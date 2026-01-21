@@ -1,5 +1,6 @@
 import { securityGuardPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultSecurityGuardPermissionName = 'SecurityGuard.';
@@ -78,6 +79,7 @@ const securityGuardModule = {
           path: securityGuardPaths.dashboard,
           _action: 'dashboard',
           permissionName: securityGuardPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
 
         {
@@ -85,18 +87,21 @@ const securityGuardModule = {
           path: securityGuardPaths.visitorManagement.root,
           _action: 'visitor-management',
           permissionName: securityGuardPermissions.visitorManagement.root,
+          icon: menuIconView('mdi:account-group-outline'),
           children: [
             {
               title: 'Visitor Checkpoint',
               path: securityGuardPaths.visitorManagement.checkpoint,
               _action: 'visitor-check-in',
               permissionName: securityGuardPermissions.visitorManagement.checkpoint,
+              icon: menuIconView('mdi:map-marker-check-outline'),
             },
             {
               title: 'Visitor Pre Approval',
               path: securityGuardPaths.visitorManagement.preApproval,
               _action: 'visitor-pre-approval',
               permissionName: securityGuardPermissions.visitorManagement.preApproval,
+              icon: menuIconView('mdi:account-check-outline'),
             },
           ],
         },
@@ -105,6 +110,7 @@ const securityGuardModule = {
           path: securityGuardPaths.gatePass.root,
           _action: 'gate-pass-management',
           permissionName: securityGuardPermissions.gatePass.root,
+          icon: menuIconView('mdi:card-account-details-outline'),
           children: [
             // {
             //   title: 'Gate Pass System',
@@ -116,24 +122,28 @@ const securityGuardModule = {
               path: securityGuardPaths.gatePass.accessLogs,
               _action: 'access-logs-management',
               permissionName: securityGuardPermissions.gatePass.accessLogs,
+              icon: menuIconView('mdi:history'),
             },
             {
               title: 'Create Gate Pass',
               path: securityGuardPaths.gatePass.create,
               _action: 'create-gate-pass',
               permissionName: securityGuardPermissions.gatePass.create,
+              icon: menuIconView('mdi:plus-box-outline'),
             },
             {
               title: 'Gate Pass Request',
               path: securityGuardPaths.gatePass.request,
               _action: 'gate-pass',
               permissionName: securityGuardPermissions.gatePass.request,
+              icon: menuIconView('mdi:file-document-edit-outline'),
             },
             {
               title: 'Review Gate Pass Request',
               path: securityGuardPaths.gatePass.reviewRequest,
               _action: 'review-gate-pass-request',
               permissionName: securityGuardPermissions.gatePass.reviewRequest,
+              icon: menuIconView('mdi:file-check-outline'),
             },
             // {
             //   title: 'Access Logs Management security-guard',
@@ -145,12 +155,14 @@ const securityGuardModule = {
               path: securityGuardPaths.gatePass.requestStaff,
               _action: 'gate-pass-staff',
               permissionName: securityGuardPermissions.gatePass.requestStaff,
+              icon: menuIconView('mdi:file-document-edit-outline'),
             },
             {
               title: 'Review Gate Pass Request',
               path: securityGuardPaths.gatePass.reviewRequestStaff,
               _action: 'review-gate-pass-staff',
               permissionName: securityGuardPermissions.gatePass.reviewRequestStaff,
+              icon: menuIconView('mdi:file-check-outline'),
             },
           ],
         },
@@ -160,30 +172,35 @@ const securityGuardModule = {
           path: securityGuardPaths.guardManagement.root,
           _action: 'guard-management',
           permissionName: securityGuardPermissions.guardManagement.root,
+          icon: menuIconView('mdi:security'),
           children: [
             {
               title: 'Guard Assignment',
               path: securityGuardPaths.guardManagement.assignment,
               _action: 'guard-assignment',
               permissionName: securityGuardPermissions.guardManagement.assignment,
+              icon: menuIconView('mdi:account-arrow-right-outline'),
             },
             {
               title: 'My Duty Schedule',
               path: securityGuardPaths.guardManagement.dutySchedule,
               _action: 'duty-schedule',
               permissionName: securityGuardPermissions.guardManagement.dutySchedule,
+              icon: menuIconView('mdi:calendar-clock-outline'),
             },
             {
               title: 'Guard Shift Configuration',
               path: securityGuardPaths.guardManagement.shiftConfig,
               _action: 'setting-configuration',
               permissionName: securityGuardPermissions.guardManagement.shiftConfig,
+              icon: menuIconView('mdi:cog-outline'),
             },
             {
               title: 'Guard Duty Overview',
               path: securityGuardPaths.guardManagement.dutyOverview,
               _action: 'hand-over-notes',
               permissionName: securityGuardPermissions.guardManagement.dutyOverview,
+              icon: menuIconView('mdi:clipboard-text-outline'),
             },
           ],
         },
@@ -193,24 +210,28 @@ const securityGuardModule = {
           path: securityGuardPaths.alert.root,
           _action: 'alert',
           permissionName: securityGuardPermissions.alert.root,
+          icon: menuIconView('mdi:alert-outline'),
           children: [
             {
               title: 'Live Security Alert',
               path: securityGuardPaths.alert.live,
               _action: 'live-security-alerts',
               permissionName: securityGuardPermissions.alert.live,
+              icon: menuIconView('mdi:alarm-light-outline'),
             },
             {
               title: 'Alert Dashboard',
               path: securityGuardPaths.alert.dashboard,
               _action: 'alert-dashboard',
               permissionName: securityGuardPermissions.alert.dashboard,
+              icon: menuIconView('mdi:monitor-dashboard'),
             },
             {
               title: 'Alert Report',
               path: securityGuardPaths.alert.report,
               _action: 'alert-report',
               permissionName: securityGuardPermissions.alert.report,
+              icon: menuIconView('mdi:file-chart-outline'),
             },
           ],
         },
@@ -219,6 +240,7 @@ const securityGuardModule = {
           path: securityGuardPaths.reports,
           _action: 'reports',
           permissionName: securityGuardPermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
       ],
     },

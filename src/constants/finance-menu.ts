@@ -1,5 +1,6 @@
 import { financePath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultFinancePermissionName = 'Finance.';
@@ -73,6 +74,7 @@ const financeModule = {
           caption: 'Coming Soon',
           shortcutKeyName: 'Alt+F+1',
           permissionName: financePermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         // {
         //   title: 'Fee Management',
@@ -104,6 +106,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+3',
           shortcutKeyName: 'Alt+F+3',
           permissionName: financePermissions.feeCollection,
+          icon: menuIconView('mdi:hand-coin-outline'),
         },
         {
           title: 'Charges',
@@ -112,6 +115,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+3',
           shortcutKeyName: 'Alt+F+3',
           permissionName: financePermissions.charges,
+          icon: menuIconView('mdi:cash-plus'),
           // children: [
           //   {
           //     title: 'Assign Charge',
@@ -138,6 +142,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+5',
           shortcutKeyName: 'Alt+F+5',
           permissionName: financePermissions.concession,
+          icon: menuIconView('mdi:ticket-percent-outline'),
           // children: [
           //   // ...
           // ],
@@ -150,6 +155,7 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+4',
           permissionName: financePermissions.invoiceReceipt,
           caption: 'Coming Soon',
+          icon: menuIconView('mdi:receipt-text-outline'),
         },
         {
           title: 'Reconciliation',
@@ -158,6 +164,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+5',
           shortcutKeyName: 'Alt+F+5',
           permissionName: financePermissions.reconciliation,
+          icon: menuIconView('mdi:scale-balance'),
         },
         {
           title: 'Income Tracking',
@@ -166,6 +173,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+4',
           shortcutKeyName: 'Alt+F+4',
           permissionName: financePermissions.incomeTracking,
+          icon: menuIconView('mdi:finance'),
         },
         {
           title: 'Expense Tracking',
@@ -174,6 +182,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+11',
           shortcutKeyName: 'Alt+F+11',
           permissionName: financePermissions.expenseTracking,
+          icon: menuIconView('mdi:cash-remove'),
         },
         // {
         //   title: 'Reconciliation',
@@ -201,6 +210,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+11',
           shortcutKeyName: 'Alt+F+11',
           permissionName: financePermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Notification',
@@ -209,6 +219,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+N',
           shortcutKeyName: 'Alt+F+N',
           permissionName: financePermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
         {
           title: 'Settings',
@@ -217,6 +228,7 @@ const financeModule = {
           shortcutKey: 'Alt+F+S',
           shortcutKeyName: 'Alt+F+S',
           permissionName: financePermissions.settings.root,
+          icon: menuIconView('mdi:cog-outline'),
           children: [
             {
               title: 'Fee Category',
@@ -225,6 +237,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+1',
               shortcutKeyName: 'Alt+F+S+1',
               permissionName: financePermissions.settings.feeCategory,
+              icon: menuIconView('mdi:shape-outline'),
             },
             {
               title: 'Fee Head',
@@ -233,6 +246,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+1',
               shortcutKeyName: 'Alt+F+S+1',
               permissionName: financePermissions.settings.feeHead,
+              icon: menuIconView('mdi:format-header-pound'),
             },
             // {
             //   title: 'General Setting',
@@ -248,6 +262,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+3',
               shortcutKeyName: 'Alt+F+S+3',
               permissionName: financePermissions.settings.receiptBook,
+              icon: menuIconView('mdi:book-open-outline'),
             },
             {
               title: 'Payment Terms',
@@ -256,6 +271,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+4',
               shortcutKeyName: 'Alt+F+S+4',
               permissionName: financePermissions.settings.paymentTerms,
+              icon: menuIconView('mdi:handshake-outline'),
             },
             {
               title: 'Fee Structure',
@@ -264,6 +280,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+4',
               shortcutKeyName: 'Alt+F+S+4',
               permissionName: financePermissions.settings.feeStructure,
+              icon: menuIconView('mdi:file-table-box-outline'),
             },
             {
               title: 'Concession Type',
@@ -272,6 +289,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+5',
               shortcutKeyName: 'Alt+F+S+5',
               permissionName: financePermissions.settings.concessionType,
+              icon: menuIconView('mdi:ticket-outline'),
             },
             // {
             //   title: 'Receipt Templates',
@@ -287,6 +305,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+6',
               shortcutKeyName: 'Alt+F+S+6',
               permissionName: financePermissions.settings.chargeCategory,
+              icon: menuIconView('mdi:tag-plus-outline'),
             },
             // ...
             {
@@ -296,6 +315,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+7',
               shortcutKeyName: 'Alt+F+7',
               permissionName: financePermissions.settings.expenseCategory,
+              icon: menuIconView('mdi:tag-minus-outline'),
             },
             // ...
             {
@@ -305,6 +325,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+7',
               shortcutKeyName: 'Alt+F+7',
               permissionName: financePermissions.settings.incomeCategory,
+              icon: menuIconView('mdi:tag-text-outline'),
             },
             {
               title: 'Bank Accounts',
@@ -313,6 +334,7 @@ const financeModule = {
               shortcutKey: 'Alt+F+8',
               shortcutKeyName: 'Alt+F+8',
               permissionName: financePermissions.settings.bankAccount,
+              icon: menuIconView('mdi:bank-outline'),
             },
             // ...
           ],

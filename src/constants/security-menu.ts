@@ -1,5 +1,6 @@
 import { securityPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultSecurityPermissionName = 'Security.';
@@ -34,12 +35,14 @@ const securityModule = {
           path: securityPaths.dashboard,
           _action: 'dashboard',
           permissionName: securityPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Role And Permission',
           path: securityPaths.roleAndPermission.root,
           _action: 'role-and-permission',
           permissionName: securityPermissions.roleAndPermission.root,
+          icon: menuIconView('mdi:shield-account-outline'),
           children: [
             {
               title: 'Role Management',
@@ -48,6 +51,7 @@ const securityModule = {
               shortcutKey: 'Alt+R+1',
               shortcutKeyName: 'Alt+R+1',
               permissionName: securityPermissions.roleAndPermission.role,
+              icon: menuIconView('mdi:account-key-outline'),
             },
             {
               title: 'User Management',
@@ -56,6 +60,7 @@ const securityModule = {
               shortcutKey: 'Alt+R+2',
               shortcutKeyName: 'Alt+R+2',
               permissionName: securityPermissions.roleAndPermission.userManagement,
+              icon: menuIconView('mdi:account-cog-outline'),
             },
             {
               title: 'Department',
@@ -64,6 +69,7 @@ const securityModule = {
               shortcutKey: 'Alt+R+3',
               shortcutKeyName: 'Alt+R+3',
               permissionName: securityPermissions.roleAndPermission.department,
+              icon: menuIconView('mdi:domain'),
             },
           ],
         },

@@ -1,5 +1,6 @@
 import { transportPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultTransportPermissionName = 'Transport.';
@@ -55,6 +56,7 @@ const transportModule = {
           caption: 'Coming Soon',
           shortcutKeyName: 'Alt+T+1',
           permissionName: transportPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Stop Management',
@@ -63,6 +65,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+4',
           shortcutKeyName: 'Alt+T+4',
           permissionName: transportPermissions.stopManagement,
+          icon: menuIconView('mdi:bus-stop'),
         },
         {
           title: 'Route Management',
@@ -71,6 +74,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+2',
           shortcutKeyName: 'Alt+T+2',
           permissionName: transportPermissions.routeManagement,
+          icon: menuIconView('mdi:map-marker-path'),
         },
         {
           title: 'Vehicle Management',
@@ -79,6 +83,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+3',
           shortcutKeyName: 'Alt+T+3',
           permissionName: transportPermissions.vehicleManagement,
+          icon: menuIconView('mdi:bus'),
         },
         {
           title: 'Transport Staff Management',
@@ -87,6 +92,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+3',
           shortcutKeyName: 'Alt+T+3',
           permissionName: transportPermissions.driverManagement,
+          icon: menuIconView('mdi:card-account-details-outline'),
         },
         // {
         //   title: 'Route Allocation',
@@ -102,6 +108,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+5',
           shortcutKeyName: 'Alt+T+5',
           permissionName: transportPermissions.applicationManagement,
+          icon: menuIconView('mdi:file-document-edit-outline'),
         },
         {
           title: 'Reports',
@@ -111,12 +118,14 @@ const transportModule = {
           shortcutKeyName: 'Alt+T+6',
           caption: 'Coming Soon',
           permissionName: transportPermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Notification',
           path: transportPaths.notification,
           _action: 'transport-notification',
           permissionName: transportPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
         {
           title: 'Settings',
@@ -125,6 +134,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+S',
           shortcutKeyName: 'Alt+T+S',
           permissionName: transportPermissions.settings.root,
+          icon: menuIconView('mdi:cog-outline'),
           children: [
             {
               title: 'Vehicle Type',
@@ -133,6 +143,7 @@ const transportModule = {
               shortcutKey: 'Alt+T+S+1',
               shortcutKeyName: 'Alt+T+S+1',
               permissionName: transportPermissions.settings.vehicleType,
+              icon: menuIconView('mdi:car-info'),
             },
             {
               title: 'Required Vehicle Document',
@@ -141,6 +152,7 @@ const transportModule = {
               shortcutKey: 'Alt+T+S+2',
               shortcutKeyName: 'Alt+T+S+2',
               permissionName: transportPermissions.settings.vehicleDocument,
+              icon: menuIconView('mdi:file-document-outline'),
             },
             {
               title: 'Servicing Type',
@@ -149,6 +161,7 @@ const transportModule = {
               shortcutKey: 'Alt+T+S+3',
               shortcutKeyName: 'Alt+T+S+3',
               permissionName: transportPermissions.settings.serviceType,
+              icon: menuIconView('mdi:wrench-outline'),
             },
             // {
             //   title: 'Licence Type',
@@ -171,6 +184,7 @@ const transportModule = {
               shortcutKey: 'Alt+T+S+6',
               shortcutKeyName: 'Alt+T+S+6',
               permissionName: transportPermissions.settings.feeConfiguration,
+              icon: menuIconView('mdi:cash-multiple'),
             },
             {
               title: 'Zone/Area Configuration',
@@ -179,6 +193,7 @@ const transportModule = {
               shortcutKey: 'Alt+T+S+6',
               shortcutKeyName: 'Alt+T+S+6',
               permissionName: transportPermissions.settings.zoneAreaConfiguration,
+              icon: menuIconView('mdi:map-legend'),
             },
           ],
         },

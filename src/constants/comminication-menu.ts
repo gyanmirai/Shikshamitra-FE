@@ -1,5 +1,6 @@
 import { communicationPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultCommunicationPermissionName = 'Communication.';
@@ -48,6 +49,7 @@ const communicationModule = {
           shortcutKey: 'Alt+C+1',
           shortcutKeyName: 'Alt+C+1',
           permissionName: communicationPermissions.dashboard,
+          icon: menuIconView('mdi:bell-outline'),
         },
         {
           title: 'Announcements',
@@ -56,6 +58,7 @@ const communicationModule = {
           shortcutKey: 'Alt+C+A',
           shortcutKeyName: 'Alt+C+A',
           permissionName: communicationPermissions.announcement,
+          icon: menuIconView('mdi:bullhorn-outline'),
         },
         {
           title: 'Notification',
@@ -64,6 +67,7 @@ const communicationModule = {
           shortcutKey: 'Alt+C+N',
           shortcutKeyName: 'Alt+C+N',
           permissionName: communicationPermissions.notification.root,
+          icon: menuIconView('mdi:bell-outline'),
           children: [
             {
               title: 'Sent Notification',
@@ -72,6 +76,7 @@ const communicationModule = {
               shortcutKey: 'Alt+C+N+1',
               shortcutKeyName: 'Alt+C+N+1',
               permissionName: communicationPermissions.notification.sent,
+              icon: menuIconView('mdi:send-check-outline'),
             },
             {
               title: 'Templates',
@@ -80,6 +85,7 @@ const communicationModule = {
               shortcutKey: 'Alt+C+T',
               shortcutKeyName: 'Alt+C+T',
               permissionName: communicationPermissions.notification.templates,
+              icon: menuIconView('mdi:file-document-outline'),
             },
             {
               title: 'Notification Setting',
@@ -88,6 +94,7 @@ const communicationModule = {
               shortcutKey: 'Alt+C+N+3',
               shortcutKeyName: 'Alt+C+N+3',
               permissionName: communicationPermissions.notification.setting,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -98,6 +105,7 @@ const communicationModule = {
           shortcutKey: 'Alt+C+S',
           shortcutKeyName: 'Alt+C+S',
           permissionName: communicationPermissions.settings.root,
+          icon: menuIconView('mdi:cog-outline'),
           children: [
             {
               title: 'Announcement Type',
@@ -106,6 +114,7 @@ const communicationModule = {
               shortcutKey: 'Alt+C+S+5',
               shortcutKeyName: 'Alt+C+S+5',
               permissionName: communicationPermissions.settings.announcementType,
+              icon: menuIconView('mdi:format-list-bulleted'),
             },
           ],
         },

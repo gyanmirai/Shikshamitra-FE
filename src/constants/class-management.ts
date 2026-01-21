@@ -1,5 +1,6 @@
 import { classPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultClassPermissionName = 'ClassManagement.';
@@ -34,6 +35,7 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+1',
           shortcutKeyName: 'Alt+A+1',
           permissionName: classManagementPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Student Elective Assignment',
@@ -42,6 +44,7 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+C+1',
           shortcutKeyName: 'Alt+A+C+1',
           permissionName: classManagementPermissions.electiveAssignment,
+          icon: menuIconView('mdi:book-check-outline'),
         },
         {
           title: 'Chapters Progress',
@@ -50,6 +53,7 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+S+3',
           shortcutKeyName: 'Alt+A+S+3',
           permissionName: classManagementPermissions.chapters,
+          icon: menuIconView('mdi:chart-line'),
         },
         {
           title: 'Teachers Assignment',
@@ -58,6 +62,7 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+C+2',
           shortcutKeyName: 'Alt+A+C+2',
           permissionName: classManagementPermissions.teacherAssignment,
+          icon: menuIconView('mdi:account-tie-outline'),
         },
         {
           title: 'Class Teacher Assignment',
@@ -66,6 +71,7 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+Z',
           shortcutKeyName: 'Alt+A+Z',
           permissionName: classManagementPermissions.classTeacherAssignment,
+          icon: menuIconView('mdi:account-supervisor-outline'),
         },
         {
           title: 'Reports',
@@ -73,6 +79,7 @@ const classManagementModule = {
           _action: 'reports',
           shortcutKey: 'Alt+A+R',
           shortcutKeyName: 'Alt+A+R',
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Notification',
@@ -81,6 +88,7 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+N',
           shortcutKeyName: 'Alt+A+N',
           permissionName: classManagementPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
       ],
     },

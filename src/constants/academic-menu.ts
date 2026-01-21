@@ -1,5 +1,6 @@
 import { academicPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultAcademicPermissionName = 'Academics.';
@@ -163,6 +164,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+A+1',
           disabled: !isDdvs,
           permissionName: academicPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Curriculum Management',
@@ -171,6 +173,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+A+C',
           shortcutKeyName: 'Alt+A+C',
           permissionName: academicPermissions.curriculum.root,
+          icon: menuIconView('mdi:book-open-page-variant-outline'),
           children: [
             {
               title: 'Subjects Assignment',
@@ -179,6 +182,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
               permissionName: academicPermissions.curriculum.subjectsAssignment,
+              icon: menuIconView('mdi:book-plus-outline'),
             },
             // {
             //   title: 'Student Elective Assignment',
@@ -208,6 +212,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+S+1',
               shortcutKeyName: 'Alt+A+S+1',
               permissionName: academicPermissions.curriculum.chaptersManagement,
+              icon: menuIconView('mdi:bookmark-multiple-outline'),
             },
             {
               title: 'Resources',
@@ -217,6 +222,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+S+2',
               shortcutKeyName: 'Alt+A+S+2',
               permissionName: academicPermissions.curriculum.resources,
+              icon: menuIconView('mdi:folder-open-outline'),
             },
             // {
             //   title: 'Chapters Progress',
@@ -232,6 +238,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               permissionName: academicPermissions.curriculum.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Settings',
@@ -240,6 +247,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               permissionName: academicPermissions.curriculum.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Subjects Creation',
@@ -248,6 +256,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+C+3+1',
                   shortcutKeyName: 'Alt+A+C+3+1',
                   permissionName: academicPermissions.curriculum.settings.subjectsCreation,
+                  icon: menuIconView('mdi:book-cog-outline'),
                 },
                 {
                   title: 'Elective Group Creation',
@@ -256,6 +265,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+C+3+2',
                   shortcutKeyName: 'Alt+A+C+3+2',
                   permissionName: academicPermissions.curriculum.settings.electiveGroupCreation,
+                  icon: menuIconView('mdi:account-group-outline'),
                 },
               ],
             },
@@ -268,6 +278,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+A+T',
           shortcutKeyName: 'Alt+A+T',
           permissionName: academicPermissions.timetable.root,
+          icon: menuIconView('mdi:calendar-clock-outline'),
           children: [
             {
               title: 'Timetable Management',
@@ -276,6 +287,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+T+2',
               shortcutKeyName: 'Alt+A+T+2',
               permissionName: academicPermissions.timetable.management,
+              icon: menuIconView('mdi:calendar-edit-outline'),
             },
             {
               title: 'Reports',
@@ -284,6 +296,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+T+3',
               shortcutKeyName: 'Alt+A+T+3',
               permissionName: academicPermissions.timetable.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Settings',
@@ -292,6 +305,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+T+4',
               shortcutKeyName: 'Alt+A+T+4',
               permissionName: academicPermissions.timetable.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Weekly Lectures',
@@ -300,6 +314,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+T+4+1',
                   shortcutKeyName: 'Alt+A+T+4+1',
                   permissionName: academicPermissions.timetable.settings.weeklyLectures,
+                  icon: menuIconView('mdi:calendar-week-outline'),
                 },
                 {
                   title: 'Lecture Slots',
@@ -308,6 +323,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+T+4+2',
                   shortcutKeyName: 'Alt+A+T+4+2',
                   permissionName: academicPermissions.timetable.settings.lectureSlots,
+                  icon: menuIconView('mdi:clock-time-four-outline'),
                 },
               ],
             },
@@ -320,6 +336,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+A+H',
           shortcutKeyName: 'Alt+A+H',
           permissionName: academicPermissions.homework.root,
+          icon: menuIconView('mdi:notebook-edit-outline'),
           children: [
             {
               title: 'Learning Tasks',
@@ -328,6 +345,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+H+2',
               shortcutKeyName: 'Alt+A+H+2',
               permissionName: academicPermissions.homework.learningTasks,
+              icon: menuIconView('mdi:clipboard-list-outline'),
             },
             {
               title: 'Assessment & Feedback',
@@ -336,6 +354,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+H+3',
               shortcutKeyName: 'Alt+A+H+3',
               permissionName: academicPermissions.homework.assessment,
+              icon: menuIconView('mdi:clipboard-check-outline'),
             },
             {
               title: 'Reports',
@@ -344,6 +363,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+H+R',
               shortcutKeyName: 'Alt+A+H+R',
               permissionName: academicPermissions.homework.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: ' Settings',
@@ -352,6 +372,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+H+4',
               shortcutKeyName: 'Alt+A+H+4',
               permissionName: academicPermissions.homework.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Homework Types',
@@ -360,6 +381,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+H+4+1',
                   shortcutKeyName: 'Alt+A+H+4+1',
                   permissionName: academicPermissions.homework.settings.homeworkTypes,
+                  icon: menuIconView('mdi:format-list-bulleted-type'),
                 },
                 {
                   title: 'Assignment Types',
@@ -368,6 +390,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+H+4+2',
                   shortcutKeyName: 'Alt+A+H+4+2',
                   permissionName: academicPermissions.homework.settings.assignmentTypes,
+                  icon: menuIconView('mdi:playlist-edit'),
                 },
               ],
             },
@@ -394,6 +417,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+E+1',
           shortcutKeyName: 'Alt+E+1',
           permissionName: academicPermissions.examination.root,
+          icon: menuIconView('mdi:file-document-edit-outline'),
           children: [
             {
               title: 'Schedule Exam',
@@ -402,6 +426,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+E+1+2',
               shortcutKeyName: 'Alt+E+1+2',
               permissionName: academicPermissions.examination.schedule,
+              icon: menuIconView('mdi:calendar-clock-outline'),
             },
             {
               title: 'Seat Allocation',
@@ -410,6 +435,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+E+1+3',
               shortcutKeyName: 'Alt+E+1+3',
               permissionName: academicPermissions.examination.seatAllocation,
+              icon: menuIconView('mdi:seat-outline'),
             },
             {
               title: 'Record Marks',
@@ -418,6 +444,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+E+1+4',
               shortcutKeyName: 'Alt+E+1+4',
               permissionName: academicPermissions.examination.recordMarks,
+              icon: menuIconView('mdi:format-list-numbered'),
             },
             {
               title: 'Quiz Management',
@@ -426,6 +453,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+E+1+5',
               shortcutKeyName: 'Alt+E+1+5',
               permissionName: academicPermissions.examination.quizManagement,
+              icon: menuIconView('mdi:comment-question-outline'),
             },
             {
               title: 'Reports',
@@ -434,6 +462,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+E+R',
               shortcutKeyName: 'Alt+E+R',
               permissionName: academicPermissions.examination.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Settings',
@@ -442,6 +471,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+E+1+6',
               shortcutKeyName: 'Alt+E+1+6',
               permissionName: academicPermissions.examination.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Grade Scaling',
@@ -450,6 +480,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+E+1+6+1',
                   shortcutKeyName: 'Alt+E+1+6+1',
                   permissionName: academicPermissions.examination.settings.gradeScaling,
+                  icon: menuIconView('mdi:scale-balance'),
                 },
                 {
                   title: 'Exam Types',
@@ -458,6 +489,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+E+1+6+2',
                   shortcutKeyName: 'Alt+E+1+6+2',
                   permissionName: academicPermissions.examination.settings.examTypes,
+                  icon: menuIconView('mdi:file-document-multiple-outline'),
                 },
               ],
             },
@@ -472,6 +504,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+A+G',
           shortcutKeyName: 'Alt+A+G',
           permissionName: academicPermissions.groupManagement.root,
+          icon: menuIconView('mdi:account-group-outline'),
           children: [
             {
               title: 'Dashboard',
@@ -480,6 +513,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+G+1',
               shortcutKeyName: 'Alt+A+G+1',
               permissionName: academicPermissions.groupManagement.dashboard,
+              icon: menuIconView('mdi:view-dashboard-outline'),
             },
             {
               title: 'Dynamic Group',
@@ -488,6 +522,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+G+2',
               shortcutKeyName: 'Alt+A+G+2',
               permissionName: academicPermissions.groupManagement.dynamicGroup,
+              icon: menuIconView('mdi:account-switch-outline'),
             },
             {
               title: 'Activity Management',
@@ -496,6 +531,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+G+3',
               shortcutKeyName: 'Alt+A+G+3',
               permissionName: academicPermissions.groupManagement.activityManagement,
+              icon: menuIconView('mdi:run'),
             },
           ],
         },
@@ -508,6 +544,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+A+L',
           shortcutKeyName: 'Alt+A+L',
           permissionName: academicPermissions.lms.root,
+          icon: menuIconView('mdi:book-open-outline'),
           children: [
             {
               title: 'Dashboard',
@@ -516,6 +553,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+L+1',
               shortcutKeyName: 'Alt+A+L+1',
               permissionName: academicPermissions.lms.dashboard,
+              icon: menuIconView('mdi:view-dashboard-outline'),
             },
             {
               title: 'Course',
@@ -524,6 +562,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+L+2',
               shortcutKeyName: 'Alt+A+L+2',
               permissionName: academicPermissions.lms.course,
+              icon: menuIconView('mdi:book-open-variant'),
             },
             {
               title: 'Student Progress Tracking',
@@ -532,6 +571,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+L+3',
               shortcutKeyName: 'Alt+A+L+3',
               permissionName: academicPermissions.lms.studentProgress,
+              icon: menuIconView('mdi:chart-line'),
             },
             {
               title: 'Content Library',
@@ -540,6 +580,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+L+4',
               shortcutKeyName: 'Alt+A+L+4',
               permissionName: academicPermissions.lms.contentLibrary,
+              icon: menuIconView('mdi:library-shelves'),
             },
             {
               title: 'Reports And Analytics',
@@ -548,6 +589,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+L+5',
               shortcutKeyName: 'Alt+A+L+5',
               permissionName: academicPermissions.lms.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Settings',
@@ -556,6 +598,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+L+6',
               shortcutKeyName: 'Alt+A+L+6',
               permissionName: academicPermissions.lms.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'General',
@@ -564,6 +607,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+L+6+1',
                   shortcutKeyName: 'Alt+A+L+6+1',
                   permissionName: academicPermissions.lms.settings.general,
+                  icon: menuIconView('mdi:tune'),
                 },
                 {
                   title: 'Course Management',
@@ -572,6 +616,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+L+6+2',
                   shortcutKeyName: 'Alt+A+L+6+2',
                   permissionName: academicPermissions.lms.settings.courseManagement,
+                  icon: menuIconView('mdi:book-cog-outline'),
                 },
                 {
                   title: 'Content Management',
@@ -580,6 +625,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+L+6+3',
                   shortcutKeyName: 'Alt+A+L+6+3',
                   permissionName: academicPermissions.lms.settings.contentManagement,
+                  icon: menuIconView('mdi:file-cog-outline'),
                 },
                 {
                   title: 'Notification',
@@ -588,6 +634,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+L+6+4',
                   shortcutKeyName: 'Alt+A+L+6+4',
                   permissionName: academicPermissions.lms.settings.notification,
+                  icon: menuIconView('mdi:bell-outline'),
                 },
                 {
                   title: 'integration',
@@ -596,6 +643,7 @@ const academicModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+A+L+6+5',
                   shortcutKeyName: 'Alt+A+L+6+5',
                   permissionName: academicPermissions.lms.settings.integration,
+                  icon: menuIconView('mdi:connection'),
                 },
               ],
             },
@@ -608,6 +656,7 @@ const academicModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+N',
           shortcutKeyName: 'Alt+N',
           permissionName: academicPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
       ],
     },

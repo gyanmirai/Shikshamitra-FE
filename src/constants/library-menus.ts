@@ -1,5 +1,6 @@
 import { libraryPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultLibraryPermissionName = 'Library.';
@@ -52,6 +53,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+1',
           shortcutKeyName: 'Alt+L+1',
           permissionName: libraryPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'All Books',
@@ -60,6 +62,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
           permissionName: libraryPermissions.allBooks,
+          icon: menuIconView('mdi:book-open-page-variant-outline'),
         },
         // {
         //   title: 'Book List',
@@ -75,6 +78,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
           permissionName: libraryPermissions.issueReturn,
+          icon: menuIconView('mdi:book-arrow-left-outline'),
         },
         {
           title: 'Library Members',
@@ -83,6 +87,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+3',
           shortcutKeyName: 'Alt+L+3',
           permissionName: libraryPermissions.members,
+          icon: menuIconView('mdi:account-group-outline'),
         },
         {
           title: 'Charges',
@@ -91,6 +96,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
           permissionName: libraryPermissions.charges,
+          icon: menuIconView('mdi:cash-remove'),
         },
         {
           title: 'Reports',
@@ -99,6 +105,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+5',
           shortcutKeyName: 'Alt+L+5',
           permissionName: libraryPermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Notification',
@@ -107,6 +114,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+N',
           shortcutKeyName: 'Alt+L+N',
           permissionName: libraryPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
         {
           title: 'Settings',
@@ -115,6 +123,7 @@ const libraryModule = {
           shortcutKey: 'Alt+L+S',
           shortcutKeyName: 'Alt+L+S',
           permissionName: libraryPermissions.settings.root,
+          icon: menuIconView('mdi:cog-outline'),
           children: [
             {
               title: 'Book Categories',
@@ -123,6 +132,7 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+1',
               shortcutKeyName: 'Alt+L+S+1',
               permissionName: libraryPermissions.settings.bookCategories,
+              icon: menuIconView('mdi:shape-outline'),
             },
             {
               title: 'Charges Categories',
@@ -131,6 +141,7 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+2',
               shortcutKeyName: 'Alt+L+S+2',
               permissionName: libraryPermissions.settings.chargeCategories,
+              icon: menuIconView('mdi:tag-plus-outline'),
             },
             {
               title: 'Library Hours',
@@ -139,6 +150,7 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+3',
               shortcutKeyName: 'Alt+L+S+3',
               permissionName: libraryPermissions.settings.libraryHours,
+              icon: menuIconView('mdi:clock-time-four-outline'),
             },
             {
               title: 'Borrowing Rules',
@@ -147,6 +159,7 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+4',
               shortcutKeyName: 'Alt+L+S+4',
               permissionName: libraryPermissions.settings.borrowingRules,
+              icon: menuIconView('mdi:gavel'),
             },
             {
               title: 'Section Management',
@@ -155,6 +168,7 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+5',
               shortcutKeyName: 'Alt+L+S+5',
               permissionName: libraryPermissions.settings.sectionManagement,
+              icon: menuIconView('mdi:view-grid-outline'),
             },
           ],
         },
