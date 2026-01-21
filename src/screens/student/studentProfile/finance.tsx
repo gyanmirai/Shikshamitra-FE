@@ -10,12 +10,12 @@ import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
-import PaymentReceipt from 'src/screens/hostel/feeManagement/components/HostelPaymentHistoryComponent/paymentReceipt';
 import {
   PaymentStatusType,
   PaymentStatusOptions,
   PaymentStatusTypeColors,
 } from 'src/enums/payment-status';
+import PaymentReceipt from 'src/screens/hostel/feeManagement/components/HostelPaymentHistoryComponent/paymentReceipt';
 import {
   Box,
   Card,

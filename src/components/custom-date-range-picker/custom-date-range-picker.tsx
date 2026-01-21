@@ -1,92 +1,241 @@
-import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Popover from '@mui/material/Popover';
+import { useState, useCallback } from 'react';
 import DialogTitle from '@mui/material/DialogTitle';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import { useResponsive } from 'src/hooks/use-responsive';
-import FormHelperText from '@mui/material/FormHelperText';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 
-import type { UseDateRangePickerReturn } from './types';
+import { RangeField } from './RangeField';
+import { CalendarPanel } from './CalendarPanel';
+import { ShortcutPanel } from './ShortcutPanel';
+import { useDateRange } from './hooks/useDateRange';
+import { useRangeValidation } from './hooks/useRangeValidation';
+
+import type { DateRangePickerProps } from './types';
 
 // ----------------------------------------------------------------------
 
-export function CustomDateRangePicker({
-  open,
-  error,
-  endDate,
-  onClose,
-  startDate,
-  onChangeEndDate,
-  variant = 'input',
-  onChangeStartDate,
-  title = 'Select date range',
-}: UseDateRangePickerReturn) {
+export function CustomDateRangePicker(props: DateRangePickerProps) {
+  const {
+    open: openProp,
+    onClose,
+    title = 'Select Date Range',
+    variant = 'input',
+    mode: modeProp,
+    calendars: calendarsProp,
+    singleInput = true, // Default to single input as requested
+    shortcuts,
+    showShortcuts,
+    // Validation
+    minDate,
+    maxDate,
+    disablePast,
+    disableFuture,
+    disableWeekends,
+    shouldDisableDate,
+    // Input props
+    label,
+    startLabel,
+    endLabel,
+    placeholder,
+    readOnly,
+    disabled,
+    error: errorProp,
+    helperText,
+    dateFormat,
+    name,
+    required,
+    //
+    slots,
+    slotProps,
+  } = props;
+
   const mdUp = useResponsive('up', 'md');
+
+  const mode = modeProp || (mdUp ? 'desktop' : 'mobile');
+  const calendars = calendarsProp || (mdUp && mode === 'desktop' ? 2 : 1);
+
+  const {
+    startDate,
+    endDate,
+    inputs,
+    onChangeStartDate,
+    onChangeEndDate,
+    onCalendarSelect,
+    onHoverDate,
+    hoverDate,
+    open,
+    onOpen,
+    onClose: handleClose,
+    onReset,
+    onAccept,
+    isSelectingEnd,
+  } = useDateRange(props);
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleOpen = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      setAnchorEl(event.currentTarget);
+      onOpen();
+    },
+    [onOpen]
+  );
+
+  const handleCloseWrapped = useCallback(() => {
+    // setAnchorEl(null); // Keep anchor for exit animation if needed, but usually fine to clear?
+    handleClose();
+  }, [handleClose]);
+
+  const validation = useRangeValidation({
+    minDate,
+    maxDate,
+    disablePast,
+    disableFuture,
+    disableWeekends,
+    shouldDisableDate,
+  });
 
   const isCalendarView = variant === 'calendar';
 
-  return (
-    <Dialog
-      fullWidth
-      maxWidth={isCalendarView ? false : 'xs'}
-      open={open}
-      onClose={onClose}
-      PaperProps={{ sx: { ...(isCalendarView && { maxWidth: 720 }) } }}
+  // ----------------------------------------------------------------------
+
+  const renderContent = (
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      sx={{
+        height: '100%',
+      }}
     >
-      <DialogTitle sx={{ pb: 2 }}>{title}</DialogTitle>
+      {showShortcuts && (
+        <ShortcutPanel
+          shortcuts={shortcuts}
+          selectedRange={[startDate, endDate]}
+          onSelectRange={(range) => {
+            onChangeStartDate(range[0]);
+            onChangeEndDate(range[1]);
+          }}
+        />
+      )}
 
-      <DialogContent sx={{ ...(isCalendarView && mdUp && { overflow: 'unset' }) }}>
-        <Stack
-          justifyContent="center"
-          spacing={isCalendarView ? 3 : 2}
-          direction={isCalendarView && mdUp ? 'row' : 'column'}
-          sx={{ pt: 1 }}
-        >
-          {isCalendarView ? (
-            <>
-              <Paper
-                variant="outlined"
-                sx={{ borderRadius: 2, borderColor: 'divider', borderStyle: 'dashed' }}
-              >
-                <DateCalendar value={startDate} onChange={onChangeStartDate} />
-              </Paper>
+      <Stack spacing={2} sx={{ p: 2 }}>
+        <CalendarPanel
+          calendars={calendars}
+          startDate={startDate}
+          endDate={endDate}
+          hoverDate={hoverDate}
+          onCalendarSelect={onCalendarSelect}
+          onHoverDate={onHoverDate}
+          // Validation
+          minDate={minDate}
+          maxDate={maxDate}
+          disablePast={disablePast}
+          disableFuture={disableFuture}
+          disableWeekends={disableWeekends}
+          shouldDisableDate={shouldDisableDate}
+        />
 
-              <Paper
-                variant="outlined"
-                sx={{ borderRadius: 2, borderColor: 'divider', borderStyle: 'dashed' }}
-              >
-                <DateCalendar value={endDate} onChange={onChangeEndDate} />
-              </Paper>
-            </>
-          ) : (
-            <>
-              <DatePicker label="Start date" value={startDate} onChange={onChangeStartDate} />
+        {/* Footer / Actions */}
+        {!isCalendarView && (
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+            <Button variant="outlined" color="inherit" onClick={onReset}>
+              Reset
+            </Button>
 
-              <DatePicker label="End date" value={endDate} onChange={onChangeEndDate} />
-            </>
-          )}
-        </Stack>
+            <Box sx={{ flexGrow: 1 }} />
 
-        {error && (
-          <FormHelperText error sx={{ px: 2 }}>
-            End date must be later than start date
-          </FormHelperText>
+            <Button variant="outlined" color="inherit" onClick={handleCloseWrapped}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={onAccept}
+              disabled={!startDate || !endDate} // Disable if not fully selected? Or allow single dates? Usually range requires both.
+            >
+              Apply
+            </Button>
+          </Stack>
         )}
-      </DialogContent>
+      </Stack>
+    </Stack>
+  );
 
-      <DialogActions>
-        <Button variant="outlined" color="inherit" onClick={onClose}>
-          Cancel
-        </Button>
+  // ----------------------------------------------------------------------
 
-        <Button disabled={error} variant="contained" onClick={onClose}>
-          Apply
-        </Button>
-      </DialogActions>
-    </Dialog>
+  if (isCalendarView) {
+    return <Box sx={{ display: 'inline-block' }}>{renderContent}</Box>;
+  }
+
+  return (
+    <>
+      {/* Trigger Field */}
+      <RangeField
+        startDate={inputs[0]}
+        endDate={inputs[1]}
+        onOpen={handleOpen}
+        singleInput={singleInput}
+        label={label}
+        startLabel={startLabel}
+        endLabel={endLabel}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        disabled={disabled}
+        error={errorProp}
+        helperText={helperText}
+        dateFormat={dateFormat}
+      />
+
+      {/* Picker Modal/Popover */}
+      {mode === 'mobile' ? (
+        <Dialog
+          fullWidth
+          maxWidth="xs"
+          open={open}
+          onClose={handleCloseWrapped}
+          PaperProps={{
+            sx: {
+              maxWidth: 'unset', // Allow it to adapt
+            },
+          }}
+        >
+          <DialogTitle>{title}</DialogTitle>
+          <DialogContent sx={{ p: 0 }}>{renderContent}</DialogContent>
+        </Dialog>
+      ) : (
+        <Popover
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleCloseWrapped}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          PaperProps={{
+            sx: {
+              mt: 1, // Margin top for spacing
+              boxShadow: (theme) => theme.customShadows.dropdown,
+              borderRadius: 2,
+            },
+          }}
+        >
+          {/* Popover content usually doesn't need a heavy title like Dialog, 
+              but we can keep it valid or minimal. 
+              The user image shows just the calendar content directly under the input.
+              Let's omit DialogTitle for Popover to match typical DatePicker look, 
+              or keep it if title is important. 
+              The reference image has "January 2026" inside standard headers.
+              I will start with just renderContent inside the Popover.
+           */}
+          {renderContent}
+        </Popover>
+      )}
+    </>
   );
 }

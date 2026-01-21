@@ -19,6 +19,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -27,8 +28,8 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useMoveToAdmissionMutation } from 'src/redux/student/registration/registration-api';
@@ -220,28 +221,13 @@ const EntranceExamScreen = () => {
       />
       <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 1, py: 1 }}>
         <Box display="flex" gap={2}>
-          <DatePicker
-            label="Start Date"
-            format="DD-MM-YYYY"
-            value={startDate}
-            minDate={dayjs(currentYear?.startDate)}
-            maxDate={dayjs(currentYear?.endDate)}
-            slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
-            views={['year', 'month', 'day']}
+          <CustomDateRangePicker
+            label="Start Date - End Date"
+            value={[startDate, endDate]}
+            dateFormat="DD/MM/YYYY"
             onChange={(value) => {
-              setStartDate(value);
-            }}
-          />
-          <DatePicker
-            label="End Date"
-            value={endDate}
-            format="DD-MM-YYYY"
-            minDate={dayjs(currentYear?.startDate)}
-            maxDate={dayjs(currentYear?.endDate)}
-            views={['year', 'month', 'day']}
-            slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
-            onChange={(value) => {
-              setEndDate(value);
+              setStartDate(value[0]);
+              setEndDate(value[1]);
             }}
           />
         </Box>

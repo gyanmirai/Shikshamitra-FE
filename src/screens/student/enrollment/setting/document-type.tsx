@@ -74,6 +74,7 @@ const StudentDocumentType = () => {
     data: documents,
     isLoading,
     isFetching,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
@@ -199,17 +200,7 @@ const StudentDocumentType = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    StudentDocumentTypeApi.util.updateQueryData(
-                      'getStudentDocumentType',
-                      { ...query },
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch({ ...query }),
                 onCommit: () => deleteDocument(editData?.id || ''),
               });
               confirm.onFalse();
