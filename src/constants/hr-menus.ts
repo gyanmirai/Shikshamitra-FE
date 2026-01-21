@@ -1,5 +1,6 @@
 import { hrPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultHrPermissionName = 'HR.';
@@ -101,6 +102,7 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+H+1',
           permissionName: hrPermissions.dashboard,
           disabled: !isDdvs,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Employee',
@@ -109,6 +111,7 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+E',
           shortcutKeyName: 'Alt+H+E',
           permissionName: hrPermissions.employee.root,
+          icon: menuIconView('mdi:account-tie-outline'),
           children: [
             {
               title: 'Employee List',
@@ -117,6 +120,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+E+1',
               shortcutKeyName: 'Alt+H+E+1',
               permissionName: hrPermissions.employee.list,
+              icon: menuIconView('mdi:format-list-bulleted'),
             },
             {
               title: 'I-card',
@@ -127,6 +131,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+E+2',
               shortcutKeyName: 'Alt+H+E+2',
               permissionName: hrPermissions.employee.iCard,
+              icon: menuIconView('mdi:card-account-details-outline'),
             },
             {
               title: 'Setting',
@@ -135,6 +140,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+S',
               shortcutKeyName: 'Alt+H+S',
               permissionName: hrPermissions.employee.setting.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Document Types',
@@ -143,6 +149,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+S+1',
                   shortcutKeyName: 'Alt+H+S+1',
                   permissionName: hrPermissions.employee.setting.documentTypes,
+                  icon: menuIconView('mdi:file-document-outline'),
                 },
               ],
             },
@@ -155,6 +162,7 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+P',
           shortcutKeyName: 'Alt+H+P',
           permissionName: hrPermissions.payroll.root,
+          icon: menuIconView('mdi:cash-multiple'),
           children: [
             {
               title: 'Dashboard',
@@ -163,6 +171,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+P+1',
               shortcutKeyName: 'Alt+H+P+1',
               permissionName: hrPermissions.payroll.dashboard,
+              icon: menuIconView('mdi:view-dashboard-outline'),
             },
             {
               title: 'Run Payroll',
@@ -171,6 +180,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+P+2',
               shortcutKeyName: 'Alt+H+P+2',
               permissionName: hrPermissions.payroll.runPayroll,
+              icon: menuIconView('mdi:play-circle-outline'),
             },
             {
               title: 'Generate Salary Slip',
@@ -179,6 +189,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+P+3',
               shortcutKeyName: 'Alt+H+P+3',
               permissionName: hrPermissions.payroll.generateSalarySlip,
+              icon: menuIconView('mdi:file-document-outline'),
             },
             {
               title: 'Settings',
@@ -187,6 +198,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+P+4',
               shortcutKeyName: 'Alt+H+P+4',
               permissionName: hrPermissions.payroll.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Earning Components',
@@ -195,6 +207,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+P+4',
                   shortcutKeyName: 'Alt+H+P+4',
                   permissionName: hrPermissions.payroll.settings.earningComponents,
+                  icon: menuIconView('mdi:cash-plus'),
                 },
                 {
                   title: 'Deduction Components',
@@ -203,6 +216,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+P+4+2',
                   shortcutKeyName: 'Alt+H+P+4+2',
                   permissionName: hrPermissions.payroll.settings.deductionComponents,
+                  icon: menuIconView('mdi:cash-minus'),
                 },
                 {
                   title: 'PF Rule',
@@ -211,6 +225,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+P+4+2',
                   shortcutKeyName: 'Alt+H+P+4+2',
                   permissionName: hrPermissions.payroll.settings.pfRule,
+                  icon: menuIconView('mdi:bank-outline'),
                 },
                 {
                   title: 'Payroll Configuration',
@@ -219,6 +234,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+P+4+2',
                   shortcutKeyName: 'Alt+H+P+4+2',
                   permissionName: hrPermissions.payroll.settings.payrollConfiguration,
+                  icon: menuIconView('mdi:cogs'),
                 },
               ],
             },
@@ -231,6 +247,7 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+A',
           shortcutKeyName: 'Alt+H+A',
           permissionName: hrPermissions.attendance.root,
+          icon: menuIconView('mdi:calendar-clock-outline'),
           children: [
             {
               title: 'Import Attendance',
@@ -239,6 +256,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+A+1',
               shortcutKeyName: 'Alt+H+A+1',
               permissionName: hrPermissions.attendance.importAttendance,
+              icon: menuIconView('mdi:file-import-outline'),
             },
             {
               title: 'Leave Management',
@@ -247,6 +265,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+A+2',
               shortcutKeyName: 'Alt+H+A+2',
               permissionName: hrPermissions.attendance.leaveManagement,
+              icon: menuIconView('mdi:calendar-remove-outline'),
             },
             {
               title: 'Attendance Tracking',
@@ -255,6 +274,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+A+3',
               shortcutKeyName: 'Alt+H+A+3',
               permissionName: hrPermissions.attendance.attendanceTracking,
+              icon: menuIconView('mdi:calendar-check-outline'),
             },
             {
               title: 'Setting',
@@ -263,6 +283,7 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+H+A+4',
               shortcutKeyName: 'Alt+H+A+4',
               permissionName: hrPermissions.attendance.setting.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 // {
                 //   title: 'Shift Management',
@@ -279,6 +300,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+A+4+2',
                   shortcutKeyName: 'Alt+H+A+4+2',
                   permissionName: hrPermissions.attendance.setting.leaveType,
+                  icon: menuIconView('mdi:format-list-checks'),
                 },
                 {
                   title: 'Leave Policy',
@@ -287,6 +309,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+A+4+3',
                   shortcutKeyName: 'Alt+H+A+4+3',
                   permissionName: hrPermissions.attendance.setting.leavePolicy,
+                  icon: menuIconView('mdi:file-document-edit-outline'),
                 },
                 {
                   title: 'Attendance Configuration',
@@ -295,6 +318,7 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+A+4+4',
                   shortcutKeyName: 'Alt+H+A+4+4',
                   permissionName: hrPermissions.attendance.setting.attendanceConfiguration,
+                  icon: menuIconView('mdi:cogs'),
                 },
               ],
             },
@@ -309,6 +333,7 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+M',
           shortcutKeyName: 'Alt+H+M',
           permissionName: hrPermissions.professionalManagement,
+          icon: menuIconView('mdi:briefcase-outline'),
         },
         {
           title: 'Reports',
@@ -317,6 +342,7 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+R',
           shortcutKeyName: 'Alt+H+R',
           permissionName: hrPermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Events & Holidays',
@@ -324,12 +350,14 @@ const hrModule = (isDdvs: boolean) => ({
           path: '/hr/events-holidays',
           shortcutKey: 'Alt+H+V',
           shortcutKeyName: 'Alt+H+V',
+          icon: menuIconView('mdi:calendar-star-outline'),
         },
         {
           title: 'Notification',
           path: hrPaths.notification,
           _action: 'hr-notification',
           permissionName: hrPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
       ],
     },

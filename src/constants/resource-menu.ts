@@ -1,5 +1,6 @@
 import { resourceManagementPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultResourcePermissionName = 'ResourceManagement.';
@@ -80,60 +81,70 @@ const resourceManagement = {
           path: resourcePaths.dashboard,
           _action: 'dashboard',
           permissionName: resourcePermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Inventory Management',
           path: resourcePaths.inventory,
           _action: 'inventory-management',
           permissionName: resourcePermissions.inventory,
+          icon: menuIconView('mdi:warehouse'),
         },
         {
           title: 'My Resources',
           path: resourcePaths.myResources,
           _action: 'my-resources',
           permissionName: resourcePermissions.myResources,
+          icon: menuIconView('mdi:briefcase-outline'),
         },
         {
           title: 'My Resource Query',
           path: resourcePaths.myQuery,
           _action: 'my-resources-request',
           permissionName: resourcePermissions.myQuery,
+          icon: menuIconView('mdi:briefcase-search-outline'),
         },
         {
           title: 'Order Request',
           path: resourcePaths.orderRequest,
           _action: 'order-management',
           permissionName: resourcePermissions.orderRequest,
+          icon: menuIconView('mdi:cart-outline'),
         },
         {
           title: 'Maintenance Request',
           path: resourcePaths.maintenanceRequest,
           _action: 'maintenance-request',
           permissionName: resourcePermissions.maintenanceRequest,
+          icon: menuIconView('mdi:wrench-outline'),
         },
         {
           title: 'Disposed Resources',
           path: resourcePaths.disposed,
           _action: 'disposed-resource',
           permissionName: resourcePermissions.disposed,
+          icon: menuIconView('mdi:delete-restore'),
         },
         {
           title: 'Resource Allocation',
           path: resourcePaths.allocation.root,
           _action: 'resource-allocation',
           permissionName: resourcePermissions.allocation.root,
+          icon: menuIconView('mdi:account-arrow-right-outline'),
           children: [
             {
               title: 'Resource Allocation',
               path: resourcePaths.allocation.allocate,
               _action: 'allocation-of-resources',
               permissionName: resourcePermissions.allocation.allocate,
+              icon: menuIconView('mdi:account-arrow-right-outline'),
             },
             {
               title: 'Assigned Resources',
               path: resourcePaths.allocation.assigned,
               _action: 'assigned-resource',
               permissionName: resourcePermissions.allocation.assigned,
+              icon: menuIconView('mdi:account-check-outline'),
             },
           ],
         },
@@ -142,18 +153,21 @@ const resourceManagement = {
           path: resourcePaths.procurement.root,
           _action: 'procurement-vendors',
           permissionName: resourcePermissions.procurement.root,
+          icon: menuIconView('mdi:truck-delivery-outline'),
           children: [
             {
               title: 'Procurement Request',
               path: resourcePaths.procurement.request,
               _action: 'allocation-of-resources',
               permissionName: resourcePermissions.procurement.request,
+              icon: menuIconView('mdi:file-document-edit-outline'),
             },
             {
               title: 'Request Review & Approval',
               path: resourcePaths.procurement.review,
               _action: 'allocation-of-resources',
               permissionName: resourcePermissions.procurement.review,
+              icon: menuIconView('mdi:file-check-outline'),
             },
           ],
         },
@@ -162,6 +176,7 @@ const resourceManagement = {
           path: resourcePaths.lossDamage,
           _action: 'report-loss-damage',
           permissionName: resourcePermissions.lossDamage,
+          icon: menuIconView('mdi:alert-circle-outline'),
         },
 
         {
@@ -169,60 +184,70 @@ const resourceManagement = {
           path: resourcePaths.incidentReport,
           _action: 'incident-report',
           permissionName: resourcePermissions.incidentReport,
+          icon: menuIconView('mdi:file-alert-outline'),
         },
         {
           title: 'Audit & Verification',
           path: resourcePaths.audit,
           _action: 'audit-verification',
           permissionName: resourcePermissions.audit,
+          icon: menuIconView('mdi:clipboard-check-outline'),
         },
         {
           title: 'Reports & Analytics',
           path: resourcePaths.reports,
           _action: 'reports-analytics',
           permissionName: resourcePermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Settings',
           path: resourcePaths.settings.root,
           _action: 'settings',
           permissionName: resourcePermissions.settings.root,
+          icon: menuIconView('mdi:cog-outline'),
           children: [
             {
               title: 'Resource Category',
               path: resourcePaths.settings.category,
               _action: 'resource-category',
               permissionName: resourcePermissions.settings.category,
+              icon: menuIconView('mdi:shape-outline'),
             },
             {
               title: 'Resource Sub Category',
               path: resourcePaths.settings.subCategory,
               _action: 'resource-sub-category',
               permissionName: resourcePermissions.settings.subCategory,
+              icon: menuIconView('mdi:shape-plus-outline'),
             },
             {
               title: 'Vendor Configuration',
               path: resourcePaths.settings.vendor,
               _action: 'vendor-configuration',
               permissionName: resourcePermissions.settings.vendor,
+              icon: menuIconView('mdi:domain'),
             },
             {
               title: 'Resource Condition Status',
               path: resourcePaths.settings.conditionStatus,
               _action: 'resource-condition-status',
               permissionName: resourcePermissions.settings.conditionStatus,
+              icon: menuIconView('mdi:list-status'),
             },
             {
               title: 'Resource Status',
               path: resourcePaths.settings.resourceStatus,
               _action: 'resource-status',
               permissionName: resourcePermissions.settings.resourceStatus,
+              icon: menuIconView('mdi:toggle-switch-outline'),
             },
             {
               title: 'Measurement Unit',
               path: resourcePaths.settings.measurementUnit,
               _action: 'measurement-unit',
               permissionName: resourcePermissions.settings.measurementUnit,
+              icon: menuIconView('mdi:ruler'),
             },
           ],
         },

@@ -55,127 +55,223 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   return (
     <Card
       sx={{
-        borderRadius: 1,
-        boxShadow: 'var(--shadows-4)',
-        bgcolor: theme.vars.palette.background.paper,
+        borderRadius: 2,
+        boxShadow:
+          theme.customShadows?.z4 ||
+          '0 0 2px 0 alpha(color("common.black"), 0.2), 0 12px 24px -4px alpha(color("common.black"), 0.12)',
+        bgcolor: 'background.paper',
         height: '100%',
-        p: 1.5,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h6" color="primary.main">
-          Payment Term
-        </Typography>
+      {/* HEADER SECTION */}
+      <Box
+        sx={{
+          p: 2.5,
+          pb: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: `1px dashed ${theme.palette.divider}`,
+        }}
+      >
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            Payment Terms
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            Select terms to collect fees
+          </Typography>
+        </Box>
 
         {selectedTerms.length > 0 && (
-          <Box display="flex" alignItems="center" gap={0.2}>
+          <Paper
+            variant="outlined"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              px: 1.5,
+              py: 0.75,
+              borderRadius: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.neutral',
+            }}
+          >
             <Switch
               size="small"
               checked={formik.values.includeCharges}
               onChange={(e) => formik.setFieldValue('includeCharges', e.target.checked)}
+              sx={{ ml: -0.5 }}
             />
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="subtitle2" sx={{ fontSize: '0.875rem' }}>
               Include Charges
             </Typography>
-            <Box ml={0.5} mt={0.6}>
-              <CustomTooltip title="If this switch is enabled, pending charges amount will be added to the payable amount first, and then fee heads amount will be added. If disabled, pending charges amount will be moved to the next payment term.">
-                <Iconify
-                  icon={GlobalIcons.question}
-                  width={16}
-                  height={16}
-                  color="text.secondary"
-                  sx={{ cursor: 'pointer' }}
-                />
-              </CustomTooltip>
-            </Box>
-          </Box>
+            <CustomTooltip title="If enabled, pending charges are added to the payable amount first, followed by fee heads. If disabled, pending charges move to the next term.">
+              <Iconify
+                icon={GlobalIcons.question}
+                width={16}
+                color="text.disabled"
+                sx={{ cursor: 'help', '&:hover': { color: 'text.primary' } }}
+              />
+            </CustomTooltip>
+          </Paper>
         )}
       </Box>
-      <Scrollbar sx={{ height: '400px', p: 1 }}>
-        {terms?.map((term) => (
-          <Paper
-            key={term.id}
-            elevation={4}
-            sx={{
-              p: 1,
-              border: selectedTerms?.some((t) => t.id === term.id) ? '1px solid' : '',
-              borderColor: selectedTerms?.some((t) => t.id === term.id)
-                ? 'primary.main'
-                : 'transparent',
-              mb: 1.5,
-              backgroundColor:
-                FeeCollectionStatusType.Paid === term.status
-                  ? alpha(theme.palette.grey[500], 0.08)
-                  : undefined,
-              borderRadius: 2,
-              cursor: 'pointer',
-            }}
-          >
-            {/* TOP SECTION */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box display="flex" gap={1.2} alignItems="center">
-                <Checkbox
-                  disabled={FeeCollectionStatusType.Paid === term.status}
-                  checked={
-                    selectedTerms?.some((t) => t.id === term.id) ||
-                    FeeCollectionStatusType.Paid === term.status
-                  }
-                  onChange={() => toggleSelect(term)}
-                />
 
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {term.name}
-                  </Typography>
+      {/* LIST SECTION */}
+      <Scrollbar sx={{ flexGrow: 1, p: 2, height: '100%' }}>
+        <Box display="flex" flexDirection="column" gap={1.5}>
+          {terms?.map((term) => {
+            const isSelected = selectedTerms?.some((t) => t.id === term.id);
+            const isPaid = FeeCollectionStatusType.Paid === term.status;
 
-                  <Typography variant="caption" color="text.secondary">
-                    Due: {term.dueDate}
-                  </Typography>
+            return (
+              <Paper
+                key={term.id}
+                elevation={0}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  position: 'relative',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: isSelected ? 'primary.main' : 'transparent',
+                  backgroundColor: isSelected
+                    ? alpha(theme.palette.primary.main, 0.04)
+                    : theme.palette.background.default,
+                  boxShadow: isSelected ? `0 0 0 1px ${theme.palette.primary.main}` : 'none',
+                  ...(isPaid && {
+                    opacity: 0.7,
+                    backgroundColor: alpha(theme.palette.grey[500], 0.04),
+                    borderColor: 'transparent',
+                  }),
+                  '&:hover': {
+                    borderColor: !isPaid ? 'primary.main' : 'transparent',
+                    boxShadow: !isPaid ? theme.customShadows?.z4 : 'none',
+                    transform: !isPaid ? 'translateY(-1px)' : 'none',
+                  },
+                }}
+              >
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  {/* LEFT: Checkbox + Details */}
+                  <Box display="flex" gap={2} alignItems="center">
+                    <Checkbox
+                      disabled={isPaid}
+                      checked={isSelected || isPaid}
+                      onChange={() => toggleSelect(term)}
+                      sx={{
+                        p: 0,
+                        '&.Mui-checked': {
+                          color: 'primary.main',
+                        },
+                      }}
+                    />
+
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 600,
+                          color: isPaid ? 'text.disabled' : 'text.primary',
+                          mb: 0.5,
+                        }}
+                      >
+                        {term.name}
+                      </Typography>
+
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Iconify icon={GlobalIcons.calenderIcon} width={14} color="text.disabled" />
+                        <Typography variant="body2" color="text.secondary">
+                          Due: {term.dueDate}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {/* RIGHT: Status + Amount + Action */}
+                  <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
+                    <Label
+                      color={
+                        FeeCollectionStatusTypeColors[
+                          term.status as FeeCollectionStatusType
+                        ] as LabelColor
+                      }
+                      variant="soft"
+                    >
+                      {FeeCollectionStatusType[term.status as FeeCollectionStatusType]}
+                    </Label>
+
+                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ fontWeight: 700, color: 'text.primary' }}
+                      >
+                        ₹ {term.total.toLocaleString()}
+                      </Typography>
+                      {term.paid > 0 && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ textDecoration: 'line-through' }}
+                        >
+                          ₹ {term.paid.toLocaleString()}
+                        </Typography>
+                      )}
+
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openTermDialog.onTrue();
+                          setSelectedTerm(term);
+                        }}
+                        sx={{
+                          ml: 0.5,
+                          width: 28,
+                          height: 28,
+                          color: 'primary.main',
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                          },
+                        }}
+                      >
+                        <Iconify icon={GlobalIcons.eye} width={16} />
+                      </IconButton>
+                    </Box>
+                  </Box>
                 </Box>
-              </Box>
+              </Paper>
+            );
+          })}
 
-              {/* Amount + Eye Icon */}
-              <Box display="flex" flexDirection="column">
-                {/* Status Label on top */}
-                <Box display="flex" justifyContent="flex-end">
-                  <Label
-                    color={
-                      FeeCollectionStatusTypeColors[
-                        term.status as FeeCollectionStatusType
-                      ] as LabelColor
-                    }
-                  >
-                    {FeeCollectionStatusType[term.status as FeeCollectionStatusType]}
-                  </Label>
-                </Box>
-
-                {/* Amount in center */}
-                <Box display="flex" alignItems="center" gap={0.5}>
-                  <Typography variant="body2" fontWeight={300}>
-                    ₹ {term.paid.toLocaleString()} / ₹ {term.total.toLocaleString()}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    color="default"
-                    onClick={() => {
-                      openTermDialog.onTrue();
-                      setSelectedTerm(term);
-                    }}
-                  >
-                    <Iconify icon={GlobalIcons.eye} width={16} height={16} />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Box>
-          </Paper>
-        ))}
-
-        {showError && errorMessage && (
-          <Typography variant="caption" color="error" mt={1}>
-            {errorMessage}
-          </Typography>
-        )}
+          {showError && errorMessage && (
+            <Paper
+              sx={{
+                p: 1.5,
+                borderRadius: 1,
+                bgcolor: alpha(theme.palette.error.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+              }}
+            >
+              <Iconify icon="solar:danger-circle-bold" color="error.main" width={20} />
+              <Typography variant="subtitle2" color="error.main">
+                {errorMessage}
+              </Typography>
+            </Paper>
+          )}
+        </Box>
       </Scrollbar>
+
       <FeeInstallmentDialog
         open={openTermDialog}
         onClose={() => {

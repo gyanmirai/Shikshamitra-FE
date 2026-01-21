@@ -1,5 +1,6 @@
 import { calendarPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultCalendarPermissionName = 'Calendar.';
@@ -42,6 +43,7 @@ const calendarModule = {
           shortcutKey: 'Alt+C+1',
           shortcutKeyName: 'Alt+C+1',
           permissionName: calendarPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Calendar View',
@@ -50,6 +52,7 @@ const calendarModule = {
           shortcutKey: 'Alt+C+1',
           shortcutKeyName: 'Alt+C+1',
           permissionName: calendarPermissions.view,
+          icon: menuIconView('mdi:calendar-month-outline'),
         },
         {
           title: 'Events',
@@ -58,6 +61,7 @@ const calendarModule = {
           shortcutKey: 'Alt+C+E',
           shortcutKeyName: 'Alt+C+E',
           permissionName: calendarPermissions.events,
+          icon: menuIconView('mdi:calendar-clock-outline'),
         },
         {
           title: 'Holidays',
@@ -66,6 +70,7 @@ const calendarModule = {
           shortcutKey: 'Alt+C+T',
           shortcutKeyName: 'Alt+C+T',
           permissionName: calendarPermissions.holidays,
+          icon: menuIconView('mdi:calendar-heart-outline'),
         },
         {
           title: 'Group Management',
@@ -74,6 +79,7 @@ const calendarModule = {
           shortcutKey: 'Alt+C+G',
           shortcutKeyName: 'Alt+C+G',
           permissionName: calendarPermissions.groupManagement,
+          icon: menuIconView('mdi:account-group-outline'),
         },
         {
           title: 'Settings',
@@ -82,6 +88,7 @@ const calendarModule = {
           shortcutKey: 'Alt+C+S',
           shortcutKeyName: 'Alt+C+S',
           permissionName: calendarPermissions.settings.root,
+          icon: menuIconView('mdi:cog-outline'),
           children: [
             {
               title: 'Event Type',
@@ -90,6 +97,7 @@ const calendarModule = {
               shortcutKey: 'Alt+C+S+4',
               shortcutKeyName: 'Alt+C+S+4',
               permissionName: calendarPermissions.settings.eventType,
+              icon: menuIconView('mdi:calendar-edit-outline'),
             },
             {
               title: 'Holiday Type',
@@ -98,6 +106,7 @@ const calendarModule = {
               shortcutKey: 'Alt+C+S+6',
               shortcutKeyName: 'Alt+C+S+6',
               permissionName: calendarPermissions.settings.holidayType,
+              icon: menuIconView('mdi:calendar-star-outline'),
             },
           ],
         },

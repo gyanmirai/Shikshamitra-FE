@@ -1,5 +1,6 @@
 import { settingPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultInstituteSetupPermissionName = 'InstituteSetup.';
@@ -45,6 +46,7 @@ const instituteSetupModule = {
           shortcutKey: 'Ctrl+A',
           shortcutKeyName: 'Ctrl+A',
           permissionName: instituteSetupPermissions.academicSetup,
+          icon: menuIconView('mdi:school-outline'),
         },
         {
           title: 'Shift Management',
@@ -53,6 +55,7 @@ const instituteSetupModule = {
           shortcutKey: 'Ctrl+S',
           shortcutKeyName: 'Ctrl+S',
           permissionName: instituteSetupPermissions.shiftManagement,
+          icon: menuIconView('mdi:clock-time-three-outline'),
         },
         {
           title: 'Rooms Management',
@@ -61,6 +64,7 @@ const instituteSetupModule = {
           shortcutKey: 'Ctrl+B',
           shortcutKeyName: 'Ctrl+B',
           permissionName: instituteSetupPermissions.roomsManagement.root,
+          icon: menuIconView('mdi:door-closed'),
           children: [
             {
               title: 'Building Management',
@@ -69,6 +73,7 @@ const instituteSetupModule = {
               shortcutKey: 'Ctrl+B+L',
               shortcutKeyName: 'Ctrl+B+L',
               permissionName: instituteSetupPermissions.roomsManagement.building,
+              icon: menuIconView('mdi:office-building'),
             },
             {
               title: 'Room Type Management',
@@ -77,6 +82,7 @@ const instituteSetupModule = {
               shortcutKey: 'Ctrl+B+T',
               shortcutKeyName: 'Ctrl+B+T',
               permissionName: instituteSetupPermissions.roomsManagement.roomType,
+              icon: menuIconView('mdi:door-sliding'),
             },
             {
               title: 'Room Management',
@@ -85,6 +91,7 @@ const instituteSetupModule = {
               shortcutKey: 'Ctrl+B+R',
               shortcutKeyName: 'Ctrl+B+R',
               permissionName: instituteSetupPermissions.roomsManagement.room,
+              icon: menuIconView('mdi:door-closed'),
             },
           ],
         },

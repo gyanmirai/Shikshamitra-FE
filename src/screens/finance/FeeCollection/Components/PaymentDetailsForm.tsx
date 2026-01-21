@@ -263,12 +263,17 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
   }, [JSON.stringify(formik.values.selectedTerms), formik.values.includeCharges]);
 
   return (
-    <Box display="flex" flexDirection="column">
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12 }} mt={1}>
-          <Divider />
-        </Grid>
-        <Grid size={{ xs: 4 }}>
+    <Box
+      display="flex"
+      flexDirection="column"
+      flexGrow={1}
+      sx={{ height: '100%', overflow: 'hidden' }}
+    >
+      <Box mt={1} mb={2}>
+        <Divider />
+      </Box>
+      <Grid container spacing={2} sx={{ flexGrow: 1, minHeight: 0 }}>
+        <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
           <FeeTermsComponent
             formik={formik}
             terms={feeTermsData}
@@ -279,20 +284,23 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
           />
         </Grid>
 
-        <Grid size={{ xs: 8 }}>
+        <Grid size={{ xs: 12, md: 7 }} sx={{ height: '100%' }}>
           <Card
             sx={{
+              display: 'flex',
+              flexDirection: 'column',
               p: 2,
               borderRadius: 1,
               boxShadow: 'var(--shadows-4)',
               bgcolor: theme.vars.palette.background.paper,
               height: '100%',
+              overflow: 'hidden',
             }}
           >
-            <Typography variant="h6" color="primary.main">
+            <Typography variant="h6" color="primary.main" sx={{ mb: 2 }}>
               Payment Details
             </Typography>
-            <Scrollbar sx={{ height: '400px', p: 1 }}>
+            <Scrollbar sx={{ flexGrow: 1, p: 1, height: '100%' }}>
               <Grid container spacing={3} pt={1}>
                 {/* Terms Selection Section */}
 

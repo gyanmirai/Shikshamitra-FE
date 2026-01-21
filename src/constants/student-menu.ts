@@ -1,5 +1,7 @@
 import { studentPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
+
 const defaultStudentPermissionName = 'Students.';
 export const defaultModulePermissionName = 'ShikshaMitra.Module.';
 
@@ -96,12 +98,15 @@ const studentModule = (isDdvs: boolean) => ({
 
           shortcutKey: 'Alt+S+1',
           shortcutKeyName: 'Alt+S+1',
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'Student Enrollment',
           path: studentPaths.enrollment.root,
           _action: 'student-enrollment',
+
           permissionName: studentPermissions.enrollment.root,
+          icon: menuIconView('mdi:account-school-outline'),
 
           children: [
             {
@@ -110,7 +115,9 @@ const studentModule = (isDdvs: boolean) => ({
               _action: 'student-enrollment-inquiry',
               shortcutKey: 'Alt+S+2',
               shortcutKeyName: 'Alt+S+2',
+
               permissionName: studentPermissions.enrollment.inquiry,
+              icon: menuIconView('mdi:clipboard-text-search-outline'),
             },
             {
               title: 'Registration Form Issued',
@@ -120,6 +127,7 @@ const studentModule = (isDdvs: boolean) => ({
               permissionName: studentPermissions.enrollment.registrationFormIssued,
               shortcutKey: 'Alt+S+3',
               shortcutKeyName: 'Alt+S+3',
+              icon: menuIconView('mdi:file-document-edit-outline'),
             },
             {
               title: 'Registration',
@@ -129,6 +137,7 @@ const studentModule = (isDdvs: boolean) => ({
               permissionName: studentPermissions.enrollment.registration,
               shortcutKey: 'Alt+S+4',
               shortcutKeyName: 'Alt+S+4',
+              icon: menuIconView('mdi:account-plus-outline'),
             },
             {
               title: 'Entrance Exam',
@@ -138,6 +147,7 @@ const studentModule = (isDdvs: boolean) => ({
               permissionName: studentPermissions.enrollment.entranceExam,
               shortcutKey: 'Alt+S+5',
               shortcutKeyName: 'Alt+S+5',
+              icon: menuIconView('mdi:clipboard-text-clock-outline'),
             },
 
             {
@@ -148,6 +158,7 @@ const studentModule = (isDdvs: boolean) => ({
               permissionName: studentPermissions.enrollment.admission,
               shortcutKey: 'Alt+S+7',
               shortcutKeyName: 'Alt+S+7',
+              icon: menuIconView('mdi:account-check-outline'),
             },
             {
               title: 'Reports',
@@ -159,6 +170,7 @@ const studentModule = (isDdvs: boolean) => ({
               permissionName: studentPermissions.enrollment.reports,
               shortcutKey: 'Alt+S+8',
               shortcutKeyName: 'Alt+S+8',
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Settings',
@@ -168,6 +180,7 @@ const studentModule = (isDdvs: boolean) => ({
               permissionName: studentPermissions.enrollment.settings.root,
               shortcutKey: 'Alt+S+9',
               shortcutKeyName: 'Alt+S+9',
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Document Types',
@@ -176,6 +189,7 @@ const studentModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+S+9+1',
                   shortcutKeyName: 'Alt+S+9+1',
                   permissionName: studentPermissions.enrollment.settings.documentTypes,
+                  icon: menuIconView('mdi:file-document-outline'),
                 },
                 {
                   title: 'Inquiry Preference',
@@ -184,6 +198,7 @@ const studentModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+S+9+2',
                   shortcutKeyName: 'Alt+S+9+2',
                   permissionName: studentPermissions.enrollment.settings.inquiryPreference,
+                  icon: menuIconView('mdi:tune'),
                 },
                 {
                   title: 'Entrance Exam Slots',
@@ -192,6 +207,7 @@ const studentModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+S+9+3',
                   shortcutKeyName: 'Alt+S+9+3',
                   permissionName: studentPermissions.enrollment.settings.entranceExamSlots,
+                  icon: menuIconView('mdi:calendar-clock-outline'),
                 },
                 // {
                 //   title: 'Registration Form Amount',
@@ -217,7 +233,9 @@ const studentModule = (isDdvs: boolean) => ({
           _action: 'student-records',
           shortcutKey: 'Alt+S+R',
           shortcutKeyName: 'Alt+S+R',
+
           permissionName: studentPermissions.records.root,
+          icon: menuIconView('mdi:folder-account-outline'),
           children: [
             {
               title: 'Student List',
@@ -226,6 +244,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+2',
               shortcutKeyName: 'Alt+S+R+2',
               permissionName: studentPermissions.records.studentList,
+              icon: menuIconView('mdi:format-list-bulleted'),
             },
             {
               title: 'Student I-Card',
@@ -236,6 +255,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+3',
               shortcutKeyName: 'Alt+S+R+3',
               permissionName: studentPermissions.records.studentICard,
+              icon: menuIconView('mdi:card-account-details-outline'),
             },
             {
               title: 'Student Management',
@@ -244,6 +264,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+4',
               shortcutKeyName: 'Alt+S+R+4',
               permissionName: studentPermissions.records.studentManagement,
+              icon: menuIconView('mdi:account-cog-outline'),
             },
             {
               title: 'Certificates',
@@ -252,6 +273,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+5',
               shortcutKeyName: 'Alt+S+R+5',
               permissionName: studentPermissions.records.certificates,
+              icon: menuIconView('mdi:certificate-outline'),
             },
             {
               title: 'Reports',
@@ -261,6 +283,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+6',
               shortcutKeyName: 'Alt+S+R+6',
               permissionName: studentPermissions.records.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Setting',
@@ -269,6 +292,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+R+6',
               shortcutKeyName: 'Alt+S+R+6',
               permissionName: studentPermissions.records.setting,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -276,7 +300,9 @@ const studentModule = (isDdvs: boolean) => ({
           title: 'Attendance',
           path: studentPaths.attendance.root,
           _action: 'student-attendance',
+
           permissionName: studentPermissions.attendance.root,
+          icon: menuIconView('mdi:calendar-check-outline'),
           children: [
             {
               title: 'Mark Attendance',
@@ -285,6 +311,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+A+2',
               shortcutKeyName: 'Alt+S+A+2',
               permissionName: studentPermissions.attendance.markAttendance,
+              icon: menuIconView('mdi:calendar-check-outline'),
             },
             {
               title: 'Leave & Absent',
@@ -293,6 +320,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+A+3',
               shortcutKeyName: 'Alt+S+A+3',
               permissionName: studentPermissions.attendance.leaveAndAbsent,
+              icon: menuIconView('mdi:calendar-remove-outline'),
             },
             {
               title: 'Reports',
@@ -303,6 +331,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+A+4',
               shortcutKeyName: 'Alt+S+A+4',
               permissionName: studentPermissions.attendance.reports,
+              icon: menuIconView('mdi:chart-box-outline'),
             },
             {
               title: 'Setting',
@@ -311,6 +340,7 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+S+A+5',
               shortcutKeyName: 'Alt+S+A+5',
               permissionName: studentPermissions.attendance.settings.root,
+              icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
                   title: 'Leave Type',
@@ -319,6 +349,7 @@ const studentModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+S+A+5+1',
                   shortcutKeyName: 'Alt+S+A+5+1',
                   permissionName: studentPermissions.attendance.settings.leaveType,
+                  icon: menuIconView('mdi:format-list-checks'),
                 },
               ],
             },
@@ -330,7 +361,9 @@ const studentModule = (isDdvs: boolean) => ({
           _action: 'notification',
           shortcutKey: 'Alt+S+N',
           shortcutKeyName: 'Alt+S+N',
+
           permissionName: studentPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
       ],
     },

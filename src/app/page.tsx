@@ -1,6 +1,5 @@
-import React from 'react';
-import Landing from 'src/screens/landing';
+import { redirect } from 'next/navigation';
 
-const HomePage = () => <Landing />;
+const HomePage = () => redirect('/dashboard');
 
 export default HomePage;

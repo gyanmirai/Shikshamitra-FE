@@ -23,18 +23,28 @@ export type CustomTabsProps = TabsProps & {
   };
 };
 
-export function CustomTabs({ children, slotProps, sx, onChange, ...other }: CustomTabsProps) {
+export function CustomTabs({
+  children,
+  slotProps,
+  sx,
+  onChange,
+  orientation = 'horizontal',
+  ...other
+}: CustomTabsProps) {
   const theme = useTheme();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
+  const isVertical = orientation === 'vertical';
+
   return (
     <Tabs
+      orientation={orientation}
       sx={{
         gap: { sm: 0 },
         minHeight: 38,
         flexShrink: 0,
-        alignItems: 'center',
+        alignItems: isVertical ? 'flex-start' : 'center',
         bgcolor: 'background.neutral',
         [`& .${tabsClasses.scroller}`]: {
           p: 1,
@@ -50,8 +60,17 @@ export function CustomTabs({ children, slotProps, sx, onChange, ...other }: Cust
           ...slotProps?.scrollButtons,
         },
         [`& .${tabsClasses.indicator}`]: {
-          py: 1,
-          height: 1,
+          ...(isVertical
+            ? {
+                px: 1,
+                width: 1,
+                left: 0,
+                right: 'auto',
+              }
+            : {
+                py: 1,
+                height: 1,
+              }),
           bgcolor: 'transparent',
           '& > span': {
             width: 1,
@@ -69,6 +88,11 @@ export function CustomTabs({ children, slotProps, sx, onChange, ...other }: Cust
           px: 2,
           zIndex: 1,
           minHeight: 'auto',
+          ...(isVertical && {
+            width: 1,
+            alignItems: 'flex-start',
+            textAlign: 'left',
+          }),
           ...slotProps?.tab,
           [`&.${tabClasses.selected}`]: {
             ...slotProps?.selected,
