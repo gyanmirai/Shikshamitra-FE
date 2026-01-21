@@ -18,7 +18,7 @@ import { ExamForm } from '../entrance-exam';
 import { CommunicationForm } from '../follow-up';
 import RegistrationTable from './registration-table';
 
-import type { IInquiryData } from '../Inquiry';
+import type { IInquiryData } from '../Inquiry/type';
 
 const RegisterScreen = () => {
   // State to store and manage the selected inquiry data for editing
