@@ -1,6 +1,5 @@
 import type { IKanbanTask } from 'src/types/kanban';
 
-import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Chip from '@mui/material/Chip';
@@ -23,7 +22,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import LinearProgress from '@mui/material/LinearProgress';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import { useDateRangePicker, CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 
 import { KanbanDetailsToolbar } from './kanban-details-toolbar';
 import { KanbanInputName } from '../components/kanban-input-name';
@@ -82,7 +80,7 @@ export function KanbanDetails({
 
   const [taskDescription, setTaskDescription] = useState(task.description);
 
-  const rangePicker = useDateRangePicker(dayjs(task.due?.[0]), dayjs(task.due?.[1]));
+  // const rangePicker = useDateRangePicker(dayjs(task.due?.[0]), dayjs(task.due?.[1]));
 
   const handleChangeTaskName = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setTaskName(event.target.value);
@@ -210,7 +208,7 @@ export function KanbanDetails({
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <StyledLabel> Due date </StyledLabel>
 
-        {rangePicker.selected ? (
+        {/* {rangePicker.selected ? (
           <Button size="small" onClick={rangePicker.onOpen}>
             {rangePicker.shortLabel}
           </Button>
@@ -226,9 +224,9 @@ export function KanbanDetails({
               <Iconify icon="mingcute:add-line" />
             </IconButton>
           </Tooltip>
-        )}
+        )} */}
 
-        <CustomDateRangePicker
+        {/* <CustomDateRangePicker
           variant="calendar"
           title="Choose due date"
           startDate={rangePicker.startDate}
@@ -239,7 +237,7 @@ export function KanbanDetails({
           onClose={rangePicker.onClose}
           selected={rangePicker.selected}
           error={rangePicker.error}
-        />
+        /> */}
       </Box>
 
       {/* Priority */}
