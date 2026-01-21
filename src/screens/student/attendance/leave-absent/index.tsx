@@ -61,7 +61,7 @@ import {
 import { AttendanceTypeForm } from '../setting/attendance-type';
 
 import type { IFormValues, ILeaveAbsent } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry';
+import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility
