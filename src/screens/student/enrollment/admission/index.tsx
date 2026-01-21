@@ -69,7 +69,7 @@ import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 import { ViewDocuments } from '../register/RenderDocument';
 
-import type { IInquiryData } from '../Inquiry';
+import type { IInquiryData } from '../Inquiry/type';
 
 const AdmissionScreen = () => {
   const tabs = useTabs(RegistrationStatusType.Pending);
