@@ -56,9 +56,8 @@ import {
   TimelineOppositeContent,
 } from '@mui/lab';
 
-import type { IInquiryData } from '../Inquiry';
-import type { IInquiryResponse } from '../Inquiry/type';
 import type { IGeneralInformationResponse } from '../register/type';
+import type { IInquiryData, IInquiryResponse } from '../Inquiry/type';
 
 const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
