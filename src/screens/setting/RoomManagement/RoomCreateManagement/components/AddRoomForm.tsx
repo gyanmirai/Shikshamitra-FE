@@ -7,13 +7,12 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import CustomServerSelect from 'src/components/custom-select-paginate';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -202,24 +201,25 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.building && !!formik.errors.building}>
-                  <CustomServerSelect
+                  <CustomSelect
                     label="Building *"
-                    value={formik.values.building}
-                    valueKey="id"
+                    name="building"
+                    size="small"
+                    isLoading={isBuldingLoading}
+                    options={buildings}
                     labelKey="buildingName"
-                    pageSize={6}
-                    fetchOptions={useCallback(
-                      async ({ search, page, pageSize }) => {
-                        const res = await triggerGetBuildings({
-                          search,
-                          page,
-                          pageSize,
-                        }).unwrap();
-                        return res;
-                      },
-                      [triggerGetBuildings]
-                    )}
-                    onChange={(id) => formik.setFieldValue('building', id)}
+                    valueKey="id"
+                    value={formik.values.building}
+                    onChange={(value) => {
+                      formik.setFieldValue('building', value);
+                      setFloorsOptions(
+                        buildings?.find((building: any) => building.id === value)?.floors || []
+                      );
+                    }}
+                    onBlur={formik.handleBlur}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                    error={formik.touched.building && Boolean(formik.errors.building)}
+                    helperText={(formik.touched.building && formik.errors.building) as string}
                   />
                 </ShakingTextField>
               </Grid>
