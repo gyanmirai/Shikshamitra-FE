@@ -128,7 +128,6 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   useEffect(() => {
-    console.log('columns=>', columns);
     setTableConfig((pre) => ({
       ...pre,
       columnVisibility: columns.reduce(
@@ -1481,8 +1480,8 @@ const ColumnFilterMenu: React.FC<{
               value={formik.values.filterValue ?? ''}
               onChange={(e) => {
                 // Remove special characters using regex
-                const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                formik.setFieldValue('filterValue', sanitizedValue);
+
+                formik.setFieldValue('filterValue', e.target.value);
               }}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}
               label={`${anchorEl?.column.label} *`}

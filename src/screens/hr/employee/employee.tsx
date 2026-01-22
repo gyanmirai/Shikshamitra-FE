@@ -173,7 +173,6 @@ const HrEmployee = () => {
               { name: 'Employee', href: '/hr/employee/' },
               { name: 'Employee List', href: '/hr/employee/' },
             ]}
-            sx={{ px: 1, mb: 1 }}
             action={
               <Button
                 variant="contained"
@@ -230,7 +229,7 @@ const HrEmployee = () => {
               {
                 id: 'fullName',
                 label: 'Name',
-                minWidth: '12vw',
+                minWidth: '16vw',
                 sticky: true,
                 align: 'left',
                 render(value, row) {

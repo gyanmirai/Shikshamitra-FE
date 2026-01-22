@@ -4,8 +4,8 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
     getSubjectAssignments: builder.query({
-      query: ({ academicMediumId, classId }) => ({
-        url: `/academics/curriculum/classes/${classId}/subject-assignments`,
+      query: ({ academicMediumId, standardId }) => ({
+        url: `/academics/curriculum/${standardId}/subject-assignments`,
         method: 'GET',
       }),
       providesTags: ['SubjectAssignment'],

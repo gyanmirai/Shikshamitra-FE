@@ -59,7 +59,7 @@ function FatherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
         >
@@ -78,7 +78,7 @@ function FatherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
         >
@@ -96,7 +96,7 @@ function FatherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
         >
@@ -114,7 +114,7 @@ function FatherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <CountryComponent
           value={formik.values.fatherCountry}
           onChange={(_e, value) => {
@@ -128,7 +128,7 @@ function FatherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <StateComponent
           value={formik.values.fatherState}
           countryValue={formik.values.fatherCountry}
@@ -142,7 +142,7 @@ function FatherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <CityComponent
           value={formik.values.fatherCity}
           onChange={(_e, value) => {
@@ -155,7 +155,7 @@ function FatherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
         >
@@ -235,7 +235,7 @@ function MotherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
         >
@@ -253,7 +253,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
         >
@@ -271,7 +271,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
         >
@@ -289,7 +289,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <CountryComponent
           value={formik.values.motherCountry}
           onChange={(_e, value) => {
@@ -303,7 +303,7 @@ function MotherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <StateComponent
           onChange={(_e, value) => {
             formik.setFieldValue('motherState', value);
@@ -317,7 +317,7 @@ function MotherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <CityComponent
           onChange={(_e, value) => formik.setFieldValue('motherCity', value)}
           disabled={!!disabled}
@@ -328,7 +328,7 @@ function MotherAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.motherPinCode && Boolean(formik.errors.motherPinCode)}
         >
@@ -406,7 +406,7 @@ function SpouseAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.spouseAddress1 && Boolean(formik.errors.spouseAddress1)}
         >
@@ -424,7 +424,7 @@ function SpouseAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.spouseAddress2 && Boolean(formik.errors.spouseAddress2)}
         >
@@ -442,7 +442,7 @@ function SpouseAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.spouseAddress3 && Boolean(formik.errors.spouseAddress3)}
         >
@@ -460,7 +460,7 @@ function SpouseAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <CountryComponent
           value={formik.values.spouseCountry}
           onChange={(_e, value) => {
@@ -474,7 +474,7 @@ function SpouseAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <StateComponent
           onChange={(_e, value) => {
             formik.setFieldValue('spouseState', value);
@@ -488,7 +488,7 @@ function SpouseAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <CityComponent
           onChange={(_e, value) => formik.setFieldValue('spouseCity', value)}
           disabled={!!disabled}
@@ -499,7 +499,7 @@ function SpouseAddressComponent(props: any) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched.spousePinCode && Boolean(formik.errors.spousePinCode)}
         >
@@ -573,7 +573,7 @@ const FamilyMemberSection = ({
       }
     >
       {/* Name Field */}
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched[`${type}Name`] && Boolean(formik.errors[`${type}Name`])}
         >
@@ -599,7 +599,7 @@ const FamilyMemberSection = ({
       </Grid>
 
       {/* Occupation Field */}
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           name={`${type}Occupation`}
           value={formik.values[`${type}Occupation`]}
@@ -619,7 +619,7 @@ const FamilyMemberSection = ({
       </Grid>
 
       {/* Contact Field */}
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ShakingTextField
           error={formik.touched[`${type}ContactNo`] && Boolean(formik.errors[`${type}ContactNo`])}
         >

@@ -53,4 +53,5 @@ export const {
   useUpdateRoomTypeMutation,
   useDeleteRoomTypeMutation,
   useGetRoomTypeByIdQuery,
+  useLazyGetRoomTypesQuery,
 } = roomTypeApi;

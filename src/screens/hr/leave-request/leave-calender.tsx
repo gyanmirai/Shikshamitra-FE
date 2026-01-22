@@ -58,6 +58,7 @@ const LeaveCalender = (props: TabComponentType) => {
         employeeCode: i.employeeCode,
         textColor: i.leavePolicy.color,
         title: `${i.leaveType} [${i.name}] ${i.status}`,
+        reason: i.reason || i.description.replace(/<[^>]+>/g, ''),
         description: i.description.replace(/<[^>]+>/g, ''),
         viewStartDate: i.startDate,
         viewEndDate: i.endDate,
@@ -169,7 +170,7 @@ export default LeaveCalender;
 
 export const LeaveRequestForm = ({ editData }: any) => {
   const isView = useBoolean();
-  const { data: leavePolicyData, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
+  const { isLoading: isLeavePolicyLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveByIdQuery,
     params: { id: editData?.id },
@@ -251,11 +252,16 @@ export const LeaveRequestForm = ({ editData }: any) => {
 
         <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            Description
+            Reason
           </Typography>
         </Grid>
         <Grid size={{ xs: 8 }}>
-          <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
+          <Typography variant="body2">
+            {editData?.reason ||
+              (editData?.description && (
+                <span dangerouslySetInnerHTML={{ __html: editData.description }} />
+              ))}
+          </Typography>
         </Grid>
 
         {editData?.rejectionReason && (

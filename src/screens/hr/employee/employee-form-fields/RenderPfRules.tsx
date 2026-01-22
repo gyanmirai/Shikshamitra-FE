@@ -26,7 +26,6 @@ export const RenderPfRules = ({ disabled, formik }: RenderPfRulesProps) => {
           <TextField
             {...params}
             label="PF Rule"
-            placeholder="Search PF Rule"
             size="small"
             fullWidth
             sx={{ width: '100%', minWidth: 'unset' }}

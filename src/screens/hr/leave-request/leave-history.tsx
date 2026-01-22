@@ -154,7 +154,7 @@ const LeaveHistory = (props: any) => {
           endDate: end.format('DD-MM-YYYY'),
           totalDays: item.totalDays,
           organization: item.organization,
-          description: item.description,
+          reason: item.reason || item.description,
           remarks: item.remarks,
           status: item.status,
         };
@@ -300,8 +300,8 @@ const LeaveHistory = (props: any) => {
             minWidth: '14vw',
           },
           {
-            label: 'Description',
-            id: 'description',
+            label: 'Reason',
+            id: 'reason',
             align: 'left',
             minWidth: '14vw',
           },

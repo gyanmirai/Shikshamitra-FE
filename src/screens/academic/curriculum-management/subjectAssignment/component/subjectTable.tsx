@@ -20,9 +20,10 @@ import {
 import type { ISubjectTableProps } from './type';
 
 const SubjectTable = ({
+  isLoading,
   classId,
   addSubjectDialog,
-  data,
+  subjectTableData,
   setEditData,
   onView,
   onEdit,
@@ -31,7 +32,7 @@ const SubjectTable = ({
 }: ISubjectTableProps) => {
   const theme = useTheme();
   function getSubjectTableData(formDataArray: any[]) {
-    return formDataArray.map((item: any) => {
+    return formDataArray?.map((item: any) => {
       // Core Subject
       if (item.subjectType === 0) {
         return {
@@ -70,6 +71,8 @@ const SubjectTable = ({
       return item;
     });
   }
+
+  console.log('formDataArray---', subjectTableData);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -216,6 +219,7 @@ const SubjectTable = ({
   return (
     <CustomizableTable
       tableId="subject-table"
+      isLoading={isLoading}
       noDataText={
         <>
           No Subject data found
@@ -239,7 +243,7 @@ const SubjectTable = ({
         </>
       }
       columns={columns}
-      data={getSubjectTableData(data)}
+      data={getSubjectTableData(subjectTableData) || []}
     />
   );
 };
