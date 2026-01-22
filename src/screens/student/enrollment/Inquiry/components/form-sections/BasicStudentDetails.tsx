@@ -11,18 +11,17 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
+  Card,
   Grid,
   Radio,
+  Divider,
   TextField,
-  FormLabel,
   RadioGroup,
   Typography,
   FormControl,
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
-
-import { CollapsibleFormSection } from '../common/CollapsibleFormSection';
 
 import type { IInquiryFormValues } from '../../type';
 
@@ -56,148 +55,194 @@ export const BasicStudentDetails = ({
   const { academicYear, boards, board, classes } = data;
   const { yearLoading, boardLoading, classLoading, isGetLoading } = loading;
 
-  const basicDetailsError =
-    (!!touched.academicYear && !!errors.academicYear) ||
-    (!!touched.board && !!errors.board) ||
-    (!!touched.medium && !!errors.medium) ||
-    (!!touched.class && !!errors.class) ||
-    (!!touched.firstName && !!errors.firstName) ||
-    (!!touched.lastName && !!errors.lastName) ||
-    (!!touched.dateOfBirth && !!errors.dateOfBirth) ||
-    (!!touched.gender && !!errors.gender);
-
   if (isGetLoading) {
-    // Return skeleton or null, managed by parent usually but sections can have internal loading states
-    // The parent implementation used an array of skeletons. We can do that here or let parent handle high level loading.
-    // For now, let's render the form and use skeletons for fields if needed, or rely on parent blocking.
-    // The original code rendered skeletons INSIDE the section.
     return (
-      <CollapsibleFormSection
-        title="Basic Student Details"
-        defaultExpanded
-        step="Step 1 of 4"
-        error={false}
-      >
-        Loading...
-      </CollapsibleFormSection>
+      <>
+        <Card sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" fontWeight={600} color="text.primary">
+            Inquiry & Admission
+          </Typography>
+          <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+          <Typography color="text.secondary">Loading...</Typography>
+        </Card>
+        <Card sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" fontWeight={600} color="text.primary">
+            Student
+          </Typography>
+          <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+          <Typography color="text.secondary">Loading...</Typography>
+        </Card>
+      </>
     );
   }
 
   return (
-    <CollapsibleFormSection
-      title="Basic Student Details"
-      defaultExpanded
-      step="Step 1 of 4"
-      error={basicDetailsError}
-    >
-      <Grid size={{ xs: 12, md: 3 }}>
-        <ShakingTextField error={!!(touched.academicYear && errors.academicYear) || false}>
-          <CustomSelect
-            name="academicYear"
-            label="Academic Year *"
-            isLoading={yearLoading}
-            options={academicYear?.items || []}
-            value={values.academicYear}
-            labelKey="name"
-            valueKey="id"
-            disabled // Auto-filled behavior
-            onChange={(value) => {
-              // const findBoards = board?.items.filter(
-              //   (item: Board) => item.academicYearId === value
-              // );
-              // This logic is duplicated slightly from hook, but onChange handlers in UI usually trigger state updates
-              // Ideally the hook handles the state update reactive to values.academicYear
-              setFieldValue('board', '');
-              setFieldValue('medium', '');
-              setFieldValue('class', '');
-              setFieldValue('academicYear', value);
-            }}
-            error={!!(touched.academicYear && errors.academicYear) || false}
-            helperText={(touched.academicYear && errors.academicYear) || 'Auto-filled'}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, md: 3 }}>
-        <ShakingTextField error={!!(touched.board && errors.board) || false}>
-          <CustomSelect
-            name="board"
-            label="Board *"
-            isLoading={boardLoading}
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={values.board}
-            onChange={(value) => {
-              setFieldValue('medium', '');
-              setFieldValue('class', '');
-              setFieldValue('board', value);
-            }}
-            error={!!(touched.board && errors.board) || false}
-            helperText={(touched.board && errors.board) || ''}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            disabled={!values.academicYear}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, md: 3 }}>
-        <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
-          <CustomSelect
-            name="medium"
-            label="Medium *"
-            disabled={!values.board}
-            options={
-              board?.items?.find((item: Board) => item.id === values.board)?.educationMediums || []
-            }
-            value={values.medium}
-            labelKey="name"
-            valueKey="id"
-            onChange={async (value) => {
-              setFieldValue('medium', value);
-              setFieldValue('class', '');
-              setFieldTouched('medium', false);
-              await actions.getClassByMedium(value as string);
-            }}
-            error={!!(touched.medium && errors.medium) || false}
-            helperText={(touched.medium && errors.medium) || ''}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, md: 3 }}>
-        <ShakingTextField error={!!(touched.class && errors.class) || false}>
-          <CustomSelect
-            name="class"
-            label="Class Seeking Admission *"
-            disabled={!values.medium}
-            isLoading={classLoading}
-            labelKey="name"
-            valueKey="id"
-            options={classes || []}
-            value={values.class}
-            onChange={(value) => {
-              setFieldValue('class', value);
-            }}
-            error={!!(touched.class && errors.class) || false}
-            helperText={(touched.class && errors.class) || ''}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          />
-        </ShakingTextField>
-      </Grid>
-
-      <Grid size={{ xs: 12 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
-          Student Name
+    <>
+      {/* Section 1: Inquiry & Admission */}
+      <Card
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 2,
+          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Typography variant="h6" fontWeight={600} color="text.primary">
+          Inquiry & Admission
         </Typography>
-        <Box display="flex" gap={2}>
-          <Box flex={1}>
-            <ShakingTextField error={!!(touched.firstName && errors.firstName) || false}>
+        <Divider sx={{ my: 2, borderStyle: 'dashed', borderColor: 'divider' }} />
+
+        <Grid container spacing={2.5}>
+          {/* Academic Year */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ShakingTextField error={!!(touched.academicYear && errors.academicYear)}>
+              <CustomSelect
+                name="academicYear"
+                label="Academic Year *"
+                isLoading={yearLoading}
+                options={academicYear?.items || []}
+                value={values.academicYear}
+                labelKey="name"
+                valueKey="id"
+                disabled
+                onChange={(value) => {
+                  setFieldValue('board', '');
+                  setFieldValue('medium', '');
+                  setFieldValue('class', '');
+                  setFieldValue('academicYear', value);
+                }}
+                error={!!(touched.academicYear && errors.academicYear)}
+                helperText={(touched.academicYear && errors.academicYear) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Board */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ShakingTextField error={!!(touched.board && errors.board)}>
+              <CustomSelect
+                name="board"
+                label="Board *"
+                isLoading={boardLoading}
+                options={boards || []}
+                labelKey="name"
+                valueKey="id"
+                value={values.board}
+                onChange={(value) => {
+                  setFieldValue('medium', '');
+                  setFieldValue('class', '');
+                  setFieldValue('board', value);
+                }}
+                error={!!(touched.board && errors.board)}
+                helperText={(touched.board && errors.board) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                disabled={!values.academicYear}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Medium */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ShakingTextField error={!!(touched.medium && errors.medium)}>
+              <CustomSelect
+                name="medium"
+                label="Medium *"
+                disabled={!values.board}
+                options={
+                  board?.items?.find((item: Board) => item.id === values.board)?.educationMediums ||
+                  []
+                }
+                value={values.medium}
+                labelKey="name"
+                valueKey="id"
+                onChange={async (value) => {
+                  setFieldValue('medium', value);
+                  setFieldValue('class', '');
+                  setFieldTouched('medium', false);
+                  await actions.getClassByMedium(value as string);
+                }}
+                error={!!(touched.medium && errors.medium)}
+                helperText={(touched.medium && errors.medium) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Class */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ShakingTextField error={!!(touched.class && errors.class)}>
+              <CustomSelect
+                name="class"
+                label="Class *"
+                disabled={!values.medium}
+                isLoading={classLoading}
+                labelKey="name"
+                valueKey="id"
+                options={classes || []}
+                value={values.class}
+                onChange={(value) => {
+                  setFieldValue('class', value);
+                }}
+                error={!!(touched.class && errors.class)}
+                helperText={(touched.class && errors.class) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* previous school */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ShakingTextField error={!!(touched.previousSchool && errors.previousSchool)}>
+              <TextField
+                name="previousSchool"
+                fullWidth
+                size="small"
+                label="Previous School"
+                value={values.previousSchool}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  if (value.length <= 50) {
+                    setFieldValue('previousSchool', value);
+                  }
+                }}
+                error={!!(touched.previousSchool && errors.previousSchool)}
+                helperText={(touched.previousSchool && errors.previousSchool) || ''}
+                inputProps={{ maxLength: 50 }}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </Card>
+
+      {/* Section 2: Student */}
+      <Card
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 2,
+          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Typography variant="h6" fontWeight={600} color="text.primary">
+          Student
+        </Typography>
+        <Divider sx={{ my: 2, borderStyle: 'dashed', borderColor: 'divider' }} />
+
+        <Grid container spacing={2.5}>
+          {/* First Name */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <ShakingTextField error={!!(touched.firstName && errors.firstName)}>
               <TextField
                 fullWidth
                 size="small"
                 name="firstName"
                 label="First Name *"
-                error={!!(touched.firstName && errors.firstName) || false}
+                error={!!(touched.firstName && errors.firstName)}
                 helperText={(touched.firstName && errors.firstName) || ''}
                 value={values.firstName}
                 onChange={(e) => {
@@ -208,9 +253,11 @@ export const BasicStudentDetails = ({
                 inputProps={{ maxLength: 30 }}
               />
             </ShakingTextField>
-          </Box>
-          <Box flex={1}>
-            <ShakingTextField error={!!(touched.middleName && errors.middleName) || false}>
+          </Grid>
+
+          {/* Middle Name */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <ShakingTextField error={!!(touched.middleName && errors.middleName)}>
               <TextField
                 fullWidth
                 size="small"
@@ -227,9 +274,11 @@ export const BasicStudentDetails = ({
                 inputProps={{ maxLength: 30 }}
               />
             </ShakingTextField>
-          </Box>
-          <Box flex={1}>
-            <ShakingTextField error={!!(touched.lastName && errors.lastName) || false}>
+          </Grid>
+
+          {/* Last Name */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <ShakingTextField error={!!(touched.lastName && errors.lastName)}>
               <TextField
                 fullWidth
                 size="small"
@@ -246,96 +295,76 @@ export const BasicStudentDetails = ({
                 inputProps={{ maxLength: 30 }}
               />
             </ShakingTextField>
-          </Box>
-        </Box>
-      </Grid>
+          </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(touched.dateOfBirth && errors.dateOfBirth) || false}>
-          <DatePicker
-            label="Date of Birth *"
-            name="dateOfBirth"
-            value={values.dateOfBirth}
-            format="DD-MM-YYYY"
-            onChange={(newValue) => {
-              const date = newValue?.format();
-              if (date) {
-                const age = calculateAge(date);
-                setFieldValue('age', age);
-              }
-              setFieldValue('dateOfBirth', newValue);
-            }}
-            disableFuture
-            minDate={dayjs('1947-01-01')}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-                error: !!(touched.dateOfBirth && errors.dateOfBirth) || false,
-                helperText: (touched.dateOfBirth && errors.dateOfBirth) || '',
-              },
-            }}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
-          <Box>
-            <FormControl
-              component="fieldset"
-              fullWidth
-              sx={{
-                border: (theme) =>
-                  `1px solid ${touched.gender && errors.gender ? theme.palette.error.main : theme.palette.divider}`,
-                borderRadius: 1,
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-              error={!!(touched.gender && errors.gender) || false}
-            >
-              <FormLabel id="gender-group" sx={{ mr: 2, fontSize: '0.875rem' }}>
-                Gender *
-              </FormLabel>
-              <RadioGroup
-                row
-                aria-labelledby="gender-group"
-                name="gender"
-                value={values.gender}
-                onChange={handleChange}
-              >
-                <FormControlLabel value={0} control={<Radio size="small" />} label="Male" />
-                <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
-              </RadioGroup>
-            </FormControl>
-            {!!(touched.gender && errors.gender) && (
-              <FormHelperText error sx={{ px: 1, ml: '0 !important' }}>
-                {errors.gender}
-              </FormHelperText>
-            )}
-          </Box>
-        </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(touched.previousSchool && errors.previousSchool) || false}>
-          <TextField
-            fullWidth
-            value={values.previousSchool}
-            onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-              if (onlyLetters.length <= 50) setFieldValue('previousSchool', onlyLetters);
-            }}
-            inputProps={{ maxLength: 50 }}
-            size="small"
-            name="previousSchool"
-            label="Previous School (Optional)"
-            placeholder="e.g. St. Xavier's High School"
-            error={!!touched.previousSchool && !!errors.previousSchool}
-            helperText={touched.previousSchool && errors.previousSchool}
-          />
-        </ShakingTextField>
-      </Grid>
-    </CollapsibleFormSection>
+          {/* Date of Birth */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <ShakingTextField error={!!(touched.dateOfBirth && errors.dateOfBirth)}>
+              <DatePicker
+                label="Date of Birth *"
+                name="dateOfBirth"
+                value={values.dateOfBirth}
+                format="DD-MM-YYYY"
+                onChange={(newValue) => {
+                  const date = newValue?.format();
+                  if (date) {
+                    const age = calculateAge(date);
+                    setFieldValue('age', age);
+                  }
+                  setFieldValue('dateOfBirth', newValue);
+                }}
+                disableFuture
+                minDate={dayjs('1947-01-01')}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: !!(touched.dateOfBirth && errors.dateOfBirth),
+                    helperText: (touched.dateOfBirth && errors.dateOfBirth) || '',
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Gender */}
+          <Grid size={{ xs: 12, sm: 8 }}>
+            <ShakingTextField error={!!(touched.gender && errors.gender)}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, height: 40 }}>
+                <Typography
+                  variant="body2"
+                  color={touched.gender && errors.gender ? 'error.main' : 'text.secondary'}
+                  sx={{ fontWeight: 500 }}
+                >
+                  Gender *
+                </Typography>
+                <FormControl component="fieldset" error={!!(touched.gender && errors.gender)}>
+                  <RadioGroup
+                    row
+                    aria-labelledby="gender-group"
+                    name="gender"
+                    value={values.gender}
+                    onChange={handleChange}
+                  >
+                    <FormControlLabel
+                      value={0}
+                      control={<Radio size="small" />}
+                      label="Male"
+                      sx={{ mr: 3 }}
+                    />
+                    <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+              {!!(touched.gender && errors.gender) && (
+                <FormHelperText error sx={{ ml: 0 }}>
+                  {errors.gender}
+                </FormHelperText>
+              )}
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </Card>
+    </>
   );
 };

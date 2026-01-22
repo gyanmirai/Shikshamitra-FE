@@ -55,8 +55,9 @@ export const useInquiryTableColumns = ({
         minWidth: '150px',
         align: 'left',
         sticky: true,
+        filterType: 'string',
       },
-      { id: 'standard', label: 'Class', align: 'left' },
+      { id: 'standard', label: 'Class', align: 'left', filterType: 'string' },
       {
         id: 'dobValue',
         label: 'Date of Birth',
@@ -64,7 +65,7 @@ export const useInquiryTableColumns = ({
         align: 'left',
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left', minWidth: '120px' },
+      { id: 'age', label: 'Age', align: 'left', minWidth: '120px', filterType: 'string' },
       {
         id: 'doiValue',
         label: 'Date of Inquiry',
@@ -85,24 +86,28 @@ export const useInquiryTableColumns = ({
         label: 'Address',
         minWidth: '200px',
         align: 'left',
+        filterType: 'string',
       },
       {
         id: 'primaryContactNo',
         label: 'Primary Contact No.',
         minWidth: '180px',
         align: 'left',
+        filterType: 'string',
       },
       {
         id: 'secondaryContactNo',
         label: 'Secondary Contact No.',
         minWidth: '200px',
         align: 'left',
+        filterType: 'string',
       },
       {
         id: 'previousSchool',
         label: 'Previous School',
         minWidth: '150px',
         align: 'left',
+        filterType: 'string',
         render(value: string) {
           return value || '-';
         },
@@ -112,6 +117,7 @@ export const useInquiryTableColumns = ({
         label: 'Inquiry Preference',
         minWidth: '11vw',
         align: 'left',
+        filterType: 'string',
       },
       {
         id: 'nextReminderDate',

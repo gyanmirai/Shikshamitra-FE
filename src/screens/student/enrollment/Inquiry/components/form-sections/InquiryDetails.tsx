@@ -1,12 +1,10 @@
 import type { FormikProps } from 'formik';
 
-import { Grid } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
+import { Card, Grid, Divider, Typography } from '@mui/material';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
-
-import { CollapsibleFormSection } from '../common/CollapsibleFormSection';
 
 import type { IInquiryFormValues } from '../../type';
 
@@ -29,60 +27,76 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
   const { inquiryPreference } = data;
   const { inquiryPrefrenceLoading, isGetLoading } = loading;
 
-  const inquiryDetailsError =
-    (!!touched.dateOfInquiry && !!errors.dateOfInquiry) ||
-    (!!touched.inquiryPreferences && !!errors.inquiryPreferences);
-
   if (isGetLoading) {
     return (
-      <CollapsibleFormSection title="Inquiry Details" step="Step 2 of 4" error={false}>
-        Loading...
-      </CollapsibleFormSection>
+      <Card sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Typography variant="h6" fontWeight={600} color="text.primary">
+          Inquiry Details
+        </Typography>
+        <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+        <Typography color="text.secondary">Loading...</Typography>
+      </Card>
     );
   }
 
   return (
-    <CollapsibleFormSection title="Inquiry Details" step="Step 2 of 4" error={inquiryDetailsError}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ShakingTextField error={!!(touched.dateOfInquiry && errors.dateOfInquiry) || false}>
-          <DatePicker
-            label="Date of Inquiry"
-            name="dateOfInquiry"
-            value={values.dateOfInquiry}
-            format="DD-MM-YYYY"
-            readOnly
-            onChange={(newValue) => {
-              setFieldValue('dateOfInquiry', newValue);
-              setFieldTouched('dateOfInquiry', true);
+    <Card
+      sx={{
+        p: 3,
+        mb: 3,
+        borderRadius: 2,
+        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+        border: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Typography variant="h6" fontWeight={600} color="text.primary">
+        Inquiry Details
+      </Typography>
+      <Divider sx={{ my: 2, borderStyle: 'dashed', borderColor: 'divider' }} />
+
+      <Grid container spacing={2.5}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ShakingTextField error={!!(touched.dateOfInquiry && errors.dateOfInquiry)}>
+            <DatePicker
+              label="Date of Inquiry"
+              name="dateOfInquiry"
+              value={values.dateOfInquiry}
+              format="DD-MM-YYYY"
+              readOnly
+              onChange={(newValue) => {
+                setFieldValue('dateOfInquiry', newValue);
+                setFieldTouched('dateOfInquiry', true);
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
+                  error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
+                },
+              }}
+            />
+          </ShakingTextField>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <CustomSelect
+            label="Inquiry Preference"
+            name="inquiryPreferences"
+            isLoading={inquiryPrefrenceLoading}
+            options={inquiryPreference?.items || []}
+            value={values.inquiryPreferences}
+            labelKey="preferenceName"
+            valueKey="id"
+            onChange={(value) => {
+              setFieldValue('inquiryPreferences', value);
+              setFieldTouched('inquiryPreferences', true);
             }}
-            slotProps={{
-              textField: {
-                size: 'small',
-                fullWidth: true,
-                helperText: touched.dateOfInquiry && (errors.dateOfInquiry as string),
-                error: touched.dateOfInquiry && Boolean(errors.dateOfInquiry),
-              },
-            }}
+            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            addOtherItemOnClick={actions.dialog.onTrue}
           />
-        </ShakingTextField>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <CustomSelect
-          label="Inquiry Source / Preference"
-          name="inquiryPreferences"
-          isLoading={inquiryPrefrenceLoading}
-          options={inquiryPreference?.items || []}
-          value={values.inquiryPreferences}
-          labelKey="preferenceName"
-          valueKey="id"
-          onChange={(value) => {
-            setFieldValue('inquiryPreferences', value);
-            setFieldTouched('inquiryPreferences', true);
-          }}
-          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          addOtherItemOnClick={actions.dialog.onTrue}
-        />
-      </Grid>
-    </CollapsibleFormSection>
+    </Card>
   );
 };
