@@ -62,6 +62,11 @@ const HrEmployee = () => {
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
+  const [employeeParams, setEmployeeParams] = useState({
+    page: 1,
+    pageSize: 10,
+  });
+
   const payrollDialog = useBoolean();
 
   const actions = useCallback(
@@ -101,7 +106,12 @@ const HrEmployee = () => {
     data: employee,
     isLoading,
     refetch,
-  } = useQueryAndMutation({ type: 'query', currentQueryAndMutation: useGetEmployeeQuery });
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeQuery,
+    params: employeeParams,
+  });
   const handleClose = useCallback(
     (_e?: any, isSubmit?: boolean) => {
       if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -210,14 +220,24 @@ const HrEmployee = () => {
               </>
             }
             onSendNotification={handlerSendNotification}
-            isLoading={isLoading}
+            isLoading={isLoading || isFetching}
             tableId="employee-table"
+            serverSidePagination
+            totalCount={employee?.totalCount}
+            onServerPagination={(page, rowsPerPage) => {
+              setEmployeeParams((pre) => ({
+                ...pre,
+                page,
+                pageSize: rowsPerPage,
+              }));
+            }}
             columns={[
               {
                 id: 'roleValue',
                 label: 'Role',
                 align: 'left',
                 sticky: true,
+                minWidth: '10vw',
                 render(value, row) {
                   return (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -310,7 +330,7 @@ const HrEmployee = () => {
                 isSort: false,
                 sticky: true,
                 isFilter: false,
-                minWidth: '80px',
+                minWidth: '90px',
                 render(value, row) {
                   return (
                     <ThreeDotsActions

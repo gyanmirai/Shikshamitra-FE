@@ -25,7 +25,14 @@ export const employeeApi = createApi({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
-      query: () => ({ url: '/employees', redirect: 'follow' }),
+      query: ({ page = 1, pageSize = 10 }) => ({
+        url: `/employees`,
+        redirect: 'follow',
+        params: {
+          page,
+          pageSize,
+        },
+      }),
       providesTags: ['Employee'],
     }),
     getEmployeeById: builder.query({

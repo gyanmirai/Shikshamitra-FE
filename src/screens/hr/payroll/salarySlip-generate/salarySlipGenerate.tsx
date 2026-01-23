@@ -13,8 +13,9 @@ import { formatCurrency } from 'src/utils/cureencyFormater';
 import { LoadingScreen } from 'src/components/loading-screen';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useLazyGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/employee-salary-slip/employee-salary-slip-api';
 import {
   Box,
@@ -24,10 +25,8 @@ import {
   Button,
   Avatar,
   Divider,
-  TextField,
   CardHeader,
   Typography,
-  Autocomplete,
 } from '@mui/material';
 
 const PaySlipGenerationScreen = () => {
@@ -46,9 +45,9 @@ const PaySlipGenerationScreen = () => {
     setOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium]);
 
-  const { data: employees, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
+  const [getEmployees, { data: employees, isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEmployeeQuery,
   });
 
   const [
@@ -94,16 +93,34 @@ const PaySlipGenerationScreen = () => {
         spacing={2}
       >
         <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" flex={1}>
-          <Autocomplete
-            loading={isLoading}
-            fullWidth
+          <PaginatedSearchSelect
+            label="Select Employee"
+            fetchOptions={async (query, page) => {
+              const res = await getEmployees({ page, pageSize: 10 }).unwrap();
+              const hasMore = res.currentPage !== res.totalPages;
+              return {
+                data: res?.items?.map((item: any) => ({
+                  label: item.fullName,
+                  id: item.id,
+                })),
+                hasMore,
+              };
+            }}
             value={employee}
-            onChange={(_, value) => setEmployee(value)}
-            options={employees?.items || []}
-            getOptionLabel={(option: any) => option?.fullName || ''}
             isOptionEqualToValue={(option, value) => option.id === value.id}
-            renderInput={(params) => <TextField {...params} label="Select Employee" />}
-            sx={{ maxWidth: 300, minWidth: 200 }}
+            renderOption={(prop, option: any) => (
+              <li {...prop} key={option.id}>
+                {option.label}
+              </li>
+            )}
+            getOptionLabel={(option: any) => option?.label || ''}
+            minChars={2}
+            onChange={(_, value) => setEmployee(value)}
+            debounceMs={400}
+            placeholder="Search by name or email"
+            helperText="Start typing to search for employees"
+            error={false}
+            sx={{ maxWidth: 300, minWidth: 250 }}
             size="small"
           />
 

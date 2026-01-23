@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { ReactNode } from 'react';
 import type { BoxProps, TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
 
 // Add this interface to your existing interfaces
@@ -37,6 +38,10 @@ export interface ICustomizableTableProps {
   columns: IColumn[];
   data: IData[];
   serverSide?: boolean;
+  serverSidePagination?: boolean;
+  serverSideSearch?: boolean;
+  serverSideSort?: boolean;
+  serverSideFilter?: boolean;
   onServerSort?: (
     column: string,
     sortData: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
@@ -73,6 +78,7 @@ export type IParams = {
     type: string;
     value: string;
     valueType: string;
+    label?: ReactNode;
   }>;
   sorts: Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>;
   dateFilter: null | Dayjs;
