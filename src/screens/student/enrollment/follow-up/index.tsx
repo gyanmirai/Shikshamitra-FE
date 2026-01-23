@@ -26,6 +26,11 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
+import {
   Box,
   Grid,
   Paper,
@@ -35,11 +40,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  FollowUpStatusType,
-  FollowUpStatusTypeColors,
-  FollowUpStatusTypeOptions,
-} from 'src/enums/inquiry-status-type';
 import {
   useGetFollowUpQuery,
   useAddFollowUpMutation,
@@ -263,7 +263,7 @@ export const CommunicationForm = ({
                   <TimelineItem key={index}>
                     <TimelineOppositeContent>
                       <Typography variant="caption" sx={{ color: 'text.primary' }}>
-                        {dayjs(item?.nextReminderDate).format('DD-MM-YYYY')}
+                        {dayjs(item?.nextReminderDate).format('DD/MM/YYYY')}
                       </Typography>
                       {/* <Typography sx={{ color: 'text.secondary' }}>
                           {item?.author
@@ -280,18 +280,23 @@ export const CommunicationForm = ({
                         sx={{
                           p: 2,
                           bgcolor: (theme) => varAlpha(theme.vars.palette.grey['400Channel'], 0.12),
+                          border: (theme) =>
+                            `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+                          borderRadius: 1,
                         }}
                       >
-                        <Typography variant="body2"> {item?.note}</Typography>
+                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                          {item?.note}
+                        </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Reminder Date : {dayjs(item.nextReminderDate).format('DD-MM-YYYY')}
+                          Reminder Date: {dayjs(item.nextReminderDate).format('DD/MM/YYYY')}
                         </Typography>
                       </Paper>
                     </TimelineContent>
                   </TimelineItem>
                 ))
               ) : (
-                <EmptyContent title="No Notes history yet." />
+                <EmptyContent title="No notes added yet" />
               )}
             </Timeline>
           )}
@@ -310,6 +315,8 @@ export const CommunicationForm = ({
                 multiline
                 rows={2}
                 autoFocus
+                placeholder="Enter your notes here..."
+                inputProps={{ maxLength: 500 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -317,7 +324,11 @@ export const CommunicationForm = ({
                   }
                 }}
                 error={!!formik.errors.msg && formik.touched.msg}
-                helperText={formik.touched.msg && formik.errors.msg}
+                helperText={
+                  formik.touched.msg && formik.errors.msg
+                    ? formik.errors.msg
+                    : `${formik.values.msg.length}/500 characters`
+                }
               />
             </ShakingTextField>
           </Grid>

@@ -44,7 +44,7 @@ const RenderLocalAddressFields = (props: any) => {
                 name="sameAsLocal"
               />
             }
-            label="Same as Student Local Address"
+            label="Same as Student's Local Address"
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -138,7 +138,7 @@ const RenderLocalAddressFields = (props: any) => {
             helperText={formik.touched.localPincode && formik.errors.localPincode}
             fullWidth
             size="small"
-            label="Pincode"
+            label="PIN Code"
           />
         </Grid>
       </Grid>

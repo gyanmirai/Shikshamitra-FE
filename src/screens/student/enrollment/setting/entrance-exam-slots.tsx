@@ -305,7 +305,6 @@ export const SlotsForm = ({
   editData: ISlot | null;
   date: Dayjs | null;
 }) => {
-  console.log(editData, 'editData');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Hook for adding a new entrance exam slot
@@ -364,7 +363,6 @@ export const SlotsForm = ({
       roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
-      console.log(values, '====called');
       try {
         if (editData) {
           await updateSlot({
@@ -383,7 +381,6 @@ export const SlotsForm = ({
             message: `${values.slotName} exam slot updated successfully`,
           });
         } else {
-          console.log(date, values);
           await addSlot({
             academicYearId: currentYear?.id,
             slotName: values.slotName,

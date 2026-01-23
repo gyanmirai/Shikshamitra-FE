@@ -87,7 +87,7 @@ export const generalFieldValidation = Yup.object({
 });
 
 export const familyFieldsValidation = Yup.object({
-  fatherName: Yup.string().required('Father name is required'),
+  fatherName: Yup.string().required('Full Name is required'),
   fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
@@ -124,7 +124,7 @@ export const familyFieldsValidation = Yup.object({
   fatherAddress1: Yup.string(),
   fatherAddress2: Yup.string(),
   fatherAddress3: Yup.string(),
-  motherName: Yup.string().required('Mother name is required'),
+  motherName: Yup.string().required('Full Name is required'),
   motherDob: Yup.string().required('Mother DOB is Required').nullable(),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
@@ -288,8 +288,14 @@ export const previousSchoolValidation = Yup.object({
 
 export const bankDetailsValidation = Yup.object({
   bankName: Yup.string(),
-  accountNo: Yup.string(),
-  ifscCode: Yup.string(),
+  accountNo: Yup.string().matches(/^\d{6,18}$/, {
+    message: 'Account No. must be 6–18 digits',
+    excludeEmptyString: true,
+  }),
+  ifscCode: Yup.string().matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, {
+    message: 'Invalid IFSC Code',
+    excludeEmptyString: true,
+  }),
   branchName: Yup.string(),
   accountHolderName: Yup.string(),
 });
