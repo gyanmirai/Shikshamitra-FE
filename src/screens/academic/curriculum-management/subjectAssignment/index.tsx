@@ -21,6 +21,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import {
   subjectAssignmentsApi,
+  useGetSubjectAssignmentsQuery,
   useDeleteSubjectAssignmentMutation,
   usePublishSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -64,13 +65,18 @@ const Subject = () => {
     setClasses(allClasses[0]?.name || '');
   }, [medium]);
 
-  // const { data: subjectTableData = [], isLoading: isTableLoading } = useGetSubjectAssignmentsQuery(
-  //   {
-  //     academicMediumId: medium?.id,
-  //     classId,
-  //   },
-  //   { skip: !medium?.id || !classId }
-  // );
+  const { data: subjectTableData = [], isLoading: isTableLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !medium?.id || !classId,
+    },
+  });
+  console.log('class id ---', classId);
   // URL search parameter state for form visibility
   const addSubjectDialog = useBoolean();
   // Dialog control for delete confirmation
@@ -82,129 +88,130 @@ const Subject = () => {
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+  console.log('---selectedSubject---', selectedSubject);
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [subjectTableData, setSubjectTableData] = useState<any[]>([
-    {
-      id: 'math-assign-id',
-      status: PublishUnpublishStatusType.Draft,
-      subjectType: 0,
-      subjects: [
-        {
-          assignedId: 'math-assigned-01',
-          subjectCode: 'MATH-101',
-          subjectId: 'math-sub-id',
-          subjectName: 'Mathematics',
-          color: '#DEB887',
-          electiveGroupId: null,
-          primaryTeacher: 'teacher-1',
-          secondaryTeachers: ['teacher-2'],
-          learningGoal: 'To master algebra and geometry concepts.',
-          prerequisites: 'Basic arithmetic',
-          description: 'Core mathematics course for 10th grade.',
-          documents: [],
-        },
-      ],
-    },
-    {
-      id: 'science-assign-id',
-      status: PublishUnpublishStatusType.Draft,
-      subjectType: 0,
-      subjects: [
-        {
-          assignedId: 'sci-assigned-01',
-          subjectCode: 'SCI-101',
-          subjectId: 'sci-sub-id',
-          subjectName: 'Science',
-          color: '#00CED1',
-          electiveGroupId: null,
-          primaryTeacher: 'teacher-3',
-          secondaryTeachers: [],
-          learningGoal: 'Understanding basic physics and chemistry.',
-          prerequisites: 'None',
-          description: 'General science covering various topics.',
-          documents: [],
-        },
-      ],
-    },
-    {
-      id: 'tech-fitness-group-id',
-      status: PublishUnpublishStatusType.Draft,
-      subjectType: 1,
-      electiveGroupName: 'Tech & Fitness Group',
-      electiveGroupId: 'tech-fitness-group-id',
-      color: '#4169E1',
-      subjects: [
-        {
-          assignedId: 'comp-assigned-01',
-          subjectCode: 'COMP-101',
-          subjectId: 'comp-sub-id',
-          subjectName: 'Computer',
-          color: '#4169E1',
-          electiveGroupId: 'tech-fitness-group-id',
-          primaryTeacher: 'teacher-4',
-          secondaryTeachers: [],
-          learningGoal: 'Basic programming skills',
-          prerequisites: 'None',
-          description: 'Introduction to computers.',
-          documents: [],
-        },
-        {
-          assignedId: 'pt-assigned-01',
-          subjectCode: 'PT-101',
-          subjectId: 'pt-sub-id',
-          subjectName: 'Physical Training',
-          color: '#FF69B4',
-          electiveGroupId: 'tech-fitness-group-id',
-          primaryTeacher: 'teacher-5',
-          secondaryTeachers: [],
-          learningGoal: 'Physical fitness and sportsmanship',
-          prerequisites: 'None',
-          description: 'Weekly PT sessions.',
-          documents: [],
-        },
-      ],
-    },
-    {
-      id: 'lang-group-id',
-      status: PublishUnpublishStatusType.Draft,
-      subjectType: 1,
-      electiveGroupName: 'Language Enrichment Group',
-      electiveGroupId: 'lang-group-id',
-      color: '#FF4500',
-      subjects: [
-        {
-          assignedId: 'hindi-assigned-01',
-          subjectCode: 'HIN-101',
-          subjectId: 'hindi-sub-id',
-          subjectName: 'Hindi',
-          color: '#FF4500',
-          electiveGroupId: 'lang-group-id',
-          primaryTeacher: 'teacher-6',
-          secondaryTeachers: [],
-          learningGoal: 'Hindi literature and grammar',
-          prerequisites: 'None',
-          description: 'Compulsory language course.',
-          documents: [],
-        },
-        {
-          assignedId: 'sansk-assigned-01',
-          subjectCode: 'SAN-101',
-          subjectId: 'sansk-sub-id',
-          subjectName: 'Sanskrit',
-          color: '#DA70D6',
-          electiveGroupId: 'lang-group-id',
-          primaryTeacher: 'teacher-7',
-          secondaryTeachers: [],
-          learningGoal: 'Basics of Sanskrit',
-          prerequisites: 'None',
-          description: 'Ancient language study.',
-          documents: [],
-        },
-      ],
-    },
-  ]);
+  // const [subjectTableData, setSubjectTableData] = useState<any[]>([
+  //   {
+  //     id: 'math-assign-id',
+  //     status: PublishUnpublishStatusType.Draft,
+  //     subjectType: 0,
+  //     subjects: [
+  //       {
+  //         assignedId: 'math-assigned-01',
+  //         subjectCode: 'MATH-101',
+  //         subjectId: 'math-sub-id',
+  //         subjectName: 'Mathematics',
+  //         color: '#DEB887',
+  //         electiveGroupId: null,
+  //         primaryTeacher: 'teacher-1',
+  //         secondaryTeachers: ['teacher-2'],
+  //         learningGoal: 'To master algebra and geometry concepts.',
+  //         prerequisites: 'Basic arithmetic',
+  //         description: 'Core mathematics course for 10th grade.',
+  //         documents: [],
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     id: 'science-assign-id',
+  //     status: PublishUnpublishStatusType.Draft,
+  //     subjectType: 0,
+  //     subjects: [
+  //       {
+  //         assignedId: 'sci-assigned-01',
+  //         subjectCode: 'SCI-101',
+  //         subjectId: 'sci-sub-id',
+  //         subjectName: 'Science',
+  //         color: '#00CED1',
+  //         electiveGroupId: null,
+  //         primaryTeacher: 'teacher-3',
+  //         secondaryTeachers: [],
+  //         learningGoal: 'Understanding basic physics and chemistry.',
+  //         prerequisites: 'None',
+  //         description: 'General science covering various topics.',
+  //         documents: [],
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     id: 'tech-fitness-group-id',
+  //     status: PublishUnpublishStatusType.Draft,
+  //     subjectType: 1,
+  //     electiveGroupName: 'Tech & Fitness Group',
+  //     electiveGroupId: 'tech-fitness-group-id',
+  //     color: '#4169E1',
+  //     subjects: [
+  //       {
+  //         assignedId: 'comp-assigned-01',
+  //         subjectCode: 'COMP-101',
+  //         subjectId: 'comp-sub-id',
+  //         subjectName: 'Computer',
+  //         color: '#4169E1',
+  //         electiveGroupId: 'tech-fitness-group-id',
+  //         primaryTeacher: 'teacher-4',
+  //         secondaryTeachers: [],
+  //         learningGoal: 'Basic programming skills',
+  //         prerequisites: 'None',
+  //         description: 'Introduction to computers.',
+  //         documents: [],
+  //       },
+  //       {
+  //         assignedId: 'pt-assigned-01',
+  //         subjectCode: 'PT-101',
+  //         subjectId: 'pt-sub-id',
+  //         subjectName: 'Physical Training',
+  //         color: '#FF69B4',
+  //         electiveGroupId: 'tech-fitness-group-id',
+  //         primaryTeacher: 'teacher-5',
+  //         secondaryTeachers: [],
+  //         learningGoal: 'Physical fitness and sportsmanship',
+  //         prerequisites: 'None',
+  //         description: 'Weekly PT sessions.',
+  //         documents: [],
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     id: 'lang-group-id',
+  //     status: PublishUnpublishStatusType.Draft,
+  //     subjectType: 1,
+  //     electiveGroupName: 'Language Enrichment Group',
+  //     electiveGroupId: 'lang-group-id',
+  //     color: '#FF4500',
+  //     subjects: [
+  //       {
+  //         assignedId: 'hindi-assigned-01',
+  //         subjectCode: 'HIN-101',
+  //         subjectId: 'hindi-sub-id',
+  //         subjectName: 'Hindi',
+  //         color: '#FF4500',
+  //         electiveGroupId: 'lang-group-id',
+  //         primaryTeacher: 'teacher-6',
+  //         secondaryTeachers: [],
+  //         learningGoal: 'Hindi literature and grammar',
+  //         prerequisites: 'None',
+  //         description: 'Compulsory language course.',
+  //         documents: [],
+  //       },
+  //       {
+  //         assignedId: 'sansk-assigned-01',
+  //         subjectCode: 'SAN-101',
+  //         subjectId: 'sansk-sub-id',
+  //         subjectName: 'Sanskrit',
+  //         color: '#DA70D6',
+  //         electiveGroupId: 'lang-group-id',
+  //         primaryTeacher: 'teacher-7',
+  //         secondaryTeachers: [],
+  //         learningGoal: 'Basics of Sanskrit',
+  //         prerequisites: 'None',
+  //         description: 'Ancient language study.',
+  //         documents: [],
+  //       },
+  //     ],
+  //   },
+  // ]);
   // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
@@ -363,12 +370,12 @@ const Subject = () => {
 
           {!showSubjectDialog.value && (
             <SubjectTable
+              isLoading={isTableLoading}
               classId={classId}
               addSubjectDialog={addSubjectDialog}
-              data={subjectTableData}
               editData={selectedSubject}
               setEditData={setSelectedSubject}
-              subjectTableData={subjectTableData}
+              subjectTableData={subjectTableData?.data?.items || []}
               onView={handleViewSubject}
               onEdit={(row: ISubjectFormValues) => {
                 setSelectedSubject(row);

@@ -9,8 +9,8 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -18,7 +18,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { Grid, Button, Typography, DialogActions } from '@mui/material';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
@@ -48,14 +48,12 @@ type AddLeaveRequestProps = TabComponentType & {
 };
 
 interface FormValues {
-  leaveType: string;
+  leaveTypeId: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
-  description: string;
+  reason: string;
   status?: number;
   rejectionReason: string;
-  startTime: Dayjs | null;
-  endTime: Dayjs | null;
   docs: string;
 }
 
@@ -90,19 +88,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   const { initialValues, errors, touched, setFieldValue, values, handleSubmit, handleBlur } =
     useFormik({
       initialValues: {
-        leaveType: editData?.leaveTypeId || '',
-        description: editData?.description || '',
+        leaveTypeId: editData?.leaveTypeId || '',
+        reason: editData?.reason || editData?.description || '',
         startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
         endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
         rejectionReason: editData?.rejectionReason || '',
         status: editData?.status || 0,
-        startTime: editData?.startTime ? dayjs(editData?.startTime) : null,
-        endTime: editData?.endTime ? dayjs(editData?.endTime) : null,
         docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
       },
       validationSchema: Yup.object().shape({
-        leaveType: Yup.string().required('Leave Type is required'),
-        // isHalfDay: Yup.boolean(),
+        leaveTypeId: Yup.string().required('Leave Type is required'),
         startDate: Yup.mixed()
           .test(
             'is-valid-dayjs',
@@ -111,44 +106,32 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           )
           .required('Start Date is required'),
         endDate: Yup.mixed()
-          .nullable()
-          .when('isHalfDay', {
-            is: true,
-            then: (schema) => schema.nullable(),
-            otherwise: (schema) =>
-              schema
-                .test('is-valid-dayjs', 'End Date is required', (value) => {
-                  if (!value) return false;
-                  return dayjs(value as any).isValid();
-                })
-                .required('End Date is required')
-                // eslint-disable-next-line func-names
-                .test('endDate', 'End Date must be after or equal to start date', function (value) {
-                  const { startDate } = this.parent;
-                  if (startDate && value) {
-                    const start = dayjs(startDate as any);
-                    const end = dayjs(value as any);
-                    return end.isAfter(start) || end.isSame(start);
-                  }
-                  return true;
-                })
-                // eslint-disable-next-line func-names
-                .test('endDate-before', 'End Date cannot be before start date', function (value) {
-                  const { startDate } = this.parent;
-                  if (startDate && value) {
-                    const start = dayjs(startDate as any);
-                    const end = dayjs(value as any);
-                    return !end.isBefore(start);
-                  }
-                  return true;
-                }),
-          }),
-        description: Yup.string().required('Leave Description is required'),
+          .test('is-valid-dayjs', 'End Date is required', (value) => {
+            if (!value) return false;
+            return dayjs(value as any).isValid();
+          })
+          .required('End Date is required')
+          .test(
+            'endDate-after-start',
+            'End Date must be after or equal to start date',
+            function (value) {
+              const { startDate } = this.parent;
+              if (startDate && value) {
+                const start = dayjs(startDate as any);
+                const end = dayjs(value as any);
+                return end.isAfter(start) || end.isSame(start, 'day');
+              }
+              return true;
+            }
+          ),
+        reason: Yup.string()
+          .min(5, 'Reason must be at least 5 characters')
+          .max(500, 'Reason must not exceed 500 characters')
+          .required('Reason for leave is required'),
         status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
         rejectionReason: Yup.string().test(
           'rejectionReason',
           'Rejection reason is required',
-          // eslint-disable-next-line func-names
           function (value) {
             const { status } = this.parent;
             if (editData && status === EmployeeLeaveStatusType.Rejected) {
@@ -176,10 +159,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           } else {
             await addLeave({
               mediumStageId: medium?.id,
-              leaveTypeId: formValues.leaveType,
+              leaveTypeId: formValues.leaveTypeId,
               startDate: dateConvertor(dayjs(formValues.startDate).format(dateFormat)),
               endDate: dateConvertor(dayjs(formValues.endDate).format(dateFormat)),
-              reason: formValues.description,
+              reason: formValues.reason,
               attachment: formValues.docs
                 ? formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, '')
                 : undefined,
@@ -198,66 +181,76 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
           <Grid container spacing={3}>
             <Grid size={12}>
-              <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
+              <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
                 <CustomSelect
                   isLoading={isLeavePolicyLoading}
                   options={leavePolicyData?.items || []}
                   label="Leave Type *"
-                  value={values.leaveType}
-                  name="leaveType"
+                  value={values.leaveTypeId}
+                  name="leaveTypeId"
                   valueKey="id"
-                  disabled={editData}
+                  disabled={!!editData}
                   labelKey="leaveType"
-                  error={!!touched.leaveType && !!errors.leaveType}
-                  helperText={(touched.leaveType && errors.leaveType) || ''}
+                  error={!!touched.leaveTypeId && !!errors.leaveTypeId}
+                  helperText={(touched.leaveTypeId && errors.leaveTypeId) || ''}
                   onChange={(value) => {
-                    setFieldValue('leaveType', value);
+                    setFieldValue('leaveTypeId', value);
                   }}
                 />
               </ShakingTextField>
             </Grid>
 
-            {/* <Grid size={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="isHalfDay"
-                    checked={values.isHalfDay}
-                    disabled={editData}
-                    sx={{ p: 0 }}
-                    onChange={(e: any) => {
-                      setFieldValue('isHalfDay', e.target.checked);
-                      if (e.target.checked) {
-                        setFieldValue('endDate', null);
-                      }
-                    }}
-                  />
-                }
-                label="Half Day"
-              />
-            </Grid> */}
-
-            <Grid size={12}>
-              <Typography variant="subtitle2" gutterBottom sx={{ pl: 0.5 }}>
-                Leave Description *
-              </Typography>
-              <ShakingTextField error={touched.description && Boolean(errors.description)}>
-                <Editor
-                  onChange={(value) => {
-                    setFieldValue('description', value);
-                  }}
-                  value={values.description}
-                  placeholder="Leave Description *"
-                  error={touched.description && Boolean(errors.description)}
-                  helperText={touched.description && errors.description}
-                  editable={!editData}
-                  sx={{ height: '100%' }}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!touched.startDate && !!errors.startDate}>
+                <DatePicker
+                  label="Start Date *"
+                  value={values.startDate}
+                  disabled={!!editData}
+                  onChange={(value) => setFieldValue('startDate', value)}
                   slotProps={{
-                    wrap: {
-                      height: '100%',
-                      position: 'relative',
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: !!touched.startDate && !!errors.startDate,
+                      helperText: touched.startDate && (errors.startDate as string),
                     },
                   }}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!touched.endDate && !!errors.endDate}>
+                <DatePicker
+                  label="End Date *"
+                  value={values.endDate}
+                  disabled={!!editData}
+                  onChange={(value) => setFieldValue('endDate', value)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: !!touched.endDate && !!errors.endDate,
+                      helperText: touched.endDate && (errors.endDate as string),
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={12}>
+              <ShakingTextField error={touched.reason && Boolean(errors.reason)}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  name="reason"
+                  label="Reason for leave *"
+                  value={values.reason}
+                  onChange={(e) => setFieldValue('reason', e.target.value)}
+                  disabled={!!editData}
+                  error={touched.reason && Boolean(errors.reason)}
+                  helperText={touched.reason && errors.reason}
                 />
               </ShakingTextField>
             </Grid>

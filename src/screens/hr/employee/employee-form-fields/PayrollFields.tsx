@@ -306,7 +306,16 @@ const RenderPayrollFields = (props: any) => {
               label="Account Holder Name"
               name="accountHolderName"
               value={values.accountHolderName || ''}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                if (/^[A-Za-z\s]*$/.test(value)) {
+                  const formattedValue = value
+                    .split(' ')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+                  formik.setFieldValue('accountHolderName', formattedValue);
+                }
+              }}
               error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
               helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
             />
@@ -324,7 +333,12 @@ const RenderPayrollFields = (props: any) => {
               name="accountNumber"
               type="number"
               value={values.accountNumber || ''}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                if (value.length <= 18) {
+                  formik.setFieldValue('accountNumber', value);
+                }
+              }}
               error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
               helperText={formik.touched.accountNumber && formik.errors.accountNumber}
             />

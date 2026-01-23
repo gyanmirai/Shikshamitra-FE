@@ -17,6 +17,8 @@ const WorkExperiences = (props: any) => {
   const [selectedExperience, setSelectedExperience] = useState<number | null>();
   const { formik, isMainForm } = props;
   const { values, setFieldValue } = formik;
+  console.log('values====', values);
+  console.log('validations----', formik.errors);
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -56,8 +58,8 @@ const WorkExperiences = (props: any) => {
                   organizationCountry: { name: 'India', isoCode: 'IN' },
                   organizationState: { name: '', isoCode: '' },
                   organizationCity: { name: '' },
-                  fromDate: null,
-                  toDate: null,
+                  startDate: null,
+                  endDate: null,
                   department: '',
                   designation: '',
                 },
@@ -78,8 +80,8 @@ const WorkExperiences = (props: any) => {
               gap: 2,
               display: 'flex',
               alignItems: 'center',
-              // position: 'relative',
               p: 2,
+              mb: values.experiences.length - 1 === index ? 2 : 0,
             }}
           >
             <Box
@@ -108,9 +110,9 @@ const WorkExperiences = (props: any) => {
                   <TextField
                     fullWidth
                     size="small"
-                    name={`experiences.${index}.mediumStageName`}
+                    name={`experiences.${index}.organizationName`}
                     label="Organization Name *"
-                    value={experience.mediumStageName}
+                    value={experience.organizationName}
                     onChange={(e) => {
                       const { value } = e.target;
                       if (/^[A-Za-z\s]*$/.test(value)) {
@@ -118,16 +120,16 @@ const WorkExperiences = (props: any) => {
                           .split(' ')
                           .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                           .join(' ');
-                        setFieldValue(`experiences.${index}.mediumStageName`, formattedValue);
+                        setFieldValue(`experiences.${index}.organizationName`, formattedValue);
                       }
                     }}
                     error={
-                      formik?.touched?.experiences?.[index]?.mediumStageName &&
-                      formik?.errors?.experiences?.[index]?.mediumStageName
+                      formik?.touched?.experiences?.[index]?.organizationName &&
+                      formik?.errors?.experiences?.[index]?.organizationName
                     }
                     helperText={
-                      formik?.touched?.experiences?.[index]?.mediumStageName &&
-                      formik?.errors?.experiences?.[index]?.mediumStageName
+                      formik?.touched?.experiences?.[index]?.organizationName &&
+                      formik?.errors?.experiences?.[index]?.organizationName
                     }
                     FormHelperTextProps={{
                       sx: {
@@ -153,7 +155,7 @@ const WorkExperiences = (props: any) => {
                     fullWidth
                     size="small"
                     name={`experiences.${index}.designation`}
-                    label="Designation *"
+                    label="Designation"
                     value={experience.designation}
                     disabled={!isEditable.value}
                     onChange={(e) => {

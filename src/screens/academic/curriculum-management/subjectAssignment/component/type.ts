@@ -81,11 +81,11 @@ export interface ISubjectFormValues {
 }
 
 export interface ISubjectTableProps {
+  isLoading: boolean;
   classId: string;
   addSubjectDialog: UseBooleanReturn;
   editData: ISubjectFormValues | null;
   setEditData: React.Dispatch<React.SetStateAction<ISubjectFormValues | null>>;
-  data: ISubjectFormValues[];
   subjectTableData: ISubjectFormValues[];
   onView: (subject: ISubjectFormValues) => void;
   onEdit: (subject: ISubjectFormValues) => void;

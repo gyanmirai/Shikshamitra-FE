@@ -384,26 +384,34 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 <FormControl
                   disabled={!isBasicDetailsEditable.value}
                   fullWidth
-                  sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center', // ✅ vertical alignment
+                    gap: 3,
+                  }}
                 >
                   <Typography
                     variant="subtitle2"
                     sx={{
+                      minWidth: 70, // ✅ keeps radios aligned
                       color: (theme) =>
                         formik.touched.gender && formik.errors.gender
                           ? theme.palette.error.main
                           : theme.palette.text.primary,
-                      mr: 2,
                     }}
                   >
                     Gender *
                   </Typography>
+
                   <RadioGroup
                     row
-                    aria-labelledby="gender-radio-group"
                     name="gender"
                     value={formik.values.gender}
                     onChange={formik.handleChange}
+                    sx={{
+                      alignItems: 'center', // ✅ aligns radio + label text
+                    }}
                   >
                     <FormControlLabel
                       value={0}
@@ -486,7 +494,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 <TextField
                   fullWidth
                   size="small"
-                  label="Family caste *"
+                  label="Family Caste *"
                   {...formik.getFieldProps('familyCast')}
                   onChange={(e) => {
                     // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]

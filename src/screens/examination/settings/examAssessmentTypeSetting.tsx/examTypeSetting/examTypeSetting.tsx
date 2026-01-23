@@ -51,7 +51,6 @@ const ExamTypeSettings = () => {
   const [deleteExamType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExaminationTypeMutation,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
   });
   // Dialog state for confirming the deletion of an exam type.
   const confirmDeleteDialog = useBoolean();
@@ -186,7 +185,7 @@ const ExamTypeSettings = () => {
             },
           },
         ]}
-        data={examTypeData?.data || []}
+        data={examTypeData?.items || []}
       />
 
       <CustomDialog
@@ -228,8 +227,10 @@ const ExamTypeSettings = () => {
       <ConfirmDialog
         open={confirmDeleteDialog.value}
         onClose={() => {
-          setSelectedExamType(null);
           confirmDeleteDialog.onFalse();
+          setTimeout(() => {
+            setSelectedExamType(null);
+          }, 200);
         }}
         title="Delete"
         content={
@@ -253,11 +254,11 @@ const ExamTypeSettings = () => {
                       'getExaminationTypes',
                       { academicMediumId: (currentMedium as any).id },
                       (draft: any) => {
-                        const index = draft.data.findIndex(
+                        const index = draft.items.findIndex(
                           (item: any) => item.id === (selectedExamType as any).id
                         );
                         setDeleteIndex(index);
-                        if (index !== -1) draft.data.splice(index, 1);
+                        if (index !== -1) draft.items.splice(index, 1);
                       }
                     )
                   ),
@@ -268,7 +269,7 @@ const ExamTypeSettings = () => {
                       { academicMediumId: (currentMedium as any).id },
                       (draft: any) => {
                         if (!draft) return;
-                        draft.data.splice(index, 0, selectedExamType);
+                        draft.items.splice(index, 0, selectedExamType);
                       }
                     )
                   ),
@@ -279,7 +280,9 @@ const ExamTypeSettings = () => {
                   }).unwrap(),
               });
               confirmDeleteDialog.onFalse();
-              setSelectedExamType(null);
+              setTimeout(() => {
+                setSelectedExamType(null);
+              }, 200);
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >

@@ -7,7 +7,7 @@ interface RoleColorIndicatorProps {
 export const RoleColorIndicator = ({ color }: RoleColorIndicatorProps) => (
   <Box
     sx={{
-      width: 4,
+      width: '4px',
       height: 18,
       borderRadius: 1,
       backgroundColor: color,
