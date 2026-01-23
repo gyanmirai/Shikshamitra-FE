@@ -23,6 +23,10 @@ export const bankDetailsFields: FieldsType[] = [
 const RenderBankDetails = (props: any) => {
   const { formik, isMainForm = false } = props;
   const isEditable = useBoolean(isMainForm);
+
+  const IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/; // e.g., HDFC0ABCD12
+  const ACCOUNT_REGEX = /^\d{6,18}$/; // common range; stored as string
+
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     await formik?.submitForm?.();
@@ -50,56 +54,68 @@ const RenderBankDetails = (props: any) => {
         {
           label: 'Bank Name',
           name: 'bankName',
-          inputProps: {
-            pattern: '[A-Za-z\\s]+',
-            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
-              e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '');
-            },
-          },
+          sanitize: (v: string) => v.replace(/[^A-Za-z\s]/g, ''),
         },
         {
           label: 'Account No.',
           name: 'accountNo',
-          inputProps: {
-            pattern: '[0-9]+',
-            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
-              e.target.value = e.target.value.replace(/[^0-9]/g, '');
-            },
-          },
+          sanitize: (v: string) => v.replace(/[^0-9]/g, ''),
         },
         {
           label: 'IFSC Code',
           name: 'ifscCode',
-          inputProps: {
-            pattern: '[a-zA-Z0-9 ]+',
-            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
-              e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '');
-            },
-          },
+          sanitize: (v: string) => v.replace(/[^a-zA-Z0-9]/g, '').toUpperCase(),
         },
-        { label: 'Branch Name', name: 'branchName' },
+        { label: 'Branch Name', name: 'branchName', sanitize: (v: string) => v },
         {
           label: 'Account Holder Name',
           name: 'accountHolderName',
-          inputProps: {
-            pattern: '[A-Za-z\\s]+',
-            onInput: (e: React.ChangeEvent<HTMLInputElement>) => {
-              e.target.value = e.target.value.replace(/[^A-Za-z\s]/g, '');
-            },
-          },
+          sanitize: (v: string) => v.replace(/[^A-Za-z\s]/g, ''),
         },
-      ].map((field) => (
-        <Grid key={field.name} size={{ xs: 12, sm: 6, md: 4 }}>
-          <TextField
-            {...field}
-            value={formik.values[field.name]}
-            onChange={formik.handleChange}
-            disabled={!isEditable.value}
-            size="small"
-            fullWidth
-          />
-        </Grid>
-      ))}
+      ].map((field) => {
+        const value = String(formik.values[field.name] ?? '');
+        const nextValue = value;
+        const isIfsc = field.name === 'ifscCode';
+        const isAccount = field.name === 'accountNo';
+        const ifscInvalid = isIfsc && nextValue !== '' && !IFSC_REGEX.test(nextValue.toUpperCase());
+        const accountInvalid = isAccount && nextValue !== '' && !ACCOUNT_REGEX.test(nextValue);
+
+        return (
+          <Grid key={field.name} size={{ xs: 12, sm: 6, md: 4 }}>
+            <TextField
+              label={field.label}
+              name={field.name}
+              value={nextValue}
+              onChange={(e) => {
+                const cleaned = field.sanitize?.(e.target.value ?? '') ?? e.target.value;
+                formik.setFieldValue(field.name, cleaned);
+              }}
+              onBlur={(e) => {
+                const cleaned = field.sanitize?.(e.target.value ?? '') ?? e.target.value;
+                formik.setFieldValue(field.name, cleaned);
+              }}
+              disabled={!isEditable.value}
+              size="small"
+              fullWidth
+              type="text"
+              inputMode={isAccount ? 'numeric' : 'text'}
+              inputProps={{
+                maxLength: field.name === 'ifscCode' ? 11 : undefined,
+                style: field.name === 'ifscCode' ? { textTransform: 'uppercase' } : undefined,
+                pattern: isAccount ? '[0-9]*' : undefined,
+              }}
+              error={Boolean(ifscInvalid || accountInvalid)}
+              helperText={
+                ifscInvalid
+                  ? 'Invalid IFSC format (e.g., HDFC0ABCD12)'
+                  : accountInvalid
+                    ? 'Account number must be 6–18 digits'
+                    : undefined
+              }
+            />
+          </Grid>
+        );
+      })}
     </SectionCard>
   );
 };

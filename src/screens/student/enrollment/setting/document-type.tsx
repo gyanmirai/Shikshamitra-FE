@@ -104,7 +104,7 @@ const StudentDocumentType = () => {
   const columns: IColumn[] = useMemo(
     () => [
       { id: 'name', label: 'Document Name' },
-      { id: 'maxSizeMB', label: 'Document Size' },
+      { id: 'maxSizeMB', label: 'Document Size (MB)' },
       {
         id: 'acceptedFormats',
         label: 'Accepted Format',
@@ -606,7 +606,7 @@ export const DocumentForm = ({
               onChange={(e) => {
                 const { value } = e.target;
 
-                if (/^[1-9]$/.test(value)) {
+                if (/^[1-9][0-9]?$/.test(value) && Number(value) >= 1 && Number(value) <= 50) {
                   setFieldValue('maxSizeMB', value);
                 } else if (value === '') {
                   setFieldValue('maxSizeMB', '');

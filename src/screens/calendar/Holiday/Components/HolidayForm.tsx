@@ -20,6 +20,10 @@ import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
+  useAddHolidayTypeMutation,
+  useUpdateHolidayTypeMutation,
+} from 'src/redux/communication/holiday/holidayDataApi';
+import {
   Box,
   Chip,
   Grid,
@@ -29,10 +33,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-import {
-  useAddHolidayTypeMutation,
-  useUpdateHolidayTypeMutation,
-} from 'src/redux/communication/holiday/holidayDataApi';
 
 import { holidayValidationSchema } from './getHolidayValidationSchema';
 

@@ -141,7 +141,7 @@ const RenderEmergencyAddressFields = (props: any) => {
           helperText={formik.touched.emergencyPincode && formik.errors.emergencyPincode}
           fullWidth
           size="small"
-          label="Pincode"
+          label="PIN Code"
         />
       </Grid>
     </Grid>

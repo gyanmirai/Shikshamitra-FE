@@ -142,7 +142,7 @@ const RenderPermanentAddressFields = (props: any) => {
           helperText={formik.touched.permanentPincode && formik.errors.permanentPincode}
           fullWidth
           size="small"
-          label="Pincode"
+          label="PIN Code"
         />
       </Grid>
     </Grid>

@@ -67,21 +67,24 @@ const RenderAdditionalDetails = (props: any) => {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 4 }}>
-        <TextField
-          fullWidth
-          label="BPL Card No."
-          size="small"
-          disabled={!isAdditionalDetailsEditable.value || !formik.values.bplStudent}
-          value={formik.values.bplCardNo}
-          onChange={(e) => {
-            const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
-            formik.setFieldValue('bplCardNo', onlyNumbers);
-          }}
-          error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}
-          helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
-        />
-      </Grid>
+      {formik.values.bplStudent && (
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <TextField
+            fullWidth
+            label="BPL Card No."
+            size="small"
+            disabled={!isAdditionalDetailsEditable.value}
+            value={formik.values.bplCardNo}
+            onChange={(e) => {
+              const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('bplCardNo', onlyNumbers);
+            }}
+            error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}
+            helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
+          />
+        </Grid>
+      )}
+
       <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           disabled={!isAdditionalDetailsEditable.value}
