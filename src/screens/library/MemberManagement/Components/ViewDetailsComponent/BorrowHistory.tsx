@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';

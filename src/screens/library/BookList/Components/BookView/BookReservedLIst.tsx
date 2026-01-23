@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';

@@ -1,4 +1,4 @@
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo, useState } from 'react';
 import { Box, Card, Switch } from '@mui/material';

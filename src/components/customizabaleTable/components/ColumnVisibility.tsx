@@ -2,7 +2,7 @@ import React from 'react';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import { Box, Button, Popover, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
-import type { IColumn } from '../type';
+import type { IColumn } from '../types';
 
 interface ColumnVisibilityProps {
   columns: IColumn[];

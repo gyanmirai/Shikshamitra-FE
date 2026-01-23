@@ -1,5 +1,5 @@
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PaymentDate } from 'src/screens/student/studentProfile/finance-profile-data/finance-profile-fee-data';
 
 import React from 'react';

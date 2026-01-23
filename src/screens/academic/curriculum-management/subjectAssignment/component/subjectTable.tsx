@@ -1,6 +1,6 @@
 // SubjectTable.tsx
 
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
