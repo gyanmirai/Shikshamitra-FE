@@ -123,7 +123,7 @@ const TABS = [
   },
   {
     value: 'calender',
-    label: 'Calender',
+    label: 'Calendar',
     icon: <Iconify icon="mdi:calendar-month-outline" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentCalendar {...props} />
@@ -348,6 +348,7 @@ export function StudentProfile() {
                 label: 'Roll No.',
                 minWidth: '6vw',
                 align: 'left',
+                filterType: 'number',
                 render: (value, row) => value || '-',
               },
               {
@@ -373,7 +374,7 @@ export function StudentProfile() {
                 align: 'left',
                 filterType: 'date',
               },
-              { id: 'age', label: 'Age', minWidth: '8vw', align: 'left' },
+              { id: 'age', label: 'Age', minWidth: '8vw', align: 'left', filterType: 'number' },
               { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
               { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
               // { id: 'class', label: 'Class' },

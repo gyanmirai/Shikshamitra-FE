@@ -209,7 +209,7 @@ const AdmissionScreen = () => {
       },
       { id: 'age', label: 'Age', align: 'left' },
       { id: 'genderValue', label: 'Gender', align: 'left' },
-      { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left' },
+      { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left', filterType: 'number' },
       {
         id: 'inquiryNo',
         label: 'Inquiry No.',
@@ -297,7 +297,6 @@ const AdmissionScreen = () => {
           return (
             <ThreeDotsActions
               showEditIcon
-              showViewIcon
               handleEditClick={() => {
                 setEditData(row as IInquiryData);
                 setOpen(true);
@@ -345,8 +344,7 @@ const AdmissionScreen = () => {
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [divisionDialog, followUpDialog, selectedStudents, tableData]
   );
 
   return (

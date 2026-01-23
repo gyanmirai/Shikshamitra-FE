@@ -1,6 +1,6 @@
-import { capitalize } from 'lodash';
-import { Grid, TextField } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomSelect from 'src/components/custom-select';
+import { Grid, TextField, Typography } from '@mui/material';
 import {
   CardActions,
   SectionCard,
@@ -34,6 +34,25 @@ export const previousSchoolFields: FieldsType[] = [
 const RenderPreviousSchoolFields = (props: any) => {
   const { formik, isMainForm = false } = props;
   const isEditable = useBoolean(isMainForm);
+  const boardOptions = [
+    { label: 'CBSE', value: 'CBSE' },
+    { label: 'ICSE', value: 'ICSE' },
+    { label: 'State Board', value: 'State Board' },
+    { label: 'IB', value: 'IB' },
+    { label: 'Cambridge', value: 'Cambridge' },
+  ];
+  const mediumOptions = [
+    { label: 'English', value: 'English' },
+    { label: 'Hindi', value: 'Hindi' },
+    { label: 'Marathi', value: 'Marathi' },
+    { label: 'Bengali', value: 'Bengali' },
+    { label: 'Gujarati', value: 'Gujarati' },
+    { label: 'Tamil', value: 'Tamil' },
+    { label: 'Telugu', value: 'Telugu' },
+    { label: 'Urdu', value: 'Urdu' },
+    { label: 'Kannada', value: 'Kannada' },
+    { label: 'Malayalam', value: 'Malayalam' },
+  ];
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     await formik?.submitForm?.();
@@ -47,7 +66,7 @@ const RenderPreviousSchoolFields = (props: any) => {
   };
   return (
     <SectionCard
-      title=""
+      title="Previous School Details"
       headerContent={
         !isMainForm && (
           <CardActions
@@ -59,6 +78,10 @@ const RenderPreviousSchoolFields = (props: any) => {
         )
       }
     >
+      {/* School Info Section */}
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="subtitle1">School Info</Typography>
+      </Grid>
       <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
           size="small"
@@ -68,7 +91,7 @@ const RenderPreviousSchoolFields = (props: any) => {
           value={formik.values.schoolName}
           onChange={(e: any) => {
             const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            const words = onlyText.split(' ');
+            const words = onlyText.split(' ').filter(Boolean);
             const capitalizedWords = words.map(
               (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
             );
@@ -90,30 +113,20 @@ const RenderPreviousSchoolFields = (props: any) => {
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 4, md: 3 }}>
-        <TextField
-          size="small"
-          fullWidth
+        <CustomSelect
           label="Board"
-          name="schoolBoard"
-          value={formik.values.schoolBoard}
-          onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            formik.setFieldValue('schoolBoard', onlyText);
-          }}
+          options={boardOptions}
+          value={formik.values.schoolBoard ?? ''}
+          onChange={(val) => formik.setFieldValue('schoolBoard', val)}
           disabled={!isEditable.value}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 4, md: 3 }}>
-        <TextField
-          size="small"
-          fullWidth
+        <CustomSelect
           label="Medium"
-          name="schoolMedium"
-          value={formik.values.schoolMedium}
-          onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            formik.setFieldValue('schoolMedium', onlyText);
-          }}
+          options={mediumOptions}
+          value={formik.values.schoolMedium ?? ''}
+          onChange={(val) => formik.setFieldValue('schoolMedium', val)}
           disabled={!isEditable.value}
         />
       </Grid>
@@ -125,11 +138,15 @@ const RenderPreviousSchoolFields = (props: any) => {
           name="tcNumber"
           value={formik.values.tcNumber}
           onChange={(e: any) => {
-            const onlyText = e.target.value.replace(/[^0-9]/g, '');
+            const onlyText = e.target.value.replace(/[^0-9]/g, '').slice(0, 20);
             formik.setFieldValue('tcNumber', onlyText);
           }}
           disabled={!isEditable.value}
         />
+      </Grid>
+      {/* Academic Info Section */}
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="subtitle1">Academic Info</Typography>
       </Grid>
       <Grid size={{ xs: 12, sm: 4, md: 3 }}>
         <TextField
@@ -139,8 +156,8 @@ const RenderPreviousSchoolFields = (props: any) => {
           name="previousClass"
           value={formik.values.previousClass}
           onChange={(e: any) => {
-            const onlyNumbers = e.target.value.replace(/[^0-9]/g, '');
-            formik.setFieldValue('previousClass', onlyNumbers);
+            const sanitized = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+            formik.setFieldValue('previousClass', sanitized);
           }}
           disabled={!isEditable.value}
         />
@@ -154,13 +171,36 @@ const RenderPreviousSchoolFields = (props: any) => {
           type="number"
           value={formik.values.percentage}
           onChange={(e: any) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('percentage', newName);
+            const val = e.target.value;
+            if (val === '') {
+              formik.setFieldValue('percentage', '');
+              return;
+            }
+            const num = Number(val.replace(/[^0-9]/g, ''));
+            const clamped = Math.max(0, Math.min(100, num));
+            formik.setFieldValue('percentage', clamped);
           }}
           onKeyDown={(e) => {
             if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
               e.preventDefault();
             }
+          }}
+          inputProps={{ min: 0, max: 100 }}
+          disabled={!isEditable.value}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 8, md: 6 }}>
+        <TextField
+          size="small"
+          fullWidth
+          multiline
+          minRows={2}
+          label="Reason for Leaving"
+          name="reasonForLeaving"
+          value={formik.values.reasonForLeaving ?? ''}
+          onChange={(e: any) => {
+            const val = e.target.value.trimStart();
+            formik.setFieldValue('reasonForLeaving', val);
           }}
           disabled={!isEditable.value}
         />

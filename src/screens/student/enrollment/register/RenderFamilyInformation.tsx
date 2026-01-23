@@ -108,7 +108,7 @@ function MotherOfficeAddressComponent(props: any) {
             formik.setFieldValue('motherOfficeState', value);
           }}
           disabled={!!disabled}
-          countryValue={formik.values.localCountry}
+          countryValue={formik.values.motherOfficeCountry}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
@@ -122,7 +122,7 @@ function MotherOfficeAddressComponent(props: any) {
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
-          name="localPincode"
+          name="motherOfficePincode"
           value={formik.values.motherOfficePincode || ''}
           onChange={(e) => {
             let value = e.target.value.replace(/\D/g, '');
@@ -254,7 +254,7 @@ function GuardianOfficeAddressComponent(props: any) {
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
-          name="localPincode"
+          name="guardianOfficePincode"
           value={formik.values.guardianOfficePincode || ''}
           onChange={(e) => {
             let value = e.target.value.replace(/\D/g, '');
@@ -356,7 +356,7 @@ function MotherAddressComponent(props: any) {
             formik.setFieldValue('motherLocalState', value);
           }}
           disabled={!!disabled}
-          countryValue={formik.values.localCountry}
+          countryValue={formik.values.motherLocalCountry}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
@@ -370,7 +370,7 @@ function MotherAddressComponent(props: any) {
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
-          name="localPincode"
+          name="motherLocalPincode"
           value={formik.values.motherLocalPincode || ''}
           onChange={(e) => {
             let value = e.target.value.replace(/\D/g, '');
@@ -484,7 +484,7 @@ function GuardianAddressComponent(props: any) {
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
-          name="localPincode"
+          name="guardianLocalPincode"
           value={formik.values.guardianLocalPincode || ''}
           onChange={(e) => {
             let value = e.target.value.replace(/\D/g, '');
@@ -543,7 +543,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}>
             <TextField
               name="fatherName"
-              label=" Full name *"
+              label="Full Name *"
               value={formik.values.fatherName}
               autoFocus
               onChange={(e) => {
@@ -567,7 +567,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.fatherDob && Boolean(formik.errors.fatherDob)}>
             <DatePicker
               name="fatherDob"
-              label="Date of Birth "
+              label="Date of Birth"
               value={formik.values.fatherDob}
               format="DD-MM-YYYY"
               onChange={(value) => {
@@ -737,7 +737,7 @@ function RenderFamilyInformation(props: any) {
           >
             <TextField
               name="fatherAadharNo"
-              label="Aadhar No."
+              label="Aadhaar No."
               type="number"
               disabled={!isFatherDetailsEditable.value}
               value={formik.values.fatherAadharNo}
@@ -1006,7 +1006,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.motherName && Boolean(formik.errors.motherName)}>
             <TextField
               name="motherName"
-              label="Full name *"
+              label="Full Name *"
               disabled={!isMotherDetailsEditable.value}
               value={formik.values.motherName}
               onChange={(e) => {
@@ -1029,7 +1029,7 @@ function RenderFamilyInformation(props: any) {
           <ShakingTextField error={formik.touched.motherDob && Boolean(formik.errors.motherDob)}>
             <DatePicker
               name="motherDob"
-              label="Date of Birth "
+              label="Date of Birth"
               disabled={!isMotherDetailsEditable.value}
               value={formik.values.motherDob}
               format="DD-MM-YYYY"
@@ -1196,7 +1196,7 @@ function RenderFamilyInformation(props: any) {
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherAadharNo"
-            label="Aadhar No. "
+            label="Aadhaar No."
             type="number"
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherAadharNo}
@@ -1277,7 +1277,7 @@ function RenderFamilyInformation(props: any) {
           >
             <DatePicker
               name="guardianDob"
-              label="Date of Birth "
+              label="Date of Birth"
               format="DD-MM-YYYY"
               disabled={!isGuardianDetailsEditable.value}
               value={formik.values.guardianDob}
@@ -1447,7 +1447,7 @@ function RenderFamilyInformation(props: any) {
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianAadharNo"
-            label="Aadhar No."
+            label="Aadhaar No."
             type="number"
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianAadharNo}
