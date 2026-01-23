@@ -49,6 +49,7 @@ export const buildingsApi = instituteSetupApi.injectEndpoints({
 
 export const {
   useGetBuildingsQuery,
+  useLazyGetBuildingsQuery,
   useAddBuildingMutation,
   useGetBuildingByIdQuery,
   useUpdateBuildingMutation,

@@ -120,7 +120,7 @@ export const DialogScrollContent = ({
       <DialogContent
         ref={ref}
         sx={{
-          p: 3, // Increased content padding for better readability
+          p: 2, // Increased content padding for better readability
           ...props.sx,
         }}
         {...props}

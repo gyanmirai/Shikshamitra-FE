@@ -42,7 +42,7 @@ const personalInformationValidationSchema = Yup.object({
     )
     .required('Date of Birth is required'),
   // dob: Yup.date().nullable().required('Date of birth is required'),
-  familyCast: Yup.string().required('Family caste is required'),
+  familyCast: Yup.string().required('Family Caste is required'),
   castType: Yup.string().required('Category is required'),
   gender: Yup.string().required('Gender is required'),
   religion: Yup.string().required('Religion is required'),
@@ -201,7 +201,7 @@ const additionalDetailsValidationSchema = Yup.object({
 export const workExperienceValidationSchema = Yup.object({
   experiences: Yup.array().of(
     Yup.object({
-      mediumStageName: Yup.string().required('Organization Name is required'),
+      organizationName: Yup.string().required('Organization Name is required'),
       // organizationAddress: Yup.string(),
       country: Yup.object().shape({
         name: Yup.string(),
@@ -258,7 +258,7 @@ export const payrollValidationSchema = Yup.object({
 
   ifscCode: Yup.string()
     .nullable()
-    .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code'),
+    .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code (Ex: SBIN0001234)'),
 
   pfType: Yup.string().nullable(),
 

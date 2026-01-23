@@ -157,11 +157,11 @@ const BuildingManagement = () => {
             size="small"
             onClick={async () => {
               await deleteBuilding(selectedBuilding?.id);
+              deleteBuildingDialog.onFalse();
+              setSelectedBuilding(null);
               shikshaMitraToast.success({
                 message: `Building "${selectedBuilding?.buildingName}" deleted successfully`,
               });
-              deleteBuildingDialog.onFalse();
-              setSelectedBuilding(null);
             }}
           >
             Yes

@@ -76,6 +76,9 @@ const SubjectAssignmentForm = ({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
     params: { assignmentId: data?.id },
+    options: {
+      skip: !data?.id,
+    },
   });
   console.log('subjectAssignmentData', subjectAssignmentData);
 
