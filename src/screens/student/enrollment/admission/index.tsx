@@ -2,7 +2,7 @@
 
 import type { Standards } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';

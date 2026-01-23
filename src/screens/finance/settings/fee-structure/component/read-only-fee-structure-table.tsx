@@ -1,6 +1,6 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React from 'react';
 import { Tooltip, Typography } from '@mui/material';

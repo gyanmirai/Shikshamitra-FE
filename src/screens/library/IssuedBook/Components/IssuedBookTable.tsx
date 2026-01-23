@@ -7,7 +7,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { LibraryBookStatus, LibraryBookStatusColors } from 'src/enums/library-book-status'; // Make sure this import path is correct
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';

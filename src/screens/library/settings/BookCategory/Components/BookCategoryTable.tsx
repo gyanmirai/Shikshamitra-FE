@@ -1,4 +1,4 @@
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';

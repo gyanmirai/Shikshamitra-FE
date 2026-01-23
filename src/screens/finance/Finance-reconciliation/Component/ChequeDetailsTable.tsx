@@ -1,5 +1,5 @@
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';

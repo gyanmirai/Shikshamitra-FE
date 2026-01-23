@@ -1,6 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';

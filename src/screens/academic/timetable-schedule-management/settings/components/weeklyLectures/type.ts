@@ -1,4 +1,4 @@
-import type { IData } from 'src/components/customizabaleTable/type';
+import type { IData } from 'src/components/customizabaleTable/types';
 
 export interface ISubject {
   id: string;

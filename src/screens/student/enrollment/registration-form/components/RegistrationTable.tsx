@@ -1,4 +1,4 @@
-import type { IData, IColumn } from 'src/components/customizabaleTable/type';
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';

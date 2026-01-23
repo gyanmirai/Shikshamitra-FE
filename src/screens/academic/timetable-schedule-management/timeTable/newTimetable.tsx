@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Standards, Organization } from 'src/types/school';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 
 import dayjs from 'dayjs';

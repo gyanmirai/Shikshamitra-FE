@@ -1,7 +1,7 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { INotification } from 'src/screens/communication/NotificationHistory/type';
 
 import { Label } from 'src/components/label';
