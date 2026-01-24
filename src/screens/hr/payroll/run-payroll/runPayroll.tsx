@@ -1,7 +1,7 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';

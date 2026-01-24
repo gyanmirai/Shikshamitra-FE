@@ -1,6 +1,6 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/type';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';

@@ -2,7 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AccuralPolicyType } from 'src/enums/accuralPolicyType';
-import type { IColumn } from 'src/components/customizabaleTable/type';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
