@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Grid, TextField, Autocomplete } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 import { ReportForm } from './ReportForm';
 import { useReportOptions } from '../hooks/useReportOptions';
@@ -21,7 +22,7 @@ export default function LeaveEncashmentReport() {
     },
     validationSchema: Yup.object({
       employees: Yup.array().min(1, 'At least one employee is required'),
-      month: Yup.date().required('Month is required').nullable(),
+      month: Yup.date().required('Month is required'),
     }),
     onSubmit: (values) => {
       console.info('Generate Leave Encashment Report', values);
@@ -32,50 +33,54 @@ export default function LeaveEncashmentReport() {
 
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
-      <Grid container spacing={2}>
+      <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Autocomplete
-            multiple
-            options={employees}
-            getOptionLabel={(option: any) =>
-              `${option.firstName} ${option.lastName} (${option.employeeCode})`
-            }
-            size="small"
-            slotProps={{
-              chip: {
-                size: 'small',
-                variant: 'soft',
-              },
-            }}
-            value={formik.values.employees}
-            onChange={(_, newValue) => formik.setFieldValue('employees', newValue)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Select Employees *"
-                error={formik.touched.employees && Boolean(formik.errors.employees)}
-                helperText={formik.touched.employees && (formik.errors.employees as string)}
-              />
-            )}
-          />
+          <ShakingTextField error={!!(formik.touched.employees && formik.errors.employees)}>
+            <Autocomplete
+              multiple
+              options={employees}
+              getOptionLabel={(option: any) =>
+                `${option.fullName} (ID: ${option.employeeIdentifier})`
+              }
+              size="small"
+              slotProps={{
+                chip: {
+                  size: 'small',
+                  variant: 'soft',
+                },
+              }}
+              value={formik.values.employees}
+              onChange={(_, newValue) => formik.setFieldValue('employees', newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Employees *"
+                  error={formik.touched.employees && Boolean(formik.errors.employees)}
+                  helperText={formik.touched.employees && (formik.errors.employees as string)}
+                />
+              )}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <DatePicker
-            label="Select Month"
-            minDate={dayjs(currentYear?.startDate)}
-            maxDate={dayjs(currentYear?.endDate)}
-            views={['month', 'year']}
-            value={formik.values.month}
-            onChange={(newValue) => formik.setFieldValue('month', newValue)}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                size: 'small',
-                error: formik.touched.month && Boolean(formik.errors.month),
-                helperText: formik.touched.month && (formik.errors.month as string),
-              },
-            }}
-          />
+          <ShakingTextField error={!!(formik.touched.month && formik.errors.month)}>
+            <DatePicker
+              label="Month *"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
+              views={['month', 'year']}
+              value={formik.values.month}
+              onChange={(newValue) => formik.setFieldValue('month', newValue)}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  size: 'small',
+                  error: formik.touched.month && Boolean(formik.errors.month),
+                  helperText: formik.touched.month && (formik.errors.month as string),
+                },
+              }}
+            />
+          </ShakingTextField>
         </Grid>
       </Grid>
     </ReportForm>
