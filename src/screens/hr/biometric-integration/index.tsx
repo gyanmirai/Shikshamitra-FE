@@ -2,14 +2,15 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -126,6 +127,109 @@ const BiometricIntegrationScreen = () => {
       setEditData(null);
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
+      { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '10vw' },
+      {
+        id: 'phoneNo',
+        label: 'Mobile No.',
+        align: 'left',
+        minWidth: '8vw',
+      },
+      {
+        id: 'inTime',
+        label: 'In-Time',
+        align: 'left',
+        minWidth: '6vw',
+        render(value, row) {
+          return value || `__ __`;
+        },
+      },
+      {
+        id: 'outTime',
+        label: 'Out-Time',
+        align: 'left',
+        minWidth: '7vw',
+        render(value, row) {
+          return value || `__ __`;
+        },
+      },
+      {
+        id: 'hoursWorked',
+        label: 'Hours Worked',
+        minWidth: '9vw',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        filterType: 'enum',
+        sticky: true,
+        align: 'left',
+        minWidth: '6vw',
+        enumOptions: [
+          {
+            label: 'Present',
+            // value: EmployeeAttendanceStatus.Present,
+            value: 'Present',
+          },
+          {
+            label: 'Half Day',
+            // value: EmployeeAttendanceStatus.HalfDayLeave,
+            value: 'Half Day',
+          },
+          {
+            label: 'Leave',
+            // value: EmployeeAttendanceStatus.HalfDayLeave,
+            value: 'Leave',
+          },
+        ],
+        render(value, row) {
+          return (
+            <Label
+              color={value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'}
+            >
+              {value}
+            </Label>
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        isFilter: false,
+        minWidth: '3vw',
+        align: 'left',
+        sticky: true,
+        isSort: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              handleEditClick={() => {
+                setEditData(row);
+                open.onTrue();
+              }}
+              showThreeDots={false}
+            />
+          );
+        },
+      },
+      // {
+      //   id: 'empty',
+      //   label: ' ',
+      //   isFilter: false,
+      //   align: 'left',
+      //   render(value, row) {
+      //     return ' ';
+      //   },
+      // },
+    ],
+    [open]
+  );
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -144,8 +248,8 @@ const BiometricIntegrationScreen = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 2,
-          mb: 2,
           pl: 1,
+          mb: 1,
           mt: 2,
           flexWrap: 'wrap',
         }}
@@ -207,99 +311,7 @@ const BiometricIntegrationScreen = () => {
         isLoading={isLoading}
         noDataText={<>No Import Attendance Data Found </>}
         tableId="biometric-integration-table"
-        columns={[
-          { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
-          { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '10vw' },
-          {
-            id: 'phoneNo',
-            label: 'Mobile No.',
-            align: 'left',
-            minWidth: '8vw',
-          },
-          {
-            id: 'inTime',
-            label: 'In-Time',
-            align: 'left',
-            minWidth: '6vw',
-            render(value, row) {
-              return value || `__ __`;
-            },
-          },
-          {
-            id: 'outTime',
-            label: 'Out-Time',
-            align: 'left',
-            minWidth: '7vw',
-            render(value, row) {
-              return value || `__ __`;
-            },
-          },
-          { id: 'hoursWorked', label: 'Hours Worked', minWidth: '9vw', align: 'left' },
-          {
-            id: 'status',
-            label: 'Status',
-            filterType: 'enum',
-            sticky: true,
-            align: 'left',
-            minWidth: '6vw',
-            enumOptions: [
-              {
-                label: 'Present',
-                // value: EmployeeAttendanceStatus.Present,
-                value: 'Present',
-              },
-              {
-                label: 'Half Day',
-                // value: EmployeeAttendanceStatus.HalfDayLeave,
-                value: 'Half Day',
-              },
-              {
-                label: 'Leave',
-                // value: EmployeeAttendanceStatus.HalfDayLeave,
-                value: 'Leave',
-              },
-            ],
-            render(value, row) {
-              return (
-                <Label
-                  color={value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'}
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isFilter: false,
-            minWidth: '3vw',
-            align: 'left',
-            sticky: true,
-            isSort: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  handleEditClick={() => {
-                    setEditData(row);
-                    open.onTrue();
-                  }}
-                  showThreeDots={false}
-                />
-              );
-            },
-          },
-          // {
-          //   id: 'empty',
-          //   label: ' ',
-          //   isFilter: false,
-          //   align: 'left',
-          //   render(value, row) {
-          //     return ' ';
-          //   },
-          // },
-        ]}
+        columns={columns}
         data={attendanceData?.data || []}
       />
 

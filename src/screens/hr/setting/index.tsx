@@ -1,5 +1,7 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
@@ -69,6 +71,42 @@ const HrSetting = () => {
       })),
     [documents?.items]
   );
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'title', label: 'Document Name' },
+      { id: 'documentSize', label: 'Document Size (MB)', minWidth: '200px', align: 'left' },
+      {
+        id: 'documentTypesString',
+        label: 'Accepted Format',
+        isSort: false,
+      },
+      {
+        label: 'Actions',
+        id: 'action',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        minWidth: 50,
+        render: (value, data) => (
+          <ThreeDotsActions
+            showEditIcon
+            showDeleteIcon
+            showThreeDots={false}
+            handleDeleteClick={() => {
+              setDeleteInformation(data);
+              confirm.onTrue();
+            }}
+            handleEditClick={() => {
+              setEditData(data);
+              dialog.onTrue();
+            }}
+          />
+        ),
+      },
+    ],
+    [confirm, dialog]
+  );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ConfirmDialog
@@ -103,7 +141,7 @@ const HrSetting = () => {
                   ),
                 onUndoRestore: (dispatchFn, index) =>
                   dispatchFn(
-                    documentApi.util.updateQueryData('getDocuments', null, (draft: any) => {
+                    documentApi.util.updateQueryData('getDocuments', undefined, (draft: any) => {
                       if (!draft.items) return;
                       draft.items.splice(index, 0, deleteInformation);
                     })
@@ -165,38 +203,7 @@ const HrSetting = () => {
         tableId="documents"
         isLoading={isLoading}
         isFilter={false}
-        columns={[
-          { id: 'title', label: 'Document Name' },
-          { id: 'documentSize', label: 'Document Size (MB)', minWidth: '200px', align: 'left' },
-          {
-            id: 'documentTypesString',
-            label: 'Accepted Format',
-            isSort: false,
-          },
-          {
-            label: 'Actions',
-            id: 'action',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            minWidth: 50,
-            render: (value, data) => (
-              <ThreeDotsActions
-                showEditIcon
-                showDeleteIcon
-                showThreeDots={false}
-                handleDeleteClick={() => {
-                  setDeleteInformation(data);
-                  confirm.onTrue();
-                }}
-                handleEditClick={() => {
-                  setEditData(data);
-                  dialog.onTrue();
-                }}
-              />
-            ),
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />
       <CustomDialog

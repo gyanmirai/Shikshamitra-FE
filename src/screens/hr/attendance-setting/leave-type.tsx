@@ -2,6 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 import type { AccuralPolicyType } from 'src/enums/accuralPolicyType';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -19,6 +21,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -28,6 +31,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
+  employeeApi,
   useGetEmployeeTypeQuery,
   useAddEmployeeTypeMutation,
   useUpdateEmployeeTypeMutation,
@@ -65,7 +69,11 @@ const LeaveType = () => {
   const leaveTypeDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
-  const { data: leavePolicyData, isLoading } = useQueryAndMutation({
+  const {
+    data: leavePolicyData,
+    refetch,
+    isLoading,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeTypeQuery,
     params: mediumStageId?.id,
@@ -90,6 +98,8 @@ const LeaveType = () => {
     }
   };
 
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   const tableData = useMemo(
     () =>
       leavePolicyData?.items.map((item: ILeavePolicy) => ({
@@ -100,6 +110,50 @@ const LeaveType = () => {
         // color: item.color,
       })) || [],
     [leavePolicyData?.items]
+  );
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Leave Type',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SubjectColorIndicator color={row.color || '#ccc'} />
+            <Typography variant="body2" fontSize={13}>
+              {value || '-'}
+            </Typography>
+          </Box>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        minWidth: 60,
+        align: 'left',
+        sticky: true,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              showDeleteIcon
+              showThreeDots={false}
+              handleDeleteClick={() => {
+                setEditData(row);
+                confirm.onTrue();
+              }}
+              handleEditClick={() => {
+                setEditData(row);
+                leaveTypeDialog.onTrue();
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [confirm, leaveTypeDialog]
   );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -143,9 +197,20 @@ const LeaveType = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deleteLeavePolicy(editData?.id);
-              shikshaMitraToast.success({
-                message: `${editData?.leaveType} leave type deleted successfully`,
+              confirmWithUndo({
+                item: editData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    employeeApi.util.updateQueryData('getEmployeeType', undefined, (draft: any) => {
+                      const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        draft.items.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
+                onCommit: () => deleteLeavePolicy(editData?.id),
               });
               confirm.onFalse();
               setEditData(null);
@@ -190,88 +255,7 @@ const LeaveType = () => {
         }
         isLoading={isLoading}
         tableId="leave-policy-table"
-        columns={[
-          {
-            id: 'name',
-            label: 'Leave Type',
-            render: (value, row) => (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <SubjectColorIndicator color={row.color || '#ccc'} />
-                <Typography variant="body2" fontSize={13}>
-                  {value || '-'}
-                </Typography>
-              </Box>
-            ),
-          },
-          // {
-          //   id: 'description',
-          //   label: 'Description',
-          //   render: (value) => value || '-',
-          // },
-          //  {
-          //   id: 'leaveTypeShortName',
-          //   label: 'Leave Type Short Name',
-          // },
-          // {
-          //   id: 'leaveDays',
-          //   label: 'Leave Days',
-          //   filterType: 'number',
-          // },
-          // {
-          //   id: 'isCarryForward',
-          //   label: 'Carry Forward',
-          // },
-          // {
-          //   id: 'accrualRateString',
-          //   label: 'Accrual Rate',
-          // },
-          // {
-          //   id: 'color',
-          //   label: 'Color',
-          //   isSort: false,
-          //   isFilter: false,
-
-          //   render(value, row) {
-          //     return (
-          //       <Box
-          //         sx={{
-          //           width: 20,
-          //           height: 20,
-          //           borderRadius: '50%',
-          //           backgroundColor: value,
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
-          {
-            id: 'action',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            minWidth: 60,
-            align: 'left',
-            sticky: true,
-
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  showThreeDots={false}
-                  handleDeleteClick={() => {
-                    setEditData(row);
-                    confirm.onTrue();
-                  }}
-                  handleEditClick={() => {
-                    setEditData(row);
-                    leaveTypeDialog.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />
 

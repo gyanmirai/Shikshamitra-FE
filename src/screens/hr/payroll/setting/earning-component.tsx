@@ -11,12 +11,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -26,16 +26,21 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import {
   Box,
   Grid,
+  Alert,
   Button,
-  Switch,
   MenuItem,
   TextField,
+  FormLabel,
   Typography,
+  FormControl,
   Autocomplete,
+  ToggleButton,
   DialogActions,
-  FormControlLabel,
+  InputAdornment,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
+  employeePayrollApi,
   useGetEarningComponentsQuery,
   useAddEarningComponentMutation,
   useGetDeductionComponentsQuery,
@@ -104,6 +109,7 @@ const EarningComponent = () => {
       }, 200);
     }
   };
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -145,11 +151,39 @@ const EarningComponent = () => {
             size="small"
             loading={deleteEarningComponentLoading}
             onClick={async () => {
-              await deleteEarningComponent(deleteInformation?.id).unwrap();
-              shikshaMitraToast.success({
-                message: ` ${deleteInformation?.earningName} Earning Component deleted successfully`,
+              confirmWithUndo({
+                item: deleteInformation,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    employeePayrollApi.util.updateQueryData(
+                      'getEarningComponents',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === deleteInformation?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    employeePayrollApi.util.updateQueryData(
+                      'getEarningComponents',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, deleteInformation);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteEarningComponent(deleteInformation?.id || ''),
               });
               confirm.onFalse();
+              setEditData(null);
             }}
           >
             Yes
@@ -161,20 +195,52 @@ const EarningComponent = () => {
         isLoading={getEarningComponentsLoading}
         columns={[
           { id: 'earningName', label: 'Name', align: 'left', minWidth: '10vw' },
+          {
+            id: 'earningType',
+            label: 'Earning Type',
+            align: 'left',
+            minWidth: '10vw',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Fixed', value: 'Fixed' },
+              { label: 'Variable', value: 'Variable' },
+            ],
+          },
           { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
-          { id: 'calculationType', label: 'Component Type', align: 'left', minWidth: '10vw' },
+          {
+            id: 'calculationType',
+            label: 'Calculation Type',
+            align: 'left',
+            minWidth: '10vw',
+            filterType: 'enum',
+            enumOptions: [
+              { label: 'Amount Based', value: 'Amount' },
+              { label: 'Percentage Based', value: 'Percentage' },
+            ],
+          },
           {
             id: 'calculatePercentageBasedOn',
             label: 'Depends On',
             align: 'left',
             minWidth: '10vw',
           },
-          { id: 'amount', label: 'Amount', align: 'left', minWidth: '10vw' },
+          {
+            id: 'amount',
+            label: 'Amount',
+            align: 'right',
+            minWidth: '10vw',
+            filterType: 'number',
+          },
           {
             id: 'showOnPayslip',
             label: 'Visible In Payslip',
             align: 'left',
             minWidth: '10vw',
+            filterType: 'enum',
+            enumOptions: [
+              { value: true, label: 'Yes' },
+              { value: false, label: 'No' },
+            ],
             render(value, row) {
               return value ? 'Yes' : 'No';
             },
@@ -267,7 +333,7 @@ const validationSchema = Yup.object({
       if (earningType === 'Variable') return true;
 
       // When earningType is Fixed
-      if (!value) {
+      if (value === undefined || value === null || value === '') {
         if (calculationType === 'Percentage') {
           return this.createError({ message: 'Percentage is required' });
         }
@@ -282,10 +348,13 @@ const validationSchema = Yup.object({
         const { earningType, calculationType } = this.parent;
         if (earningType === 'Variable') return true;
         if (calculationType !== 'Percentage') return true;
-        if (!value) return true;
+
+        if (value === undefined || value === null || value === '') {
+          return this.createError({ message: 'Percentage is required' });
+        }
 
         const num = parseFloat(value);
-        if (Number.isNaN(num)) return false;
+        if (Number.isNaN(num)) return this.createError({ message: 'Invalid percentage' });
         if (num < 0) return this.createError({ message: 'Percentage must be at least 0' });
         if (num > 100) return this.createError({ message: 'Percentage must be at most 100' });
         return true;
@@ -382,11 +451,20 @@ const EarningComponentForm = ({
         {/* Earning Details */}
         <SectionCard
           title="Earning Details"
-          gridProps={{
-            sx: {
-              alignItems: 'start',
-            },
-          }}
+          headerContent={
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Earning components define how employee salary is structured, such as Basic Pay or HRA."
+            >
+              <Iconify
+                icon="lucide:info"
+                sx={{ cursor: 'pointer' }}
+                fontSize={16}
+                color="info.main"
+              />
+            </CustomTooltip>
+          }
         >
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField
@@ -442,7 +520,7 @@ const EarningComponentForm = ({
               <TextField
                 size="small"
                 fullWidth
-                label="Description (Optional)"
+                label="Description"
                 name="description"
                 multiline
                 rows={2}
@@ -454,7 +532,23 @@ const EarningComponentForm = ({
         </SectionCard>
 
         {/* Calculation Rules */}
-        <SectionCard title="Calculation Rules">
+        <SectionCard
+          title="Calculation Rules"
+          headerContent={
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Calculation rules define how the earning component is calculated, such as percentage of Basic Pay or a fixed amount."
+            >
+              <Iconify
+                icon="lucide:info"
+                sx={{ cursor: 'pointer' }}
+                fontSize={16}
+                color="info.main"
+              />
+            </CustomTooltip>
+          }
+        >
           <Grid size={{ xs: 12, sm: 6, md: 6 }}>
             <ShakingTextField
               error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
@@ -466,7 +560,10 @@ const EarningComponentForm = ({
                 label="Calculation Type *"
                 name="calculationType"
                 value={formik.values.calculationType}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.setFieldValue('calculationType', e.target.value);
+                  formik.setFieldValue('amount', '');
+                }}
                 error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
                 helperText={
                   (formik.touched.calculationType && formik.errors.calculationType) as string
@@ -543,6 +640,7 @@ const EarningComponentForm = ({
               </ShakingTextField>
             </Grid>
           )}
+
           {formik.values.earningType === 'Fixed' &&
             formik.values.calculationType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6, md: 6 }}>
@@ -550,16 +648,33 @@ const EarningComponentForm = ({
                   <TextField
                     size="small"
                     fullWidth
-                    label="Percentage (%) "
+                    label="Percentage"
                     required={formik.values.earningType === 'Fixed'}
                     name="amount"
                     type="number"
                     value={formik.values.amount}
                     onChange={(e) => {
                       const { value } = e.target;
-                      if (value.length <= 3) {
+
+                      // Allow empty value
+                      if (value === '') {
                         formik.setFieldValue('amount', value);
+                        return;
                       }
+
+                      const numericValue = Number(value);
+
+                      // Restrict between 0 and 100
+                      if (numericValue >= 0 && numericValue <= 100) {
+                        formik.setFieldValue('amount', numericValue);
+                      }
+                    }}
+                    inputProps={{
+                      min: 0,
+                      max: 100,
+                    }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">%</InputAdornment>,
                     }}
                     error={formik.touched.amount && Boolean(formik.errors.amount)}
                     helperText={(formik.touched.amount && formik.errors.amount) as string}
@@ -578,10 +693,17 @@ const EarningComponentForm = ({
                   value={formik.values.amount || ''}
                   onChange={(e) => {
                     let val = e.target.value;
-                    // Remove currency symbol, commas, spaces and negative signs
-                    val = val.replace(/\D/g, '');
+                    // Remove currency symbol and disallowed characters, but allow dots
+                    val = val.replace(/[^0-9.]/g, '');
+
+                    // Prevent multiple dots
+                    const parts = val.split('.');
+                    if (parts.length > 2) {
+                      val = `${parts[0]}.${parts.slice(1).join('')}`;
+                    }
+
                     // Convert to number and ensure it's positive
-                    if (/^\d*$/.test(val)) {
+                    if (/^\d*\.?\d*$/.test(val)) {
                       formik.setFieldValue('amount', val); // keep it as string while typing
                     }
                   }}
@@ -596,23 +718,114 @@ const EarningComponentForm = ({
               </ShakingTextField>
             </Grid>
           )}
+          <Grid size={{ xs: 12 }} display="flex">
+            <FormControl fullWidth>
+              <FormLabel sx={{ mb: 0.5, fontSize: 13 }}>Payslip Visibility *</FormLabel>
 
-          <Grid size={{ xs: 12, sm: 6, md: 6 }} display="flex" alignItems="center">
-            <FormControlLabel
-              control={
-                <Switch
+              <Box display="flex" gap={1}>
+                <ToggleButtonGroup
+                  exclusive
                   size="small"
-                  name="showOnPayslip"
-                  checked={Boolean(formik.values.showOnPayslip)}
-                  onChange={(_, checked) => {
-                    formik.setFieldValue('showOnPayslip', checked);
+                  value={formik.values.showOnPayslip ? 'VISIBLE' : 'HIDDEN'}
+                  onChange={(_, value) => {
+                    if (value !== null) {
+                      formik.setFieldValue('showOnPayslip', value === 'VISIBLE');
+                    }
                   }}
-                />
-              }
-              label="Show on Payslip"
-            />
+                  sx={{ p: 0 }}
+                >
+                  <ToggleButton
+                    value="VISIBLE"
+                    sx={{
+                      textTransform: 'none',
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: 12,
+                      gap: 0.5,
+                      '&.Mui-selected': {
+                        backgroundColor: 'success.light',
+                        color: 'success.dark',
+                      },
+                    }}
+                  >
+                    <Iconify icon="lucide:eye" fontSize={14} />
+                    Visible
+                  </ToggleButton>
+
+                  <ToggleButton
+                    value="HIDDEN"
+                    sx={{
+                      textTransform: 'none',
+                      px: 1.5,
+                      py: 0.5,
+                      fontSize: 12,
+                      gap: 0.5,
+                      '&.Mui-selected': {
+                        backgroundColor: 'warning.light',
+                        color: 'warning.dark',
+                      },
+                    }}
+                  >
+                    <Iconify icon="lucide:eye-off" fontSize={14} />
+                    Internal
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </FormControl>
           </Grid>
         </SectionCard>
+        <Grid size={{ xs: 12 }}>
+          <Box
+            sx={{
+              mt: 2,
+              minHeight: 110, // slightly higher to handle all cases
+              transition: 'opacity 0.2s ease',
+            }}
+          >
+            <Alert icon={<Iconify icon="lucide:info" />} severity="info" variant="outlined">
+              <Typography variant="body2">
+                {/* 🔹 Main calculation explanation */}
+                {formik.values.calculationType === 'Percentage' ? (
+                  <>
+                    This earning will be calculated as{' '}
+                    <strong>{formik.values.amount || 'X'}%</strong> of{' '}
+                    <strong>
+                      {componentOptions.find((c) => c.id === formik.values.selectedEarningComponent)
+                        ?.componentName || 'the selected component'}
+                    </strong>
+                    .
+                    <br />
+                    Example: If Basic Pay is ₹30,000 and percentage is 40%, this earning will be
+                    ₹12,000.
+                  </>
+                ) : (
+                  <>
+                    This earning will be added as a fixed amount.
+                    <strong>{formik.values.amount || 'X'}</strong>
+                    <br />
+                    Example: If amount is ₹5,000, the same amount will be applied to all employees.
+                  </>
+                )}
+              </Typography>
+
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {formik.values.earningType === 'Fixed'
+                  ? 'The amount will be the same for all employees.'
+                  : 'The amount can vary for each employee.'}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 0.5,
+                  visibility: formik.values.showOnPayslip ? 'hidden' : 'visible',
+                }}
+              >
+                ⚠️ This earning will <strong>not</strong> appear on employee payslips.
+              </Typography>
+            </Alert>
+          </Box>
+        </Grid>
       </DialogScrollContent>
 
       <DialogActions>

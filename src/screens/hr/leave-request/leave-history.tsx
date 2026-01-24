@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -201,10 +202,97 @@ const LeaveHistory = (props: any) => {
   useEffect(() => {
     setRejectionReason(editData?.rejectionReason || '');
   }, [editData?.rejectionReason]);
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        label: 'Name',
+        id: 'name',
+        sticky: true,
+        minWidth: '12vw',
+        align: 'left',
+      },
+      {
+        label: 'Employee Code',
+        id: 'employeeIdentifier',
+        minWidth: '9.5vw',
+        align: 'left',
+      },
+      {
+        label: 'Start Date',
+        id: 'startDate',
+        filterType: 'date',
+        minWidth: '120px',
+        align: 'left',
+        isDateFilter: true,
+      },
+      {
+        label: 'End Date',
+        id: 'endDate',
+        filterType: 'date',
+        minWidth: '100px',
+        align: 'left',
+        isDateFilter: true,
+      },
+      {
+        label: 'Total Days',
+        id: 'totalDays',
+        minWidth: '7vw',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        label: 'Organization',
+        id: 'organization',
+        align: 'left',
+        minWidth: '14vw',
+      },
+      {
+        label: 'Description',
+        id: 'description',
+        align: 'left',
+        minWidth: '14vw',
+      },
+      {
+        label: 'Remarks',
+        id: 'remarks',
+        align: 'left',
+        minWidth: '12vw',
+        render(value) {
+          return value || '-';
+        },
+      },
+      {
+        label: 'Status',
+        id: 'status',
+        filterType: 'enum',
+        align: 'left',
+        enumOptions: EmployeeLeaveStatusOptions,
+        sticky: true,
+        minWidth: '100px',
+        render(value) {
+          const color = EmployeeLeaveStatusTypeColor[
+            value as EmployeeLeaveStatusType
+          ] as LabelColor;
 
+          return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
+        },
+      },
+      {
+        label: 'Action',
+        id: 'action',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        render(_value, row) {
+          return <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />;
+        },
+      },
+    ],
+    [actions]
+  );
   return (
     <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ display: 'flex', gap: 2, mt: 1.5, pl: 1, justifyContent: 'space-between' }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 2, pl: 1, mb: 1, justifyContent: 'space-between' }}>
         <DatePicker
           label="Month-Year"
           format="MMM-YYYY"
@@ -257,92 +345,7 @@ const LeaveHistory = (props: any) => {
         isLoading={isLoading}
         tableId="leave-history-table"
         data={tableData}
-        columns={[
-          {
-            label: 'Name',
-            id: 'name',
-            sticky: true,
-            minWidth: '12vw',
-            align: 'left',
-          },
-          {
-            label: 'Employee Code',
-            id: 'employeeIdentifier',
-            minWidth: '9.5vw',
-            align: 'left',
-          },
-          {
-            label: 'Start Date',
-            id: 'startDate',
-            filterType: 'date',
-            minWidth: '120px',
-            align: 'left',
-            isDateFilter: true,
-          },
-          {
-            label: 'End Date',
-            id: 'endDate',
-            filterType: 'date',
-            minWidth: '100px',
-            align: 'left',
-            isDateFilter: true,
-          },
-          {
-            label: 'Total Days',
-            id: 'totalDays',
-            minWidth: '7vw',
-            align: 'left',
-          },
-          {
-            label: 'Organization',
-            id: 'organization',
-            align: 'left',
-            minWidth: '14vw',
-          },
-          {
-            label: 'Reason',
-            id: 'reason',
-            align: 'left',
-            minWidth: '14vw',
-          },
-          {
-            label: 'Remarks',
-            id: 'remarks',
-            align: 'left',
-            minWidth: '12vw',
-            render(value) {
-              return value || '-';
-            },
-          },
-          {
-            label: 'Status',
-            id: 'status',
-            filterType: 'enum',
-            align: 'left',
-            enumOptions: EmployeeLeaveStatusOptions,
-            sticky: true,
-            minWidth: '100px',
-            render(value) {
-              const color = EmployeeLeaveStatusTypeColor[
-                value as EmployeeLeaveStatusType
-              ] as LabelColor;
-
-              return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
-            },
-          },
-          {
-            label: 'Action',
-            id: 'action',
-            isFilter: false,
-            isSort: false,
-            sticky: true,
-            render(_value, row) {
-              return (
-                <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
-              );
-            },
-          },
-        ]}
+        columns={columns}
       />
 
       <ConfirmDialog

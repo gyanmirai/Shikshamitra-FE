@@ -3,16 +3,18 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -29,6 +31,9 @@ import {
 } from 'src/redux/employee/employeeApi';
 
 import type { TabComponentType } from '.';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 // ----------------------------------------------------------------------
 
@@ -77,110 +82,152 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
-
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
 
   // Handler to remove a single file attachment
   // const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
   //   setFieldValue('docs', '');
   // }, []);
 
-  const { initialValues, errors, touched, setFieldValue, values, handleSubmit, handleBlur } =
-    useFormik({
-      initialValues: {
-        leaveTypeId: editData?.leaveTypeId || '',
-        reason: editData?.reason || editData?.description || '',
-        startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
-        endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
-        rejectionReason: editData?.rejectionReason || '',
-        status: editData?.status || 0,
-        docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
-      },
-      validationSchema: Yup.object().shape({
-        leaveTypeId: Yup.string().required('Leave Type is required'),
-        startDate: Yup.mixed()
-          .test(
-            'is-valid-dayjs',
-            'Start Date is required',
-            (value) => value && dayjs(value as any).isValid()
-          )
-          .required('Start Date is required'),
-        endDate: Yup.mixed()
-          .test('is-valid-dayjs', 'End Date is required', (value) => {
-            if (!value) return false;
-            return dayjs(value as any).isValid();
-          })
-          .required('End Date is required')
-          .test(
-            'endDate-after-start',
-            'End Date must be after or equal to start date',
-            function (value) {
-              const { startDate } = this.parent;
-              if (startDate && value) {
-                const start = dayjs(startDate as any);
-                const end = dayjs(value as any);
-                return end.isAfter(start) || end.isSame(start, 'day');
-              }
-              return true;
-            }
-          ),
-        reason: Yup.string()
-          .min(5, 'Reason must be at least 5 characters')
-          .max(500, 'Reason must not exceed 500 characters')
-          .required('Reason for leave is required'),
-        status: editData ? Yup.string().required('Status is required') : Yup.string().nullable(),
-        rejectionReason: Yup.string().test(
-          'rejectionReason',
-          'Rejection reason is required',
-          function (value) {
-            const { status } = this.parent;
-            if (editData && status === EmployeeLeaveStatusType.Rejected) {
-              return !!value || this.createError({ message: 'Rejection reason is required' });
-            }
-            return true;
+  const {
+    initialValues,
+    errors,
+    touched,
+    setFieldValue,
+    values,
+    handleSubmit,
+    handleBlur,
+    resetForm,
+    isSubmitting,
+  } = useFormik({
+    initialValues: {
+      leaveTypeId: editData?.leaveTypeId || '',
+      reason: editData?.reason || editData?.description || '',
+      startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
+      endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
+      rejectionReason: editData?.rejectionReason || '',
+      status: editData?.status,
+      docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
+    },
+    validationSchema: Yup.object().shape({
+      leaveTypeId: Yup.string().required('Leave Type is required'),
+      startDate: Yup.mixed()
+        .required('Start Date is required')
+        .test(
+          'is-valid-dayjs',
+          'Start Date must be a valid date',
+          (value) => value && dayjs(value as any).isValid()
+        )
+        .test(
+          'min-date',
+          (value) =>
+            `Start Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
+          (value) => {
+            if (!currentYear?.startDate) return false;
+            return value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day');
+          }
+        )
+        .test(
+          'max-date',
+          (value) =>
+            `Start Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
+          (value) => {
+            if (!currentYear?.endDate) return false;
+            return value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day');
           }
         ),
-      }),
-      onSubmit: async (formValues: FormValues, { resetForm }) => {
-        try {
-          if (editData) {
-            await updateLeaveStatus({
-              leaveRequestId: editData.id,
-              body: {
-                status:
-                  formValues.status === EmployeeLeaveStatusType.Rejected
-                    ? 'REJECTED'
-                    : formValues.status === EmployeeLeaveStatusType.Approved
-                      ? 'APPROVED'
-                      : 'REVIEWED',
-                remarks: formValues.rejectionReason || undefined,
-              },
-            });
-          } else {
-            await addLeave({
-              mediumStageId: medium?.id,
-              leaveTypeId: formValues.leaveTypeId,
-              startDate: dateConvertor(dayjs(formValues.startDate).format(dateFormat)),
-              endDate: dateConvertor(dayjs(formValues.endDate).format(dateFormat)),
-              reason: formValues.reason,
-              attachment: formValues.docs
-                ? formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, '')
-                : undefined,
-            });
-          }
 
-          handleClose?.(null, true);
-        } catch (e) {
-          console.error(e);
+      endDate: Yup.mixed()
+        .required('End Date is required')
+        .test(
+          'is-valid-dayjs',
+          'End Date must be a valid date',
+          (value) => value && dayjs(value as any).isValid()
+        )
+        // eslint-disable-next-line func-names
+        .test('is-after-start-date', 'End Date cannot be before Start Date', function (value) {
+          const { startDate } = this.parent;
+          if (!value || !startDate) return true;
+          return dayjs(value as any).isSameOrAfter(dayjs(startDate));
+        })
+        .test(
+          'min-date',
+          (value) =>
+            `End Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
+          (value) => {
+            if (!currentYear?.startDate) return false;
+            return value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day');
+          }
+        )
+        .test(
+          'max-date',
+          (value) =>
+            `End Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
+          (value) => {
+            if (!currentYear?.endDate) return false;
+            return value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day');
+          }
+        ),
+      reason: Yup.string()
+        .min(5, 'Reason must be at least 5 characters')
+        .max(500, 'Reason must not exceed 500 characters')
+        .required('Reason for leave is required'),
+      status: Yup.string().nullable(),
+      rejectionReason: Yup.string().when('status', {
+        is: EmployeeLeaveStatusType.Rejected,
+        then: (schema) => schema.required('Rejection reason is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+    }),
+    onSubmit: async (formValues: FormValues, { setSubmitting }) => {
+      try {
+        setSubmitting(true);
+        if (editData) {
+          await updateLeaveStatus({
+            leaveRequestId: editData.id,
+            body: {
+              status:
+                formValues.status === EmployeeLeaveStatusType.Rejected
+                  ? 'REJECTED'
+                  : formValues.status === EmployeeLeaveStatusType.Approved
+                    ? 'APPROVED'
+                    : 'REVIEWED',
+              remarks: formValues.rejectionReason || undefined,
+            },
+          });
+        } else {
+          await addLeave({
+            mediumStageId: currentMedium?.id,
+            leaveTypeId: formValues.leaveTypeId,
+            startDate: dateConvertor(dayjs(formValues.startDate).format(dateFormat)),
+            endDate: dateConvertor(dayjs(formValues.endDate).format(dateFormat)),
+            reason: formValues.reason,
+            attachment: formValues.docs
+              ? formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, '')
+              : undefined,
+          });
         }
-      },
-    });
+        handleClose?.(null, true);
+        resetForm();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (!editData) {
+      resetForm();
+    }
+  }, [editData, resetForm]);
   return (
     <>
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
           <Grid container spacing={3}>
-            <Grid size={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
                 <CustomSelect
                   isLoading={isLeavePolicyLoading}
@@ -189,7 +236,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   value={values.leaveTypeId}
                   name="leaveTypeId"
                   valueKey="id"
-                  disabled={!!editData}
+                  disabled={!!editData || isLeavePolicyLoading}
                   labelKey="leaveType"
                   error={!!touched.leaveTypeId && !!errors.leaveTypeId}
                   helperText={(touched.leaveTypeId && errors.leaveTypeId) || ''}
@@ -205,7 +252,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <DatePicker
                   label="Start Date *"
                   value={values.startDate}
-                  disabled={!!editData}
+                  disabled={!!editData || !currentYear}
+                  format="DD/MM/YYYY"
+                  disablePast
+                  minDate={dayjs(currentYear?.startDate)}
+                  maxDate={dayjs(currentYear?.endDate)}
                   onChange={(value) => setFieldValue('startDate', value)}
                   slotProps={{
                     textField: {
@@ -224,7 +275,11 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <DatePicker
                   label="End Date *"
                   value={values.endDate}
-                  disabled={!!editData}
+                  disabled={!!editData || !currentYear}
+                  format="DD/MM/YYYY"
+                  disablePast
+                  minDate={values.startDate || dayjs(currentYear?.startDate)}
+                  maxDate={dayjs(currentYear?.endDate)}
                   onChange={(value) => setFieldValue('endDate', value)}
                   slotProps={{
                     textField: {
@@ -238,7 +293,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               </ShakingTextField>
             </Grid>
 
-            <Grid size={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField error={touched.reason && Boolean(errors.reason)}>
                 <TextField
                   fullWidth
@@ -254,9 +309,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid size={12}>
+            <Grid size={{ xs: 12 }}>
               <FileUploader
-                disabled={editData}
+                disabled={!!editData}
                 // @ts-ignore
                 value={values.docs}
                 multiple={false}
@@ -399,14 +454,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           variant="outlined"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => {
-            handleClose?.(null, false);
+          onClick={(e) => {
+            handleClose?.(e, false);
+            resetForm();
           }}
         >
           Cancel
         </Button>
         {!editData && (
-          <Button
+          <LoadingButton
+            loading={isSubmitting}
             startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
             onClick={(e: any) => {
               handleSubmit(e);
@@ -414,13 +471,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             type="submit"
             size="small"
             variant="contained"
-            disabled={isLoading}
           >
             Submit
-          </Button>
+          </LoadingButton>
         )}
 
-        {values.status === EmployeeLeaveStatusType.Rejected && (
+        {editData && values.status !== EmployeeLeaveStatusType.Approved && (
           <LoadingButton
             loading={isUpdateStatusLoading}
             onClick={(e: any) => {
@@ -430,7 +486,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             disabled={isUpdateStatusLoading}
             size="small"
           >
-            Approve
+            {values.status === EmployeeLeaveStatusType.Rejected ? 'Approve' : 'Update Status'}
           </LoadingButton>
         )}
       </DialogActions>

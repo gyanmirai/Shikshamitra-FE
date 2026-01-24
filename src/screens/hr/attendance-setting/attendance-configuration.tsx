@@ -1,14 +1,13 @@
 'use client';
 
-import type dayjs from 'dayjs';
-
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 // Icons
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 // Date Pickers
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 // UI Components
@@ -17,6 +16,7 @@ import {
   Card,
   Grid,
   Stack,
+  Paper,
   Button,
   Switch,
   Divider,
@@ -80,6 +80,10 @@ const validationSchema = Yup.object().shape({
 });
 
 const AttendanceConfigurationScreen = () => {
+  // UI state for enhanced interactions (UI-only)
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null); // Track which card is hovered for subtle animations
+  const theme = useTheme();
+
   const formik = useFormik<AttendanceConfiguration>({
     initialValues: INITIAL_ATTENDANCE_CONFIG,
     validationSchema,
@@ -88,14 +92,7 @@ const AttendanceConfigurationScreen = () => {
     },
   });
 
-  const { values, handleChange, setFieldValue, touched, errors, handleSubmit } = formik;
-
-  // Helper to handle TimePicker changes (Dayjs -> string)
-  const handleTimeChange = (field: string) => (newValue: dayjs.Dayjs | null) => {
-    if (newValue) {
-      setFieldValue(field, newValue.format('HH:mm'));
-    }
-  };
+  const { values, handleChange, setFieldValue, touched, errors } = formik;
 
   // Helper for error props - returns validation status and message
   const getFieldStatus = (field: string) => {
@@ -131,141 +128,111 @@ const AttendanceConfigurationScreen = () => {
           >
             <Scrollbar sx={{ p: 2, flexGrow: 1 }}>
               <Grid container spacing={2}>
-                {/* Section A: Work Schedule */}
-                {/* <Grid size={{ xs: 12, md: 6 }}>
-              <Card
-                elevation={0}
-                sx={{ border: '1px solid #E0E0E0', borderRadius: 3, height: '100%' }}
-              >
-                <CardContent>
-                  <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                    <AccessTimeIcon color="primary" />
-                    <Typography variant="h6" fontWeight={600}>
-                      Work Schedule
-                    </Typography>
-                  </Stack>
-                  <Divider sx={{ mb: 3 }} />
-
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 6 }}>
-                      {(() => {
-                        const { error, errorMessage } = getFieldStatus('shiftTiming.startTime');
-                        return (
-                          <TimePicker
-                            label="Shift Start Time"
-                            value={dayjs(values.shiftTiming.startTime, 'HH:mm')}
-                            onChange={handleTimeChange('shiftTiming.startTime')}
-                            slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                size: 'small',
-                                error,
-                                helperText: errorMessage,
-                              },
-                            }}
-                          />
-                        );
-                      })()}
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      {(() => {
-                        const { error, errorMessage } = getFieldStatus('shiftTiming.endTime');
-                        return (
-                          <TimePicker
-                            label="Shift End Time"
-                            value={dayjs(values.shiftTiming.endTime, 'HH:mm')}
-                            onChange={handleTimeChange('shiftTiming.endTime')}
-                            slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                size: 'small',
-                                error,
-                                helperText: errorMessage,
-                              },
-                            }}
-                          />
-                        );
-                      })()}
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      {(() => {
-                        const { error, errorMessage } = getFieldStatus('shiftTiming.breakDuration');
-                        return (
-                          <TextField
-                            fullWidth
-                            size="small"
-                            label="Break Duration (Minutes)"
-                            name="shiftTiming.breakDuration"
-                            type="number"
-                            value={values.shiftTiming.breakDuration}
-                            onChange={handleChange}
-                            InputProps={{
-                              endAdornment: <InputAdornment position="end">min</InputAdornment>,
-                            }}
-                            error={error}
-                            helperText={errorMessage}
-                          />
-                        );
-                      })()}
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      {(() => {
-                        const { error, errorMessage } = getFieldStatus('weeklyOff');
-                        return (
-                          <TextField
-                            select
-                            fullWidth
-                            size="small"
-                            label="Weekly Off Pattern"
-                            name="weeklyOff"
-                            value={values.weeklyOff}
-                            onChange={handleChange}
-                            error={error}
-                            helperText={errorMessage}
-                          >
-                            <MenuItem value="sunday">Sunday Only</MenuItem>
-                            <MenuItem value="saturday_sunday">Saturday & Sunday</MenuItem>
-                            <MenuItem value="custom">Custom</MenuItem>
-                          </TextField>
-                        );
-                      })()}
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-                 </Grid> */}
-
-                {/* Section B: Daily Attendance Rules */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Card elevation={0} sx={{ borderRadius: 3, height: '100%', p: 0 }}>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                        <Typography variant="h6" fontWeight={600}>
-                          Daily Punch Rules
-                        </Typography>
+                  <Card
+                    elevation={0}
+                    onMouseEnter={() => setHoveredCard('daily')}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    sx={{
+                      borderRadius: 3,
+                      height: '100%',
+                      p: 0,
+                      border: `2px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                      boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.04)}`,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: hoveredCard === 'daily' ? 'translateY(-4px)' : 'translateY(0)',
+                      '&:hover': {
+                        boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
+                        borderColor: alpha(theme.palette.primary.main, 0.2),
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ p: 2 }}>
+                      <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.success.main, 0.1),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Iconify
+                            icon="material-symbols:schedule"
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              color: theme.palette.success.main,
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            fontWeight={600}
+                            sx={{
+                              color: theme.palette.text.primary,
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            Daily Punch Rules
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Configure daily attendance policies
+                          </Typography>
+                        </Box>
                       </Stack>
-                      <Divider sx={{ mb: 2 }} />
 
-                      <Stack spacing={2}>
+                      <Divider sx={{ mb: 2, opacity: 0.6 }} />
+
+                      <Stack spacing={3}>
                         {(() => {
                           const { error, errorMessage } = getFieldStatus(
                             'dailyRules.hoursBasedPayPercentage'
                           );
                           return (
-                            <TextField
-                              fullWidth
-                              size="small"
-                              label="Hours Based Pay Percentage"
-                              name="dailyRules.hoursBasedPayPercentage"
-                              type="number"
-                              value={values.dailyRules.hoursBasedPayPercentage}
-                              onChange={handleChange}
-                              InputProps={{
-                                endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                              }}
-                              error={error}
-                              helperText={errorMessage}
-                            />
+                            <Box>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{
+                                  mb: 1.5,
+                                  fontWeight: 600,
+                                  color: theme.palette.text.primary,
+                                }}
+                              >
+                                Minimum Hours for Full Pay
+                              </Typography>
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Hours Based Pay Percentage"
+                                name="dailyRules.hoursBasedPayPercentage"
+                                type="number"
+                                value={values.dailyRules.hoursBasedPayPercentage}
+                                onChange={handleChange}
+                                InputProps={{
+                                  endAdornment: (
+                                    <InputAdornment position="end">
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ fontWeight: 500 }}
+                                      >
+                                        %
+                                      </Typography>
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                error={error}
+                                helperText={
+                                  errorMessage ||
+                                  'Minimum percentage of hours required for full day pay'
+                                }
+                              />
+                            </Box>
                           );
                         })()}
                       </Stack>
@@ -275,31 +242,94 @@ const AttendanceConfigurationScreen = () => {
 
                 {/* Section C: Late & Early Rules */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Card elevation={0} sx={{ borderRadius: 3 }}>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                        <Typography variant="h6">Late Entry & Early Exit</Typography>
+                  <Card
+                    elevation={0}
+                    onMouseEnter={() => setHoveredCard('late')}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    sx={{
+                      borderRadius: 3,
+                      height: '100%',
+                      border: `2px solid ${alpha(theme.palette.warning.main, 0.08)}`,
+                      boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.04)}`,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: hoveredCard === 'late' ? 'translateY(-4px)' : 'translateY(0)',
+                      '&:hover': {
+                        boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
+                        borderColor: alpha(theme.palette.warning.main, 0.2),
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ p: 2 }}>
+                      <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.warning.main, 0.1),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Iconify
+                            icon="material-symbols:timer"
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              color: theme.palette.warning.main,
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            fontWeight={600}
+                            sx={{
+                              color: theme.palette.text.primary,
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            Late Entry & Early Exit
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Set penalties and grace periods
+                          </Typography>
+                        </Box>
                       </Stack>
-                      <Divider sx={{ mb: 2 }} />
 
-                      <Grid container spacing={3} flexDirection={{ md: 'column' }}>
+                      <Divider sx={{ mb: 2, opacity: 0.6 }} />
+
+                      <Grid container spacing={3}>
                         <Grid size={{ xs: 12 }}>
                           {(() => {
                             const { error, errorMessage } = getFieldStatus(
                               'lateEarlyRules.graceTime'
                             );
                             return (
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Grace Time (Minutes)"
-                                name="lateEarlyRules.graceTime"
-                                type="number"
-                                value={values.lateEarlyRules.graceTime}
-                                onChange={handleChange}
-                                error={error}
-                                helperText={errorMessage || 'Allowed delay before marking late'}
-                              />
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{
+                                    mb: 1.5,
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                  }}
+                                >
+                                  Grace Period
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  label="Grace Time (Minutes)"
+                                  name="lateEarlyRules.graceTime"
+                                  type="number"
+                                  value={values.lateEarlyRules.graceTime}
+                                  onChange={handleChange}
+                                  error={error}
+                                  helperText={errorMessage || 'Allowed delay before marking late'}
+                                />
+                              </Box>
                             );
                           })()}
                         </Grid>
@@ -309,17 +339,31 @@ const AttendanceConfigurationScreen = () => {
                               'lateEarlyRules.maxLateAllowedPerMonth'
                             );
                             return (
-                              <TextField
-                                fullWidth
-                                size="small"
-                                label="Max Late Allowed / Month"
-                                name="lateEarlyRules.maxLateAllowedPerMonth"
-                                type="number"
-                                value={values.lateEarlyRules.maxLateAllowedPerMonth}
-                                onChange={handleChange}
-                                error={error}
-                                helperText={errorMessage || 'e.g. 3 times allowed'}
-                              />
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{
+                                    mb: 1.5,
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                  }}
+                                >
+                                  Monthly Limit
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  label="Max Late Allowed / Month"
+                                  name="lateEarlyRules.maxLateAllowedPerMonth"
+                                  type="number"
+                                  value={values.lateEarlyRules.maxLateAllowedPerMonth}
+                                  onChange={handleChange}
+                                  error={error}
+                                  helperText={
+                                    errorMessage || 'Maximum late entries allowed per month'
+                                  }
+                                />
+                              </Box>
                             );
                           })()}
                         </Grid>
@@ -329,21 +373,47 @@ const AttendanceConfigurationScreen = () => {
                               'lateEarlyRules.penaltyType'
                             );
                             return (
-                              <TextField
-                                select
-                                fullWidth
-                                size="small"
-                                label="Penalty Action"
-                                name="lateEarlyRules.penaltyType"
-                                value={values.lateEarlyRules.penaltyType}
-                                onChange={handleChange}
-                                error={error}
-                                helperText={errorMessage}
-                              >
-                                <MenuItem value="none">No Penalty</MenuItem>
-                                <MenuItem value="deduct_half_day">Deduct Half Pay</MenuItem>
-                                <MenuItem value="deduct_full_day">Deduct Full Day Pay</MenuItem>
-                              </TextField>
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{
+                                    mb: 1.5,
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                  }}
+                                >
+                                  Penalty Action
+                                </Typography>
+                                <TextField
+                                  select
+                                  fullWidth
+                                  size="small"
+                                  label="Penalty Action"
+                                  name="lateEarlyRules.penaltyType"
+                                  value={values.lateEarlyRules.penaltyType}
+                                  onChange={handleChange}
+                                  error={error}
+                                  helperText={
+                                    errorMessage || 'Action taken when monthly limit is exceeded'
+                                  }
+                                >
+                                  <MenuItem value="none">
+                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                      <Typography>No Penalty</Typography>
+                                    </Stack>
+                                  </MenuItem>
+                                  <MenuItem value="deduct_half_day">
+                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                      <Typography>Deduct Half Pay</Typography>
+                                    </Stack>
+                                  </MenuItem>
+                                  <MenuItem value="deduct_full_day">
+                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                      <Typography>Deduct Full Day Pay</Typography>
+                                    </Stack>
+                                  </MenuItem>
+                                </TextField>
+                              </Box>
                             );
                           })()}
                         </Grid>
@@ -354,67 +424,219 @@ const AttendanceConfigurationScreen = () => {
 
                 {/* Section D: Overtime & Holiday Rules */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Card elevation={0} sx={{ borderRadius: 3 }}>
-                    <CardContent>
-                      <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                        <Typography variant="h6" fontWeight={600}>
-                          Overtime & Holiday Rules
-                        </Typography>
+                  <Card
+                    elevation={0}
+                    onMouseEnter={() => setHoveredCard('overtime')}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    sx={{
+                      borderRadius: 3,
+                      height: '100%',
+                      border: `2px solid ${alpha(theme.palette.info.main, 0.08)}`,
+                      boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.04)}`,
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: hoveredCard === 'overtime' ? 'translateY(-4px)' : 'translateY(0)',
+                      '&:hover': {
+                        boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
+                        borderColor: alpha(theme.palette.info.main, 0.2),
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ p: 2 }}>
+                      <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                        <Box
+                          sx={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.info.main, 0.1),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Iconify
+                            icon="material-symbols:work-history"
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              color: theme.palette.info.main,
+                            }}
+                          />
+                        </Box>
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            fontWeight={600}
+                            sx={{
+                              color: theme.palette.text.primary,
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            Overtime & Holiday Rules
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Configure overtime calculation
+                          </Typography>
+                        </Box>
                       </Stack>
-                      <Divider sx={{ mb: 1 }} />
 
-                      <Stack spacing={2}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={values.overtime.enabled}
-                              onChange={(e) => setFieldValue('overtime.enabled', e.target.checked)}
-                            />
-                          }
-                          label="Enable Overtime Calculation"
-                        />
+                      <Divider sx={{ mb: 2, opacity: 0.6 }} />
 
-                        <Collapse in={values.overtime.enabled}>
-                          <Stack spacing={2} pl={2} borderLeft="2px solid #eee">
-                            {(() => {
-                              const { error, errorMessage } = getFieldStatus('overtime.rate');
-                              return (
-                                <TextField
-                                  select
-                                  fullWidth
-                                  size="small"
-                                  label="Overtime Rate"
-                                  name="overtime.rate"
-                                  value={values.overtime.rate}
-                                  onChange={handleChange}
-                                  error={error}
-                                  helperText={errorMessage}
+                      <Stack spacing={3}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.info.main, 0.04),
+                            border: `1px solid ${alpha(theme.palette.info.main, 0.12)}`,
+                          }}
+                        >
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={values.overtime.enabled}
+                                onChange={(e) =>
+                                  setFieldValue('overtime.enabled', e.target.checked)
+                                }
+                                sx={{
+                                  '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: theme.palette.info.main,
+                                  },
+                                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                    backgroundColor: theme.palette.info.main,
+                                  },
+                                }}
+                              />
+                            }
+                            label={
+                              <Box>
+                                <Typography variant="subtitle2" fontWeight={600}>
+                                  Enable Overtime Calculation
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Automatically calculate overtime pay for extra hours
+                                </Typography>
+                              </Box>
+                            }
+                            sx={{ m: 0 }}
+                          />
+                        </Box>
+
+                        <Collapse in={values.overtime.enabled} timeout={300}>
+                          <Paper
+                            sx={{
+                              p: 2,
+                              borderRadius: 2,
+                              bgcolor: alpha(theme.palette.background.paper, 0.6),
+                              border: `1px solid ${alpha(theme.palette.grey[300], 0.3)}`,
+                            }}
+                          >
+                            <Stack spacing={3}>
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{
+                                    mb: 1.5,
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                  }}
                                 >
-                                  <MenuItem value="1.5x">1.5x (Normal OT)</MenuItem>
-                                  <MenuItem value="2.0x">2.0x (Double Pay)</MenuItem>
-                                  <MenuItem value="flat">Flat Rate</MenuItem>
-                                </TextField>
-                              );
-                            })()}
-                            {(() => {
-                              const { error, errorMessage } = getFieldStatus(
-                                'overtime.minOvertimeMinutes'
-                              );
-                              return (
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  label="Min Duration for OT (Minutes)"
-                                  name="overtime.minOvertimeMinutes"
-                                  type="number"
-                                  value={values.overtime.minOvertimeMinutes}
-                                  onChange={handleChange}
-                                  error={error}
-                                  helperText={errorMessage}
-                                />
-                              );
-                            })()}
-                          </Stack>
+                                  <Iconify
+                                    icon="material-symbols:calculate"
+                                    sx={{ width: 16, height: 16 }}
+                                  />
+                                  Overtime Rate
+                                </Typography>
+                                {(() => {
+                                  const { error, errorMessage } = getFieldStatus('overtime.rate');
+                                  return (
+                                    <TextField
+                                      select
+                                      fullWidth
+                                      size="small"
+                                      label="Overtime Rate"
+                                      name="overtime.rate"
+                                      value={values.overtime.rate}
+                                      onChange={handleChange}
+                                      error={error}
+                                      helperText={
+                                        errorMessage || 'Rate multiplier for overtime hours'
+                                      }
+                                    >
+                                      <MenuItem value="1.5x">
+                                        <Stack direction="row" alignItems="center" spacing={2}>
+                                          <Typography fontWeight={500}>1.5x</Typography>
+                                          <Typography variant="caption" color="text.secondary">
+                                            (Standard Rate)
+                                          </Typography>
+                                        </Stack>
+                                      </MenuItem>
+                                      <MenuItem value="2.0x">
+                                        <Stack direction="row" alignItems="center" spacing={2}>
+                                          <Typography fontWeight={500}>2.0x</Typography>
+                                          <Typography variant="caption" color="text.secondary">
+                                            (Double Pay)
+                                          </Typography>
+                                        </Stack>
+                                      </MenuItem>
+                                      <MenuItem value="flat">
+                                        <Stack direction="row" alignItems="center" spacing={2}>
+                                          <Typography fontWeight={500}>Flat Rate</Typography>
+                                          <Typography variant="caption" color="text.secondary">
+                                            (Fixed Amount)
+                                          </Typography>
+                                        </Stack>
+                                      </MenuItem>
+                                    </TextField>
+                                  );
+                                })()}
+                              </Box>
+
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{
+                                    mb: 1.5,
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Iconify
+                                    icon="material-symbols:hourglass-top"
+                                    sx={{ width: 16, height: 16 }}
+                                  />
+                                  Minimum Duration
+                                </Typography>
+                                {(() => {
+                                  const { error, errorMessage } = getFieldStatus(
+                                    'overtime.minOvertimeMinutes'
+                                  );
+                                  return (
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Min Duration for OT (Minutes)"
+                                      name="overtime.minOvertimeMinutes"
+                                      type="number"
+                                      value={values.overtime.minOvertimeMinutes}
+                                      onChange={handleChange}
+                                      error={error}
+                                      helperText={
+                                        errorMessage ||
+                                        'Minimum overtime duration to qualify for OT pay'
+                                      }
+                                    />
+                                  );
+                                })()}
+                              </Box>
+                            </Stack>
+                          </Paper>
                         </Collapse>
                       </Stack>
                     </CardContent>

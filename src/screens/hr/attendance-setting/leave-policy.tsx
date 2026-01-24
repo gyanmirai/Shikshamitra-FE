@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 // Removed dayjs since date fields are no longer part of simplified form
 import * as Yup from 'yup';
@@ -19,6 +20,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -26,6 +28,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { AccuralPolicyType, AccuralPolicyTypeArray } from 'src/enums/accuralPolicyType';
 import {
+  employeeApi,
   useGetEmployeeLeavePolicyQuery,
   useAddEmployeeLeavePolicyMutation,
   useDeleteEmployeeLeavePolicyMutation,
@@ -99,6 +102,95 @@ const LeavePolicy = () => {
     }
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'title',
+        label: 'Name',
+        minWidth: '12vw',
+        align: 'left',
+        sticky: true,
+      },
+      {
+        id: 'leaveType',
+        label: 'Leave Type',
+        minWidth: '11vw',
+        align: 'left',
+      },
+      {
+        id: 'accuralPolicyType',
+        label: 'Accural Policy',
+        minWidth: '11vw',
+        align: 'left',
+      },
+      {
+        id: 'leaveCount',
+        label: 'Leave Count',
+        minWidth: '11vw',
+        align: 'left',
+      },
+      {
+        id: 'maxLeavePerYear',
+        label: 'Maximum Per year',
+        minWidth: '17vw',
+        align: 'left',
+      },
+      {
+        id: 'carryForward',
+        label: 'Carry Forward',
+        minWidth: '16vw',
+        align: 'left',
+        render: (value) => (value ? 'Yes' : 'No'),
+      },
+      {
+        id: 'encashmentAllowed',
+        label: 'Encashable',
+        minWidth: '16vw',
+        align: 'left',
+        render: (value) => (value ? 'Yes' : 'No'),
+      },
+      {
+        id: 'paidType',
+        label: 'Paid Type',
+        minWidth: '16vw',
+        align: 'left',
+      },
+      {
+        id: 'requiresApproval',
+        label: 'Requires Approval',
+        minWidth: '16vw',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              showDeleteIcon
+              showThreeDots={false}
+              handleDeleteClick={() => {
+                setEditData(row);
+                confirm.onTrue();
+              }}
+              handleEditClick={() => {
+                setEditData(row);
+                leavePolicyDialog.onTrue();
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [confirm, leavePolicyDialog]
+  );
+
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   // Derived table data (kept inline in CustomizableTable for simplified form) – remove unused mapping.
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -142,8 +234,37 @@ const LeavePolicy = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deleteLeavePolicy(editData?.id);
+              confirmWithUndo({
+                item: editData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    employeeApi.util.updateQueryData(
+                      'getEmployeeLeavePolicy',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    employeeApi.util.updateQueryData(
+                      'getEmployeeLeavePolicy',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, editData);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteLeavePolicy(editData?.id || ''),
+              });
               confirm.onFalse();
+              setEditData(null);
             }}
           >
             Yes
@@ -185,91 +306,7 @@ const LeavePolicy = () => {
         }
         isLoading={isLoading}
         tableId="leave-policy-table"
-        columns={[
-          {
-            id: 'title',
-            label: 'Name',
-            minWidth: '12vw',
-            align: 'left',
-            sticky: true,
-          },
-          {
-            id: 'leaveType',
-            label: 'Leave Type',
-            minWidth: '11vw',
-            align: 'left',
-          },
-          {
-            id: 'accuralPolicyType',
-            label: 'Accural Policy',
-            minWidth: '11vw',
-            align: 'left',
-          },
-          {
-            id: 'leaveCount',
-            label: 'Leave Count',
-            minWidth: '11vw',
-            align: 'left',
-          },
-          {
-            id: 'maxLeavePerYear',
-            label: 'Maximum Per year',
-            minWidth: '17vw',
-            align: 'left',
-          },
-          {
-            id: 'carryForward',
-            label: 'Carry Forward',
-            minWidth: '16vw',
-            align: 'left',
-            render: (value) => (value ? 'Yes' : 'No'),
-          },
-          {
-            id: 'encashmentAllowed',
-            label: 'Encashable',
-            minWidth: '16vw',
-            align: 'left',
-            render: (value) => (value ? 'Yes' : 'No'),
-          },
-          {
-            id: 'paidType',
-            label: 'Paid Type',
-            minWidth: '16vw',
-            align: 'left',
-            filterType: 'date',
-          },
-          {
-            id: 'requiresApproval',
-            label: 'Requires Approval',
-            minWidth: '16vw',
-            align: 'left',
-            filterType: 'date',
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  showThreeDots={false}
-                  handleDeleteClick={() => {
-                    setEditData(row);
-                    confirm.onTrue();
-                  }}
-                  handleEditClick={() => {
-                    setEditData(row);
-                    leavePolicyDialog.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData}
       />
 
@@ -543,6 +580,21 @@ export const LeavePolicyForm = ({
               Allow unused leaves to carry forward to next year
             </Typography>
           </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={formik.values.requiresApproval}
+                  onChange={formik.handleChange}
+                  name="requiresApproval"
+                />
+              }
+              sx={{ mt: -2 }}
+              label="Requires approval from supervisor"
+            />
+          </Grid>
           <Grid size={{ xs: 6 }} display="flex" flexDirection="column">
             <FormControlLabel
               control={
@@ -560,10 +612,10 @@ export const LeavePolicyForm = ({
               Allow employees to encash unused leaves
             </Typography>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 6 }} sx={{ mb: 2 }}>
             {formik.values.encashmentAllowed && (
               <>
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5, pt: 0 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
                   When Should Leave Be Encashed?
                 </Typography>
                 <RadioGroup
@@ -588,21 +640,6 @@ export const LeavePolicyForm = ({
                 )}
               </>
             )}
-          </Grid>
-
-          <Grid size={{ xs: 6 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="small"
-                  checked={formik.values.requiresApproval}
-                  onChange={formik.handleChange}
-                  name="requiresApproval"
-                />
-              }
-              sx={{ mt: -2 }}
-              label="Requires approval from supervisor"
-            />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>

@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -13,12 +14,12 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
-import { useState, useEffect, useCallback } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
@@ -153,6 +154,128 @@ const HrEmployee = () => {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'roleValue',
+        label: 'Role',
+        align: 'left',
+        sticky: true,
+        render(value, row) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <RoleColorIndicator color={getRoleColor(value)} />
+              <Label variant="soft">{value}</Label>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'fullName',
+        label: 'Name',
+        minWidth: '12vw',
+        sticky: true,
+        align: 'left',
+        render(value, row) {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Avatar
+                alt={value}
+                src={convertBase64Format(row.profilePicture)}
+                sx={{
+                  height: 32,
+                  width: 32,
+                  border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
+                }}
+              />{' '}
+              {value} ({row.employeeIdentifier})
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'dob',
+        label: 'Date of Birth',
+        minWidth: '8vw',
+        filterType: 'date',
+        align: 'left',
+      },
+      {
+        id: 'genderValue',
+        label: 'Gender',
+        align: 'left',
+        filterType: 'enum',
+        enumOptions: [
+          { label: 'Male', value: 'Male' },
+          { label: 'Female', value: 'Female' },
+        ],
+      },
+      {
+        id: 'doi',
+        label: 'Date of Joining',
+        minWidth: 150,
+        filterType: 'date',
+        align: 'left',
+      },
+      { id: 'email', label: 'Email', align: 'left' },
+      { id: 'mobileNo', label: 'Mobile No.', minWidth: 150, align: 'left' },
+      {
+        id: 'isTeaching',
+        label: 'Employee Group',
+        minWidth: '10vw',
+        align: 'left',
+        filterType: 'enum',
+        enumOptions: EmployeeGroupTypeFilter,
+        render(value, row) {
+          return EmployeeGroupType[value === true ? 0 : 1];
+        },
+      },
+      { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
+      // { id: 'organization', label: 'Organization', align: 'left' },
+      {
+        id: 'status',
+        label: 'Status',
+        filterType: 'enum',
+        enumOptions: EmployeeStatusTypeOptions,
+        minWidth: '90px',
+        align: 'left',
+        sticky: true,
+        render(value, row) {
+          const color = EmployeeStatusTypeColor[row.status as EmployeeStatusType] as LabelColor;
+          return <Label color={color}>{EmployeeStatusType[value]}</Label>;
+        },
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        minWidth: '80px',
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              actions={(props) => actions({ ...props, row })}
+              placement="right-top"
+              showViewIcon
+              showEditIcon
+              handleViewClick={() => {
+                setSearchParams({ employee: row?.id });
+              }}
+              // showThreeDots={false}
+              handleEditClick={() => {
+                setEditData(row);
+                setOpen(true);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {open ? (
@@ -230,126 +353,7 @@ const HrEmployee = () => {
                 pageSize: rowsPerPage,
               }));
             }}
-            columns={[
-              {
-                id: 'roleValue',
-                label: 'Role',
-                align: 'left',
-                sticky: true,
-                minWidth: '10vw',
-                render(value, row) {
-                  return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <RoleColorIndicator color={getRoleColor(value)} />
-                      <Label variant="soft">{value}</Label>
-                    </Box>
-                  );
-                },
-              },
-              {
-                id: 'fullName',
-                label: 'Name',
-                minWidth: '16vw',
-                sticky: true,
-                align: 'left',
-                render(value, row) {
-                  return (
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Avatar
-                        alt={value}
-                        src={convertBase64Format(row.profilePicture)}
-                        sx={{
-                          height: 32,
-                          width: 32,
-                          border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
-                        }}
-                      />{' '}
-                      {value} ({row.employeeIdentifier})
-                    </Box>
-                  );
-                },
-              },
-              {
-                id: 'dob',
-                label: 'Date of Birth',
-                minWidth: '8vw',
-                filterType: 'date',
-                align: 'left',
-              },
-              {
-                id: 'genderValue',
-                label: 'Gender',
-                align: 'left',
-                filterType: 'enum',
-                enumOptions: [
-                  { label: 'Male', value: 'Male' },
-                  { label: 'Female', value: 'Female' },
-                ],
-              },
-              {
-                id: 'doi',
-                label: 'Date of Joining',
-                minWidth: 150,
-                filterType: 'date',
-                align: 'left',
-              },
-              { id: 'email', label: 'Email', align: 'left' },
-              { id: 'mobileNo', label: 'Mobile No.', minWidth: 150, align: 'left' },
-              {
-                id: 'isTeaching',
-                label: 'Employee Group',
-                minWidth: '10vw',
-                align: 'left',
-                filterType: 'enum',
-                enumOptions: EmployeeGroupTypeFilter,
-                render(value, row) {
-                  return EmployeeGroupType[value === true ? 0 : 1];
-                },
-              },
-              { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
-              // { id: 'organization', label: 'Organization', align: 'left' },
-              {
-                id: 'status',
-                label: 'Status',
-                filterType: 'enum',
-                enumOptions: EmployeeStatusTypeOptions,
-                minWidth: '90px',
-                align: 'left',
-                sticky: true,
-                render(value, row) {
-                  const color = EmployeeStatusTypeColor[
-                    row.status as EmployeeStatusType
-                  ] as LabelColor;
-                  return <Label color={color}>{EmployeeStatusType[value]}</Label>;
-                },
-              },
-              {
-                id: 'actions',
-                label: 'Actions',
-                isSort: false,
-                sticky: true,
-                isFilter: false,
-                minWidth: '90px',
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(props) => actions({ ...props, row })}
-                      placement="right-top"
-                      showViewIcon
-                      showEditIcon
-                      handleViewClick={() => {
-                        setSearchParams({ employee: row?.id });
-                      }}
-                      // showThreeDots={false}
-                      handleEditClick={() => {
-                        setEditData(row);
-                        setOpen(true);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
+            columns={columns}
             data={tableData || []}
           />
           <CustomDialog
