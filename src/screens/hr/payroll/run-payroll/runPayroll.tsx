@@ -1,11 +1,12 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -21,7 +22,7 @@ import {
 } from 'src/redux/runPayroll/runPayrollApi';
 
 import { salaryData } from './component/verifyPayrollComponent';
-import { DeductionSection } from '../salarySlip-generate/salarySlipGenerate';
+import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
 
 const RunPayroll = () => {
   const deductionDialog = useBoolean();
@@ -43,6 +44,102 @@ const RunPayroll = () => {
       type: 'mutation',
       currentQueryAndMutation: useGenerateAndLockPayrollMutation,
     });
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'employeeName',
+        label: 'Employee Name',
+        minWidth: '160px',
+        align: 'left',
+        sticky: true,
+        render(value, row) {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Avatar
+                alt={value}
+                src={convertBase64Format(row.profilePicture)}
+                sx={{ height: 32, width: 32 }}
+              />{' '}
+              {value} ({row.employeeIdentifier})
+            </Box>
+          );
+        },
+      },
+      { id: 'employeeGroup', label: 'Employee Group', minWidth: '160px', align: 'left' },
+      {
+        id: 'totalWorkingDays',
+        label: 'Total Working Days',
+        minWidth: '170px',
+        align: 'left',
+      },
+      {
+        id: 'totalPresentDays',
+        label: 'Total Present Days',
+        minWidth: '170px',
+        align: 'left',
+      },
+      {
+        id: 'totalAbsentDays',
+        label: 'Total Absent Days',
+        minWidth: '170px',
+        align: 'left',
+      },
+      {
+        id: 'salary',
+        label: 'Salary',
+        minWidth: '100px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'grossSalary',
+        label: 'Gross Salary',
+        minWidth: '130px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'basicSalary',
+        label: 'Basic Salary',
+        minWidth: '130px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'totalDeduction',
+        label: 'Total Deduction',
+        minWidth: '150px',
+        align: 'left',
+        filterType: 'number',
+        render(value, row) {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
+              <IconButton
+                onClick={() => {
+                  deductionDialog.onTrue();
+                }}
+                size="small"
+              >
+                <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
+              </IconButton>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'netSalary',
+        label: 'Net Salary',
+        filterType: 'number',
+        minWidth: '130px',
+        align: 'left',
+      },
+    ],
+    [deductionDialog]
+  );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -124,131 +221,29 @@ const RunPayroll = () => {
             noDataText={<>No Data Found For Payroll</>}
             tableId="employee-salary-table"
             isLoading={getRunPayrollPreviewLoading}
-            columns={[
-              {
-                id: 'employeeName',
-                label: 'Employee Name',
-                minWidth: '160px',
-                align: 'left',
-                sticky: true,
-                render(value, row) {
-                  return (
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Avatar
-                        alt={value}
-                        src={convertBase64Format(row.profilePicture)}
-                        sx={{ height: 32, width: 32 }}
-                      />{' '}
-                      {value} ({row.employeeIdentifier})
-                    </Box>
-                  );
-                },
-              },
-              { id: 'employeeGroup', label: 'Employee Group', minWidth: '160px', align: 'left' },
-              {
-                id: 'totalWorkingDays',
-                label: 'Total Working Days',
-                minWidth: '170px',
-                align: 'left',
-              },
-              {
-                id: 'totalPresentDays',
-                label: 'Total Present Days',
-                minWidth: '170px',
-                align: 'left',
-              },
-              {
-                id: 'totalAbsentDays',
-                label: 'Total Absent Days',
-                minWidth: '170px',
-                align: 'left',
-              },
-              {
-                id: 'salary',
-                label: 'Salary',
-                minWidth: '100px',
-                align: 'left',
-                filterType: 'number',
-              },
-              {
-                id: 'grossSalary',
-                label: 'Gross Salary',
-                minWidth: '130px',
-                align: 'left',
-                filterType: 'number',
-              },
-              {
-                id: 'basicSalary',
-                label: 'Basic Salary',
-                minWidth: '130px',
-                align: 'left',
-                filterType: 'number',
-              },
-              {
-                id: 'totalDeduction',
-                label: 'Total Deduction',
-                minWidth: '150px',
-                align: 'left',
-                filterType: 'number',
-                render(value, row) {
-                  return (
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="caption" fontSize="13px">
-                        {value}
-                      </Typography>
-                      <IconButton
-                        onClick={() => {
-                          deductionDialog.onTrue();
-                        }}
-                        size="small"
-                      >
-                        <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
-                      </IconButton>
-                    </Box>
-                  );
-                },
-              },
-              {
-                id: 'netSalary',
-                label: 'Net Salary',
-                filterType: 'number',
-                minWidth: '130px',
-                align: 'left',
-              },
-            ]}
+            columns={columns}
             data={salaryData}
           />
         </Card>
       )}
 
-      {/* <CustomDialog
-        maxWidth="lg"
-        open={open}
-        handleClose={() => setOpen(false)}
-        title={
-          <Box display="flex" alignItems="center" gap={1}>
-            Run Payroll
-            <Typography fontSize={14} color="text.secondary" component="span">
-              ( {` Month :- ₹{month?.format('MMMM')}, Organization :- ₹{organizationValue?.name}`}
-              ){' '}
-            </Typography>
-          </Box>
-        }
-      >
-        <VerifyPayrollComponent
-          // onSubmit={handleSubmit}
-          onClose={() => {
-            setOpen(false);
-          }}
-        />
-      </CustomDialog> */}
       <CustomDialog
         open={deductionDialog.value}
         handleClose={() => deductionDialog.onFalse()}
         title="Deduction History"
+        maxWidth="sm"
       >
         <Box p={2}>
-          <DeductionSection data={[]} />
+          <SalaryDetailsTableCard
+            title="Deductions"
+            subheader="Breakdown of deductions"
+            icon="solar:minus-circle-linear"
+            iconColor={{ bg: 'error.lighter', color: 'error.main' }}
+            data={[]}
+            tableId="deduction-table"
+            nameColumnLabel="Deduction Type"
+            noDataText="No Deduction Found"
+          />
         </Box>
       </CustomDialog>
     </Box>

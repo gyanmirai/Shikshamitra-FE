@@ -71,7 +71,7 @@ export const SectionCard = ({
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 2, md: 3 },
+        p: { xs: 2, md: 2 },
         mb: 3,
         position: 'relative',
         borderRadius: 2,
@@ -92,10 +92,10 @@ export const SectionCard = ({
         display="flex"
         justifyContent={title ? 'space-between' : 'end'}
         alignItems="center"
-        mb={title || headerContent ? 3 : 0}
+        mb={title || headerContent ? 2 : 0}
         sx={{
           borderBottom: title ? `1px dashed ${alpha(theme.palette.grey[500], 0.2)}` : 'none',
-          pb: title ? 2 : 0,
+          pb: title ? 1 : 0,
         }}
       >
         {title && (

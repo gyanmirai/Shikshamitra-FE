@@ -60,7 +60,7 @@ const LeaveRequest = () => {
           },
           { name: 'Leave Management' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 2, mb: 2 }}
         description={
           currentActiveComponent?.value === 'leaveRequest'
             ? 'Create new leave requests and manage existing ones by approving or rejecting them.'
@@ -84,7 +84,7 @@ const LeaveRequest = () => {
 
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 1 }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
           role="tablist"
         >
           {TABS.map((tab) => (

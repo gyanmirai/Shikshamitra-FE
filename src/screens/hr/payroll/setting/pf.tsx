@@ -18,13 +18,23 @@ import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
+  Box,
+  Stack,
+  Button,
+  TextField,
+  Typography,
+  DialogActions,
+  InputAdornment,
+} from '@mui/material';
+import {
+  pfApi,
   useGetPFQuery,
   useAddPFMutation,
   useUpdatePFMutation,
@@ -79,6 +89,8 @@ const PF = () => {
       setEditData(null);
     }
   };
+
+  const { confirmWithUndo } = useConfirmWithUndo();
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -101,7 +113,7 @@ const PF = () => {
             onClick={dialog.onTrue}
             sx={{ px: '32px' }}
           >
-            PF
+            PF Rule
           </Button>
         }
       />
@@ -125,9 +137,26 @@ const PF = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deletePF(editData?.id || '');
-              shikshaMitraToast.success({
-                message: `PF rule "${editData?.name}" deleted successfully`,
+              confirmWithUndo({
+                item: editData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    pfApi.util.updateQueryData('getPF', undefined, (draft: any) => {
+                      const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        draft.items.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    pfApi.util.updateQueryData('getPF', undefined, (draft: any) => {
+                      if (!draft.items) return;
+                      draft.items.splice(index, 0, editData);
+                    })
+                  ),
+                onCommit: () => deletePF(editData?.id || ''),
               });
               confirm.onFalse();
               setEditData(null);
@@ -324,19 +353,39 @@ const PFForm = ({
             >
               <TextField
                 size="small"
-                label="Employee Percentage *"
-                type="number"
                 fullWidth
+                label="Employee Percentage *"
                 name="employeePercentage"
+                type="number"
                 value={formik.values.employeePercentage}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const { value } = e.target;
+
+                  // Allow empty value
+                  if (value === '') {
+                    formik.setFieldValue('employeePercentage', value);
+                    return;
+                  }
+
+                  const numericValue = Number(value);
+
+                  // Restrict between 0 and 100
+                  if (numericValue >= 0 && numericValue <= 100) {
+                    formik.setFieldValue('employeePercentage', numericValue);
+                  }
+                }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                }}
                 error={
                   formik.touched.employeePercentage && Boolean(formik.errors.employeePercentage)
                 }
                 helperText={
-                  formik.touched.employeePercentage && formik.errors.employeePercentage
-                    ? String(formik.errors.employeePercentage)
-                    : ''
+                  (formik.touched.employeePercentage && formik.errors.employeePercentage) as string
                 }
               />
             </ShakingTextField>
@@ -345,19 +394,39 @@ const PFForm = ({
             >
               <TextField
                 size="small"
-                type="number"
-                label="Employer Percentage *"
                 fullWidth
+                label="Employer Percentage *"
                 name="employerPercentage"
+                type="number"
                 value={formik.values.employerPercentage}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const { value } = e.target;
+
+                  // Allow empty value
+                  if (value === '') {
+                    formik.setFieldValue('employerPercentage', value);
+                    return;
+                  }
+
+                  const numericValue = Number(value);
+
+                  // Restrict between 0 and 100
+                  if (numericValue >= 0 && numericValue <= 100) {
+                    formik.setFieldValue('employerPercentage', numericValue);
+                  }
+                }}
+                inputProps={{
+                  min: 0,
+                  max: 100,
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                }}
                 error={
                   formik.touched.employerPercentage && Boolean(formik.errors.employerPercentage)
                 }
                 helperText={
-                  formik.touched.employerPercentage && formik.errors.employerPercentage
-                    ? String(formik.errors.employerPercentage)
-                    : ''
+                  (formik.touched.employerPercentage && formik.errors.employerPercentage) as string
                 }
               />
             </ShakingTextField>

@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -73,7 +74,7 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 2, mb: 1 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
@@ -90,7 +91,7 @@ const AttendanceTrackingScreen = () => {
               }}
               // variant="fullWidth"
               role="tablist"
-              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
               // slotProps={{ tab: { px: 0 } }}
             >
               {MAIN_TABS.map((tab) => (
@@ -223,8 +224,8 @@ const DateWise = ({
         // icon: <Iconify icon="mdi:cross-circle-outline" />,
       },
       {
-        value: 'Half day',
-        label: 'Half day',
+        value: 'Half-Day',
+        label: 'Half Day',
         count: counts['Half-Day'] || 0,
         color: 'warning',
         // icon: <Iconify icon="radix-icons:half-2" />,
@@ -261,7 +262,84 @@ const DateWise = ({
       setOrganization(medium?.educationMediumStages?.[0]?.id);
     }
   }, [medium?.educationMediumStages]);
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'fullName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
+      { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '150px' },
+      { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
+      {
+        id: 'inTime',
+        label: 'In-Time',
+        align: 'left',
+        minWidth: '120px',
+        render(value, row) {
+          return value || `__ __`;
+        },
+      },
+      {
+        id: 'outTime',
+        label: 'Out-Time',
+        align: 'left',
+        minWidth: '120px',
+        render(value, row) {
+          return value || `__ __`;
+        },
+      },
+      { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left', minWidth: '150px' },
+      {
+        id: 'remarks',
+        label: 'Remarks',
+        align: 'left',
+        minWidth: '200px',
+        render: (value, row) => {
+          // Split address into lines and take first two lines
+          const addressLines = value.split(', ');
+          const displayAddress = addressLines.slice(0, 3).join(', ');
+          const hasMoreLines = addressLines.length > 3;
 
+          return (
+            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '13px',
+                  width: '200px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  lineHeight: '1.2em',
+                  maxHeight: '2.4em',
+                }}
+              >
+                {displayAddress}
+                {hasMoreLines && '...'}
+              </Typography>
+            </CustomTooltip>
+          );
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        sticky: true,
+        isSort: false,
+        isFilter: false,
+        minWidth: '100px',
+        align: 'left',
+        render(value, row) {
+          return (
+            <Label
+              color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
+            >
+              {value}
+            </Label>
+          );
+        },
+      },
+    ],
+    []
+  );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {' '}
@@ -356,140 +434,7 @@ const DateWise = ({
         showCheckbox={selectedStudents.length !== 0}
         tableId="employee-attendance-table"
         isLoading={isLoading}
-        columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '60px',
-          //   sticky: true,
-          //   isSort: false,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(tableData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
-          { id: 'fullName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
-          { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '150px' },
-          { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
-          {
-            id: 'inTime',
-            label: 'In-Time',
-            align: 'left',
-            minWidth: '120px',
-            render(value, row) {
-              return value || `__ __`;
-            },
-          },
-          {
-            id: 'outTime',
-            label: 'Out-Time',
-            align: 'left',
-            minWidth: '120px',
-            render(value, row) {
-              return value || `__ __`;
-            },
-          },
-          { id: 'totalHoursWorked', label: 'Hours Worked', align: 'left', minWidth: '150px' },
-          {
-            id: 'remarks',
-            label: 'Remarks',
-            align: 'left',
-            minWidth: '200px',
-            render: (value, row) => {
-              // Split address into lines and take first two lines
-              const addressLines = value.split(', ');
-              const displayAddress = addressLines.slice(0, 3).join(', ');
-              const hasMoreLines = addressLines.length > 3;
-
-              return (
-                <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '13px',
-                      width: '200px',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: '1.2em',
-                      maxHeight: '2.4em',
-                    }}
-                  >
-                    {displayAddress}
-                    {hasMoreLines && '...'}
-                  </Typography>
-                </CustomTooltip>
-              );
-            },
-          },
-          // {
-          //   id: 'status',
-          //   label: 'Status',
-          //   filterType: 'enum',
-          //   sticky: true,
-          //   enumOptions: EmployeeAttendanceStatusOptions,
-          //   render(value, row) {
-          //     return (
-          //       <Label
-          //         color={
-          //           value === EmployeeAttendanceStatus.Present
-          //             ? 'success'
-          //             : value === EmployeeAttendanceStatus.FullDayLeave
-          //               ? 'error'
-          //               : 'warning'
-          //         }
-          //       >
-          //         {value}
-          //       </Label>
-          //     );
-          //   },
-          // },
-          {
-            id: 'status',
-            label: 'Status',
-            sticky: true,
-            isSort: false,
-            isFilter: false,
-            minWidth: '100px',
-            align: 'left',
-            render(value, row) {
-              return (
-                <Label
-                  color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
-                >
-                  {value}
-                </Label>
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []}
       />
       {sendInstantNotificationDialogValue.value && (
@@ -668,6 +613,116 @@ const EmployeeWise = ({
       setOrganization(medium?.educationMediumStages?.[0]?.id);
     }
   }, [medium?.educationMediumStages]);
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      // {
+      //   id: 'checkBox',
+      //   align: 'left',
+      //   minWidth: '60px',
+      //   sticky: true,
+      //   isSort: false,
+      //   isFilter: false,
+      //   label: '',
+      //   renderColumn() {
+      //     return (
+      //       <Checkbox
+      //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+      //         onChange={(e) => {
+      //           if (e.target.checked) {
+      //             setSelectedStudents(tableData || []);
+      //           } else {
+      //             setSelectedStudents([]);
+      //           }
+      //         }}
+      //       />
+      //     );
+      //   },
+      //   render(value, row) {
+      //     return (
+      //       <Checkbox
+      //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
+      //         onChange={(e) => {
+      //           if (e.target.checked) {
+      //             setSelectedStudents([...selectedStudents, row]);
+      //           } else {
+      //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+      //           }
+      //         }}
+      //       />
+      //     );
+      //   },
+      // },
+      {
+        id: 'attendanceDate',
+        label: 'Date',
+        filterType: 'date',
+        sticky: true,
+        render(value, row) {
+          return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
+        },
+      },
+      {
+        id: 'day',
+        label: 'Day',
+        minWidth: '6vw',
+        align: 'left',
+      },
+      {
+        id: 'timeIn',
+        align: 'left',
+        label: 'In-time',
+        minWidth: '6vw',
+        render(value, row) {
+          return value || `__ __`;
+        },
+      },
+      {
+        id: 'timeOut',
+        align: 'left',
+        label: 'Out-time',
+        minWidth: '8vw',
+        render(value, row) {
+          return value || `__ __`;
+        },
+      },
+      { id: 'totalHoursWorked', align: 'left', label: 'Hours Worked', minWidth: '10vw' },
+      { id: 'description', label: 'Description' },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        minWidth: '100px',
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <Label
+              color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
+            >
+              {value}
+            </Label>
+          );
+        },
+        // render(value: number, row) {
+        //   const status = EmployeeAttendanceStatus[row.statusType];
+        //   return (
+        //     <Label
+        //       variant="soft"
+        //       color={
+        //         EmployeeAttendanceStatusColor[
+        //           status as keyof typeof EmployeeAttendanceStatusColor
+        //         ]
+        //       }
+        //     >
+        //       {status}
+        //     </Label>
+        //   );
+        // },
+      },
+    ],
+    []
+  );
   return (
     <>
       <Box
@@ -836,114 +891,7 @@ const EmployeeWise = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="employee-wise-attendance-table"
           isLoading={attendanceLoading}
-          columns={[
-            // {
-            //   id: 'checkBox',
-            //   align: 'left',
-            //   minWidth: '60px',
-            //   sticky: true,
-            //   isSort: false,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(tableData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     return (
-            //       <Checkbox
-            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
-            {
-              id: 'attendanceDate',
-              label: 'Date',
-              filterType: 'date',
-              sticky: true,
-              render(value, row) {
-                return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
-              },
-            },
-            {
-              id: 'day',
-              label: 'Day',
-              minWidth: '6vw',
-              align: 'left',
-            },
-            {
-              id: 'timeIn',
-              align: 'left',
-              label: 'In-time',
-              minWidth: '6vw',
-              render(value, row) {
-                return value || `__ __`;
-              },
-            },
-            {
-              id: 'timeOut',
-              align: 'left',
-              label: 'Out-time',
-              minWidth: '8vw',
-              render(value, row) {
-                return value || `__ __`;
-              },
-            },
-            { id: 'totalHoursWorked', align: 'left', label: 'Hours Worked', minWidth: '10vw' },
-            { id: 'description', label: 'Description' },
-            {
-              id: 'status',
-              label: 'Status',
-              align: 'left',
-              minWidth: '100px',
-              sticky: true,
-              isFilter: false,
-              render(value, row) {
-                return (
-                  <Label
-                    color={
-                      value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'
-                    }
-                  >
-                    {value}
-                  </Label>
-                );
-              },
-              // render(value: number, row) {
-              //   const status = EmployeeAttendanceStatus[row.statusType];
-              //   return (
-              //     <Label
-              //       variant="soft"
-              //       color={
-              //         EmployeeAttendanceStatusColor[
-              //           status as keyof typeof EmployeeAttendanceStatusColor
-              //         ]
-              //       }
-              //     >
-              //       {status}
-              //     </Label>
-              //   );
-              // },
-            },
-          ]}
+          columns={columns}
           data={attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []}
         />
       )}

@@ -10,6 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -45,7 +46,7 @@ const PaySlipGenerationScreen = () => {
     setOrganization(medium?.educationMediumStages?.[0]?.id || '');
   }, [medium]);
 
-  const [getEmployees, { data: employees, isLoading }] = useQueryAndMutation({
+  const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeQuery,
   });
@@ -74,7 +75,7 @@ const PaySlipGenerationScreen = () => {
     }
   }, [employee?.id, getEmployeeSalarySlip, monthYear]);
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <CustomBreadcrumbs
         heading="Generate Salary Slip"
         links={[
@@ -173,247 +174,198 @@ const PaySlipGenerationScreen = () => {
         </Box>
       </Stack>
 
-      {employee?.id && !employeeSalarySlipLoading && (
+      {employee?.id && !employeeSalarySlipLoading ? (
         <>
           {/* Summary Stats */}
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                sx={{
-                  p: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  boxShadow: (theme) => theme.customShadows?.z8 || theme.shadows[3],
-                }}
-              >
-                <Avatar
-                  variant="rounded"
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: 'success.lighter',
-                    color: 'success.dark',
-                  }}
-                >
-                  <Iconify icon="solar:wallet-bold-duotone" width={32} />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Total Salary
-                  </Typography>
-                  <Typography variant="h4">
-                    {formatCurrency(employeeSalarySlip?.totalEarning || 0)}
-                  </Typography>
-                </Box>
-              </Card>
+              <SummaryWidget
+                title="Total Salary"
+                total={employeeSalarySlip?.totalEarning || 0}
+                icon="solar:wallet-bold-duotone"
+                color="success"
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                sx={{
-                  p: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  boxShadow: (theme) => theme.customShadows?.z8 || theme.shadows[3],
-                }}
-              >
-                <Avatar
-                  variant="rounded"
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: 'error.lighter',
-                    color: 'error.dark',
-                  }}
-                >
-                  <Iconify icon="solar:bill-list-bold-duotone" width={32} />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Total Deduction
-                  </Typography>
-                  <Typography variant="h4">
-                    {formatCurrency(employeeSalarySlip?.totalDeduction || 0)}
-                  </Typography>
-                </Box>
-              </Card>
+              <SummaryWidget
+                title="Total Deduction"
+                total={employeeSalarySlip?.totalDeduction || 0}
+                icon="solar:bill-list-bold-duotone"
+                color="error"
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card
-                sx={{
-                  p: 3,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  bgcolor: 'background.paper',
-                  boxShadow: (theme) => theme.customShadows?.z8 || theme.shadows[3],
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Avatar
-                  variant="rounded"
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: 'info.lighter',
-                    color: 'info.dark',
-                  }}
-                >
-                  <Iconify icon="solar:card-send-bold-duotone" width={32} />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Net Payable
-                  </Typography>
-                  <Typography variant="h4">
-                    {formatCurrency(employeeSalarySlip?.netSalary || 0)}
-                  </Typography>
-                </Box>
-              </Card>
+              <SummaryWidget
+                title="Net Payable"
+                total={employeeSalarySlip?.netSalary || 0}
+                icon="solar:card-send-bold-duotone"
+                color="info"
+              />
             </Grid>
           </Grid>
-
+          <Divider />
           {/* Tables Section */}
-          <Grid container spacing={3} sx={{ mt: 3 }}>
+          <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardHeader
-                  title="Earnings"
-                  subheader="Breakdown of earnings"
-                  avatar={
-                    <Avatar
-                      sx={{
-                        bgcolor: 'success.lighter',
-                        color: 'success.main',
-                        width: 32,
-                        height: 32,
-                      }}
-                    >
-                      <Iconify icon="solar:hand-money-linear" width={20} />
-                    </Avatar>
-                  }
-                />
-                <Divider />
-                <EarningSection data={employeeSalarySlip?.earnings || []} />
-              </Card>
+              <SalaryDetailsTableCard
+                title="Earnings"
+                subheader="Breakdown of earnings"
+                icon="solar:hand-money-linear"
+                iconColor={{ bg: 'success.lighter', color: 'success.main' }}
+                data={employeeSalarySlip?.earnings || []}
+                tableId="earning-table"
+                nameColumnLabel="Earning Type"
+                noDataText="No Earning Found"
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Card>
-                <CardHeader
-                  title="Deductions"
-                  subheader="Breakdown of deductions"
-                  avatar={
-                    <Avatar
-                      sx={{ bgcolor: 'error.lighter', color: 'error.main', width: 32, height: 32 }}
-                    >
-                      <Iconify icon="solar:minus-circle-linear" width={20} />
-                    </Avatar>
-                  }
-                />
-                <Divider />
-                <DeductionSection data={employeeSalarySlip?.deductions || []} />
-              </Card>
+              <SalaryDetailsTableCard
+                title="Deductions"
+                subheader="Breakdown of deductions"
+                icon="solar:minus-circle-linear"
+                iconColor={{ bg: 'error.lighter', color: 'error.main' }}
+                data={employeeSalarySlip?.deductions || []}
+                tableId="deduction-table"
+                nameColumnLabel="Deduction Type"
+                noDataText="No Deduction Found"
+              />
             </Grid>
           </Grid>
         </>
+      ) : employeeSalarySlipLoading ? (
+        <LoadingScreen />
+      ) : (
+        <EmptyContent title="No Data Found Search the Employee" />
       )}
-
-      {employeeSalarySlipLoading && <LoadingScreen />}
     </Box>
   );
 };
 
 export default PaySlipGenerationScreen;
 
-export const EarningSection = ({ data }: { data: any }) => (
-  <CustomizableTable
-    noDataText="No Earning Found"
-    isSearch={false}
-    isFilter={false}
-    isPagination={false}
-    isShowedDense={false}
-    tableId="earning-table"
-    columns={[
-      {
-        id: 'name',
-        label: 'Earning Type',
-        render(value, row) {
-          return (
-            <Typography
-              variant="subtitle2"
-              sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
-            >
-              {value}
-            </Typography>
-          );
-        },
-      },
-      {
-        id: 'amount',
-        label: 'Amount',
-        filterType: 'number',
-        render(value, row) {
-          return (
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
-              }}
-            >
-              {formatCurrency(value)}
-            </Typography>
-          );
-        },
-      },
-    ]}
-    data={data || []}
-  />
+interface SalaryDetailsTableCardProps {
+  title: string;
+  subheader: string;
+  icon: string;
+  iconColor: { bg: string; color: string };
+  data: any[];
+  tableId: string;
+  nameColumnLabel: string;
+  noDataText: string;
+}
+
+export const SalaryDetailsTableCard = ({
+  title,
+  subheader,
+  icon,
+  iconColor,
+  data,
+  tableId,
+  nameColumnLabel,
+  noDataText,
+}: SalaryDetailsTableCardProps) => (
+  <Card>
+    <CardHeader
+      title={title}
+      subheader={subheader}
+      avatar={
+        <Avatar
+          sx={{
+            bgcolor: iconColor.bg,
+            color: iconColor.color,
+            width: 32,
+            height: 32,
+          }}
+        >
+          <Iconify icon={icon} width={20} />
+        </Avatar>
+      }
+      sx={{ p: 2 }}
+    />
+
+    <Box sx={{ px: 2, py: 1, pt: 0 }}>
+      <CustomizableTable
+        noDataText={noDataText}
+        isSearch={false}
+        isFilter={false}
+        isPagination={false}
+        isShowedDense={false}
+        tableId={tableId}
+        columns={[
+          {
+            id: 'name',
+            label: nameColumnLabel,
+            render(value, row) {
+              return (
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
+                >
+                  {value}
+                </Typography>
+              );
+            },
+          },
+          {
+            id: 'amount',
+            label: 'Amount',
+            filterType: 'number',
+            render(value, row) {
+              return (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
+                  }}
+                >
+                  {formatCurrency(value)}
+                </Typography>
+              );
+            },
+          },
+        ]}
+        data={data || []}
+      />
+    </Box>
+  </Card>
 );
 
-export const DeductionSection = ({ data }: { data: any }) => (
-  <CustomizableTable
-    noDataText="No Deduction Found"
-    isSearch={false}
-    isFilter={false}
-    isPagination={false}
-    isShowedDense={false}
-    tableId="deduction-table"
-    columns={[
-      {
-        id: 'name',
-        label: 'Deduction Type',
-        render(value, row) {
-          return (
-            <Typography
-              variant="subtitle2"
-              sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
-            >
-              {value}
-            </Typography>
-          );
-        },
-      },
-      {
-        id: 'amount',
-        label: 'Amount',
-        filterType: 'number',
-        render(value, row) {
-          return (
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
-              }}
-            >
-              {formatCurrency(value)}
-            </Typography>
-          );
-        },
-      },
-    ]}
-    data={data || []}
-  />
+interface SummaryWidgetProps {
+  title: string;
+  total: number;
+  icon: string;
+  color: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+}
+
+const SummaryWidget = ({ title, total, icon, color }: SummaryWidgetProps) => (
+  <Card
+    sx={{
+      p: 2,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 2,
+      boxShadow: (theme) => theme.customShadows?.z8 || theme.shadows[3],
+    }}
+  >
+    <Avatar
+      variant="rounded"
+      sx={{
+        width: 56,
+        height: 56,
+        bgcolor: `${color}.lighter`,
+        color: `${color}.dark`,
+      }}
+    >
+      <Iconify icon={icon} width={32} />
+    </Avatar>
+
+    <Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+        {title}
+      </Typography>
+      <Typography variant="h4">{formatCurrency(total)}</Typography>
+    </Box>
+  </Card>
 );
