@@ -4,8 +4,6 @@ import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Label, type LabelColor } from 'src/components/label';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeTermsQuery } from 'src/redux/feeCollection/feeTerms';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
@@ -28,29 +26,31 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+import feeCollectionData from '../../../../../../financeFeeCollection.json';
+
 export const FeeTermAccordion = () => {
   // Mocking the API call
-  const { data: terms, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeTermsQuery,
-  });
+  // const { data: terms, isLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetFeeTermsQuery,
+  // });
   const theme = useTheme();
 
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          mt: 2,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: 120,
-        }}
-      >
-        <Box className="loader" height={24} />
-      </Box>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <Box
+  //       sx={{
+  //         mt: 2,
+  //         display: 'flex',
+  //         justifyContent: 'center',
+  //         alignItems: 'center',
+  //         height: 120,
+  //       }}
+  //     >
+  //       <Box className="loader" height={24} />
+  //     </Box>
+  //   );
+  // }
 
   return (
     <Card
@@ -79,7 +79,7 @@ export const FeeTermAccordion = () => {
           Fee Term Breakdown
         </Typography>
         <Label color="info" variant="soft">
-          {terms.length} Terms
+          {feeCollectionData?.terms.length} Terms
         </Label>
       </Box>
 
@@ -92,7 +92,7 @@ export const FeeTermAccordion = () => {
         }}
       >
         <Stack spacing={2}>
-          {terms.map((term: any) => {
+          {feeCollectionData?.terms.map((term: any) => {
             const pending = term.total - term.paid;
 
             return (

@@ -1,6 +1,6 @@
-import { communicationApi } from '../communicationApi';
+import { calendarModuleApi } from '../calendarApi';
 
-export const eventTypeOptionsApi = communicationApi.injectEndpoints({
+export const eventTypeOptionsApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getEventTypeOptions: builder.query({
       query: () => ({
@@ -14,7 +14,7 @@ export const eventTypeOptionsApi = communicationApi.injectEndpoints({
       query: (body) => ({
         url: '/calendar/event-types',
         method: 'POST',
-        body,
+        data: body,
       }),
       invalidatesTags: ['EventTypeOptions'],
     }),
@@ -23,7 +23,7 @@ export const eventTypeOptionsApi = communicationApi.injectEndpoints({
       query: ({ body, eventTypeId }) => ({
         url: `/calendar/event-types/${eventTypeId}`,
         method: 'PUT',
-        body,
+        data: body,
       }),
       invalidatesTags: ['EventTypeOptions'],
     }),

@@ -20,7 +20,7 @@ import {
   eventTypeOptionsApi,
   useDeleteEventTypeMutation,
   useGetEventTypeOptionsQuery,
-} from 'src/redux/communication/setting/eventTypeApi';
+} from 'src/redux/calendar/events/eventTypeApi';
 
 // Replace with actual API hook when available
 import EventTypeForm from './Components/EventTypeForm';
@@ -30,7 +30,12 @@ import type { IEventType } from './type';
 
 const EventTypeCreation = () => {
   // Custom hook to fetch event type data
-  const { data: eventTypeData } = useQueryAndMutation({
+  const {
+    data: eventTypeData,
+    refetch: refetchEventTypeData,
+    isLoading: isEventTypeDataLoading,
+    isFetching: isEventTypeDataFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEventTypeOptionsQuery,
   });
@@ -109,7 +114,8 @@ const EventTypeCreation = () => {
         onAddEventType={addEventTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedEventType}
-        data={eventTypeData}
+        data={eventTypeData?.items || []}
+        isTableLoading={isEventTypeDataLoading || isEventTypeDataFetching}
       />
 
       <CustomDialog
@@ -176,27 +182,17 @@ const EventTypeCreation = () => {
                       'getEventTypeOptions',
                       undefined,
                       (draft: any) => {
-                        const index = draft?.findIndex(
+                        const index = draft?.items?.findIndex(
                           (item: any) => item.id === selectedEventType?.id
                         );
                         setDeleteIndex(index);
                         if (index !== -1 && draft) {
-                          draft.splice(index, 1);
+                          draft.items.splice(index, 1);
                         }
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    eventTypeOptionsApi.util.updateQueryData(
-                      'getEventTypeOptions',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedEventType);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetchEventTypeData(),
                 onCommit: () => deleteEventType((selectedEventType as any)?.id || ''),
               });
               deleteEventTypeDialog.onFalse();

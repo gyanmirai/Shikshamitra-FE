@@ -41,6 +41,7 @@ export interface IEventAnnouncement {
   endDate: string | null;
   createdBy: string;
   duration: number;
+  typeName?: string;
   createdOn: string | null; // fixed typo
   status: number;
   type: string;

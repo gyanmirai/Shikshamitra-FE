@@ -6,6 +6,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
@@ -19,12 +20,16 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
+import { useGetEventTypeOptionsQuery } from 'src/redux/calendar/events/eventTypeApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useCreateEventMutation, useUpdateEventMutation } from 'src/redux/calendar/events/eventApi';
 import {
   Box,
   Grid,
@@ -46,18 +51,29 @@ import { eventAnnouncementValidationSchema } from './components/getValidationEve
 
 import type { IAddEventProps } from './type';
 
-const options = [
-  { value: 'cricketGroup', label: 'Cricket Group' },
-  { value: 'mathLegendGroup', label: 'Math Legend Group' },
-  { value: 'scienceInnovators', label: 'Science Innovators' },
-  { value: 'literatureClub', label: 'Literature Club' },
-  { value: 'musicTeam', label: 'Music Team' },
-  { value: 'artCrew', label: 'Art Crew' },
-];
-
 const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isEdit = false }) => {
   const theme = useTheme();
+  const { data: roleData, isLoading: isRoleDataLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRolesQuery,
+  });
+  const {
+    data: eventTypeData,
+    isLoading: isEventTypeDataLoading,
+    isFetching: isEventTypeDataFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEventTypeOptionsQuery,
+  });
+  const [createEvent, { isLoading: addEventTypeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateEventMutation,
+  });
 
+  const [updateEvent, { isLoading: updateEventTypeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEventMutation,
+  });
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -87,22 +103,95 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     }
   };
   const formik = useFormik({
-    initialValues: getEventInitialValues(initialValues),
+    initialValues: getEventInitialValues(initialValues, currentYear),
     validationSchema: eventAnnouncementValidationSchema(currentYear),
-    onSubmit: (values) => {
-      if (initialValues) {
-        shikshaMitraToast.success({
-          message: `Event : ${values.title} updated successfully!`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Event : ${values.title} added successfully!`,
+    onSubmit: async (values) => {
+      const isEditMode = !!initialValues;
+
+      const recurrenceJson = values.isRecurring
+        ? JSON.stringify({
+            repeatFrequency: values.repeatFrequency,
+            customInterval: values.customInterval,
+            customIntervalCount: values.customIntervalCount,
+            customDays: values.customDays,
+            monthlyOption: values.monthlyOption,
+            onDay: values.onDay,
+            onTheWeek: values.onTheWeek,
+            onTheDay: values.onTheDay,
+            repeatUntil: values.repeatUntil,
+          })
+        : '';
+
+      // ----------------------------
+      // Base payload (Swagger-safe)
+      // ----------------------------
+      const payload: any = {
+        title: values.title,
+        eventTypeId: values.type,
+        description: values.description,
+        poster: values.attachment ?? '',
+        mode: values.eventMode === 'online' ? 1 : 0,
+        venue: values.eventMode === 'offline' ? values.venue : '',
+        onlineLink: values.eventMode === 'online' ? values.onlineLink : '',
+        recurrenceSummary: values.recurrenceSummary,
+        isRecurring: values.isRecurring,
+        recurrenceJson,
+        startTime: values.startTime
+          ? dayjs(values.startTime).format('HH:mm')
+          : dayjs().format('HH:mm'),
+        endTime: values.endTime ? dayjs(values.endTime).format('HH:mm') : dayjs().format('HH:mm'),
+        audienceIds: values.audience,
+      };
+
+      // ----------------------------
+      // Meeting date (REQUIRED)
+      // ----------------------------
+      if (values.meetingDate && dayjs(values.meetingDate).isValid()) {
+        payload.meetingDate = dayjs(values.meetingDate).format('YYYY-MM-DD');
+      }
+
+      // ----------------------------
+      // Time (REQUIRED by API)
+      // ----------------------------
+      if (values.startTime && dayjs(values.startTime).isValid()) {
+        payload.startTime = dayjs(values.startTime).format('HH:mm');
+      }
+
+      if (values.endTime && dayjs(values.endTime).isValid()) {
+        payload.endTime = dayjs(values.endTime).format('HH:mm');
+      }
+
+      // ----------------------------
+      // Remove undefined keys
+      // ----------------------------
+      Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
+
+      try {
+        if (isEditMode) {
+          await updateEvent({
+            id: initialValues.id,
+            ...payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Event: ${values.title} has been successfully updated`,
+          });
+        } else {
+          await createEvent(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Event: ${values.title} has been successfully created`,
+          });
+        }
+
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} event`,
         });
       }
-      onClose(null, true);
     },
   });
-
   // Update organizations list when medium changes
   useEffect(() => {
     const orgs = cloneDeep(medium?.educationMediumStages || []);
@@ -252,19 +341,23 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                   <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
                     <CustomSelect
                       label="Event Type *"
-                      options={[
-                        { value: 'meeting', label: 'Meeting' },
-                        { value: 'academic', label: 'Academic' },
-                        { value: 'administrative', label: 'Administrative' },
-                        { value: 'extracurriculam', label: 'Extracurriculam' },
-                      ]}
+                      isLoading={isEventTypeDataLoading || isEventTypeDataFetching}
+                      options={eventTypeData?.items}
                       value={formik.values.type}
-                      onChange={(val) => formik.setFieldValue('type', val)}
+                      onChange={(val) => {
+                        formik.setFieldValue('type', val);
+                        const selectedType = eventTypeData?.items.find(
+                          (item: any) => item.id === val
+                        );
+                        formik.setFieldValue('typeName', selectedType?.name || '');
+                      }}
                       formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                       error={formik.touched.type && Boolean(formik.errors.type)}
                       helperText={
                         formik.touched.type && formik.errors.type ? formik.errors.type : undefined
                       }
+                      valueKey="id"
+                      labelKey="name"
                     />
                   </ShakingTextField>
                 </Grid>
@@ -273,24 +366,25 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                   <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
                     <Autocomplete
                       multiple
+                      loading={isRoleDataLoading}
                       disableCloseOnSelect
-                      options={options}
-                      getOptionLabel={(option) => option?.label || ''}
+                      options={roleData?.items || []}
+                      getOptionLabel={(option) => option?.name || ''}
                       value={formik.values.audience
-                        .map((val: any) => options.find((opt) => opt.value === val))
+                        .map((val: any) => roleData?.items.find((opt: any) => opt.id === val))
                         .filter(Boolean)}
                       onChange={(_, newValue) =>
                         formik.setFieldValue(
                           'audience',
-                          newValue.map((opt) => opt?.value)
+                          newValue.map((opt) => opt?.id)
                         )
                       }
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
                           <Chip
                             {...getTagProps({ index })}
-                            key={option?.value}
-                            label={option?.label}
+                            key={option?.id}
+                            label={option?.name}
                             size="small"
                             color="default"
                             variant="soft"
@@ -299,13 +393,13 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         ))
                       }
                       renderOption={(props, option, { selected }) => (
-                        <li {...props} key={option?.value}>
+                        <li {...props} key={option?.id}>
                           <Checkbox
                             icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                             checkedIcon={<CheckBoxIcon fontSize="small" />}
                             checked={selected}
                           />
-                          {option?.label}
+                          {option?.name}
                         </li>
                       )}
                       renderInput={(params) => (
@@ -365,7 +459,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Scheduling">
-                {formik.values.type === 'meeting' ? (
+                {formik.values.typeName === 'Meeting' ? (
                   <Grid size={{ xs: 12, md: 3 }}>
                     <FormControlLabel
                       control={
@@ -415,7 +509,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                               }
                             }
                           }}
-                          minDateTime={dayjs()} // <- disables past date and time
+                          minDateTime={dayjs(currentYear?.startDate)} // <- disables past date and time
                           maxDate={dayjs(currentYear?.endDate)}
                           sx={{ minWidth: 180, width: '100%' }}
                           slotProps={{
@@ -441,7 +535,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         <DateTimePicker
                           label="End Date-Time *"
                           format="DD/MM/YYYY hh:mm"
-                          minDate={dayjs(formik.values.startDate)}
+                          minDateTime={dayjs(currentYear?.startDate)} // <- disables past date and time
                           maxDate={dayjs(currentYear?.endDate)}
                           value={dayjs(formik.values.endDate)}
                           onChange={(newValue) => {
@@ -536,7 +630,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                   </>
                 )}
 
-                {!formik.values.isRecurring && formik.values.type === 'meeting' && (
+                {!formik.values.isRecurring && formik.values.typeName === 'Meeting' && (
                   <>
                     <Grid size={{ xs: 12, md: 3 }}>
                       <ShakingTextField
@@ -718,10 +812,11 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="contained"
               size="small"
               type="submit"
+              loading={addEventTypeLoading || updateEventTypeLoading}
               startIcon={
                 <Iconify
                   icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
@@ -731,7 +826,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
               }
             >
               {initialValues ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>

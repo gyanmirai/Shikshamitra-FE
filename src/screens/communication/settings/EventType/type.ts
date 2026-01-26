@@ -14,6 +14,7 @@ export interface IEventTypeTableProps {
   setEditData: (data: IEventType | null) => void;
   onDelete: (row: IEventType) => void;
   onEdit: (row: IEventType) => void;
+  isTableLoading: boolean;
 }
 
 export interface IEventFormProps {

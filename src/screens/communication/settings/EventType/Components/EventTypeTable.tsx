@@ -15,11 +15,12 @@ const EventTypeTable: React.FC<IEventTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  isTableLoading,
 }) => {
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'eventType',
+        id: 'name',
         label: 'Name',
         align: 'left',
         render: (value, row) => (
@@ -74,6 +75,7 @@ const EventTypeTable: React.FC<IEventTypeTableProps> = ({
   return (
     <CustomizableTable
       tableId="event-type-data-table"
+      isLoading={isTableLoading}
       noDataText={
         <>
           No event type data found.{' '}
