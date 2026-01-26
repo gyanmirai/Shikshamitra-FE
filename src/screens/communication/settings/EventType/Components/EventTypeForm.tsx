@@ -43,25 +43,25 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
           await updateEventType({
             eventTypeId: editData?.id,
             body: {
-              name: values.eventType,
+              name: values.name,
               color: values.color,
               description: values.description,
             },
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `Event type: ${values.eventType} has been successfully updated`,
+            message: `Event type: ${values.name} has been successfully updated`,
           });
         } else {
           // Create new event type
           await addEventType({
-            name: values.eventType,
+            name: values.name,
             color: values.color,
             description: values.description,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `Event type: ${values.eventType} has been successfully created`,
+            message: `Event type: ${values.name} has been successfully created`,
           });
         }
         onClose(null, true);
@@ -79,15 +79,13 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
         <Grid container spacing={3}>
           {/* Event Type Name */}
           <Grid size={12}>
-            <ShakingTextField
-              error={!!(formik.touched.eventType && formik.errors.eventType) || false}
-            >
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
                 label="Event Type Name *"
-                name="eventType"
+                name="name"
                 size="small"
-                value={formik.values.eventType}
+                value={formik.values.name}
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-zA-Z\s]/g, '')
@@ -96,10 +94,10 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
                     )
                     .join(' ');
-                  formik.setFieldValue('eventType', value);
+                  formik.setFieldValue('name', value);
                 }}
-                error={formik.touched.eventType && Boolean(formik.errors.eventType)}
-                helperText={(formik.touched.eventType && formik.errors.eventType) as string}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={(formik.touched.name && formik.errors.name) as string}
               />
             </ShakingTextField>
           </Grid>

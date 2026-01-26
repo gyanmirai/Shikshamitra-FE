@@ -162,8 +162,7 @@ const EventTypeCreation = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete event type{' '}
-            <strong>{selectedEventType?.eventType}</strong>?
+            Are you sure you want to delete event type <strong>{selectedEventType?.name}</strong>?
           </>
         }
         action={
@@ -175,7 +174,7 @@ const EventTypeCreation = () => {
             onClick={async () => {
               confirmWithUndo({
                 item: selectedEventType,
-                message: `Event type: ${selectedEventType?.eventType} deleted successfully`,
+                message: `Event type: ${selectedEventType?.name} deleted successfully`,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     eventTypeOptionsApi.util.updateQueryData(

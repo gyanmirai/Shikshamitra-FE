@@ -2,7 +2,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IEventType {
   id: string;
-  eventType: string;
+  name: string;
   description: string;
   color: string;
 }
