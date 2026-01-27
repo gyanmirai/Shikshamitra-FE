@@ -312,6 +312,7 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
       {/* Table */}
       <CustomizableTable
         tableId="event-announcement-table"
+        isLoading={isLoading}
         noDataText={
           <>
             No event data found

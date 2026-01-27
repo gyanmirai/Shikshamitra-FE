@@ -18,6 +18,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   eventApi,
   useGetEventsQuery,
@@ -72,7 +73,7 @@ const Events = (props: TabComponentType) => {
         setEditingEvent(null);
         uploadPhotoVideoDialog.onFalse();
         setOpen(false);
-        // dispatch(setIsChanges(false));
+        dispatch(setIsChanges(false));
       }, 200); // Delay for dialog transition
     };
 

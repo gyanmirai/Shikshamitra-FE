@@ -1,17 +1,15 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { cloneDeep } from 'lodash';
+import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
@@ -29,7 +27,11 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import { useGetEventTypeOptionsQuery } from 'src/redux/calendar/events/eventTypeApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useCreateEventMutation, useUpdateEventMutation } from 'src/redux/calendar/events/eventApi';
+import {
+  useGetEventByIdQuery,
+  useCreateEventMutation,
+  useUpdateEventMutation,
+} from 'src/redux/calendar/events/eventApi';
 import {
   Box,
   Grid,
@@ -45,7 +47,6 @@ import {
 } from '@mui/material';
 
 import RecurringScheduleForm from './components/RecurringScheduleForm';
-import { getRecurrenceSummary } from './components/getReccuringMessage';
 import { getEventInitialValues } from './components/getEventInitialValues';
 import { eventAnnouncementValidationSchema } from './components/getValidationEventSchema';
 
@@ -56,6 +57,11 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
   const { data: roleData, isLoading: isRoleDataLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
+  });
+  const { data: eventData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEventByIdQuery,
+    params: { id: initialValues?.id || '' },
   });
   const {
     data: eventTypeData,
@@ -75,19 +81,13 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     currentQueryAndMutation: useUpdateEventMutation,
   });
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // Redux state for current board, medium and medium setter
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const openRecurringDialog = useBoolean();
   // State to store list of all organizations/branches
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();
-  // State to store list of all classes/standards
-  const [allClass, setAllClass] = useState<Standards[]>([]);
 
-  // State to store list of all divisions
-  const [, setAllDivision] = useState<Division[]>([]);
   const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
@@ -102,11 +102,16 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       resetState();
     }
   };
+  const formikInitialValues = useMemo(
+    () => getEventInitialValues(eventData, currentYear),
+    [eventData, currentYear]
+  );
   const formik = useFormik({
-    initialValues: getEventInitialValues(initialValues, currentYear),
+    initialValues: formikInitialValues,
     validationSchema: eventAnnouncementValidationSchema(currentYear),
+    enableReinitialize: true,
     onSubmit: async (values) => {
-      const isEditMode = !!initialValues;
+      const isEditMode = !!eventData;
 
       const recurrenceJson = values.isRecurring
         ? JSON.stringify({
@@ -169,7 +174,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       try {
         if (isEditMode) {
           await updateEvent({
-            id: initialValues.id,
+            id: eventData?.id,
             ...payload,
           }).unwrap();
 
@@ -192,108 +197,6 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       }
     },
   });
-  // Update organizations list when medium changes
-  useEffect(() => {
-    const orgs = cloneDeep(medium?.educationMediumStages || []);
-
-    // Add "All" if not present
-    if (!orgs.some((org: Organization) => org.id === 'all')) {
-      orgs.unshift({
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumId: '',
-        standards: [],
-      });
-    }
-
-    setAllOrganization(orgs);
-  }, [medium?.educationMediumStages]);
-
-  // Update divisions list when class selection changes
-  useEffect(() => {
-    if (formik.values.classes.length === 0) {
-      setAllDivision([]);
-      if (!isEdit) formik.setFieldValue('divisions', []); // only reset on create
-      return;
-    }
-
-    if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
-      const divisions = selectedClass?.divisions || [];
-      setAllDivision(divisions);
-
-      if (!isEdit) {
-        const divisionIds = divisions.map((div: any) => div.id);
-        formik.setFieldValue('divisions', [...divisionIds]);
-      }
-    } else {
-      setAllDivision([
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          strength: 0,
-          standardId: '',
-        },
-      ]);
-      if (!isEdit) formik.setFieldValue('divisions', ['all']);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allClass, formik.values.classes]);
-
-  // Update classes list when organization selection changes
-  useEffect(() => {
-    if (formik.values.organizations.length === 0) {
-      setAllClass([]);
-      if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
-      return;
-    }
-
-    const mergedStandards = formik.values.organizations.includes('all')
-      ? allOrganization
-          .filter((org: any) => org.id !== 'all')
-          .flatMap((org: any) => org.standards || [])
-      : formik.values.organizations
-          .map(
-            (orgId: string) =>
-              allOrganization.find((org: any) => org?.id === orgId)?.standards || []
-          )
-          .flat();
-
-    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
-    setAllClass(withAll);
-
-    if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrganization, formik.values.organizations]);
-
-  useEffect(() => {
-    const summary = getRecurrenceSummary(formik.values);
-    formik.setFieldValue('recurrenceSummary', summary || '', false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    formik.values.isRecurring,
-    formik.values.repeatFrequency,
-    formik.values.customInterval,
-    formik.values.customIntervalCount,
-    formik.values.customDays,
-    formik.values.monthlyOption,
-    formik.values.onDay,
-    formik.values.onTheWeek,
-    formik.values.onTheDay,
-    formik.values.repeatUntil,
-    formik.values.startDate,
-    formik.values.endDate,
-    formik.values.meetingDate,
-    formik.values.type,
-  ]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

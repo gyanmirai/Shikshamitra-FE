@@ -9,11 +9,8 @@ export const getEventInitialValues = (
   id: initialValues?.id || '',
   title: initialValues?.title || '',
   description: initialValues?.description || '',
-  audience: initialValues?.audience || [],
-  organizations: initialValues?.organizations || [],
-  classes: initialValues?.classes || [],
+  audience: initialValues?.audienceIds || [],
   duration: initialValues?.duration ?? 0,
-  divisions: initialValues?.divisions || [],
   startDate: initialValues?.startDate
     ? dayjs(initialValues?.startDate)
     : dayjs(`${currentYear?.startDate}`),
@@ -21,7 +18,7 @@ export const getEventInitialValues = (
   createdBy: initialValues?.createdBy || '',
   createdOn: initialValues?.createdOn ? dayjs(initialValues?.createdOn) : null,
   status: initialValues?.status || 0,
-  type: initialValues?.type || '',
+  type: initialValues?.eventTypeId || '',
   typeName: initialValues?.typeName || '',
   attachment: initialValues?.attachment || null,
   link: initialValues?.link || '',
