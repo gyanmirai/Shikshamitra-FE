@@ -34,7 +34,7 @@ import type { IEventAnnouncement } from './type';
 
 const Events = (props: TabComponentType) => {
   // State to store the selected event details
-  const [status, setStatus] = useState('All');
+  const [status, setStatus] = useState('');
 
   const {
     data: eventTableData,
@@ -45,6 +45,7 @@ const Events = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetEventsQuery,
     params: { status: status === 'All' ? undefined : status },
+    options: { skip: !status },
   });
   const { confirmWithUndo } = useConfirmWithUndo();
 
