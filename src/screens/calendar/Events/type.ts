@@ -41,6 +41,9 @@ export interface IEventAnnouncement {
   endDate: string | null;
   createdBy: string;
   duration: number;
+  typeName?: string;
+  eventTypeId: string;
+  audienceIds: string[]; // fixed typo
   createdOn: string | null; // fixed typo
   status: number;
   type: string;

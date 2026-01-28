@@ -9,13 +9,12 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeTermsQuery } from 'src/redux/feeCollection/feeTerms';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Card, Grid, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
 import FeeTermsComponent from './FeeTermsComponent';
 import { paymentMethodsConfig } from './paymentConfigMethods';
+import feeCollectionData from '../../../../../financeFeeCollection.json';
 
 import type { IPaymentFieldConfig, IPaymentDetailsFormProps } from './type';
 
@@ -233,10 +232,10 @@ export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, curre
 
 export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps) {
   const theme = useTheme();
-  const { data: feeTermsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeTermsQuery,
-  });
+  // const { data: feeTermsData } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetFeeTermsQuery,
+  // });
 
   useEffect(() => {
     const { selectedTerms, includeCharges } = formik.values;
@@ -276,7 +275,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
         <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
           <FeeTermsComponent
             formik={formik}
-            terms={feeTermsData}
+            terms={feeCollectionData?.terms}
             selectedTerms={formik.values.selectedTerms}
             onTermSelect={(selectedTerms) => formik.setFieldValue('selectedTerms', selectedTerms)}
             showError={formik.touched.selectedTerms && Boolean(formik.errors.selectedTerms)}

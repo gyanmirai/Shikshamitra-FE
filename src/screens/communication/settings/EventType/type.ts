@@ -2,7 +2,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IEventType {
   id: string;
-  eventType: string;
+  name: string;
   description: string;
   color: string;
 }
@@ -14,6 +14,7 @@ export interface IEventTypeTableProps {
   setEditData: (data: IEventType | null) => void;
   onDelete: (row: IEventType) => void;
   onEdit: (row: IEventType) => void;
+  isTableLoading: boolean;
 }
 
 export interface IEventFormProps {

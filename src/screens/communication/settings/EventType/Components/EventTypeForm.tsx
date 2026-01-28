@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -14,7 +15,7 @@ import { Grid, Button, TextField, Typography, DialogActions } from '@mui/materia
 import {
   useAddEventTypeMutation,
   useUpdateEventTypeMutation,
-} from 'src/redux/communication/setting/eventTypeApi';
+} from 'src/redux/calendar/events/eventTypeApi';
 
 import { eventTypeValidationSchema } from './EventTypeValidation';
 import { getEventTypeInitialValues } from './EventTypeInitialValue';
@@ -22,12 +23,12 @@ import { getEventTypeInitialValues } from './EventTypeInitialValue';
 import type { IEventFormProps } from '../type';
 
 const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) => {
-  const { addEventType } = useQueryAndMutation({
+  const [addEventType, { isLoading: addEventTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEventTypeMutation,
   });
 
-  const { updateEventType } = useQueryAndMutation({
+  const [updateEventType, { isLoading: updateEventTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEventTypeMutation,
   });
@@ -40,25 +41,27 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
         if (editData) {
           // Update existing event type
           await updateEventType({
-            eventTypeId: (editData as any).id, // Assuming editData has an id field
-            name: values.eventType,
-            color: values.color,
-            description: values.description,
+            eventTypeId: editData?.id,
+            body: {
+              name: values.name,
+              color: values.color,
+              description: values.description,
+            },
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `Event type: ${values.eventType} has been successfully updated`,
+            message: `Event type: ${values.name} has been successfully updated`,
           });
         } else {
           // Create new event type
           await addEventType({
-            name: values.eventType,
+            name: values.name,
             color: values.color,
             description: values.description,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `Event type: ${values.eventType} has been successfully created`,
+            message: `Event type: ${values.name} has been successfully created`,
           });
         }
         onClose(null, true);
@@ -76,15 +79,13 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
         <Grid container spacing={3}>
           {/* Event Type Name */}
           <Grid size={12}>
-            <ShakingTextField
-              error={!!(formik.touched.eventType && formik.errors.eventType) || false}
-            >
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
                 label="Event Type Name *"
-                name="eventType"
+                name="name"
                 size="small"
-                value={formik.values.eventType}
+                value={formik.values.name}
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-zA-Z\s]/g, '')
@@ -93,10 +94,10 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
                     )
                     .join(' ');
-                  formik.setFieldValue('eventType', value);
+                  formik.setFieldValue('name', value);
                 }}
-                error={formik.touched.eventType && Boolean(formik.errors.eventType)}
-                helperText={(formik.touched.eventType && formik.errors.eventType) as string}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={(formik.touched.name && formik.errors.name) as string}
               />
             </ShakingTextField>
           </Grid>
@@ -141,7 +142,8 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          loading={addEventTypeLoading || updateEventTypeLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -153,10 +155,9 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
-          disabled={formik.isSubmitting}
         >
           {formik.isSubmitting ? 'Submitting...' : editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

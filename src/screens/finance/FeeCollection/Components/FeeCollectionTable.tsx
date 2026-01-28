@@ -9,14 +9,14 @@ import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, MenuItem, Typography } from '@mui/material';
-import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
+
+import feeCollectionData from '../../../../../financeFeeCollection.json';
 
 import type { IFeeData, IFeeTableProps } from './type';
 
@@ -32,15 +32,15 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: feeCollectionData, isLoading: feeCollectionLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeCollectionListQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      boardId: selectedBoard,
-      mediumId: selectedMedium,
-    },
-  });
+  // const { data: feeCollectionData, isLoading: feeCollectionLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetFeeCollectionListQuery,
+  //   params: {
+  //     academicYearId: currentYear?.id,
+  //     boardId: selectedBoard,
+  //     mediumId: selectedMedium,
+  //   },
+  // });
   useEffect(() => {
     // Filter boards based on academic year ID from edit data
     setBoards(currentYear?.boards);
@@ -91,7 +91,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         <CustomizableTable
           tableId="fee-collection-table"
           noDataText={<>Fee Collection Data Not Found </>}
-          isLoading={feeCollectionLoading}
+          // isLoading={feeCollectionLoading}
           columns={[
             {
               id: 'name',
@@ -203,7 +203,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               },
             },
           ]}
-          data={feeCollectionData?.items || []}
+          data={feeCollectionData?.feeCollectionData || []}
         />
       )}
     </>

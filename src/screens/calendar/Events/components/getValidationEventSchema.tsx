@@ -9,10 +9,6 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     title: Yup.string().required('Title is required'),
     description: Yup.string(),
     type: Yup.string().required('Event Type is required'),
-    organizations: Yup.array()
-      .of(Yup.string())
-      .min(1, 'At least one organization is required')
-      .required('Organizations are required'),
     audience: Yup.array()
       .of(
         Yup.string()
@@ -51,23 +47,28 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
         (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
 
-    endDate: Yup.mixed()
-      .required('End Date-Time is required')
-      .test(
-        'is-valid-dayjs',
-        'End Date-Time must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
-      )
-      .test(
-        'is-after-start-date',
-        'End Date-Time cannot be before Start Date-Time',
-        // eslint-disable-next-line func-names
-        function (value) {
-          const { startDate } = this.parent;
-          if (!value || !startDate) return true;
-          return dayjs(value as Dayjs).isSameOrAfter(dayjs(startDate), 'day');
-        }
-      ),
+    endDate: Yup.mixed().when('type', {
+      is: (type: string) => type !== 'Meeting',
+      then: (schema) => schema.nullable(),
+      otherwise: (schema) =>
+        schema
+          .required('End Date-Time is required')
+          .test(
+            'is-valid-dayjs',
+            'End Date-Time must be a valid date',
+            (value) => value && dayjs(value as Dayjs).isValid()
+          )
+          .test(
+            'is-after-start-date',
+            'End Date-Time cannot be before Start Date-Time',
+            // eslint-disable-next-line func-names
+            function (value) {
+              const { startDate } = this.parent;
+              if (!value || !startDate) return true;
+              return dayjs(value as Dayjs).isSameOrAfter(dayjs(startDate), 'day');
+            }
+          ),
+    }),
     // .test(
     //   'min-date',
     //   (value) =>

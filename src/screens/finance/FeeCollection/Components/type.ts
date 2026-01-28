@@ -101,7 +101,7 @@ export interface ITerm {
 
 export interface ITermsToCollectProps {
   formik: any;
-  terms: ITerm[] | null; // Optional terms data
+  terms: any | null; // Optional terms data
   selectedTerms: any[];
   onTermSelect: (selectedTerms: any[]) => void;
   showError?: boolean;
