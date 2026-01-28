@@ -49,7 +49,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
         Select Installment to Collect Fees
       </Typography>
-      {terms?.map((term) => (
+      {terms?.map((term: any) => (
         <Box
           key={term.id}
           sx={{ border: '1px solid #ddd', borderRadius: 2, mb: 1.5, overflow: 'hidden' }}
@@ -85,7 +85,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
               <Typography variant="body2" color="primary" fontWeight={600} mb={1}>
                 Fee Head Breakdown
               </Typography>
-              {term.feeHeads.map((head) => (
+              {term.feeHeads.map((head: any) => (
                 <Box
                   key={head.name}
                   display="flex"

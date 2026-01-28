@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEventByIdQuery } from 'src/redux/calendar/events/eventApi';
 import {
   Box,
   Chip,
@@ -40,6 +42,12 @@ const EventDetailsComponent = ({
     }
     return null;
   }, [event]);
+
+  const { data: eventData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEventByIdQuery,
+    params: { id: event?.id || '' },
+  });
 
   return (
     <Dialog
@@ -112,7 +120,7 @@ const EventDetailsComponent = ({
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: { md: '68%' } }}>
           <Chip
-            label={`Upcoming ${event?.type}`}
+            label={`${eventData?.type}`}
             color="success"
             variant="outlined"
             sx={{
@@ -133,11 +141,11 @@ const EventDetailsComponent = ({
               lineHeight: 1.3,
             }}
           >
-            {event?.title}
+            {eventData?.title}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.5 }}>
             <Chip
-              label={event?.type || event?.type || 'General'}
+              label={eventData?.type || eventData?.type || 'General'}
               size="small"
               variant="outlined"
               sx={{
@@ -148,7 +156,7 @@ const EventDetailsComponent = ({
               }}
             />
             <Chip
-              label={event?.eventMode || 'Offline'}
+              label={eventData?.eventMode || 'Offline'}
               size="small"
               variant="outlined"
               sx={{
@@ -169,16 +177,25 @@ const EventDetailsComponent = ({
             <InfoCard
               icon={<CalendarToday color="primary" />}
               title="Date"
-              subtitle="Oct 5, 2025"
+              subtitle={eventData ? `${eventData.startDate} to ${eventData.endDate}` : '-'}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <InfoCard
               icon={<AccessTime color="primary" />}
               title="Time"
-              subtitle="10:00 AM - 2:00 PM"
+              subtitle={eventData ? `${eventData.startTime} - ${eventData.endTime}` : '-'}
             />
           </Grid>
+          {eventData?.typeName === 'Meeting' && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <InfoCard
+                icon={<AccessTime color="primary" />}
+                title="Meeting Info"
+                subtitle={eventData ? `${eventData.recurrenceSummary}` : '-'}
+              />
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12 }}>
             <InfoCard icon={<Group color="primary" />} title="Audience" subtitle="120 Users" />
@@ -187,9 +204,9 @@ const EventDetailsComponent = ({
           <Grid size={{ xs: 12 }}>
             <InfoCard
               icon={<LinkIcon color="primary" />}
-              title={event?.eventMode === 'online' ? 'Meeting Link' : 'Venue'}
+              title={eventData?.eventMode === 'online' ? 'Meeting Link' : 'Venue'}
               subtitle={
-                event?.eventMode === 'online' ? (
+                eventData?.eventMode === 'online' ? (
                   <Link
                     href="https://meet.example.com/ptc-2025"
                     target="_blank"
@@ -199,7 +216,7 @@ const EventDetailsComponent = ({
                     https://meet.example.com/ptc-2025
                   </Link>
                 ) : (
-                  event?.venue || '-'
+                  eventData?.venue || '-'
                 )
               }
             />
@@ -209,10 +226,10 @@ const EventDetailsComponent = ({
             <InfoCard
               icon={<InfoTwoTone color="success" />}
               title="Description"
-              subtitle={event?.description || '-'}
+              subtitle={eventData?.description || '-'}
             />
           </Grid>
-          {attachmentUrl && event?.attachment && (
+          {attachmentUrl && eventData?.attachment && (
             <Grid size={{ xs: 12 }}>
               <InfoCard
                 icon={<LinkIcon color="primary" />}
@@ -220,11 +237,11 @@ const EventDetailsComponent = ({
                 subtitle={
                   <Link
                     href={attachmentUrl}
-                    download={event.attachment.name}
+                    download={eventData.attachment.name}
                     underline="hover"
                     sx={{ fontWeight: 600, color: 'success.main', wordBreak: 'break-all' }}
                   >
-                    {event.attachment.name}
+                    {eventData.attachment.name}
                   </Link>
                 }
               />

@@ -284,13 +284,42 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField
+                error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+              >
+                <DatePicker
+                  label="Start Date *"
+                  format="DD/MM/YYYY"
+                  value={dayjs(formik.values.startDate)}
+                  onChange={(newValue) => {
+                    formik.setFieldValue('startDate', newValue);
+                  }}
+                  minDate={dayjs(currentYear?.startDate)}
+                  maxDate={dayjs(currentYear?.endDate)}
+                  sx={{ minWidth: 180, width: '100%' }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                      helperText:
+                        formik.touched.startDate && formik.errors.startDate
+                          ? String(formik.errors.startDate)
+                          : undefined,
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.repeatUntil && formik.errors.repeatUntil)}>
                 <DatePicker
                   label="Last Date *"
                   name="repeatUntil"
                   format="DD/MM/YYYY"
+                  minDate={dayjs(currentYear?.startDate)} // <- disables past date and time
+                  maxDate={dayjs(currentYear?.endDate)}
                   value={formik.values.repeatUntil}
                   onChange={(newValue) => formik.setFieldValue('repeatUntil', newValue)}
                   slotProps={{

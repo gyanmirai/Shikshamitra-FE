@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -14,10 +15,15 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetEventAnnouncementsQuery } from 'src/redux/communication/announcement/eventDataApi';
+import {
+  eventApi,
+  useGetEventsQuery,
+  useDeleteEventMutation,
+} from 'src/redux/calendar/events/eventApi';
 
 import AddEvent from './addeventForm';
 import EventAnnouncementTable from './components/EventTable';
@@ -28,10 +34,19 @@ import type { IEventAnnouncement } from './type';
 
 const Events = (props: TabComponentType) => {
   // State to store the selected event details
-  const { data: eventTableData } = useQueryAndMutation({
+  const [status, setStatus] = useState('All');
+
+  const {
+    data: eventTableData,
+    refetch: refetchEventTableData,
+    isLoading: isEventTableLoading,
+    isFetching: isEventTableFetching,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEventAnnouncementsQuery,
+    currentQueryAndMutation: useGetEventsQuery,
+    params: { status: status === 'All' ? undefined : status },
   });
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State to store the event being edited
   const [editingEvent, setEditingEvent] = useState<IEventAnnouncement | null>(null);
@@ -68,6 +83,12 @@ const Events = (props: TabComponentType) => {
       resetState();
     }
   };
+
+  // Delete mutation and undo hook
+  const [deleteEvent, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEventMutation,
+  });
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
@@ -118,8 +139,11 @@ const Events = (props: TabComponentType) => {
         </Card>
       ) : (
         <EventAnnouncementTable
+          status={status}
+          setStatus={setStatus}
+          isLoading={isEventTableLoading || isEventTableFetching}
           setOpen={setOpen}
-          data={eventTableData}
+          data={eventTableData?.items}
           onEdit={(row) => {
             setOpen(true);
             setEditingEvent(row);
@@ -152,7 +176,9 @@ const Events = (props: TabComponentType) => {
       <ConfirmDialog
         open={confirm_dialog.value}
         onClose={() => {
-          setEditingEvent(null);
+          setTimeout(() => {
+            setEditingEvent(null);
+          }, 200);
           confirm_dialog.onFalse();
         }}
         content={
@@ -163,19 +189,38 @@ const Events = (props: TabComponentType) => {
         }
         title="Delete"
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
-            onClick={() => {
-              confirm_dialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Event : "${editingEvent?.title}" removed successfully.`,
+            onClick={async () => {
+              confirmWithUndo({
+                item: editingEvent,
+                message: `Event: ${editingEvent?.title} deleted successfully`,
+                onOptimisticRemove: (dispatchFn) =>
+                  dispatchFn(
+                    eventApi.util.updateQueryData(
+                      'getEvents',
+                      { status: status === 'All' ? undefined : status },
+                      (draft: any) => {
+                        const index = draft.items.findIndex(
+                          (item: any) => item.id === editingEvent?.id
+                        );
+                        if (index !== -1) draft.items.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetchEventTableData(),
+                onCommit: () => deleteEvent(editingEvent?.id || ''),
               });
+
+              confirm_dialog.onFalse();
+              setEditingEvent(null);
             }}
             size="small"
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 

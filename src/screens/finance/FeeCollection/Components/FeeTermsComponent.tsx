@@ -124,7 +124,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       {/* LIST SECTION */}
       <Scrollbar sx={{ flexGrow: 1, p: 2, height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={1.5}>
-          {terms?.map((term) => {
+          {terms?.map((term: any) => {
             const isSelected = selectedTerms?.some((t) => t.id === term.id);
             const isPaid = FeeCollectionStatusType.Paid === term.status;
 

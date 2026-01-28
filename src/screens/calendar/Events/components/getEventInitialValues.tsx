@@ -2,21 +2,24 @@ import dayjs from 'dayjs';
 
 import type { IEventAnnouncement } from '../type';
 
-export const getEventInitialValues = (initialValues: IEventAnnouncement | null) => ({
+export const getEventInitialValues = (
+  initialValues: IEventAnnouncement | null,
+  currentYear: any
+) => ({
   id: initialValues?.id || '',
   title: initialValues?.title || '',
   description: initialValues?.description || '',
-  audience: initialValues?.audience || [],
-  organizations: initialValues?.organizations || [],
-  classes: initialValues?.classes || [],
+  audience: initialValues?.audienceIds || [],
   duration: initialValues?.duration ?? 0,
-  divisions: initialValues?.divisions || [],
-  startDate: initialValues?.startDate ? dayjs(initialValues?.startDate) : dayjs().add(1, 'hours'),
+  startDate: initialValues?.startDate
+    ? dayjs(initialValues?.startDate)
+    : dayjs(`${currentYear?.startDate}`),
   endDate: initialValues?.endDate ? dayjs(initialValues?.endDate) : null,
   createdBy: initialValues?.createdBy || '',
   createdOn: initialValues?.createdOn ? dayjs(initialValues?.createdOn) : null,
   status: initialValues?.status || 0,
-  type: initialValues?.type || '',
+  type: initialValues?.eventTypeId || '',
+  typeName: initialValues?.typeName || '',
   attachment: initialValues?.attachment || null,
   link: initialValues?.link || '',
   active: initialValues?.active ?? 1,
