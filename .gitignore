@@ -15,6 +15,7 @@ coverage
 
 # production
 .next
+.agent/
 .swc
 _static
 out

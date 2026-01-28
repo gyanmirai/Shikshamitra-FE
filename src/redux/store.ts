@@ -24,6 +24,7 @@ import { transportApi } from './transport/transportApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
+import { calendarModuleApi } from './calendar/calendarApi';
 import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
 import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ReconciliationApi } from './finance/reconciliation';
@@ -186,6 +187,7 @@ const reducers = combineReducers({
   [instituteSetupApi.reducerPath]: instituteSetupApi.reducer,
   [classManagementApi.reducerPath]: classManagementApi.reducer,
   [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
+  [calendarModuleApi.reducerPath]: calendarModuleApi.reducer,
 });
 
 const store = configureStore({
@@ -288,6 +290,7 @@ const store = configureStore({
       openLibraryApi.middleware,
       instituteSetupApi.middleware,
       classManagementApi.middleware,
+      calendarModuleApi.middleware,
     ]),
 });
 

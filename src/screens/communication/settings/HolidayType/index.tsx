@@ -17,10 +17,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
-  holidayTypeOptionsApi,
+  holidayApi,
+  useGetHolidayTypeQuery,
   useDeleteHolidayTypeMutation,
-  useGetHolidayTypeOptionsQuery,
-} from 'src/redux/communication/setting/holidayTypeApi';
+} from 'src/redux/communication/holiday/holidayDataApi';
 
 import HolidayTypeForm from './Components/HoliayTypeForm';
 // Replace with actual API hook when available
@@ -30,9 +30,14 @@ import type { IHolidayType } from './type';
 
 const HolidayTypeCreation = () => {
   // Custom hook to fetch holiday type data
-  const { data: holidayTypeData } = useQueryAndMutation({
+  const {
+    data: holidayTypeData,
+    refetch,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetHolidayTypeOptionsQuery,
+    currentQueryAndMutation: useGetHolidayTypeQuery,
   });
 
   // Dialog control states
@@ -109,7 +114,8 @@ const HolidayTypeCreation = () => {
         onAddHolidayType={addHolidayTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedHolidayType}
-        data={holidayTypeData}
+        data={holidayTypeData?.items || []}
+        isLoading={isLoading || isFetching}
       />
 
       <CustomDialog
@@ -157,7 +163,7 @@ const HolidayTypeCreation = () => {
         content={
           <>
             Are you sure you want to delete holiday type{' '}
-            <strong>{selectedHolidayType?.holidayType}</strong>?
+            <strong>{selectedHolidayType?.name}</strong>?
           </>
         }
         action={
@@ -169,34 +175,20 @@ const HolidayTypeCreation = () => {
             onClick={async () => {
               confirmWithUndo({
                 item: selectedHolidayType,
-                message: `Holiday type: ${selectedHolidayType?.holidayType} deleted successfully`,
+                message: `Holiday type: ${selectedHolidayType?.name} deleted successfully`,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    holidayTypeOptionsApi.util.updateQueryData(
-                      'getHolidayTypeOptions',
-                      undefined,
-                      (draft: any) => {
-                        const index = draft?.findIndex(
-                          (item: any) => item.id === selectedHolidayType?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1 && draft) {
-                          draft.splice(index, 1);
-                        }
+                    holidayApi.util.updateQueryData('getHolidayType', undefined, (draft: any) => {
+                      const index = draft?.items?.findIndex(
+                        (item: any) => item.id === selectedHolidayType?.id
+                      );
+                      setDeleteIndex(index);
+                      if (index !== -1 && draft) {
+                        draft.items.splice(index, 1);
                       }
-                    )
+                    })
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    holidayTypeOptionsApi.util.updateQueryData(
-                      'getHolidayTypeOptions',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedHolidayType);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteHolidayType(selectedHolidayType?.id || ''),
               });
               deleteHolidayTypeDialog.onFalse();

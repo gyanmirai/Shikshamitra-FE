@@ -2,7 +2,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IHolidayType {
   id?: string;
-  holidayType: string;
+  name: string;
   description: string;
   color: string;
 }
@@ -14,6 +14,7 @@ export interface IHolidayTypeTableProps {
   setEditData: (val: IHolidayType | null) => void;
   onDelete: (row: IHolidayType) => void;
   onEdit: (row: IHolidayType) => void;
+  isLoading: boolean;
 }
 
 export interface IHolidayFormProps {

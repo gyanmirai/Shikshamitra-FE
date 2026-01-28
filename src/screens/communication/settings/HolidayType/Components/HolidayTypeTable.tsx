@@ -15,11 +15,12 @@ const HolidayTypeTable: React.FC<IHolidayTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  isLoading,
 }) => {
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'holidayType',
+        id: 'name',
         label: 'Name',
         align: 'left',
         render: (value, row) => (
@@ -74,6 +75,7 @@ const HolidayTypeTable: React.FC<IHolidayTypeTableProps> = ({
   return (
     <CustomizableTable
       tableId="holiday-type-data-table"
+      isLoading={isLoading}
       noDataText={
         <>
           No holiday type data found.{' '}
