@@ -42,7 +42,7 @@ const StudentReportsScreen = () => {
         heading="Reports"
         description="Generate and view comprehensive reports on student records, including academic performance, attendance, and other relevant data."
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Student', href: '/student/dashboard/' },
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Reports' },
         ]}
@@ -65,22 +65,22 @@ const StudentReportsScreen = () => {
             {
               name: 'Student Lists',
               id: 'Student Lists',
-              icon: 'mdi:account-multiple',
+              icon: 'mdi:account-multiple-outline',
             },
             {
               name: 'Birthday & Dates',
               id: 'Birthday & Dates',
-              icon: 'mdi:calendar-star',
+              icon: 'mdi:calendar-star-outline',
             },
             {
               name: 'Summaries',
               id: 'Summaries',
-              icon: 'mdi:chart-box',
+              icon: 'mdi:chart-box-outline',
             },
             {
               name: 'Demographics',
               id: 'Demographics',
-              icon: 'mdi:account-group',
+              icon: 'mdi:account-group-outline',
             },
           ]}
           subCategories={[

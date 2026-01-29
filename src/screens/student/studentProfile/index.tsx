@@ -187,7 +187,6 @@ export function StudentProfile() {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
-  console.log(StudentsData, 'StudentsData');
   // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
