@@ -223,6 +223,7 @@ export interface StudentAdditionalDetails {
 }
 
 export interface IInquiryData {
+  studentName: string;
   id: string;
   userId: string;
   inquiryPreferencesId: string;

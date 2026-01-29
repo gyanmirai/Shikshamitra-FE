@@ -9,7 +9,7 @@ export enum ScheduleExamStatus {
 }
 
 export const ScheduleExamStatusColor = {
-  [ScheduleExamStatus.Pending]: 'default',
+  [ScheduleExamStatus.Pending]: 'warning',
   [ScheduleExamStatus.Draft]: 'warning',
   [ScheduleExamStatus.Published]: 'info',
   [ScheduleExamStatus.Submitted]: 'success',

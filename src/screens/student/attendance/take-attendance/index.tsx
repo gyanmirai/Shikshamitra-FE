@@ -12,6 +12,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -22,7 +23,17 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
 import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
-import { Box, Chip, Stack, Avatar, Button, Divider, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  Chip,
+  Stack,
+  Avatar,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+} from '@mui/material';
 import {
   useMarkAttendanceMutation,
   useGetAttendanceByFilterQuery,
@@ -160,7 +171,17 @@ const TakeAttendanceScreen = () => {
         ]}
         description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
       />
-      <Box display="flex" gap={2} flexWrap="wrap" sx={{ mb: 1, pt: 1 }}>
+      <Card
+        sx={{
+          mb: 3,
+          p: 2,
+          display: 'flex',
+          gap: 2,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+        }}
+      >
         <DatePicker
           label="Date"
           value={date}
@@ -170,7 +191,7 @@ const TakeAttendanceScreen = () => {
             setDate(val);
           }}
           format="DD-MM-YYYY"
-          slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
+          slotProps={{ textField: { size: 'small', sx: { maxWidth: '200px', width: '100%' } } }}
         />
 
         <CustomSelect
@@ -180,7 +201,7 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => setOrganization(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
           disabled={!medium}
         />
         <CustomSelect
@@ -190,7 +211,7 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
           disabled={!organization}
         />
         <CustomSelect
@@ -200,10 +221,10 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
           disabled={!classes}
         />
-      </Box>
+      </Card>
 
       <Divider sx={{ my: 1 }} />
       <Box
@@ -272,7 +293,6 @@ const TakeAttendanceScreen = () => {
         <Button
           size="small"
           variant="outlined"
-          loading={isLoading}
           startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
           onClick={() => {
             setStudentData(
@@ -395,14 +415,13 @@ const TakeAttendanceScreen = () => {
 
         <Box
           sx={{
-            display: 'flex',
-            gap: 1,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            minHeight: '32px', // Fixed height for chip area
             flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            minWidth: 0,
             py: 0.25,
+            minHeight: '32px',
           }}
         >
           {absentStudents.length > 0 && (
@@ -413,29 +432,38 @@ const TakeAttendanceScreen = () => {
               >
                 Absent Students:
               </Typography>
-              {absentStudents.map((item: any) => (
-                <Chip
-                  key={item.student.id}
-                  size="small"
-                  label={`${item.student.rollNo} - ${item.student.firstName || 'Student'}`}
-                  color="error"
-                  avatar={
-                    <Avatar>
-                      {item.student.firstName?.[0] || item.student.rollNo?.[0] || 'S'}
-                    </Avatar>
-                  }
-                  variant="soft"
-                  onDelete={() => {
-                    setStudentData((studentDetails: any) =>
-                      studentDetails.map((student: any) =>
-                        item.student.id === student.student.id
-                          ? { ...student, isPresent: true }
-                          : student
-                      )
-                    );
-                  }}
-                />
-              ))}
+              <Scrollbar
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  '& .simplebar-content': {
+                    display: 'flex',
+                    gap: 1,
+                    alignItems: 'center',
+                    flexWrap: 'nowrap',
+                  },
+                }}
+              >
+                {absentStudents.map((item: any) => (
+                  <Chip
+                    key={item.studentId || item.id}
+                    size="small"
+                    label={`${item.rollNo} - ${item.name || 'Student'}`}
+                    color="error"
+                    avatar={<Avatar>{item.name?.[0] || 'S'}</Avatar>}
+                    variant="soft"
+                    onDelete={() => {
+                      setStudentData((studentDetails: any) =>
+                        studentDetails.map((student: any) =>
+                          (item.studentId || item.id) === (student.studentId || student.id)
+                            ? { ...student, isPresent: AttendanceStatus.Present }
+                            : student
+                        )
+                      );
+                    }}
+                  />
+                ))}
+              </Scrollbar>
             </>
           )}
         </Box>
@@ -475,10 +503,13 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching }: any)
           sx: {
             background: (theme) =>
               tableData.isPresent === true
-                ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
+                ? varAlpha(theme.vars.palette.success.mainChannel, 0.12)
                 : tableData.isPresent === false
-                  ? varAlpha(theme.vars.palette.error.mainChannel, 0.08)
+                  ? varAlpha(theme.vars.palette.error.mainChannel, 0.12)
                   : varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
+            transition: 'background-color 0.2s',
+            height: '40px', // Compact row height
+            '& td': { py: 0.5 }, // Reduce cell padding
           },
         })}
         columns={[
@@ -603,177 +634,127 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching }: any)
                       : 'Not Yet Marked'}
                 </Label>
               ) : (
-                <Stack direction="column" spacing={1} sx={{ alignItems: 'center' }}>
+                <Stack direction="row" spacing={0} sx={{ alignItems: 'center' }}>
                   <Box
                     sx={{
                       position: 'relative',
-                      width: '140px',
-                      height: '36px',
-                      backgroundColor: 'background.paper',
-                      borderRadius: '18px',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
-                      overflow: 'hidden',
+                      display: 'flex',
+                      width: '120px',
+                      height: '34px',
+                      bgcolor: (theme) => theme.vars.palette.background.neutral,
+                      borderRadius: 1,
+                      p: 0.5,
+                      gap: 0.5,
                     }}
                   >
-                    {/* Background sections */}
+                    {/* Present Button */}
                     <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '33.33%',
-                        height: '100%',
-                        backgroundColor: value === true ? 'success.light' : 'transparent',
-                        transition: 'all 0.3s ease',
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: '33.33%',
-                        width: '33.33%',
-                        height: '100%',
-                        backgroundColor: value === null ? 'warning.light' : 'transparent',
-                        transition: 'all 0.3s ease',
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: '33.33%',
-                        height: '100%',
-                        backgroundColor: value === false ? 'error.light' : 'transparent',
-                        transition: 'all 0.3s ease',
-                      }}
-                    />
-
-                    {/* Clickable sections */}
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '33.33%',
-                        height: '100%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 2,
-                        backgroundColor:
-                          value === AttendanceStatus.Present ? 'success.light' : 'transparent',
-                        '&:hover': { backgroundColor: 'success.lighter' },
-                      }}
                       onClick={() => {
                         setStudentData(
                           data.map((item: any) =>
-                            item.studentId === row.studentId
-                              ? { ...item, isPresent: AttendanceStatus.Present }
-                              : item
+                            item.studentId === row.studentId ? { ...item, isPresent: true } : item
                           )
                         );
                       }}
+                      sx={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 0.8,
+                        cursor: 'pointer',
+                        bgcolor:
+                          value === true
+                            ? (theme) => theme.vars.palette.success.main
+                            : 'transparent',
+                        color:
+                          value === true
+                            ? (theme) => theme.vars.palette.success.contrastText
+                            : (theme) => theme.vars.palette.text.secondary,
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor:
+                            value === true
+                              ? (theme) => theme.vars.palette.success.dark
+                              : (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.1),
+                        },
+                      }}
                     >
-                      <Box
-                        sx={{
-                          fontSize: '16px',
-                          fontWeight: 600,
-                          color:
-                            value === AttendanceStatus.Present ? 'success.dark' : 'text.secondary',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        ✓
-                      </Box>
+                      <Iconify icon="eva:checkmark-fill" width={18} />
                     </Box>
 
+                    {/* Pending Button */}
                     <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: '33.33%',
-                        width: '33.33%',
-                        height: '100%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 2,
-                        backgroundColor:
-                          value === AttendanceStatus.Pending ? 'warning.light' : 'transparent',
-                        '&:hover': { backgroundColor: 'warning.lighter' },
-                      }}
                       onClick={() => {
                         setStudentData(
                           data.map((item: any) =>
                             item.studentId === row.studentId
-                              ? { ...item, isPresent: AttendanceStatus.Pending, remarks: '' }
+                              ? { ...item, isPresent: null, remarks: '' }
                               : item
                           )
                         );
                       }}
+                      sx={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 0.8,
+                        cursor: 'pointer',
+                        bgcolor:
+                          value === null
+                            ? (theme) => theme.vars.palette.warning.main
+                            : 'transparent',
+                        color:
+                          value === null
+                            ? (theme) => theme.vars.palette.warning.contrastText
+                            : (theme) => theme.vars.palette.text.secondary,
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor:
+                            value === null
+                              ? (theme) => theme.vars.palette.warning.dark
+                              : (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
+                        },
+                      }}
                     >
-                      <Box
-                        sx={{
-                          fontSize: '16px',
-                          fontWeight: 600,
-                          color:
-                            value === AttendanceStatus.Pending ? 'warning.dark' : 'text.secondary',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        ?
-                      </Box>
+                      <Iconify icon="eva:question-mark-circle-fill" width={18} />
                     </Box>
 
+                    {/* Absent Button */}
                     <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: '33.33%',
-                        height: '100%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 2,
-                        backgroundColor:
-                          value === AttendanceStatus.Absent ? 'error.light' : 'transparent',
-                        '&:hover': { backgroundColor: 'error.lighter' },
-                      }}
                       onClick={() => {
                         setStudentData(
                           data.map((item: any) =>
-                            item.studentId === row.studentId
-                              ? { ...item, isPresent: AttendanceStatus.Absent }
-                              : item
+                            item.studentId === row.studentId ? { ...item, isPresent: false } : item
                           )
                         );
                       }}
+                      sx={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 0.8,
+                        cursor: 'pointer',
+                        bgcolor:
+                          value === false
+                            ? (theme) => theme.vars.palette.error.main
+                            : 'transparent',
+                        color:
+                          value === false
+                            ? (theme) => theme.vars.palette.error.contrastText
+                            : (theme) => theme.vars.palette.text.secondary,
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor:
+                            value === false
+                              ? (theme) => theme.vars.palette.error.dark
+                              : (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
+                        },
+                      }}
                     >
-                      <Box
-                        sx={{
-                          fontSize: '16px',
-                          fontWeight: 600,
-                          color:
-                            value === AttendanceStatus.Absent ? 'error.dark' : 'text.secondary',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        ✗
-                      </Box>
+                      <Iconify icon="eva:close-fill" width={18} />
                     </Box>
                   </Box>
                 </Stack>

@@ -19,19 +19,20 @@ const TABS = [
 const AcademicTabs = () => {
   const tabs = useTabs('timetable');
   return (
-    <Card sx={{}}>
+    <Card sx={{ display: 'flex', flexDirection: 'row', height: 'calc(100vh - 280px)' }}>
       <CustomTabs
         value={tabs.value}
         onChange={tabs.onChange}
-        variant="fullWidth"
-        slotProps={{ tab: { px: 0 } }}
+        orientation="vertical"
+        sx={{ width: 220, borderRight: 1, borderColor: 'divider' }}
+        slotProps={{ tab: { px: 2, justifyContent: 'flex-start' } }}
       >
         {TABS.map((tab) => (
           <Tab key={tab.value} value={tab.value} label={tab.label} />
         ))}
       </CustomTabs>
 
-      <Scrollbar sx={{ minHeight: 384 }}>
+      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
         <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
           {tabs.value === 'timetable' && <AcademicTimetable />}
           {tabs.value === 'subjectPerformace' && <SubjectPerformance />}

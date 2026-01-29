@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { ReportForm } from './ReportForm';
@@ -16,6 +17,7 @@ export default function AddressLabelReport() {
       organization: '',
       class: [] as string[],
       division: '',
+      shift: '',
       fromRollNo: '',
       toRollNo: '',
     },
@@ -25,10 +27,22 @@ export default function AddressLabelReport() {
         .min(1, 'At least one class must be selected')
         .required('Class is required'),
       division: Yup.string().required('Division is required'),
-      fromRollNo: Yup.string().required('From Roll No is required'),
-      toRollNo: Yup.string().required('To Roll No is required'),
+      shift: Yup.string().required('Shift is required'),
+      fromRollNo: Yup.number().typeError('Must be a number').required('From Roll No is required'),
+      toRollNo: Yup.number()
+        .typeError('Must be a number')
+        .required('To Roll No is required')
+        .min(Yup.ref('fromRollNo'), 'To Roll No must be greater than From Roll No.'),
     }),
-    onSubmit: (values) => {},
+    onSubmit: async (values) => {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        shikshaMitraToast.success({ message: 'Report Generated Successfully!' });
+      } catch (error) {
+        console.error(error);
+        shikshaMitraToast.error({ message: 'Failed to generate report' });
+      }
+    },
   });
 
   const handleClassChange = (val: any) => {
@@ -62,7 +76,7 @@ export default function AddressLabelReport() {
 
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
-      <Grid size={{ xs: 12, md: 6 }}>
+      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
         <ShakingTextField error={!!(formik.touched.organization && formik.errors.organization)}>
           <CustomSelect
             options={organizations}
@@ -79,7 +93,7 @@ export default function AddressLabelReport() {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }}>
+      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
         <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
           <CustomSelect
             options={allClasses}
@@ -97,7 +111,7 @@ export default function AddressLabelReport() {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }}>
+      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
         <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
           <TextField
             name="division"
