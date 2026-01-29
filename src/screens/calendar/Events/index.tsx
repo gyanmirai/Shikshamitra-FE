@@ -34,7 +34,7 @@ import type { IEventAnnouncement } from './type';
 
 const Events = (props: TabComponentType) => {
   // State to store the selected event details
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('All');
 
   const {
     data: eventTableData,
