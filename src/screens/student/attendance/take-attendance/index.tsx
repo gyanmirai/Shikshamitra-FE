@@ -158,7 +158,6 @@ const TakeAttendanceScreen = () => {
           { name: 'Attendance', href: '' },
           { name: 'Mark Attendance' },
         ]}
-        sx={{ mb: 1 }}
         description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
       />
       <Box display="flex" gap={2} flexWrap="wrap" sx={{ mb: 1, pt: 1 }}>

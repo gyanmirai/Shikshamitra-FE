@@ -170,7 +170,6 @@ const LibraryFineManagement = () => {
             { name: 'Circulation' },
             { name: 'Fine Management' },
           ]}
-          sx={{ mb: 2 }}
         />
         <CommonCtaComponent
           bookHandler={openAddBookDialog}

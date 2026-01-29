@@ -55,7 +55,6 @@ const MarksFeedbackHomeworkAssignment = () => {
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
           { name: 'Assessment & Feedback' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Paper
         sx={{

@@ -40,7 +40,6 @@ const ResorceMeasurementScreen = () => {
         heading="Resource Measurement Unit"
         description="Here you can add the resource measurement unit to manage the resource effectively and trak on the basis of their measurement unit."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

@@ -126,7 +126,6 @@ const ExamTypeSettings = () => {
             Exam Types
           </Button>
         }
-        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="examTypeTable"

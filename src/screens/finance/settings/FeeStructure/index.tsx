@@ -99,7 +99,6 @@ const FeeStructure = () => {
               name: selectedFeeStructure ? 'Edit Fee Structure' : 'Add Fee Structure',
             },
           ]}
-          sx={{ mb: 2 }}
         />
       ) : viewFeeStructureDialog.value ? (
         <CustomBreadcrumbs
@@ -129,7 +128,7 @@ const FeeStructure = () => {
             },
             { name: 'View Fee Structure', href: '' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -157,7 +156,7 @@ const FeeStructure = () => {
               Fee Structure
             </Button>
           }
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
         />
       )}
       <>

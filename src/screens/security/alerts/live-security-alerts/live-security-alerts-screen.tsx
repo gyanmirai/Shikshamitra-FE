@@ -13,7 +13,6 @@ const LiveSecurityAlertsScreen = () => (
         { name: 'Security', href: '' },
         { name: 'Live Security Alert', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <LiveSecurityAlertTable />
   </>

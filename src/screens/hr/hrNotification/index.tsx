@@ -69,7 +69,7 @@ const HRNotificationScreen = () => {
           ]}
           isBack
           onBack={() => dialog.onFalse()}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -79,7 +79,7 @@ const HRNotificationScreen = () => {
             { name: 'HR/Staff', href: '/hr/dashboard' },
             { name: 'Notification', href: '/hr/notification' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       )}
 

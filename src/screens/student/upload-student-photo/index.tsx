@@ -53,7 +53,6 @@ const UploadStudentPhotoScreen = () => {
       <CustomBreadcrumbs
         heading="Upload Student Photo"
         links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Upload Student Photo' }]}
-        sx={{ mb: 2 }}
       />
       <Divider sx={{ mb: 2 }} />
       <Grid container spacing={2}>

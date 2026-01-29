@@ -17,7 +17,6 @@ const FinanceClearedChequeListScreen = () => (
         { name: 'Reconciliation', href: '/finance/reconciliation/cleared-cheque/' },
         { name: 'Cleared Cheque' },
       ]}
-      sx={{ mb: 2 }}
     />
 
     <CustomizableTable

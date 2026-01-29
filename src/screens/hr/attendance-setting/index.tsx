@@ -140,7 +140,6 @@ const HrAttendanceSettingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-setting` },
           { name: 'Setting' },
         ]}
-        sx={{ mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         description="Configure attendance settings including shift management, leave types, and leave policies for effective workforce management"
       />

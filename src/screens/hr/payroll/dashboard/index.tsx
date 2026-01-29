@@ -15,7 +15,6 @@ const Dashboard = () => (
     <CustomBreadcrumbs
       heading="Dashboard"
       links={[{ name: 'HR' }, { name: 'Payroll' }, { name: 'Dashboard' }]}
-      sx={{ mb: 2 }}
     />
     <MonthCards />
     <DashboardMiddleChart />

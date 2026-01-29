@@ -64,7 +64,6 @@ const GradeBookPerformanceTrackingScreen = () => {
           { name: 'Grade Book Performance Tracking' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Card

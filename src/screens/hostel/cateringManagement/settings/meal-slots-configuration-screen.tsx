@@ -23,7 +23,6 @@ const MealSlotConfigurationScreen = () => {
         heading="Settings"
         description="Here you can add slots and configure other settings related to catering management."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

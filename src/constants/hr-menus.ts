@@ -164,15 +164,15 @@ const hrModule = (isDdvs: boolean) => ({
           permissionName: hrPermissions.payroll.root,
           icon: menuIconView('mdi:cash-multiple'),
           children: [
-            {
-              title: 'Dashboard',
-              path: hrPaths.payroll.dashboard,
-              _action: 'payroll-dashboard',
-              shortcutKey: 'Alt+H+P+1',
-              shortcutKeyName: 'Alt+H+P+1',
-              permissionName: hrPermissions.payroll.dashboard,
-              icon: menuIconView('mdi:view-dashboard-outline'),
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: hrPaths.payroll.dashboard,
+            //   _action: 'payroll-dashboard',
+            //   shortcutKey: 'Alt+H+P+1',
+            //   shortcutKeyName: 'Alt+H+P+1',
+            //   permissionName: hrPermissions.payroll.dashboard,
+            //   icon: menuIconView('mdi:view-dashboard-outline'),
+            // },
             {
               title: 'Run Payroll',
               path: hrPaths.payroll.runPayroll,

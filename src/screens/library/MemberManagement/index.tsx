@@ -81,7 +81,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
                 : 'Add a new member by entering details like name, contact information, membership type, and status.'
             }
             links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Library Members' }]}
-            sx={{ px: 1, mb: 1 }}
+            sx={{ px: 1 }}
             isBack
             onBack={() => {
               handleClose(null, false);
@@ -92,7 +92,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             heading="Library Members"
             description="This screen displays the list of all library members along with their details, and provides an option to add new members."
             links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Library Members' }]}
-            sx={{ px: 1, mb: 1 }}
+            sx={{ px: 1 }}
           />
         ))}
 

@@ -73,7 +73,6 @@ const GateApproval = () => {
           { name: 'Attendance And Leave Management', href: '' },
           { name: 'Gate Verification', href: '' },
         ]}
-        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="gate-verification-management"

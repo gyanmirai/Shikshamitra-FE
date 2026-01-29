@@ -43,7 +43,6 @@ const AccessControlScreen = () => {
       <CustomBreadcrumbs
         heading="Access Control"
         links={[{ name: 'Security' }, { name: 'Role And Permission' }, { name: 'Access Control' }]}
-        sx={{ mb: 2 }}
         action={
           <Button variant="contained" onClick={dialog.onTrue}>
             Add Access Control

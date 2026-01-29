@@ -87,14 +87,14 @@ export function CustomBreadcrumbs({
       alignItems="center"
       spacing={2}
       sx={{
-        py: 1.5,
-        px: 2,
+        pb: 0,
+        px: 1,
         minHeight: 56,
         borderRadius: 2,
-        bgcolor: 'background.paper',
-        boxShadow: (theme) =>
-          `0px 4px 12px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.16)'}`,
-        border: (theme) => `1px solid ${theme.palette.divider}`,
+        bgcolor: 'transparent',
+        // boxShadow: (theme) =>
+        //   `0px 4px 12px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.16)'}`,
+        // border: (theme) => `1px solid ${theme.palette.divider}`,
         backdropFilter: 'blur(8px)',
         overflow: 'hidden',
         ...sx,
@@ -182,8 +182,9 @@ export function CustomBreadcrumbs({
               '& .MuiBreadcrumbs-ol': {
                 flexWrap: 'nowrap',
                 overflowX: 'auto',
-                pb: 0.5, // Space for scrollbar if needed
+                // pb: 0.5, // Space for scrollbar if needed
                 scrollbarWidth: 'none', // Firefox
+                columnGap: 0.5,
                 '&::-webkit-scrollbar': { display: 'none' }, // Chrome/Safari
               },
               ...slotProps?.breadcrumbs,
@@ -194,7 +195,7 @@ export function CustomBreadcrumbs({
               <BreadcrumbsLink
                 key={link.name ?? index}
                 link={link}
-                activeLast={activeLast}
+                activeLast={links.length === index + 1}
                 disabled={link.name === lastLink}
               />
             ))}
@@ -219,7 +220,7 @@ export function Separator() {
         height: 4,
         borderRadius: '50%',
         bgcolor: 'text.disabled',
-        opacity: 0.4, // subtler
+        opacity: 0.7, // subtler
       }}
     />
   );

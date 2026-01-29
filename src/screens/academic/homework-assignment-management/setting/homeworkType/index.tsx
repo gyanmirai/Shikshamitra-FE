@@ -98,7 +98,6 @@ const HomeworkTypeCreation = () => {
             Homework Type
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <HomeworkTypeTable

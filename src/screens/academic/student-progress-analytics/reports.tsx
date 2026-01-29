@@ -46,7 +46,6 @@ const Reports = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Reports"
         links={[{ name: 'Academics' }, { name: 'Student Progress Analytics' }, { name: 'Reports' }]}
-        sx={{ mb: 2 }}
       />
       <Formik
         initialValues={initialValues}

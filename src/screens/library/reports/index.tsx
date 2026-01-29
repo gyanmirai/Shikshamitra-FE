@@ -56,7 +56,6 @@ const LibraryReportsScreen = () => {
         heading="Reports"
         description="Generate and filter library reports by book, member, circulation, and other criteria."
         links={[{ name: 'Library', href: '/library/dashboard/' }, { name: 'Reports' }]}
-        sx={{ mb: 1 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={

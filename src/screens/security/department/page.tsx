@@ -244,7 +244,7 @@ const Department = () => {
           { name: 'Role And Permission', href: '/security/role' },
           { name: 'Department' },
         ]}
-        sx={{ px: 1, mb: 3 }}
+        sx={{ px: 1 }}
         action={
           <Button
             startIcon={<Add />}

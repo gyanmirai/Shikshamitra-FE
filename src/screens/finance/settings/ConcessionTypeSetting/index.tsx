@@ -119,7 +119,7 @@ const ConcessionType = () => {
             Concession Type
           </Button>
         }
-        sx={{ px: 2, mb: 1 }}
+        sx={{ px: 2 }}
       />
       <>
         {/* Form card for creating/editing concession types */}

@@ -46,7 +46,6 @@ const StudentReportsScreen = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Reports' },
         ]}
-        sx={{ mb: 1 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={

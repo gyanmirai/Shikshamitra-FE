@@ -13,7 +13,6 @@ const AccessLogsManagementSecurity = () => (
         { name: 'Security', href: '' },
         { name: 'Access Logs Management Security', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <AccessLogsManagementSecurityTable />
   </>

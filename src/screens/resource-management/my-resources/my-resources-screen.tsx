@@ -73,7 +73,6 @@ const MyResourcesScreen = () => {
       <CustomBreadcrumbs
         heading="My Resources"
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

@@ -14,11 +14,7 @@ const SecurityAdminDashboard = () => (
 
   <Box sx={{ p: 3 }}>
     {/* Top Section: Key Metrics */}
-    <CustomBreadcrumbs
-      heading="Dashboard"
-      links={[{ name: 'Security' }, { name: 'Dashboard' }]}
-      sx={{ mb: 2 }}
-    />
+    <CustomBreadcrumbs heading="Dashboard" links={[{ name: 'Security' }, { name: 'Dashboard' }]} />
     <GuardOnDuty />
     <VisitorSummary />
 

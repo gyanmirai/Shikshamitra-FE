@@ -94,7 +94,6 @@ const ChargeTypeCreation = () => {
             Charges Categories
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <ChargeTypeTable

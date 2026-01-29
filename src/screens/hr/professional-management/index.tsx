@@ -56,7 +56,6 @@ const ProfessionalManagementScreen = () => {
           { name: 'Attendance & Leave' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 2 }}
       />
       <CustomTabs
         value={searchParams.tab}

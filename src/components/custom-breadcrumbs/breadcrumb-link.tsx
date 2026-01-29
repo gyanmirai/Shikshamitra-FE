@@ -1,3 +1,5 @@
+import type { SxProps } from '@mui/system';
+import type { Theme } from 'src/theme/types';
 import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
@@ -15,18 +17,19 @@ type Props = BoxProps & {
 };
 
 export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props) {
-  const styles = {
+  const styles: SxProps<Theme> = {
     typography: 'body2',
     alignItems: 'center',
-    color: 'text.secondary',
+    color: (theme) =>
+      activeLast ? theme.vars.palette.primary.main : theme.vars.palette.text.primary,
     display: 'inline-flex',
     transition: 'all 0.2s ease-in-out',
     fontWeight: activeLast ? 600 : 400,
     '&:hover': {
       color: 'primary.main',
       textDecoration: 'none',
-      backgroundColor: 'action.hover',
-      borderRadius: 0.75,
+      backgroundColor: activeLast ? 'unset' : 'action.hover',
+      borderRadius: 0.9,
     },
     ...(disabled &&
       !activeLast && {

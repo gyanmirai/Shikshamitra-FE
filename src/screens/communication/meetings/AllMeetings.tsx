@@ -78,7 +78,6 @@ const AllMeetings = (props: TabComponentType) => {
               { name: 'Meetings' },
               { name: 'Meeting Form' },
             ]}
-            sx={{ mb: 2 }}
             isBack
             onBack={() => {
               handleCloseDialog(null, false);
@@ -103,7 +102,6 @@ const AllMeetings = (props: TabComponentType) => {
               { name: 'Communication', href: '/communication/dashboard' },
               { name: 'Meetings' },
             ]}
-            sx={{ mb: 2 }}
             action={
               <Button
                 startIcon={<Iconify icon="mdi:plus" />}

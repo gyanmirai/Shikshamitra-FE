@@ -31,7 +31,6 @@ const ArchievedIncidents = () => {
           },
           { name: 'Archieved Incident', href: '' },
         ]}
-        sx={{ mb: 2 }}
       />{' '}
       <ArchivedIncidentTable
         onView={(data) => {

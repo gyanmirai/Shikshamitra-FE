@@ -187,7 +187,6 @@ const TransportVehicleManagementScreen = () => {
       <CustomBreadcrumbs
         heading="Vehicle Management"
         links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
-        sx={{ mb: 2 }}
       />
       {/* <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end">
         <Button

@@ -69,7 +69,7 @@ const LibraryNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -79,7 +79,7 @@ const LibraryNotificationScreen = () => {
             { name: 'Library', href: '/library/dashboard' },
             { name: 'Notification', href: '/library/notification' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
         />
       )}
 

@@ -268,7 +268,6 @@ const WeeklyLectures = () => {
             Weekly Lectures
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

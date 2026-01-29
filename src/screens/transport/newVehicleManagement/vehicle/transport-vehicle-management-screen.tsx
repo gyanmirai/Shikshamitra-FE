@@ -62,7 +62,6 @@ const TransportVehicleSettingScreen = () => {
             <CustomBreadcrumbs
               heading="Vehicle Management"
               links={[{ name: 'Transport' }, { name: 'Vehicle Management' }]}
-              sx={{ mb: 2 }}
             />
 
             <Button startIcon={<Add />} onClick={() => setOpen(true)} variant="contained">

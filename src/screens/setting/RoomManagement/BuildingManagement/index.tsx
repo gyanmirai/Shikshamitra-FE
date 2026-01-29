@@ -82,7 +82,7 @@ const BuildingManagement = () => {
             { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
             { name: 'Building Management', href: '/academic/curriculumSubjects' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -93,7 +93,7 @@ const BuildingManagement = () => {
             { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
             { name: 'Building Management' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
           action={
             <Button
               variant="contained"

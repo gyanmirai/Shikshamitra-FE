@@ -215,7 +215,6 @@ const BorrowingReturnRules = () => {
             </LoadingButton>
           </Box>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

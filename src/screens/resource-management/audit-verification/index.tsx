@@ -52,7 +52,6 @@ const AuditVerificationScreen = () => {
           { name: 'Resource Management', href: '/resourceManagement/dashboard' },
           { name: 'Audit & Verification' },
         ]}
-        sx={{ mb: 2 }}
         action={
           <Button variant="contained" startIcon={<Add />} onClick={isOpenForm.onTrue}>
             New Audit

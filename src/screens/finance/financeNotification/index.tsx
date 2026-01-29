@@ -97,7 +97,7 @@ const FinanceNotificationScreen = () => {
           ]}
           isBack
           onBack={() => dialog.onFalse()}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -107,7 +107,7 @@ const FinanceNotificationScreen = () => {
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Notification', href: '/finance/notification' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       )}
 

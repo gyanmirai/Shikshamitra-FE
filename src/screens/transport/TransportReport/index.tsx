@@ -156,7 +156,6 @@ const TransportReportScreen = ({ addReportDialog }: { addReportDialog: UseBoolea
         onBack={() => {
           addReportDialog?.onFalse();
         }}
-        sx={{ mb: 1 }}
       />
 
       <CommonReport

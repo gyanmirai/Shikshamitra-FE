@@ -1,9 +1,8 @@
 'use client';
 
-import { Box, Tab, Paper } from '@mui/material';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { CustomTabs } from 'src/components/custom-tabs';
+import { Box, Grid, Card, Button } from '@mui/material';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -11,7 +10,6 @@ import LeavingCertificate from './leaving-certificate';
 import BonofiedCertificate from './bonofied-certificate';
 import CharacterCertificate from './character-certificate';
 import FirstTrialCertificate from './first-trial-certificate';
-import { FormSlider } from '../enrollment/register/register-form';
 
 const TABS = [
   {
@@ -47,11 +45,6 @@ const StudentCertificatesScreen = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
-  const [isBackClick, setIsBackClick] = useState(false);
 
   // const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (
@@ -63,57 +56,105 @@ const StudentCertificatesScreen = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Certificates' },
         ]}
-        sx={{ mb: 2 }}
         description="Generate certificates like Bonafide, Leaving, and others here."
       />
-      <Paper
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          mb: 1,
-        }}
-      >
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === value);
-            if (currentIndex > newIndex) {
-              setIsBackClick(true);
-            } else {
-              setIsBackClick(false);
-            }
 
-            setSearchParams({ tab: value });
-          }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-          ))}
-        </CustomTabs>
-      </Paper>
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-          },
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          mt: 0,
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: '0',
         }}
       >
-        <Box sx={{ p: 1, height: '100%' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component
-            // addSubjectDialog={addSubjectDialog}
-            // addElectiveGroupDialog={addElectiveGroupDialog}
-            // searchParams={searchParams}
-            // setSearchParams={setSearchParams}
-            />
-          )}{' '}
-        </Box>
-      </FormSlider>
+        {/* Left Section - Navigation List */}
+        <Grid size={{ xs: 12, md: 3, lg: 2 }} sx={{ height: '100%' }}>
+          <Card sx={{ height: '100%', p: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+              }}
+            >
+              {TABS.map((tab) => {
+                const isSelected = searchParams.tab === tab.value;
+                return (
+                  <Button
+                    key={tab.value}
+                    onClick={() => setSearchParams({ tab: tab.value })}
+                    variant="text"
+                    color="inherit"
+                    startIcon={tab.icon}
+                    sx={{
+                      position: 'relative',
+                      justifyContent: 'flex-start',
+                      px: 2,
+                      py: 1.5,
+
+                      textAlign: 'left',
+                      backgroundColor: (theme) =>
+                        isSelected ? theme.palette.action.hover : 'transparent',
+                      color: isSelected ? 'inherit' : 'text.secondary',
+                      // '&:hover': {
+                      //   backgroundColor: (theme) =>
+                      //     isSelected ? theme.palette.primary.light : theme.palette.action.hover,
+                      // },
+
+                      ...(isSelected
+                        ? {
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: '2px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              width: '4px',
+                              height: '80%',
+                              borderLeft: (theme) =>
+                                isSelected ? `4px solid ${theme.palette.primary.main}` : 'none',
+                            },
+                          }
+                        : {}),
+                    }}
+                  >
+                    {tab.label}
+                  </Button>
+                );
+              })}
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Right Section - Content */}
+        <Grid size={{ xs: 12, md: 9, lg: 10 }} sx={{ height: '100%' }}>
+          <Box
+            sx={{
+              gap: 1,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '0',
+            }}
+          >
+            {/* Component Render Section */}
+            <Card sx={{ p: 1, flexGrow: 1 }}>
+              {currentActiveComponent?.component && (
+                <currentActiveComponent.component
+                // addSubjectDialog={addSubjectDialog}
+                // addElectiveGroupDialog={addElectiveGroupDialog}
+                // searchParams={searchParams}
+                // setSearchParams={setSearchParams}
+                />
+              )}{' '}
+            </Card>
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

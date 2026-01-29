@@ -16,7 +16,6 @@ const GeneralSettings = () => (
         { name: 'Settings' },
         { name: 'General' },
       ]}
-      sx={{ mb: 2 }}
     />
     <Card sx={{ p: 2 }}>
       <Grid container spacing={2} alignItems="center">

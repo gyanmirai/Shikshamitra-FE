@@ -279,7 +279,7 @@ const Subject = () => {
             { name: 'Subjects Assignment', href: '/academic/curriculumSubjects' },
             // { name: selectedSubject ? 'Update Subject Assignment' : 'Subject Assignment Form' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -303,7 +303,6 @@ const Subject = () => {
             showSubjectDialog.onFalse();
             setSelectedSubject(null);
           }}
-          sx={{ mb: 2 }}
         />
       )}
       {/* Conditional rendering based on form state */}

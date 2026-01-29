@@ -115,7 +115,6 @@ const GradingScale = () => {
             Grade Scale
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

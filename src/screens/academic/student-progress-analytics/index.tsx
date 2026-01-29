@@ -65,7 +65,6 @@ const StudentProgressAnalyticsScreen = () => {
           { name: 'Student Progress & Analytics' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Card

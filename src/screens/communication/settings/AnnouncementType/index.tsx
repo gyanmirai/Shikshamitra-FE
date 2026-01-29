@@ -103,7 +103,7 @@ const AnnouncementTypeCreation = () => {
             Announcement Type
           </Button>
         }
-        sx={{ px: 2, mb: 1 }}
+        sx={{ px: 2 }}
       />
 
       <AnnouncementTypeTable

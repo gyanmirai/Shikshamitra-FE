@@ -88,7 +88,6 @@ const ManageProcurementRequestScreenTeacher = () => {
       <CustomBreadcrumbs
         heading="Procurement Request"
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

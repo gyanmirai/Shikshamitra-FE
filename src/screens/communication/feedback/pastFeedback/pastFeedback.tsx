@@ -45,7 +45,6 @@ const PastSurvey = (props: TabComponentType) => {
           { name: 'Survey' },
           { name: 'Past Survey' },
         ]}
-        sx={{ mb: 2 }}
       />
       <PastSurveyTable
         data={surveyTableData}

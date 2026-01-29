@@ -20,7 +20,6 @@ const ContentManagementSetting = () => {
             name: 'Content Management',
           },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Grid container spacing={4}>

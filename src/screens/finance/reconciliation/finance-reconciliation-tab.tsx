@@ -46,7 +46,6 @@ const FinanceChequeTransectionScreen = () => {
           { name: 'Reconciliation', href: '/finance/reconciliation/payment-by-cheque/' },
           { name: 'Cheque Transactions' },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

@@ -31,7 +31,6 @@ export const InquiryHeader = React.memo(
       ]}
       isBack={isAdding}
       onBack={onBackClick}
-      sx={{ mb: 2 }}
       action={
         !isAdding && (
           <Button

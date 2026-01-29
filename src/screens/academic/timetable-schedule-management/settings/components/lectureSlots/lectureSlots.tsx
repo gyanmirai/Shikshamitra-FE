@@ -323,7 +323,6 @@ const LectureSlots = () => {
             { name: 'Settings' },
             { name: 'View Slots' },
           ]}
-          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             viewSlotsDialog.onFalse();
@@ -340,7 +339,6 @@ const LectureSlots = () => {
             { name: 'Lecture Slots' },
             { name: 'Add Lecture Slot' },
           ]}
-          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             addLectureSlotDialog.onFalse();
@@ -370,7 +368,6 @@ const LectureSlots = () => {
               Lecture Slot
             </Button>
           }
-          sx={{ mb: 2 }}
         />
       )}
 

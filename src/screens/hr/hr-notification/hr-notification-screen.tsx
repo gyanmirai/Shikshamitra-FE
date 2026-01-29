@@ -57,7 +57,6 @@ const HRStaticNotificationScreen = () => {
         <CustomBreadcrumbs
           heading="Notification Settings"
           links={[{ name: 'HR' }, { name: 'Notification Settings' }]}
-          sx={{ mb: 2 }}
           description="In the Notification Settings, you can customize the message for each notification and enable or disable it as needed."
         />
         {/* <Button startIcon={<Iconify icon="eva:arrow-back-fill" />} size="small" variant='contained' onClick={closeHandler}>Back</Button> */}

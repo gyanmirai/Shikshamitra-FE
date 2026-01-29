@@ -56,7 +56,6 @@ const TransportReportsScreen = () => {
       <CustomBreadcrumbs
         heading="Transport Reports"
         links={[{ name: 'Transport' }, { name: 'Reports' }]}
-        sx={{ mb: 2 }}
       />
 
       <Formik

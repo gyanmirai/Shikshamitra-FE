@@ -70,7 +70,6 @@ const VisitorPreApprovalScreen = () => {
       <CustomBreadcrumbs
         heading="Visitor Pre-Approval"
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

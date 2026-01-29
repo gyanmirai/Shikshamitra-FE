@@ -19,7 +19,6 @@ const Integrations = () => (
 
         { name: 'Integrations' },
       ]}
-      sx={{ mb: 2 }}
     />
     <Typography variant="h6">Integrations</Typography>
     <Box sx={{ display: 'flex', alignItems: 'center' }}>

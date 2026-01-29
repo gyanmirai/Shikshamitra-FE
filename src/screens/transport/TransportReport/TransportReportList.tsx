@@ -30,7 +30,6 @@ const TransportReportList = () => {
               Report
             </Button>
           }
-          sx={{ mb: 1 }}
         />
       )}
 

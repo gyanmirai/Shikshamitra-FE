@@ -40,7 +40,6 @@ const ResourceConditionScreen = () => {
         heading="Resource Condition"
         description="Here you can add the resource condition to manage the resource effectively and trak on the basis of their condition."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

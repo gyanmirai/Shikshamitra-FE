@@ -20,7 +20,6 @@ const TeacherBookingScreen = () => {
         <CustomBreadcrumbs
           heading="Book Resource"
           links={[{ name: 'Resource Management' }, { name: 'Book Resource ' }]}
-          sx={{ mb: 2 }}
         />
         <Button
           onClick={() => {

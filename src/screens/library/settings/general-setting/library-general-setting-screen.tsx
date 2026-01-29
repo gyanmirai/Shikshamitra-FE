@@ -68,7 +68,6 @@ const LibraryGeneralSettingScreen = () => {
             { name: 'Setting' },
             { name: 'General Setting' },
           ]}
-          sx={{ mb: 2 }}
           description="Manage library timings, fines, and other general configurations for the library module here"
         />
 

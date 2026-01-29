@@ -140,7 +140,6 @@ const ActiveSurvey = (props: TabComponentType) => {
           { name: 'Survey' },
           { name: 'Active Survey' },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

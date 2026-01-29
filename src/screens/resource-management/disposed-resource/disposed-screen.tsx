@@ -12,7 +12,7 @@ const DisposedResourceScreen = () => {
 
   return (
     <>
-      <CustomBreadcrumbs heading="Disposed Resources" links={links} sx={{ mb: 2 }} />
+      <CustomBreadcrumbs heading="Disposed Resources" links={links} />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 6, lg: 3 }} pb="20px">

@@ -96,7 +96,6 @@ const AssignmentTypeCreation = () => {
             Assignment Type
           </Button>
         }
-        sx={{ mb: 3 }}
       />
 
       <AssignmentTypeTable

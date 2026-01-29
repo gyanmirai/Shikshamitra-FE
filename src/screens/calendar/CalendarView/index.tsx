@@ -379,7 +379,6 @@ const CalendarView = () => {
       <CustomBreadcrumbs
         heading="Calendar View"
         links={[{ name: 'Calendar' }, { name: 'Calendar View' }]}
-        sx={{ mb: 2 }}
       />
 
       {/* Inline filter controls */}

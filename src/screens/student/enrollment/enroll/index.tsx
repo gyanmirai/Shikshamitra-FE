@@ -116,7 +116,6 @@ const EnrollScreen = () => {
       <CustomBreadcrumbs
         heading="Enrollment"
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Enrollment' }]}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

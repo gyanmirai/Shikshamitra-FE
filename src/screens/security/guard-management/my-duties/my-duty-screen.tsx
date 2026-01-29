@@ -13,7 +13,6 @@ const MyDutyScreen = () => (
         { name: 'Security', href: '' },
         { name: 'My Duty Schedule', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <MyDutyTable />
   </>

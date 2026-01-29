@@ -47,7 +47,6 @@ const ReportsScreen = () => {
           { name: 'Class Management', href: '/classManagement/dashboard/' },
           { name: 'Reports' },
         ]}
-        sx={{ mb: 1 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={

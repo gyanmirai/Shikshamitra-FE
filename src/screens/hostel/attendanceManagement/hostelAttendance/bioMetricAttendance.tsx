@@ -56,7 +56,6 @@ const BiometricHostelAttendance = () => {
           { name: 'Attendance And Leave Management', href: '' },
           { name: 'Attendance', href: '' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'end', flexWrap: 'wrap', mb: 2 }}>
         <DatePicker

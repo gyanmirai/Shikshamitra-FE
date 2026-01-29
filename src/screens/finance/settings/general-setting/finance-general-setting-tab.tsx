@@ -164,7 +164,6 @@ const FinanceGeneralSettingTab = () => {
           { name: 'Setting' },
           { name: 'General Setting' },
         ]}
-        sx={{ mb: 2 }}
         description="This is the General Settings section for the Finance module, where you can manage fee heads, payment status options, and other required fields and details related to financial operations."
         action={
           <Button

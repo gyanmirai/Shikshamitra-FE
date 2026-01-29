@@ -36,7 +36,6 @@ const FinanceFeeStructureOverviewComponent = () => {
           { name: 'Fee Management', href: '/finance/fee-management/fee-structure-overview/' },
           { name: 'Fee Structure Overview' },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Box pb="10px">

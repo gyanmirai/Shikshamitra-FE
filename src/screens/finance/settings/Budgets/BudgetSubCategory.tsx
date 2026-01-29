@@ -132,7 +132,6 @@ const FinanceBudgetSubCategorySettings = () => {
             Budget Sub Category
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

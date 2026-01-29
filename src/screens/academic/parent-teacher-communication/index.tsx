@@ -67,7 +67,6 @@ const ParentTeacherCommunicationScreen = () => {
           { name: 'Parent Teacher Communication' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Card

@@ -82,7 +82,6 @@ const PaymentTerm = () => {
             { name: 'Setting', href: '/finance/setting' },
             { name: 'Payment Terms', href: '/finance/payment-term' },
           ]}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -113,7 +112,6 @@ const PaymentTerm = () => {
               Payment Term
             </Button>
           }
-          sx={{ mb: 2 }}
         />
       )}
       <>

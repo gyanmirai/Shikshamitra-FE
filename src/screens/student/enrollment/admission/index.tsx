@@ -356,7 +356,6 @@ const AdmissionScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
           { name: 'Admission' },
         ]}
-        sx={{ mb: 1 }}
         description="Manage students admissions, review applications and approve or reject them as needed."
       />
       <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1 }}>

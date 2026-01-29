@@ -90,7 +90,6 @@ const SubjectCreation = () => {
             Subject
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <SettingSubjectTable

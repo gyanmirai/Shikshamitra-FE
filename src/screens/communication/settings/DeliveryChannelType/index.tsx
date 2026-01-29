@@ -76,7 +76,7 @@ const DeliveryChannelTypeCreation = () => {
             Delivery Channel Type
           </Button>
         }
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1 }}
       />
 
       <DeliveryChannelTable

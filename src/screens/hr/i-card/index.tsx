@@ -38,7 +38,6 @@ const StudentIcardScreen = () => {
             heading="I-Card"
             description="View and manage employee I-Cards by status and organization."
             links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
-            sx={{ mb: 2 }}
             action={
               <Button
                 onClick={dialog.onFalse}
@@ -59,7 +58,6 @@ const StudentIcardScreen = () => {
             heading="I-Card"
             description="View and manage employee I-Cards by status and organization."
             links={[{ name: 'HR' }, { name: 'Employee' }, { name: 'I-Card' }]}
-            sx={{ mb: 2 }}
             action={
               <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
                 Create I-card

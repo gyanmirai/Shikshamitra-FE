@@ -13,7 +13,6 @@ const AccessLogsManagementScreen = () => (
         { name: 'Security', href: '' },
         { name: 'Access Logs', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <AccessLogsManagementTable />
   </>

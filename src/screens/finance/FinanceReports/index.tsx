@@ -284,7 +284,6 @@ const FinanceReports = ({ addReportDialog }: { addReportDialog: UseBooleanReturn
         heading="Generate Reports"
         description="Generate and export various finance reports."
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Generate Reports' }]}
-        sx={{ mb: 2 }}
         isBack={addReportDialog?.value}
         onBack={() => {
           addReportDialog?.onFalse();

@@ -84,7 +84,6 @@ const SeatAllocation = () => {
             { name: 'Examination', href: '/academic/examination' },
             { name: 'Seat Allocation', href: '/academic/examination/seat-allocation' },
           ]}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -95,7 +94,6 @@ const SeatAllocation = () => {
             { name: 'Examination', href: '/academic/examination' },
             { name: 'Seat Allocation' },
           ]}
-          sx={{ mb: 2 }}
         />
       )}
       {openSeatAllocation.value ? (

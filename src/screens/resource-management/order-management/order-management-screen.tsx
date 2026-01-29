@@ -12,7 +12,7 @@ const OrderManagementScreen = () => {
 
   return (
     <>
-      <CustomBreadcrumbs heading="Order Request" links={links} sx={{ mb: 2 }} />
+      <CustomBreadcrumbs heading="Order Request" links={links} />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 6, lg: 3 }} pb="20px">

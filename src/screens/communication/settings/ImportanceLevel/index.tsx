@@ -75,7 +75,7 @@ const ImportanceLevelCreation = () => {
             Importance Level
           </Button>
         }
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1 }}
       />
 
       <ImportanceLevelTable

@@ -255,7 +255,6 @@ const FinanceExpenseCategory = () => {
             Expense Category
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

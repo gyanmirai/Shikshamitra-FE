@@ -44,7 +44,6 @@ const ChooseElectiveSubject = () => {
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Choose Elective Subjects' },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Box display="flex" gap={2} justifyContent="flex-end" mb={2}>

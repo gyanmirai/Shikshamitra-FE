@@ -179,7 +179,7 @@ const Subjects = () => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -190,7 +190,6 @@ const Subjects = () => {
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
             { name: 'Chapters Management' },
           ]}
-          sx={{ mb: 2 }}
         />
       )}
       {/* Conditional rendering based on form state */}

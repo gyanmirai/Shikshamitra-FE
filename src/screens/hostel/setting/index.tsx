@@ -43,7 +43,6 @@ const HostelSetting = () => {
           { name: 'Hostel Management', href: '/hostel/dashboard' },
           { name: 'Setting', href: '' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box display="flex" justifyContent="flex-end" gap={2}>
         <Button variant="outlined" startIcon={<Iconify icon={GlobalIcons.download} />}>

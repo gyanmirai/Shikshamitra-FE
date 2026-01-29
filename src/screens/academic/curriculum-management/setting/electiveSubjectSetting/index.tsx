@@ -102,7 +102,6 @@ const ElectiveSubjectSetting = () => {
             Elective Group
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <ElectiveSubjectTable

@@ -59,7 +59,6 @@ const FinanceExpenseTrackingScreen = () => {
           <CustomBreadcrumbs
             heading="Expense Tracking"
             links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Expense Tracking' }]}
-            sx={{ mb: 2 }}
             description="The Expense Tracking screen provides a detailed overview of all recorded expenses. You can track expense categories, view transaction details, and monitor financial records efficiently."
             action={
               <Button

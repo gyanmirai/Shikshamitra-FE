@@ -489,7 +489,6 @@ const TimeTableGrid = () => {
           heading="Timetable"
           links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
           description="Create and manage class schedules by assigning subjects, teachers and rooms to specific time slots"
-          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             // handleCloseDialog(false);
@@ -504,7 +503,6 @@ const TimeTableGrid = () => {
             { name: 'Timetable Management' },
           ]}
           description="View and manage timetables for different classes and divisions. Create new schedules or modify existing ones to organize academic activities"
-          sx={{ mb: 2 }}
         />
       )}
       <CustomDialog

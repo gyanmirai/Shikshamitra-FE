@@ -36,7 +36,7 @@ const ReportsScreen = () => {
         heading="Reports"
         description="Generate and filter payroll and employee reports by department, role, status, and other criteria."
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports' }]}
-        sx={{ mb: 1, px: 2 }}
+        sx={{ px: 2 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={

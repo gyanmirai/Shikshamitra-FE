@@ -115,7 +115,6 @@ const FinanceExpenseTracking = () => {
               href: '/finance/expense-tracking',
             },
           ]}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -136,7 +135,7 @@ const FinanceExpenseTracking = () => {
               Expense
             </Button>
           }
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
         />
       )}
 

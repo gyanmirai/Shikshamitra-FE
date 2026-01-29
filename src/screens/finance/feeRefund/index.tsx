@@ -111,7 +111,6 @@ const FeeRefund = () => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -132,7 +131,6 @@ const FeeRefund = () => {
               Fee Refund
             </Button>
           }
-          sx={{ mb: 2 }}
         />
       )}
 

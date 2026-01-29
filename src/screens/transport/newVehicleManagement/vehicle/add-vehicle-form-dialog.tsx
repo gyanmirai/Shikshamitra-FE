@@ -82,7 +82,6 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
         <CustomBreadcrumbs
           heading="Vehicle Management"
           links={[{ name: 'Transport' }, { name: 'Vehicle Management' }, { name: 'Form' }]}
-          sx={{ mb: 2 }}
         />
         <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
           <Button

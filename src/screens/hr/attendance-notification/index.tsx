@@ -46,7 +46,6 @@ const HrAttendanceNotificationScreen = () => {
       <CustomBreadcrumbs
         heading="Notifications History"
         links={[{ name: 'HR' }, { name: 'Attendance & Leave' }, { name: 'Notifications History' }]}
-        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="hr-attendance-notification"

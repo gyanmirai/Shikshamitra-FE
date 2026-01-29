@@ -186,7 +186,6 @@ const ClassTeacherAssignment = () => {
           { name: 'Class Teacher Assignment' },
         ]}
         description="Assign teachers to specific classes and divisions, manage class teacher allocations."
-        sx={{ mb: 2 }}
       />
       <Box
         sx={{

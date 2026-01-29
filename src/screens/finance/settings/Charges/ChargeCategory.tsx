@@ -260,7 +260,6 @@ const FinanceChargeCategory = () => {
             Charge Type
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

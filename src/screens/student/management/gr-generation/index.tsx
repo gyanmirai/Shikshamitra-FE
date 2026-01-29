@@ -197,7 +197,7 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
         showCheckbox={selectedStudents.length !== 0}
         isLoading={isStudentDataLoading || isStudentDataFetching}
         tableId="gr-no-generation-table"
-        noDataText={<>No GR No Data Found </>}
+        noDataText={<>No GR No. Data Found </>}
         columns={[
           { id: 'studentName', label: 'Name', align: 'left' },
           {

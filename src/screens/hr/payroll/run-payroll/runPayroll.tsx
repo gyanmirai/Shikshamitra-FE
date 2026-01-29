@@ -146,7 +146,6 @@ const RunPayroll = () => {
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
-        sx={{ mb: 2 }}
         description="Run payroll by selecting a month, and verify details before processing."
       />
       {/* <StepsForPayroll /> */}

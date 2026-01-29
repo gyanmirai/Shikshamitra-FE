@@ -57,7 +57,6 @@ const UploadStudentDocumentsScreen = () => {
           { name: 'Student Record' },
           { name: 'Upload Student Documents' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Divider sx={{ mb: 2 }} />
       <Grid container spacing={2}>

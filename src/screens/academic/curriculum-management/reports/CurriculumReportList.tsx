@@ -34,7 +34,6 @@ const CurriculumReportList = () => {
               Report
             </Button>
           }
-          sx={{ mb: 1 }}
         />
       )}
 

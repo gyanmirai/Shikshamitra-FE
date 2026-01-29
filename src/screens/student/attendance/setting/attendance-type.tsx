@@ -169,7 +169,6 @@ const AttendanceType = () => {
             Leave Type
           </Button>
         }
-        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="attendance-type"

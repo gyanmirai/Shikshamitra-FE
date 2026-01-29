@@ -95,7 +95,6 @@ const PreRegisterScreenForStudent = () => {
             : 'View and manage all pre-registered visitors, including their scheduled visits and personal details. Add new pre-registrations or update existing ones.'
         }
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

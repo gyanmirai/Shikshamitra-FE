@@ -58,7 +58,6 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: any }
           { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
           { name: 'Reports' },
         ]}
-        sx={{ mb: 1 }}
         isBack={addReportDialog.value}
         onBack={addReportDialog.onFalse}
         action={

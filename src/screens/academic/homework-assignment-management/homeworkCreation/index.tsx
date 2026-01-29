@@ -90,7 +90,6 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
             { name: 'Homework & Assignment' },
             { name: 'Learning Tasks' },
           ]}
-          sx={{ mb: 2 }}
           action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         />
       )}

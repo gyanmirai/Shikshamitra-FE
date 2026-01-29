@@ -239,7 +239,7 @@ export function StudentProfile() {
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          backgroundColor: 'background.default',
+          // backgroundColor: 'background.default',
         }}
       >
         {currentStudent ? (
@@ -250,7 +250,6 @@ export function StudentProfile() {
               { name: 'Student Records', href: '/student/overview/' },
               { name: 'Student Profile' },
             ]}
-            sx={{ mb: 1 }}
             isBack
             onBack={() => setSearchParams('student', '')}
             description="View and manage comprehensive student information including academics, attendance, finance and more."
@@ -263,7 +262,6 @@ export function StudentProfile() {
               { name: 'Student Records', href: '/student/overview/' },
               { name: 'Student List' },
             ]}
-            sx={{ mb: 1 }}
             description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
           />
         )}

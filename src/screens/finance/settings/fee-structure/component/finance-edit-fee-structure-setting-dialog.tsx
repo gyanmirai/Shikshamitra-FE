@@ -29,7 +29,6 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
         { name: 'Fee Structure' },
       ]}
       description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
-      sx={{ mb: 2 }}
       isBack
       onBack={() => {
         dialogValue.onFalse();

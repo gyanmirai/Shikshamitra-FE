@@ -42,7 +42,7 @@ const StudentAttendanceNotificationScreen = () => {
       <CustomBreadcrumbs
         heading="Notifications"
         links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Notifications' }]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1 }}
       />
       <CustomizableTable
         tableId="student-attendance-notification-table"

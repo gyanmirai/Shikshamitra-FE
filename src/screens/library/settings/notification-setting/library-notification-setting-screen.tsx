@@ -49,7 +49,7 @@ const LibraryNotificationSettingScreen = () => {
       <CustomBreadcrumbs
         heading="Notification Setting"
         links={[{ name: 'Library' }, { name: 'Setting' }, { name: 'Notification Setting' }]}
-        sx={{ px: 1, mb: 5 }}
+        sx={{ px: 1 }}
       />
 
       <Box sx={{ padding: 1 }}>
@@ -197,7 +197,7 @@ export default LibraryNotificationSettingScreen;
 //           //       : 'Fee-Structure-Overview',
 //           // },
 //         ]}
-//         sx={{ mb: 2 }}
+//
 //       />
 
 //       <Box sx={{ padding: 3 }}>

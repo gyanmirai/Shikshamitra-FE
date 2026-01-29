@@ -4,10 +4,9 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Tab, Box, Paper } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Grid, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { CustomTabs } from 'src/components/custom-tabs';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
@@ -18,7 +17,6 @@ import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
 import RollNoGenerationScreen from './roll-generation';
-import { FormSlider } from '../enrollment/register/register-form';
 
 import type { IInquiryData } from '../enrollment/Inquiry/type';
 
@@ -90,10 +88,6 @@ const StudentManagementScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
@@ -119,8 +113,6 @@ const StudentManagementScreen = () => {
     [searchParams.tab]
   );
 
-  const [isBackClick, setIsBackClick] = useState(false);
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -131,94 +123,140 @@ const StudentManagementScreen = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Student Management' },
         ]}
-        sx={{ px: 1, mb: 1 }}
       />
-      <Paper
-        elevation={2}
-        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1, mb: 1 }}
-      >
-        <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!medium}
-        />
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!organization}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!classes}
-        />
-      </Paper>
-      <Paper>
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === value);
-            if (currentIndex > newIndex) {
-              setIsBackClick(true);
-            } else {
-              setIsBackClick(false);
-            }
-            setSearchParams({ tab: value });
-          }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              value={tab.value}
-              icon={tab.icon}
-              label={tab.label}
-              role="tab"
-            />
-          ))}
-        </CustomTabs>
-      </Paper>
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-          },
+
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          mt: 0,
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: '0',
         }}
       >
-        <Box sx={{ p: 1, height: '100%' }}>
-          {currentActiveComponent?.component && (
-            <CurrentComponent
-              tableData={tableData}
-              isLoading={isLoading}
-              allDivision={allDivision}
-              division={division}
-              allClass={allClass}
-              classes={classes}
-            />
-          )}
-        </Box>
-      </FormSlider>
+        {/* Left Section - Navigation List */}
+        <Grid size={{ xs: 12, md: 3, lg: 2 }} sx={{ height: '100%' }}>
+          <Card sx={{ height: '100%', p: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+              }}
+            >
+              {TABS.map((tab) => {
+                const isSelected = searchParams.tab === tab.value;
+                return (
+                  <Button
+                    key={tab.value}
+                    onClick={() => setSearchParams({ tab: tab.value })}
+                    variant="text"
+                    color="inherit"
+                    startIcon={tab.icon}
+                    sx={{
+                      position: 'relative',
+                      justifyContent: 'flex-start',
+                      px: 2,
+                      py: 1.5,
+
+                      textAlign: 'left',
+                      backgroundColor: (theme) =>
+                        isSelected ? theme.palette.action.hover : 'transparent',
+                      color: isSelected ? 'inherit' : 'text.secondary',
+                      // '&:hover': {
+                      //   backgroundColor: (theme) =>
+                      //     isSelected ? theme.palette.primary.light : theme.palette.action.hover,
+                      // },
+
+                      ...(isSelected
+                        ? {
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: '2px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              width: '4px',
+                              height: '80%',
+                              borderLeft: (theme) =>
+                                isSelected ? `4px solid ${theme.palette.primary.main}` : 'none',
+                            },
+                          }
+                        : {}),
+                    }}
+                  >
+                    {tab.label}
+                  </Button>
+                );
+              })}
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Right Section - Content */}
+        <Grid size={{ xs: 12, md: 9, lg: 10 }} sx={{ height: '100%' }}>
+          <Box
+            sx={{
+              gap: 1,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '0',
+            }}
+          >
+            {/* Filters Section */}
+            <Card sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+              <CustomSelect
+                options={allOrganization}
+                label="Organization"
+                value={organization}
+                onChange={(val) => setOrganization(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                disabled={!medium}
+              />
+              <CustomSelect
+                options={allClass}
+                label="Class"
+                value={classes}
+                onChange={(val) => setClass(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                disabled={!organization}
+              />
+              <CustomSelect
+                options={allDivision}
+                label="Division"
+                value={division}
+                onChange={(val) => setDivision(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                disabled={!classes}
+              />
+            </Card>
+
+            {/* Component Render Section */}
+            <Card sx={{ p: 1, flexGrow: 1 }}>
+              {currentActiveComponent?.component && (
+                <CurrentComponent
+                  tableData={tableData}
+                  isLoading={isLoading}
+                  allDivision={allDivision}
+                  division={division}
+                  allClass={allClass}
+                  classes={classes}
+                />
+              )}
+            </Card>
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

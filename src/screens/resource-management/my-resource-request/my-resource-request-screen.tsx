@@ -10,7 +10,7 @@ const MyResourceRequestScreen = () => {
 
   return (
     <>
-      <CustomBreadcrumbs heading="My Resource Query" links={links} sx={{ mb: 2 }} />
+      <CustomBreadcrumbs heading="My Resource Query" links={links} />
 
       <MyResourceRequestTable onClick={() => {}} />
     </>

@@ -48,7 +48,7 @@ const GroupManagement = () => {
             },
             { name: editingGroup ? 'Update Group' : 'Add Group' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
           isBack
           onBack={() => {
             handleCloseDialog();
@@ -67,7 +67,7 @@ const GroupManagement = () => {
             },
             { name: viewingGroup.name || 'Group Details' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
           isBack
           onBack={handleCloseView}
         />
@@ -76,7 +76,7 @@ const GroupManagement = () => {
           heading="Group Management"
           description="View and manage all calendar groups, including group details, members, and access settings. Add new groups, update existing ones, or remove them as needed."
           links={[{ name: 'Calendar', href: '/calendar/dashboard' }, { name: 'Group Management' }]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
           action={
             <Button
               size="small"

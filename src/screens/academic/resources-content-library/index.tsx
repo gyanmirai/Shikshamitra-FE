@@ -53,7 +53,6 @@ const ResourceContentLibraryScreen = () => {
           { name: 'Resources and Content Library' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Card

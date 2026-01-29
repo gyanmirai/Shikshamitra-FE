@@ -58,7 +58,6 @@ const AddNewBounceCheckChargesDialog: React.FC<AddNewBounceCheckChargesDialogPro
         <CustomBreadcrumbs
           heading="Bounce Cheque Charges"
           links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Bounce Cheque Charges' }]}
-          sx={{ mb: 2 }}
         />
         <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
           <Button

@@ -65,7 +65,6 @@ const ConcessionList = () => {
           { name: 'Concession', href: '/finance/concession/concessionRequest' },
           { name: 'Concession List' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
         <CustomSelect

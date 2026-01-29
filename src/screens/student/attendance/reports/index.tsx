@@ -33,7 +33,6 @@ const AttendanceReportScreen = () => {
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
           { name: 'Reports' },
         ]}
-        sx={{ mb: 1 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={

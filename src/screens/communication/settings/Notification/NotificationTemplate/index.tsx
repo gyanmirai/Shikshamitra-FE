@@ -92,7 +92,7 @@ const TemplatesManagement = (props: TabComponentType) => {
             },
             { name: editingTemplate ? 'Update Template' : 'Add Template' },
           ]}
-          sx={{ px: 2, mb: 2 }}
+          sx={{ px: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
@@ -106,7 +106,7 @@ const TemplatesManagement = (props: TabComponentType) => {
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Templates' },
           ]}
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
           action={
             <Button
               size="small"

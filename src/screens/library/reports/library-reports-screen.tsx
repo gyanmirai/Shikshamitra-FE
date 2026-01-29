@@ -75,7 +75,6 @@ const LibraryReportsScreen = () => {
       <CustomBreadcrumbs
         heading="Library Reports"
         links={[{ name: 'Library' }, { name: 'Reports' }]}
-        sx={{ mb: 2 }}
       />
 
       <Formik

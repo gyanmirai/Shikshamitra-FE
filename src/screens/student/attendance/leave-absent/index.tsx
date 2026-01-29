@@ -279,7 +279,6 @@ const LeaveAndAbsentScreen = () => {
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
           { name: 'Leave and Absent' },
         ]}
-        sx={{ mb: 2 }}
         action={
           <Button
             startIcon={<Add />}

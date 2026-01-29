@@ -107,7 +107,6 @@ const ServiceTypeSettingScreen = () => {
             Service Type
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <ServiceTypeTable
