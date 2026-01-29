@@ -150,6 +150,8 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
         endTime: values.endTime
           ? dayjs(values.endTime).format('HH:mm')
           : dayjs().add(1, 'hour').format('HH:mm'),
+        startDate: dayjs(values.startDate).toISOString(),
+        endDate: dayjs(values.endDate).toISOString(),
         audienceIds: values.audience,
       };
 
@@ -210,6 +212,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       }
     },
   });
+  console.log('formik.values', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
