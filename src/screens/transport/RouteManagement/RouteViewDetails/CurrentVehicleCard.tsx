@@ -1,26 +1,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { SwapHoriz } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Person, SwapHoriz, DirectionsBus } from '@mui/icons-material';
+import { Box, Card, Button, Divider, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Card, Button, Avatar, Divider, Typography } from '@mui/material';
 
 import ChangeVehicleForm from './ChangeVehicleForm';
 
-// Mock vehicle data - replace with actual props/API data
 export const mockVehicleData = {
-  vehicleNumber: 'GJ-05-AD-2711',
-  imageUrl: 'https://cdn-icons-png.flaticon.com/512/296/296216.png',
-  busCode: 'Bus-001',
-  schoolAssignedNumber: '05',
-  studentName: 'Dharmik Jinjala',
-  PhoneNumber: '9876543210',
-  avatarUrl: 'https://randomuser.me/api/portraits/men/11.jpg',
+  currentVehicleData: {
+    vehicleNumber: 'GJ-05-AB-1234',
+    schoolAssignedNumber: '01',
+    studentName: 'Dharmik Jinjala',
+  },
+  PhoneNumber: '+91 6355030866',
 };
 
 const CurrentVehicleCard = () => {
@@ -43,10 +41,37 @@ const CurrentVehicleCard = () => {
 
   return (
     <>
-      <Card sx={{ p: 3, borderRadius: 2, boxShadow: 4, position: 'relative', minHeight: 120 }}>
+      <Card
+        sx={{
+          p: { xs: 2.5, sm: 3 },
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          position: 'relative',
+          minHeight: 120,
+        }}
+      >
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" color="primary" fontWeight="bold">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 3,
+            pb: 2,
+            borderBottom: '2px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography
+            variant="overline"
+            color="primary"
+            fontWeight="700"
+            sx={{
+              fontSize: '0.7rem',
+              letterSpacing: '0.08em',
+            }}
+          >
             Current Vehicle & Driver
           </Typography>
           <Button
@@ -54,18 +79,17 @@ const CurrentVehicleCard = () => {
             size="small"
             startIcon={<SwapHoriz />}
             onClick={() => {
-              setSelectedVehicle(mockVehicleData);
+              setSelectedVehicle(mockVehicleData?.currentVehicleData);
               changeVehicleDialog.onTrue();
             }}
             sx={{
               textTransform: 'none',
               borderRadius: 2,
-              px: 2,
+              px: 2.5,
               py: 1,
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              bgcolor: 'background.paper',
-              boxShadow: 1,
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderWidth: 1.5,
             }}
           >
             Change Vehicle
@@ -74,59 +98,121 @@ const CurrentVehicleCard = () => {
 
         {/* Main Content */}
         <Box
-          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 3 }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: { xs: 2, sm: 3 },
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}
         >
           {/* Vehicle Info */}
-          <Box display="flex" alignItems="center" gap={2} minWidth={220}>
-            <Avatar
-              src={mockVehicleData.imageUrl || '/static/vehicle/bus-1.png'}
-              sx={{ width: 56, height: 56 }}
-              variant="rounded"
-            />
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={2}
+            minWidth={{ xs: '100%', sm: 220 }}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
+            {/* Vehicle Icon */}
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: 2,
+                bgcolor: 'primary.lighter',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <DirectionsBus sx={{ fontSize: 28, color: 'primary.main' }} />
+            </Box>
             <Box>
-              <Typography variant="subtitle1" fontWeight={600}>
-                {mockVehicleData.vehicleNumber}
+              <Typography
+                variant="subtitle1"
+                fontWeight={700}
+                sx={{
+                  fontSize: '1rem',
+                  mb: 0.5,
+                }}
+              >
+                {mockVehicleData?.currentVehicleData.vehicleNumber}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                School Assigned No: {mockVehicleData.schoolAssignedNumber}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                }}
+              >
+                School Assigned No: {mockVehicleData?.currentVehicleData.schoolAssignedNumber}
               </Typography>
             </Box>
           </Box>
 
-          {/* Divider */}
-          <Divider
-            orientation="vertical"
-            flexItem
-            sx={{
-              height: 56,
-              borderRightWidth: 3,
-              bgcolor: 'primary.main',
-              borderColor: 'primary.main',
-              width: '3px',
-              borderRadius: '10px',
-            }}
-          />
+          <Divider orientation="vertical" flexItem sx={{ width: '2px' }} />
 
-          {/* Total Students */}
-          <Box display="flex" alignItems="center" gap={2} minWidth={220}>
-            <Avatar
-              src={mockVehicleData.avatarUrl || '/static/avatars/default-avatar.jpg'}
+          {/* Driver Info */}
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={2}
+            minWidth={{ xs: '100%', sm: 220 }}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
+            {/* Driver Icon */}
+            <Box
               sx={{
-                width: 56,
-                height: 56,
-                border: '1px solid ',
+                width: 48,
+                height: 48,
+                borderRadius: 2,
+                bgcolor: 'success.lighter',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
               }}
-            />
+            >
+              <Person sx={{ fontSize: 28, color: 'success.main' }} />
+            </Box>
             <Box>
               <Typography
-                variant="body2"
-                color="text.secondary"
-                gutterBottom
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                variant="subtitle1"
+                fontWeight={700}
+                sx={{
+                  fontSize: '1rem',
+                  mb: 0.5,
+                }}
               >
-                {mockVehicleData.studentName}
+                {mockVehicleData?.currentVehicleData.studentName}
               </Typography>
-              <Typography color="text.primary">{mockVehicleData.PhoneNumber}</Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                }}
+              >
+                {mockVehicleData.PhoneNumber}
+              </Typography>
             </Box>
           </Box>
         </Box>
