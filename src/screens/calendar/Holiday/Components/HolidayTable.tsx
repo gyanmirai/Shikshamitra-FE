@@ -10,6 +10,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, Paper, Typography } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   HolidayStatus,
   HolidayStatusColor,
@@ -77,7 +78,19 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-      { id: 'holidayType', label: 'Type', align: 'left' },
+      {
+        id: 'holidayType.name',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
       {
         id: 'audience',
         label: 'Audience',
@@ -143,8 +156,6 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             showThreeDots={false}
             handleEditClick={() => onEdit(row as IHoliday)}
             handleDeleteClick={() => {
-              console.log(row);
-
               onDelete(row as IHoliday);
             }}
           />
@@ -239,7 +250,19 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-            { id: 'holidayType', label: 'Type', align: 'left' },
+            {
+              id: 'holidayType.name',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              ),
+            },
             {
               id: 'audience',
               label: 'Audience',
@@ -307,7 +330,19 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-            { id: 'holidayType', label: 'Type', align: 'left' },
+            {
+              id: 'holidayType.name',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              ),
+            },
             { id: 'audience', label: 'Audience', align: 'left' },
             {
               id: 'startDate',
@@ -387,7 +422,19 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-            { id: 'holidayType', label: 'Type', align: 'left' },
+            {
+              id: 'holidayType.name',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              ),
+            },
             { id: 'audience', label: 'Audience', align: 'left' },
             {
               id: 'startDate',

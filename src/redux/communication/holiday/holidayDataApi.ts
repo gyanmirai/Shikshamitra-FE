@@ -11,10 +11,11 @@ export const holidayApi = calendarModuleApi.injectEndpoints({
     }),
 
     addHoliday: builder.mutation({
-      query: (data) => ({
-        url: '/calendar/holidays',
+      query: ({ params, data }) => ({
+        url: `/calendar/holidays`,
         method: 'POST',
         data,
+        params,
       }),
       invalidatesTags: ['Holiday'],
     }),

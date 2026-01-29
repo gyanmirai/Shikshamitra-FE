@@ -1,4 +1,5 @@
 export enum EmployeeAttendanceStatus {
+  Pending,
   Present,
   HalfDayLeave,
   FullDayLeave,
@@ -7,6 +8,10 @@ export enum EmployeeAttendanceStatus {
 }
 
 export const EmployeeAttendanceStatusOptions = [
+  {
+    label: 'Pending',
+    value: EmployeeAttendanceStatus.Pending,
+  },
   {
     label: 'Present',
     value: EmployeeAttendanceStatus.Present,

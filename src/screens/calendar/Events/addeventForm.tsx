@@ -54,6 +54,8 @@ import type { IAddEventProps } from './type';
 
 const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isEdit = false }) => {
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: roleData, isLoading: isRoleDataLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
@@ -62,6 +64,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     type: 'query',
     currentQueryAndMutation: useGetEventByIdQuery,
     params: { id: initialValues?.id || '' },
+    options: { skip: !isEdit || !initialValues?.id },
   });
   const {
     data: eventTypeData,
@@ -74,13 +77,13 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
   const [createEvent, { isLoading: addEventTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateEventMutation,
+    params: { academicYearId: currentYear?.id || '' },
   });
 
   const [updateEvent, { isLoading: updateEventTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEventMutation,
   });
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const openRecurringDialog = useBoolean();
   // State to store list of all organizations/branches
@@ -131,23 +134,28 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       // Base payload (Swagger-safe)
       // ----------------------------
       const payload: any = {
+        academicYearId: currentYear?.id,
         title: values.title,
         eventTypeId: values.type,
         description: values.description,
         poster: values.attachment ?? '',
-        mode: values.eventMode === 'online' ? 1 : 0,
-        venue: values.eventMode === 'offline' ? values.venue : '',
-        onlineLink: values.eventMode === 'online' ? values.onlineLink : '',
-        recurrenceSummary: values.recurrenceSummary,
+        mode: values.eventMode === 'online' ? 0 : 1,
+        ...(values.eventMode === 'offline' && {
+          venue: values.venue,
+        }),
         isRecurring: values.isRecurring,
-        recurrenceJson,
         startTime: values.startTime
           ? dayjs(values.startTime).format('HH:mm')
           : dayjs().format('HH:mm'),
-        endTime: values.endTime ? dayjs(values.endTime).format('HH:mm') : dayjs().format('HH:mm'),
+        endTime: values.endTime
+          ? dayjs(values.endTime).format('HH:mm')
+          : dayjs().add(1, 'hour').format('HH:mm'),
         audienceIds: values.audience,
       };
 
+      if (values.isRecurring) {
+        payload.recurrenceJson = recurrenceJson;
+      }
       // ----------------------------
       // Meeting date (REQUIRED)
       // ----------------------------
@@ -182,7 +190,12 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
             message: `Event: ${values.title} has been successfully updated`,
           });
         } else {
-          await createEvent(payload).unwrap();
+          await createEvent({
+            params: {
+              academicYearId: currentYear?.id,
+            },
+            data: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
             message: `Event: ${values.title} has been successfully created`,

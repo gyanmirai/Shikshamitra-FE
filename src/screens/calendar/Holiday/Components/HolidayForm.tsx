@@ -57,7 +57,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
   const [, setAllClass] = useState<Standards[]>([]);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
+  console.log('currentYear', currentYear?.id);
   const [addHoliday, { isLoading: addLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHolidayMutation,
@@ -70,7 +70,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
 
   const {
     data: holidayTypeData,
-    refetch,
     isLoading,
     isFetching,
   } = useQueryAndMutation({
@@ -103,14 +102,14 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
           // description: values.description,
           // audience: values.audience,
           // attachment: values.attachment ? 'base64-or-url' : undefined, // Handle file upload
-
+          academicYearId: currentYear?.id,
           holidayName: values.holidayName,
           holidayTypeId: values.holidayTypeId,
-          startDate: dayjs(values.startDate).format('YYYY-MM-DD'),
-          endDate: dayjs(values.endDate).format('YYYY-MM-DD'),
+          startDate: dayjs(values.startDate).toISOString(),
+          endDate: dayjs(values.endDate).toISOString(),
           description: values.description,
           audienceIds: ['3fa85f64-5717-4562-b3fc-2c963f66afa6'],
-          attachments: values.attachment ? 'base64-or-url' : undefined,
+          attachments: values.attachment ? 'base64-or-url' : '',
         };
 
         if (initialValues) {
@@ -123,7 +122,12 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
             message: `Holiday: ${values.holidayName} updated successfully!`,
           });
         } else {
-          await addHoliday(payload).unwrap();
+          await addHoliday({
+            params: {
+              academicYearId: currentYear?.id,
+            },
+            data: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
             message: `Holiday: ${values.holidayName} added successfully!`,
@@ -151,8 +155,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
     if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  console.log(formik);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

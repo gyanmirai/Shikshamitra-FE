@@ -140,7 +140,7 @@ const DateWise = ({
     () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
     [searchParams.date]
   );
-  const tabs = useTabs('Present');
+  const tabs = useTabs('Pending');
   const {
     data: attendanceData,
     isLoading,
@@ -188,6 +188,10 @@ const DateWise = ({
 
   const counts = useMemo(
     () => ({
+      Pending:
+        attendanceData?.items.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Pending
+        ).length || 6,
       Present:
         attendanceData?.items.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
@@ -210,6 +214,13 @@ const DateWise = ({
   const TABS = useMemo(
     () => [
       {
+        value: 'Pending',
+        label: 'Pending',
+        count: counts.Pending || 0,
+        color: 'warning',
+        // icon: <Iconify icon="oui:check-in-circle-empty" />,
+      },
+      {
         value: 'Present',
         label: 'Present',
         count: counts.Present || 0,
@@ -227,7 +238,7 @@ const DateWise = ({
         value: 'Half-Day',
         label: 'Half Day',
         count: counts['Half-Day'] || 0,
-        color: 'warning',
+        color: 'info',
         // icon: <Iconify icon="radix-icons:half-2" />,
       },
       {
@@ -473,7 +484,7 @@ const EmployeeWise = ({
     [searchParams.endDate]
   );
 
-  const tabs = useTabs('Present');
+  const tabs = useTabs('Pending');
 
   const { data: employees, isLoading: employeeLoading } = useQueryAndMutation({
     type: 'query',
@@ -502,6 +513,10 @@ const EmployeeWise = ({
 
   useMemo(
     () => ({
+      Pending:
+        attendanceData?.items?.filter(
+          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Pending
+        ).length || 10,
       Present:
         attendanceData?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
@@ -561,6 +576,13 @@ const EmployeeWise = ({
   const TABS = useMemo(
     () => [
       {
+        value: 'Pending',
+        label: 'Pending',
+        count: attendanceData?.[0]?.pendingDays || 6,
+        icon: 'fluent:person-available-16-regular',
+        color: 'warning',
+      },
+      {
         value: 'Present',
         label: 'Present',
         count: attendanceData?.[0]?.presentDays || 6,
@@ -579,7 +601,7 @@ const EmployeeWise = ({
         label: 'Half day',
         count: attendanceData?.[0]?.halfDayLeaves || 2,
         icon: 'mdi:fraction-one-half',
-        color: 'warning',
+        color: 'info',
       },
       {
         value: 'RejectedLeave',
