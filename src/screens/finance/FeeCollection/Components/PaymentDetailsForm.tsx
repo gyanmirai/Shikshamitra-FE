@@ -268,10 +268,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
       flexGrow={1}
       sx={{ height: '100%', overflow: 'hidden' }}
     >
-      <Box mt={1} mb={2}>
-        <Divider />
-      </Box>
-      <Grid container spacing={2} sx={{ flexGrow: 1, minHeight: 0 }}>
+      <Grid container spacing={2} sx={{ flexGrow: 1, minHeight: 0 }} mb={1}>
         <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
           <FeeTermsComponent
             formik={formik}
@@ -294,6 +291,8 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               bgcolor: theme.vars.palette.background.paper,
               height: '100%',
               overflow: 'hidden',
+              mt: 0.5,
+              mr: 0.5,
             }}
           >
             <Typography variant="h6" color="primary.main" sx={{ mb: 2 }}>

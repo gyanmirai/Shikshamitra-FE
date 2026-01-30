@@ -1,6 +1,7 @@
 // import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import { formatNumber } from 'src/utils/formate_number';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Label, type LabelColor } from 'src/components/label';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -67,15 +68,14 @@ export const FeeTermAccordion = () => {
     >
       <Box
         sx={{
-          p: 3,
-          pb: 2,
+          p: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           borderBottom: `1px dashed ${theme.palette.divider}`,
         }}
       >
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
           Fee Term Breakdown
         </Typography>
         <Label color="info" variant="soft">
@@ -174,7 +174,7 @@ export const FeeTermAccordion = () => {
                           Total
                         </Typography>
                         <Typography variant="subtitle2" fontWeight={700}>
-                          ₹{term.total.toLocaleString()}
+                          ₹ {formatNumber(term.total)}
                         </Typography>
                       </Box>
 
@@ -183,7 +183,7 @@ export const FeeTermAccordion = () => {
                           Paid
                         </Typography>
                         <Typography variant="subtitle2" color="success.main" fontWeight={700}>
-                          ₹{term.paid.toLocaleString()}
+                          ₹ {formatNumber(term.paid)}
                         </Typography>
                       </Box>
 
@@ -192,7 +192,7 @@ export const FeeTermAccordion = () => {
                           Pending
                         </Typography>
                         <Typography variant="subtitle2" color="warning.main" fontWeight={700}>
-                          ₹{pending.toLocaleString()}
+                          ₹ {formatNumber(pending)}
                         </Typography>
                       </Box>
                     </Stack>
@@ -220,9 +220,8 @@ export const FeeTermAccordion = () => {
                       {/* FEE HEADS */}
                       <Box>
                         <Typography
-                          variant="overline"
                           color="text.secondary"
-                          sx={{ mb: 1.5, display: 'block', letterSpacing: 1.1, fontWeight: 700 }}
+                          sx={{ mb: 1.5, display: 'block', fontWeight: 700 }}
                         >
                           Fee Head Maintenance
                         </Typography>
@@ -284,17 +283,17 @@ export const FeeTermAccordion = () => {
                                     align="right"
                                     sx={{ color: 'warning.dark', fontWeight: 600 }}
                                   >
-                                    ₹{(head.total - head.paid).toLocaleString()}
+                                    ₹ {formatNumber(head.total - head.paid)}₹
                                   </TableCell>
                                   <TableCell
                                     align="right"
                                     sx={{ color: 'success.dark', fontWeight: 600 }}
                                   >
-                                    ₹{head.paid?.toLocaleString()}
+                                    ₹ {formatNumber(head.paid)}
                                   </TableCell>
                                   <TableCell align="center">
                                     <Label
-                                      variant="filled" // Changed to filled for contrast on white
+                                      variant="soft" // Changed to filled for contrast on white
                                       color={
                                         FeeCollectionStatusTypeColors[
                                           head.status as FeeCollectionStatusType
@@ -320,9 +319,8 @@ export const FeeTermAccordion = () => {
                       {term.charges?.length > 0 && (
                         <Box>
                           <Typography
-                            variant="overline"
                             color="text.secondary"
-                            sx={{ mb: 1.5, display: 'block', letterSpacing: 1.1, fontWeight: 700 }}
+                            sx={{ mb: 1.5, display: 'block', fontWeight: 700 }}
                           >
                             Additional Charges
                           </Typography>
@@ -380,17 +378,17 @@ export const FeeTermAccordion = () => {
                                       align="right"
                                       sx={{ color: 'warning.dark', fontWeight: 600 }}
                                     >
-                                      ₹{(cha.total - cha.paid).toLocaleString()}
+                                      ₹ {formatNumber(cha.total - cha.paid)}
                                     </TableCell>
                                     <TableCell
                                       align="right"
                                       sx={{ color: 'success.dark', fontWeight: 600 }}
                                     >
-                                      ₹{cha.paid.toLocaleString()}
+                                      ₹ {formatNumber(cha.paid)}
                                     </TableCell>
                                     <TableCell align="center">
                                       <Label
-                                        variant="filled"
+                                        variant="soft"
                                         color={
                                           FeeCollectionStatusTypeColors[
                                             cha.status as FeeCollectionStatusType

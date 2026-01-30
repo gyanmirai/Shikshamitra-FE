@@ -1,20 +1,17 @@
 // components/ChapterTable.tsx
-import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetChaptersQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import type { IChapter, IChapterTableProps } from '../type';
 
 const ChapterTable = ({
   addChapterDialog,
+  isLoading,
   onDelete,
   setEditData,
   data,
@@ -24,21 +21,6 @@ const ChapterTable = ({
   subjectId,
   standardId,
 }: IChapterTableProps) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
-  const queryParams = useMemo(() => ({ standardId, subjectId }), [standardId, subjectId]);
-
-  const {
-    data: chapterResponse,
-    isLoading,
-    isFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetChaptersQuery,
-    params: queryParams,
-  });
-
-  const chaptersData = useMemo(() => chapterResponse ?? [], [chapterResponse]);
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -169,7 +151,7 @@ const ChapterTable = ({
   return (
     <CustomizableTable
       tableId="chapterTable"
-      isLoading={isLoading || isFetching}
+      isLoading={isLoading}
       noDataText={
         <>
           Chapters Data Not Found{' '}

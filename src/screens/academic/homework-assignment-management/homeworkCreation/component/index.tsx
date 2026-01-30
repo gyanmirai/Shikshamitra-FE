@@ -102,11 +102,15 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const selectedClassData = allClass.find((c: any) => c?.name === classes);
   const selectedDivisionData = allDivision.find((d: any) => d?.name === division);
 
-  const { data: homeworkData } = useGetHomeworksQuery({
-    classId: selectedClassData?.id,
-    divisionId: selectedDivisionData?.id,
-    subjectId: subject,
-    homeworkDate: date?.toISOString(),
+  const { data: homeworkData, refetch } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworksQuery,
+    params: {
+      classId: selectedClassData?.id,
+      divisionId: selectedDivisionData?.id,
+      subjectId: subject,
+      homeworkDate: date?.toISOString(),
+    },
   });
 
   // Handles closing the incident form
@@ -138,8 +142,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          mt: 1,
-
+          mt: 2,
           p: 1,
           gap: 2,
         }}
@@ -306,26 +309,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    homeworkApi.util.updateQueryData(
-                      'getHomeworks',
-                      {
-                        classId: selectedClassData?.id,
-                        divisionId: selectedDivisionData?.id,
-                        subjectId: subject,
-                        homeworkDate: date?.toISOString(),
-                      },
-                      (draft: any) => {
-                        const itemIndex = draft.findIndex(
-                          (item: any) => item.id === selectedHomework?.id
-                        );
-                        if (itemIndex !== -1) {
-                          draft[itemIndex].status = selectedHomework?.status;
-                        }
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () =>
                   publishHomework({
                     homeworkId: selectedHomework?.id,

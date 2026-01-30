@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -65,7 +66,11 @@ const Subject = () => {
     setClasses(allClasses[0]?.name || '');
   }, [medium]);
 
-  const { data: subjectTableData = [], isLoading: isTableLoading } = useQueryAndMutation({
+  const {
+    data: subjectTableData = [],
+    isLoading: isTableLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
@@ -76,7 +81,6 @@ const Subject = () => {
       skip: !medium?.id || !classId,
     },
   });
-  console.log('class id ---', classId);
   // URL search parameter state for form visibility
   const addSubjectDialog = useBoolean();
   // Dialog control for delete confirmation
@@ -88,147 +92,12 @@ const Subject = () => {
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
-  console.log('---selectedSubject---', selectedSubject);
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const [subjectTableData, setSubjectTableData] = useState<any[]>([
-  //   {
-  //     id: 'math-assign-id',
-  //     status: PublishUnpublishStatusType.Draft,
-  //     subjectType: 0,
-  //     subjects: [
-  //       {
-  //         assignedId: 'math-assigned-01',
-  //         subjectCode: 'MATH-101',
-  //         subjectId: 'math-sub-id',
-  //         subjectName: 'Mathematics',
-  //         color: '#DEB887',
-  //         electiveGroupId: null,
-  //         primaryTeacher: 'teacher-1',
-  //         secondaryTeachers: ['teacher-2'],
-  //         learningGoal: 'To master algebra and geometry concepts.',
-  //         prerequisites: 'Basic arithmetic',
-  //         description: 'Core mathematics course for 10th grade.',
-  //         documents: [],
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: 'science-assign-id',
-  //     status: PublishUnpublishStatusType.Draft,
-  //     subjectType: 0,
-  //     subjects: [
-  //       {
-  //         assignedId: 'sci-assigned-01',
-  //         subjectCode: 'SCI-101',
-  //         subjectId: 'sci-sub-id',
-  //         subjectName: 'Science',
-  //         color: '#00CED1',
-  //         electiveGroupId: null,
-  //         primaryTeacher: 'teacher-3',
-  //         secondaryTeachers: [],
-  //         learningGoal: 'Understanding basic physics and chemistry.',
-  //         prerequisites: 'None',
-  //         description: 'General science covering various topics.',
-  //         documents: [],
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: 'tech-fitness-group-id',
-  //     status: PublishUnpublishStatusType.Draft,
-  //     subjectType: 1,
-  //     electiveGroupName: 'Tech & Fitness Group',
-  //     electiveGroupId: 'tech-fitness-group-id',
-  //     color: '#4169E1',
-  //     subjects: [
-  //       {
-  //         assignedId: 'comp-assigned-01',
-  //         subjectCode: 'COMP-101',
-  //         subjectId: 'comp-sub-id',
-  //         subjectName: 'Computer',
-  //         color: '#4169E1',
-  //         electiveGroupId: 'tech-fitness-group-id',
-  //         primaryTeacher: 'teacher-4',
-  //         secondaryTeachers: [],
-  //         learningGoal: 'Basic programming skills',
-  //         prerequisites: 'None',
-  //         description: 'Introduction to computers.',
-  //         documents: [],
-  //       },
-  //       {
-  //         assignedId: 'pt-assigned-01',
-  //         subjectCode: 'PT-101',
-  //         subjectId: 'pt-sub-id',
-  //         subjectName: 'Physical Training',
-  //         color: '#FF69B4',
-  //         electiveGroupId: 'tech-fitness-group-id',
-  //         primaryTeacher: 'teacher-5',
-  //         secondaryTeachers: [],
-  //         learningGoal: 'Physical fitness and sportsmanship',
-  //         prerequisites: 'None',
-  //         description: 'Weekly PT sessions.',
-  //         documents: [],
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     id: 'lang-group-id',
-  //     status: PublishUnpublishStatusType.Draft,
-  //     subjectType: 1,
-  //     electiveGroupName: 'Language Enrichment Group',
-  //     electiveGroupId: 'lang-group-id',
-  //     color: '#FF4500',
-  //     subjects: [
-  //       {
-  //         assignedId: 'hindi-assigned-01',
-  //         subjectCode: 'HIN-101',
-  //         subjectId: 'hindi-sub-id',
-  //         subjectName: 'Hindi',
-  //         color: '#FF4500',
-  //         electiveGroupId: 'lang-group-id',
-  //         primaryTeacher: 'teacher-6',
-  //         secondaryTeachers: [],
-  //         learningGoal: 'Hindi literature and grammar',
-  //         prerequisites: 'None',
-  //         description: 'Compulsory language course.',
-  //         documents: [],
-  //       },
-  //       {
-  //         assignedId: 'sansk-assigned-01',
-  //         subjectCode: 'SAN-101',
-  //         subjectId: 'sansk-sub-id',
-  //         subjectName: 'Sanskrit',
-  //         color: '#DA70D6',
-  //         electiveGroupId: 'lang-group-id',
-  //         primaryTeacher: 'teacher-7',
-  //         secondaryTeachers: [],
-  //         learningGoal: 'Basics of Sanskrit',
-  //         prerequisites: 'None',
-  //         description: 'Ancient language study.',
-  //         documents: [],
-  //       },
-  //     ],
-  //   },
-  // ]);
-  // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Redux dispatch function for triggering actions
   const dispatch = useDispatch();
-  // State to track pending status changes for subjects
-  // const [pendingStatusChange, setPendingStatusChange] = useState<{
-  //   id: number;
-  //   newValue: string;
-  // } | null>(null);
-
-  // Handle subject status toggle between Publish/Unpublish
-  // const handleStatusChange = (id: number, value: string) => {
-  //   setPendingStatusChange({ id, newValue: value === 'Published' ? 'Unpublish' : 'Published' });
-  //   confirmPublishDialog.onTrue();
-  // };
-
   // Open dialog to view subject details
   const handleViewSubject = (subject: ISubjectFormValues) => {
     setSelectedSubject(subject);
@@ -323,47 +192,48 @@ const Subject = () => {
         <>
           {/* Class selection dropdown */}
           {!showSubjectDialog.value && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 1,
-                ml: 1,
-              }}
-            >
-              <CustomSelect
-                label="Class"
-                name="class"
-                options={allClass}
-                valueKey="id"
-                labelKey="name"
-                formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
-                value={classId}
-                onChange={(value) => {
-                  setClassId(value as string);
-                  const standard = allClass.find((c) => c.id === value);
-                  setClasses(standard?.name || '');
+            <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 1,
                 }}
-              />
-              <Button
-                size="small"
-                startIcon={<Add />}
-                variant="contained"
-                onClick={
-                  addSubjectDialog.value
-                    ? () => handleClose(null, false)
-                    : () => {
-                        addSubjectDialog.onTrue();
-                        setIsEdit(false);
-                        setSelectedSubject(null);
-                      }
-                }
-                sx={{ px: '32px' }}
               >
-                Subjects Assignment
-              </Button>
-            </Box>
+                <CustomSelect
+                  label="Class"
+                  name="class"
+                  options={allClass}
+                  valueKey="id"
+                  labelKey="name"
+                  formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
+                  value={classId}
+                  onChange={(value) => {
+                    setClassId(value as string);
+                    const standard = allClass.find((c) => c.id === value);
+                    setClasses(standard?.name || '');
+                  }}
+                />
+                <Button
+                  size="small"
+                  startIcon={<Add />}
+                  variant="contained"
+                  onClick={
+                    addSubjectDialog.value
+                      ? () => handleClose(null, false)
+                      : () => {
+                          addSubjectDialog.onTrue();
+                          setIsEdit(false);
+                          setSelectedSubject(null);
+                        }
+                  }
+                  sx={{ px: '32px' }}
+                >
+                  Subjects Assignment
+                </Button>
+              </Box>
+            </Card>
           )}
           {/* Subject table displayed when class is selected */}
 
@@ -437,18 +307,7 @@ const Subject = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    subjectAssignmentsApi.util.updateQueryData(
-                      'getSubjectAssignments',
-                      { academicMediumId: medium?.id, classId },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedSubject);
-                      }
-                    )
-                  ),
-
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () =>
                   deleteSubjectAssignment({ assignmentId: selectedSubject?.id || '' }),
               });
@@ -511,44 +370,29 @@ const Subject = () => {
                   ? PublishUnpublishStatusType.Draft
                   : PublishUnpublishStatusType.Published;
 
-              confirmWithUndo({
-                item: selectedSubject,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    subjectAssignmentsApi.util.updateQueryData(
-                      'getSubjectAssignments',
-                      { academicMediumId: medium?.id, classId },
-                      (draft: any) => {
-                        const index = draft.findIndex((b: any) => b.id === selectedSubject?.id);
-                        if (index !== -1) {
-                          draft[index].status = nextStatus;
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    subjectAssignmentsApi.util.updateQueryData(
-                      'getSubjectAssignments',
-                      { academicMediumId: medium?.id, classId },
-                      (draft: any) => {
-                        const itemIndex = draft.findIndex((b: any) => b.id === selectedSubject?.id);
-                        if (itemIndex !== -1) {
-                          draft[itemIndex].status = selectedSubject?.status;
-                        }
-                      }
-                    )
-                  ),
-                onCommit: () =>
-                  publishSubjectAssignment({
-                    assignmentId: selectedSubject?.id,
-                    status: nextStatus,
-                  }),
+              publishSubjectAssignment({
+                assignmentId: selectedSubject?.id,
+                status: nextStatus,
               });
+
               confirmPublishDialog.onFalse();
+
               setTimeout(() => {
                 setSelectedSubject(null);
               }, 100);
+              shikshaMitraToast.success({
+                message: `"${
+                  selectedSubject?.subjectType === 1
+                    ? selectedSubject?.subjects
+                        ?.map((sub: any) => `${sub.subjectName} (${sub.subjectCode})`)
+                        .join(', ')
+                    : `${selectedSubject?.subjects?.[0]?.subjectName} (${selectedSubject?.subjects?.[0]?.subjectCode})`
+                }" subject ${
+                  nextStatus === PublishUnpublishStatusType.Published
+                    ? 'published'
+                    : 'moved to draft'
+                } successfully`,
+              });
             }}
           >
             {selectedSubject?.status === PublishUnpublishStatusType.Published ? 'Draft' : 'Publish'}
@@ -558,9 +402,9 @@ const Subject = () => {
 
       {/* View subject details dialog */}
       {showSubjectDialog.value && (
-        <Card>
+        <Box sx={{ height: '100%' }}>
           <ViewSubject subject={selectedSubject} />
-        </Card>
+        </Box>
       )}
     </Box>
   );

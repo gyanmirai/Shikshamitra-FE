@@ -3,10 +3,12 @@ import type { Division } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
+import { alpha } from '@mui/system';
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Grid, Switch, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, Chip, Paper, Switch, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IExamFormValues } from '../type';
@@ -14,42 +16,76 @@ import type { IExamFormValues } from '../type';
 const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
   const formik = props;
+  // Theme for consistent access to design tokens
+  const theme = useTheme();
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', mb: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Modernized Switch Section */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          border: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          transition: 'all 0.3s ease',
+          backgroundColor: formik.values.isRoomAssign
+            ? alpha(theme.palette.primary.main, 0.04)
+            : 'background.paper',
+          '&:hover': {
+            backgroundColor: alpha(theme.palette.primary.main, 0.06),
+            borderColor: formik.values.isRoomAssign
+              ? theme.palette.primary.main
+              : theme.palette.divider,
+          },
+        }}
+      >
         <Switch
           checked={formik.values.isRoomAssign}
-          size="small"
           onChange={() => {
             formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
           }}
           inputProps={{ 'aria-label': 'controlled' }}
         />
-        <Typography sx={{ mr: 2 }} variant="body2">
-          Do you want to assign room for this exam?
-        </Typography>
-      </Box>
-      {formik.values.isRoomAssign &&
-        (formik.values.roomDetails && typeof formik.values.roomDetails === 'object'
-          ? Object.entries(formik.values.roomDetails)
-          : []
-        ).map(([subjectName, subjectDetails]) => (
-          <RoomAssignmentCard
-            key={subjectName}
-            subjectName={subjectName}
-            subjectData={subjectDetails}
-            formik={formik}
-          />
-        ))}
+        <Box>
+          <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+            Room Assignment
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Do you want to assign specific rooms for this exam schedule?
+          </Typography>
+        </Box>
+      </Paper>
+
+      {/* Render Subject Cards if functionality is enabled */}
+      {formik.values.isRoomAssign && (
+        <Grid container spacing={3}>
+          {(formik.values.roomDetails && typeof formik.values.roomDetails === 'object'
+            ? Object.entries(formik.values.roomDetails)
+            : []
+          ).map(([subjectName, subjectDetails]) => (
+            <Grid size={{ xs: 12 }} key={subjectName}>
+              <RoomAssignmentCard
+                subjectName={subjectName}
+                subjectData={subjectDetails}
+                formik={formik}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 };
 export default RoomDetails;
 
-const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
+const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const theme = useTheme();
 
   // Flatten all standards/classes from education medium stages into a single array
   // This creates a comprehensive list of all available classes across different stages
@@ -84,7 +120,34 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
   ];
 
   return (
-    <SectionCard title={`${subjectName} • ${subjectData.examDate.format('DD-MM-YYYY')}`} key={key}>
+    <SectionCard
+      title={subjectName}
+      headerContent={
+        <Chip
+          label={subjectData.examDate.format('dddd, DD MMM YYYY')}
+          size="small"
+          variant="outlined"
+          sx={{
+            fontWeight: 600,
+            borderRadius: 1,
+            color: 'primary.main',
+            borderColor: alpha(theme.palette.primary.main, 0.2),
+            bgcolor: alpha(theme.palette.primary.main, 0.08),
+          }}
+        />
+      }
+      paperProps={{
+        sx: {
+          overflow: 'hidden',
+          transition: 'all 0.3s ease',
+          boxShadow: theme.customShadows?.card || '0px 4px 20px rgba(0, 0, 0, 0.05)',
+          '&:hover': {
+            boxShadow: theme.customShadows?.z8 || '0px 12px 30px rgba(0, 0, 0, 0.1)',
+          },
+        },
+      }}
+      // gridProps={{ sx: { mb: 1 } }}
+    >
       <Grid size={{ xs: 12 }}>
         <CustomizableTable
           tableId={`room-assignment-${subjectName}`}
@@ -97,6 +160,11 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
               label: 'Division',
               minWidth: 100,
               align: 'left',
+              render: (value, row) => (
+                <Typography variant="body2" fontWeight={600}>
+                  {value}
+                </Typography>
+              ),
             },
             {
               id: 'roomIds',
@@ -109,7 +177,7 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
 
                 return (
                   <CustomSelect
-                    label="Room"
+                    label="Select Room"
                     value={selectedRoomId}
                     options={roomsData}
                     labelKey="name"
@@ -128,7 +196,7 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
                       );
                     }}
                     formControlProps={{
-                      sx: { minWidth: '400px', width: '100%' },
+                      sx: { width: '100%', minWidth: { xs: '200px', md: '350px' } },
                     }}
                   />
                 );
@@ -137,9 +205,12 @@ const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
             {
               id: 'capacity',
               label: 'Capacity',
-              render: (_: any, row: any) =>
-                formik.values.roomDetails?.[subjectName]?.divisions?.[row.divisionId]?.capacity ||
-                '-',
+              render: (_: any, row: any) => (
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                  {formik.values.roomDetails?.[subjectName]?.divisions?.[row.divisionId]
+                    ?.capacity || '-'}
+                </Typography>
+              ),
             },
           ]}
           data={tableData}

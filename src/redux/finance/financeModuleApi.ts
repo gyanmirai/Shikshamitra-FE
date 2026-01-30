@@ -12,7 +12,7 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export const financeModuleApi = createApi({
   reducerPath: 'financeModuleApi',
-  baseQuery: isDev
+  baseQuery: !isDev
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
         switch (url) {

@@ -10,6 +10,8 @@ export interface IAssignmentTypeFormProps {
 }
 
 export interface IAssignmentTypeTableProps {
+  isLoading: boolean;
+  data: IAssignmentType[];
   onEdit: (data: IAssignmentType) => void;
   onDelete: (data: IAssignmentType) => void;
 }

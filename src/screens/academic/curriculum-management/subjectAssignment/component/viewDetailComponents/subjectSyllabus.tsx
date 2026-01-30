@@ -1,8 +1,18 @@
+import React from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 import { useGetChaptersQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import {
+  Box,
+  Paper,
+  Divider,
+  Accordion,
+  Typography,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import type { ISubjectDetail } from '../type';
 
@@ -41,59 +51,110 @@ const chapters = [
 
 const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
   const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: chaptersData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersQuery,
     params: { subjectId: subject?.id },
   });
-  return (
-    <Box sx={{ height: '100%', overflow: 'hidden' }}>
-      {/* <Scrollbar ref={ref}> */}
-      <Box sx={{ height: '100%', overflow: 'auto', pb: 2 }}>
-        {chapters.length > 0 ? (
-          chapters.map((chapter, index) => (
-            <Accordion
-              key={chapter.id}
-              sx={{
-                mb: 2,
-                borderRadius: 1,
-                overflow: 'visible',
-                boxShadow: 3,
-                '&::before': {
-                  display: 'none', // hides the ::before line
-                },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
-                aria-controls={`chapter-${chapter.id}-content`}
-                id={`chapter-${chapter.id}-header`}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Iconify icon="mdi:book-open-variant" sx={{ mr: 1.5 }} />
-                  <Typography variant="subtitle2">{`${index + 1}. ${chapter.title}`}</Typography>
-                </Box>
-              </AccordionSummary>
 
-              <AccordionDetails sx={{ pt: 0 }}>
-                <Scrollbar sx={{ height: '90px', pr: 2 }}>
-                  <Typography variant="body2" pl={5} textAlign="justify">
+  return (
+    <Box sx={{ height: '100%' }}>
+      <Scrollbar sx={{ height: '100%', pb: 2 }}>
+        {chapters.length > 0 ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {chapters.map((chapter, index) => (
+              <Accordion
+                key={chapter.id}
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: 'none',
+                  border: (theme) => `1px solid ${theme.palette.divider}`,
+                  '&:before': { display: 'none' }, // Remove default divider
+                  '&.Mui-expanded': {
+                    margin: 0, // Prevent default margin shift
+                    boxShadow: 'var(--shadows-3)',
+                    borderColor: 'transparent',
+                  },
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}
+                  sx={{
+                    minHeight: 64,
+                    '& .MuiAccordionSummary-content': { my: 0 },
+                    '&.Mui-expanded': {
+                      minHeight: 64,
+                      bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
+                    },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1,
+                        bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'primary.main',
+                        mr: 2,
+                      }}
+                    >
+                      <Iconify icon="mdi:book-open-page-variant" width={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="overline" sx={{ color: 'text.disabled' }}>
+                        Chapter {index + 1}
+                      </Typography>
+                      <Typography variant="subtitle1" sx={{ color: 'text.primary' }}>
+                        {chapter.title}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </AccordionSummary>
+
+                <AccordionDetails sx={{ pt: 1, pb: 3, px: 3 }}>
+                  <Divider sx={{ borderStyle: 'dashed', mb: 2 }} />
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
                     {chapter.description || 'No description provided.'}
                   </Typography>
-                </Scrollbar>
-              </AccordionDetails>
-            </Accordion>
-          ))
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-            No chapters available for this subject.
-          </Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 5,
+              textAlign: 'center',
+              borderRadius: 2,
+              bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.04),
+              borderStyle: 'dashed',
+            }}
+          >
+            <Iconify
+              icon="solar:notebook-minimalistic-broken"
+              width={64}
+              sx={{ color: 'text.disabled', mb: 2 }}
+            />
+            <Typography variant="h6" color="text.secondary">
+              No chapters available
+            </Typography>
+            <Typography variant="body2" color="text.disabled">
+              There are no syllabus chapters created for this subject yet.
+            </Typography>
+          </Paper>
         )}
-      </Box>
-      {/* </Scrollbar> */}
+      </Scrollbar>
     </Box>
   );
 };

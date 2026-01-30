@@ -1,5 +1,6 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
@@ -17,6 +18,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   homeworkTypesApi,
+  useGetHomeworkTypesQuery,
   useDeleteHomeworkTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 
@@ -39,7 +41,7 @@ const HomeworkTypeCreation = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Get current medium from global state
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Currently selected homework type for edit/delete
   const [selectedData, setSelectedData] = useState<IHomeworkType | null>(null);
@@ -77,6 +79,18 @@ const HomeworkTypeCreation = () => {
     }
   };
 
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: homeworkTypeData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+  });
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -87,13 +101,14 @@ const HomeworkTypeCreation = () => {
           { name: 'Settings' },
           { name: 'Homework Type' },
         ]}
+        description="Create and manage homework types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
           <Button
             variant="contained"
             startIcon={<Iconify icon="mdi:plus" />}
             onClick={addHomeworkTypeDialog.onTrue}
             size="small"
-            sx={{ width: '160px' }}
+            sx={{ px: '32px' }}
           >
             Homework Type
           </Button>
@@ -101,6 +116,8 @@ const HomeworkTypeCreation = () => {
       />
 
       <HomeworkTypeTable
+        isLoading={isLoading || isFetching}
+        data={homeworkTypeData}
         onEdit={(data) => {
           setSelectedData(data);
           addHomeworkTypeDialog.onTrue();
@@ -180,20 +197,10 @@ const HomeworkTypeCreation = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    homeworkTypesApi.util.updateQueryData(
-                      'getHomeworkTypes',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedData);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () =>
                   deleteHomeworkType({
-                    academicMediumId: (currentMedium as any).id,
+                    academicMediumId: (medium as Medium)?.id,
                     homeworkTypeId: selectedData?.id,
                   }),
               });

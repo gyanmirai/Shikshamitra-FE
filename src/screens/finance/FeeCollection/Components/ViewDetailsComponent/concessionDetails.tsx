@@ -40,7 +40,7 @@ export default function ConcessionsCard() {
     >
       <Box
         sx={{
-          p: 3,
+          p: 2,
           pb: 2,
           display: 'flex',
           alignItems: 'center',
@@ -48,7 +48,7 @@ export default function ConcessionsCard() {
         }}
       >
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
             Concessions
           </Typography>
           <Typography variant="body2" color="text.secondary">

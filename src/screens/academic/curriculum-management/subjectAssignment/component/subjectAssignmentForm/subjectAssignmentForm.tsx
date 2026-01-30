@@ -68,11 +68,7 @@ const SubjectAssignmentForm = ({
   selectedClass,
   classId,
 }: ISubjectAssignmentFormProps) => {
-  const {
-    data: subjectAssignmentData,
-    isLoading: isSubjectAssignmentLoading,
-    isFetching: isSubjectAssignmentFetching,
-  } = useQueryAndMutation({
+  const { data: subjectAssignmentData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
     params: { assignmentId: data?.id },
@@ -80,7 +76,6 @@ const SubjectAssignmentForm = ({
       skip: !data?.id,
     },
   });
-  console.log('subjectAssignmentData', subjectAssignmentData);
 
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
@@ -300,8 +295,7 @@ const SubjectAssignmentForm = ({
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
-  const handleFileUpload = async (files: (File | string)[], index: number) => {
-    console.log('files', files);
+  const handleFileUpload = async (files: (File | string)[], index: number | null) => {
     const uploadedFiles: (string | File)[] = [];
     const formData = new FormData();
     formData.append('FileName', (files[0] as File)?.name);

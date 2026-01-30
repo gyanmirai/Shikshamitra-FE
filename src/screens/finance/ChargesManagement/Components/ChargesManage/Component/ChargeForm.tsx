@@ -18,7 +18,9 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { Box, Grid, Button, Checkbox, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
 import type { IChargeFormProps } from './type';
 
@@ -173,224 +175,238 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
+            <Grid container>
               <Grid size={{ xs: 12 }}>
-                <ShakingTextField
-                  error={!!(touched.chargeCategory && errors.chargeCategory) || false}
-                >
-                  <CustomSelect
-                    name="chargeCategory"
-                    label="Charge Category *"
-                    options={[
-                      { id: 'Library Fine', name: 'Library Fine' },
-                      { id: 'Transport Damage', name: 'Transport Damage' },
-                      { id: 'Hostel Maintenance', name: 'Hostel Maintenance' },
-                    ]}
-                    labelKey="name"
-                    valueKey="id"
-                    value={values.chargeCategory}
-                    onChange={(value) => setFieldValue('chargeCategory', value)}
-                    error={!!(touched.chargeCategory && errors.chargeCategory) || false}
-                    helperText={(touched.chargeCategory && errors.chargeCategory) || ''}
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </ShakingTextField>
+                <SectionCard title="Charge Details" paperProps={{ sx: { ...cardStyle } }}>
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField
+                      error={!!(touched.chargeCategory && errors.chargeCategory) || false}
+                    >
+                      <CustomSelect
+                        name="chargeCategory"
+                        label="Charge Category *"
+                        options={[
+                          { id: 'Library Fine', name: 'Library Fine' },
+                          { id: 'Transport Damage', name: 'Transport Damage' },
+                          { id: 'Hostel Maintenance', name: 'Hostel Maintenance' },
+                        ]}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.chargeCategory}
+                        onChange={(value) => setFieldValue('chargeCategory', value)}
+                        error={!!(touched.chargeCategory && errors.chargeCategory) || false}
+                        helperText={(touched.chargeCategory && errors.chargeCategory) || ''}
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField
+                      error={!!(touched.description && errors.description) || false}
+                    >
+                      <TextField
+                        name="description"
+                        label="Purpose/Description *"
+                        multiline
+                        minRows={3}
+                        fullWidth
+                        value={values.description}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={!!(touched.description && errors.description)}
+                        helperText={(touched.description && errors.description) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 6 }}>
+                    <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+                      <NumericFormatCustom
+                        size="small"
+                        fullWidth
+                        label="Amount *"
+                        name="amount"
+                        value={values.amount || ''}
+                        onChange={(e) => {
+                          let val = e.target.value;
+                          // Remove currency symbol, commas, spaces and negative signs
+                          val = val.replace(/\D/g, '');
+                          // Convert to number and ensure it's positive
+                          if (/^\d*$/.test(val)) {
+                            setFieldValue('amount', val); // keep it as string while typing
+                          }
+                        }}
+                        sx={{
+                          width: '100%',
+                          padding: '0',
+                          borderRadius: 1,
+                        }}
+                        error={!!(touched.amount && errors.amount)}
+                        helperText={(touched.amount && errors.amount) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 6 }}>
+                    <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+                      <DatePicker
+                        label="Due Date *"
+                        name="dueDate"
+                        format="DD/MM/YYYY"
+                        minDate={dayjs().startOf('day')} // disables all past dates
+                        maxDate={dayjs(currentYear?.endDate)}
+                        value={dayjs(values.dueDate) || null}
+                        onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            error: !!(touched.dueDate && errors.dueDate),
+                            helperText: (touched.dueDate && errors.dueDate) as string,
+                            onBlur: () => setFieldTouched('dueDate', true),
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
+                      <CustomSelect
+                        name="priority"
+                        label="Priority *"
+                        options={[
+                          { id: '0', name: 'Low' },
+                          { id: '1', name: 'Medium' },
+                          { id: '2', name: 'High' },
+                        ]}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.priority}
+                        onChange={(value) => setFieldValue('priority', value)}
+                        error={!!(touched.priority && errors.priority) || false}
+                        helperText={(touched.priority && errors.priority) || ''}
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <ShakingTextField error={!!(touched.description && errors.description) || false}>
+                <SectionCard title="Student Information" paperProps={{ sx: { ...cardStyle } }}>
+                  <Grid size={{ xs: 6 }}>
+                    <ShakingTextField error={!!(touched.class && errors.class) || false}>
+                      <CustomSelect
+                        name="class"
+                        label="Class *"
+                        options={allClass}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.class}
+                        onChange={(value) => {
+                          setFieldValue('class', value);
+                          setFieldTouched('class', false);
+                        }}
+                        error={!!(touched.class && errors.class) || false}
+                        helperText={(touched.class && errors.class) || ''}
+                        formControlProps={{ sx: { width: '100%' } }}
+                        multiple={false}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 6 }}>
+                    <ShakingTextField error={!!(touched.division && errors.division) || false}>
+                      <CustomSelect
+                        name="division"
+                        label="Division *"
+                        labelKey="name"
+                        valueKey="id"
+                        disabled={!values.class}
+                        options={
+                          allClass?.find((i: Standards) => i.id === values.class)?.divisions || []
+                        }
+                        value={values.division}
+                        onChange={(value) => {
+                          setFieldValue('division', value);
+                          setFieldTouched('division', false);
+                          setFieldValue('studentName', '');
+                        }}
+                        formControlProps={{ sx: { width: '100%' } }}
+                        error={!!(touched.division && errors.division)}
+                        helperText={(touched.division && errors.division) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField
+                      error={!!(touched.studentName && errors.studentName) || false}
+                    >
+                      <Autocomplete
+                        loading={isLoading}
+                        fullWidth
+                        disableCloseOnSelect
+                        value={values.studentName}
+                        disabled={!values.division}
+                        onChange={(e, value: any) => {
+                          setFieldValue('studentName', value);
+                          setFieldTouched('studentName', false);
+                        }}
+                        options={tableData}
+                        getOptionLabel={(option: any) => option?.name || ''}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        renderOption={(props, option, { selected }) => (
+                          <li {...props} key={option.id}>
+                            <Checkbox
+                              icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                              checkedIcon={<CheckBoxIcon fontSize="small" />}
+                              style={{ marginRight: 8 }}
+                              checked={selected}
+                            />
+                            {option.name}
+                          </li>
+                        )}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            size="small"
+                            label="Student *"
+                            fullWidth
+                            error={!!(touched.studentName && errors.studentName)}
+                            helperText={(touched.studentName && errors.studentName) as string}
+                            sx={(theme) => ({
+                              ...(!!(touched.studentName && errors.studentName) &&
+                                !values.division && {
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: `${theme.palette.error.main} !important`,
+                                  },
+                                  '& .MuiInputLabel-root.Mui-disabled': {
+                                    color: `${theme.palette.error.main} !important`,
+                                  },
+                                }),
+                            })}
+                          />
+                        )}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <SectionCard title="Additional Notes" paperProps={{ sx: { ...cardStyle } }}>
                   <TextField
-                    name="description"
-                    label="Purpose/Description *"
+                    name="additionalNotes"
+                    label="Additional Notes"
                     multiline
                     minRows={3}
                     fullWidth
-                    value={values.description}
+                    value={values.additionalNotes}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={!!(touched.description && errors.description)}
-                    helperText={(touched.description && errors.description) as string}
                   />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 6 }}>
-                <ShakingTextField error={!!(touched.class && errors.class) || false}>
-                  <CustomSelect
-                    name="class"
-                    label="Class *"
-                    options={allClass}
-                    labelKey="name"
-                    valueKey="id"
-                    value={values.class}
-                    onChange={(value) => {
-                      setFieldValue('class', value);
-                      setFieldTouched('class', false);
-                    }}
-                    error={!!(touched.class && errors.class) || false}
-                    helperText={(touched.class && errors.class) || ''}
-                    formControlProps={{ sx: { width: '100%' } }}
-                    multiple={false}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 6 }}>
-                <ShakingTextField error={!!(touched.division && errors.division) || false}>
-                  <CustomSelect
-                    name="division"
-                    label="Division *"
-                    labelKey="name"
-                    valueKey="id"
-                    disabled={!values.class}
-                    options={
-                      allClass?.find((i: Standards) => i.id === values.class)?.divisions || []
-                    }
-                    value={values.division}
-                    onChange={(value) => {
-                      setFieldValue('division', value);
-                      setFieldTouched('division', false);
-                      setFieldValue('studentName', '');
-                    }}
-                    formControlProps={{ sx: { width: '100%' } }}
-                    error={!!(touched.division && errors.division)}
-                    helperText={(touched.division && errors.division) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <ShakingTextField error={!!(touched.studentName && errors.studentName) || false}>
-                  <Autocomplete
-                    loading={isLoading}
-                    fullWidth
-                    disableCloseOnSelect
-                    value={values.studentName}
-                    disabled={!values.division}
-                    onChange={(e, value: any) => {
-                      setFieldValue('studentName', value);
-                      setFieldTouched('studentName', false);
-                    }}
-                    options={tableData}
-                    getOptionLabel={(option: any) => option?.name || ''}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    renderOption={(props, option, { selected }) => (
-                      <li {...props} key={option.id}>
-                        <Checkbox
-                          icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                          checkedIcon={<CheckBoxIcon fontSize="small" />}
-                          style={{ marginRight: 8 }}
-                          checked={selected}
-                        />
-                        {option.name}
-                      </li>
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        size="small"
-                        label="Student *"
-                        fullWidth
-                        error={!!(touched.studentName && errors.studentName)}
-                        helperText={(touched.studentName && errors.studentName) as string}
-                        sx={(theme) => ({
-                          ...(!!(touched.studentName && errors.studentName) &&
-                            !values.division && {
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: `${theme.palette.error.main} !important`,
-                              },
-                              '& .MuiInputLabel-root.Mui-disabled': {
-                                color: `${theme.palette.error.main} !important`,
-                              },
-                            }),
-                        })}
-                      />
-                    )}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-                  <NumericFormatCustom
-                    size="small"
-                    fullWidth
-                    label="Amount *"
-                    name="amount"
-                    value={values.amount || ''}
-                    onChange={(e) => {
-                      let val = e.target.value;
-                      // Remove currency symbol, commas, spaces and negative signs
-                      val = val.replace(/\D/g, '');
-                      // Convert to number and ensure it's positive
-                      if (/^\d*$/.test(val)) {
-                        setFieldValue('amount', val); // keep it as string while typing
-                      }
-                    }}
-                    sx={{
-                      width: '100%',
-                      padding: '0',
-                      borderRadius: 1,
-                    }}
-                    error={!!(touched.amount && errors.amount)}
-                    helperText={(touched.amount && errors.amount) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 6 }}>
-                <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
-                  <DatePicker
-                    label="Due Date *"
-                    name="dueDate"
-                    format="DD/MM/YYYY"
-                    minDate={dayjs().startOf('day')} // disables all past dates
-                    maxDate={dayjs(currentYear?.endDate)}
-                    value={dayjs(values.dueDate) || null}
-                    onChange={(newValue) => setFieldValue('dueDate', newValue)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: !!(touched.dueDate && errors.dueDate),
-                        helperText: (touched.dueDate && errors.dueDate) as string,
-                        onBlur: () => setFieldTouched('dueDate', true),
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-                  <CustomSelect
-                    name="priority"
-                    label="Priority *"
-                    options={[
-                      { id: '0', name: 'Low' },
-                      { id: '1', name: 'Medium' },
-                      { id: '2', name: 'High' },
-                    ]}
-                    labelKey="name"
-                    valueKey="id"
-                    value={values.priority}
-                    onChange={(value) => setFieldValue('priority', value)}
-                    error={!!(touched.priority && errors.priority) || false}
-                    helperText={(touched.priority && errors.priority) || ''}
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  name="additionalNotes"
-                  label="Additional Notes"
-                  multiline
-                  minRows={3}
-                  fullWidth
-                  value={values.additionalNotes}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
+                </SectionCard>
               </Grid>
             </Grid>
           </Scrollbar>
