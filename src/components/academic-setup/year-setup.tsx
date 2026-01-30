@@ -320,25 +320,39 @@ const YearSetup = () => {
       </CustomDialog>
 
       {/* Main Layout */}
-      <Stack spacing={2} sx={{ height: '100%' }}>
+      <Stack spacing={3} sx={{ height: '100%' }}>
         {/* Header Section */}
-        <Card sx={{ p: 2 }}>
+        <Card
+          sx={{
+            p: 2.5,
+            borderRadius: 2,
+            boxShadow: theme.customShadows.z1,
+            border: `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Typography
-                variant="subtitle1"
-                sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
+                variant="subtitle2"
+                sx={{ color: 'text.secondary', whiteSpace: 'nowrap', fontWeight: 600 }}
               >
-                Academic Year:
+                ACADEMIC YEAR
               </Typography>
-              <FormControl size="small" variant="standard" sx={{ minWidth: 200 }}>
+              <FormControl size="small" variant="standard" sx={{ minWidth: 240 }}>
                 <Select
                   value={selectedAcademicYear}
                   onChange={(e) => setSelectedAcademicYear(e.target.value)}
                   displayEmpty
+                  disableUnderline
                   sx={{
                     typography: 'h6',
-                    '& .MuiSelect-select': { py: 0.5 },
+                    fontWeight: 700,
+                    '& .MuiSelect-select': {
+                      py: 0.5,
+                      px: 1.5,
+                      bgcolor: 'background.neutral',
+                      borderRadius: 1,
+                    },
                   }}
                 >
                   {years?.items?.map((y: AcademicYear) => (
@@ -355,13 +369,27 @@ const YearSetup = () => {
                     size="small"
                     onClick={handleEditYear}
                     disabled={!selectedAcademicYear}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
                   >
-                    <Iconify icon="solar:pen-bold" width={18} />
+                    <Iconify icon="solar:pen-bold" width={16} />
                   </IconButton>
                 </CustomTooltip>
-                <CustomTooltip title=" New Year">
-                  <IconButton size="small" onClick={handleCreateYear}>
-                    <Iconify icon="mingcute:add-line" width={20} />
+                <CustomTooltip title="New Year">
+                  <IconButton
+                    size="small"
+                    onClick={handleCreateYear}
+                    sx={{
+                      bgcolor: 'primary.lighter',
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: 'primary.light', color: 'primary.contrastText' },
+                    }}
+                  >
+                    <Iconify icon="mingcute:add-line" width={18} />
                   </IconButton>
                 </CustomTooltip>
               </Stack>
@@ -369,39 +397,63 @@ const YearSetup = () => {
 
             <Button
               variant="contained"
+              color="primary"
               startIcon={<Iconify icon="mingcute:add-line" />}
               onClick={boardDialog.onTrue}
               disabled={!selectedAcademicYear || isYearLoading}
               size="small"
+              sx={{ px: 2, boxShadow: theme.customShadows.primary }}
             >
-              Board
+              Add Board
             </Button>
           </Stack>
         </Card>
 
         {/* Master-Detail Body */}
-        <Grid container spacing={2} sx={{ flexGrow: 1, overflow: 'hidden' }}>
+        <Grid container spacing={3} sx={{ flexGrow: 1, overflow: 'hidden' }}>
           {/* Left Sidebar */}
           <Grid size={{ xs: 12, md: 4, lg: 3 }} sx={{ height: '100%' }}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ p: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                <Typography variant="subtitle2" color="text.secondary">
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: 2,
+                boxShadow: theme.customShadows.z1,
+                border: `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <Box
+                sx={{
+                  p: 2,
+                  borderBottom: `1px solid ${theme.palette.divider}`,
+                  bgcolor: 'background.neutral',
+                }}
+              >
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  sx={{ fontWeight: 700, letterSpacing: 1 }}
+                >
                   HIERARCHY
                 </Typography>
               </Box>
 
               <Scrollbar sx={{ flexGrow: 1, overflowY: 'auto', p: 1 }}>
                 {(isYearLoading || isBoardLoading) && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                     <Box className="loader" />
                   </Box>
                 )}
 
                 {!isYearLoading && !isBoardLoading && treeData.length === 0 && (
-                  <Box sx={{ p: 2, textAlign: 'center' }}>
+                  <Box sx={{ p: 4, textAlign: 'center' }}>
                     <Typography variant="body2" color="text.secondary">
-                      No boards found
+                      No boards found for this year.
                     </Typography>
+                    <Button size="small" variant="text" onClick={boardDialog.onTrue} sx={{ mt: 1 }}>
+                      Get Started
+                    </Button>
                   </Box>
                 )}
 
@@ -425,11 +477,7 @@ const YearSetup = () => {
           {/* Right Details Panel */}
           <Grid size={{ xs: 12, md: 8, lg: 9 }} sx={{ height: '100%' }}>
             {selectedNode ? (
-              <DetailsPanel
-                selectedNode={selectedNode}
-                currentAcademicYear={currentAcademicYear}
-                // onRefresh={() => {}} // React Query handles this automatically normally
-              />
+              <DetailsPanel selectedNode={selectedNode} currentAcademicYear={currentAcademicYear} />
             ) : (
               <Card
                 sx={{
@@ -437,9 +485,22 @@ const YearSetup = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  borderRadius: 2,
+                  boxShadow: theme.customShadows.z1,
+                  border: `1px dashed ${theme.palette.divider}`,
+                  bgcolor: 'background.neutral',
                 }}
               >
-                <Typography color="text.secondary">Select an item to view details</Typography>
+                <Stack alignItems="center" spacing={2}>
+                  <Iconify
+                    icon="solar:folder-open-bold-duotone"
+                    width={64}
+                    sx={{ color: 'text.disabled', opacity: 0.5 }}
+                  />
+                  <Typography color="text.secondary" variant="subtitle1">
+                    Select an item to view details
+                  </Typography>
+                </Stack>
               </Card>
             )}
           </Grid>
@@ -490,42 +551,55 @@ const SidebarItem = ({
         onClick={handleItemClick}
         sx={{
           pl: 2 + depth * 2,
-          py: 1,
-          minHeight: 44,
-          borderRadius: '0 20px 20px 0',
+          py: 1.2,
+          minHeight: 48,
+          borderRadius: 1.5,
           mb: 0.5,
-          borderLeft: isSelected ? '4px solid' : '4px solid transparent',
-          borderColor: isSelected ? 'primary.main' : 'transparent',
-          bgcolor: isSelected ? 'primary.lighter' : 'transparent',
-          color: isSelected ? 'primary.dark' : 'text.primary',
-          '&:hover': {
-            bgcolor: 'action.hover',
-            color: isSelected ? 'primary.dark' : 'text.primary',
-          },
-          '&.Mui-selected': {
-            bgcolor: 'primary.lighter',
+          mx: 1,
+          width: 'auto',
+          transition: 'all 0.2s',
+          border: '1px solid transparent',
+          ...(isSelected && {
+            bgcolor: (t) => t.palette.primary.lighter,
             color: 'primary.dark',
-            '&:hover': { bgcolor: 'primary.lighter' },
-          },
+            borderColor: (t) => t.palette.primary.light,
+            fontWeight: 'fontWeightBold',
+            '&:hover': {
+              bgcolor: (t) => t.palette.primary.lighter,
+            },
+          }),
+          ...(!isSelected && {
+            color: 'text.secondary',
+            '&:hover': {
+              bgcolor: 'action.hover',
+              color: 'text.primary',
+            },
+          }),
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
           {hasChildren ? (
             <Iconify
               icon={isExpanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
-              width={16}
-              sx={{ mr: 1, color: isSelected ? 'inherit' : 'text.secondary', flexShrink: 0 }}
+              width={18}
+              sx={{
+                mr: 1,
+                color: isSelected ? 'primary.main' : 'text.disabled',
+                flexShrink: 0,
+                transition: 'transform 0.2s',
+              }}
             />
           ) : (
-            <Box sx={{ width: 16, mr: 1, flexShrink: 0 }} />
+            <Box sx={{ width: 18, mr: 1, flexShrink: 0 }} />
           )}
 
           <ListItemText
             primary={node.name}
             primaryTypographyProps={{
               variant: 'body2',
-              fontWeight: isSelected ? 700 : 500,
+              fontWeight: isSelected ? 600 : 500,
               noWrap: true,
+              sx: { transition: 'color 0.2s' },
             }}
           />
 
@@ -534,13 +608,15 @@ const SidebarItem = ({
             <Chip
               label={node.children!.length}
               size="small"
-              variant={isSelected ? 'filled' : 'outlined'}
+              variant={isSelected ? 'filled' : 'soft'}
               color={isSelected ? 'primary' : 'default'}
               sx={{
                 height: 20,
                 fontSize: '0.7rem',
                 ml: 1,
-                borderColor: isSelected ? 'transparent' : 'divider',
+                fontWeight: 600,
+                borderRadius: 1,
+                minWidth: 24,
               }}
             />
           )}
@@ -606,37 +682,50 @@ const DetailsPanel = ({ selectedNode, currentAcademicYear }: DetailsPanelProps) 
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: (theme) => theme.customShadows.z4,
+        borderRadius: 2,
+        boxShadow: (t) => t.customShadows.z1,
+        border: (t) => `1px solid ${t.palette.divider}`,
       }}
     >
       <Box sx={{ p: 3, borderBottom: '1px dashed', borderColor: 'divider' }}>
-        <Breadcrumbs separator={<Iconify icon="eva:arrow-ios-forward-fill" width={16} />}>
+        <Breadcrumbs
+          separator={<Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
+          sx={{ mb: 2 }}
+        >
           {crumbs.map((crumb, index) => (
             <Typography
               key={index}
               variant="caption"
-              color={index === crumbs.length - 1 ? 'text.primary' : 'text.secondary'}
-              fontWeight={index === crumbs.length - 1 ? 'bold' : 'normal'}
+              sx={{
+                color: index === crumbs.length - 1 ? 'text.primary' : 'text.secondary',
+                fontWeight: index === crumbs.length - 1 ? 'fontWeightBold' : 'fontWeightMedium',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+              }}
             >
               {crumb}
             </Typography>
           ))}
         </Breadcrumbs>
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 3 }}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
           <Box>
             <Stack direction="row" alignItems="center" spacing={1.5}>
-              <Typography variant="h4">{selectedNode.name}</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+                {selectedNode.name}
+              </Typography>
               <Chip
                 label={selectedNode.type}
                 color="primary"
                 variant="soft"
                 size="small"
-                sx={{ borderRadius: 1 }}
+                sx={{ borderRadius: 1, fontWeight: 600, px: 0.5 }}
               />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {selectedNode.data.description || `Manage settings for this ${selectedNode.type}`}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, maxWidth: 600 }}>
+              {selectedNode.data.description ||
+                `Manage settings and configurations for this ${selectedNode.type}.`}
             </Typography>
           </Box>
 
@@ -722,7 +811,7 @@ const BoardActionController = ({ data, parentsData }: { data: Board; parentsData
       />
 
       <Button
-        variant="outlined"
+        variant="soft"
         color="error"
         startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
         onClick={confirm.onTrue}
@@ -735,8 +824,9 @@ const BoardActionController = ({ data, parentsData }: { data: Board; parentsData
         startIcon={<Iconify icon="mingcute:add-line" />}
         onClick={modal.onTrue}
         size="small"
+        sx={{ boxShadow: (theme) => theme.customShadows.primary }}
       >
-        Medium
+        Add Medium
       </Button>
     </>
   );
@@ -801,10 +891,21 @@ const MediumActionController = ({ data, parentsData }: { data: Medium; parentsDa
         }
       />
 
-      <Button size="small" variant="outlined" color="error" onClick={confirm.onTrue}>
+      <Button
+        size="small"
+        variant="soft"
+        color="error"
+        onClick={confirm.onTrue}
+        startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+      >
         Delete
       </Button>
-      <Button size="small" variant="outlined" onClick={edit.onTrue}>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={edit.onTrue}
+        startIcon={<Iconify icon="solar:pen-bold" />}
+      >
         Edit
       </Button>
       <Button
@@ -812,8 +913,9 @@ const MediumActionController = ({ data, parentsData }: { data: Medium; parentsDa
         size="small"
         startIcon={<Iconify icon="mingcute:add-line" />}
         onClick={modal.onTrue}
+        sx={{ boxShadow: (theme) => theme.customShadows.primary }}
       >
-        Organization
+        Add Organization
       </Button>
     </>
   );
@@ -882,10 +984,21 @@ const OrganizationActionController = ({
         }
       />
 
-      <Button size="small" variant="outlined" color="error" onClick={confirm.onTrue}>
+      <Button
+        size="small"
+        variant="soft"
+        color="error"
+        onClick={confirm.onTrue}
+        startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+      >
         Delete
       </Button>
-      <Button size="small" variant="outlined" onClick={edit.onTrue}>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={edit.onTrue}
+        startIcon={<Iconify icon="solar:pen-bold" />}
+      >
         Edit
       </Button>
       <Button
@@ -893,8 +1006,9 @@ const OrganizationActionController = ({
         startIcon={<Iconify icon="mingcute:add-line" />}
         onClick={modal.onTrue}
         size="small"
+        sx={{ boxShadow: (theme) => theme.customShadows.primary }}
       >
-        Standard
+        Add Standard
       </Button>
     </>
   );
@@ -957,10 +1071,21 @@ const StandardActionController = ({ data, parentsData }: { data: Standards; pare
         }
       />
 
-      <Button size="small" variant="outlined" color="error" onClick={confirm.onTrue}>
+      <Button
+        size="small"
+        variant="soft"
+        color="error"
+        onClick={confirm.onTrue}
+        startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+      >
         Delete
       </Button>
-      <Button size="small" variant="outlined" onClick={edit.onTrue}>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={edit.onTrue}
+        startIcon={<Iconify icon="solar:pen-bold" />}
+      >
         Edit
       </Button>
       <Button
@@ -968,8 +1093,9 @@ const StandardActionController = ({ data, parentsData }: { data: Standards; pare
         startIcon={<Iconify icon="mingcute:add-line" />}
         onClick={modal.onTrue}
         size="small"
+        sx={{ boxShadow: (theme) => theme.customShadows.primary }}
       >
-        Division
+        Add Division
       </Button>
     </>
   );
@@ -1022,10 +1148,21 @@ const DivisionActionController = ({ data, parentsData }: { data: Division; paren
           </LoadingButton>
         }
       />
-      <Button size="small" variant="outlined" color="error" onClick={confirm.onTrue}>
+      <Button
+        size="small"
+        variant="soft"
+        color="error"
+        onClick={confirm.onTrue}
+        startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+      >
         Delete
       </Button>
-      <Button size="small" variant="contained" onClick={edit.onTrue}>
+      <Button
+        size="small"
+        variant="contained"
+        onClick={edit.onTrue}
+        startIcon={<Iconify icon="solar:pen-bold" />}
+      >
         Edit
       </Button>
     </>

@@ -124,7 +124,7 @@ const AdmissionScreen = () => {
     () =>
       admissionData?.items?.map((item: IInquiryData) => ({
         ...item,
-        id: item.studentId, // Map studentId to id for component compatibility
+        id: item.studentId,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',

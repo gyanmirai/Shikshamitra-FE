@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Stack, Button, Avatar, Container, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Card, Grid, Stack, Avatar, Button, Container, Typography } from '@mui/material';
 
 interface WelcomeScreenProps {
   onNext?: () => void;
@@ -14,10 +14,23 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext }) => {
 
   return (
     <Container
-      maxWidth="lg"
-      sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      maxWidth={false}
+      sx={{
+        height: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: { xs: 2, md: 3 },
+        px: { xs: 2, sm: 3 },
+        maxWidth: '1400px !important',
+      }}
     >
-      <Grid container spacing={6} sx={{ alignItems: 'center' }}>
+      <Grid
+        container
+        spacing={{ xs: 2, md: 4 }}
+        sx={{ alignItems: 'center', maxWidth: '100%', m: 0 }}
+      >
         {/* Left side - School Illustration */}
         <Grid
           size={{ xs: 12, md: 6 }}
@@ -26,63 +39,141 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext }) => {
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
+            order: { xs: 2, md: 1 },
+            pl: { md: '0 !important' },
           }}
         >
           <Box
             component={motion.div}
-            initial={{ opacity: 0, scale: 0.8, rotate: -2 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            initial={{ opacity: 0, scale: 0.85, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.43, 0.13, 0.23, 0.96] }}
             sx={{
               position: 'relative',
               zIndex: 2,
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
             }}
           >
             <Box
               component="img"
-              src="/assets/illustrations/welcome_setup.png"
+              src="/assets/illustrations/welcome_setup_v2.png"
               alt="Welcome Illustration"
               sx={{
                 width: '100%',
-                maxWidth: 480,
-                filter: 'drop-shadow(0px 20px 40px rgba(0,0,0,0.15))',
+                maxWidth: { xs: 240, sm: 300, md: 540 },
+                height: 'auto',
+                filter: 'drop-shadow(0px 16px 32px rgba(0,0,0,0.1))',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                },
               }}
             />
 
-            {/* Floating Elements Animation */}
+            {/* Floating Analytics Card */}
             <Box
               component={motion.div}
-              animate={{ y: [-15, 15, -15] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              animate={{ y: [-8, 8, -8] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               sx={{
                 position: 'absolute',
-                top: '10%',
-                right: '-5%',
+                top: { xs: '5%', md: '10%' },
+                right: { xs: '-2%', md: '5%' },
                 zIndex: 3,
-                bgcolor: 'background.paper',
-                p: 2,
-                borderRadius: 2,
-                boxShadow: theme.customShadows.z24,
-                display: { xs: 'none', md: 'block' },
+                display: { xs: 'none', sm: 'block' },
               }}
             >
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Avatar
-                  sx={{ bgcolor: 'success.lighter', color: 'success.main', width: 40, height: 40 }}
-                >
-                  <Iconify icon="solar:chart-2-bold" width={24} />
-                </Avatar>
-                <Box>
-                  <Typography variant="subtitle2">Analytics Ready</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Real-time insights
+              <Card
+                sx={{
+                  p: { xs: 1, md: 1.5 },
+                  borderRadius: 2,
+                  boxShadow: theme.customShadows.z20,
+                  backdropFilter: 'blur(8px)',
+                  bgcolor: alpha(theme.palette.background.paper, 0.95),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                  minWidth: { xs: 140, md: 160 },
+                }}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Avatar
+                    sx={{
+                      bgcolor: alpha(theme.palette.success.main, 0.12),
+                      color: 'success.main',
+                      width: { xs: 32, md: 36 },
+                      height: { xs: 32, md: 36 },
+                    }}
+                  >
+                    <Iconify icon="solar:chart-2-bold" width={20} />
+                  </Avatar>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      sx={{ fontSize: { xs: '0.7rem', md: '0.8rem' } }}
+                    >
+                      Analytics
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.6rem', md: '0.7rem' } }}
+                    >
+                      Real-time
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Card>
+            </Box>
+
+            {/* Floating Achievement Badge */}
+            <Box
+              component={motion.div}
+              animate={{ y: [8, -8, 8] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              sx={{
+                position: 'absolute',
+                bottom: { xs: '8%', md: '12%' },
+                left: { xs: '-2%', md: '5%' },
+                zIndex: 3,
+                display: { xs: 'none', sm: 'block' },
+              }}
+            >
+              <Card
+                sx={{
+                  p: { xs: 1, md: 1.25 },
+                  borderRadius: 2,
+                  boxShadow: theme.customShadows.z16,
+                  backdropFilter: 'blur(8px)',
+                  bgcolor: alpha(theme.palette.background.paper, 0.95),
+                  border: `1px solid ${alpha(theme.palette.warning.main, 0.08)}`,
+                }}
+              >
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Avatar
+                    sx={{
+                      bgcolor: alpha(theme.palette.warning.main, 0.12),
+                      color: 'warning.main',
+                      width: { xs: 28, md: 32 },
+                      height: { xs: 28, md: 32 },
+                    }}
+                  >
+                    <Iconify icon="solar:medal-star-bold" width={16} />
+                  </Avatar>
+                  <Typography
+                    variant="caption"
+                    fontWeight={600}
+                    sx={{ fontSize: { xs: '0.65rem', md: '0.7rem' } }}
+                  >
+                    Premium ERP
                   </Typography>
-                </Box>
-              </Stack>
+                </Stack>
+              </Card>
             </Box>
           </Box>
 
-          {/* Back Glow */}
+          {/* Enhanced Background Glow */}
           <Box
             sx={{
               position: 'absolute',
@@ -91,9 +182,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext }) => {
               transform: 'translate(-50%, -50%)',
               width: '120%',
               height: '120%',
-              background: `radial-gradient(circle, ${theme.palette.primary.lighter} 0%, transparent 70%)`,
-              opacity: 0.6,
+              background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.06)} 0%, transparent 60%)`,
+              opacity: 0.8,
               zIndex: 0,
+              pointerEvents: 'none',
             }}
           />
         </Grid>
@@ -103,109 +195,211 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext }) => {
           size={{ xs: 12, md: 6 }}
           sx={{
             display: 'flex',
-            alignDirection: 'column',
+            flexDirection: 'column',
             justifyContent: 'center',
+            order: { xs: 1, md: 2 },
           }}
         >
-          <Box sx={{ pl: { md: 4 } }}>
+          <Box sx={{ pl: { md: 6 } }}>
             <Box
               component={motion.div}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+              {/* Premium Badge */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={{ xs: 1, md: 1 }}
+                sx={{ mb: { xs: 1.5, md: 2 } }}
+              >
                 <Box
                   sx={{
-                    p: 1,
-                    bgcolor: 'primary.lighter',
+                    p: 0.75,
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
                     borderRadius: 1.5,
                     color: 'primary.main',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  <Iconify icon="solar:stars-minimalistic-bold" width={24} />
+                  <Iconify icon="solar:stars-minimalistic-bold" width={16} />
                 </Box>
-                <Typography variant="subtitle1" color="primary.main" fontWeight={700}>
+                <Typography
+                  variant="subtitle2"
+                  color="primary.main"
+                  fontWeight={700}
+                  sx={{ letterSpacing: 0.5, fontSize: { xs: '0.75rem', md: '0.875rem' } }}
+                >
                   Premium School ERP
                 </Typography>
               </Stack>
 
+              {/* Main Heading */}
               <Typography
                 variant="h2"
                 sx={{
-                  fontWeight: 900,
-                  lineHeight: 1.1,
-                  mb: 2,
-                  background: `linear-gradient(to right, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
+                  fontWeight: 800,
+                  lineHeight: 1.2,
+                  mb: { xs: 1, md: 2 },
+                  fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.25rem' },
+                  background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.primary.main} 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
                 }}
               >
                 Welcome to <br /> Shiksha Mitra
               </Typography>
 
+              {/* Subtitle */}
               <Typography
-                variant="h6"
-                sx={{ color: 'text.secondary', mb: 4, fontWeight: 400, maxWidth: 480 }}
+                variant="body1"
+                sx={{
+                  color: 'text.secondary',
+                  mb: { xs: 2, md: 3 },
+                  fontWeight: 400,
+                  maxWidth: 480,
+                  lineHeight: 1.5,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem', md: '0.925rem' },
+                }}
               >
                 Empower your institution with an AI-driven platform designed to revolutionize
                 education management.
               </Typography>
 
-              <Stack spacing={3} sx={{ mb: 5 }}>
+              {/* Feature Cards */}
+              <Stack spacing={{ xs: 1.5, md: 2 }} sx={{ mb: { xs: 3, md: 4 } }}>
                 {[
                   {
                     title: 'Smart Analytics',
-                    desc: 'Data-driven decisions for better student outcomes.',
+                    desc: 'Data-driven decisions for better outcomes.',
                     icon: 'solar:graph-up-bold',
+                    color: 'primary',
                   },
                   {
                     title: 'Seamless Management',
-                    desc: 'Effortless administration of academics and finance.',
+                    desc: 'Effortless administration of academics.',
                     icon: 'solar:settings-minimalistic-bold-duotone',
+                    color: 'info',
+                  },
+                  {
+                    title: 'Secure & Reliable',
+                    desc: 'Enterprise-grade security with 99.9% uptime.',
+                    icon: 'solar:shield-check-bold',
+                    color: 'success',
                   },
                 ].map((item, index) => (
-                  <Stack
+                  <Box
                     key={index}
-                    direction="row"
-                    spacing={2}
                     component={motion.div}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
                   >
-                    <Box sx={{ color: 'primary.main' }}>
-                      <Iconify icon={item.icon} width={28} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        {item.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {item.desc}
-                      </Typography>
-                    </Box>
-                  </Stack>
+                    <Card
+                      sx={{
+                        p: { xs: 1.5, md: 1.75 },
+                        borderRadius: { xs: 2, md: 2 },
+                        border: `1px solid ${alpha(theme.palette[item.color as 'primary' | 'info' | 'success'].main, 0.08)}`,
+                        bgcolor: alpha(
+                          theme.palette[item.color as 'primary' | 'info' | 'success'].main,
+                          0.02
+                        ),
+                        boxShadow: 'none',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: 'default',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        '&:hover': {
+                          boxShadow: theme.customShadows.z8,
+                          transform: 'translateY(-2px)',
+                          bgcolor: alpha(
+                            theme.palette[item.color as 'primary' | 'info' | 'success'].main,
+                            0.04
+                          ),
+                          borderColor: alpha(
+                            theme.palette[item.color as 'primary' | 'info' | 'success'].main,
+                            0.16
+                          ),
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: { xs: 36, md: 40 },
+                          height: { xs: 36, md: 40 },
+                          borderRadius: 1.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: alpha(
+                            theme.palette[item.color as 'primary' | 'info' | 'success'].main,
+                            0.12
+                          ),
+                          color: `${item.color}.main`,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Iconify icon={item.icon} width={20} />
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight={700}
+                          sx={{
+                            mb: 0.25,
+                            lineHeight: 1.3,
+                            fontSize: { xs: '0.8125rem', md: '0.925rem' },
+                          }}
+                        >
+                          {item.title}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{
+                            lineHeight: 1.4,
+                            fontSize: { xs: '0.7rem', md: '0.8rem' },
+                            display: 'block',
+                          }}
+                        >
+                          {item.desc}
+                        </Typography>
+                      </Box>
+                    </Card>
+                  </Box>
                 ))}
               </Stack>
 
+              {/* CTA Button */}
               <Button
                 variant="contained"
                 size="large"
                 onClick={onNext}
-                endIcon={<Iconify icon="solar:arrow-right-linear" />}
+                endIcon={<Iconify icon="solar:arrow-right-linear" width={18} />}
                 component={motion.button}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 sx={{
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 50,
-                  boxShadow: theme.customShadows.primary,
+                  px: { xs: 3, md: 4 },
+                  py: { xs: 1, md: 1.5 },
+                  borderRadius: 2,
+                  fontSize: { xs: '0.875rem', md: '0.9375rem' },
+                  fontWeight: 700,
+                  boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.24)}`,
                   bgcolor: 'primary.main',
                   color: 'white',
+                  textTransform: 'none',
+                  letterSpacing: 0.5,
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover': {
                     bgcolor: 'primary.dark',
+                    boxShadow: `0 12px 24px ${alpha(theme.palette.primary.main, 0.32)}`,
+                    transform: 'translateY(-1px)',
                   },
                 }}
               >

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Logo } from 'src/components/logo';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import YearSetup from 'src/components/academic-setup/year-setup';
-import { Box, Stack, Button, Avatar, Typography, useMediaQuery } from '@mui/material';
+import { Box, Stack, Button, Typography, useMediaQuery } from '@mui/material';
 
 // Components
 import WelcomeScreen from './welcom-screen';
@@ -48,51 +49,43 @@ export default function InitialSetupScreen() {
         flexDirection: 'column',
         px: 3,
         position: 'relative',
-        overflow: 'hidden',
         background: `radial-gradient(circle at 10% 20%, ${alpha(theme.palette.primary.lighter, 0.4)} 0%, ${theme.palette.background.default} 60%)`,
       }}
     >
-      {/* Background Decor */}
-      <Box
-        component={motion.div}
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 5, -5, 0],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        sx={{
-          position: 'absolute',
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          borderRadius: '50%',
-          background: `conic-gradient(from 0deg, ${alpha(theme.palette.primary.main, 0.05)}, transparent)`,
-          filter: 'blur(60px)',
-          zIndex: 0,
-        }}
-      />
-
       {/* Header / Wizard Progress */}
-      <Box maxWidth="xl" sx={{ pt: 4, pb: 2, zIndex: 2 }}>
+      <Box
+        maxWidth="xl"
+        sx={{
+          position: 'sticky',
+          top: 0,
+          pt: { xs: 2.5, md: 3 },
+          pb: { xs: 2.5, md: 3 },
+          zIndex: 1100,
+          backgroundColor: alpha(theme.palette.background.default, 0.8),
+          backdropFilter: 'blur(8px)',
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+          transition: 'all 0.3s ease',
+          mx: -3,
+          px: 3,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           alignItems="center"
           justifyContent="space-between"
           spacing={3}
+          sx={{
+            width: '100%',
+            maxWidth: '1400px',
+            mx: 'auto',
+          }}
         >
           {/* Logo / Brand Area */}
           <Stack direction="row" alignItems="center" spacing={2}>
             {/* <Logo /> You can uncomment if you export Logo */}
-            <Avatar
-              variant="rounded"
-              sx={{
-                bgcolor: 'primary.main',
-                boxShadow: theme.customShadows.z8,
-              }}
-            >
-              <Iconify icon="solar:diploma-bold-duotone" width={24} />
-            </Avatar>
+            <Logo width={44} height={44} disableLink />
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
                 Setup Wizard
@@ -103,12 +96,17 @@ export default function InitialSetupScreen() {
             </Box>
           </Stack>
 
-          {/* Custom Stepper */}
+          {/* Custom Stepper - Minimal */}
           {!isMobile && (
             <Stack
               direction="row"
-              spacing={1}
-              sx={{ bgcolor: 'background.neutral', p: 1, borderRadius: 20 }}
+              spacing={0.5}
+              sx={{
+                bgcolor: alpha(theme.palette.background.neutral, 0.6),
+                p: 0.5,
+                borderRadius: 3,
+                backdropFilter: 'blur(6px)',
+              }}
             >
               {STEPS.map((step, index) => {
                 const isActive = activeStep === index;
@@ -125,10 +123,10 @@ export default function InitialSetupScreen() {
                       position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 1.5,
-                      px: 2.5,
-                      py: 1,
-                      borderRadius: 16,
+                      gap: 1.25,
+                      px: 2,
+                      py: 0.75,
+                      borderRadius: 2.5,
                       cursor: index < activeStep ? 'pointer' : 'default',
                       transition: 'all 0.3s ease',
                       ...(isActive && {
@@ -142,8 +140,8 @@ export default function InitialSetupScreen() {
                   >
                     <Box
                       sx={{
-                        width: 28,
-                        height: 28,
+                        width: 24,
+                        height: 24,
                         borderRadius: '50%',
                         display: 'flex',
                         alignItems: 'center',
@@ -189,6 +187,7 @@ export default function InitialSetupScreen() {
           display: 'flex',
           flexDirection: 'column',
           pb: 4,
+          pt: 2,
           zIndex: 2,
           overflow: 'hidden',
         }}
@@ -283,7 +282,6 @@ export default function InitialSetupScreen() {
                         onClick={() => {
                           // Handle Finish Action - redirect or show completion modal
                           // For now just console log
-                          console.log('Setup Completed');
                           // You might want to redirect to dashboard
                           window.location.href = '/dashboard';
                         }}
