@@ -183,7 +183,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
         isLoading={driverConductorLoading}
         noDataText={<>Driver/Conductor Data Not Found </>}
         columns={columns}
-        data={driverConductorData || []}
+        data={driverConductorData?.length ? driverConductorData : []}
       />
 
       {/* Assign Route Dialog */}
@@ -218,7 +218,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
           viewProfileDialog.onFalse();
           setSelectedDriver(null);
         }}
-        maxWidth="sm"
+        maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Driver Profile</Typography>

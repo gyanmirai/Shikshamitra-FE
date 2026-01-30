@@ -38,9 +38,7 @@ const currentVehicle = {
 };
 
 const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
-  const [availableVehicles, setAvailableVehicles] = useState<any>(
-    vehicleManagementData?.availableVehiclesData
-  );
+  const [availableVehicles] = useState<any>(vehicleManagementData?.availableVehiclesData);
   // const { data: availableVehicles } = useQueryAndMutation({
   //   type: 'query',
   //   currentQueryAndMutation: useGetAvailableVehiclesQuery,
@@ -99,53 +97,186 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
         <Box sx={{ p: 1, minWidth: 600 }}>
           {/* Current Vehicle Section */}
           <Box sx={{ mb: 4 }}>
-            <Card sx={{ p: 2, border: '1px solid #e9ecef' }}>
-              <Typography variant="h6" gutterBottom color="primary.main">
-                Current Vehicle
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Registration No.
-                  </Typography>
-                  <Typography variant="body1" fontWeight="500" gutterBottom>
-                    {currentVehicle.registrationNo}
-                  </Typography>
+            <Card
+              sx={{
+                p: 0,
+                borderRadius: 2,
+                boxShadow: theme.customShadows?.z1 || '0px 2px 8px rgba(0,0,0,0.08)',
+                border: '1px solid',
+                borderColor: 'divider',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  width: 4,
+                  bgcolor: 'info.main',
+                }}
+              />
+              <Box sx={{ p: 3, pl: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1 }}>
+                  <Label
+                    color="info"
+                    variant="soft"
+                    sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}
+                  >
+                    Current Assignment
+                  </Label>
+                </Box>
+
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 3 }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: varAlpha(theme.vars.palette.info.mainChannel, 0.08),
+                          color: 'info.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <Iconify icon="eva:pricetags-outline" width={24} />
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                          sx={{ mb: 0.5, fontWeight: 600 }}
+                        >
+                          REGISTRATION NO.
+                        </Typography>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                          {currentVehicle.registrationNo}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+
+                  <Grid size={{ xs: 3 }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
+                          color: 'warning.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <Iconify icon="mdi:steering" width={24} />
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                          sx={{ mb: 0.5, fontWeight: 600 }}
+                        >
+                          MAKE & MODEL
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {currentVehicle.makeModel}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+
+                  <Grid size={{ xs: 3 }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: varAlpha(theme.vars.palette.secondary.mainChannel, 0.08),
+                          color: 'secondary.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <Iconify icon="mdi:bus-side" width={24} />
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                          sx={{ mb: 0.5, fontWeight: 600 }}
+                        >
+                          VEHICLE TYPE
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {currentVehicle.vehicleType}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+
+                  <Grid size={{ xs: 3 }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box
+                        sx={{
+                          mt: 0.5,
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: varAlpha(theme.vars.palette.success.mainChannel, 0.08),
+                          color: 'success.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 40,
+                          height: 40,
+                        }}
+                      >
+                        <Iconify icon="mdi:seat-passenger" width={24} />
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                          sx={{ mb: 0.5, fontWeight: 600 }}
+                        >
+                          CAPACITY
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {currentVehicle.seatingCapacity} Seats
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
                 </Grid>
-                <Grid size={{ xs: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Make & Model
-                  </Typography>
-                  <Typography variant="body1" fontWeight="500" gutterBottom>
-                    {currentVehicle.makeModel}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Vehicle Type
-                  </Typography>
-                  <Typography variant="body1" fontWeight="500" gutterBottom>
-                    {currentVehicle.vehicleType}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 3 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Seating Capacity
-                  </Typography>
-                  <Typography variant="body1" fontWeight="500" gutterBottom>
-                    {currentVehicle.seatingCapacity}
-                  </Typography>
-                </Grid>
-              </Grid>
+              </Box>
             </Card>
           </Box>
-          <Grid size={{ xs: 12 }}>
+
+          <Grid size={{ xs: 12 }} sx={{ mb: 4 }}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
                 fullWidth
-                label="Reason"
+                label="Reason for Change"
                 name="reason"
-                size="small"
+                variant="outlined"
                 multiline
                 rows={3}
                 value={formik.values.reason}
@@ -155,24 +286,42 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
                 }}
                 error={formik.touched.reason && Boolean(formik.errors.reason)}
                 helperText={formik.touched.reason && formik.errors.reason}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'background.paper',
+                  },
+                }}
               />
             </ShakingTextField>
           </Grid>
 
           {/* Select New Vehicle Section */}
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom color="primary.main">
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2.5, fontWeight: 700 }}>
               Select New Vehicle
             </Typography>
 
             {/* Search Field */}
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 2.5 }}>
               <TextField
                 size="small"
                 fullWidth
-                label="Search by Reg no."
+                placeholder="Search by registration number, model, or type..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', mr: 1 }} />
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'background.neutral',
+                    '& fieldset': { border: 'none' },
+                    '&:hover fieldset': { border: 'none' },
+                    '&.Mui-focused fieldset': { border: '1px solid', borderColor: 'primary.main' },
+                  },
+                }}
               />
             </Box>
 
@@ -184,78 +333,123 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
                 formik.setFieldValue('selectedVehicle', e.target.value);
               }}
             >
-              <Scrollbar sx={{ height: '150px' }}>
-                {filteredVehicles?.map((vehicle: any) => (
-                  <Card
-                    key={vehicle.id}
-                    sx={{
-                      p: 1,
-                      mb: 2,
-                      border: selectedVehicle === vehicle.id ? '2px solid' : '1px solid',
-                      borderColor: selectedVehicle === vehicle.id ? 'primary.main' : 'grey.300',
-                      backgroundColor:
-                        selectedVehicle === vehicle.id
-                          ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                          : 'background.paper',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        borderColor: '#4caf50',
-                      },
-                    }}
-                    onClick={() => {
-                      setSelectedVehicle(vehicle.id);
-                      formik.setFieldValue('selectedVehicle', vehicle.id);
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Radio
-                          value={vehicle.id}
-                          size="small"
+              <Scrollbar sx={{ maxHeight: 320, pr: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {filteredVehicles?.map((vehicle: any) => {
+                    const isSelected = selectedVehicle === vehicle.id;
+                    return (
+                      <Card
+                        key={vehicle.id}
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          border: '1px solid',
+                          borderColor: isSelected ? 'primary.main' : 'divider',
+                          backgroundColor: isSelected
+                            ? varAlpha(theme.vars.palette.primary.mainChannel, 0.04)
+                            : 'background.paper',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            borderColor: isSelected ? 'primary.main' : 'text.disabled',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                          },
+                        }}
+                        onClick={() => {
+                          setSelectedVehicle(vehicle.id);
+                          formik.setFieldValue('selectedVehicle', vehicle.id);
+                        }}
+                      >
+                        <Box
                           sx={{
-                            color:
-                              selectedVehicle === vehicle.id
-                                ? varAlpha(theme.vars.palette.primary.mainChannel, 0.04)
-                                : 'default',
-                            '&.Mui-checked': {
-                              color: 'success.main',
-                            },
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
                           }}
-                        />
-                        <Box display="flex" gap={2}>
-                          <Typography variant="body1" fontWeight="600">
-                            {vehicle?.registrationNo}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {vehicle?.makeModel}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Type : {vehicle?.type} | Seats : {vehicle?.seatingCapacity}
-                          </Typography>
-                        </Box>
-                      </Box>
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Radio
+                              value={vehicle.id}
+                              size="small"
+                              checked={isSelected}
+                              sx={{
+                                p: 0.5,
+                                color: 'text.disabled',
+                                '&.Mui-checked': {
+                                  color: 'primary.main',
+                                },
+                              }}
+                            />
+                            <Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                  {vehicle?.registrationNo}
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    width: 4,
+                                    height: 4,
+                                    borderRadius: '50%',
+                                    bgcolor: 'text.disabled',
+                                  }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  {vehicle?.makeModel}
+                                </Typography>
+                              </Box>
+                              <Typography
+                                variant="caption"
+                                color="text.disabled"
+                                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                              >
+                                <Iconify icon="mdi:bus-side" width={14} />
+                                {vehicle?.type}
+                                <Box component="span" sx={{ mx: 0.5 }}>
+                                  •
+                                </Box>
+                                <Iconify icon="mdi:seat" width={14} />
+                                {vehicle?.seatingCapacity} Seats
+                              </Typography>
+                            </Box>
+                          </Box>
 
-                      <Label variant="soft" color={getStatusColor(vehicle?.status) as any}>
-                        {vehicle?.status}
-                      </Label>
-                    </Box>
-                  </Card>
-                ))}
+                          <Label
+                            variant="soft"
+                            color={getStatusColor(vehicle?.status) as any}
+                            sx={{ textTransform: 'uppercase', height: 24, px: 1, fontWeight: 700 }}
+                          >
+                            {vehicle?.status}
+                          </Label>
+                        </Box>
+                      </Card>
+                    );
+                  })}
+                </Box>
               </Scrollbar>
             </RadioGroup>
 
             {filteredVehicles?.length === 0 && (
-              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>
-                {searchQuery
-                  ? 'No active vehicles found matching your search criteria'
-                  : 'No active vehicles available'}
-              </Typography>
+              <Box
+                sx={{
+                  py: 6,
+                  textAlign: 'center',
+                  bgcolor: 'background.neutral',
+                  borderRadius: 2,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                }}
+              >
+                <Iconify
+                  icon="eva:car-outline"
+                  width={48}
+                  sx={{ color: 'text.disabled', mb: 2, opacity: 0.5 }}
+                />
+                <Typography variant="subtitle2" color="text.secondary">
+                  {searchQuery
+                    ? 'No vehicles found matching your search'
+                    : 'No active vehicles available'}
+                </Typography>
+              </Box>
             )}
           </Box>
         </Box>
@@ -264,14 +458,17 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
       {/* Sticky Action Buttons */}
       <DialogActions
         sx={{
-          bottom: 0,
+          px: 3,
+          py: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
         }}
       >
         <Button
           variant="outlined"
+          color="inherit"
           onClick={() => onClose(null, false)}
-          size="small"
-          startIcon={<Iconify icon="material-symbols:close" />}
+          startIcon={<Iconify icon="eva:close-fill" />}
         >
           Cancel
         </Button>
@@ -279,10 +476,10 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
           disabled={!selectedVehicle}
-          size="small"
-          startIcon={<Iconify icon="material-symbols:check" />}
+          startIcon={<Iconify icon="eva:checkmark-fill" />}
+          sx={{ px: 3 }}
         >
-          Change Vehicle
+          Confirm Change
         </Button>
       </DialogActions>
     </BackPopUpChecked>

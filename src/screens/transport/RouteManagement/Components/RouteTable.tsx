@@ -186,7 +186,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
             },
           },
         ]}
-        data={routeDta || []}
+        data={routeDta?.data || []}
       />
 
       {/* Change Status Dialog */}

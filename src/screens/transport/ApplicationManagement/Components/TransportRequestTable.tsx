@@ -19,7 +19,6 @@ import {
 
 import type { ITransportApplicationPayload } from '../type';
 
-// Props
 interface ITransportRequestTableProps {
   data: ITransportApplicationPayload[];
   onView: (row: ITransportApplicationPayload) => void;
@@ -28,12 +27,13 @@ interface ITransportRequestTableProps {
 }
 
 const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
-  data,
+  data: inputData,
   onView,
   onDelete,
   onChangeStop,
 }) => {
   // Tab management
+  const data = useMemo(() => inputData || [], [inputData]);
   const tabs = useTabs('All');
 
   const counts = useMemo(
@@ -95,7 +95,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
   return (
     <>
       {/* Tabs Header */}
-      <Box display="flex" justifyContent="space-between" sx={{ mt: 1, mb: 2 }}>
+      <Box display="flex" justifyContent="space-between" sx={{ mt: 1, mb: 2, px: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={tabs.onChange}

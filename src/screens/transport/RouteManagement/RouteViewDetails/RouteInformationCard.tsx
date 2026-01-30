@@ -35,31 +35,65 @@ export const InfoItem = ({
   color?: string;
   fontSize?: number;
 }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1.5,
+      p: 1.5,
+      borderRadius: 2,
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        bgcolor: 'action.hover',
+        transform: 'translateY(-2px)',
+      },
+    }}
+  >
     <Box
       sx={{
-        width: 32,
-        height: 32,
-        borderRadius: '50%',
-        bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
+        width: 40,
+        height: 40,
+        borderRadius: 2,
+        bgcolor: (theme) => alpha(theme.palette.success.main, 0.12),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: 1,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+        },
       }}
     >
       {React.cloneElement(
         icon as React.ReactElement<{ sx?: { color: string; fontSize?: number } }>,
         {
-          sx: { color, fontSize },
+          sx: { color, fontSize: fontSize + 1 },
         }
       )}
     </Box>
-    <Box>
-      <Typography variant="body2" color="text.secondary">
+    <Box sx={{ flex: 1 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{
+          fontSize: '0.75rem',
+          fontWeight: 500,
+          letterSpacing: '0.02em',
+          textTransform: 'uppercase',
+        }}
+      >
         {label}
       </Typography>
-      <Typography variant="body1" fontWeight="600">
+      <Typography
+        variant="body1"
+        fontWeight="600"
+        sx={{
+          fontSize: '0.95rem',
+          mt: 0.25,
+          color: 'text.primary',
+        }}
+      >
         {value}
       </Typography>
     </Box>
@@ -76,39 +110,107 @@ const RouteInformationCard = () => {
 
   return (
     <>
-      <Card sx={{ p: 2, borderRadius: 2, boxShadow: 'var(--shadows-4)' }}>
+      <Card
+        sx={{
+          p: { xs: 2.5, sm: 3 },
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid',
+          borderColor: 'divider',
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': {
+            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+          },
+        }}
+      >
         {/* Header */}
         <Box
-          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            mb: 3,
+            pb: 2,
+            borderBottom: '2px solid',
+            borderColor: 'divider',
+          }}
         >
           <Box>
-            <Typography variant="h6" color="primary" fontWeight="bold">
+            <Typography
+              variant="overline"
+              color="primary"
+              fontWeight="700"
+              sx={{
+                fontSize: '0.7rem',
+                letterSpacing: '0.08em',
+                mb: 0.5,
+                display: 'block',
+              }}
+            >
               Route Details
             </Typography>
-            <Typography variant="h6" fontWeight="600">
+            <Typography
+              variant="h5"
+              fontWeight="700"
+              sx={{
+                mb: 0.5,
+                color: 'text.primary',
+                lineHeight: 1.3,
+              }}
+            >
               {mockRouteData.routeName}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                fontWeight: 500,
+                fontFamily: 'monospace',
+              }}
+            >
               {mockRouteData.routeCode}
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <CustomTooltip title="View Assigned Student's">
-              <Visibility
-                sx={{ fontSize: 18, cursor: 'pointer' }}
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  bgcolor: 'action.hover',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    bgcolor: 'action.selected',
+                    transform: 'scale(1.05)',
+                  },
+                }}
                 onClick={() => viewStudentsDialog.onTrue()}
-              />
+              >
+                <Visibility sx={{ fontSize: 20 }} />
+              </Box>
             </CustomTooltip>
-            <Label variant="soft" color="success">
+            <Label
+              variant="soft"
+              color="success"
+              sx={{
+                px: 2,
+                py: 0.75,
+                borderRadius: 1.5,
+                fontWeight: 600,
+                fontSize: '0.75rem',
+              }}
+            >
               {mockRouteData.status}
             </Label>
           </Box>
         </Box>
 
-        {/* Divider */}
-        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 1 }} />
-
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {/* Start Point */}
           <Grid size={{ xs: 12, md: 6 }}>
             <InfoItem
@@ -151,14 +253,42 @@ const RouteInformationCard = () => {
         </Grid>
 
         {/* Capacity Utilisation */}
-        <Box sx={{ mt: 2 }}>
+        <Box
+          sx={{
+            mt: 3,
+            pt: 3,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
           <Box
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 1.5,
+            }}
           >
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+              }}
+            >
               Capacity Utilisation
             </Typography>
-            <Typography variant="body1" fontWeight="600">
+            <Typography
+              variant="body1"
+              fontWeight="700"
+              sx={{
+                fontSize: '0.95rem',
+                color: capacityPercentage > 85 ? 'warning.main' : 'success.main',
+              }}
+            >
               {mockRouteData.currentStudents}/{mockRouteData.totalCapacity} students
             </Typography>
           </Box>
@@ -166,15 +296,32 @@ const RouteInformationCard = () => {
             variant="determinate"
             value={capacityPercentage}
             sx={{
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: (theme) => alpha(theme.palette.grey[500], 0.2),
+              height: 5,
+              borderRadius: 5,
+              backgroundColor: (theme) => alpha(theme.palette.grey[500], 0.15),
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
               '& .MuiLinearProgress-bar': {
-                backgroundColor: 'success.main',
-                borderRadius: 4,
+                background: (theme) =>
+                  capacityPercentage > 85
+                    ? `linear-gradient(90deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`
+                    : `linear-gradient(90deg, ${theme.palette.success.main} 0%, ${theme.palette.success.dark} 100%)`,
+                borderRadius: 5,
+                transition: 'all 0.4s ease-in-out',
               },
             }}
           />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              mt: 0.75,
+              display: 'block',
+              textAlign: 'right',
+              fontSize: '0.7rem',
+            }}
+          >
+            {capacityPercentage}% utilized
+          </Typography>
         </Box>
       </Card>
       <ViewStudents
