@@ -89,7 +89,7 @@ const HolidayManagement = (props: TabComponentType) => {
             { name: 'Holidays' },
             { name: editingHoliday ? 'Update Holiday' : 'Add Holiday' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
           isBack
           onBack={() => handleCloseDialog(null, false)}
         />
@@ -98,7 +98,6 @@ const HolidayManagement = (props: TabComponentType) => {
           heading="Holidays"
           description="View and manage all holidays. Add new holidays, update existing ones, or remove them as needed."
           links={[{ name: 'Calendar', href: '/calendar/dashboard' }, { name: 'Holidays' }]}
-          sx={{ mb: 2 }}
           action={
             <Button
               size="small"

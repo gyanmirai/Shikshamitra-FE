@@ -47,7 +47,6 @@ const HomeworkReportsList = () => {
               Add Report
             </Button>
           }
-          sx={{ mb: 1 }}
         />
       )}
 

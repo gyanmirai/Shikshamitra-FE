@@ -21,7 +21,6 @@ const CourseManagementSetting = () => {
           { name: 'Settings' },
           { name: 'Course Management' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
         <Button variant="contained" size="small">

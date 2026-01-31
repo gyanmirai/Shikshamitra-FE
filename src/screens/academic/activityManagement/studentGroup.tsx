@@ -92,7 +92,6 @@ const StudentGroup = (props: TabComponentType) => {
             { name: 'Student Group' },
             { name: 'Add Student Group' },
           ]}
-          sx={{ mb: 1 }}
           action={
             <Button
               variant="contained"
@@ -108,7 +107,6 @@ const StudentGroup = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="Student Group"
           links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Student Group' }]}
-          sx={{ mb: 1 }}
           action={
             <Button
               startIcon={<Add />}

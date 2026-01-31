@@ -80,7 +80,6 @@ const CurriculumSetting = () => {
         heading="Settings"
         description="Set up global subjects and elective groups to manage curriculum consistently across different classes."
         links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
-        sx={{ mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
       <Card

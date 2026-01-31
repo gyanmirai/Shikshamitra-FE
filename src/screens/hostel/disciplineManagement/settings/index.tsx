@@ -47,7 +47,6 @@ const HostelDisciplineSetting: React.FC = () => {
           { name: 'Setting', href: '' },
           { name: currentActiveComponent?.label, href: '' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Card
         sx={{

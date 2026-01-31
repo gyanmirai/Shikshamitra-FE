@@ -71,7 +71,6 @@ const VisitorCheckInOutScreen = () => {
         heading="Visitor Checkpoint"
         description="This is the Pre-Approved Visitor screen. Here, you can enter visitor details and request approval in advance. Once approved, guards can easily manage their check-in and check-out."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

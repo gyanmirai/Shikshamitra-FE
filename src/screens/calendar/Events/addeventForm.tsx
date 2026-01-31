@@ -118,16 +118,16 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
       const recurrenceJson = values.isRecurring
         ? JSON.stringify({
-            repeatFrequency: values.repeatFrequency,
-            customInterval: values.customInterval,
-            customIntervalCount: values.customIntervalCount,
-            customDays: values.customDays,
-            monthlyOption: values.monthlyOption,
-            onDay: values.onDay,
-            onTheWeek: values.onTheWeek,
-            onTheDay: values.onTheDay,
-            repeatUntil: values.repeatUntil,
-          })
+          repeatFrequency: values.repeatFrequency,
+          customInterval: values.customInterval,
+          customIntervalCount: values.customIntervalCount,
+          customDays: values.customDays,
+          monthlyOption: values.monthlyOption,
+          onDay: values.onDay,
+          onTheWeek: values.onTheWeek,
+          onTheDay: values.onTheDay,
+          repeatUntil: values.repeatUntil,
+        })
         : '';
 
       // ----------------------------
@@ -212,7 +212,6 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       }
     },
   });
-  console.log('formik.values', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -352,8 +351,8 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         '&:hover': { borderColor: theme.vars.palette.text.primary },
                         ...(!!formik.touched.description &&
                           !!formik.errors.description && {
-                            borderColor: theme.palette.error.main,
-                          }),
+                          borderColor: theme.palette.error.main,
+                        }),
                         '&:focus-within': {
                           borderColor: theme.vars.palette.text.primary,
                           borderWidth: 2,
@@ -439,7 +438,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                                 !!(formik.touched.startDate && formik.errors.startDate) || false,
                               helperText:
                                 formik.touched.startDate &&
-                                typeof formik.errors.startDate === 'string'
+                                  typeof formik.errors.startDate === 'string'
                                   ? formik.errors.startDate
                                   : undefined,
                             },
@@ -520,7 +519,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                           }
                           helperText={
                             formik.touched.repeatFrequency &&
-                            typeof formik.errors.repeatFrequency === 'string'
+                              typeof formik.errors.repeatFrequency === 'string'
                               ? formik.errors.repeatFrequency
                               : undefined
                           }
@@ -569,7 +568,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                                 formik.touched.meetingDate && Boolean(formik.errors.meetingDate),
                               helperText:
                                 formik.touched.meetingDate &&
-                                typeof formik.errors.meetingDate === 'string'
+                                  typeof formik.errors.meetingDate === 'string'
                                   ? formik.errors.meetingDate
                                   : undefined,
                             },
@@ -596,7 +595,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                               error: formik.touched.startTime && Boolean(formik.errors.startTime),
                               helperText:
                                 formik.touched.startTime &&
-                                typeof formik.errors.startTime === 'string'
+                                  typeof formik.errors.startTime === 'string'
                                   ? formik.errors.startTime
                                   : undefined,
                             },

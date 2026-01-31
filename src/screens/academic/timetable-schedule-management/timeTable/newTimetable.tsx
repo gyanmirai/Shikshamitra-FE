@@ -23,7 +23,7 @@ import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Button, Divider, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import { MOCK_SUBJECTS, DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
 import {
   TimetableStatusType,
@@ -367,8 +367,9 @@ const TimeTableGrid = () => {
   const draftTimetableDialog = useBoolean();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
+  // State to store selected class/standard name
   const [classes, setClasses] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -380,7 +381,7 @@ const TimeTableGrid = () => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
+    setClasses(allClasses[0]?.name || '');
   }, [medium]);
 
   // State for managing classroom selection
@@ -429,6 +430,7 @@ const TimeTableGrid = () => {
             <MenuItem
               onClick={() => {
                 handleOpenDialog();
+                setDivision(row.division);
               }}
             >
               <Iconify icon="mdi:add" sx={{ height: '16px', width: '16px' }} />
@@ -489,7 +491,6 @@ const TimeTableGrid = () => {
           heading="Timetable"
           links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
           description="Create and manage class schedules by assigning subjects, teachers and rooms to specific time slots"
-          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             // handleCloseDialog(false);
@@ -504,7 +505,6 @@ const TimeTableGrid = () => {
             { name: 'Timetable Management' },
           ]}
           description="View and manage timetables for different classes and divisions. Create new schedules or modify existing ones to organize academic activities"
-          sx={{ mb: 2 }}
         />
       )}
       <CustomDialog
@@ -531,33 +531,34 @@ const TimeTableGrid = () => {
         open={open}
         fullScreen
       >
-        <TImeTableForm />
+        <TimeTableForm selectedClass={classes} selectedDivision={division} />
       </CustomDialog>
 
       {!open && (
         <>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 2,
-              ml: 1,
-            }}
-          >
-            <CustomSelect
-              label="Class"
-              name="class"
-              options={allClass}
-              valueKey="id"
-              labelKey="name"
-              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-              value={classes}
-              onChange={(value) => {
-                setClasses(value as string);
+          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 1,
               }}
-            />
-          </Box>
+            >
+              <CustomSelect
+                label="Class"
+                name="class"
+                options={allClass}
+                valueKey="name"
+                labelKey="name"
+                formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+                value={classes}
+                onChange={(value) => {
+                  setClasses(value as string);
+                }}
+              />
+            </Box>
+          </Card>
           <CustomizableTable
             tableId="timetable-table"
             noDataText="No Time Table Data Found"
@@ -648,7 +649,13 @@ const TimeTableGrid = () => {
 
 export default TimeTableGrid;
 
-const TImeTableForm = () => {
+const TimeTableForm = ({
+  selectedClass,
+  selectedDivision,
+}: {
+  selectedClass: string;
+  selectedDivision: string;
+}) => {
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
       slots: generateWeeklySlots(DEFAULT_CONFIG),
@@ -661,7 +668,7 @@ const TImeTableForm = () => {
 
   return (
     <DialogScrollContent
-      sx={{ paddingBottom: '16px', height: '100%' }}
+      sx={{ paddingBottom: '16px', height: '100%', p: 2 }}
       scrollBarProps={{
         sx: {
           height: '100%',
@@ -679,14 +686,25 @@ const TImeTableForm = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: 2,
+            pb: 1,
           }}
         >
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography>Class : Class 10</Typography>
-            <Typography>Division : A</Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+              Class :
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+              {selectedClass}
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+              Division :
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+              {selectedDivision}
+            </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
               size="small"
@@ -705,12 +723,13 @@ const TImeTableForm = () => {
             </Button>
           </Box>
         </Box>
-        <Divider sx={{ my: 2 }} />
         <TimetableBoard
           slots={formik.values.slots}
           onChange={(value) => formik.setFieldValue('slots', value)}
           subjects={MOCK_SUBJECTS}
           readOnly={false}
+          selectedClass={selectedClass}
+          selectedDivision={selectedDivision}
         />
       </Box>
     </DialogScrollContent>

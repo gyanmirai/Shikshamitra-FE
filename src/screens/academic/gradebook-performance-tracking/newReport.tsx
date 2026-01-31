@@ -108,7 +108,6 @@ const Reports = (props: TabComponentType) => {
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Reports' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Formik
         initialValues={initialValues}

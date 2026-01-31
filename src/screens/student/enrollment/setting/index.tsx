@@ -161,7 +161,6 @@ const StudentEnrollmentSettingScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/setting' },
           { name: 'Setting' },
         ]}
-        sx={{ mb: 2 }}
         description="Configure all essential admission steps in the Settings tab, including exam setup, document types, and other requirements."
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />

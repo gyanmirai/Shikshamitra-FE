@@ -124,7 +124,6 @@ const TimetableSettingScreen = () => {
                 { name: 'Settings' },
                 { name: 'View Slots' },
               ]}
-              sx={{ mb: 2 }}
               isBack
               onBack={() => {
                 viewSlotsDialog.onFalse();
@@ -135,7 +134,6 @@ const TimetableSettingScreen = () => {
               heading="Settings"
               description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
               links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
-              sx={{ mb: 2 }}
               action={renderButton[searchParams.tab as keyof typeof renderButton]}
             />
           )}

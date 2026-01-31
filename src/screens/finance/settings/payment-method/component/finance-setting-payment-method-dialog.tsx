@@ -119,7 +119,6 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
         <CustomBreadcrumbs
           heading="Payment Method"
           links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
-          sx={{ mb: 2 }}
         />
         <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
           <Button

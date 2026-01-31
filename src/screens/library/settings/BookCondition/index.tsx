@@ -80,7 +80,6 @@ const BookConditionCreation = () => {
             Book Condition
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <BookConditionTable

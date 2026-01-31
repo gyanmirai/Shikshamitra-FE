@@ -277,7 +277,6 @@ const FinanceFeeStructureSettingTab = () => {
             <CustomBreadcrumbs
               heading="Fee Structure"
               links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Fee Structure' }]}
-              sx={{ mb: 2 }}
             />
             <Box display="flex" flexDirection="row" justifyContent="flex-end">
               <Button

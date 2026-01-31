@@ -47,7 +47,6 @@ const Feedback = () => {
           { name: 'Feedback and Survey' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 2 }}
       />
       <Card
         sx={{

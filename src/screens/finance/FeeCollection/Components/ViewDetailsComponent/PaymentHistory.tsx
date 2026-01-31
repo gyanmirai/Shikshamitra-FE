@@ -20,14 +20,14 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
       sx={{
         borderRadius: 2,
         height: '450px',
-        p: 3,
+        p: 2,
         display: 'flex',
         flexDirection: 'column',
         border: (theme) => `1px solid ${theme.palette.divider}`,
       }}
     >
-      <Stack spacing={0.5} sx={{ mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+      <Stack spacing={0.5}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
           Payment History
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>

@@ -21,7 +21,6 @@ const ResourceAssignedScreen = () => {
           <CustomBreadcrumbs
             heading="Assigned Resources"
             links={[{ name: 'Resource Management' }, { name: 'Assigned Resources' }]}
-            sx={{ mb: 2 }}
           />
         </Box>
       </Box>

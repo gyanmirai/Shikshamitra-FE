@@ -30,7 +30,6 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Curriculum Management' }, { name: 'Dashboard' }]}
-        sx={{ mb: 2 }}
         action={
           <DashBoardQuickAction
             actions={[

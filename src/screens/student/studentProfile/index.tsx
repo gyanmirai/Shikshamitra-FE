@@ -11,6 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -20,8 +21,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import { Box, Tab, Card, Tabs, Paper, Avatar, Divider, MenuItem, Typography } from '@mui/material';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -33,6 +34,7 @@ import StudentCalendar from './StudentCalendar';
 import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
+import ChangeStudentStatusForm from './change-status-form';
 
 import type { IInquiryData } from '../enrollment/Inquiry/type';
 
@@ -187,7 +189,6 @@ export function StudentProfile() {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
-  console.log(StudentsData, 'StudentsData');
   // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
@@ -232,6 +233,20 @@ export function StudentProfile() {
     }
   };
 
+  // State to control status change dialog
+  const statusDialog = useBoolean();
+  const [selectedStudentForStatus, setSelectedStudentForStatus] = useState<any>(null);
+
+  const handleCloseStatus = () => {
+    statusDialog.onFalse();
+    setSelectedStudentForStatus(null);
+    getStudents({
+      // academicYearId: year?.id,
+      standardId: classes,
+      divisionId: division,
+    });
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box
@@ -239,7 +254,7 @@ export function StudentProfile() {
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          backgroundColor: 'background.default',
+          // backgroundColor: 'background.default',
         }}
       >
         {currentStudent ? (
@@ -250,7 +265,6 @@ export function StudentProfile() {
               { name: 'Student Records', href: '/student/overview/' },
               { name: 'Student Profile' },
             ]}
-            sx={{ mb: 1 }}
             isBack
             onBack={() => setSearchParams('student', '')}
             description="View and manage comprehensive student information including academics, attendance, finance and more."
@@ -263,7 +277,6 @@ export function StudentProfile() {
               { name: 'Student Records', href: '/student/overview/' },
               { name: 'Student List' },
             ]}
-            sx={{ mb: 1 }}
             description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
           />
         )}
@@ -407,15 +420,44 @@ export function StudentProfile() {
                 render: (value, row) => (
                   <ThreeDotsActions
                     showViewIcon
-                    showThreeDots={false}
+                    showThreeDots
                     handleViewClick={() => {
                       setSearchParams('student', row.studentId);
                     }}
+                    actions={({ popover: pop }) => (
+                      <MenuItem
+                        onClick={() => {
+                          pop.onClose();
+                          setSelectedStudentForStatus(row);
+                          statusDialog.onTrue();
+                        }}
+                      >
+                        <Iconify
+                          icon="mdi:form-dropdown"
+                          sx={{ height: '16px', width: '16px', mr: 1 }}
+                        />
+                        Change Status
+                      </MenuItem>
+                    )}
                   />
                 ),
               },
             ]}
           />
+          <CustomDialog
+            open={statusDialog.value}
+            handleClose={handleCloseStatus}
+            title="Change Status"
+          >
+            {selectedStudentForStatus && (
+              <ChangeStudentStatusForm
+                handleClose={handleCloseStatus}
+                studentId={selectedStudentForStatus.id}
+                studentName={selectedStudentForStatus.name}
+                status={selectedStudentForStatus.status}
+              />
+            )}
+          </CustomDialog>
         </>
       )}
 

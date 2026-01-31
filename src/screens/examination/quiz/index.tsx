@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import quizTableData from 'src/json/academic/examination/quizTableData.json';
@@ -43,6 +44,8 @@ const QuizManagement = (props: TabComponentType) => {
   // Boolean hook to control the quiz result dialog visibility
   const viewResultDialog = useBoolean();
 
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   // Dynamic breadcrumb navigation links based on current view (form or list)
 
   /**
@@ -50,8 +53,23 @@ const QuizManagement = (props: TabComponentType) => {
    * @param id - The unique identifier of the quiz to be deleted
    */
   const handleDelete = (id: string | undefined) => {
-    const updatedQuizData = quizData.filter((quiz) => quiz.id !== id);
-    setQuizData(updatedQuizData);
+    const itemToDelete = quizData.find((q) => q.id === id);
+    confirmWithUndo({
+      item: itemToDelete,
+      onOptimisticRemove: () => {
+        const updatedQuizData = quizData.filter((quiz) => quiz.id !== id);
+        setQuizData(updatedQuizData);
+      },
+      onUndoRestore: () => {
+        if (itemToDelete) {
+          setQuizData((prev) => [...prev, itemToDelete]);
+        }
+      },
+      onCommit: async () => {
+        // No API call for local data
+      },
+    });
+
     deleteDialog.onFalse();
     setSelectedQuiz(null);
   };

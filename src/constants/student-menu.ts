@@ -238,6 +238,15 @@ const studentModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:folder-account-outline'),
           children: [
             {
+              title: 'Student Management',
+              path: studentPaths.records.management,
+              _action: 'student-management',
+              shortcutKey: 'Alt+S+R+4',
+              shortcutKeyName: 'Alt+S+R+4',
+              permissionName: studentPermissions.records.studentManagement,
+              icon: menuIconView('mdi:account-cog-outline'),
+            },
+            {
               title: 'Student List',
               path: studentPaths.records.studentList,
               _action: 'student-profile',
@@ -256,15 +265,6 @@ const studentModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+S+R+3',
               permissionName: studentPermissions.records.studentICard,
               icon: menuIconView('mdi:card-account-details-outline'),
-            },
-            {
-              title: 'Student Management',
-              path: studentPaths.records.management,
-              _action: 'student-management',
-              shortcutKey: 'Alt+S+R+4',
-              shortcutKeyName: 'Alt+S+R+4',
-              permissionName: studentPermissions.records.studentManagement,
-              icon: menuIconView('mdi:account-cog-outline'),
             },
             {
               title: 'Certificates',

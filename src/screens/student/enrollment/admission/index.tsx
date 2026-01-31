@@ -124,7 +124,7 @@ const AdmissionScreen = () => {
     () =>
       admissionData?.items?.map((item: IInquiryData) => ({
         ...item,
-        id: item.studentId, // Map studentId to id for component compatibility
+        id: item.studentId,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
@@ -356,7 +356,6 @@ const AdmissionScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
           { name: 'Admission' },
         ]}
-        sx={{ mb: 1 }}
         description="Manage students admissions, review applications and approve or reject them as needed."
       />
       <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1 }}>

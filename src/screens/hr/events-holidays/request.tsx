@@ -20,7 +20,6 @@ const EventsAndHolidaysRequest = () => (
     <CustomBreadcrumbs
       heading="Request"
       links={[{ name: 'HR' }, { name: 'Events & Holidays' }, { name: 'Request' }]}
-      sx={{ mb: 2 }}
       description="The Request Screen allows you to handle various requests. You can approve or reject requests based on the details provided."
     />
     <CustomizableTable

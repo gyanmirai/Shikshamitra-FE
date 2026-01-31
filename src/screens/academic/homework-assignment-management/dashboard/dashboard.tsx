@@ -55,7 +55,6 @@ const Dashboard = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Homework & Assignment' }, { name: 'Dashboard' }]}
-        sx={{ mb: 2 }}
         action={
           <DashBoardQuickAction
             actions={[

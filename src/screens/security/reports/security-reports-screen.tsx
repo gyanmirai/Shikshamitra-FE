@@ -24,11 +24,7 @@ const SecurityReportsScreen = () => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Reports"
-        links={[{ name: 'Security' }, { name: 'Reports' }]}
-        sx={{ mb: 2 }}
-      />
+      <CustomBreadcrumbs heading="Reports" links={[{ name: 'Security' }, { name: 'Reports' }]} />
 
       <form onSubmit={formik.handleSubmit}>
         <Card sx={{ p: 3 }}>

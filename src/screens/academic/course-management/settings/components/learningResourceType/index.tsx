@@ -60,7 +60,6 @@ const ResourceTypeCreation = () => {
           { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Setting' },
         ]}
-        sx={{ mb: 1 }}
         action={
           <Button variant="contained" onClick={addDialog.onTrue} startIcon={<Add />} size="small">
             Resource Type

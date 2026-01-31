@@ -135,7 +135,6 @@ const ChargesManagement = () => {
             viewChargeDetailsDialog.onFalse();
             setSelectedChargeData(null);
           }}
-          sx={{ mb: 2 }}
         />
       ) : addChargeDialog.value ? (
         <CustomBreadcrumbs
@@ -157,7 +156,6 @@ const ChargesManagement = () => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ mb: 2 }}
         />
       ) : editChargeDialog.value ? (
         <CustomBreadcrumbs
@@ -180,7 +178,7 @@ const ChargesManagement = () => {
             editChargeDialog.onFalse();
             setSelectedChargeData(null);
           }}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -201,7 +199,6 @@ const ChargesManagement = () => {
               Charge
             </Button>
           }
-          sx={{ px: 2 }}
         />
       )}
       {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (

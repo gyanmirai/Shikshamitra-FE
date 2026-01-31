@@ -107,7 +107,6 @@ const FinanceAddExpenseTrackingDialog: React.FC<IFinanceAddExpenseTrackingDialog
       <CustomBreadcrumbs
         heading="Expense Tracking"
         links={[{ name: 'Finance' }, { name: 'Expense Tracking' }]}
-        sx={{ mb: 2 }}
         isBack
         onBack={handleCloseDialog}
         description="The Expense Tracking dialog allows you to add and manage expense records. Enter the expense category, amount, date, and relevant details to ensure accurate financial tracking."

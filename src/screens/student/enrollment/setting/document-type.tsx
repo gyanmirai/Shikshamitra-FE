@@ -163,7 +163,6 @@ const StudentDocumentType = () => {
             Document
           </Button>
         }
-        sx={{ mb: 2 }}
         description="Manage the types of documents required for student enrollment, including accepted formats and size limits."
       />
       <ConfirmDialog

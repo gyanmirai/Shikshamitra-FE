@@ -123,12 +123,12 @@ export interface ITeacherOption {
 }
 
 export interface ISubjectCardProps {
-  index: number; // add index to access nested Formik data
+  index: number | null; // add index to access nested Formik data
   formik: FormikProps<ISubjectAssignmentFormValues>;
   subject: ISubjectAssignmentSubject;
   isCore: boolean;
   isPublished: boolean;
-  onFileUpload: (files: (File | string)[], index: number) => Promise<void>;
+  onFileUpload: (files: (File | string)[], index: number | null) => Promise<void>;
   // isPublishing: boolean;
   // teacherOptions: TeacherProfile[];
   onSubjectChange: (subjectId: string, field: string, value: any) => void;

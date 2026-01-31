@@ -163,7 +163,7 @@ const HrSetting = () => {
           { name: 'Employee', href: '/hr/employee/' },
           { name: 'Setting' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1 }}
         description="Add, update or delete documents associated with an employee."
         action={
           <Button

@@ -40,7 +40,6 @@ const ResourceCategoryConfiguration = () => {
         heading="Resource Category"
         description="Here you can add the resource category to manage the resource effectively and trak on the basis of category."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

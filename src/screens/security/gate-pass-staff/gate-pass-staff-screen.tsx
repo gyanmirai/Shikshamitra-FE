@@ -93,7 +93,6 @@ const GatePassStaffScreen = () => {
             : 'View your submitted gate pass requests, check their approval status, and manage them by updating or canceling if needed.'
         }
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

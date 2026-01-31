@@ -58,7 +58,6 @@ const PayrollConfiguration = () => {
           { name: 'Setting', href: '/hr/payroll/setting/earning' },
           { name: 'Payroll Configuration' },
         ]}
-        sx={{ mb: 2 }}
       />
 
       <Card

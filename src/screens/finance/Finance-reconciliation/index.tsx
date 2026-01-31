@@ -215,7 +215,6 @@ const FinanceReconciliation = () => {
           { name: 'Finance', href: '/finance/dashboard/' },
           { name: 'Reconciliation', href: '/finance/reconciliation' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Paper
         sx={{

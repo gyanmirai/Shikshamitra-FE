@@ -76,7 +76,7 @@ const ClassManagementNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -86,7 +86,7 @@ const ClassManagementNotificationScreen = () => {
             { name: 'Class Management', href: '/classManagement/dashboard' },
             { name: 'Notification', href: '/classManagement/notification-management' },
           ]}
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
         />
       )}
 

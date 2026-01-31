@@ -11,7 +11,6 @@ const GuardManagementScreen = () => (
         { name: 'Security', href: '' },
         { name: 'Guard Assignment', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <GuardRosterScreen />
     {/* <GuardCalenderView/> */}

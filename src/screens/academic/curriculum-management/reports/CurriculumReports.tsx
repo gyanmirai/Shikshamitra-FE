@@ -41,7 +41,6 @@ const CurriculumReports = ({ addReportDialog }: { addReportDialog: UseBooleanRet
         onBack={() => {
           addReportDialog?.onFalse();
         }}
-        sx={{ mb: 1 }}
       />
 
       <CommonReport categories={categories} subCategories={subCategories} />

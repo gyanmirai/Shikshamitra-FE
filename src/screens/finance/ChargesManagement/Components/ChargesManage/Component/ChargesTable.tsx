@@ -8,7 +8,7 @@ import { Cancel, CheckCircle } from '@mui/icons-material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
-import { Box, Tab, Tabs, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Card, MenuItem, MenuList, Typography } from '@mui/material';
 
 import type { IChargeData } from './type';
 
@@ -118,30 +118,33 @@ const ChargesTable = ({
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px' }}>
-        <Tabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2 },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}
-                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-                </Box>
-              }
-              value={tab.value}
-            />
-          ))}
-        </Tabs>
-      </Box>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2 }}>
+        <Box display="flex" justifyContent="space-between" sx={{ pb: 1 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+              pb: 1,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                sx={{ fontSize: '12px' }}
+                key={tab.value}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}
+                    <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                  </Box>
+                }
+                value={tab.value}
+              />
+            ))}
+          </Tabs>
+        </Box>
+      </Card>
 
       <CustomizableTable
         tableId="charges-table"

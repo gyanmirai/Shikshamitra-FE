@@ -68,7 +68,7 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
                 href: '/transport/vehicle-management',
               },
             ]}
-            sx={{ px: 1, mb: 1 }}
+            sx={{ px: 1 }}
           />
         ) : viewDialog.value ? (
           <CustomBreadcrumbs
@@ -88,7 +88,6 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
                 href: '/transport/vehicle-management',
               },
             ]}
-            sx={{ mb: 2 }}
           />
         ) : (
           <CustomBreadcrumbs
@@ -98,7 +97,6 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
               { name: 'Transport', href: '/transport/dashboard' },
               { name: 'Vehicle Management' },
             ]}
-            sx={{ mb: 2 }}
             action={
               <Button
                 startIcon={<Add />}

@@ -53,24 +53,24 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
     }
   };
   return (
+    // <Card sx={{ boxShadow: 'var(--shadows-4)', ml: 0.5, mt: 0.5 }}>
     <Card
       sx={{
         borderRadius: 2,
-        boxShadow:
-          theme.customShadows?.z4 ||
-          '0 0 2px 0 alpha(color("common.black"), 0.2), 0 12px 24px -4px alpha(color("common.black"), 0.12)',
         bgcolor: 'background.paper',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        ml: 0.5,
+        mt: 0.5,
+
+        boxShadow: 'var(--shadows-4)',
       }}
     >
       {/* HEADER SECTION */}
       <Box
         sx={{
-          p: 2.5,
-          pb: 2,
+          p: 2,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -129,10 +129,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
             const isPaid = FeeCollectionStatusType.Paid === term.status;
 
             return (
-              <Paper
+              <Card
                 key={term.id}
-                elevation={0}
-                variant="outlined"
                 sx={{
                   p: 2,
                   borderRadius: 1.5,
@@ -145,7 +143,9 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                   backgroundColor: isSelected
                     ? alpha(theme.palette.primary.main, 0.04)
                     : theme.palette.background.default,
-                  boxShadow: isSelected ? `0 0 0 1px ${theme.palette.primary.main}` : 'none',
+                  boxShadow: isSelected
+                    ? `0 0 0 1px ${theme.palette.primary.main}`
+                    : 'var(--shadows-4)',
                   ...(isPaid && {
                     opacity: 0.7,
                     backgroundColor: alpha(theme.palette.grey[500], 0.04),
@@ -199,7 +199,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     <Label
                       color={
                         FeeCollectionStatusTypeColors[
-                          term.status as FeeCollectionStatusType
+                        term.status as FeeCollectionStatusType
                         ] as LabelColor
                       }
                       variant="soft"
@@ -247,7 +247,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     </Box>
                   </Box>
                 </Box>
-              </Paper>
+              </Card>
             );
           })}
 

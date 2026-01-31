@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { StudentApi } from 'src/redux/student';
 import { Iconify } from 'src/components/iconify';
@@ -199,7 +198,7 @@ const GroupManagement = ({ division }: { division: string }) => {
           isRemoveLeader.onFalse();
           setEditData(null);
         }}
-        title="Remove Division Leader"
+        title="Remove House Leader"
         content={
           <>
             Are you sure want to Remove Student <b>{`${editData?.studentName}`}</b> from House
@@ -288,7 +287,7 @@ const GroupManagement = ({ division }: { division: string }) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View and download learning materials, worksheets, and other educational resources."
+              title="Assign a student as the Division Leader who will represent their house within this division."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -312,7 +311,7 @@ const GroupManagement = ({ division }: { division: string }) => {
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 isConfirmForDivisionLeader.onFalse();
                 shikshaMitraToast.success({
-                  message: `Division leader assign successfully for ${editData?.studentName}`,
+                  message: `Division leader assigned successfully for ${editData?.studentName}`,
                 });
               } catch (error) {
                 console.error(error);
@@ -337,7 +336,7 @@ const GroupManagement = ({ division }: { division: string }) => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View and download learning materials, worksheets, and other educational resources."
+              title="Assign a student as the House Leader who will lead this house across all divisions."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -361,7 +360,7 @@ const GroupManagement = ({ division }: { division: string }) => {
                 dispatch(StudentApi.util.invalidateTags(['Student']));
                 isConfirmForMainLeader.onFalse();
                 shikshaMitraToast.success({
-                  message: `House Leader assign successfully for ${editData?.studentName}`,
+                  message: `House Leader assigned successfully for ${editData?.studentName}`,
                 });
               } catch (error) {
                 console.error(error);
@@ -382,10 +381,42 @@ const GroupManagement = ({ division }: { division: string }) => {
         columns={[
           {
             id: 'studentName',
-            label: 'Name',
+            label: 'Student Name',
             align: 'left',
-            minWidth: '160px',
+            minWidth: '200px',
             sticky: true,
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                {(row.isGlobalHouseLeader || row.isDivisionHouseLeader) && (
+                  <CustomTooltip
+                    title={
+                      row.isGlobalHouseLeader ? 'House Leader & Division Leader' : 'Division Leader'
+                    }
+                    arrow
+                    placement="top"
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        color: row.isGlobalHouseLeader ? 'success.main' : 'warning.main',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Iconify icon="mdi:crown" width={24} />
+                    </Box>
+                  </CustomTooltip>
+                )}
+                <Typography variant="body2">{value || '-'}</Typography>
+              </Box>
+            ),
+          },
+          {
+            id: 'grNo',
+            label: 'GR No.',
+            align: 'left',
+            minWidth: '110px',
+            filterType: 'number',
             render: (value) => value || '-',
           },
           {
@@ -393,13 +424,7 @@ const GroupManagement = ({ division }: { division: string }) => {
             label: 'Roll No.',
             align: 'left',
             minWidth: '120px',
-            render: (value) => value || '-',
-          },
-          {
-            id: 'grNo',
-            label: 'GR No.',
-            align: 'left',
-            minWidth: '110px',
+            filterType: 'number',
             render: (value) => value || '-',
           },
           {
@@ -409,81 +434,34 @@ const GroupManagement = ({ division }: { division: string }) => {
             align: 'left',
             render(value, row) {
               return (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  {/* <SubjectColorIndicator color={row.color} /> */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {value ? (
-                    <Typography variant="caption" fontSize="13px">
-                      {value}
-                    </Typography>
+                    <Typography variant="body2">{value}</Typography>
                   ) : (
-                    '-'
-                  )}
-                </Box>
-              );
-            },
-            // render(value) {
-            //   return (
-            //     <Box
-            //       sx={{
-            //         display: 'flex',
-            //         gap: 1,
-            //         alignItems: 'center',
-            //         justifyContent: 'space-between',
-            //       }}
-            //     >
-            //       {value ? <Label color="info">{value} House</Label> : <Typography>-</Typography>}
-            //     </Box>
-            //   );
-            // },
-          },
-          {
-            id: 'isDivisionHouseLeader',
-            label: 'Division Leader',
-            minWidth: '160px',
-            align: 'left',
-            render(value, row) {
-              return (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  {row.isDivisionHouseLeader ? (
-                    <Label color="success">Yes</Label>
-                  ) : (
-                    <Label color="default">No</Label>
+                    <Button
+                      size="small"
+                      variant="soft"
+                      color="inherit"
+                      startIcon={<Iconify icon="uil:house-user" width={16} />}
+                      sx={{
+                        color: 'text.secondary',
+                        fontSize: '12px',
+                        py: 0.2,
+                        minHeight: 0,
+                      }}
+                      onClick={() => {
+                        setEditData(row as IStudentHouse);
+                        assignStudentDialog.onTrue();
+                      }}
+                    >
+                      Assign House
+                    </Button>
                   )}
                 </Box>
               );
             },
           },
-          {
-            id: 'isGlobalHouseLeader',
-            label: 'House Leader',
-            minWidth: '160px',
-            align: 'left',
-            render(value, row) {
-              return (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  {row.isGlobalHouseLeader ? (
-                    <Label color="success">Yes</Label>
-                  ) : (
-                    <Label color="default">No</Label>
-                  )}
-                </Box>
-              );
-            },
-          },
+
           {
             id: 'actions',
             label: 'Action',
@@ -556,6 +534,7 @@ const GroupManagement = ({ division }: { division: string }) => {
                             popover.onClose();
                           }}
                         >
+                          <Iconify icon="jam:user-remove" />
                           Remove House Leader
                         </MenuItem>
                       ) : (
@@ -820,25 +799,6 @@ const GroupManagementForm = ({
           </LoadingButton>
         </DialogActions>
       </Stack>
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          type="submit"
-          variant="contained"
-          loading={isLoading || isUpdateLoading}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-        >
-          {editData ? 'Update' : 'Add'}
-        </LoadingButton>
-      </DialogActions>
     </Box>
   );
 };
@@ -929,7 +889,7 @@ const AssignStudentForm = ({
             fullWidth
             loading={isGetGroupLoading}
             value={formik.values.house}
-            onChange={(_, val) => formik.setFieldValue('house', val)}
+            onChange={(__, val) => formik.setFieldValue('house', val)}
             renderOption={(props, option: any) => (
               <li {...props} key={option.id}>
                 {option?.name}
@@ -969,7 +929,7 @@ const AssignStudentForm = ({
           }}
           startIcon={<Iconify icon="mdi:account-plus" width={18} />}
         >
-          assign
+          Assign
         </LoadingButton>
       </DialogActions>
     </Box>

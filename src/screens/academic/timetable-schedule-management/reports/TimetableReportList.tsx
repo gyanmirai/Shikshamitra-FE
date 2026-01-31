@@ -37,7 +37,6 @@ const TimetableReportList = () => {
               Report
             </Button>
           }
-          sx={{ mb: 1 }}
         />
       )}
 

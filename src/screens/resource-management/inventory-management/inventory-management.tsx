@@ -32,7 +32,6 @@ const InventoryManagement = () => {
           <CustomBreadcrumbs
             heading="Inventory Management"
             links={[{ name: 'Resource Management' }, { name: 'Inventory Management' }]}
-            sx={{ mb: 2 }}
           />
         </Box>
 

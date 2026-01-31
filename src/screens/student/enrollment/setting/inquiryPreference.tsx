@@ -99,7 +99,6 @@ const InquiryPreference = () => {
             Inquiry Preference
           </Button>
         }
-        sx={{ mb: 2 }}
       />
       <ConfirmDialog
         open={confirm.value}

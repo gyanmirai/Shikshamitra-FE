@@ -19,7 +19,10 @@ const Overview = () => {
       bgColor: 'success',
       href: '/attendance',
       width: 4,
-      labels: [],
+      labels: [
+        { name: 'Working Days: 220', color: 'info' },
+        { name: 'Present: 200', color: 'success' },
+      ],
     },
     {
       id: 'academic-performance',
@@ -86,7 +89,10 @@ const Overview = () => {
       bgColor: 'info',
       href: '/teachers/class',
       width: 6,
-      labels: [],
+      labels: [
+        { name: 'Standard: 10-A', color: 'primary' },
+        { name: 'Subject: Science', color: 'secondary' },
+      ],
     },
   ]);
 

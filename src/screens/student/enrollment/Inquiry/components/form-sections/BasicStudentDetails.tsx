@@ -106,7 +106,6 @@ export const BasicStudentDetails = ({
                 value={values.academicYear}
                 labelKey="name"
                 valueKey="id"
-                disabled
                 onChange={(value) => {
                   setFieldValue('board', '');
                   setFieldValue('medium', '');

@@ -355,10 +355,13 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         >
           <CustomStepLabel
             error={errors[index]}
-            sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
+            sx={{
+              '& span': { fontSize: '12px', mt: '2px !important' },
+              '& .MuiStepLabel-iconContainer': { display: isVertical ? 'none' : 'block' }, // Hide icon in vertical mode
+            }}
             // @ts-ignore
             isdisabledlabel={`${isDisabledLabel}`}
-            StepIconComponent={isVertical ? ModernStepIcon : CustomStepIcon}
+            StepIconComponent={isVertical ? () => null : CustomStepIcon}
           >
             {label}
           </CustomStepLabel>

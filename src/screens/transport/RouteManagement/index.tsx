@@ -103,7 +103,6 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
                 href: '/transport/routeManagement',
               },
             ]}
-            sx={{ mb: 2 }}
           />
         ) : (
           <CustomBreadcrumbs
@@ -113,7 +112,6 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
               { name: 'Transport', href: '/transport/dashboard' },
               { name: 'Route Management' },
             ]}
-            sx={{ mb: 2 }}
             action={
               <Button
                 startIcon={<Add />}

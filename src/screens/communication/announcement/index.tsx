@@ -132,7 +132,7 @@ const Announcement = (props: TabComponentType) => {
 
             { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
@@ -146,7 +146,7 @@ const Announcement = (props: TabComponentType) => {
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
           ]}
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
           action={
             <Button
               size="small"

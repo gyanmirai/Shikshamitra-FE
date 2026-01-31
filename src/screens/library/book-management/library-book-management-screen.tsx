@@ -186,7 +186,6 @@ const LibraryBookManagementScreen = () => {
           <CustomBreadcrumbs
             heading="Book Management"
             links={[{ name: 'Library' }, { name: 'Book Management' }]}
-            sx={{ mb: 2 }}
           />
           <CommonCtaComponent
             bookHandler={() => openDialog(dialogStates.addNewBook)}

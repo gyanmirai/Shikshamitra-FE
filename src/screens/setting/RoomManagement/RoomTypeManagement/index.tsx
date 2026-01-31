@@ -76,7 +76,6 @@ const RoomTypeManagement = () => {
           { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
           { name: 'Room Type Management' },
         ]}
-        sx={{ mb: 1 }}
         action={
           <Button
             variant="contained"

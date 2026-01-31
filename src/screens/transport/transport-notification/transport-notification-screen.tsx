@@ -63,7 +63,7 @@ const TransportNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -73,7 +73,7 @@ const TransportNotificationScreen = () => {
             { name: 'Transport', href: '/transport/dashboard' },
             { name: 'Notification', href: '/transport/notification' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
         />
       )}
 

@@ -13,7 +13,6 @@ const AlertReportsScreen = () => (
         { name: 'Security', href: '' },
         { name: 'Alert Reports', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <AlertReportTable />
   </>

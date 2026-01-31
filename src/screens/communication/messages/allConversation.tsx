@@ -19,7 +19,6 @@ const AllConversation = (props: TabComponentType) => {
           { name: 'Messages', href: '/communication/messages' },
           { name: 'Conversation' },
         ]}
-        sx={{ mb: 2 }}
       />
       <CustomSelect
         options={[

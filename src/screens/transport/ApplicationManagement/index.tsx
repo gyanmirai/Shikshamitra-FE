@@ -96,7 +96,6 @@ const TransportRequests = () => {
           ]}
           isBack
           onBack={() => handleClose(null, false)}
-          sx={{ mb: 2 }}
         />
       ) : viewDialog.value ? (
         <CustomBreadcrumbs
@@ -109,7 +108,6 @@ const TransportRequests = () => {
           ]}
           isBack
           onBack={() => handleClose(null, false)}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs

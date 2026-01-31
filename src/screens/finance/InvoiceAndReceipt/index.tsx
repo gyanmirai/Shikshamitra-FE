@@ -60,7 +60,6 @@ const InvoiceAndReceipt = () => {
         heading="Invoice & Receipt"
         description="View and manage all generated student invoices, with options to preview, download, and share with parents."
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Invoice & Receipt' }]}
-        sx={{ mb: 2 }}
         action={searchParams.tab === 'invoice' && renderButton[searchParams.tab]}
       />
       <Card

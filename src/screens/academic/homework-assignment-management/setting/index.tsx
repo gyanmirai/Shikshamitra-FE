@@ -84,7 +84,6 @@ const HomeworkSetting = () => {
             : 'Create and manage different types of assignments for student assessment'
         }
         links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
-        sx={{ mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
 

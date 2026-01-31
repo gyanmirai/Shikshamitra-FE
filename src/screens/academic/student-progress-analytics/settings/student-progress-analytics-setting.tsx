@@ -20,7 +20,6 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => (
     <CustomBreadcrumbs
       heading="Settings"
       links={[{ name: 'Academics' }, { name: 'Student Progress Analytics' }, { name: 'Settings' }]}
-      sx={{ mb: 2 }}
     />
     <Grid container spacing={2}>
       <Grid size={{ xs: 12, md: 6 }}>

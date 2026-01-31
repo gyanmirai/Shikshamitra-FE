@@ -22,7 +22,6 @@ const StudentProgressTracking = (props: TabComponentType) => {
           { name: 'Learning Management System' },
           { name: 'Student Progress Tracking' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box display="flex" gap={2} mt={2}>
         <CustomSelect

@@ -53,7 +53,6 @@ const ActivityManagementScreen = () => {
           { name: 'Activity Management' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ mb: 1 }}
       />
 
       <Card

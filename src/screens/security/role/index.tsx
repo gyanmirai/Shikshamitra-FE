@@ -97,7 +97,6 @@ const RoleScreen = () => {
           { name: 'Role And Permission', href: '/security/role' },
           { name: 'Role Management' },
         ]}
-        sx={{ mb: 1 }}
         action={
           <Button
             startIcon={<Add />}

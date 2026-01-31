@@ -89,7 +89,6 @@ const GuardShiftsSettings = () => {
         heading="Guard Shift Configuration"
         description="Create Shifts to manage Guard duty effeciently."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

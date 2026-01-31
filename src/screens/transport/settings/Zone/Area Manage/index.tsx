@@ -99,7 +99,6 @@ const ZoneAreaSettingScreen = () => {
             Zone/Area
           </Button>
         }
-        sx={{ mb: 2 }}
       />
       <ZoneAreaTable
         data={zoneAreaData}

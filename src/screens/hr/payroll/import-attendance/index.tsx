@@ -40,7 +40,6 @@ const ImportAttendanceScreen = () => {
       <CustomBreadcrumbs
         heading="Import Attendance"
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Import Attendance' }]}
-        sx={{ mb: 2 }}
         action={
           <Button startIcon={<Refresh />} variant="contained">
             Generate Selected

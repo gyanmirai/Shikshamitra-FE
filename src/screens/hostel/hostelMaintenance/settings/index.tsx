@@ -78,7 +78,6 @@ const IncidentTypeSetting = () => {
               : 'View and manage all incident types. You can add, edit, or delete incident types used for discipline tracking.'
           }
           links={links}
-          sx={{ mb: 2 }}
           action={
             <Button
               size="small"

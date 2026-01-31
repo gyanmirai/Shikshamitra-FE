@@ -1,11 +1,16 @@
+import React from 'react';
 import { Label } from 'src/components/label';
+import BadgeIcon from '@mui/icons-material/Badge';
 import RouteIcon from '@mui/icons-material/Route';
-import GroupIcon from '@mui/icons-material/Group';
+import { alpha, useTheme } from '@mui/material/styles';
+import LooksOneIcon from '@mui/icons-material/LooksOne';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import { Box, Card, Grid, Stack, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Grid, Avatar, Typography } from '@mui/material';
 import LocalGasStationIcon from '@mui/icons-material/LocalGasStationOutlined';
+import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
 import { useGetVehicleDetailsQuery } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 interface VehicleInformationCardProps {
@@ -13,469 +18,232 @@ interface VehicleInformationCardProps {
 }
 
 const VehicleInformationCard = ({ vehicleId }: VehicleInformationCardProps) => {
-  const { data: vehicle, isLoading } = useQueryAndMutation({
+  const theme = useTheme();
+
+  const { data: vehicle } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetVehicleDetailsQuery,
     params: vehicleId,
   });
 
+  // Helper to get colors for different fields to match the reference image style
+  const getFieldStyles = (type: string) => {
+    switch (type) {
+      case 'registration':
+        return {
+          bg: alpha(theme.palette.info.main, 0.1),
+          color: theme.palette.info.main,
+          icon: <BadgeIcon />,
+        };
+      case 'model':
+        return {
+          bg: alpha(theme.palette.warning.main, 0.1),
+          color: theme.palette.warning.main,
+          icon: <DirectionsCarIcon />,
+        };
+      case 'type':
+        return {
+          bg: alpha(theme.palette.secondary.main, 0.1),
+          color: theme.palette.secondary.main,
+          icon: <DirectionsBusIcon />,
+        };
+      case 'capacity':
+        return {
+          bg: alpha(theme.palette.success.main, 0.1),
+          color: theme.palette.success.main,
+          icon: <AirlineSeatReclineNormalIcon />,
+        };
+      default:
+        return {
+          bg: alpha(theme.palette.primary.main, 0.08),
+          color: theme.palette.primary.main,
+          icon: <DirectionsCarIcon />,
+        };
+    }
+  };
+
+  const renderDetailItem = (
+    label: string,
+    value: string | undefined,
+    fallback: string,
+    styleType: string,
+    customIcon?: React.ReactNode,
+    isRoute = false
+  ) => {
+    const styles = getFieldStyles(styleType);
+    const displayValue = value || fallback;
+    const finalIcon = customIcon || styles.icon;
+
+    return (
+      <Stack direction="row" spacing={2} alignItems="center">
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: 1.5,
+            bgcolor: styles.bg,
+            color: styles.color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {React.cloneElement(finalIcon as React.ReactElement<any>, { fontSize: 'medium' })}
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              display: 'block',
+              mb: 0.25,
+            }}
+          >
+            {label}
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              color: 'text.primary',
+              lineHeight: 1.2,
+              ...(isRoute && {
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
+            title={isRoute ? displayValue : undefined}
+          >
+            {isRoute && displayValue.length > 20 ? `${displayValue.slice(0, 20)}...` : displayValue}
+          </Typography>
+        </Box>
+      </Stack>
+    );
+  };
+
   return (
     <Card
       sx={{
-        borderRadius: 4,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        overflow: 'hidden',
-        mb: 2,
-        '&:hover .navigation-dots': {
-          '& .dot-avatar': {
-            bgcolor: '#fff9c4',
-            transform: 'scale(1.2)',
-            boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)',
-            '& .inner-dot': {
-              bgcolor: '#fbbf24',
-              transform: 'scale(1.1)',
-            },
-          },
-        },
+        p: 3,
+        borderRadius: 2,
+        boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
+        position: 'relative',
+        overflow: 'visible', // Ensure tooltip or dropdowns aren't clipped if added later
+        mb: 3,
+        borderLeft: `6px solid ${theme.palette.info.main}`, // Accent border from reference
       }}
     >
-      {/* Black Header - Registration Number */}
-      <Box
-        sx={{
-          bgcolor: 'primary.darker',
-          color: 'white',
-          py: 1,
-          px: 2,
-          textAlign: 'center',
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
-          {vehicle?.registrationNo || 'GJ-05-AD-2711'}
-        </Typography>
-      </Box>
-
-      <Box sx={{ p: 1 }}>
-        {/*  Header with Active Status */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 1.5 }}>
-          <Label
-            color="success"
-            variant="soft"
-            sx={{
-              fontSize: '0.75rem',
-              height: 24,
-              px: 1,
-            }}
-          >
-            {vehicle?.status || 'Active'}
-          </Label>
-        </Box>
-
-        {/* Vehicle Model - Green Box */}
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={4}>
         <Box
           sx={{
-            bgcolor: 'default.lighter',
-            borderRadius: 2,
-            p: 1,
-            mb: 1,
-            border: '1px solid #c8e6c9',
+            py: 0.75,
+            px: 1.5,
+            borderRadius: 1,
+            bgcolor: alpha(theme.palette.info.main, 0.1),
+            color: 'info.dark',
+            display: 'inline-flex',
+            alignItems: 'center',
           }}
         >
           <Typography
-            sx={{
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              textAlign: 'center',
-            }}
+            variant="subtitle2"
+            sx={{ fontWeight: 800, fontSize: '0.75rem', letterSpacing: 0.5 }}
           >
-            {vehicle?.model || 'Tata StarBus'} - {vehicle?.seatingCapacity || '40'} seater
+            VEHICLE DETAILS
           </Typography>
         </Box>
 
-        {/* Vehicle Type and Capacity */}
-        <Grid container spacing={2} sx={{ mb: 1 }}>
-          {/* Vehicle Type */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                gap: 1,
-                borderRadius: 2,
-                p: 2,
-                height: '100%',
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                transition: 'all 0.25s ease-in-out',
-                '&:hover': {
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <DirectionsCarIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-                <Typography
-                  sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Vehicle Type
-                </Typography>
-              </Box>
-
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: 400,
-                  color: 'primary.main',
-                  ml: 3.5, // aligns text visually under label
-                }}
-              >
-                {(vehicle?.vehicleType || 'Bus')?.length > 12
-                  ? `${(vehicle?.vehicleType || 'Bus').slice(0, 12)}...`
-                  : vehicle?.vehicleType || 'Bus'}
-                /{vehicle?.feature || 'AC'}
-              </Typography>
-            </Box>
-          </Grid>
-
-          {/* Capacity */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                gap: 1,
-                borderRadius: 2,
-                p: 2,
-                height: '100%',
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                transition: 'all 0.25s ease-in-out',
-                '&:hover': {
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <GroupIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-                <Typography
-                  sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Capacity
-                </Typography>
-              </Box>
-
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: 400,
-                  color: 'primary.main',
-                  ml: 3.5, // aligns text perfectly under the label
-                }}
-              >
-                {(vehicle?.seatingCapacity || '45') > 99
-                  ? `${vehicle?.seatingCapacity || '45'} Seats`
-                  : `${vehicle?.seatingCapacity || '45'} Seats`}
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* School Assign No.  and Fuel Type */}
-        <Grid container spacing={2} sx={{ mb: 1 }}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                gap: 1,
-                borderRadius: 2,
-                p: 2,
-                height: '100%',
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                transition: 'all 0.25s ease-in-out',
-                '&:hover': {
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <DirectionsCarIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-                <Typography
-                  sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    color: 'text.secondary',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Bus No.
-                </Typography>
-              </Box>
-
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: 400,
-                  color: 'primary.main',
-                  ml: 3.5,
-                }}
-              >
-                {vehicle?.schoolAssignedNumber || '01'}
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                gap: 1,
-                borderRadius: 2,
-                p: 2,
-                height: '100%',
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                transition: 'all 0.25s ease-in-out',
-                '&:hover': {
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                }}
-              >
-                <LocalGasStationIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-                <Typography
-                  sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    color: 'text.secondary',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Fuel Type
-                </Typography>
-              </Box>
-
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: 400,
-                  color: 'primary.main',
-                  ml: 3.5,
-                }}
-              >
-                {vehicle?.fuelType || '45'}
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* Expiry Date Cards */}
-        <Grid container spacing={2} sx={{ mb: 1 }}>
-          {/* Insurance */}
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                gap: 1,
-                borderRadius: 2,
-                p: 2,
-                height: '100%',
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                transition: 'all 0.25s ease-in-out',
-                '&:hover': {
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <VerifiedUserIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-                <Typography
-                  sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Insurance
-                </Typography>
-              </Box>
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: 400,
-                  color: 'primary.main',
-                  ml: 3.5,
-                }}
-              >
-                {vehicle?.insuranceExpiry || '10-12-2024'}
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                gap: 1,
-                borderRadius: 2,
-                p: 2,
-                height: '100%',
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                transition: 'all 0.25s ease-in-out',
-                '&:hover': {
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <RouteIcon sx={{ fontSize: 22, color: 'primary.main' }} />
-                <Typography
-                  sx={{
-                    fontSize: '0.85rem',
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  Route
-                </Typography>
-              </Box>
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: 400,
-                  maxWidth: '100%',
-                  color: 'primary.main',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  ml: 3.5,
-                }}
-                title={vehicle?.route || 'Route-CC'}
-              >
-                {(vehicle?.route || 'Route-CC').length > 12
-                  ? `${(vehicle?.route || 'Route-CC').slice(0, 12)}...`
-                  : vehicle?.route || 'Route-CC'}
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-
-        {/* Bottom Navigation with Light Yellow Spread Effect */}
-        <Box
-          className="navigation-dots"
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            pt: 1,
-          }}
+        <Label
+          color={vehicle?.status === 'Inactive' ? 'error' : 'success'}
+          variant="soft"
+          sx={{ fontWeight: 700, textTransform: 'uppercase' }}
         >
-          <Avatar
-            className="dot-avatar"
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: '#fbbf24',
-              cursor: 'pointer',
-              transition: 'all 1.3s ease',
-            }}
-          >
-            <Box
-              className="inner-dot"
-              sx={{
-                width: 14,
-                height: 14,
-                borderRadius: '50%',
-                bgcolor: '#fff',
-                transition: 'all 1.3s ease',
-              }}
-            />
-          </Avatar>
-          <Avatar
-            className="dot-avatar"
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: '#fbbf24',
-              cursor: 'pointer',
-              transition: 'all 1.3s ease',
-            }}
-          >
-            <Box
-              className="inner-dot"
-              sx={{
-                width: 14,
-                height: 14,
-                borderRadius: '50%',
-                bgcolor: '#fff',
-                transition: 'all 1.3s ease',
-              }}
-            />
-          </Avatar>
-        </Box>
-      </Box>
+          {vehicle?.status || 'Active'}
+        </Label>
+      </Stack>
+
+      <Grid container spacing={4} rowSpacing={4}>
+        {/* Row 1 - Matching the image fields */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Registration No.',
+            vehicle?.registrationNo || 'GJ-05-AD-2711',
+            'GJ-05-AD-2711',
+            'registration',
+            <BadgeIcon />
+          )}
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Make & Model',
+            vehicle?.model,
+            'Tata StarBus',
+            'model',
+            <DirectionsCarIcon />
+          )}
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Vehicle Type',
+            vehicle?.vehicleType,
+            'Bus',
+            'type',
+            <DirectionsBusIcon />
+          )}
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Capacity',
+            `${vehicle?.seatingCapacity || '45'} Seats`,
+            '45 Seats',
+            'capacity',
+            <AirlineSeatReclineNormalIcon />
+          )}
+        </Grid>
+
+        {/* Row 2 - Remaining fields */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Bus No.',
+            vehicle?.schoolAssignedNumber,
+            '01',
+            'default',
+            <LooksOneIcon />
+          )}
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Fuel Type',
+            vehicle?.fuelType,
+            'Diesel',
+            'default',
+            <LocalGasStationIcon />
+          )}
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem(
+            'Insurance',
+            vehicle?.insuranceExpiry,
+            '10-12-2024',
+            'default',
+            <VerifiedUserIcon />
+          )}
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          {renderDetailItem('Route', vehicle?.route, 'Route-CC', 'default', <RouteIcon />, true)}
+        </Grid>
+      </Grid>
     </Card>
   );
 };

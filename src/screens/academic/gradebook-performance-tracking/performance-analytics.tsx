@@ -23,7 +23,6 @@ const PerformanceAnalytics = (props: TabComponentType) => (
         { name: 'Gradebook And Performace Tracking' },
         { name: 'Performace Analytics' },
       ]}
-      sx={{ mb: 2 }}
     />
     <Grid container spacing={2}>
       <ClassPerformance />

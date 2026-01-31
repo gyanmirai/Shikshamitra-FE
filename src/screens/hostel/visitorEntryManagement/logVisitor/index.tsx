@@ -65,7 +65,6 @@ const LogVisitor = () => {
             : 'View and manage all visitors, including their details, entry/exit timings, and reasons for visits. Add new visitor entries or update existing ones.'
         }
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

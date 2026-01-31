@@ -40,7 +40,6 @@ const ResourceStatusScreen = () => {
         heading="Resource Status"
         description="Here you can add the resource status to manage the resource effectively and trak on the basis of their status."
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

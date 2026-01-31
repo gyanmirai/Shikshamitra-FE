@@ -37,7 +37,6 @@ const EnrollmentReportScreen = () => {
           { name: 'Enrollment', href: '/student/enrollment/dashboard/' },
           { name: 'Reports' },
         ]}
-        sx={{ mb: 1 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={

@@ -246,7 +246,6 @@ const LibraryTimingCreation = () => {
             Same as School Hours
           </Button>
         }
-        sx={{ mb: 3 }}
       />
 
       <Card

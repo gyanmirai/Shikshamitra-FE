@@ -64,7 +64,6 @@ const HrAttendanceSettingScreen = () => {
       <CustomBreadcrumbs
         heading={currentActiveComponent?.label}
         links={[{ name: 'HR' }, { name: 'Setting' }]}
-        sx={{ mb: 2 }}
       />
       <CustomTabs
         value={searchParams.tab}

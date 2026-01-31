@@ -71,7 +71,6 @@ const StudentRoomAllocate = () => {
         heading="Room Allocation to Students"
         description="Manage and track your hostel accommodation requests and assigned rooms."
         links={links}
-        sx={{ mb: 2 }}
       />
 
       <StudentTableData

@@ -94,7 +94,6 @@ const SafteyManagemtScreen = () => {
             : 'View and manage all reported maintenance incidents, track their status, and review details such as urgency, date, and resolution actions. Update or resolve reports as needed.'
         }
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

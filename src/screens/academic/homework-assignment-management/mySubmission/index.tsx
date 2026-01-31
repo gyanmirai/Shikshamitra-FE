@@ -46,7 +46,6 @@ const MySubmission = () => {
           { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
           { name: 'My Submission' },
         ]}
-        sx={{ mb: 2 }}
       />{' '}
       <Card
         sx={{

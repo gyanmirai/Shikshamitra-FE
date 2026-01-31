@@ -14,7 +14,6 @@ const AlertDashboardScreen = () => (
         { name: 'Security', href: '' },
         { name: 'Alert Dashboard', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <AlertDashboardCard />
     <AlertDashboardTable />

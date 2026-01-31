@@ -65,7 +65,6 @@ const AssignedRouteScreen = () => {
                     : 'Waiting List',
           },
         ]}
-        sx={{ mb: 2 }}
       />
       <Card>
         <CustomTabs

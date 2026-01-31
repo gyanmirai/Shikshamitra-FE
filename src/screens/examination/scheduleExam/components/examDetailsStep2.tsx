@@ -27,7 +27,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         {
           id: 'subjectName',
           label: 'Subject',
-          minWidth: '130px',
+          minWidth: '300px',
           align: 'left',
           isFilter: false,
           isSort: false,
@@ -36,7 +36,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box
                   sx={{
-                    width: 4,
+                    width: 5,
                     height: 18,
                     borderRadius: 1,
                     backgroundColor: row.subjectColor,
@@ -125,7 +125,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isFilter: false,
           isSort: false,
           align: 'left',
-          minWidth: 150,
+          minWidth: 100,
           render(value, row) {
             return (
               <ShakingTextField
@@ -237,7 +237,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isFilter: false,
           isSort: false,
           align: 'left',
-          minWidth: 150,
           render(value, row) {
             return (
               <ShakingTextField
@@ -281,6 +280,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                   InputLabelProps={{
                     sx: {
                       lineHeight: '1.2em',
+                      width: '100%',
                     },
                   }}
                 />
@@ -294,7 +294,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isFilter: false,
           isSort: false,
           align: 'left',
-          minWidth: 150,
+          minWidth: 100,
           render(value, row) {
             return (
               <ShakingTextField

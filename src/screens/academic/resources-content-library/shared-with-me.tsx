@@ -37,7 +37,6 @@ const SharedWithMe = (props: TabComponentType) => {
           { name: 'Resource Content Library' },
           { name: 'Shared With Me' },
         ]}
-        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="shared-with-me"

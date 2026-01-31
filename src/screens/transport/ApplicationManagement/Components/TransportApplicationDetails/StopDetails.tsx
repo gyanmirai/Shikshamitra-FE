@@ -14,9 +14,9 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Grid, Button, Typography, IconButton } from '@mui/material';
 import AddStopIndex from 'src/screens/transport/StopManagement/AddStopComponents';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { Box, Grid, Button, TableRow, TableCell, Typography, IconButton } from '@mui/material';
 
 const StopsDetails = ({ formik }: { formik: any }) => {
   const theme = useTheme();
@@ -26,6 +26,8 @@ const StopsDetails = ({ formik }: { formik: any }) => {
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const stopsToRender = formik.values.stops.length > 0 ? formik.values.stops : [];
 
   const handleAssignStop = (stop: any) => {
     formik.setFieldValue('studentDetails', {
@@ -44,7 +46,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
     const newStopWithFlag = {
       ...newStop,
       id: `ST${Math.floor(Math.random() * 100000)}`,
-      isLatestAdded: true,
+      isLatestAdded: true, // Mark only the new stop as latest added
     };
 
     formik.setFieldValue('stops', [...updatedStops, newStopWithFlag]);
@@ -103,133 +105,125 @@ const StopsDetails = ({ formik }: { formik: any }) => {
           )
         }
       >
-        {formik.values.stops.length > 0 ? (
-          <Scrollbar sx={{ height: 260, width: '100%', p: 1 }}>
-            {formik.values.stops.map((stop: any, index: number) => {
-              const isAssigned =
-                formik.values.studentDetails.assignedStop === stop.id &&
-                formik.values.studentDetails.assignedRoute === formik.values.selectedRoute.routeId;
+        <Scrollbar sx={{ height: 260, width: '100%', p: 1 }}>
+          {stopsToRender.map((stop: any, index: number) => {
+            const isAssigned =
+              formik.values.studentDetails.assignedStop === stop.id &&
+              formik.values.studentDetails.assignedRoute === formik.values.selectedRoute.routeId;
 
-              const isDragging = draggedIndex === index;
-              const isDragOver = dragOverIndex === index && draggedIndex !== index;
+            const isDragging = draggedIndex === index;
+            const isDragOver = dragOverIndex === index && draggedIndex !== index;
 
-              return (
-                <Grid
-                  container
-                  key={stop.id}
-                  spacing={2}
-                  onDragOver={(e) => handleDragOver(index, e)}
-                  onDrop={() => handleDrop(index)}
-                  onDragEnd={() => {
-                    setDraggedIndex(null);
-                    setDragOverIndex(null);
-                  }}
-                  sx={{
-                    backgroundColor: stop.isLatestAdded
-                      ? theme.palette.primary.lighter
-                      : isDragOver
-                        ? theme.palette.action.hover
-                        : 'transparent',
-                    border: isDragging ? '2px dashed #808080' : '1px dashed #808080',
-                    borderRadius: 2,
-                    alignItems: 'center',
-                    p: 1.5,
-                    mb: 2,
-                    opacity: isDragging ? 0.6 : 1,
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  {/* Drag handle */}
-                  <Grid size={{ xs: 0.5 }} sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <IconButton
-                      draggable
-                      onDragStart={() => handleDragStart(index)}
-                      sx={{
-                        cursor: 'grab',
-                        color: isDragging ? 'primary.main' : 'text.secondary',
-                        '&:hover': { color: 'primary.main' },
-                      }}
-                    >
-                      <DragIndicatorIcon sx={{ fontSize: 20 }} />
-                    </IconButton>
-                  </Grid>
-
-                  {/* Stop Number */}
-                  <Grid size={{ xs: 0.2 }}>
-                    <Typography variant="body1" fontWeight={600}>
-                      {index + 1}.
-                    </Typography>
-                  </Grid>
-
-                  {/* Stop Name */}
-                  <Grid size={{ xs: 2.5 }}>
-                    <Typography variant="subtitle1" sx={{ ml: 1 }}>
-                      {stop.stopName}
-                    </Typography>
-                  </Grid>
-
-                  {/* Arrival Time */}
-                  <Grid size={{ xs: 2.8 }}>
-                    <TimePicker
-                      label="Arrival Time"
-                      value={stop.arrivalTime ? dayjs(stop.arrivalTime, 'HH:mm') : null}
-                      onChange={(newValue) =>
-                        formik.setFieldValue(
-                          `stops[${index}].arrivalTime`,
-                          newValue ? newValue.format('HH:mm') : ''
-                        )
-                      }
-                      slotProps={{
-                        textField: { size: 'small', fullWidth: true },
-                      }}
-                    />
-                  </Grid>
-
-                  {/* Departure Time */}
-                  <Grid size={{ xs: 2.8 }}>
-                    <TimePicker
-                      label="Departure Time"
-                      value={stop.departureTime ? dayjs(stop.departureTime, 'HH:mm') : null}
-                      onChange={(newValue) =>
-                        formik.setFieldValue(
-                          `stops[${index}].departureTime`,
-                          newValue ? newValue.format('HH:mm') : ''
-                        )
-                      }
-                      slotProps={{
-                        textField: { size: 'small', fullWidth: true },
-                      }}
-                    />
-                  </Grid>
-
-                  {/* Assign Button */}
-                  <Grid size={{ xs: 3 }}>
-                    <Button
-                      variant="contained"
-                      color={isAssigned ? 'primary' : 'inherit'}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        width: '90%',
-                      }}
-                      startIcon={<Iconify icon={GlobalIcons.assigned} />}
-                      onClick={() => handleAssignStop(stop)}
-                    >
-                      {isAssigned ? 'Assigned' : 'Assign this Stop'}
-                    </Button>
-                  </Grid>
+            return (
+              <Grid
+                container
+                key={stop.id}
+                spacing={2}
+                onDragOver={(e) => handleDragOver(index, e)}
+                onDrop={() => handleDrop(index)}
+                onDragEnd={() => {
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                sx={{
+                  backgroundColor: stop.isLatestAdded
+                    ? theme.palette.primary.lighter
+                    : isDragOver
+                      ? theme.palette.action.hover
+                      : 'transparent',
+                  border: isDragging ? '2px dashed #808080' : '1px dashed #808080',
+                  borderRadius: 2,
+                  alignItems: 'center',
+                  p: 1.5,
+                  mb: 2,
+                  opacity: isDragging ? 0.6 : 1,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {/* Drag handle */}
+                <Grid size={{ xs: 0.5 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <IconButton
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    sx={{
+                      cursor: 'grab',
+                      color: isDragging ? 'primary.main' : 'text.secondary',
+                      '&:hover': { color: 'primary.main' },
+                    }}
+                  >
+                    <DragIndicatorIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
                 </Grid>
-              );
-            })}
-          </Scrollbar>
-        ) : (
-          <TableRow>
-            <TableCell sx={{ height: '50px' }}>
-              <Box className="loader" height={24} />
-            </TableCell>
-          </TableRow>
-        )}
+
+                {/* Stop Number */}
+                <Grid size={{ xs: 0.2 }}>
+                  <Typography variant="body1" fontWeight={600}>
+                    {index + 1}.
+                  </Typography>
+                </Grid>
+
+                {/* Stop Name */}
+                <Grid size={{ xs: 2.5 }}>
+                  <Typography variant="subtitle1" sx={{ ml: 1 }}>
+                    {stop.stopName}
+                  </Typography>
+                </Grid>
+
+                {/* Arrival Time */}
+                <Grid size={{ xs: 2.8 }}>
+                  <TimePicker
+                    label="Arrival Time"
+                    value={stop.arrivalTime ? dayjs(stop.arrivalTime, 'HH:mm') : null}
+                    onChange={(newValue) =>
+                      formik.setFieldValue(
+                        `stops[${index}].arrivalTime`,
+                        newValue ? newValue.format('HH:mm') : ''
+                      )
+                    }
+                    slotProps={{
+                      textField: { size: 'small', fullWidth: true },
+                    }}
+                  />
+                </Grid>
+
+                {/* Departure Time */}
+                <Grid size={{ xs: 2.8 }}>
+                  <TimePicker
+                    label="Departure Time"
+                    value={stop.departureTime ? dayjs(stop.departureTime, 'HH:mm') : null}
+                    onChange={(newValue) =>
+                      formik.setFieldValue(
+                        `stops[${index}].departureTime`,
+                        newValue ? newValue.format('HH:mm') : ''
+                      )
+                    }
+                    slotProps={{
+                      textField: { size: 'small', fullWidth: true },
+                    }}
+                  />
+                </Grid>
+
+                {/* Assign Button */}
+                <Grid size={{ xs: 3 }}>
+                  <Button
+                    variant="contained"
+                    color={isAssigned ? 'primary' : 'inherit'}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      width: '90%',
+                    }}
+                    startIcon={<Iconify icon={GlobalIcons.assigned} />}
+                    onClick={() => handleAssignStop(stop)}
+                  >
+                    {isAssigned ? 'Assigned' : 'Assign this Stop'}
+                  </Button>
+                </Grid>
+              </Grid>
+            );
+          })}
+        </Scrollbar>
       </SectionCard>
 
       <CustomDialog

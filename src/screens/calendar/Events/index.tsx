@@ -105,7 +105,7 @@ const Events = (props: TabComponentType) => {
             { name: 'Events' },
             { name: editingEvent ? 'Update Event' : 'Add Event' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
@@ -116,7 +116,7 @@ const Events = (props: TabComponentType) => {
           heading="Events"
           description="View and manage all school events, including event details, schedules, and status. Add new events, update existing ones, or remove them as needed."
           links={[{ name: 'Calendar', href: '/calendar/dashboard' }, { name: 'Events' }]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
           action={
             <Button
               size="small"

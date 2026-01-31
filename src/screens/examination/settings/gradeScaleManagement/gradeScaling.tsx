@@ -54,6 +54,7 @@ const GradingScale = () => {
     data: gradeScalings,
     isLoading,
     isFetching,
+    refetch: refetchGradeScalings,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
@@ -115,7 +116,6 @@ const GradingScale = () => {
             Grade Scale
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <CustomizableTable
@@ -274,17 +274,7 @@ const GradingScale = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    gradeScalingApi.util.updateQueryData(
-                      'getGradeScalings',
-                      { academicMediumId: (currentMedium as any).id },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.data.splice(index, 0, selectedGrade);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetchGradeScalings(),
                 onCommit: () =>
                   deleteGradeScaling({
                     academicMediumId: (currentMedium as any).id,

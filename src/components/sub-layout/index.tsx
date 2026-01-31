@@ -24,7 +24,12 @@ const SubLayout = ({ children }: any) => {
   const isNavMini = settings.navLayout === 'mini';
 
   return (
-    <Box display="flex" height="100%" gap={2}>
+    <Box
+      display="flex"
+      height="100%"
+      gap={1}
+      sx={{ backgroundColor: (theme) => theme.vars.palette.background.neutral }}
+    >
       {currentData?.length > 0 && (
         <Slide direction="right" in={isNavMini} mountOnEnter unmountOnExit>
           <Scrollbar
@@ -37,7 +42,7 @@ const SubLayout = ({ children }: any) => {
               backgroundColor: (theme) => theme.vars.palette.background.paper,
               borderRight: (theme) => `1px solid ${theme.vars.palette.divider}`,
               // borderTop: (theme) => `1px solid ${theme.vars.palette.divider}`,
-              borderRadius: 1,
+              borderRadius: 0,
             }}
           >
             <NavSectionVertical
@@ -61,7 +66,7 @@ const SubLayout = ({ children }: any) => {
           bgcolor: (theme) => 'transparent',
           // border: (theme) =>
           //   currentData?.length ? `4px solid ${theme.vars.palette.background.paper}` : 'none',
-          borderRadius: 1,
+          borderRadius: 0,
           borderBottom: 'none',
           borderRight: 'none',
           transition: 'all 0.3s ease-in-out',
@@ -73,9 +78,9 @@ const SubLayout = ({ children }: any) => {
             mx: 'auto',
             height: '100%',
             overflow: 'auto',
-            pt: 2,
-            pr: 2,
-            pl: 0.5,
+            pt: 1,
+            pr: 1,
+            // pl: 0.5,
             pb: 1,
           }}
         >

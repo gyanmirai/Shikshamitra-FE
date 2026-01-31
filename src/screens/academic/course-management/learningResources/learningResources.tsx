@@ -113,7 +113,6 @@ const LearningResources = (props: TabComponentType) => {
             : 'Manage and organize learning resources for each subject efficiently. View the list of resources, add new ones, update existing resources, or remove them as needed.'
         }
         links={links}
-        sx={{ mb: 1 }}
         action={
           !addLearningResourceDialog.value && (
             <Button

@@ -14,18 +14,21 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
+import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 import {
   Box,
   Grid,
   Card,
+  Stack,
+  Avatar,
   Button,
+  Divider,
   Tooltip,
   TextField,
   Typography,
   IconButton,
   DialogActions,
 } from '@mui/material';
-import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import { assignGradeValidationSchema } from './validationSchema';
 import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
@@ -67,7 +70,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
         },
       });
       shikshaMitraToast.success({
-        message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'}.`,
+        message: `Feedback and marks have been ${
+          isUpdate ? 'updated' : 'added'
+        } successfully for ${data?.studentName ?? 'the student'}.`,
       });
       onClose(null, true);
     },
@@ -78,96 +83,138 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        {/* <form onSubmit={formik.handleSubmit}> */}
         <Box
           component="form"
-          sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2 }}
+          sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           onSubmit={formik.handleSubmit}
         >
-          <Scrollbar sx={{ height: '250px' }}>
+          <Scrollbar sx={{ height: '500px', p: 2 }}>
             <Grid container spacing={3}>
+              {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
-                <Box display="flex" gap={2}>
-                  <Typography variant="body2">
-                    <strong>Name : </strong>
-                    {data?.studentName}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Roll No : </strong>
-                    {data?.rollNumber}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="subtitle2">Student Submission</Typography>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <Card
-                  key={document.id}
-                  sx={{
-                    p: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    '&:hover': { bgcolor: 'action.hover' },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {getFileIconByType(document.type ?? 'txt', 32)}
-                    <Box>
-                      <Typography variant="subtitle2">{document.name}</Typography>
-                      {document.size && (
-                        <Typography variant="body2" color="text.secondary">
-                          {document.size}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-
-                  <Tooltip title="Preview">
-                    <IconButton
-                      edge="end"
-                      aria-label="preview"
-                      onClick={() => handleDownload(document)}
+                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Avatar
+                      alt={data?.studentName || 'Student'}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        bgcolor: 'primary.lighter',
+                        color: 'primary.main',
+                        fontWeight: 'bold',
+                      }}
                     >
-                      <Iconify icon={GlobalIcons.eye} />
-                    </IconButton>
-                  </Tooltip>
+                      {data?.studentName?.charAt(0) || 'S'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {data?.studentName}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Roll No: {data?.rollNumber || '--'}
+                      </Typography>
+                    </Box>
+                  </Stack>
                 </Card>
               </Grid>
 
-              <Grid size={{ xs: 12 }} mb={-2}>
-                <Typography variant="subtitle2">Description</Typography>
-              </Grid>
-
+              {/* Student Submission Section */}
               <Grid size={{ xs: 12 }}>
-                <Box
-                  sx={{
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 1,
-                    p: 2,
-                    bgcolor: '#fafafa',
-                    minHeight: '100px',
-                    maxHeight: '200px',
-                    overflow: 'auto',
-                  }}
-                >
-                  <Typography
-                    component="pre"
+                <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
+                  <Box
                     sx={{
-                      whiteSpace: 'pre-wrap',
-                      m: 0,
-                      fontSize: '0.875rem',
-                      lineHeight: 1.5,
+                      p: 2,
+                      bgcolor: (theme) => theme.palette.grey[100],
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    {`Homework Assignment: Science Fundamentals
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      <Iconify
+                        icon="solar:document-text-bold"
+                        width={20}
+                        sx={{ color: 'info.main' }}
+                      />
+                      Student Submission
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2 }}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: 'background.paper',
+                        '&:hover': {
+                          bgcolor: 'background.neutral',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {getFileIconByType(document.type ?? 'txt', 32)}
+                        <Box>
+                          <Typography variant="subtitle2" noWrap sx={{ maxWidth: 200 }}>
+                            {document.name}
+                          </Typography>
+                          {document.size && (
+                            <Typography variant="caption" color="text.secondary">
+                              {document.size}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+
+                      <Tooltip title="Preview">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDownload(document)}
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          <Iconify icon={GlobalIcons.eye} width={20} />
+                        </IconButton>
+                      </Tooltip>
+                    </Card>
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Description Section */}
+              <Grid size={{ xs: 12 }}>
+                <Card
+                  variant="outlined"
+                  sx={{ borderStyle: 'dashed', boxShadow: 'var(--shadows-10)' }}
+                >
+                  <Box sx={{ p: 2 }}>
+                    <Stack direction="row" alignItems="center" gap={1} mb={2}>
+                      <Iconify
+                        icon="solar:notebook-minimalistic-bold"
+                        width={20}
+                        sx={{ color: 'text.secondary' }}
+                      />
+                      <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                        Homework Description
+                      </Typography>
+                    </Stack>
+                    <Typography
+                      component="pre"
+                      variant="body2"
+                      sx={{
+                        whiteSpace: 'pre-wrap',
+                        m: 0,
+                        fontFamily: 'inherit',
+                        color: 'text.primary',
+                        p: 2,
+                        bgcolor: (theme) => theme.palette.background.neutral,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {`Homework Assignment: Science Fundamentals
 
 Due Date: Friday, March 15th, 2024
 Instructions: Write detailed explanations for the following scientific facts.
@@ -179,60 +226,92 @@ Questions:
 
 Additional Notes:
 I have completed all answers according to the given instructions and provided scientific explanations for each point.`}
-                  </Typography>
-                </Box>
+                    </Typography>
+                  </Box>
+                </Card>
               </Grid>
 
+              {/* Assessment & Feedback Section */}
               <Grid size={{ xs: 12 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.feedback && formik.errors.feedback) || false}
-                >
-                  <TextField
-                    label="Feedback *"
-                    multiline
-                    size="small"
-                    disabled={!isEdit}
-                    rows={3}
-                    fullWidth
-                    name="feedback"
-                    value={formik.values.feedback}
-                    onChange={formik.handleChange}
-                    error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                    helperText={formik.touched.feedback && formik.errors.feedback}
-                  />
-                </ShakingTextField>
+                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+                  <Typography variant="h6" sx={{ mb: 3 }}>
+                    Assessment & Feedback
+                  </Typography>
+
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <ShakingTextField
+                        error={!!(formik.touched.totalMarks && formik.errors.totalMarks) || false}
+                      >
+                        <TextField
+                          label="Total Marks *"
+                          fullWidth
+                          name="totalMarks"
+                          type="number"
+                          value={formik.values.totalMarks}
+                          onChange={formik.handleChange}
+                          error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                          helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+                          disabled={!isEdit}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 8 }}>
+                      <ShakingTextField
+                        error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+                      >
+                        <TextField
+                          label="Feedback"
+                          multiline
+                          rows={3}
+                          fullWidth
+                          name="feedback"
+                          value={formik.values.feedback}
+                          onChange={formik.handleChange}
+                          error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                          helperText={formik.touched.feedback && formik.errors.feedback}
+                          disabled={!isEdit}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                  </Grid>
+                </Card>
               </Grid>
             </Grid>
           </Scrollbar>
+
+          <Divider />
+
+          <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5 }}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={() => {
+                onClose(null, false);
+              }}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="contained"
+              size="small"
+              loading={isUpdateLoading}
+              onClick={(e: any) => formik.handleSubmit(e)}
+              startIcon={
+                <Iconify
+                  icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={data?.feedback ? 16 : 20}
+                  height={data?.feedback ? 16 : 20}
+                />
+              }
+            >
+              {data?.feedback ? 'Update' : 'Submit'}
+            </LoadingButton>
+          </DialogActions>
         </Box>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            variant="outlined"
-            onClick={() => {
-              onClose(null, false);
-            }}
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            variant="contained"
-            size="small"
-            loading={isUpdateLoading}
-            onClick={(e: any) => formik.handleSubmit(e)}
-            startIcon={
-              <Iconify
-                icon={data?.feedback ? GlobalIcons.edit : GlobalIcons.submit}
-                width={data?.feedback ? 16 : 20}
-                height={data?.feedback ? 16 : 20}
-              />
-            }
-          >
-            {data?.feedback ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-        {/* </form> */}
       </BackPopUpChecked>
     </Box>
   );

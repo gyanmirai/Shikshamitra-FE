@@ -73,7 +73,6 @@ const ScheduledSurvey = (props: TabComponentType) => {
               { name: 'Scheduled Survey' },
               { name: 'Survey Form' },
             ]}
-            sx={{ mb: 2 }}
             action={
               <Button
                 variant="contained"
@@ -99,7 +98,6 @@ const ScheduledSurvey = (props: TabComponentType) => {
               { name: 'Survey' },
               { name: 'Scheduled Survey' },
             ]}
-            sx={{ mb: 2 }}
             action={
               <Button
                 startIcon={<Iconify icon="mdi:plus" />}

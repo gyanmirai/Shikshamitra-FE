@@ -61,7 +61,6 @@ const UserManagementScreen = () => {
           { name: 'Role And Permission', href: '/security/role' },
           { name: 'User Management' },
         ]}
-        sx={{ mb: 1 }}
       />
 
       <CustomizableTable

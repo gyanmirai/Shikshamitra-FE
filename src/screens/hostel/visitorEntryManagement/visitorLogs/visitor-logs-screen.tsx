@@ -18,7 +18,6 @@ const VisitorLogsScreen = () => {
         heading="Visitor Log"
         description="View a complete log of all visitor activity, including entry and exit times, status updates, and visit purposes. Track overstays, manage records, and ensure accurate visitor history."
         links={links}
-        sx={{ mb: 2 }}
       />
       <VisitorLogtable />
     </Box>

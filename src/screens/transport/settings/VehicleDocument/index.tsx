@@ -109,7 +109,6 @@ const VehicleDocumentSettingScreen = () => {
             Vehicle Document
           </Button>
         }
-        sx={{ mb: 2 }}
       />
 
       <VehicleDocumentTable

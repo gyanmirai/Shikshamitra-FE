@@ -7,9 +7,10 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { EmptyContent } from 'src/components/empty-content';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Card, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
@@ -63,31 +64,33 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
 
   return (
     <>
-      <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
-        <CustomSelect
-          label="Board"
-          options={boards || []}
-          labelKey="name"
-          valueKey="id"
-          value={selectedBoard}
-          onChange={(value) => {
-            setSelectedBoard(value as string);
-            setSelectedMedium('');
-          }}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-        <CustomSelect
-          label="Medium"
-          options={mediums || []}
-          labelKey="name"
-          disabled={!selectedBoard}
-          valueKey="id"
-          value={selectedMedium}
-          onChange={(value) => setSelectedMedium(value as string)}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-      </Box>
-      {selectedMedium && (
+      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, pb: 1 }}>
+          <CustomSelect
+            label="Board"
+            options={boards || []}
+            labelKey="name"
+            valueKey="id"
+            value={selectedBoard}
+            onChange={(value) => {
+              setSelectedBoard(value as string);
+              setSelectedMedium('');
+            }}
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          />
+          <CustomSelect
+            label="Medium"
+            options={mediums || []}
+            labelKey="name"
+            disabled={!selectedBoard}
+            valueKey="id"
+            value={selectedMedium}
+            onChange={(value) => setSelectedMedium(value as string)}
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          />
+        </Box>
+      </Card>
+      {selectedMedium ? (
         <CustomizableTable
           tableId="fee-collection-table"
           noDataText={<>Fee Collection Data Not Found </>}
@@ -205,6 +208,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           ]}
           data={feeCollectionData?.feeCollectionData || []}
         />
+      ) : (
+        <EmptyContent title="Please select board and medium to view fee collection data." />
       )}
     </>
   );

@@ -86,7 +86,6 @@ const Setting = (props: TabComponentType) => {
         heading="Settings"
         description={currentActiveComponent?.description}
         links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
-        sx={{ mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
 

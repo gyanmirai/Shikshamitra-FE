@@ -55,7 +55,6 @@ const MarksFeedbackHomeworkAssignment = () => {
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
           { name: 'Assessment & Feedback' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Paper
         sx={{
@@ -74,7 +73,7 @@ const MarksFeedbackHomeworkAssignment = () => {
 
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
           role="tablist"
         >
           {TABS.map((tab) => (

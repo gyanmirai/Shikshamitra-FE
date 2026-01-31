@@ -34,7 +34,6 @@ const ExaminationReportsList = () => {
               Report
             </Button>
           }
-          sx={{ mb: 1 }}
         />
       )}
 

@@ -201,7 +201,6 @@ const FinanceReceiptBookSetting = () => {
           { name: 'Setting', href: '/finance/settings/receipt-book/' },
           { name: 'Receipt Book' },
         ]}
-        sx={{ mb: 1 }}
         action={
           <Button
             size="small"

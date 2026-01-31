@@ -1,7 +1,8 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { Person, CalendarToday } from '@mui/icons-material';
-import { Box, Card, Chip, Stack, Avatar, Divider, Typography, CardContent } from '@mui/material';
+import { Box, Card, Stack, Avatar, Divider, Typography, CardContent } from '@mui/material';
 
 interface RequestorInfoProps {
   charge?: any;
@@ -32,25 +33,19 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
     >
       <Box
         sx={{
-          px: 3,
+          px: 2,
           py: 2,
           borderBottom: '1px dashed',
           borderColor: 'divider',
           bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.02),
         }}
       >
-        <Typography
-          variant="subtitle1"
-          fontWeight={700}
-          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-        >
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
           Requestor Details
         </Typography>
       </Box>
 
-      <CardContent
-        sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-      >
+      <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Stack spacing={3}>
           {/* Requestor Profile Section */}
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -75,18 +70,9 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Person sx={{ fontSize: 16, color: 'text.secondary' }} />
-                <Chip
-                  label={department}
-                  size="small"
-                  sx={{
-                    height: 22,
-                    fontSize: '0.75rem',
-                    bgcolor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.08),
-                    color: 'secondary.dark',
-                    fontWeight: 600,
-                    borderRadius: '6px',
-                  }}
-                />
+                <Label variant="soft" color="success">
+                  {department}
+                </Label>
               </Box>
             </Box>
           </Box>

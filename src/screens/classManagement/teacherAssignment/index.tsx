@@ -245,7 +245,6 @@ const TeacherAssignment = ({
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Teachers Assignment' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 1 }}>

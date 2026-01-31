@@ -15,7 +15,6 @@ const ReviewGatePassStaffScreen = () => (
         { name: 'Security', href: '' },
         { name: 'Review Gate Pass Request', href: '' },
       ]}
-      sx={{ mb: 2 }}
     />
     <ReviewGatePassRequestStaffTable />
   </Box>

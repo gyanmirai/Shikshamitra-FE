@@ -15,7 +15,6 @@ const StudentSiblingScreen = () => {
       <CustomBreadcrumbs
         heading="Student Sibling"
         links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student Sibling' }]}
-        sx={{ mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
             Add Sibling

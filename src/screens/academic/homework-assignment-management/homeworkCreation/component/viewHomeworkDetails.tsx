@@ -1,122 +1,146 @@
-import type { UseTabsReturn } from 'src/hooks/use-tabs';
-
-import React, { useMemo } from 'react';
-import { useTabs } from 'src/hooks/use-tabs';
-import { Box, Typography } from '@mui/material';
+import React from 'react';
+import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Card, Grid, Typography } from '@mui/material';
 
 import HomeworkOverview from './viewHomeworkDetails/homeworkOverview';
-import HomeworkDocuments from './viewHomeworkDetails/homeworkDocuments';
 
 import type { IHomework } from '../type';
 
-const HOMEWORK_TABS = [
-  {
-    value: 'overview',
-    label: 'Overview',
-    icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
-    component: (props: { tabs: UseTabsReturn; homework: IHomework }) => (
-      <HomeworkOverview {...props} />
-    ),
-  },
-  {
-    value: `attachments`,
-    label: 'Attachments (5)',
-    icon: <Iconify icon="solar:bill-list-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn; homework: IHomework }) => (
-      <HomeworkDocuments {...props} />
-    ),
-  },
-];
+// Reusable Info Item Component matching BasicChargeAccordianCard pattern
+interface InfoItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number | undefined;
+}
+
+export const InfoItem = ({ icon, label, value }: InfoItemProps) => (
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+    <Box
+      sx={{
+        width: 40,
+        height: 40,
+        borderRadius: 1.5,
+        bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+        color: 'primary.main',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}
+    >
+      {React.cloneElement(icon as React.ReactElement<any>, { sx: { fontSize: 20 } })}
+    </Box>
+    <Box sx={{ minWidth: 0 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{ color: 'text.secondary', display: 'block', fontWeight: 500 }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="subtitle2"
+        sx={{ fontWeight: 600, color: 'text.primary', wordBreak: 'break-word' }}
+      >
+        {value || 'N/A'}
+      </Typography>
+    </Box>
+  </Box>
+);
 
 const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
-  // Custom hook to manage tab state with 'overview' as the default selected tab
-  const tabs = useTabs('overview');
-
-  // Memoized value that finds and returns the currently active tab component
-  // Updates only when the selected tab value changes
-  useMemo(() => HOMEWORK_TABS.find((tab) => tab.value === tabs.value), [tabs.value]);
-
-  return (
-    <Box sx={{ p: 2, height: '100%' }}>
-      <Scrollbar sx={{ height: '450px' }}>
+  if (!homework) {
+    return (
+      <Box
+        sx={{
+          p: 2,
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Box
           sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.08),
+            border: (theme) => `1px dashed ${theme.palette.divider}`,
             display: 'flex',
-            alignItems: 'flex-start',
+            flexDirection: 'column',
+            alignItems: 'center',
             gap: 2,
-            mb: 1,
+            textAlign: 'center',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Iconify
-              icon="mdi:book-open-page-variant"
-              sx={{
-                color: 'text.secondary',
-                width: 20,
-                height: 20,
-                mr: 0.5,
-              }}
-            />
-            <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
-              {homework?.subject}
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Iconify
-              icon="mdi:google-classroom"
-              sx={{
-                color: 'text.secondary',
-                width: 20,
-                height: 20,
-                mr: 0.5,
-              }}
-            />
-            <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
-              {homework?.class} - {homework?.divisionMeta?.divisionId}
-            </Typography>
-          </Box>
-
-          {homework?.chapter && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Iconify
-                icon="cil:book"
-                sx={{
-                  color: 'text.secondary',
-                  width: 18,
-                  height: 18,
-                  mr: 0.5,
-                }}
-              />
-
-              <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
-                {homework?.chapter}
-              </Typography>
-            </Box>
-          )}
+          <Iconify
+            icon="solar:clipboard-list-bold-duotone"
+            sx={{ width: 64, height: 64, color: 'text.disabled' }}
+          />
+          <Typography variant="h6" sx={{ color: 'text.secondary' }}>
+            No homework details available
+          </Typography>
         </Box>
-        {/* Homework Header */}
+      </Box>
+    );
+  }
 
-        {/* Subject Accordion - Single Subject */}
+  return (
+    <Box sx={{ p: 1, height: '100%' }}>
+      <Scrollbar sx={{ height: '100%' }}>
+        <Card
+          sx={{
+            height: '100%',
+            mx: 'auto',
+            boxShadow: 'var(--shadows-10)',
+            borderRadius: 2,
+            ml: 1,
+            mb: 2,
+            mr: 1,
+            mt: 0.5,
+          }}
+        >
+          {/* Body */}
+          <Box sx={{ p: 2 }}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <InfoItem
+                  icon={<Iconify icon="mdi:book-open-page-variant" />}
+                  label="Subject"
+                  value={homework.subject}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <InfoItem
+                  icon={<Iconify icon="mdi:google-classroom" />}
+                  label="Class"
+                  value={`${homework.class} - ${homework.divisionMeta?.divisionId}`}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 3 }}>
+                <InfoItem
+                  icon={<Iconify icon="solar:bookmark-circle-bold" />}
+                  label="Chapter"
+                  value={homework.chapter}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <InfoItem
+                  icon={<Iconify icon={GlobalIcons.submit} />}
+                  label="Submit Via"
+                  value={homework.submissionType}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </Card>
+
+        {/* Detailed Overview */}
         <Box sx={{ borderColor: 'divider', mb: 2 }}>
-          {homework ? (
-            <HomeworkOverview homework={homework} />
-          ) : (
-            <Box
-              sx={{
-                textAlign: 'center',
-                py: 4,
-                border: '1px dashed #ccc',
-                borderRadius: 2,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                No homework details available
-              </Typography>
-            </Box>
-          )}
+          <HomeworkOverview homework={homework} />
         </Box>
       </Scrollbar>
     </Box>

@@ -46,7 +46,6 @@ const FinanceNewReportsScreen = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Reports"
         links={[{ name: 'Finance', href: '/finance/dashboard/' }, { name: 'Reports' }]}
-        sx={{ mb: 2 }}
       />
       {/* <Typography variant="h6" gutterBottom>Download Reports</Typography> */}
       {/* <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>

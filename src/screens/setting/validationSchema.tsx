@@ -33,7 +33,7 @@ export const basicInformationvalidationSchema = Yup.object().shape({
     .required('State is required'),
   contactNumber: Yup.string()
     .required('Contact Number is required')
-    .test('Mobile NO', 'Parents ContactNo is not valid', (value) =>
+    .test('Mobile NO', 'ContactNo is not valid', (value) =>
       matchIsValidTel((value || '') as string)
     ),
   emailAddress: Yup.string().required('Email Address is required').email('Invalid email format'),

@@ -1,15 +1,12 @@
-// import { isValidPhoneNumber } from 'react-phone-number-input/input';
-
-import { useFormik } from 'formik';
-import { useTabs } from 'src/hooks/use-tabs';
-import { CustomTabs } from 'src/components/custom-tabs';
+import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Card, Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { getBase64String } from 'src/utils/get-base64-string';
 import { LoadingScreen } from 'src/components/loading-screen';
-import { Tab, Box, Grid, Card, TextField } from '@mui/material';
+import { getBase64String } from 'src/utils/get-base64-string';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useGetBasicDetailsQuery,
@@ -91,12 +88,8 @@ export const validationSchemas = [
 export function StudentInformation(props: StudentTabsComponentType) {
   const { student, refetch } = props;
   const editData = student;
-  const [isEdit, setIsEdit] = useState(false);
-  const tabs = useTabs('general');
-  const activeTabIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
+  const [activeStep, setActiveStep] = useState(0);
+  const [isBackClick, setIsBackClick] = useState(false);
 
   const [updateBasicDetails] = useQueryAndMutation({
     type: 'mutation',
@@ -127,8 +120,6 @@ export function StudentInformation(props: StudentTabsComponentType) {
     currentQueryAndMutation: useUpdateParentBankDetailsMutation,
   });
 
-  // const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  // const dispatch = useDispatch();
   const handleGeneralFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
@@ -165,16 +156,9 @@ export function StudentInformation(props: StudentTabsComponentType) {
               lastClassPassed: values.lastClassPassed,
               academicMediumId: values.medium,
               standardId: values.class,
-
               formNumber: values.formNo,
-              // academicYearId: values.academicYear,
-              // educationBoardId: values.board,
             },
           }).unwrap();
-          // if (isComeFromIssueForm) {
-          //   await moveToRegistration(editData?.id);
-          //   // router.push('/student/enrollment/registration');
-          // }
         }
       } catch (error) {
         throw new Error(error);
@@ -182,6 +166,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
     },
     [editData, updateBasicDetails]
   );
+
   const handleFamilyFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
@@ -304,6 +289,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
     },
     [editData?.studentId, updateFamilyDetails]
   );
+
   const handleCommunicationFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
@@ -347,6 +333,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
     },
     [editData?.studentId, updateCommunicationDetails]
   );
+
   const handleMedicalFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
@@ -369,6 +356,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
     },
     [editData?.studentId, updateMedicalDetails]
   );
+
   const handlePreviousSchoolFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
@@ -410,23 +398,13 @@ export function StudentInformation(props: StudentTabsComponentType) {
     },
     [editData?.studentId, updateBankDetails]
   );
+
   const handleAdditionalDetailsFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
         await updateAdditionDetails({
           id: editData?.studentId || values?.id,
           body: {
-            // category: values.category,
-            // rightToEducation: values.category === Category.Rte,
-            // bplStudent: values.bplStudent,
-            // bplCardNo: values.bplCardNo,
-            // personWithDisability: values.personWithDisability,
-            // secondLanguage: values.secondLanguage,
-            // emergencyContactNo: values.emergencyContactNo,
-            // singleParentChild: values.singleParentChild,
-            // singleChild: values.singleChild,
-            // sponsorName: values.sponsorStudent.id,
-
             category: values.category,
             isBPLStudent: values.bplStudent,
             bplCardNo: values.bplCardNo,
@@ -446,38 +424,70 @@ export function StudentInformation(props: StudentTabsComponentType) {
     [editData?.studentId, updateAdditionDetails]
   );
 
-  const onSubmit = async (values: any) => {
-    try {
-      if (activeTabIndex === 0) {
-        await handleGeneralFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Student details updated successfully' });
-      } else if (activeTabIndex === 2) {
-        await handleFamilyFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Family details updated successfully' });
-      } else if (activeTabIndex === 3) {
-        await handleCommunicationFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Communication details updated successfully' });
-      } else if (activeTabIndex === 4) {
-        await handleAdditionalDetailsFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Additional details updated successfully' });
-      } else if (activeTabIndex === 5) {
-        await handleMedicalFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Medical details updated successfully' });
-      } else if (activeTabIndex === 6) {
-        await handlePreviousSchoolFormSubmit(values, formik);
-        shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
-      } else if (activeTabIndex === 7) {
-        await handleBankDetailsFormSubmit(values, formik);
-        shikshaMitraToast.success({
-          message: `Registration for ${student?.firstName} ${student?.lastName} updated successfully`,
-        });
+  const steps = useMemo(() => TABS.map((tab) => tab.label), []);
+
+  const handleSave = useCallback(
+    async (
+      isLastStep: boolean,
+      values: any,
+      formik: any,
+      setIsLoading: (val: boolean) => void,
+      isSaveButton: boolean = false
+    ) => {
+      try {
+        setIsLoading(true);
+        if (activeStep === 0) {
+          await handleGeneralFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Student details updated successfully' });
+        } else if (activeStep === 1) {
+          await handleFamilyFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Family details updated successfully' });
+        } else if (activeStep === 2) {
+          await handleCommunicationFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Communication details updated successfully' });
+        } else if (activeStep === 3) {
+          await handleAdditionalDetailsFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Additional details updated successfully' });
+        } else if (activeStep === 4) {
+          await handleMedicalFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Medical details updated successfully' });
+        } else if (activeStep === 5) {
+          await handlePreviousSchoolFormSubmit(values, formik);
+          shikshaMitraToast.success({ message: 'Previous school details updated successfully' });
+        } else if (activeStep === 6) {
+          await handleBankDetailsFormSubmit(values, formik);
+          shikshaMitraToast.success({
+            message: `Registration for ${student?.firstName} ${student?.lastName} updated successfully`,
+          });
+        }
+
+        if (!isSaveButton && !isLastStep) {
+          setActiveStep((prev) => prev + 1);
+          setIsBackClick(false);
+        }
+
+        refetch?.();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      // setIsLoading(false);
-    }
-  };
+    },
+    [
+      activeStep,
+      handleAdditionalDetailsFormSubmit,
+      handleBankDetailsFormSubmit,
+      handleCommunicationFormSubmit,
+      handleFamilyFormSubmit,
+      handleGeneralFormSubmit,
+      handleMedicalFormSubmit,
+      handlePreviousSchoolFormSubmit,
+      refetch,
+      student?.firstName,
+      student?.lastName,
+    ]
+  );
+
   const initialValues = useMemo(
     () => ({
       ...generalFieldsInitialValues(student),
@@ -491,61 +501,60 @@ export function StudentInformation(props: StudentTabsComponentType) {
     [student]
   );
 
-  const formik: any = useFormik({
-    initialValues,
-    validationSchema: validationSchemas[activeTabIndex],
-    onSubmit: async (values, { setSubmitting }) => {
-      await onSubmit(values);
-      setSubmitting(false);
-      refetch?.();
-    },
-  });
-
-  // useEffect(() => {
-  //   if (isChanges) {
-  //     // dispatch(setIsChanges(false));
-  //     // setEditData(null);
-  //   } else {
-  //     // formDialog.onFalse();
-  //     // setEditData(null);
-  //   }
-  // }, [dispatch, isChanges, tabs.value]);
-  const [isBackClick, setIsBackClick] = useState(false);
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
-    const newIndex = TABS.findIndex((tab) => tab.value === newValue);
-    if (activeTabIndex > newIndex) {
-      setIsBackClick(true);
-    } else {
-      setIsBackClick(false);
-    }
-    setIsEdit(false);
-    tabs.setValue(newValue);
-  };
   return (
-    <Box>
-      {/* <BackPopUpChecked initialValues={initialValues} currentValues={formik.values}> */}
-      <form onSubmit={formik.handleSubmit}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+      }}
+    >
+      <Scrollbar>
         <Card sx={{ px: 0 }}>
-          <CustomTabs value={tabs.value} onChange={handleTabChange} variant="fullWidth" sx={{}}>
-            {TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                label={tab.label}
-                sx={{ px: '10px !important' }}
+          <CustomStepperWithFormik
+            initialValues={initialValues}
+            steps={steps}
+            viewMode="vertical"
+            activeStep={activeStep}
+            handleBack={() => {
+              setActiveStep((prev) => prev - 1);
+              setIsBackClick(true);
+            }}
+            validationSchema={validationSchemas[activeStep]}
+            onStepClick={(step) => {
+              if (step < activeStep) setIsBackClick(true);
+              else setIsBackClick(false);
+              setActiveStep(step);
+            }}
+            isDisabledLabel={false}
+            validateOnChange
+            handleNext={(
+              isLastStep: boolean,
+              value: any,
+              formik: any,
+              setIsLoading: (val: boolean) => void
+            ) => handleSave(isLastStep, value, formik, setIsLoading)}
+            onSave={(
+              isLastStep: boolean,
+              value: any,
+              formik: any,
+              setIsLoading: (val: boolean) => void
+            ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
+            renderItem={({ activeStep: step, formik }: any) => (
+              <StudentInformationForm
+                formik={formik}
+                step={step}
+                editData={editData}
+                isEdit
+                isBackClick={isBackClick}
               />
-            ))}
-          </CustomTabs>
-          <StudentInformationForm
-            formik={formik}
-            step={activeTabIndex}
-            editData={editData}
-            isEdit={isEdit}
-            isBackClick={isBackClick}
+            )}
           />
         </Card>
-      </form>
-      {/* </BackPopUpChecked> */}
+      </Scrollbar>
     </Box>
   );
 }

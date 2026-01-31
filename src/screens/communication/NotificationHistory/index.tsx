@@ -39,7 +39,7 @@ const NotificationHistory = () => {
           { name: 'Communication', href: '/communication/dashboard' },
           { name: 'Notification History' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1 }}
       />
       <CustomizableTable
         tableId="announcement-data-table"

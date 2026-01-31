@@ -89,7 +89,6 @@ const FollowUpScreen: React.FC = () => {
         heading="Follow Up"
         description="Follow up with students and parents to ensure their inquiries are addressed promptly and effectively."
         links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Follow Up' }]}
-        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="followUpTable"

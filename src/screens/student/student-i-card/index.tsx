@@ -36,7 +36,6 @@ const StudentIcardScreen = () => {
       <CustomBreadcrumbs
         heading="Student I-Card"
         links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student I-Card' }]}
-        sx={{ mb: 2 }}
         action={
           <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
             Create I-card

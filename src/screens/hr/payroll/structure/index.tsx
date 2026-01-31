@@ -65,7 +65,6 @@ const EmployeeSalaryStructureScreen = () => {
       <CustomBreadcrumbs
         heading="Payroll Structure"
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Payroll Structure' }]}
-        sx={{ mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
         <CustomSelect

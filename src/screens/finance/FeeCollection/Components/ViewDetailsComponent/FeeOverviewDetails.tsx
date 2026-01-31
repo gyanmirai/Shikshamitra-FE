@@ -39,7 +39,7 @@ export default function FeeOverview({
   }) => (
     <Box
       sx={{
-        p: 2.5,
+        p: 2,
         borderRadius: 2,
         mb: 2,
         // bgcolor,
@@ -82,7 +82,7 @@ export default function FeeOverview({
   return (
     <Card
       sx={{
-        p: 3,
+        p: 2,
         borderRadius: 2,
         height: '100%',
         boxShadow: theme.customShadows?.card || theme.shadows[3],
@@ -90,8 +90,8 @@ export default function FeeOverview({
         flexDirection: 'column',
       }}
     >
-      <Box mb={3}>
-        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+      <Box mb={2}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
           Fee Overview
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -99,7 +99,7 @@ export default function FeeOverview({
         </Typography>
       </Box>
 
-      <Scrollbar sx={{ flexGrow: 1, height: 'auto', px: 1, mx: -1 }}>
+      <Scrollbar sx={{ flexGrow: 1, height: 'auto', px: 1 }}>
         {/* Total Fee */}
         <RowCard
           icon={<Iconify icon="streamline:bag-dollar" width={24} />}

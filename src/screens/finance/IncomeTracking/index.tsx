@@ -96,7 +96,6 @@ const IncomeTracking = () => {
             },
             { name: selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking ' },
           ]}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -117,7 +116,7 @@ const IncomeTracking = () => {
               Income
             </Button>
           }
-          sx={{ px: 2, mb: 1 }}
+          sx={{ px: 2 }}
         />
       )}
 

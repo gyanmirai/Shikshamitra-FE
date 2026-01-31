@@ -280,7 +280,6 @@ const Gradebook = (props: TabComponentType) => {
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Gradebook' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={3}>
         <CustomSelect

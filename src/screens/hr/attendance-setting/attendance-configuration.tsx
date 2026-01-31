@@ -116,7 +116,6 @@ const AttendanceConfigurationScreen = () => {
           { name: 'Setting' },
           { name: 'Attendance Configuration', href: '' },
         ]}
-        sx={{ mb: 2 }}
         description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
       />
 

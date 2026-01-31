@@ -84,7 +84,6 @@ const RegistrationFormScreen = () => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -95,7 +94,6 @@ const RegistrationFormScreen = () => {
             { name: 'Student Enrollment', href: '/student/dashboard/' },
             { name: 'Registration Form Issued' },
           ]}
-          sx={{ mb: 1 }}
         />
       )}
       {registerFormDialog.value ? (

@@ -83,7 +83,6 @@ const PaySlipGenerationScreen = () => {
           { name: 'Payroll Management' },
           { name: 'Generate Salary Slip' },
         ]}
-        sx={{ mb: 0 }}
         description="Generate and download salary slips by selecting the pay period and employee details."
       />
 

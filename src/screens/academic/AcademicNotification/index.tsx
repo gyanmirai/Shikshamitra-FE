@@ -76,7 +76,7 @@ const AcademicNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -86,7 +86,7 @@ const AcademicNotificationScreen = () => {
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Notification', href: '/academic/notification' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       )}
       <Paper

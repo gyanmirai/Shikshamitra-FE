@@ -78,7 +78,6 @@ const ResourceVendorScreen = () => {
       <CustomBreadcrumbs
         heading="Vendor Configuration"
         links={links}
-        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

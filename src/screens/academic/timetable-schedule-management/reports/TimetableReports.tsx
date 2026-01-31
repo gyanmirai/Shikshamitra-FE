@@ -44,7 +44,6 @@ const TimetableReports = ({ addReportDialog }: { addReportDialog: UseBooleanRetu
         onBack={() => {
           addReportDialog?.onFalse();
         }}
-        sx={{ mb: 1 }}
       />
 
       <CommonReport categories={categories} subCategories={subCategories} />

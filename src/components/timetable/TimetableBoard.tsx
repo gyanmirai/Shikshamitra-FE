@@ -1,8 +1,11 @@
 import confetti from 'canvas-confetti';
 import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import CreateSlotsForm from 'src/screens/academic/timetable-schedule-management/settings/components/lectureSlots/createSlotsForm';
 import {
   Box,
   Paper,
@@ -28,6 +31,8 @@ export interface TimetableBoardProps {
   onChange: (newSlots: Record<DayOfWeek, TimeSlot[]>) => void;
   subjects: Subject[];
   readOnly?: boolean;
+  selectedClass: string;
+  selectedDivision: string;
 }
 
 const TimetableBoard: React.FC<TimetableBoardProps> = ({
@@ -35,9 +40,11 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   onChange,
   subjects,
   readOnly = false,
+  selectedClass,
+  selectedDivision,
 }) => {
   const [timelineStamps] = useState(generateTimelineStamps());
-
+  const createSlotsDialog = useBoolean();
   // Dialog State
   const [activeDialog, setActiveDialog] = useState<{
     type: 'teacher' | 'room';
@@ -330,16 +337,17 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     Object.values(slots).forEach((daySlots) => {
       daySlots.forEach((slot) => {
         // Count from the new 'subjects' array
-        if (slot.subjects && slot.subjects.length > 0) {
-          slot.subjects.forEach((sub) => {
-            // If split ids, we might want to map back to original 'parent' id?
-            const originalId = sub.id.split('_part_')[0];
-            counts[originalId] = (counts[originalId] || 0) + 1;
-          });
-        }
+        // if (slot.subjects && slot.subjects.length > 0) {
+        //   slot.subjects.forEach((sub) => {
+        //     // If split ids, we might want to map back to original 'parent' id?
+        //     const originalId = sub.id.split('_part_')[0];
+        //     counts[originalId] = (counts[originalId] || 0) + 1;
+        //   });
+        // }
         // Fallback or legacy check
-        else if (slot.subjectId) {
-          counts[slot.subjectId] = (counts[slot.subjectId] || 0) + 1;
+        const subjectKey = slot.subjectId || slot.electiveGroupId;
+        if (subjectKey) {
+          counts[subjectKey] = (counts[subjectKey] || 0) + 1;
         }
       });
     });
@@ -358,79 +366,110 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       }}
     >
       {/* Left Panel: Palette */}
-      {!readOnly && <SubjectPalette subjects={subjects} placedCounts={subjectCounts} />}
+      {!readOnly && (
+        <SubjectPalette
+          subjects={subjects}
+          placedCounts={subjectCounts}
+          selectedClass={selectedClass}
+          selectedDivision={selectedDivision}
+        />
+      )}
 
       {/* Main Area */}
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          overflow: 'auto',
-          position: 'relative',
-          bgcolor: 'background.paper',
-          height: '100%',
-        }}
-      >
-        {/* Time Column (Sticky) */}
-        <Paper
-          elevation={1}
+      {slots ? (
+        <Box
           sx={{
-            width: '80px',
-            flexShrink: 0,
+            flex: 1,
+            display: 'flex',
+            overflow: 'auto',
+            position: 'relative',
             bgcolor: 'background.paper',
-            borderRight: 1,
-            borderColor: 'divider',
-            position: 'sticky',
-            left: 0,
-            zIndex: 5,
-            pt: '40px', // Header offset
-            borderRadius: 0,
             height: '100%',
+            mt: 1,
           }}
         >
-          {timelineStamps.map((time) => (
-            <Box
-              key={time}
-              sx={{
-                height: '50px', // var(--slot-height-30)
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                pr: 1.5,
-                fontSize: '0.75rem',
-                color: 'text.secondary',
-                position: 'relative',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  right: 0,
-                  top: 0,
-                  width: '6px',
-                  height: '1px',
-                  bgcolor: 'divider',
-                },
-              }}
-            >
-              {time}
-            </Box>
-          ))}
-        </Paper>
+          {/* Time Column (Sticky) */}
+          <Paper
+            elevation={1}
+            sx={{
+              width: '80px',
+              flexShrink: 0,
+              bgcolor: 'background.paper',
+              borderRight: 1,
+              borderColor: 'divider',
+              position: 'sticky',
+              left: 0,
+              zIndex: 5,
+              pt: '40px', // Header offset
+              borderRadius: 0,
+              height: '100%',
+            }}
+          >
+            {timelineStamps.map((time) => (
+              <Box
+                key={time}
+                sx={{
+                  height: '50px', // var(--slot-height-30)
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  pr: 1.5,
+                  fontSize: '0.75rem',
+                  color: 'text.secondary',
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    width: '6px',
+                    height: '1px',
+                    bgcolor: 'divider',
+                  },
+                }}
+              >
+                {time}
+              </Box>
+            ))}
+          </Paper>
 
-        {/* Days Grid */}
-        <Box sx={{ display: 'flex', flex: 1, width: '100%' }}>
-          {(Object.keys(slots) as DayOfWeek[]).map((day) => (
-            <DayColumn
-              key={day}
-              day={day}
-              slots={slots[day]}
-              onDropSubject={handleDropSubject}
-              onRemoveSubject={handleRemoveSubject}
-              onAssignTeacher={handleAssignTeacher}
-              onAssignRoom={handleAssignRoom}
-            />
-          ))}
+          {/* Days Grid */}
+          <Box sx={{ display: 'flex', flex: 1, width: '100%' }}>
+            {(Object.keys(slots) as DayOfWeek[]).map((day) => (
+              <DayColumn
+                key={day}
+                day={day}
+                slots={slots[day]}
+                onDropSubject={handleDropSubject}
+                onRemoveSubject={handleRemoveSubject}
+                onAssignTeacher={handleAssignTeacher}
+                onAssignRoom={handleAssignRoom}
+              />
+            ))}
+          </Box>
         </Box>
-      </Box>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-end',
+            mt: 2,
+            mb: 2,
+          }}
+        >
+          <Button
+            startIcon={<Add />}
+            size="small"
+            variant="contained"
+            onClick={() => {
+              createSlotsDialog.onTrue();
+            }}
+          >
+            Create Slots
+          </Button>
+        </Box>
+      )}
 
       {/* Assignment Dialog */}
       <CustomDialog
@@ -496,6 +535,16 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
             Submit
           </Button>
         </DialogActions>
+      </CustomDialog>
+      <CustomDialog
+        open={createSlotsDialog.value}
+        handleClose={(e, isSubmit) => {
+          createSlotsDialog.onFalse();
+        }}
+        title="Create Slots"
+        maxWidth="md"
+      >
+        <CreateSlotsForm handleClose={() => createSlotsDialog.onFalse()} />
       </CustomDialog>
     </Box>
   );

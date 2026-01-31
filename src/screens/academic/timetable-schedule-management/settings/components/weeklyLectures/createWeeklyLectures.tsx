@@ -51,16 +51,18 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useUpdateWeeklyLectureSlotMutation,
   });
-  const [getWeeklyLectureSlotById, { isLoading: isLoadingGetById }] = useQueryAndMutation({
+  const { data: weeklyLectureSlotById, isLoading: isLoadingGetById } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWeeklyLectureSlotByIdQuery,
-    params: {
-      lectureSlotId: editData?.id,
+    params: editData?.id ? { lectureSlotId: editData.id } : undefined,
+    options: {
+      skip: !editData?.id,
     },
   });
+
   const formik = useFormik<ISubjectFormValues>({
     initialValues: getNoOfLectureInitialValues(
-      getWeeklyLectureSlotById?.data,
+      weeklyLectureSlotById?.data,
       selectedClass || classes
     ),
     enableReinitialize: true, // important when using useMemo

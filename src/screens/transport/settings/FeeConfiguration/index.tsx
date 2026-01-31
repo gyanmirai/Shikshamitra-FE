@@ -117,7 +117,6 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
               {isAdding || isUpdating ? 'Saving...' : 'Save '}
             </Button>
           }
-          sx={{ mb: 2 }}
         />
       )}
       <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>

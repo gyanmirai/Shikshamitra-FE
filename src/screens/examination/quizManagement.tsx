@@ -50,7 +50,7 @@ const QuizManagement = (props: TabComponentType) => {
           { name: 'Quiz Management' },
           { name: currentTab?.label || '' },
         ]}
-        // sx={{ mb: 2 }}
+        //
       />
       <Paper
         sx={{

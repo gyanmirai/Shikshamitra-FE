@@ -32,6 +32,7 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
     type: 'query',
     currentQueryAndMutation: useGetVehicleManagementDataQuery,
   });
+
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const maintainDialog = useBoolean();

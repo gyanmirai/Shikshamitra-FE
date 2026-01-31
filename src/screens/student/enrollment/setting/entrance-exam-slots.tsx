@@ -158,7 +158,6 @@ const EntranceExamSlots = () => {
           { name: 'Settings' },
           { name: 'Entrance Exam Slots' },
         ]}
-        sx={{ mb: 2 }}
         action={
           <Button
             sx={{ px: '32px' }}

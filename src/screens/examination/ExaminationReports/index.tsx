@@ -125,7 +125,6 @@ const ExaminationReports = ({ addReportDialog }: { addReportDialog: UseBooleanRe
         onBack={() => {
           addReportDialog?.onFalse();
         }}
-        sx={{ mb: 1 }}
       />
 
       <CommonReport

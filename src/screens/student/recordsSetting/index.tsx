@@ -162,7 +162,6 @@ const HouseSetting = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Setting' },
         ]}
-        sx={{ mb: 1 }}
         action={
           <Button
             size="small"

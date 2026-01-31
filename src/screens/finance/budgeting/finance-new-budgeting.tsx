@@ -211,7 +211,6 @@ const FinanceNewBudgetingScreen = () => {
       <CustomBreadcrumbs
         heading="Budgeting"
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Budgeting' }]}
-        sx={{ mb: 2 }}
         description="The Budget screen provides an overview of income and expenses based on the selected tab. Easily track financial allocations and monitor spending for better financial planning."
       />
 

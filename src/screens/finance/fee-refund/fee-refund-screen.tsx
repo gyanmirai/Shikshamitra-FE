@@ -120,7 +120,6 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
             description="This is the Refund Screen, where all created refund requests are displayed. By clicking the Approve action from the table, you can review and make a decision on the refund request. To create a new request, click on the Create Request Button"
             heading="Fee Refund"
             links={links}
-            sx={{ mb: 2 }}
             isBack={open}
             onBack={() => {
               setOpen(false);

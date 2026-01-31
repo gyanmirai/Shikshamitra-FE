@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
@@ -109,8 +110,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 1,
-          mb: 2,
+          mt: 2,
           p: 1,
           gap: 2,
         }}
@@ -172,13 +172,15 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           />
         </CustomTooltip>
       </Box>
-      {homeworkTitle && (
+      {homeworkTitle ? (
         <StudentSubmissions
           selectedClass={classes}
           selectedDivision={division}
           selectedSubject={subject}
           selectedHomework={selectedHomework}
         />
+      ) : (
+        <EmptyContent title="Please select a homework title to view student submissions." />
       )}
     </Box>
   );

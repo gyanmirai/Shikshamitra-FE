@@ -203,13 +203,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         <Card
           ref={tableRef}
           sx={{
-            boxShadow: theme.customShadows?.z20 || '0px 4px 20px rgba(0, 0, 0, 0.05)',
+            // boxShadow: theme.customShadows?.z20 || '0px 4px 20px rgba(0, 0, 0, 0.05)',
             borderRadius: 2,
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
             minHeight: 0,
-            border: `1px solid ${theme.vars.palette.grey['500Channel'] ? `rgba(${theme.vars.palette.grey['500Channel']}, 0.12)` : 'rgba(145, 158, 171, 0.12)'}`,
+            border: `1px solid ${theme.palette.divider}`,
           }}
         >
           <TableToolbar
@@ -357,11 +357,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       </Box>
     ),
     [
+      theme.palette.divider,
+      theme.vars.palette.divider,
       boxSx,
       boxOther,
-      theme.customShadows?.z20,
-      theme.vars.palette.grey,
-      theme.vars.palette.divider,
       isSearch,
       isFilter,
       searchTerm,
@@ -376,8 +375,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       filters,
       handleRemoveFilter,
       handleClearAllFilters,
-      handleApplyColumnFilter,
       filterAnchorEl,
+      handleApplyColumnFilter,
       sx,
       other,
       dense,
@@ -392,12 +391,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       expandedRows,
       handleExpandRow,
       noDataText,
+      rowsPerPage,
       isShowedDense,
       isPagination,
       serverSidePagination,
       totalCount,
       filteredData.length,
-      rowsPerPage,
       page,
       handlePageChange,
       handleRowsPerPageChange,

@@ -14,7 +14,6 @@ const Dashboard = (props: TabComponentType) => (
     <CustomBreadcrumbs
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Student Progress Analytics' }, { name: 'Dashboard' }]}
-      sx={{ mb: 2 }}
     />
     <Grid container spacing={3}>
       <StudentProgressCards />

@@ -22,19 +22,27 @@ const StudentExamsList = () => (
     }}
   >
     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="h6"
+        sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
+        <Iconify
+          icon="solar:pen-new-square-bold-duotone"
+          width={24}
+          sx={{ color: 'primary.main' }}
+        />
         Exams
       </Typography>
       <Button
         size="small"
-        endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+        endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
         sx={{ color: 'text.secondary', fontWeight: 600 }}
       >
         View All
       </Button>
     </Box>
 
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       {exams?.map((exam, index) => (
         <ExamCard key={index} {...exam} />
       ))}

@@ -361,7 +361,6 @@ const EntranceExamScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/entrance-exam/?view=calender' },
           { name: 'Entrance Exam' },
         ]}
-        sx={{ mb: 1 }}
       />
       <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 1, py: 1 }}>
         <Box display="flex" gap={2}>

@@ -36,19 +36,21 @@ const ReportsScreen = () => {
         heading="Reports"
         description="Generate and filter payroll and employee reports by department, role, status, and other criteria."
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports' }]}
-        sx={{ mb: 1 }}
+        sx={{ px: 2 }}
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={openGenerateReport.onTrue}
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-            sx={{ px: '32px' }}
-          >
-            Generate Report
-          </Button>
+          openGenerateReport.value ? null : (
+            <Button
+              variant="contained"
+              size="small"
+              onClick={openGenerateReport.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.report} />}
+              sx={{ px: '32px' }}
+            >
+              Generate Report
+            </Button>
+          )
         }
       />
       {openGenerateReport.value ? (
@@ -214,6 +216,7 @@ const ReportsScreen = () => {
               minWidth: '15vw',
               align: 'left',
               sticky: true,
+              filterType: 'string',
             },
 
             { label: 'Report Category', id: 'reportCategory', minWidth: '10vw', align: 'left' },
@@ -223,16 +226,20 @@ const ReportsScreen = () => {
               id: 'reportDescription',
               minWidth: '12vw',
               align: 'left',
+              filterType: 'string',
             },
             {
               label: 'Generate Report Date',
               id: 'generateReportDate',
               minWidth: '13vw',
               align: 'left',
+              filterType: 'date',
             },
             {
               label: 'Applied Filters',
               id: 'appliedFilters',
+              isFilter: false,
+              isSort: false,
               render(value, row) {
                 return (
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>

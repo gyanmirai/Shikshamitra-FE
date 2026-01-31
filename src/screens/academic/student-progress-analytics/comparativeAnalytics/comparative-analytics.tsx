@@ -58,7 +58,6 @@ const ComparativeAnalytics = (props: TabComponentType) => {
           { name: 'Student Progress Analytics' },
           { name: 'Comparative Analytics' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Grid container spacing={2}>
         <SubjectPerformanceComparison />

@@ -54,7 +54,6 @@ const HostelNotificationTabScreen = () => {
           { name: 'Setting', href: '' },
           { name: currentActiveComponent?.label, href: '' },
         ]}
-        sx={{ mb: 2 }}
       />
       <Card
         sx={{

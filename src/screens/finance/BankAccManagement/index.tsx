@@ -101,7 +101,7 @@ const BankAccountManagement: React.FC = () => {
             Add Bank Account
           </Button>
         }
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1 }}
       />
 
       <BankAccountTable

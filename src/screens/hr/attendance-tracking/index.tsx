@@ -74,7 +74,7 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 2, mb: 1 }}
+        sx={{ px: 2 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
