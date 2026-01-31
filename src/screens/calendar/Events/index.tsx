@@ -45,6 +45,7 @@ const Events = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetEventsQuery,
     params: { status: status === 'All' ? undefined : status },
+    options: { skip: !status },
   });
   const { confirmWithUndo } = useConfirmWithUndo();
 

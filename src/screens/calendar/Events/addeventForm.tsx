@@ -54,6 +54,8 @@ import type { IAddEventProps } from './type';
 
 const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isEdit = false }) => {
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: roleData, isLoading: isRoleDataLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
@@ -62,6 +64,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     type: 'query',
     currentQueryAndMutation: useGetEventByIdQuery,
     params: { id: initialValues?.id || '' },
+    options: { skip: !isEdit || !initialValues?.id },
   });
   const {
     data: eventTypeData,
@@ -74,13 +77,13 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
   const [createEvent, { isLoading: addEventTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateEventMutation,
+    params: { academicYearId: currentYear?.id || '' },
   });
 
   const [updateEvent, { isLoading: updateEventTypeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEventMutation,
   });
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const openRecurringDialog = useBoolean();
   // State to store list of all organizations/branches
@@ -115,39 +118,46 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
       const recurrenceJson = values.isRecurring
         ? JSON.stringify({
-            repeatFrequency: values.repeatFrequency,
-            customInterval: values.customInterval,
-            customIntervalCount: values.customIntervalCount,
-            customDays: values.customDays,
-            monthlyOption: values.monthlyOption,
-            onDay: values.onDay,
-            onTheWeek: values.onTheWeek,
-            onTheDay: values.onTheDay,
-            repeatUntil: values.repeatUntil,
-          })
+          repeatFrequency: values.repeatFrequency,
+          customInterval: values.customInterval,
+          customIntervalCount: values.customIntervalCount,
+          customDays: values.customDays,
+          monthlyOption: values.monthlyOption,
+          onDay: values.onDay,
+          onTheWeek: values.onTheWeek,
+          onTheDay: values.onTheDay,
+          repeatUntil: values.repeatUntil,
+        })
         : '';
 
       // ----------------------------
       // Base payload (Swagger-safe)
       // ----------------------------
       const payload: any = {
+        academicYearId: currentYear?.id,
         title: values.title,
         eventTypeId: values.type,
         description: values.description,
         poster: values.attachment ?? '',
-        mode: values.eventMode === 'online' ? 1 : 0,
-        venue: values.eventMode === 'offline' ? values.venue : '',
-        onlineLink: values.eventMode === 'online' ? values.onlineLink : '',
-        recurrenceSummary: values.recurrenceSummary,
+        mode: values.eventMode === 'online' ? 0 : 1,
+        ...(values.eventMode === 'offline' && {
+          venue: values.venue,
+        }),
         isRecurring: values.isRecurring,
-        recurrenceJson,
         startTime: values.startTime
           ? dayjs(values.startTime).format('HH:mm')
           : dayjs().format('HH:mm'),
-        endTime: values.endTime ? dayjs(values.endTime).format('HH:mm') : dayjs().format('HH:mm'),
+        endTime: values.endTime
+          ? dayjs(values.endTime).format('HH:mm')
+          : dayjs().add(1, 'hour').format('HH:mm'),
+        startDate: dayjs(values.startDate).toISOString(),
+        endDate: dayjs(values.endDate).toISOString(),
         audienceIds: values.audience,
       };
 
+      if (values.isRecurring) {
+        payload.recurrenceJson = recurrenceJson;
+      }
       // ----------------------------
       // Meeting date (REQUIRED)
       // ----------------------------
@@ -182,7 +192,12 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
             message: `Event: ${values.title} has been successfully updated`,
           });
         } else {
-          await createEvent(payload).unwrap();
+          await createEvent({
+            params: {
+              academicYearId: currentYear?.id,
+            },
+            data: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
             message: `Event: ${values.title} has been successfully created`,
@@ -336,8 +351,8 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         '&:hover': { borderColor: theme.vars.palette.text.primary },
                         ...(!!formik.touched.description &&
                           !!formik.errors.description && {
-                            borderColor: theme.palette.error.main,
-                          }),
+                          borderColor: theme.palette.error.main,
+                        }),
                         '&:focus-within': {
                           borderColor: theme.vars.palette.text.primary,
                           borderWidth: 2,
@@ -423,7 +438,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                                 !!(formik.touched.startDate && formik.errors.startDate) || false,
                               helperText:
                                 formik.touched.startDate &&
-                                typeof formik.errors.startDate === 'string'
+                                  typeof formik.errors.startDate === 'string'
                                   ? formik.errors.startDate
                                   : undefined,
                             },
@@ -504,7 +519,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                           }
                           helperText={
                             formik.touched.repeatFrequency &&
-                            typeof formik.errors.repeatFrequency === 'string'
+                              typeof formik.errors.repeatFrequency === 'string'
                               ? formik.errors.repeatFrequency
                               : undefined
                           }
@@ -553,7 +568,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                                 formik.touched.meetingDate && Boolean(formik.errors.meetingDate),
                               helperText:
                                 formik.touched.meetingDate &&
-                                typeof formik.errors.meetingDate === 'string'
+                                  typeof formik.errors.meetingDate === 'string'
                                   ? formik.errors.meetingDate
                                   : undefined,
                             },
@@ -580,7 +595,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                               error: formik.touched.startTime && Boolean(formik.errors.startTime),
                               helperText:
                                 formik.touched.startTime &&
-                                typeof formik.errors.startTime === 'string'
+                                  typeof formik.errors.startTime === 'string'
                                   ? formik.errors.startTime
                                   : undefined,
                             },

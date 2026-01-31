@@ -12,10 +12,11 @@ export const eventApi = calendarModuleApi.injectEndpoints({
     }),
 
     createEvent: builder.mutation({
-      query: (body) => ({
+      query: ({ params, data }) => ({
         url: '/calendar/events',
         method: 'POST',
-        data: body,
+        data,
+        params,
       }),
       invalidatesTags: ['Events'],
     }),

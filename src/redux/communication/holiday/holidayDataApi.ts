@@ -1,39 +1,73 @@
-import { communicationApi } from '../communicationApi';
+import { calendarModuleApi } from 'src/redux/calendar/calendarApi';
 
-export const holidayApi = communicationApi.injectEndpoints({
+export const holidayApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getHolidays: builder.query({
       query: () => ({
-        url: '/holidayData',
+        url: '/calendar/holidays',
         method: 'GET',
       }),
       providesTags: ['Holiday'],
     }),
 
+    addHoliday: builder.mutation({
+      query: ({ params, data }) => ({
+        url: `/calendar/holidays`,
+        method: 'POST',
+        data,
+        params,
+      }),
+      invalidatesTags: ['Holiday'],
+    }),
+
+    getHolidayType: builder.query({
+      query: () => ({
+        url: '/calendar/holiday-types',
+        method: 'GET',
+      }),
+      providesTags: ['HolidayType'],
+    }),
+
     addHolidayType: builder.mutation({
       query: (data) => ({
-        url: '/api/calendar/holiday-types',
+        url: '/calendar/holiday-types',
         method: 'POST',
-        body: data,
+        data,
+      }),
+      invalidatesTags: ['HolidayType'],
+    }),
+
+    updateHoliday: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/calendar/holidays/${id}`,
+        method: 'PUT',
+        data: body,
       }),
       invalidatesTags: ['Holiday'],
     }),
 
     updateHolidayType: builder.mutation({
       query: ({ data, holidayTypeId }) => ({
-        url: `/api/calendar/holiday-types/${holidayTypeId}`,
+        url: `/calendar/holiday-types/${holidayTypeId}`,
         method: 'PUT',
-        body: data,
+        data,
+      }),
+      invalidatesTags: ['HolidayType'],
+    }),
+    deleteHoliday: builder.mutation({
+      query: (id) => ({
+        url: `/calendar/holidays/${id}`,
+        method: 'DELETE',
       }),
       invalidatesTags: ['Holiday'],
     }),
 
     deleteHolidayType: builder.mutation({
       query: (holidayTypeId) => ({
-        url: `/api/calendar/holiday-types/${holidayTypeId}`,
+        url: `/calendar/holiday-types/${holidayTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Holiday'],
+      invalidatesTags: ['HolidayType'],
     }),
   }),
   overrideExisting: false,
@@ -41,7 +75,11 @@ export const holidayApi = communicationApi.injectEndpoints({
 
 export const {
   useGetHolidaysQuery,
+  useGetHolidayTypeQuery,
+  useAddHolidayMutation,
   useAddHolidayTypeMutation,
   useUpdateHolidayTypeMutation,
+  useUpdateHolidayMutation,
   useDeleteHolidayTypeMutation,
+  useDeleteHolidayMutation,
 } = holidayApi;

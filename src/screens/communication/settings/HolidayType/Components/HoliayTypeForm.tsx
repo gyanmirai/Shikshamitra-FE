@@ -14,7 +14,7 @@ import { Grid, Button, TextField, Typography, DialogActions } from '@mui/materia
 import {
   useAddHolidayTypeMutation,
   useUpdateHolidayTypeMutation,
-} from 'src/redux/communication/setting/holidayTypeApi';
+} from 'src/redux/communication/holiday/holidayDataApi';
 
 import { holidayTypeValidationSchema } from './HolidayTypeValidation';
 import { getHolidayTypeInitialValues } from './HolidayTypeInitialValues';
@@ -22,12 +22,13 @@ import { getHolidayTypeInitialValues } from './HolidayTypeInitialValues';
 import type { IHolidayFormProps } from '../type';
 
 const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData }) => {
-  const { addHolidayType } = useQueryAndMutation({
+  console.log(editData);
+  const [addHolidayType] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHolidayTypeMutation,
   });
 
-  const { updateHolidayType } = useQueryAndMutation({
+  const [updateHolidayType] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHolidayTypeMutation,
   });
@@ -41,9 +42,11 @@ const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData 
           // Update existing holiday type
           await updateHolidayType({
             holidayTypeId: editData.id || '',
-            name: values.holidayType,
-            color: values.color,
-            description: values.description,
+            data: {
+              name: values.holidayType,
+              color: values.color,
+              description: values.description,
+            },
           }).unwrap();
 
           shikshaMitraToast.success({
@@ -63,6 +66,7 @@ const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData 
         }
         onClose(null, true);
       } catch (error: any) {
+        console.error(error);
         shikshaMitraToast.error({
           message:
             error?.data?.message || `Failed to ${editData ? 'update' : 'create'} holiday type`,

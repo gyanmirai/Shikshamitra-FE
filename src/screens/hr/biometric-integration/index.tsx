@@ -172,18 +172,23 @@ const BiometricIntegrationScreen = () => {
         minWidth: '6vw',
         enumOptions: [
           {
+            label: 'Pending',
+            value: 'Pending',
+          },
+          {
             label: 'Present',
-            // value: EmployeeAttendanceStatus.Present,
             value: 'Present',
           },
           {
+            label: 'Absent',
+            value: 'Absent',
+          },
+          {
             label: 'Half Day',
-            // value: EmployeeAttendanceStatus.HalfDayLeave,
             value: 'Half Day',
           },
           {
             label: 'Leave',
-            // value: EmployeeAttendanceStatus.HalfDayLeave,
             value: 'Leave',
           },
         ],

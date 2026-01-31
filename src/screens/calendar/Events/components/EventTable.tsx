@@ -11,6 +11,7 @@ import { RemoveCircle } from '@mui/icons-material';
 import React, { useMemo, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Tab, Tabs, Paper, MenuList, MenuItem, Typography } from '@mui/material';
 import { EventStatus, EventStatusColor, EventStatusOptions } from 'src/enums/event-type';
 
@@ -122,7 +123,19 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
   const allColumns: IColumn[] = useMemo(
     () => [
       { id: 'title', label: 'Title', align: 'left', sticky: true, minWidth: 150 },
-      { id: 'type', label: 'Type', align: 'left' },
+      {
+        id: 'eventType.name',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
       {
         id: 'audienceIds',
         label: 'Target Group',
@@ -208,7 +221,19 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
   const otherColumns: IColumn[] = useMemo(
     () => [
       { id: 'title', label: 'Title', align: 'left', sticky: true, minWidth: 150 },
-      { id: 'type', label: 'Type', align: 'left' },
+      {
+        id: 'eventType.name',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
       {
         id: 'audienceIds',
         label: 'Target Group',

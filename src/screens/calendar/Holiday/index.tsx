@@ -20,7 +20,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   holidayApi,
   useGetHolidaysQuery,
-  useDeleteHolidayTypeMutation,
+  useDeleteHolidayMutation,
 } from 'src/redux/communication/holiday/holidayDataApi';
 
 import HolidayForm from './Components/HolidayForm';
@@ -31,7 +31,12 @@ import type { IHoliday } from './Components/type';
 const HolidayManagement = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
 
-  const { data: holidayData } = useQueryAndMutation({
+  const {
+    data: holidayData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHolidaysQuery,
   });
@@ -48,7 +53,7 @@ const HolidayManagement = (props: TabComponentType) => {
   // Delete mutation and undo hook
   const [deleteHoliday, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteHolidayTypeMutation,
+    currentQueryAndMutation: useDeleteHolidayMutation,
   });
 
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -70,6 +75,8 @@ const HolidayManagement = (props: TabComponentType) => {
       resetState();
     }
   };
+
+  console.log(selectedHoliday);
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -116,20 +123,20 @@ const HolidayManagement = (props: TabComponentType) => {
       ) : (
         <HolidayTable
           setOpen={setOpen}
-          data={holidayData}
+          data={holidayData?.items || []}
           onEdit={(row) => {
             setOpen(true);
             setEditingHoliday(row);
           }}
-          onDelete={(id) => {
-            const holiday = holidayData?.find((h: IHoliday) => h.id === id);
-            setSelectedHoliday(holiday || null);
+          onDelete={(row) => {
+            setSelectedHoliday(row);
             confirm_dialog.onTrue();
           }}
           onPublish={(row) => {
             publish_modal.onTrue();
             setPublishingHoliday(row);
           }}
+          isLoading={isLoading || isFetching}
         />
       )}
 
@@ -159,22 +166,16 @@ const HolidayManagement = (props: TabComponentType) => {
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     holidayApi.util.updateQueryData('getHolidays', undefined, (draft: any) => {
-                      const index = draft?.findIndex(
+                      const index = draft?.items?.findIndex(
                         (item: any) => item.id === selectedHoliday?.id
                       );
                       setDeleteIndex(index);
                       if (index !== -1 && draft) {
-                        draft.splice(index, 1);
+                        draft.items.splice(index, 1);
                       }
                     })
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    holidayApi.util.updateQueryData('getHolidays', undefined, (draft: any) => {
-                      if (!draft) return;
-                      draft.splice(index, 0, selectedHoliday);
-                    })
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteHoliday(selectedHoliday?.id || ''),
               });
               confirm_dialog.onFalse();

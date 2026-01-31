@@ -1,4 +1,5 @@
 export enum EmployeeAttendanceStatus {
+  Pending,
   Present,
   HalfDayLeave,
   FullDayLeave,
@@ -7,6 +8,10 @@ export enum EmployeeAttendanceStatus {
 }
 
 export const EmployeeAttendanceStatusOptions = [
+  {
+    label: 'Pending',
+    value: EmployeeAttendanceStatus.Pending,
+  },
   {
     label: 'Present',
     value: EmployeeAttendanceStatus.Present,
@@ -30,8 +35,9 @@ export const EmployeeAttendanceStatusOptions = [
 ];
 
 export const EmployeeAttendanceStatusColor = {
+  [EmployeeAttendanceStatus.Pending]: 'warning',
   [EmployeeAttendanceStatus.Present]: 'success',
-  [EmployeeAttendanceStatus.HalfDayLeave]: 'warning',
+  [EmployeeAttendanceStatus.HalfDayLeave]: 'info',
   [EmployeeAttendanceStatus.FullDayLeave]: 'error',
   [EmployeeAttendanceStatus.Late]: 'info',
   [EmployeeAttendanceStatus.RejectedLeave]: 'error',

@@ -10,6 +10,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, Paper, Typography } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   HolidayStatus,
   HolidayStatusColor,
@@ -24,6 +25,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
   onEdit,
   onDelete,
   onPublish,
+  isLoading,
 }) => {
   // counts for tabs
   const holidayCounts = useMemo(
@@ -76,12 +78,24 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-      { id: 'holidayType', label: 'Type', align: 'left' },
+      {
+        id: 'holidayType.name',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
       {
         id: 'audience',
         label: 'Audience',
         align: 'left',
-        render: (value) => <Box>{value.join(', ')}</Box>,
+        render: (value) => <Box>-</Box>,
       },
       {
         id: 'startDate',
@@ -105,7 +119,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
       },
       { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
       {
-        id: 'createdOn',
+        id: 'creationTime',
         label: 'Created On',
         filterType: 'date',
         align: 'left',
@@ -121,6 +135,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         filterType: 'enum',
         enumOptions: HolidayStatusOptions,
         sticky: true,
+        minWidth: 120,
         render: (value) => (
           <Label variant="soft" color={HolidayStatusColor[value as HolidayStatus] as LabelColor}>
             {HolidayStatus[value as HolidayStatus]}
@@ -140,7 +155,9 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             showDeleteIcon
             showThreeDots={false}
             handleEditClick={() => onEdit(row as IHoliday)}
-            handleDeleteClick={() => onDelete(row.id)}
+            handleDeleteClick={() => {
+              onDelete(row as IHoliday);
+            }}
           />
         ),
       },
@@ -180,6 +197,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
       {/* Table */}
       {tabs.value === 'All' ? (
         <CustomizableTable
+          isLoading={isLoading}
           tableId="holiday-table-all"
           noDataText={
             <>
@@ -207,6 +225,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         />
       ) : tabs.value === HolidayStatus.Ongoing ? (
         <CustomizableTable
+          isLoading={isLoading}
           tableId="holiday-table-ongoing"
           noDataText={
             <>
@@ -231,12 +250,24 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-            { id: 'holidayType', label: 'Type', align: 'left' },
+            {
+              id: 'holidayType.name',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              ),
+            },
             {
               id: 'audience',
               label: 'Audience',
               align: 'left',
-              render: (value) => <Box>{value.join(', ')}</Box>,
+              render: (value) => <Box>-</Box>,
             },
             {
               id: 'startDate',
@@ -260,7 +291,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
-              id: 'createdOn',
+              id: 'creationTime',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
@@ -274,6 +305,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         />
       ) : tabs.value === HolidayStatus.Upcoming ? (
         <CustomizableTable
+          isLoading={isLoading}
           tableId="holiday-table-upcoming"
           noDataText={
             <>
@@ -298,7 +330,19 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-            { id: 'holidayType', label: 'Type', align: 'left' },
+            {
+              id: 'holidayType.name',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              ),
+            },
             { id: 'audience', label: 'Audience', align: 'left' },
             {
               id: 'startDate',
@@ -322,7 +366,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
-              id: 'createdOn',
+              id: 'creationTime',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
@@ -344,7 +388,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
                   showDeleteIcon
                   showThreeDots={false}
                   handleEditClick={() => onEdit(row as IHoliday)}
-                  handleDeleteClick={() => onDelete(row.id)}
+                  handleDeleteClick={() => onDelete(row as IHoliday)}
                 />
               ),
             },
@@ -353,6 +397,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
         />
       ) : tabs.value === HolidayStatus.Completed ? (
         <CustomizableTable
+          isLoading={isLoading}
           tableId="holiday-table-completed"
           noDataText={
             <>
@@ -377,7 +422,19 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
-            { id: 'holidayType', label: 'Type', align: 'left' },
+            {
+              id: 'holidayType.name',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={row.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value}
+                  </Typography>
+                </Box>
+              ),
+            },
             { id: 'audience', label: 'Audience', align: 'left' },
             {
               id: 'startDate',
@@ -401,7 +458,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
-              id: 'createdOn',
+              id: 'creationTime',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
@@ -421,7 +478,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
                   placement="right-top"
                   showThreeDots={false}
                   showDeleteIcon
-                  handleDeleteClick={() => onDelete(row.id)}
+                  handleDeleteClick={() => onDelete(row as IHoliday)}
                 />
               ),
             },
