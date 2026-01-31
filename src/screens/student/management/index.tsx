@@ -138,7 +138,7 @@ const StudentManagementScreen = () => {
         }}
       >
         {/* Left Section - Navigation List */}
-        <Grid size={{ xs: 12, md: 3, lg: 2 }} sx={{ height: '100%' }}>
+        <Grid size={{ xs: 12, md: 4, lg: 2.3 }} sx={{ height: '100%' }}>
           <Card sx={{ height: '100%', p: 1 }}>
             <Box
               sx={{
@@ -197,7 +197,7 @@ const StudentManagementScreen = () => {
         </Grid>
 
         {/* Right Section - Content */}
-        <Grid size={{ xs: 12, md: 9, lg: 10 }} sx={{ height: '100%' }}>
+        <Grid size={{ xs: 12, md: 8, lg: 9.7 }} sx={{ height: '100%' }}>
           <Box
             sx={{
               gap: 1,

@@ -40,7 +40,7 @@ const stats = [
 ];
 
 const HRStatsCards = () => (
-  <Grid container spacing={2} mb={3}>
+  <Grid container spacing={1} mb={1}>
     {stats.map((stat, index) => (
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }} key={index}>
         <Card

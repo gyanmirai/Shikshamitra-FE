@@ -18,7 +18,7 @@ const PrincipalDashboard = () => (
     </Box>
 
     <Box sx={{ mb: 4 }}>
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <PrincipalHouseDistribution />
         </Grid>

@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import { GlobalIcons } from 'src/utils/icons';
-// import { useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import { Box, Typography, DialogTitle } from '@mui/material';
@@ -30,10 +30,20 @@ export function ConfirmDialog({
   icon = 'error',
   ...other
 }: ConfirmDialogProps) {
-  // const theme = useTheme();
+  const theme = useTheme();
 
   return (
-    <Dialog fullWidth maxWidth="xs" open={open} onClose={onClose} {...other}>
+    <Dialog
+      fullWidth
+      maxWidth="xs"
+      open={open}
+      onClose={onClose}
+      {...other}
+      transitionDuration={{
+        enter: theme.transitions.duration.shortest,
+        exit: 0,
+      }}
+    >
       <DialogTitle sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={1}>
           {iconMap[icon as ConfirmIconType]}

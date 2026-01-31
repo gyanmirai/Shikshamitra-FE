@@ -1,6 +1,5 @@
 import type { StackProps } from '@mui/material/Stack';
 
-import { m } from 'framer-motion';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';

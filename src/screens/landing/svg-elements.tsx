@@ -4,7 +4,7 @@ import type { Theme, SxProps, CSSObject } from '@mui/material/styles';
 
 import { useId } from 'react';
 import Box from '@mui/material/Box';
-import { m, circOut } from 'framer-motion';
+import { motion, circOut } from 'framer-motion';
 import { varFade } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ export function FloatLine({
 }) {
   return (
     <Box
-      component={m.svg}
+      component={motion.svg}
       sx={{
         ...baseStyles,
         zIndex: 1,
@@ -45,7 +45,7 @@ export function FloatLine({
       {...other}
     >
       {vertical ? (
-        <m.line
+        <motion.line
           x1="0.5"
           x2="0.5"
           y1="0"
@@ -56,7 +56,7 @@ export function FloatLine({
           }}
         />
       ) : (
-        <m.line
+        <motion.line
           x1="0"
           x2="100%"
           y1="0.5"
@@ -76,7 +76,7 @@ export function FloatLine({
 export function FloatPlusIcon({ sx, ...other }: BoxProps) {
   return (
     <Box
-      component={m.svg}
+      component={motion.svg}
       variants={{ initial: { scale: 0 }, animate: { scale: 1, transition } }}
       width="16"
       height="16"
@@ -101,7 +101,7 @@ export function FloatPlusIcon({ sx, ...other }: BoxProps) {
 export function FloatXIcon({ sx, ...other }: BoxProps) {
   return (
     <Box
-      component={m.svg}
+      component={motion.svg}
       variants={{ initial: { scaleX: 0 }, animate: { scaleX: 1, transition } }}
       width="16"
       height="16"
@@ -126,7 +126,7 @@ export function FloatXIcon({ sx, ...other }: BoxProps) {
 export function FloatTriangleLeftIcon({ sx, ...other }: BoxProps) {
   return (
     <Box
-      component={m.svg}
+      component={motion.svg}
       variants={{ initial: { scaleY: 0 }, animate: { scaleY: 1, transition } }}
       width="10"
       height="20"
@@ -149,7 +149,7 @@ export function FloatTriangleLeftIcon({ sx, ...other }: BoxProps) {
 export function FloatTriangleDownIcon({ sx, ...other }: BoxProps) {
   return (
     <Box
-      component={m.svg}
+      component={motion.svg}
       variants={{ initial: { scaleX: 0 }, animate: { scaleX: 1, transition } }}
       width="20"
       height="10"
@@ -174,7 +174,7 @@ export function FloatTriangleDownIcon({ sx, ...other }: BoxProps) {
 export function FloatDotIcon({ sx, ...other }: BoxProps) {
   return (
     <Box
-      component={m.span}
+      component={motion.span}
       variants={{ initial: { scale: 0 }, animate: { scale: 1, transition } }}
       sx={{
         ...baseStyles,
@@ -204,7 +204,7 @@ export function CircleSvg({ sx, variants }: Props) {
   return (
     // @ts-ignore
     <Box
-      component={m.svg}
+      component={motion.svg}
       width="100%"
       height="100%"
       viewBox="0 0 560 560"

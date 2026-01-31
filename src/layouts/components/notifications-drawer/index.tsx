@@ -2,9 +2,9 @@
 
 import type { IconButtonProps } from '@mui/material/IconButton';
 
-import { m } from 'framer-motion';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Drawer from '@mui/material/Drawer';
@@ -155,7 +155,7 @@ export function NotificationsDrawer({
   return (
     <>
       <IconButton
-        component={m.button}
+        component={motion.button}
         whileTap="tap"
         whileHover="hover"
         variants={varHover(1.05)}

@@ -2,8 +2,8 @@ import type { Transition } from 'framer-motion';
 import type { BoxProps } from '@mui/material/Box';
 import type { AvatarProps } from '@mui/material/Avatar';
 
-import { m } from 'framer-motion';
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import Avatar from '@mui/material/Avatar';
 
 // ----------------------------------------------------------------------
@@ -61,7 +61,7 @@ export function AnimateAvatar({
       </Avatar>
 
       <Box
-        component={m.span}
+        component={motion.span}
         animate={{ rotate: 360 }}
         transition={{
           duration: 8,

@@ -1,266 +1,237 @@
 'use client';
 
+import Box from '@mui/material/Box';
+import { Grid } from '@mui/material';
 import React, { useState } from 'react';
-import { CONFIG } from 'src/config-global';
-import { SvgColor } from 'src/components/svg-color';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import { DashboardContent } from 'src/layouts/dashboard';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
-import { Box, Grid, Card, Button, ButtonGroup } from '@mui/material';
 import SeoIllustration from 'src/assets/illustrations/seo-illustration';
 
 import PerformerCard from './component/performer-card';
+import { DashboardKpiCard } from '../component/dashboard-kpi-card';
 import { StudentPerformanceChart } from './component/student-performance';
 import UpcomingExamCard from '../student/component/exam-card-for-student';
 import TeacherPayrollOverview from './component/teacher-payroll-overview';
+import { DashboardWidgetWrapper } from '../component/dashboard-widget-wrapper';
 import UpcomingAssignmentCard from '../student/component/upcoming-assignment-card';
-import { PrincipalDashboardCard } from '../principal/component/principal-dashboard-card';
 import WhatsNewInMonthComponent from '../principal/component/whats-new-in-month-component';
 
-const MainDashboardTeacher = () => {
-  const [timeTable, setTimeTable] = useState('my');
-  // const handleChangeView = useCallback(
-  //   (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
-  //     if (newView !== null) {
-  //       setTimeTable(newView);
-  //     }
-  //   },
-  //   []
-  // );
+// ----------------------------------------------------------------------
 
-  const icon = (name: string) => (
-    <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
-  );
+const studentList = [
+  { id: 1, name: 'Alice Wilson', value: '1', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
+  { id: 2, name: 'Jane Smith', value: '2', totalMarks: 89, avatarUrl: '/path/to/avatar2.jpg' },
+  { id: 3, name: 'Alice Brown', value: '3', totalMarks: 78, avatarUrl: '/path/to/avatar3.jpg' },
+  { id: 4, name: 'Bob Johnson', value: '4', totalMarks: 65, avatarUrl: '/path/to/avatar4.jpg' },
+];
 
-  const studentList = [
-    { id: 1, name: '1', value: 'math', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      value: '2',
-      totalMarks: 89,
-      avatarUrl: '/path/to/avatar2.jpg',
-    },
-    {
-      id: 3,
-      name: 'Alice Brown',
-      value: '3',
-      totalMarks: 78,
-      avatarUrl: '/path/to/avatar3.jpg',
-    },
-    {
-      id: 4,
-      name: 'Bob Johnson',
-      value: '4',
-      totalMarks: 65,
-      avatarUrl: '/path/to/avatar4.jpg',
-    },
-    {
-      id: 5,
-      name: 'Charlie Wilson',
-      value: '3',
-      totalMarks: 55,
-      avatarUrl: '/path/to/avatar5.jpg',
-    },
-  ];
+const subjectOptions = [
+  { value: 'all', label: 'All' },
+  { value: '1', label: 'Math' },
+  { value: '2', label: 'Science' },
+];
 
-  const subjectOptions = [
-    { value: 'all', label: 'All' },
-    { value: '1', label: '1' },
-    { value: '2', label: '2' },
-    { value: '3', label: '3' },
-  ];
+export default function MainDashboardTeacher() {
+  const [viewType, setViewType] = useState('my_timetable');
 
   return (
-    <Grid container spacing={3} sx={{ px: 2 }}>
+    <DashboardContent maxWidth="xl">
       {/* Welcome Section */}
-      <Grid size={12} py={3}>
-        <AppWelcome
-          title={`Good Morning 👋 \n Jeet`}
-          description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
-          img={<SeoIllustration hideBackground />}
-        />
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={12}>
+          <AppWelcome
+            title={`Good Morning 👋 \n Prof. Jeet`}
+            description="You have 3 classes today. Your first period starts at 9:00 AM in Room 101."
+            img={<SeoIllustration hideBackground />}
+            action={
+              <Button variant="contained" color="primary" sx={{ borderRadius: '12px' }}>
+                View Full Schedule
+              </Button>
+            }
+          />
+        </Grid>
       </Grid>
 
-      {/* Dashboard Cards: Total Students & Class Attendance */}
       <Grid container spacing={3}>
-        <Grid size={{ lg: 3 }}>
+        {/* KPI Cards */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
+            title="My Students"
+            total={156}
+            icon="hugeicons:students"
+            color="primary"
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
+            title="Class Attendance"
+            total="94%"
+            icon="solar:user-check-bold"
+            color="success"
+            trend={{ value: 2.1, isUp: true }}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
+            title="Pending Grades"
+            total={24}
+            icon="solar:pen-new-square-bold"
+            color="warning"
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
+            title="Active Assignments"
+            total={12}
+            icon="solar:document-text-bold"
+            color="info"
+          />
+        </Grid>
+
+        {/* Daily Workflow Tools */}
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <DashboardWidgetWrapper title="Academic Performance" subheader="Overall Student Progress">
+            <Box sx={{ p: 1 }}>
+              <StudentPerformanceChart />
+            </Box>
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Quick Tools */}
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <DashboardWidgetWrapper title="Daily Tools" subheader="Quick access to your workflow">
+            <Stack spacing={2}>
+              {[
+                { label: 'Mark Attendance', icon: 'solar:user-plus-bold', color: 'success' },
+                { label: 'Upload Homework', icon: 'solar:upload-bold', color: 'primary' },
+                { label: 'Enter Exam Marks', icon: 'solar:clipboard-check-bold', color: 'warning' },
+                { label: 'Create New Test', icon: 'solar:shield-warning-bold', color: 'error' },
+              ].map((tool, index) => (
+                <Button
+                  key={index}
+                  fullWidth
+                  variant="soft"
+                  color="inherit"
+                  size="large"
+                  startIcon={<Iconify icon={tool.icon} sx={{ color: `${tool.color}.main` }} />}
+                  sx={{ justifyContent: 'flex-start', borderRadius: '12px', py: 1.5 }}
+                >
+                  {tool.label}
+                </Button>
+              ))}
+            </Stack>
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Schedule & Exams */}
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <UpcomingExamCard
             exams={[
               { subject: 'Math Exam', date: 'Sep 20, 2024', class: '10th-A', room: '101' },
               { subject: 'Physics Exam', date: 'Sep 22, 2024', class: '12th-B', room: '102' },
               { subject: 'Chemistry Exam', date: 'Sep 24, 2024', class: '11th-C', room: '103' },
-              { subject: 'Biology Exam', date: 'Sep 26, 2024', class: '9th-D', room: '104' },
-              { subject: 'Math Exam', date: 'Sep 20, 2024', class: '10th-A', room: '101' },
-              { subject: 'Physics Exam', date: 'Sep 22, 2024', class: '12th-B', room: '102' },
             ]}
           />
         </Grid>
-        <Grid size={{ lg: 3 }}>
+
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <UpcomingAssignmentCard
             assignments={[
-              { name: 'Math Homework', dueDate: 'Sep 20, 2024' },
-              { name: 'Science Report', dueDate: 'Sep 22, 2024' },
-              { name: 'English Essay', dueDate: 'Sep 25, 2024' },
-              { name: 'History Presentation', dueDate: 'Sep 27, 2024' },
-              { name: 'Math Homework', dueDate: 'Sep 20, 2024' },
-              { name: 'Science Report', dueDate: 'Sep 22, 2024' },
+              { name: 'Algebra Homework', dueDate: 'Sep 20, 2024' },
+              { name: 'Science Lab Manual', dueDate: 'Sep 22, 2024' },
+              { name: 'History Essay', dueDate: 'Sep 25, 2024' },
             ]}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <DashboardWidgetWrapper title="What's New">
+            <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Student Insights */}
+        <Grid size={{ xs: 12, md: 6 }}>
           <PerformerCard
-            title="Needs improvement"
-            subheader="Based on The latest Exam"
+            title="Needs Improvement"
+            subheader="Students requiring attention"
             list={studentList}
             options={subjectOptions}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <PerformerCard
             title="Top Performers"
-            subheader="Based on The latest Exam"
+            subheader="Outstanding Students"
             list={studentList}
             options={subjectOptions}
           />
         </Grid>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-        <PrincipalDashboardCard
-          dropdownLabel="Select Class"
-          icon="hugeicons:students"
-          title="My Class Students"
-          count={250}
-          color="primary.main"
-          bgColor="primary"
-          href="/dashboard"
-          labels={[
-            { name: 'Male', color: 'success', value: 500 },
-            { name: 'Female', color: 'error', value: 500 },
-          ]}
-          selectOptions={[]}
-          selectedValue="1"
-          onSelectChange={(val) => {}}
-        />
-      </Grid>
 
-      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-        <PrincipalDashboardCard
-          dropdownLabel="Select Class"
-          icon="hugeicons:task-daily-02"
-          title="Today Class Attendance"
-          count="50%"
-          color="primary.main"
-          bgColor="primary"
-          href="/dashboard"
-          labels={[
-            { name: 'Present', color: 'success', value: 50 },
-            { name: 'Absent', color: 'error', value: 50 },
-          ]}
-          selectOptions={[]}
-          selectedValue="Jan"
-          onSelectChange={(val) => {}}
-        />
-      </Grid>
-      {/* 
-      <Grid item xs={12} md={6} size={{lg:3}}>
-        <PrincipalDashboardCard
-          dropdownLabel="Select Class"
-          icon="hugeicons:task-daily-02"
-          title="My Attendance Overall"
-          count="50%"
-          color="primary.main"
-          bgColor="primary"
-          href="/dashboard"
-          labels={[
-
-          ]}
-          selectOptions={[]}
-          selectedValue="Jan"
-          onSelectChange={(val) => }
-        />
-      </Grid> */}
-      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-        <PrincipalDashboardCard
-          dropdownLabel="Select Class"
-          icon="material-symbols-light:pending-actions"
-          title="My Pending Task"
-          count="100"
-          color="primary.main"
-          bgColor="primary"
-          href="/dashboard"
-          labels={[
-            { name: 'Assignment', color: 'warning', value: 50 },
-            { name: 'Grading', color: 'warning', value: 50 },
-          ]}
-          selectOptions={[]}
-          selectedValue="Jan"
-          onSelectChange={(val) => {}}
-        />
-      </Grid>
-
-      {/* Time Table & Class View Buttons */}
-      <Grid size={12} sx={{ mt: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <ButtonGroup>
-            <Button
-              variant={timeTable === 'my' ? 'outlined' : 'contained'}
-              color="inherit"
-              onClick={() => setTimeTable('class')}
-              startIcon={icon('ic-hr')}
-            >
-              My Time-table
-            </Button>
-            <Button
-              color="inherit"
-              variant={timeTable === 'my' ? 'contained' : 'outlined'}
-              onClick={() => setTimeTable('my')}
-              startIcon={icon('ic-student')}
-            >
-              My Class
-            </Button>
-          </ButtonGroup>
-        </Box>
-        {/* <TimeTableView /> */}
-      </Grid>
-
-      {/* What’s New in Month, Performance Chart, and Payroll Overview */}
-      <Grid container spacing={3} sx={{ mt: 3, px: 3, width: '100%' }}>
+        {/* Payroll Overview */}
         <Grid size={{ xs: 12 }}>
-          <Card sx={{ boxShadow: 'var(--shadows-2)', height: '460px' }}>
-            <StudentPerformanceChart />
-          </Card>
+          <DashboardWidgetWrapper
+            title="Professional Overview"
+            subheader="Earnings & Deductions Summary"
+          >
+            <TeacherPayrollOverview
+              earnings={[
+                { label: 'Teaching Allowance', amount: 5000 },
+                { label: 'Transport Allowance', amount: 2000 },
+                { label: 'Performance Bonus', amount: 3000 },
+              ]}
+              deductions={[
+                { label: 'Income Tax', amount: 5000 },
+                { label: 'Provident Fund', amount: 3000 },
+              ]}
+            />
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Detailed Timeline Selector */}
+        <Grid size={{ xs: 12 }}>
+          <DashboardWidgetWrapper title="Schedule & Class View">
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <ButtonGroup variant="soft" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+                <Button
+                  onClick={() => setViewType('my_timetable')}
+                  variant={viewType === 'my_timetable' ? 'contained' : 'soft'}
+                >
+                  My Timetable
+                </Button>
+                <Button
+                  onClick={() => setViewType('my_class')}
+                  variant={viewType === 'my_class' ? 'contained' : 'soft'}
+                >
+                  My Class Overview
+                </Button>
+              </ButtonGroup>
+            </Stack>
+            <Box
+              sx={{
+                p: 5,
+                textAlign: 'center',
+                bgcolor: 'background.neutral',
+                borderRadius: 2,
+                border: '2px dashed rgba(145, 158, 171, 0.12)',
+              }}
+            >
+              <Typography variant="body2" color="text.disabled">
+                [Interactive {viewType === 'my_timetable' ? 'Timetable' : 'Class View'} Placeholder]
+              </Typography>
+            </Box>
+          </DashboardWidgetWrapper>
         </Grid>
       </Grid>
-
-      {/* Student Assignments Table */}
-      <Grid container spacing={3} sx={{ mt: 3, px: 3, width: '100%' }}>
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <TeacherPayrollOverview
-            earnings={[
-              { label: 'Teaching Allowance', amount: 5000 },
-              { label: 'Transport Allowance', amount: 2000 },
-              { label: 'Academic Performance Bonus', amount: 3000 },
-              { label: 'Extra-curricular Activities', amount: 2000 },
-            ]}
-            deductions={[
-              { label: 'Income Tax', amount: 5000 },
-              { label: 'Provident Fund', amount: 3000 },
-              { label: 'Professional Tax', amount: 1000 },
-              { label: 'Insurance Premium', amount: 1000 },
-            ]}
-          />
-        </Grid>
-      </Grid>
-
-      {/* Payroll Overview */}
-    </Grid>
+    </DashboardContent>
   );
-};
-
-export default MainDashboardTeacher;
+}

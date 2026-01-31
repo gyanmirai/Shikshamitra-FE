@@ -1,6 +1,5 @@
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { m } from 'framer-motion';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { CONFIG } from 'src/config-global';

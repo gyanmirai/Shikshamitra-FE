@@ -2,9 +2,8 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 
 import axios from 'axios';
 import { toast } from 'sonner';
-import store from 'src/redux/store';
-import { getSession } from 'next-auth/react';
-import { clearUser } from 'src/redux/auth/authSlice';
+// import store from 'src/redux/store';
+import { signOut, getSession } from 'next-auth/react';
 
 const createAxiosInstance = (baseURL: string): AxiosInstance => {
   const instance = axios.create({
@@ -60,8 +59,7 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
 };
 
 function handleLogout() {
-  store.dispatch(clearUser());
-  window.location.href = '/login';
+  signOut({ callbackUrl: '/login' });
 }
 
 export default createAxiosInstance;
