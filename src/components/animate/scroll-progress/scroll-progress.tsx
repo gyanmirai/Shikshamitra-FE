@@ -2,7 +2,7 @@ import type { MotionValue } from 'framer-motion';
 import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
-import { m, useSpring } from 'framer-motion';
+import { motion, useSpring } from 'framer-motion';
 
 // ----------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ export function ScrollProgress({
         pathLength="1"
       />
       <Box
-        component={m.circle}
+        component={motion.circle}
         cx={progressSize / 2}
         cy={progressSize / 2}
         r={progressSize / 2 - thickness - 4}
@@ -73,7 +73,7 @@ export function ScrollProgress({
 
   const renderLinear = (
     <Box
-      component={m.div}
+      component={motion.div}
       sx={{
         top: 0,
         left: 0,

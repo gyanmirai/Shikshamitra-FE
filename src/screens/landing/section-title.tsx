@@ -1,4 +1,3 @@
-import type { MotionProps } from 'framer-motion';
 import type { StackProps } from '@mui/material/Stack';
 import type { Theme, SxProps } from '@mui/material/styles';
 
@@ -7,6 +6,7 @@ import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
 import { varFade } from 'src/components/animate';
 import Typography from '@mui/material/Typography';
+import { motion, type MotionProps } from 'framer-motion';
 import { varAlpha, textGradient } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------
@@ -50,7 +50,7 @@ export function SectionTitle({
       )}
 
       <Typography
-        component={m.h2}
+        component={motion.h2}
         variant="h2"
         variants={slotProps?.title?.variants ?? varFade({ distance: 24 }).inUp}
         sx={slotProps?.title?.sx}
@@ -72,7 +72,7 @@ export function SectionTitle({
 
       {description && (
         <Typography
-          component={m.p}
+          component={motion.p}
           variants={slotProps?.description?.variants ?? varFade({ distance: 24 }).inUp}
           sx={{ color: 'text.secondary', ...slotProps?.description?.sx }}
         >
@@ -88,7 +88,7 @@ export function SectionTitle({
 export function SectionCaption({ title, variants, sx }: TextProps) {
   return (
     <Stack
-      component={m.span}
+      component={motion.span}
       variants={variants ?? varFade({ distance: 24 }).inUp}
       sx={{ typography: 'overline', color: 'text.disabled', ...sx }}
     >

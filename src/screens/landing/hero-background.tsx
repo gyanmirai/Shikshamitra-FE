@@ -1,6 +1,7 @@
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
@@ -61,7 +62,7 @@ export function HeroBackground({ sx }: Props) {
       {upMd && <Texts />}
 
       <Box
-        component={m.svg}
+        component={motion.svg}
         xmlns="http://www.w3.org/2000/svg"
         width="1440"
         height="1080"
@@ -97,7 +98,7 @@ export function HeroBackground({ sx }: Props) {
       </Box>
 
       <Box
-        component={m.div}
+        component={motion.div}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         sx={{

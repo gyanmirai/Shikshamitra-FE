@@ -211,7 +211,7 @@ export function PlusIcon() {
 export function Texts({ sx, ...other }: StackProps) {
   return (
     <Stack
-      component={m.div}
+      component={motion.div}
       variants={varFade().in}
       sx={{
         left: 0,
@@ -269,7 +269,7 @@ function Dot({ color = 'primary', animate, transition, sx, ...other }: DotProps)
 
   return (
     <Box
-      component={m.div}
+      component={motion.div}
       variants={{
         initial: { opacity: 0 },
         animate: { opacity: 1, transition: { duration: 0.64, ease: [0.43, 0.13, 0.23, 0.96] } },
@@ -285,7 +285,7 @@ function Dot({ color = 'primary', animate, transition, sx, ...other }: DotProps)
       {...other}
     >
       <Box
-        component={m.div}
+        component={motion.div}
         animate={animate}
         transition={
           transition ?? {

@@ -2,6 +2,7 @@ import type { StackProps } from '@mui/material/Stack';
 
 import Box from '@mui/material/Box';
 import { Grid } from '@mui/material';
+import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -48,7 +49,7 @@ export function HomeMinimal({ sx, ...other }: StackProps) {
           {ITEMS.map((item) => (
             <Grid size={{ xs: 12, md: 6 }} key={item.title}>
               <Box
-                component={m.div}
+                component={motion.div}
                 key={item.title}
                 variants={varFade({ distance: 24 }).inUp}
                 gap={3}

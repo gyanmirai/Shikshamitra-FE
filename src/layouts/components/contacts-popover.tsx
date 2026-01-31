@@ -2,6 +2,7 @@
 
 import type { IconButtonProps } from '@mui/material/IconButton';
 
+import { motion } from 'framer-motion';
 import Badge from '@mui/material/Badge';
 import Avatar from '@mui/material/Avatar';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -36,7 +37,7 @@ export function ContactsPopover({ data = [], sx, ...other }: ContactsPopoverProp
   return (
     <>
       <IconButton
-        component={m.button}
+        component={motion.button}
         whileTap="tap"
         whileHover="hover"
         variants={varHover(1.05)}

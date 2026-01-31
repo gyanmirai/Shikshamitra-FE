@@ -1,6 +1,7 @@
 import type { StackProps } from '@mui/material/Stack';
 
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import { CONFIG } from 'src/config-global';
@@ -91,7 +92,7 @@ export function UpgradeBlock({ sx, ...other }: StackProps) {
       />
 
       <Box
-        component={m.img}
+        component={motion.img}
         animate={{ y: [12, -12, 12] }}
         transition={{
           duration: 8,
