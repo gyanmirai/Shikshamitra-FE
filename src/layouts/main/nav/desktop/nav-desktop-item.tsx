@@ -1,9 +1,9 @@
 import type { LinkProps } from '@mui/material/Link';
 
-import { m } from 'framer-motion';
 import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import { motion } from 'framer-motion';
 import { CONFIG } from 'src/config-global';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -121,7 +121,7 @@ export function NavItemDashboard({ path, sx, ...other }: NavItemDashboardProps) 
           ...sx,
         }}
       >
-        <m.div
+        <motion.div
           whileTap="tap"
           whileHover="hover"
           variants={{ hover: { scale: 1.02 }, tap: { scale: 0.98 } }}
@@ -136,7 +136,7 @@ export function NavItemDashboard({ path, sx, ...other }: NavItemDashboardProps) 
               aspectRatio: '4/3',
             }}
           />
-        </m.div>
+        </motion.div>
       </CardActionArea>
     </Link>
   );

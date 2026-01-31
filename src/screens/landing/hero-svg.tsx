@@ -3,8 +3,8 @@ import type { StackProps } from '@mui/material/Stack';
 import type { ColorType } from 'src/theme/core/palette';
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { m } from 'framer-motion';
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import { stylesMode } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
@@ -62,7 +62,7 @@ export function Lines({ strokeCount }: { strokeCount: number }) {
   const linesX = (
     <>
       {[...Array(strokeCount)].map((_, index) => (
-        <m.line
+        <motion.line
           key={index}
           x1="0"
           x2="100%"
@@ -89,7 +89,7 @@ export function Lines({ strokeCount }: { strokeCount: number }) {
   const linesY = (
     <>
       {[...Array(strokeCount)].map((_, index) => (
-        <m.line
+        <motion.line
           key={index}
           x1="50%"
           x2="50%"
@@ -128,7 +128,7 @@ export function Circles() {
 
   return (
     <>
-      <m.path
+      <motion.path
         variants={drawCircle}
         d="M1 41C1 63.0914 18.9086 81 41 81C63.0914 81 81 63.0914 81 41C81 18.9086 63.0914 1 41 1"
         style={{
@@ -139,7 +139,7 @@ export function Circles() {
         }}
       />
 
-      <m.path
+      <motion.path
         variants={drawCircle}
         d="M1 41C1 63.0914 18.9086 81 41 81C63.0914 81 81 63.0914 81 41C81 18.9086 63.0914 1 41 1"
         style={{
@@ -150,7 +150,7 @@ export function Circles() {
         }}
       />
 
-      <m.circle
+      <motion.circle
         cx="50%"
         cy="50%"
         fill="var(--hero-circle-stroke-color)"
@@ -187,7 +187,7 @@ export function PlusIcon() {
 
   return (
     <>
-      <m.path
+      <motion.path
         // @ts-ignore
         variants={drawPlus}
         d="M8 0V16M16 8.08889H0"
@@ -195,7 +195,7 @@ export function PlusIcon() {
         style={{ transform: 'translate(calc(50% - 448px), calc(50% - 128px))' }}
       />
 
-      <m.path
+      <motion.path
         // @ts-ignore
         variants={drawPlus}
         d="M8 0V16M16 8.08889H0"
@@ -211,7 +211,7 @@ export function PlusIcon() {
 export function Texts({ sx, ...other }: StackProps) {
   return (
     <Stack
-      component={m.div}
+      component={motion.div}
       variants={varFade().in}
       sx={{
         left: 0,
@@ -241,7 +241,7 @@ export function Texts({ sx, ...other }: StackProps) {
           },
         }}
       >
-        <m.text
+        <motion.text
           x="0"
           y="12px"
           dominantBaseline="hanging"
@@ -249,7 +249,7 @@ export function Texts({ sx, ...other }: StackProps) {
           transition={{ duration: 64, ease: 'linear', repeat: Infinity }}
         >
           Minimal Design System Minimal Design System
-        </m.text>
+        </motion.text>
       </Box>
     </Stack>
   );
@@ -269,7 +269,7 @@ function Dot({ color = 'primary', animate, transition, sx, ...other }: DotProps)
 
   return (
     <Box
-      component={m.div}
+      component={motion.div}
       variants={{
         initial: { opacity: 0 },
         animate: { opacity: 1, transition: { duration: 0.64, ease: [0.43, 0.13, 0.23, 0.96] } },
@@ -285,7 +285,7 @@ function Dot({ color = 'primary', animate, transition, sx, ...other }: DotProps)
       {...other}
     >
       <Box
-        component={m.div}
+        component={motion.div}
         animate={animate}
         transition={
           transition ?? {

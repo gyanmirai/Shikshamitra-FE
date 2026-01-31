@@ -70,7 +70,7 @@ const kpiData = [
     value: '100',
     labels: [
       { name: `Male ${fNumber(50)}`, color: 'success' as const },
-      { name: `Female ${fNumber(50)}`, color: 'error' as const },
+      { name: `Female ${fNumber(50)}`, color: 'warning' as const },
     ],
     icon: 'mdi:account-check-outline',
     color: 'info.dark',
@@ -79,7 +79,7 @@ const kpiData = [
 ];
 
 const AdminKPICards = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {kpiData.map((kpi) => (
       <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
         <DashboardCard

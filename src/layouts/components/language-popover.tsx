@@ -2,7 +2,7 @@
 
 import type { IconButtonProps } from '@mui/material/IconButton';
 
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useCallback } from 'react';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
@@ -39,7 +39,7 @@ export function LanguagePopover({ data = [], sx, ...other }: LanguagePopoverProp
   return (
     <>
       <IconButton
-        component={m.button}
+        component={motion.button}
         whileTap="tap"
         whileHover="hover"
         variants={varHover(1.05)}

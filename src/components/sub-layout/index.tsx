@@ -27,7 +27,7 @@ const SubLayout = ({ children }: any) => {
     <Box
       display="flex"
       height="100%"
-      gap={1}
+      // gap={1}
       sx={{ backgroundColor: (theme) => theme.vars.palette.background.neutral }}
     >
       {currentData?.length > 0 && (
@@ -80,7 +80,7 @@ const SubLayout = ({ children }: any) => {
             overflow: 'auto',
             pt: 1,
             pr: 1,
-            // pl: 0.5,
+            pl: 1,
             pb: 1,
           }}
         >

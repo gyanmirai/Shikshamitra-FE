@@ -50,6 +50,7 @@ const MuiDialogActions: Components<Theme>['MuiDialogActions'] = {
     root: ({ theme }) => ({
       padding: theme.spacing(2),
       boxShadow: `${alpha(theme.palette.divider, 0.35)} 0px 5px 12px`,
+      borderTop: `1px solid ${theme.palette.divider}`,
       '& > :not(:first-of-type)': { marginLeft: theme.spacing(1.5) },
     }),
   },

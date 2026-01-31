@@ -9,7 +9,7 @@ import HouseDistribution from './house-distribution';
 
 const AdminDashboard = () => (
   <Box sx={{ p: 0 }}>
-    <Grid container spacing={4}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <AdminKPICards />
       </Grid>
@@ -19,7 +19,7 @@ const AdminDashboard = () => (
       </Grid>
 
       <Grid size={{ xs: 12 }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           <Grid size={{ xs: 12, md: 6 }}>
             <HouseDistribution />
           </Grid>

@@ -205,7 +205,7 @@ const HRBirthdaysAndAnniversaries = () => {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 2,
+          borderRadius: 3,
           boxShadow: theme.customShadows.z4,
         }}
       >

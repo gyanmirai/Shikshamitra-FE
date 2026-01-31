@@ -13,7 +13,7 @@ const HRDashboardScreen = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column' }}>
     <HRStatsCards />
 
-    <Grid container spacing={3} mb={3}>
+    <Grid container spacing={1} mb={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <HRDashboardAttendanceTrend />
       </Grid>
@@ -22,7 +22,7 @@ const HRDashboardScreen = () => (
       </Grid>
     </Grid>
 
-    <Grid container spacing={3} mb={3}>
+    <Grid container spacing={1} mb={1}>
       <Grid size={{ xs: 12, md: 6 }}>
         <LeaveManagement />
       </Grid>

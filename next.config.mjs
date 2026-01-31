@@ -5,6 +5,7 @@
 const isStaticExport = 'false';
 
 const nextConfig = {
+  productionBrowserSourceMaps: true,
   swcMinify: true,
   trailingSlash: true,
   basePath: process.env.NEXT_PUBLIC_BASE_PATH,

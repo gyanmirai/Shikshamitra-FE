@@ -292,9 +292,9 @@ export function StudentProfile() {
               gap: 1,
               flexWrap: 'wrap',
               alignItems: 'center',
-              px: 2,
+              px: 1,
               py: 1,
-              mb: 1,
+              // mb: 1,
             }}
           >
             <CustomSelect

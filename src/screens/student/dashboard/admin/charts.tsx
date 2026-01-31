@@ -98,7 +98,7 @@ const AdminCharts = () => {
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       {/* Enrollment Trend - Full Width */}
       <Grid size={{ xs: 12 }}>
         <Card>
