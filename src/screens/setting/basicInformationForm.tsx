@@ -12,6 +12,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -180,74 +181,82 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
 
               <Grid container spacing={3}>
                 <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Institute Name"
-                    name="instituteName"
-                    value={values.instituteName}
-                    onChange={(e) => setFieldValue('instituteName', capitalize(e.target.value))}
-                    error={touched.instituteName && Boolean(errors.instituteName)}
-                    helperText={touched.instituteName && errors.instituteName}
-                    InputProps={{
-                      startAdornment: (
-                        <Iconify
-                          icon="solar:city-bold"
-                          width={20}
-                          color="text.disabled"
-                          sx={{ mr: 1 }}
-                        />
-                      ),
-                    }}
-                  />
+                  <ShakingTextField error={touched.instituteName && Boolean(errors.instituteName)}>
+                    <TextField
+                      fullWidth
+                      label="Institute Name *"
+                      name="instituteName"
+                      value={values.instituteName}
+                      onChange={(e) => setFieldValue('instituteName', capitalize(e.target.value))}
+                      error={touched.instituteName && Boolean(errors.instituteName)}
+                      helperText={touched.instituteName && errors.instituteName}
+                      InputProps={{
+                        startAdornment: (
+                          <Iconify
+                            icon="solar:city-bold"
+                            width={20}
+                            color="text.disabled"
+                            sx={{ mr: 1 }}
+                          />
+                        ),
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Email Address"
-                    name="emailAddress"
-                    value={values.emailAddress}
-                    onChange={handleChange}
-                    error={touched.emailAddress && Boolean(errors.emailAddress)}
-                    helperText={touched.emailAddress && errors.emailAddress}
-                    InputProps={{
-                      startAdornment: (
-                        <Iconify
-                          icon="solar:letter-bold"
-                          width={20}
-                          color="text.disabled"
-                          sx={{ mr: 1 }}
-                        />
-                      ),
-                    }}
-                  />
+                  <ShakingTextField error={touched.emailAddress && Boolean(errors.emailAddress)}>
+                    <TextField
+                      fullWidth
+                      label="Email Address *"
+                      name="emailAddress"
+                      value={values.emailAddress}
+                      onChange={handleChange}
+                      error={touched.emailAddress && Boolean(errors.emailAddress)}
+                      helperText={touched.emailAddress && errors.emailAddress}
+                      InputProps={{
+                        startAdornment: (
+                          <Iconify
+                            icon="solar:letter-bold"
+                            width={20}
+                            color="text.disabled"
+                            sx={{ mr: 1 }}
+                          />
+                        ),
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <PhoneInput
-                    name="contactNumber"
-                    value={values.contactNumber}
-                    onChange={(value) => setFieldValue('contactNumber', value)}
-                    error={touched.contactNumber && Boolean(errors.contactNumber)}
-                    helperText={touched.contactNumber && errors.contactNumber}
-                    variant="outlined"
-                    label="Contact No."
-                    size="medium"
-                  />
+                  <ShakingTextField error={touched.contactNumber && Boolean(errors.contactNumber)}>
+                    <PhoneInput
+                      name="contactNumber"
+                      value={values.contactNumber}
+                      onChange={(value) => setFieldValue('contactNumber', value)}
+                      error={touched.contactNumber && Boolean(errors.contactNumber)}
+                      helperText={touched.contactNumber && errors.contactNumber}
+                      variant="outlined"
+                      label="Contact No. *"
+                      size="medium"
+                    />
+                  </ShakingTextField>
                 </Grid>
 
                 {!editData && (
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      name="password"
-                      label="Admin Password"
-                      type="password"
-                      value={values.password}
-                      onChange={handleChange}
-                      error={touched.password && Boolean(errors.password)}
-                      helperText={touched.password && errors.password}
-                    />
+                    <ShakingTextField error={touched.password && Boolean(errors.password)}>
+                      <TextField
+                        fullWidth
+                        name="password"
+                        label="Admin Password"
+                        type="password"
+                        value={values.password}
+                        onChange={handleChange}
+                        error={touched.password && Boolean(errors.password)}
+                        helperText={touched.password && errors.password}
+                      />
+                    </ShakingTextField>
                   </Grid>
                 )}
 
@@ -262,14 +271,7 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <CountryComponent
-                    size="medium"
-                    value={values.country}
-                    onChange={(_e, value) => {
-                      setFieldValue('stateProvince', null);
-                      setFieldValue('city', null);
-                      setFieldValue('country', value);
-                    }}
+                  <ShakingTextField
                     error={
                       touched.country &&
                       typeof errors.country === 'object' &&
@@ -277,26 +279,45 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                       'name' in errors.country &&
                       Boolean((errors.country as any).name)
                     }
-                    textFieldProps={{ label: 'Country', size: 'medium' }}
-                  />
+                  >
+                    <CountryComponent
+                      size="medium"
+                      value={values.country}
+                      onChange={(_e, value) => {
+                        setFieldValue('stateProvince', null);
+                        setFieldValue('city', null);
+                        setFieldValue('country', value);
+                      }}
+                      error={
+                        touched.country &&
+                        typeof errors.country === 'object' &&
+                        errors.country !== null &&
+                        'name' in errors.country &&
+                        Boolean((errors.country as any).name)
+                      }
+                      textFieldProps={{ label: 'Country *', size: 'medium' }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <StateComponent
-                    value={values.stateProvince}
-                    countryValue={values.country}
-                    onChange={(_e, value) => {
-                      setFieldValue('city', null);
-                      setFieldValue('stateProvince', value);
-                    }}
+                  <ShakingTextField
                     error={touched.stateProvince && Boolean((errors?.stateProvince as any)?.name)}
-                    textFieldProps={{ label: 'State', size: 'medium' }}
-                  />
+                  >
+                    <StateComponent
+                      value={values.stateProvince}
+                      countryValue={values.country}
+                      onChange={(_e, value) => {
+                        setFieldValue('city', null);
+                        setFieldValue('stateProvince', value);
+                      }}
+                      error={touched.stateProvince && Boolean((errors?.stateProvince as any)?.name)}
+                      helperText={touched.stateProvince && (errors?.stateProvince as any)?.name}
+                      textFieldProps={{ label: 'State *', size: 'medium' }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <CityComponent
-                    value={values.city}
-                    stateValue={values.stateProvince}
-                    onChange={(_e, value) => setFieldValue('city', value)}
+                  <ShakingTextField
                     error={
                       touched.city &&
                       Boolean(
@@ -306,8 +327,24 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                           (errors.city as any).name
                       )
                     }
-                    textFieldProps={{ label: 'City', size: 'medium' }}
-                  />
+                  >
+                    <CityComponent
+                      value={values.city}
+                      stateValue={values.stateProvince}
+                      onChange={(_e, value) => setFieldValue('city', value)}
+                      error={
+                        touched.city &&
+                        Boolean(
+                          typeof errors.city === 'object' &&
+                            errors.city !== null &&
+                            'name' in errors.city &&
+                            (errors.city as any).name
+                        )
+                      }
+                      helperText={touched.city && (errors?.city as any)?.name}
+                      textFieldProps={{ label: 'City *', size: 'medium' }}
+                    />
+                  </ShakingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
@@ -325,18 +362,20 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    name="addressLine1"
-                    label="Address Line 1"
-                    placeholder="Building No./Flat/House No."
-                    value={values.addressLine1}
-                    onChange={handleChange}
-                    error={touched.addressLine1 && Boolean(errors.addressLine1)}
-                    helperText={touched.addressLine1 && errors.addressLine1}
-                    multiline
-                    rows={2}
-                  />
+                  <ShakingTextField error={touched.addressLine1 && Boolean(errors.addressLine1)}>
+                    <TextField
+                      fullWidth
+                      name="addressLine1"
+                      label="Address Line 1 *"
+                      placeholder="Building No./Flat/House No."
+                      value={values.addressLine1}
+                      onChange={handleChange}
+                      error={touched.addressLine1 && Boolean(errors.addressLine1)}
+                      helperText={touched.addressLine1 && errors.addressLine1}
+                      multiline
+                      rows={2}
+                    />
+                  </ShakingTextField>
                 </Grid>
               </Grid>
             </Card>
@@ -350,7 +389,7 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                 <Stack spacing={3}>
                   <Box>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Institute Logo
+                      Institute Logo *
                     </Typography>
                     <BasicInformationAssets
                       formik={formik}
@@ -360,7 +399,7 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                   </Box>
                   <Box>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Institute Banner
+                      Institute Banner *
                     </Typography>
                     <BasicInformationAssets
                       formik={formik}
@@ -370,7 +409,7 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                   </Box>
                   <Box>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Principal&apos;s Signature
+                      Principal&apos;s Signature *
                     </Typography>
                     <BasicInformationAssets
                       formik={formik}

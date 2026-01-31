@@ -473,10 +473,12 @@ const LeaveRequestForm = ({
               const fullStartDate = dayjs(startDate);
               const endDate = dayjs(value as any);
 
-              const isAfter = endDate.isAfter(fullStartDate);
+              const isSameOrAfter =
+                endDate.isSame(fullStartDate, 'day') || endDate.isAfter(fullStartDate, 'day');
 
               return (
-                isAfter || context.createError({ message: 'End date must be after start date' })
+                isSameOrAfter ||
+                context.createError({ message: 'End date must be same or after start date' })
               );
             }
             if (!value && !isHalfDay) {
