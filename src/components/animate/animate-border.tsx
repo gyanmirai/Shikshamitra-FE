@@ -4,6 +4,7 @@ import type { BoxProps } from '@mui/material/Box';
 import type { Easing, RepeatType } from 'framer-motion';
 
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import { borderGradient } from 'src/theme/styles';
 import { useRef, useState, useEffect } from 'react';
 
@@ -124,7 +125,7 @@ export function AnimateBorder({ animate, sx }: AnimateBorderProps) {
     >
       <Box
         ref={animateRef}
-        component={m.span}
+        component={motion.span}
         transition={transition}
         animate={
           !values.disable
@@ -142,7 +143,7 @@ export function AnimateBorder({ animate, sx }: AnimateBorderProps) {
 
       {!values.disable && !values.disableDoubleline && (
         <Box
-          component={m.span}
+          component={motion.span}
           transition={transition}
           animate={{
             background: background(
