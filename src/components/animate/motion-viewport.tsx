@@ -1,8 +1,8 @@
-import type { MotionProps } from 'framer-motion';
 import type { BoxProps } from '@mui/material/Box';
 
 import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
+import { motion, type MotionProps } from 'framer-motion';
 import { useResponsive } from 'src/hooks/use-responsive';
 
 import { varContainer } from './variants';
@@ -23,7 +23,7 @@ export const MotionViewport = forwardRef<HTMLDivElement, MotionViewportProps>(
     const props = disabled
       ? {}
       : {
-          component: m.div,
+          component: motion.div,
           initial: 'initial',
           whileInView: 'animate',
           variants: varContainer(),
