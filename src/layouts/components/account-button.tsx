@@ -1,6 +1,6 @@
 import type { IconButtonProps } from '@mui/material/IconButton';
 
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import NoSsr from '@mui/material/NoSsr';
 import Avatar from '@mui/material/Avatar';
 import SvgIcon from '@mui/material/SvgIcon';
@@ -40,7 +40,7 @@ export function AccountButton({ open, photoURL, displayName, sx, ...other }: Acc
 
   return (
     <IconButton
-      component={m.button}
+      component={motion.button}
       whileTap="tap"
       whileHover="hover"
       variants={varHover(1.05)}

@@ -1,70 +1,33 @@
 'use client';
 
-// import { useFormik } from 'formik';
+import Box from '@mui/material/Box';
+import { Grid } from '@mui/material';
 import React, { useState } from 'react';
-import { CONFIG } from 'src/config-global';
-import { SvgColor } from 'src/components/svg-color';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
+import ButtonGroup from '@mui/material/ButtonGroup';
+import Autocomplete from '@mui/material/Autocomplete';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomSelect from 'src/components/custom-select';
+import { DashboardContent } from 'src/layouts/dashboard';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-import {
-  Box,
-  Card,
-  Grid,
-  Button,
-  TextField,
-  Typography,
-  ButtonGroup,
-  Autocomplete,
-} from '@mui/material';
 
 import PerformerCard from '../teacher/component/performer-card';
 import { AnalyticsClassResults } from './component/result-graph';
-import ExamOverviewForPrincipal from './component/exam-overview';
-import { PrincipalDashboardCard } from './component/principal-dashboard-card';
+import { DashboardKpiCard } from '../component/dashboard-kpi-card';
+import { DashboardWidgetWrapper } from '../component/dashboard-widget-wrapper';
 import WhatsNewInMonthComponent from './component/whats-new-in-month-component';
 
-// const _ExamSalesOverview = [
-//   'Ongoing Exams',
-//   'Upcoming Exams',
-//   'Completed Exams',
-//   'Pending Grading',
-// ].map((label, index) => ({
-//   label,
-//   totalAmount: (19 + index) * 100,
-//   value: 10 + index,
-// }));
+// ----------------------------------------------------------------------
 
 const studentList = [
   { id: 1, name: 'John Doe', value: '1', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    value: '1',
-    totalMarks: 89,
-    avatarUrl: '/path/to/avatar2.jpg',
-  },
-  {
-    id: 3,
-    name: 'Alice Brown',
-    value: '2',
-    totalMarks: 78,
-    avatarUrl: '/path/to/avatar3.jpg',
-  },
-  {
-    id: 4,
-    name: 'Bob Johnson',
-    value: '3',
-    totalMarks: 65,
-    avatarUrl: '/path/to/avatar4.jpg',
-  },
-  {
-    id: 5,
-    name: 'Charlie Wilson',
-    value: '4',
-    totalMarks: 55,
-    avatarUrl: '/path/to/avatar5.jpg',
-  },
+  { id: 2, name: 'Jane Smith', value: '1', totalMarks: 89, avatarUrl: '/path/to/avatar2.jpg' },
+  { id: 3, name: 'Alice Brown', value: '2', totalMarks: 78, avatarUrl: '/path/to/avatar3.jpg' },
+  { id: 4, name: 'Bob Johnson', value: '3', totalMarks: 65, avatarUrl: '/path/to/avatar4.jpg' },
+  { id: 5, name: 'Charlie Wilson', value: '4', totalMarks: 55, avatarUrl: '/path/to/avatar5.jpg' },
 ];
 
 const subjectOptions = [
@@ -74,283 +37,263 @@ const subjectOptions = [
   { value: '3', label: '3' },
 ];
 
-const MainDashboardPrincipal = () => {
+export default function MainDashboardPrincipal() {
   const [timeTable, setTimeTable] = useState('student');
-  // const handleChangeView = useCallback(
-  //   (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
-  //     if (newView !== null) {
-  //       setTimeTable(newView);
-  //     }
-  //   },
-  //   []
-  // );
-  // const formik = useFormik({
-  //   initialValues: {
-  //     selectedClassForStudent: '',
-  //   },
 
-  //   onSubmit: async (values) => {},
-  // });
-  const icon = (name: string) => (
-    <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
-  );
   return (
-    <Grid container spacing={3} sx={{ p: 3, maxWidth: '100%' }}>
-      <Grid container spacing={3} size={12}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <PrincipalDashboardCard
-            dropdownLabel="Select Class"
-            icon="hugeicons:students"
+    <DashboardContent maxWidth="xl">
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 5 }}>
+        <Stack spacing={1}>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            Principal Dashboard
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Academic Leadership & School Monitoring
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="soft"
+            color="info"
+            startIcon={<Iconify icon="solar:document-bold" />}
+            sx={{ borderRadius: '12px' }}
+          >
+            Review Reports
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<Iconify icon="solar:bell-bing-bold" />}
+            sx={{ borderRadius: '12px', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.24)' }}
+          >
+            Emergency Alert
+          </Button>
+        </Stack>
+      </Stack>
+
+      <Grid container spacing={3}>
+        {/* KPI Cards */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
             title="Total Students"
-            count={2500}
-            color="primary.main"
-            bgColor="primary"
-            href="/dashboard"
-            labels={[
-              { name: 'Female', color: 'warning', value: 500 },
-              { name: 'Male', color: 'info', value: 500 },
-              { name: 'Present', color: 'success', value: 500 },
-              { name: 'Absent', color: 'error', value: 500 },
-            ]}
-            selectOptions={[
-              { value: 'all', label: 'All' },
-              { value: '1', label: '1' },
-              { value: '2', label: '3' },
-            ]}
-            selectedValue="all"
-            onSelectChange={(val) => {}}
+            total={2500}
+            icon="hugeicons:students"
+            color="primary"
+            trend={{ value: 4.5, isUp: true }}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <PrincipalDashboardCard
-            icon="clarity:employee-group-solid"
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
             title="Total Employees"
-            count={250}
-            dropdownLabel="Select Employee"
-            color="primary.main"
-            bgColor="primary"
-            href="/dashboard"
-            labels={[
-              { name: 'Present', color: 'success', value: 500 },
-              { name: 'Absent', color: 'error', value: 500 },
-            ]}
-            selectOptions={[
-              { value: 'all', label: 'All' },
-              { value: 'Teaching', label: 'Teaching' },
-              { value: 'Non-Teaching', label: 'Non-Teaching' },
-            ]}
-            selectedValue="all"
-            onSelectChange={(val) => {}}
+            total={250}
+            icon="clarity:employee-group-solid"
+            color="info"
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <PrincipalDashboardCard
-            dropdownLabel="Select Month"
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
+            title="Today's Attendance"
+            total="92.8%"
+            icon="solar:user-check-bold"
+            color="success"
+            trend={{ value: 1.2, isUp: true }}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardKpiCard
+            title="Payroll (Current)"
+            total={formatNumber(250000, 'INR')}
             icon="noto:receipt"
-            title="Payroll generated"
-            count={formatNumber(250000, 'INR')}
-            color="primary.main"
-            bgColor="primary"
-            href="/dashboard"
-            labels={[
-              { name: 'Teaching', color: 'warning', value: formatNumber(250000, 'INR') },
-              { name: 'Non-teaching', color: 'info', value: formatNumber(250000, 'INR') },
-            ]}
-            selectOptions={[
-              { value: 'all', label: 'All' },
-              { value: 'January', label: 'January' },
-              { value: 'February', label: 'February' },
-              { value: 'March', label: 'March' },
-            ]}
-            selectedValue="all"
-            onSelectChange={(val) => {}}
+            color="warning"
           />
         </Grid>
-      </Grid>
 
-      <Grid size={{ xs: 12, lg: 4 }}>
-        <PerformerCard
-          title="Needs improvement"
-          subheader="Based on The latest Exam"
-          list={studentList}
-          options={subjectOptions}
-        />
-      </Grid>
-
-      <Grid size={{ xs: 12, lg: 4 }}>
-        <PerformerCard
-          title="Top Performers"
-          subheader="Based on The latest Exam"
-          list={studentList}
-          options={subjectOptions}
-        />
-      </Grid>
-
-      <Grid size={12}>
-        <Card sx={{ boxShadow: 'var(--shadows-2)' }}>
-          <AnalyticsWebsiteVisits
-            firstDropdownOnChange={() => {}}
-            firstDropdownValue="2024"
-            firstDropdownLabel="Year"
-            firstDropdownOptions={[
-              { value: '2024', label: '2024-2025' },
-              { value: '2023', label: '2023-2024' },
-              { value: '2022', label: '2022-2023' },
-            ]}
-            title="Fees Summary"
-            chart={{
-              categories: [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ],
-              series: [
-                { name: 'Fee Collected', data: [43, 33, 22, 37, 67, 68, 37, 24, 55, 50, 90, 70] },
-                { name: 'Fee Outstanding', data: [51, 70, 47, 67, 40, 37, 24, 70, 24, 89, 90, 50] },
-                { name: 'Fee Overdue', data: [43, 33, 22, 37, 67, 68, 37, 24, 55, 50, 90, 70] },
-              ],
-            }}
-            sx={{ height: '100%', boxShadow: 'none' }}
-          />
-        </Card>
-      </Grid>
-
-      <Grid size={{ lg: 4 }} px={1}>
-        <Card sx={{ p: 2, cursor: 'pointer', height: '100%' }}>
-          <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
-        </Card>
-      </Grid>
-
-      <Grid size={{ lg: 8 }} sx={{ height: '100%' }}>
-        <Typography sx={{ pt: '13px' }} variant="h6" fontWeight={600} mb="24px">
-          Exam Overview
-        </Typography>
-        <ExamOverviewForPrincipal />
-      </Grid>
-
-      <Grid size={{ lg: 12 }} px={1}>
-        <Card sx={{ boxShadow: 'var(--shadows-2)' }}>
-          <AnalyticsClassResults
-            title="Class & Subject Wise Results"
-            subheader="View student performance data"
-          />
-        </Card>
-      </Grid>
-
-      <Grid size={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <ButtonGroup
-              variant="outlined"
-              sx={{
-                bgcolor: 'background.paper',
-                boxShadow: 1,
-                borderRadius: 1,
-                '& .MuiButton-root': {
-                  borderColor: 'divider',
-                  color: 'text.secondary',
-                  px: 3,
-                  py: 1,
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                    borderColor: 'divider',
+        {/* Academic Performance */}
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <DashboardWidgetWrapper
+            title="Academic Performance"
+            subheader="Fees & Collection Summary"
+          >
+            <AnalyticsWebsiteVisits
+              firstDropdownValue="2024"
+              firstDropdownOptions={[{ value: '2024', label: '2024-2025' }]}
+              title=""
+              chart={{
+                categories: [
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
+                ],
+                series: [
+                  { name: 'Fee Collected', data: [43, 33, 22, 37, 67, 68, 37, 24, 55, 50, 90, 70] },
+                  {
+                    name: 'Fee Outstanding',
+                    data: [51, 70, 47, 67, 40, 37, 24, 70, 24, 89, 90, 50],
                   },
-                  '&.Mui-contained': {
-                    bgcolor: 'primary.main',
-                    color: 'common.white',
-                    borderColor: 'primary.main',
-                    '&:hover': { bgcolor: 'primary.dark' },
-                  },
+                ],
+              }}
+              sx={{ boxShadow: 'none' }}
+            />
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Approvals & Requests */}
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <DashboardWidgetWrapper
+            title="Approvals Required"
+            subheader="Pending items for your review"
+          >
+            <Stack spacing={2}>
+              {[
+                {
+                  title: 'Leave Request',
+                  user: 'Sunil Kumar (Teacher)',
+                  type: 'Sick Leave',
+                  color: 'warning',
                 },
+                {
+                  title: 'Budget Request',
+                  user: 'Library Dept',
+                  type: 'Book Purchase',
+                  color: 'info',
+                },
+                {
+                  title: 'Event Approval',
+                  user: 'Cultural Comm',
+                  type: 'Annual Fest',
+                  color: 'success',
+                },
+              ].map((item, index) => (
+                <Box key={index} sx={{ p: 2, borderRadius: 2, bgcolor: 'background.neutral' }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        bgcolor: `${item.color}.main`,
+                      }}
+                    />
+                    <Stack spacing={0.5} flexGrow={1}>
+                      <Typography variant="subtitle2">{item.title}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.user} • {item.type}
+                      </Typography>
+                    </Stack>
+                    <Button size="small" variant="soft" color="inherit">
+                      Review
+                    </Button>
+                  </Stack>
+                </Box>
+              ))}
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{ borderStyle: 'dashed', borderRadius: '12px' }}
+              >
+                View All Approvals
+              </Button>
+            </Stack>
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Performance Insight */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <PerformerCard
+            title="Needs Improvement"
+            subheader="Students requiring academic attention"
+            list={studentList}
+            options={subjectOptions}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <PerformerCard
+            title="Top Performers"
+            subheader="Academic Excellence this month"
+            list={studentList}
+            options={subjectOptions}
+          />
+        </Grid>
+
+        {/* Exam & Results */}
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <DashboardWidgetWrapper title="Class & Subject Wise Results">
+            <AnalyticsClassResults title="" subheader="" />
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <DashboardWidgetWrapper title="What's New this Month">
+            <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
+          </DashboardWidgetWrapper>
+        </Grid>
+
+        {/* Attendance Monitor */}
+        <Grid size={{ xs: 12 }}>
+          <DashboardWidgetWrapper
+            title="Quick Monitor"
+            subheader="Select view to see detailed activity"
+          >
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <ButtonGroup variant="soft" sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+                <Button
+                  onClick={() => setTimeTable('student')}
+                  variant={timeTable === 'student' ? 'contained' : 'soft'}
+                >
+                  Student Activity
+                </Button>
+                <Button
+                  onClick={() => setTimeTable('employee')}
+                  variant={timeTable === 'employee' ? 'contained' : 'soft'}
+                >
+                  Employee Activity
+                </Button>
+              </ButtonGroup>
+
+              {timeTable === 'employee' && (
+                <Autocomplete
+                  sx={{ width: 240 }}
+                  options={[
+                    { id: 1, firstName: 'EMP-102' },
+                    { id: 2, firstName: 'EMP-105' },
+                  ]}
+                  getOptionLabel={(option) => option.firstName}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Search Employee" size="small" />
+                  )}
+                />
+              )}
+            </Stack>
+            <Box
+              sx={{
+                p: 4,
+                textAlign: 'center',
+                borderRadius: 2,
+                border: '2px dashed rgba(145, 158, 171, 0.12)',
               }}
             >
-              <Button
-                variant={timeTable === 'student' ? 'outlined' : 'contained'}
-                onClick={() => setTimeTable('employee')}
-                startIcon={icon('ic-hr')}
-                sx={
-                  timeTable === 'employee'
-                    ? { bgcolor: 'primary.main !important', color: 'white !important' }
-                    : {}
-                }
-              >
-                Employee
-              </Button>
-              <Button
-                variant={timeTable === 'student' ? 'contained' : 'outlined'}
-                onClick={() => setTimeTable('student')}
-                startIcon={icon('ic-student')}
-                sx={
-                  timeTable === 'student'
-                    ? { bgcolor: 'primary.main !important', color: 'white !important' }
-                    : {}
-                }
-              >
-                Student
-              </Button>
-            </ButtonGroup>
-
-            {timeTable === 'student' && (
-              <>
-                <CustomSelect
-                  label="Class"
-                  options={[]}
-                  labelKey="name"
-                  valueKey="id"
-                  onChange={(val) => {}}
-                  value=""
-                  formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
-                />
-                <CustomSelect
-                  label="Division"
-                  disabled
-                  labelKey="name"
-                  valueKey="id"
-                  options={[]}
-                  value=""
-                  onChange={(val) => {}}
-                  formControlProps={{ sx: { width: '100%', minWidth: '180px' } }}
-                />
-              </>
-            )}
-
-            {timeTable === 'employee' && (
-              <Autocomplete
-                options={[
-                  { id: 1, firstName: '987374' },
-                  { id: 2, firstName: '838738' },
-                ]}
-                getOptionLabel={(option) => option.firstName}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="GR No"
-                    placeholder="Search GR No"
-                    size="small"
-                    fullWidth
-                    sx={{ width: '100%', minWidth: '200px' }}
-                  />
-                )}
-                onChange={(e, value) => {}}
-              />
-            )}
-          </Box>
-        </Box>
-        {/* <TimeTableView /> */}
+              <Typography variant="body2" color="text.disabled">
+                [Interactive {timeTable === 'student' ? 'Student' : 'Employee'} Tracker View
+                Placeholder]
+              </Typography>
+            </Box>
+          </DashboardWidgetWrapper>
+        </Grid>
       </Grid>
-    </Grid>
+    </DashboardContent>
   );
-};
-
-export default MainDashboardPrincipal;
+}

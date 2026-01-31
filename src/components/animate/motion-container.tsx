@@ -1,9 +1,9 @@
 import type { MotionProps } from 'framer-motion';
 import type { BoxProps } from '@mui/material/Box';
 
-import { m } from 'framer-motion';
 import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 
 import { varContainer } from './variants';
 
@@ -19,7 +19,7 @@ export const MotionContainer = forwardRef<HTMLDivElement, MotionContainerProps>(
   ({ animate, action = false, children, ...other }, ref) => {
     const commonProps = {
       ref,
-      component: m.div,
+      component: motion.div,
       variants: varContainer(),
       initial: action ? false : 'initial',
       animate: action ? (animate ? 'animate' : 'exit') : 'animate',

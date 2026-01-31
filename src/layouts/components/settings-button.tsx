@@ -2,7 +2,7 @@
 
 import type { IconButtonProps } from '@mui/material/IconButton';
 
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Badge from '@mui/material/Badge';
 import SvgIcon from '@mui/material/SvgIcon';
 import IconButton from '@mui/material/IconButton';
@@ -24,7 +24,7 @@ export function SettingsButton({ sx, ...other }: SettingsButtonProps) {
     >
       <Badge color="error" variant="dot" invisible={!settings.canReset}>
         <SvgIcon
-          component={m.svg}
+          component={motion.svg}
           animate={{ rotate: 360 }}
           transition={{ duration: 8, ease: 'linear', repeat: Infinity }}
         >

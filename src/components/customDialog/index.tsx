@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
 import React, { useRef } from 'react';
+import { CONFIG } from 'src/config-global';
 import { Close } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
@@ -54,7 +55,7 @@ const CustomDialog = ({
       maxWidth={maxWidth}
       transitionDuration={{
         enter: theme.transitions.duration.shortest,
-        exit: theme.transitions.duration.shortest - 80,
+        exit: 0,
       }}
       PaperProps={{
         sx: {
@@ -63,6 +64,10 @@ const CustomDialog = ({
           flexDirection: 'column',
           borderRadius: '16px', // Modern rounded corners
           boxShadow: theme.customShadows?.dialog || theme.shadows[24], // Premium shadow
+          backgroundRepeat: 'no-repeat',
+          // borderTop: `5px solid ${theme.palette.primary.main}`,
+          backgroundImage: `url(${CONFIG.site.basePath}/assets/red-blur.png)`,
+          backgroundPosition: 'bottom left',
           '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
           ...(sx || {}),
         },

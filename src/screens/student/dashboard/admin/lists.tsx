@@ -61,7 +61,7 @@ const studentEnrollment = [
 ];
 
 const AdminLists = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {/* Upcoming Entrance Exam */}
     <Grid size={{ xs: 12 }}>
       <Card sx={{ boxShadow: (theme) => theme.shadows[2], borderRadius: 2 }}>

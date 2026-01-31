@@ -3,7 +3,7 @@ import type { TypographyProps } from '@mui/material/Typography';
 
 import { useRef, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
-import { m, animate, useInView, useTransform, useMotionValue } from 'framer-motion';
+import { motion, animate, useInView, useTransform, useMotionValue } from 'framer-motion';
 
 // ----------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ export function AnimateCountUp({
       }}
       {...other}
     >
-      <m.span ref={ref}>{rounded}</m.span>
+      <motion.span ref={ref}>{rounded}</motion.span>
       {unit}
     </Typography>
   );
