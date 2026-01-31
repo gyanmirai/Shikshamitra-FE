@@ -46,7 +46,7 @@ export default function FinanceConcessionImpact({ title, subheader, chart, ...ot
 
   return (
     <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart

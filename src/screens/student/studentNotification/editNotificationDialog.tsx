@@ -138,14 +138,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
             ))}
           </Grid>
         </Scrollbar>
-        <DialogActions
-          sx={{
-            px: 3,
-            pb: 3,
-            justifyContent: 'flex-end',
-            background: 'transparent',
-          }}
-        >
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <CancelButton
             onClick={() => {
               onClose();

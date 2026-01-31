@@ -33,19 +33,23 @@ interface NotificationFormStepperProps {
 
 const NotificationFormStepper = ({ onBack }: NotificationFormStepperProps) => {
   const [activeStep, setActiveStep] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notificationId, setNotificationId] = useState<string | null>(null);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [createNotificationDraft] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateNotificationDraftMutation,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [updateNotificationChannels] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateNotificationChannelsMutation,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [composeMessageAndPublish] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useComposeMessageAndPublishMutation,
@@ -97,10 +101,9 @@ const NotificationFormStepper = ({ onBack }: NotificationFormStepperProps) => {
           if (!notificationId) {
             // Need to map values to API payload
             // NOTE: Assuming structure based on standard patterns as API definition wasn't explicit on payload structure
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const payload = {
-              role: values.audience?.role,
-              classes: values.audience?.classes,
-              divisions: values.audience?.divisions,
+              educationMediumStageId: values.audience?.educationMediumStageId,
               memberIds: values.members?.filter((m) => m.isSelect).map((m) => m.id),
             };
 

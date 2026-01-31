@@ -82,7 +82,7 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
           </Grid>
         </SectionCard>
         <SectionCard title="Compose Message">
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 disabled={isLoading}

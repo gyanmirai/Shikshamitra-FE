@@ -31,7 +31,7 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
     <DragDropContext onDragEnd={handleOnDragEnd}>
       <Droppable droppableId="components">
         {(provided) => (
-          <Grid container spacing={2} ref={provided.innerRef} {...provided.droppableProps}>
+          <Grid container spacing={1} ref={provided.innerRef} {...provided.droppableProps}>
             {sections.map((section: any, index: number) => (
               <Draggable key={section.id} draggableId={section.id.toString()} index={index}>
                 {(p, snapshot) => (
@@ -47,6 +47,7 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
                         cursor: 'grab',
                         userSelect: 'none',
                         height: '100%',
+                        borderRadius: '50%',
                       }}
                     >
                       {dashBoardSections[section.id]}

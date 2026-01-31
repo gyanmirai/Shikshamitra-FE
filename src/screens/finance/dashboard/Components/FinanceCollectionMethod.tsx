@@ -74,7 +74,7 @@ export default function FinanceCollectionMethod({ title, subheader, chart, ...ot
 
   return (
     <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
       <Box
         sx={{

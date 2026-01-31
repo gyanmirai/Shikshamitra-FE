@@ -263,7 +263,7 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
                         onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
                         placeholder="Message"
                         error={!!(formik.touched.message && formik.errors.message)}
-                        editable={!formik.values.templateName}
+                        // editable={!formik.values.templateName}
                         helperText={(formik.touched.message && formik.errors.message) || ''}
                       />
                     </ShakingTextField>

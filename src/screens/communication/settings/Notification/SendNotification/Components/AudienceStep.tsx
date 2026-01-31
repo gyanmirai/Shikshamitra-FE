@@ -2,40 +2,49 @@
 
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
+import { varAlpha } from 'src/theme/styles';
+import { debounce, cloneDeep } from 'lodash';
+import { useTheme } from '@mui/material/styles';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, Checkbox, TextField, Autocomplete, FormHelperText } from '@mui/material';
+import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
+import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Box, Grid, Checkbox, TextField, IconButton, FormHelperText } from '@mui/material';
 
 import type { INotificationSendSchema } from './type';
 
 const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema> }) => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  console.log('formik erroes-----', formik.errors);
+  const theme = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [getStudents] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
   });
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // Update class list when medium/organization changes
-  useEffect(() => {
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
-    // Add "All" option if not present
-    if (!allClasses.some((std: Standards) => std.id === 'all')) {
-      allClasses.unshift({
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+
+  useEffect(() => {
+    if (!medium?.educationMediumStages) {
+      setAllOrganization([]);
+      return;
+    }
+    const orgList = cloneDeep(medium.educationMediumStages);
+    const updatedOrganizations = [
+      {
         id: 'all',
         name: 'All',
         creationTime: '',
@@ -44,115 +53,77 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
         lastModifierId: '',
         educationMediumStageId: '',
         divisions: [],
-      });
-    }
-    setAllClass(allClasses);
-  }, [medium]);
+      },
+      ...orgList,
+    ];
+    setAllOrganization(updatedOrganizations);
+  }, [medium?.educationMediumStages]);
 
-  // Update division list based on class selection
-  useEffect(() => {
-    if (formik.values.audience.classes?.length === 0) {
-      setAllDivision([]);
-      formik.setFieldValue('audience.divisions', []);
-      return;
-    }
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-    if (
-      formik.values.audience.classes?.length === 1 &&
-      formik.values.audience.classes[0] !== 'all'
-    ) {
-      const selectedClass = allClass.find(
-        (cls: any) => cls?.id === formik.values.audience?.classes?.[0]
-      );
-      const divisions = selectedClass?.divisions || [];
-      setAllDivision(divisions);
-      formik.setFieldValue(
-        'audience.divisions',
-        divisions.map((d: any) => d.id)
-      );
-    } else {
-      setAllDivision([
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          strength: 0,
-          standardId: '',
-        },
-      ]);
-      formik.setFieldValue('audience.divisions', ['all']);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allClass, formik.values.audience?.classes]);
+  const debouncedSetSearch = useMemo(
+    () => debounce((value: string) => setDebouncedSearch(value), 500),
+    []
+  );
 
-  useEffect(() => {
-    const classes = formik.values.audience?.classes || [];
-    const divisions = formik.values.audience?.divisions || [];
-
-    if (classes.length === 0 || divisions.length === 0) return;
-
-    const payload = {
-      educationMediumStageId: medium?.id,
-      standardIds: classes.filter((id) => id !== 'all'),
-      divisionIds: divisions.filter((id) => id !== 'all'),
-    };
-
-    if (payload.standardIds.length > 0 && payload.divisionIds.length > 0) {
-      getStudents(payload);
-    }
-  }, [formik.values.audience?.classes, formik.values.audience?.divisions, getStudents, medium]);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    debouncedSetSearch(e.target.value);
+  };
 
   const tableData = useMemo(() => {
     let tableData2: any[] = [];
 
-    if (formik.values.audience?.role === '3a1c1c6b-79ab-63ab-ea1f-e7f639d54dad') {
-      tableData2 = [
-        {
-          id: '0',
-          name: 'Prerna Bhanudas Atre',
-          division: 'A',
-          grNo: 'GR001',
-          rollNo: '1',
-          contactNo: '1234567890',
-        },
-        {
-          id: '1',
-          name: 'Dharmik Harishbhai Ahir',
-          division: 'A',
-          grNo: 'GR002',
-          rollNo: '2',
-          contactNo: '0987654321',
-        },
-      ];
-    } else {
-      tableData2 = [
-        {
-          id: '0',
-          name: 'Prerna Bhanudas Atre',
-          division: '',
-          grNo: '',
-          rollNo: '',
-          email: 'prerna@gmail.com',
-          employeeCode: 'EMP001',
-          contactNo: '1234567890',
-        },
-        {
-          id: '1',
-          name: 'Dharmik Harishbhai Ahir',
-          division: '',
-          grNo: '',
-          rollNo: '',
-          email: 'dharmik@gmail.com',
-          employeeCode: 'EMP002',
-          contactNo: '0987654321',
-        },
-      ];
-    }
+    tableData2 = [
+      {
+        id: '0',
+        role: 'Student',
+        name: 'Prerna Bhanudas Atre',
+        division: 'A',
+        grNo: 'GR001',
+        rollNo: '101',
+        email: 'prerna@gmail.com',
+        employeeCode: '',
+        contactNo: '1234567890',
+      },
+      {
+        id: '1',
+        role: 'Student',
+        name: 'Dharmik Harishbhai Ahir',
+        division: 'B',
+        grNo: 'GR002',
+        rollNo: '102',
+        email: 'dharmik@gmail.com',
+        employeeCode: '',
+        contactNo: '0987654321',
+      },
+      {
+        id: '2',
+        role: 'Teacher',
+        name: 'Rahul Sharma',
+        division: '',
+        grNo: '',
+        rollNo: '',
+        email: 'rahul.sharma@school.com',
+        employeeCode: 'EMP003',
+        contactNo: '9876543210',
+      },
+      {
+        id: '3',
+        role: 'Parent',
+        name: 'Suresh Patel',
+        division: '',
+        grNo: '',
+        rollNo: '',
+        email: 'suresh.patel@gmail.com',
+        employeeCode: '',
+        contactNo: '8765432109',
+      },
+    ];
+
     return tableData2;
-  }, [formik.values.audience?.role]);
+  }, []);
 
   useEffect(() => {
     if (!tableData.length) {
@@ -173,267 +144,192 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableData]);
 
-  // useEffect(() => {
-  //   if (tableData && tableData.length && !formik.values.members?.length) {
-  //     formik.setFieldValue(
-  //       'members',
-  //       tableData.map((item: IAudienceMember) => ({ ...item, isSelect: false }))
-  //     );
-  //   }
-  // }, [tableData, formik]);
+  const displayData = useMemo(() => {
+    if (!debouncedSearch) return [];
+    const lowerTerm = debouncedSearch.toLowerCase();
+    return (formik.values.members || []).filter(
+      (member: any) =>
+        member.name?.toLowerCase().includes(lowerTerm) ||
+        member.email?.toLowerCase().includes(lowerTerm) ||
+        member.role?.toLowerCase().includes(lowerTerm) ||
+        member.contactNo?.toLowerCase().includes(lowerTerm)
+    );
+  }, [debouncedSearch, formik.values.members]);
+  const onClearSearch = () => {
+    setSearchTerm('');
+    setDebouncedSearch('');
+    debouncedSetSearch.cancel(); // cancel any pending debounce
+  };
 
   return (
     // <SectionCard title="Select Audience">
     <Grid container spacing={3}>
-      {/* Role */}
       <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField
-          error={formik.touched.audience?.role && Boolean(formik.errors.audience?.role)}
+          error={
+            !!formik.errors.audience?.educationMediumStageId &&
+            !!formik.touched.audience?.educationMediumStageId
+          }
         >
-          <Autocomplete
-            disabled={isLoading}
-            options={data?.items || []}
-            value={
-              data?.items?.find((item: any) => item.id === formik.values.audience?.role) || null
-            }
-            fullWidth
-            getOptionLabel={(option: any) => option.name}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Role *"
-                size="small"
-                fullWidth
-                error={formik.touched.audience?.role && Boolean(formik.errors.audience?.role)}
-                helperText={formik.touched.audience?.role && formik.errors.audience?.role}
-              />
-            )}
-            onChange={(e, value) => {
-              formik.setFieldValue('audience.role', value?.id);
+          <ResponsiveMultiSelect
+            label="Organizations"
+            options={[{ id: 'all', name: 'All' }, ...allOrganization.filter((o) => o.id !== 'all')]}
+            value={formik.values.audience?.educationMediumStageId}
+            getOptionLabel={(opt) => opt?.name}
+            getOptionValue={(opt) => opt?.id}
+            onChange={(selectedValues) => {
+              const allRealIds = allOrganization.filter((o) => o.id !== 'all').map((o) => o.id);
+
+              const hasAllInSelection = selectedValues.includes('all');
+              const wasAllPreviouslySelected =
+                formik.values.audience?.educationMediumStageId.includes('all');
+
+              let finalValues: string[] = [];
+
+              if (hasAllInSelection && !wasAllPreviouslySelected) {
+                finalValues = ['all', ...allRealIds];
+              } else if (!hasAllInSelection && wasAllPreviouslySelected) {
+                finalValues = [];
+              } else if (hasAllInSelection && wasAllPreviouslySelected) {
+                finalValues = selectedValues.filter((id) => id !== 'all');
+              } else {
+                const allIndividuallySelected = allRealIds.every((id) =>
+                  selectedValues.includes(id)
+                );
+
+                if (allIndividuallySelected && selectedValues.length === allRealIds.length) {
+                  finalValues = ['all', ...allRealIds];
+                } else {
+                  finalValues = selectedValues;
+                }
+              }
+
+              formik.setFieldValue('audience.educationMediumStageId', finalValues);
             }}
-            onBlur={() => formik.setFieldTouched('audience.role', true)}
+            error={
+              !!(
+                formik.touched.audience?.educationMediumStageId &&
+                formik.errors.audience?.educationMediumStageId
+              )
+            }
+            helperText={
+              formik.touched.audience?.educationMediumStageId &&
+              typeof formik.errors.audience?.educationMediumStageId === 'string'
+                ? formik.errors.audience?.educationMediumStageId
+                : undefined
+            }
           />
         </ShakingTextField>
       </Grid>
 
-      {/* Class */}
-      {formik.values.audience?.role === '3a1c1c6b-79ab-63ab-ea1f-e7f639d54dad' && (
-        <>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <ShakingTextField
-              error={formik.touched.audience?.classes && Boolean(formik.errors.audience?.classes)}
-            >
-              <CustomSelect
-                options={allClass}
-                label="Class *"
-                multiple
-                value={formik.values.audience?.classes || []}
-                onChange={(val) => {
-                  const value = val as string[];
-                  const allClassIds =
-                    allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
-                  const isAllClicked = value.includes('all');
-                  const wasAllPreviouslySelected = (
-                    formik.values.audience?.classes as string[]
-                  ).includes('all');
+      {/* Search */}
+      <Grid size={{ xs: 12, md: 8 }}>
+        <TextField
+          variant="outlined"
+          size="small"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="Search..."
+          InputProps={{
+            startAdornment: <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />,
+            endAdornment: searchTerm && (
+              <IconButton size="small" onClick={onClearSearch} edge="end">
+                <ClearIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            ),
+            sx: {
+              borderRadius: 1.5,
+              bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+              fontSize: '14px',
+              '& fieldset': {
+                border: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+              },
+              '&:hover fieldset': {
+                borderColor: `${varAlpha(theme.vars.palette.grey['500Channel'], 0.4)} !important`,
+              },
+            },
+          }}
+          sx={{
+            // maxWidth: '300px',
+            width: '100%',
+            '& .MuiInputBase-root': {
+              pr: 1,
+            },
+          }}
+        />
+      </Grid>
 
-                  if (isAllClicked && !wasAllPreviouslySelected) {
-                    formik.setFieldValue('audience.classes', ['all', ...allClassIds]);
-                  } else if (!isAllClicked && wasAllPreviouslySelected) {
-                    formik.setFieldValue('audience.classes', []);
-                  } else if (isAllClicked && wasAllPreviouslySelected) {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allClassIds.length) {
-                      formik.setFieldValue('audience.classes', ['all', ...allClassIds]);
-                    } else {
-                      formik.setFieldValue('audience.classes', selectedWithoutAll);
-                    }
-                  } else {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allClassIds.length) {
-                      formik.setFieldValue('audience.classes', ['all', ...allClassIds]);
-                    } else {
-                      formik.setFieldValue('audience.classes', selectedWithoutAll);
-                    }
-                  }
-                }}
-                onBlur={() => formik.setFieldTouched('audience.classes', true)}
-                error={formik.touched.audience?.classes && Boolean(formik.errors.audience?.classes)}
-                helperText={
-                  (formik.touched.audience?.classes && formik.errors.audience?.classes) as string
-                }
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <ShakingTextField
-              error={
-                formik.touched.audience?.divisions && Boolean(formik.errors.audience?.divisions)
-              }
-            >
-              {!(formik.values.audience?.classes as string[]).includes('all') &&
-                (formik.values.audience?.classes as string[])?.length === 1 && (
-                  <CustomSelect
-                    options={allDivision}
-                    label="Division *"
-                    value={formik.values.audience?.divisions || []}
-                    onChange={(val) => formik.setFieldValue('audience.divisions', val)}
-                    onBlur={() => formik.setFieldTouched('audience.divisions', true)}
-                    error={
-                      formik.touched.audience?.divisions &&
-                      Boolean(formik.errors.audience?.divisions)
-                    }
-                    helperText={
-                      (formik.touched.audience?.divisions &&
-                        formik.errors.audience?.divisions) as string
-                    }
-                    labelKey="name"
-                    valueKey="id"
-                    multiple={
-                      !(formik.values.audience?.classes as string[]).includes('all') ||
-                      (formik.values.audience?.classes?.length ?? 0) > 1
-                    }
-                    formControlProps={{ fullWidth: true }}
-                    disabled={formik.values.audience?.classes?.length === 0}
-                  />
-                )}
-            </ShakingTextField>
-          </Grid>
-        </>
-      )}
-      {formik.values.audience.role &&
-        (formik.values.audience.role === '3a1c1c6b-79ab-63ab-ea1f-e7f639d54dad' ? (
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                border:
-                  formik.touched.members && formik.errors.members ? '1.5px solid #f44336' : 'none',
-                borderRadius: 2,
-              }}
-            >
-              <CustomizableTable
-                tableId="student-table"
-                isLoading={isLoading}
-                noDataText="No student data found"
-                columns={[
-                  {
-                    id: 'checkBox',
-                    align: 'left',
-                    minWidth: '60px',
-                    isSort: false,
-                    isFilter: false,
-                    label: '',
-                    renderColumn: () => (
-                      <Checkbox
-                        checked={
-                          formik.values.members?.length > 0 &&
-                          formik.values.members.every((m: any) => m.isSelect)
-                        }
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            'members',
-                            formik.values.members.map((m: any) => ({
-                              ...m,
-                              isSelect: e.target.checked,
-                            }))
-                          )
-                        }
-                      />
-                    ),
-                    render: (value, row) => (
-                      <Checkbox
-                        checked={row.isSelect || false}
-                        onChange={(e) => {
-                          const updatedMembers = formik.values.members.map((member: any) =>
-                            member.id === row.id
-                              ? { ...member, isSelect: e.target.checked }
-                              : member
-                          );
-                          formik.setFieldValue('members', updatedMembers);
-                        }}
-                      />
-                    ),
-                  },
-                  { id: 'name', label: 'Name', align: 'left', minWidth: '150px' },
-                  { id: 'division', label: 'Division', align: 'left', minWidth: '100px' },
-                  { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '100px' },
-                  { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '100px' },
-                  { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
-                ]}
-                data={formik.values.members || []}
-              />
-            </Box>
-          </Grid>
-        ) : (
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                border:
-                  formik.touched.members && formik.errors.members ? '1.5px solid #f44336' : 'none',
-                borderRadius: 2,
-                p: 0.5,
-              }}
-            >
-              <CustomizableTable
-                tableId="student-table"
-                isLoading={isLoading}
-                noDataText="No student data found"
-                columns={[
-                  {
-                    id: 'checkBox',
-                    align: 'left',
-                    minWidth: '60px',
-                    isSort: false,
-                    isFilter: false,
-                    label: '',
-                    renderColumn: () => (
-                      <Checkbox
-                        checked={
-                          formik.values.members?.length > 0 &&
-                          formik.values.members.every((m: any) => m.isSelect)
-                        }
-                        onChange={(e) =>
-                          formik.setFieldValue(
-                            'members',
-                            formik.values.members.map((m: any) => ({
-                              ...m,
-                              isSelect: e.target.checked,
-                            }))
-                          )
-                        }
-                      />
-                    ),
-                    render: (value, row) => (
-                      <Checkbox
-                        checked={row.isSelect || false}
-                        onChange={(e) => {
-                          const updatedMembers = formik.values.members.map((member: any) =>
-                            member.id === row.id
-                              ? { ...member, isSelect: e.target.checked }
-                              : member
-                          );
-                          formik.setFieldValue('members', updatedMembers);
-                        }}
-                      />
-                    ),
-                  },
-                  { id: 'name', label: 'Name', align: 'left', minWidth: '150px' },
-                  { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '150px' },
-                  { id: 'email', label: 'Email', align: 'left', minWidth: '200px' },
-                  { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
-                ]}
-                data={formik.values.members || []}
-              />
-            </Box>
-          </Grid>
-        ))}
       <Grid size={{ xs: 12 }}>
-        {/* Remove the FormHelperText error message */}
+        <Box
+          sx={{
+            border:
+              formik.touched.members && formik.errors.members ? '1.5px solid #f44336' : 'none',
+            borderRadius: 2,
+          }}
+        >
+          <CustomizableTable
+            tableId="student-table"
+            isLoading={isLoading}
+            noDataText="No data found"
+            isSearch={false}
+            wrapperProps={{
+              sx: {
+                pt: 0,
+              },
+            }}
+            columns={[
+              {
+                id: 'checkBox',
+                align: 'left',
+                minWidth: '60px',
+                isSort: false,
+                isFilter: false,
+                label: '',
+                renderColumn: () => (
+                  <Checkbox
+                    checked={
+                      formik.values.members?.length > 0 &&
+                      formik.values.members.every((m: any) => m.isSelect)
+                    }
+                    onChange={(e) =>
+                      formik.setFieldValue(
+                        'members',
+                        formik.values.members.map((m: any) => ({
+                          ...m,
+                          isSelect: e.target.checked,
+                        }))
+                      )
+                    }
+                  />
+                ),
+                render: (value, row) => (
+                  <Checkbox
+                    checked={row.isSelect || false}
+                    onChange={(e) => {
+                      const updatedMembers = formik.values.members.map((member: any) =>
+                        member.id === row.id ? { ...member, isSelect: e.target.checked } : member
+                      );
+                      formik.setFieldValue('members', updatedMembers);
+                    }}
+                  />
+                ),
+              },
+              { id: 'name', label: 'Name', align: 'left', minWidth: '150px', sticky: true },
+              { id: 'role', label: 'Role', align: 'left', minWidth: '150px', sticky: true },
+              { id: 'division', label: 'Division', align: 'left', minWidth: '100px' },
+              { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '100px' },
+              { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '100px' },
+              { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
+              { id: 'email', label: 'Email', align: 'left', minWidth: '150px' },
+              { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '150px' },
+            ]}
+            data={displayData}
+          />
+        </Box>
+      </Grid>
 
-        {formik.values.audience.role && formik.touched.members && formik.errors.members && (
+      <Grid size={{ xs: 12 }}>
+        {formik.touched.members && formik.errors.members && (
           <FormHelperText
             error
             sx={{

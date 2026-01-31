@@ -144,11 +144,11 @@ const FinanceNotificationScreen = () => {
           sx: { p: 0, minHeight: 0 },
         }}
       >
-        <Paper sx={{ height: '100%' }}>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component dialog={dialog} setIsViewMode={setIsViewMode} />
           )}
-        </Paper>
+        </Box>
       </FormSlider>
     </Box>
   );
