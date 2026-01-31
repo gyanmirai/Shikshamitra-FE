@@ -4,8 +4,8 @@ import * as Yup from 'yup';
 export const holidayValidationSchema = (currentYear: any) =>
   Yup.object().shape({
     holidayName: Yup.string().required('Holiday Name is required'),
-    holidayType: Yup.string().required('Holiday Type is required'),
-    importanceLevel: Yup.string().required('Importance Level is required'),
+    holidayTypeId: Yup.string().required('Holiday Type is required'),
+    // importanceLevel: Yup.string().required('Importance Level is required'),
     startDate: Yup.mixed()
       .required('Start Date is required')
       .test(
@@ -16,7 +16,7 @@ export const holidayValidationSchema = (currentYear: any) =>
       .test(
         'not-past-date',
         'Start Date cannot be in the past',
-        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(), 'minute')
+        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(), 'day')
       )
       .test(
         'min-date',
@@ -56,5 +56,5 @@ export const holidayValidationSchema = (currentYear: any) =>
           `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
-    classes: Yup.array().min(1, 'At least one class must be selected'),
+    // classes: Yup.array().min(1, 'At least one class must be selected'),
   });

@@ -605,22 +605,22 @@ const DeductionComponentForm = ({
                   renderGroup={(params) => (
                     <Box key={params.key}>
                       {/* 🔹 Group Header */}
-                      <Typography
+                      <Box
                         sx={{
                           px: 2,
-                          py: 1,
-                          fontSize: '12px',
+                          pt: 1.2,
+                          pb: 0.5,
                           fontWeight: 600,
-                          color: 'grey.600',
+                          fontSize: '14px',
+                          color: 'text.primary',
                           backgroundColor: '#f5f5f5',
-                          textTransform: 'uppercase',
                         }}
                       >
                         {params.group}
-                      </Typography>
+                      </Box>
 
                       {/* 🔹 Group Items */}
-                      {params.children}
+                      <Box sx={{ pl: 2 }}>{params.children}</Box>
                     </Box>
                   )}
                   renderInput={(params) => (

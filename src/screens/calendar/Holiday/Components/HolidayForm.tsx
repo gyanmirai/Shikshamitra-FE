@@ -1,8 +1,10 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
+import type { IHolidayType } from 'src/screens/communication/settings/HolidayType/type';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
@@ -20,10 +22,6 @@ import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
-  useAddHolidayTypeMutation,
-  useUpdateHolidayTypeMutation,
-} from 'src/redux/communication/holiday/holidayDataApi';
-import {
   Box,
   Chip,
   Grid,
@@ -33,6 +31,11 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
+import {
+  useAddHolidayMutation,
+  useGetHolidayTypeQuery,
+  useUpdateHolidayMutation,
+} from 'src/redux/communication/holiday/holidayDataApi';
 
 import { holidayValidationSchema } from './getHolidayValidationSchema';
 
@@ -54,22 +57,31 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
   const [, setAllClass] = useState<Standards[]>([]);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  const { addHoliday } = useQueryAndMutation({
+  console.log('currentYear', currentYear?.id);
+  const [addHoliday, { isLoading: addLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddHolidayTypeMutation,
+    currentQueryAndMutation: useAddHolidayMutation,
   });
 
-  const { updateHoliday } = useQueryAndMutation({
+  const [updateHoliday, { isLoading: updateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateHolidayTypeMutation,
+    currentQueryAndMutation: useUpdateHolidayMutation,
+  });
+
+  const {
+    data: holidayTypeData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHolidayTypeQuery,
   });
 
   const formik = useFormik<IHoliday>({
     initialValues: {
       id: initialValues?.id || '',
       holidayName: initialValues?.holidayName || '',
-      holidayType: initialValues?.holidayType || '',
+      holidayTypeId: initialValues?.holidayTypeId || '',
       startDate: initialValues?.startDate || null,
       audience: initialValues?.audience || [],
       endDate: initialValues?.endDate || null,
@@ -83,26 +95,39 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
     onSubmit: async (values) => {
       try {
         const payload = {
-          name: values.holidayName,
-          holidayTypeId: values.holidayType, // Assuming this is the ID
-          startDate: dayjs(values.startDate).format('YYYY-MM-DD'),
-          endDate: dayjs(values.endDate).format('YYYY-MM-DD'),
+          // name: values.holidayName,
+          // holidayTypeId: values.holidayType, // Assuming this is the ID
+          // startDate: dayjs(values.startDate).format('YYYY-MM-DD'),
+          // endDate: dayjs(values.endDate).format('YYYY-MM-DD'),
+          // description: values.description,
+          // audience: values.audience,
+          // attachment: values.attachment ? 'base64-or-url' : undefined, // Handle file upload
+          academicYearId: currentYear?.id,
+          holidayName: values.holidayName,
+          holidayTypeId: values.holidayTypeId,
+          startDate: dayjs(values.startDate).toISOString(),
+          endDate: dayjs(values.endDate).toISOString(),
           description: values.description,
-          audience: values.audience,
-          attachment: values.attachment ? 'base64-or-url' : undefined, // Handle file upload
+          audienceIds: ['3fa85f64-5717-4562-b3fc-2c963f66afa6'],
+          attachments: values.attachment ? 'base64-or-url' : '',
         };
 
         if (initialValues) {
           await updateHoliday({
-            holidayId: values.id,
-            ...payload,
+            id: initialValues.id,
+            body: payload,
           }).unwrap();
 
           shikshaMitraToast.success({
             message: `Holiday: ${values.holidayName} updated successfully!`,
           });
         } else {
-          await addHoliday(payload).unwrap();
+          await addHoliday({
+            params: {
+              academicYearId: currentYear?.id,
+            },
+            data: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
             message: `Holiday: ${values.holidayName} added successfully!`,
@@ -178,20 +203,22 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
-                    error={!!(formik.touched.holidayType && formik.errors.holidayType)}
+                    error={!!(formik.touched.holidayTypeId && formik.errors.holidayTypeId)}
                   >
                     <CustomSelect
                       label="Holiday Type *"
-                      value={formik.values.holidayType}
-                      onChange={(val) => formik.setFieldValue('holidayType', val)}
-                      options={[
-                        { value: 'National Holiday', label: 'National Holiday' },
-                        { value: 'Festival', label: 'Festival' },
-                        { value: 'School Holiday', label: 'School Holiday' },
-                      ]}
-                      error={formik.touched.holidayType && Boolean(formik.errors.holidayType)}
+                      value={formik.values.holidayTypeId}
+                      onChange={(val) => formik.setFieldValue('holidayTypeId', val)}
+                      isLoading={isLoading || isFetching}
+                      options={
+                        holidayTypeData?.items.map((item: IHolidayType) => ({
+                          value: item.id,
+                          label: item.name,
+                        })) || []
+                      }
+                      error={formik.touched.holidayTypeId && Boolean(formik.errors.holidayTypeId)}
                       helperText={
-                        (formik.touched.holidayType && formik.errors.holidayType) as string
+                        (formik.touched.holidayTypeId && formik.errors.holidayTypeId) as string
                       }
                       formControlProps={{ fullWidth: true }}
                     />
@@ -342,10 +369,11 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="contained"
               size="small"
               type="submit"
+              loading={addLoading || updateLoading}
               startIcon={
                 <Iconify
                   icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
@@ -355,7 +383,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
               }
             >
               {initialValues ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>

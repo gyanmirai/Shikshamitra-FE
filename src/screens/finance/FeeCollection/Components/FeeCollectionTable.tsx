@@ -33,7 +33,15 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
+  // const { data: feeCollectionData, isLoading: feeCollectionLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetFeeCollectionListQuery,
+  //   params: {
+  //     academicYearId: currentYear?.id,
+  //     boardId: selectedBoard,
+  //     mediumId: selectedMedium,
+  //   },
+  // });
   useEffect(() => {
     // Filter boards based on academic year ID from edit data
     setBoards(currentYear?.boards);
