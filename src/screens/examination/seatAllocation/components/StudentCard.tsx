@@ -1,6 +1,6 @@
 import type { Theme } from '@mui/material';
 
-import { Box, Paper, Avatar, Typography } from '@mui/material';
+import { Box, Card, Avatar, Typography } from '@mui/material';
 
 import type { IStudentRoomAssignment } from '../type';
 
@@ -15,54 +15,96 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
     e.dataTransfer.effectAllowed = 'move';
   };
 
+  const isAssigned = student.isRoomAssign;
+
   return (
-    <Paper
-      draggable={!student.isRoomAssign}
+    <Card
+      draggable={!isAssigned}
       onDragStart={handleDragStart}
       sx={{
+        p: 1.5,
         display: 'flex',
         alignItems: 'center',
-        gap: 1,
-        p: 1,
-        justifyContent: 'space-between',
-        cursor: student.isRoomAssign ? 'pointer' : 'grab',
-        transition: 'all 0.3s ease-in-out',
-        background: student.isRoomAssign ? theme.vars.palette.action.selected : 'background.paper',
-        opacity: student.isRoomAssign ? 0.7 : 1,
-        '&:hover': { scale: '1.03' },
+        gap: 2,
+        cursor: isAssigned ? 'pointer' : 'grab',
+        transition: 'all 0.2s ease-in-out',
+        borderRadius: 1.5,
+        border: (t) => `1px solid ${t.palette.divider}`,
+        boxShadow: (t) => (isAssigned ? 'none' : t.shadows[2]),
+        bgcolor: (t) => (isAssigned ? t.palette.action.selected : t.palette.background.paper),
+        opacity: isAssigned ? 0.6 : 1,
+        '&:hover': {
+          transform: isAssigned ? 'none' : 'translateY(-2px)',
+          boxShadow: (t) => (isAssigned ? 'none' : t.shadows[4]),
+        },
         '&:active': { cursor: 'grabbing' },
+        position: 'relative',
+        overflow: 'visible',
       }}
-      elevation={6}
-      title={student.isRoomAssign ? 'Already Assign' : 'Drag to assign seat'}
     >
-      <Box display="flex" alignItems="center" gap={1}>
-        <Avatar>{student.name?.split(' ')?.[0]?.[0] || '?'}</Avatar>
-        <Box>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {student.name}
+      <Avatar
+        sx={{
+          width: 40,
+          height: 40,
+          bgcolor: (t) =>
+            isAssigned ? t.palette.action.disabledBackground : t.palette.primary.main,
+          color: (t) => (isAssigned ? t.palette.text.disabled : t.palette.primary.contrastText),
+          fontWeight: 700,
+          fontSize: '0.875rem',
+        }}
+      >
+        {student.name?.split(' ')?.[0]?.[0] || '?'}
+      </Avatar>
+
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600, mb: 0.5 }}>
+          {student.name}
+        </Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
+            Roll:{' '}
+            <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
+              {student.rollNo}
+            </Box>
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Roll No: {student.rollNo}
-            {student.isRoomAssign && student.bench && ` • Bench: ${student.bench}`}
-          </Typography>
+
+          {isAssigned && student.bench && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              • Bench:{' '}
+              <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                {student.bench}
+              </Box>
+            </Typography>
+          )}
         </Box>
       </Box>
 
-      {student.isRoomAssign && student.room && (
+      {isAssigned && student.room && (
         <Box
           sx={{
             px: 1,
             py: 0.5,
-            borderRadius: 1,
-            bgcolor: 'primary.main',
-            color: 'white',
+            borderRadius: 0.75,
+            bgcolor: 'success.lighter',
+            color: 'success.dark',
             fontSize: '0.75rem',
+            fontWeight: 700,
+            border: '1px solid',
+            borderColor: 'success.light',
           }}
         >
           {student.room}
         </Box>
       )}
-    </Paper>
+    </Card>
   );
 };
 

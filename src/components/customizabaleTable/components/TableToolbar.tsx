@@ -71,7 +71,7 @@ export const TableToolbar = React.memo(
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: 2.5,
+          p: isSearch || isFilter || isFullScreen ? 2 : 0,
           gap: 2,
           flexShrink: 0,
           borderBottom: `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,

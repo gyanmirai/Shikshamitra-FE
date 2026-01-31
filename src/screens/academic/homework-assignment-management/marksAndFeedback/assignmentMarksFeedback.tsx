@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
@@ -72,8 +73,7 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 1,
-          mb: 2,
+          mt: 2,
           p: 1,
           gap: 2,
         }}
@@ -149,7 +149,7 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           />
         </CustomTooltip>
       </Box>
-      {assignmentTitle && (
+      {assignmentTitle ? (
         <StudentSubmissions
           selectedClass={classes}
           selectedDivision={division}
@@ -160,6 +160,8 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           tableData={[]}
           setTableData={() => {}}
         />
+      ) : (
+        <EmptyContent title="Please select an assignment title to view student submissions." />
       )}
     </Box>
   );

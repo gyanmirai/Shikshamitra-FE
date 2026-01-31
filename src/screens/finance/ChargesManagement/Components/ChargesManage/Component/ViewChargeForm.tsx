@@ -33,10 +33,10 @@ const ChargeDetailsCard: React.FC<Props> = ({
         {/* Right section (size 2) */}
 
         {/* Full-width section (size 12) */}
-        <Grid size={{ xs: 12, md: 10 }}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <ChargeViewDetailsCard charge={charge} />
         </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <RequestorInfoCard charge={charge} />
         </Grid>
       </Grid>

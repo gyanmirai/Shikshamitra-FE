@@ -5,7 +5,7 @@ import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Card, Grid, Paper, Stack, Avatar, Divider, Typography } from '@mui/material';
+import { Box, Card, Grid, Stack, Avatar, Divider, Typography } from '@mui/material';
 
 import type { IStudentFee } from './type';
 
@@ -24,7 +24,20 @@ export const StudentFeeSummaryCard: React.FC<{
   }
 
   return (
-    <Paper sx={{ p: 2, mb: 3, boxShadow: (theme) => theme.customShadows?.z4 }}>
+    <Card
+      sx={{
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        display: 'flex',
+        flexDirection: 'column',
+        ml: 0.5,
+        mt: 0.5,
+        mb: 2,
+        p: 2,
+        boxShadow: 'var(--shadows-4)',
+      }}
+    >
+      {/* <Paper sx={{ p: 2, mb: 1, boxShadow: (theme) => theme.customShadows?.z4 }}> */}
       {showHeader && (
         <Grid container spacing={2} alignItems="center">
           <Grid
@@ -196,7 +209,7 @@ export const StudentFeeSummaryCard: React.FC<{
           </Grid>
         </Grid>
       )}
-    </Paper>
+    </Card>
   );
 };
 

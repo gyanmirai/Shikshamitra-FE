@@ -231,10 +231,12 @@ const GlobalAcademicSearch = () => {
                   option.academicYear.id === currentYear?.id &&
                   option.board.id === currentBoard?.id &&
                   option.medium.id === currentMedium?.id;
+                const { key, ...restProps } = props;
                 return (
                   <Box
                     component="li"
-                    {...props}
+                    key={key}
+                    {...restProps}
                     data-selected={isSelected}
                     sx={{
                       backgroundColor: isSelected ? 'action.hover' : 'transparent',

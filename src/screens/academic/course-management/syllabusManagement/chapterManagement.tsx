@@ -31,6 +31,7 @@ import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   chaptersApi,
+  useGetChaptersQuery,
   useDeleteChapterMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
@@ -133,6 +134,20 @@ const Subjects = () => {
     []
   );
 
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: chapterResponse,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading: isChapterLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isFetching: isChapterFetching,
+    refetch: refetchChapters,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersQuery,
+    params: { standardId: classId, subjectId },
+  });
+
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addChapterDialog.onFalse();
@@ -211,70 +226,73 @@ const Subjects = () => {
         // Table view for displaying chapters
         <>
           {/* Filter controls for class and subject selection */}
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 2,
-              mb: 1,
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
-              <CustomSelect
-                label="Class"
-                name="class"
-                options={allClass}
-                valueKey="id"
-                labelKey="name"
-                formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-                value={classId}
-                onChange={(value) => {
-                  const standard = allClass.find((std) => std.id === value);
-                  setClasses(standard?.name || '');
-                  setClassId(value as string);
-                }}
-              />
-              <CustomSelect
-                options={[
-                  { value: 'Mathematics', label: 'Mathematics' },
-                  { value: 'Science', label: 'Science' },
-                  { value: 'English', label: 'English' },
-                  { value: 'History', label: 'History' },
-                  { value: 'Geography', label: 'Geography' },
-                ]}
-                value={subject}
-                disabled={!classes}
-                onChange={(val) => {
-                  setSubject(val as string);
-                  setSubjectId(val as string);
-                }}
-                label="Subject"
-                valueKey="value"
-                labelKey="label"
-                isLoading={isLoading}
-                formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-              />
-            </Box>
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={() => {
-                addChapterDialog.onTrue();
+          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                mb: 1,
+                alignItems: 'center',
+                justifyContent: 'space-between',
               }}
-              disabled={!classes || !subject}
-              sx={{ px: '32px' }}
             >
-              Chapter
-            </Button>
-          </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <CustomSelect
+                  label="Class"
+                  name="class"
+                  options={allClass}
+                  valueKey="id"
+                  labelKey="name"
+                  formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+                  value={classId}
+                  onChange={(value) => {
+                    const standard = allClass.find((std) => std.id === value);
+                    setClasses(standard?.name || '');
+                    setClassId(value as string);
+                  }}
+                />
+                <CustomSelect
+                  options={[
+                    { value: 'Mathematics', label: 'Mathematics' },
+                    { value: 'Science', label: 'Science' },
+                    { value: 'English', label: 'English' },
+                    { value: 'History', label: 'History' },
+                    { value: 'Geography', label: 'Geography' },
+                  ]}
+                  value={subject}
+                  disabled={!classes}
+                  onChange={(val) => {
+                    setSubject(val as string);
+                    setSubjectId(val as string);
+                  }}
+                  label="Subject"
+                  valueKey="value"
+                  labelKey="label"
+                  isLoading={isLoading}
+                  formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+                />
+              </Box>
+              <Button
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                onClick={() => {
+                  addChapterDialog.onTrue();
+                }}
+                disabled={!classes || !subject}
+                sx={{ px: '32px' }}
+              >
+                Chapter
+              </Button>
+            </Box>
+          </Card>
           {/* Table component for displaying chapter data */}
           <ChapterTable
             onDelete={(chapter) => {
               setSelectedChapter(chapter as IChapter);
               deleteDialog.onTrue();
             }}
+            isLoading={isChapterLoading || isChapterFetching}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
             data={chapterData}
@@ -328,17 +346,7 @@ const Subjects = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    chaptersApi.util.updateQueryData(
-                      'getChapters',
-                      { standardId: classId, subjectId },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedChapter);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetchChapters(),
                 onCommit: () => deleteChapter((selectedChapter as any).id),
               });
               deleteDialog.onFalse();

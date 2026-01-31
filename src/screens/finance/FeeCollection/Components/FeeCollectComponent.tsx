@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Button, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -54,14 +55,13 @@ const FeeCollectComponent = ({
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
-      <Box p={2} sx={{ height: '100%' }}>
-        {/* <Scrollbar sx={{ p: 2, height: '100%' }}> */}
+      <Scrollbar sx={{ p: 1.5, height: '100%' }}>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <StudentFeeSummaryCard student={student} />
           <PaymentDetailsForm formik={formik} />
         </BackPopUpChecked>
-        {/* </Scrollbar> */}
-      </Box>
+      </Scrollbar>
+
       <DialogActions>
         <Button
           variant="outlined"

@@ -11,7 +11,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   ScheduleExamStatus,
   ScheduleExamStatusColor,
@@ -117,41 +117,44 @@ const QuizTable = ({
   return (
     <>
       {/* Tabs Section */}
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2 },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}{' '}
-                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-                </Box>
-              }
-              value={tab.value}
-            />
-          ))}
-        </Tabs>
-        <Button
-          size="small"
-          startIcon={<Add />}
-          variant="contained"
-          onClick={() => {
-            setOpenDialog(true);
-          }}
-          sx={{ px: '32px' }}
-        >
-          Quiz
-        </Button>
-      </Box>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Tabs
+            value={tabs.value}
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+              pb: 1,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                sx={{ fontSize: '12px' }}
+                key={tab.value}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}{' '}
+                    <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                  </Box>
+                }
+                value={tab.value}
+              />
+            ))}
+          </Tabs>
+          <Button
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              setOpenDialog(true);
+            }}
+            sx={{ px: '32px', mt: 1.5 }}
+          >
+            Quiz
+          </Button>
+        </Box>
+      </Card>
 
       <CustomizableTable
         tableId="quiz-table"

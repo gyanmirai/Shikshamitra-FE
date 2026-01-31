@@ -9,8 +9,8 @@ import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -173,15 +173,17 @@ const SeatAllocation = () => {
         </CustomDialog>
       ) : (
         <>
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val) => setClasses(val as string)}
-            labelKey="name"
-            valueKey="name"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%', ml: 1 } }}
-          />
+          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="name"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%', pb: 1 } }}
+            />
+          </Card>
           <SeatAllocationTable
             openSeatAllocation={openSeatAllocation}
             onSeatAllocate={(examData) => {

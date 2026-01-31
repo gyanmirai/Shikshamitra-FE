@@ -72,7 +72,7 @@ export const SectionCard = ({
       elevation={0}
       sx={{
         p: { xs: 2, md: 2 },
-        mb: 3,
+        mb: 2,
         position: 'relative',
         borderRadius: 2,
         border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,

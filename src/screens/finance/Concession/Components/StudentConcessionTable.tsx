@@ -1,12 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useMemo, useCallback } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -14,6 +17,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   concessionRequestApi,
@@ -25,8 +29,6 @@ import type { IStudentInfo } from '../type';
 import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
 
 interface ICombinedProps {
-  selectedBoard: string;
-  selectedMedium: string;
   onRequestConcession?: (student: IStudentInfo) => void;
   onApprove: (data: IStudentInfo) => void;
   onReject: (data: IStudentInfo) => void;
@@ -38,8 +40,6 @@ interface ICombinedProps {
 }
 
 const StudentConcessionTable: React.FC<ICombinedProps> = ({
-  selectedBoard,
-  selectedMedium,
   onApprove,
   onReject,
   onAddConcession,
@@ -56,7 +56,13 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionRequestMutation,
   });
+  // Local state to store filtered boards based on academic year
+  const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
   const {
     data: concessionData = [],
     isLoading: isLoadingConcessionData,
@@ -70,6 +76,14 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
       status: tabs.value,
     },
   });
+  // State to store th  e selected student concession data
+  // null when no student is selected
+  useEffect(() => {
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   const concessionCounts = useMemo(
     () => ({
@@ -143,29 +157,55 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" sx={{ mb: 2, ml: 2 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2 },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              sx={{ fontSize: '12px' }}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}
-                  <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                </Box>
-              }
-            />
-          ))}
-        </Tabs>
+      <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
+          <CustomSelect
+            label="Board"
+            options={boards || []}
+            labelKey="name"
+            valueKey="id"
+            value={selectedBoard}
+            onChange={(value) => {
+              setSelectedBoard(value as string);
+              setSelectedMedium('');
+            }}
+            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+          />
+          <CustomSelect
+            label="Medium"
+            options={mediums || []}
+            labelKey="name"
+            disabled={!selectedBoard}
+            valueKey="id"
+            value={selectedMedium}
+            onChange={(value) => setSelectedMedium(value as string)}
+            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+          />
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                key={tab.value}
+                value={tab.value}
+                sx={{ fontSize: '12px' }}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}
+                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+        </Box>
       </Box>
 
       <CustomizableTable

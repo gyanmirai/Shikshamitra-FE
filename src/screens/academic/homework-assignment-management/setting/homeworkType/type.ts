@@ -10,6 +10,8 @@ export interface IHomeworkTypeFormProps {
 }
 
 export interface IHomeworkTypeTableProps {
+  isLoading: boolean;
+  data: IHomeworkType[];
   onEdit: (data: IHomeworkType) => void;
   onDelete: (data: IHomeworkType) => void;
 }

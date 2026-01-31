@@ -44,8 +44,8 @@ export function CustomTabs({
         gap: { sm: 0 },
         minHeight: 38,
         flexShrink: 0,
+        backgroundColor: theme.vars.palette.background.paper,
         alignItems: isVertical ? 'flex-start' : 'center',
-        bgcolor: 'background.neutral',
         [`& .${tabsClasses.scroller}`]: {
           p: 1,
           ...slotProps?.scroller,
@@ -77,7 +77,7 @@ export function CustomTabs({
             height: 1,
             borderRadius: 1,
             display: 'block',
-            bgcolor: 'common.white',
+            bgcolor: theme.palette.divider,
             boxShadow: theme.customShadows.z1,
             [stylesMode.dark]: { bgcolor: 'grey.900' },
             ...slotProps?.indicator,

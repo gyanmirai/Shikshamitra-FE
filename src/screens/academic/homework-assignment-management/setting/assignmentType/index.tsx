@@ -1,5 +1,6 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
@@ -17,6 +18,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   assignmentTypesApi,
+  useGetAssignmentTypesQuery,
   useDeleteAssignmentTypeMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 
@@ -74,6 +76,17 @@ const AssignmentTypeCreation = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const {
+    data: assignmentTypeData,
+    refetch,
+    isLoading: isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentTypesQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+  });
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -99,6 +112,8 @@ const AssignmentTypeCreation = () => {
       />
 
       <AssignmentTypeTable
+        isLoading={isFetching}
+        data={assignmentTypeData || []}
         onEdit={(data) => {
           setSelectedData(data);
           addAssignmentTypeDialog.onTrue();
@@ -178,17 +193,7 @@ const AssignmentTypeCreation = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    assignmentTypesApi.util.updateQueryData(
-                      'getAssignmentTypes',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedData);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () =>
                   deleteAssignmentType({
                     academicMediumId: (currentMedium as any).id,

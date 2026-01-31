@@ -1,15 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Board, Medium } from 'src/types/school';
 
+import { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -25,13 +23,7 @@ import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
 
 const Concession = () => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Local state to store filtered boards based on academic year
-  const [boards, setBoards] = useState([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
-  const [selectedMedium, setSelectedMedium] = useState<string>('');
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch function for dispatching actions to update the store
@@ -67,15 +59,6 @@ const Concession = () => {
   // null when no student is selected
   const [selectedConcessionForView, setSelectedConcessionForView] =
     useState<IViewConcessionRequestProps | null>(null);
-
-  // State to store th  e selected student concession data
-  // null when no student is selected
-  useEffect(() => {
-    // Filter boards based on academic year ID from edit data
-    setBoards(currentYear?.boards);
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -142,38 +125,9 @@ const Concession = () => {
         />
       )}
 
-      {!addConcessionRequest.value && !viewConcessionRequest.value && (
-        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
-          <CustomSelect
-            label="Board"
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={selectedBoard}
-            onChange={(value) => {
-              setSelectedBoard(value as string);
-              setSelectedMedium('');
-            }}
-            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          />
-          <CustomSelect
-            label="Medium"
-            options={mediums || []}
-            labelKey="name"
-            disabled={!selectedBoard}
-            valueKey="id"
-            value={selectedMedium}
-            onChange={(value) => setSelectedMedium(value as string)}
-            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          />
-        </Box>
-      )}
-
       {/* Show table only when no dialog is open */}
       {!addConcessionRequest.value && !viewConcessionRequest.value && (
         <StudentConcessionTable
-          selectedBoard={selectedBoard}
-          selectedMedium={selectedMedium}
           onRequestConcession={(data) => {
             setSelectedConcession(data);
             addConcessionRequest.onTrue();

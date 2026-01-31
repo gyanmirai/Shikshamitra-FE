@@ -7,46 +7,7 @@ import { Iconify } from 'src/components/iconify';
 import { Box, Card, Grid, Divider, Typography } from '@mui/material';
 import { Email, School, Numbers, LocalPhone, CalendarToday } from '@mui/icons-material';
 import { ChargesPaymentStatus, ChargesPaymentStatusColors } from 'src/enums/fee-charges-status';
-
-interface InfoItemProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-}
-
-const InfoItem = ({ icon, label, value }: InfoItemProps) => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-    <Box
-      sx={{
-        width: 40,
-        height: 40,
-        borderRadius: 1.5,
-        bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
-        color: 'primary.main',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      {React.cloneElement(icon as React.ReactElement<any>, { sx: { fontSize: 20 } })}
-    </Box>
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        variant="caption"
-        sx={{ color: 'text.secondary', display: 'block', mb: 0.5, fontWeight: 500 }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        variant="subtitle2"
-        sx={{ fontWeight: 600, color: 'text.primary', wordBreak: 'break-word' }}
-      >
-        {value}
-      </Typography>
-    </Box>
-  </Box>
-);
+import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 const ChargeInformationAccordion = ({ charge }: any) => (
   <Card
@@ -62,7 +23,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
     {/* Header */}
     <Box
       sx={{
-        p: 2.5,
+        p: 2,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',

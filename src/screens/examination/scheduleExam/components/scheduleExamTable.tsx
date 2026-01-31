@@ -15,7 +15,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
-import { Box, Tab, Tabs, Button, MenuList, MenuItem } from '@mui/material';
+import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem } from '@mui/material';
 import {
   useGetExamsQuery,
   usePublishExamMutation,
@@ -162,49 +162,51 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2 },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}{' '}
-                  <Label
-                    // variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
-                    color={(tab?.color as LabelColor) || 'default'}
-                  >
-                    {tab.count}
-                  </Label>
-                </Box>
-              }
-              // icon={tab.icon}
-              value={tab.value}
-            />
-          ))}
-        </Tabs>
-        {isScheduleExamButton && (
-          <Button
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-            onClick={() => {
-              setOpenDialog?.(true);
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Tabs
+            value={tabs.value}
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              pb: 1,
             }}
-            sx={{ px: '32px' }}
           >
-            Schedule Exam
-          </Button>
-        )}
-      </Box>
+            {TABS.map((tab) => (
+              <Tab
+                sx={{ fontSize: '12px' }}
+                key={tab.value}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}{' '}
+                    <Label
+                      // variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
+                      color={(tab?.color as LabelColor) || 'default'}
+                    >
+                      {tab.count}
+                    </Label>
+                  </Box>
+                }
+                // icon={tab.icon}
+                value={tab.value}
+              />
+            ))}
+          </Tabs>
+          {isScheduleExamButton && (
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => {
+                setOpenDialog?.(true);
+              }}
+              sx={{ px: '32px', mt: 1.5 }}
+            >
+              Schedule Exam
+            </Button>
+          )}
+        </Box>
+      </Card>
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"
