@@ -28,6 +28,7 @@ const CoverView = ({
   onViewAllReservationBook,
 }: { books: IBook[] } & LibrarySearchProps) => {
   const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
+
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -45,7 +46,7 @@ const CoverView = ({
             pop.onClose();
           }}
         >
-          <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px', mr: 1 }} />
           View
         </MenuItem>
         <MenuItem
@@ -55,7 +56,7 @@ const CoverView = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px', mr: 1 }} />
           Edit
         </MenuItem>
         <MenuItem
@@ -67,9 +68,11 @@ const CoverView = ({
         >
           <Iconify
             icon="solar:trash-bin-trash-bold"
-            sx={{ height: '16px', width: '16px', color: 'red' }}
+            sx={{ height: '16px', width: '16px', mr: 1, color: 'error.main' }}
           />
-          Delete
+          <Typography color="error.main" variant="body2">
+            Delete
+          </Typography>
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -78,7 +81,10 @@ const CoverView = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="game-icons:archive-register" sx={{ height: '16px', width: '16px' }} />
+          <Iconify
+            icon="game-icons:archive-register"
+            sx={{ height: '16px', width: '16px', mr: 1 }}
+          />
           Reserve Book
         </MenuItem>
         <MenuItem
@@ -88,35 +94,58 @@ const CoverView = ({
             pop.onClose();
           }}
         >
-          <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px', mr: 1 }} />
           View Reservation
         </MenuItem>
       </MenuList>
     ),
     [fetchCopies, onDelete, onEdit, onReserveBook, onView, onViewAllReservationBook]
   );
+
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={3}>
       {books?.map((book) => (
-        <Grid size={{ xs: 12, sm: 6, md: 2 }} key={book.isbn}>
+        <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2, xl: 2 }} key={book.isbn}>
           <Card
             sx={{
               position: 'relative',
-              borderRadius: 2,
-              boxShadow: 10,
-              textAlign: 'center',
-              p: 1,
-              overflow: 'hidden',
-              transition: 'opacity 0.3s ease',
+              height: '100%',
+              p: 2,
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              bgcolor: 'background.paper',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'all 0.3s ease-in-out',
+              overflow: 'visible',
               '&:hover': {
-                opacity: 0.6,
-                '& .three-dots': { opacity: 1, visibility: 'visible' },
+                transform: 'translateY(-4px)',
+                boxShadow: (theme) =>
+                  theme.customShadows?.z24 || '0 12px 24px -4px rgba(0,0,0,0.12)',
+                borderColor: 'transparent',
+                '& .book-cover': {
+                  transform: 'scale(1.05)',
+                },
+                '& .action-btn': {
+                  opacity: 1,
+                  visibility: 'visible',
+                },
               },
             }}
           >
-            {/* Cover Image */}
+            {/* Image Container with Aspect Ratio */}
             <Box
-              sx={{ position: 'relative', cursor: 'pointer' }}
+              sx={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: 160, // Limit width for "smaller" look
+                mx: 'auto', // Center horizontally
+                pt: '145%', // Aspect ratio for book cover
+                overflow: 'hidden',
+                borderRadius: 2, // Rounded corners all around
+                cursor: 'pointer',
+                bgcolor: 'grey.100',
+                boxShadow: (theme) => theme.customShadows?.z8 || '0 8px 16px rgba(0,0,0,0.1)', // Frame shadow
+              }}
               onClick={async () => {
                 try {
                   const copies = await fetchCopies(book.id).unwrap();
@@ -131,48 +160,103 @@ const CoverView = ({
               <Image
                 src={book.bookCoverImages?.[0] || noCover}
                 alt={book.title}
-                width={250}
-                height={250}
+                fill
                 unoptimized
-                style={{ boxShadow: 'var(--shadows-10)', borderRadius: '8px' }}
+                className="book-cover"
+                sizes="(max-width: 600px) 50vw, (max-width: 900px) 33vw, 20vw"
+                style={{
+                  objectFit: 'cover',
+                  transition: 'transform 0.5s ease',
+                }}
               />
 
-              {/* ThreeDotsActions replaces the individual edit/delete icons */}
+              {/* Gradient Overlay deleted - simpler clean look for small images */}
+            </Box>
+
+            {/* Action Button - Floating Top Right relative to CARD */}
+            <Box
+              className="action-btn"
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 9,
+                opacity: 0,
+                visibility: 'hidden',
+                transition: 'all 0.2s ease-in-out',
+                '@media (hover: none)': {
+                  opacity: 1,
+                  visibility: 'visible',
+                },
+              }}
+            >
               <Box
-                className="three-dots"
                 sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  width: 23,
-                  height: 23,
+                  bgcolor: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(6px)',
                   borderRadius: '50%',
-                  overflow: 'hidden',
-                  bgcolor: 'rgba(255, 255, 255, 0.85)',
-                  boxShadow: 1,
+                  width: 32,
+                  height: 32,
+                  display: 'flex',
                   alignItems: 'center',
-                  opacity: 0,
-                  transition: 'opacity 0.3s ease',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  border: '1px solid rgba(0,0,0,0.05)',
                   '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.56)',
+                    bgcolor: 'white',
+                    transform: 'scale(1.1)',
                   },
                 }}
               >
                 <ThreeDotsActions
-                  placement="top-center"
+                  placement="bottom-right"
                   actions={(prop) => actions({ ...prop, row: book })}
-                  sx={{ ml: 0.4, mt: 0.2 }}
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 />
               </Box>
             </Box>
 
-            {/* Book Info */}
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
+            {/* Content Section */}
+            <Box
+              sx={{
+                mt: 2,
+                px: 0.5,
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                flexGrow: 1,
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                noWrap
+                title={book.title}
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  mb: 0.5,
+                  color: 'text.primary',
+                }}
+              >
                 {book.title}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                {book.author}
+
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                  display: 'block',
+                  lineHeight: 1.2,
+                  fontSize: '0.75rem',
+                }}
+              >
+                {book.author || 'Unknown Author'}
               </Typography>
             </Box>
           </Card>

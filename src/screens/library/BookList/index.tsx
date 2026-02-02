@@ -189,11 +189,29 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
 
       {/* Main Content */}
       {open ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card
+          sx={{
+            flexGrow: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: 'var(--shadows-4)',
+            mt: 2,
+          }}
+        >
           <BookFormStepper onClose={handleClose} editData={selectedBook as IBookPayload | null} />
         </Card>
       ) : viewDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card
+          sx={{
+            flexGrow: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: 'var(--shadows-4)',
+            mt: 2,
+          }}
+        >
           <BookViewDetail
             book={selectedBook}
             handleChangeStatus={(copy) => {

@@ -44,17 +44,15 @@ const TransportManagerDashboard = () => (
       <Grid size={{ xs: 12, md: 6 }}>
         <VehicleStatusChart />
       </Grid>
+      <Grid size={{ xs: 12 }}>
+        <TodayRouteScheduleList />
+      </Grid>
       <Grid size={{ xs: 12, md: 6 }}>
         <WeeklyPerformanceChart />
       </Grid>
-
       <Grid size={{ xs: 12, md: 6 }}>
-        <TodayRouteScheduleList />
-      </Grid>
-      <Grid size={{ xs: 12 }} mb={2}>
         <StudentsPerStopChart />
       </Grid>
-
       {/* <Grid size={{ xs: 12, md: 8 }}>
         <PendingApplicationsList />
       </Grid> */}

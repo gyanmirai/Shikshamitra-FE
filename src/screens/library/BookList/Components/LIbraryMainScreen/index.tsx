@@ -1,9 +1,10 @@
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Grid, Button, TextField, CircularProgress } from '@mui/material';
+import { Box, Card, Grid, Button, TextField, CircularProgress } from '@mui/material';
 
 import ListView from './ListView';
 import CoverView from './CoverView';
@@ -146,78 +147,108 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
   };
 
   return (
-    <Box sx={{ height: '100%', pb: 5 }}>
+    <Card
+      sx={{
+        flexGrow: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: 'var(--shadows-4)',
+      }}
+    >
       {/* Search and View mode */}
-      <Grid container spacing={2} mb={2}>
-        <Grid size={{ xs: 12, md: 10 }}>
-          <TextField
-            variant="outlined"
-            size="small"
-            value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-            }}
-            label="Search by Title, Author, ISBN."
-            fullWidth
-            InputProps={{
-              endAdornment: (
-                <>{searchInput !== debouncedSearch && <CircularProgress size={20} />}</>
-              ),
-            }}
-          />
+      <Box sx={{ flexShrink: 0, mb: 3, p: 2 }}>
+        <Grid container spacing={2} mb={2}>
+          <Grid size={{ xs: 12, md: 10 }}>
+            <TextField
+              variant="outlined"
+              size="small"
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+              }}
+              label="Search by Title, Author, ISBN."
+              fullWidth
+              InputProps={{
+                endAdornment: (
+                  <>{searchInput !== debouncedSearch && <CircularProgress size={20} />}</>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 2 }}>
+            <CustomSelect
+              options={[
+                { value: 'list', label: 'List' },
+                { value: 'cover', label: 'Cover' },
+                { value: 'summary', label: 'Summary' },
+              ]}
+              label="View"
+              name="viewMode"
+              value={selectedViewMode}
+              onChange={(value) => setSelectedViewMode(value as string)}
+            />
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, md: 2 }}>
-          <CustomSelect
-            options={[
-              { value: 'list', label: 'List' },
-              { value: 'cover', label: 'Cover' },
-              { value: 'summary', label: 'Summary' },
-            ]}
-            label="View"
-            name="viewMode"
-            value={selectedViewMode}
-            onChange={(value) => setSelectedViewMode(value as string)}
-          />
-        </Grid>
-      </Grid>
 
-      {/* Alphabet Filter */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-        {alphabet.map((letter) => (
-          <Button
-            key={letter}
-            size="small"
-            variant={selectedLetter === letter ? 'contained' : 'text'}
-            onClick={() => setSelectedLetter(letter)}
-            sx={{ minWidth: 32 }}
-          >
-            {letter}
-          </Button>
-        ))}
+        {/* Alphabet Filter */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            position: 'sticky',
+            top: 0,
+            bgcolor: 'background.paper',
+            zIndex: 1,
+          }}
+        >
+          {alphabet.map((letter) => (
+            <Button
+              key={letter}
+              size="small"
+              variant={selectedLetter === letter ? 'contained' : 'text'}
+              onClick={() => setSelectedLetter(letter)}
+              sx={{ minWidth: 32 }}
+            >
+              {letter}
+            </Button>
+          ))}
+        </Box>
       </Box>
 
-      {/* View Rendering */}
-      {displayedBooks.length === 0 ? (
-        <Box
-          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
-        >
-          <EmptyContent
-            title="No Books Available"
-            sx={{
-              width: '100%',
-            }}
-          />
+      {/* View Rendering inside Scrollbar */}
+      <Scrollbar sx={{ flexGrow: 1 }}>
+        <Box sx={{ pb: 5 }}>
+          {displayedBooks.length === 0 ? (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100%',
+                minHeight: 300,
+              }}
+            >
+              <EmptyContent
+                title="No Books Available"
+                sx={{
+                  width: '100%',
+                }}
+              />
+            </Box>
+          ) : (
+            renderView()
+          )}
+          <Box ref={lastBookRef} sx={{ height: 20, mt: 2 }} />
+          {hasMore && (
+            <Box sx={{ textAlign: 'center', py: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          )}
         </Box>
-      ) : (
-        renderView()
-      )}
-      <Box ref={lastBookRef} sx={{ height: 20, mt: 2 }} />
-      {hasMore && (
-        <Box sx={{ textAlign: 'center', py: 2 }}>
-          <CircularProgress size={24} />
-        </Box>
-      )}
-    </Box>
+      </Scrollbar>
+    </Card>
   );
 };
 

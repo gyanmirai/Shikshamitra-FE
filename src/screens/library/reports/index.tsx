@@ -75,37 +75,37 @@ const LibraryReportsScreen = () => {
             {
               name: 'Book & Inventory',
               id: 'Book-Inventory',
-              icon: 'mdi:book-multiple',
+              icon: 'mdi:book-multiple-outline',
             },
             {
               name: 'Circulation & Usage',
               id: 'Circulation-Usage',
-              icon: 'mdi:book-sync',
+              icon: 'mdi:book-sync-outline',
             },
             {
               name: 'Popular Books',
               id: 'Popular-Books',
-              icon: 'mdi:star',
+              icon: 'mdi:star-outline',
             },
             {
               name: 'Member Management',
               id: 'Member-Management',
-              icon: 'mdi:account-group',
+              icon: 'mdi:account-group-outline',
             },
             {
               name: 'Reservations',
               id: 'Reservations',
-              icon: 'mdi:book-clock',
+              icon: 'mdi:book-clock-outline',
             },
             {
               name: 'Financial',
               id: 'Financial',
-              icon: 'mdi:currency-inr',
+              icon: 'mdi:currency-inr-outline',
             },
             {
               name: 'Administrative',
               id: 'Administrative',
-              icon: 'mdi:cog',
+              icon: 'mdi:cog-outline',
             },
           ]}
           subCategories={[
