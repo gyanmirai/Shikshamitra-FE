@@ -11,16 +11,13 @@ const SchoolManagementViewDetails = ({
   announcement,
 }: {
   announcement: ISchoolWiseAnnouncement | null;
-}) => {
-  console.log('announcement---', announcement);
-  return (
-    <Scrollbar sx={{ maxHeight: 600, p: 3 }}>
-      <Stack spacing={3}>
-        <SchoolWiseAnnouncementDetailsInfoCard announcement={announcement} />
-        <SchoolWiseAnnouncementDetailCard announcement={announcement} />
-      </Stack>
-    </Scrollbar>
-  );
-};
+}) => (
+  <Scrollbar sx={{ maxHeight: 600, p: 2 }}>
+    <Stack spacing={3}>
+      <SchoolWiseAnnouncementDetailsInfoCard announcement={announcement} />
+      <SchoolWiseAnnouncementDetailCard announcement={announcement} />
+    </Stack>
+  </Scrollbar>
+);
 
 export default SchoolManagementViewDetails;

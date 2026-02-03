@@ -5,6 +5,15 @@ export const calendarModuleApi = createApi({
   reducerPath: 'calendarModuleApi',
   baseQuery: axiosBaseQuery({ baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api` }),
 
-  tagTypes: ['Employee', 'Users', 'Holiday', 'HolidayType', 'EventTypeOptions', 'Events'],
+  tagTypes: [
+    'Employee',
+    'Users',
+    'Holiday',
+    'HolidayType',
+    'EventTypeOptions',
+    'Events',
+    'Groups',
+    'GroupDetails',
+  ],
   endpoints: () => ({}),
 });

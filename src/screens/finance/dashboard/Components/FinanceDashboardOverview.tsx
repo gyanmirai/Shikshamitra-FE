@@ -39,25 +39,45 @@ export const SummaryCard = ({
       sx={{
         p: 2,
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 2,
-        flexGrow: 1,
-        cursor: 'pointer',
         height: '100%',
-        transition: 'all 0.3s ease',
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: 'none',
+        transition: (theme) =>
+          theme.transitions.create(['box-shadow', 'transform'], {
+            duration: theme.transitions.duration.short,
+          }),
         '&:hover': {
-          boxShadow: 'var(--shadows-8)',
-          scale: 1.03,
+          boxShadow: (theme) => theme.customShadows.z16,
+          transform: 'translateY(-4px)',
         },
       }}
     >
-      <Box>
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
           {title}
         </Typography>
-        <Typography variant="h4">{count}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+        <Iconify
+          icon={icon}
+          sx={{
+            height: 40,
+            width: 40,
+            color,
+            p: 0.75,
+            borderRadius: '50%',
+            bgcolor: (theme) =>
+              theme.palette[
+                bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
+              ].lighter,
+          }}
+        />
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h3">{count}</Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
           {labels.map((label, idx) => (
             <Label key={idx} color={label.color} variant="soft">
               {label.name}
@@ -65,20 +85,6 @@ export const SummaryCard = ({
           ))}
         </Box>
       </Box>
-      <Iconify
-        icon={icon}
-        sx={{
-          height: 48,
-          width: 48,
-          color,
-          p: 1,
-          borderRadius: '50%',
-          bgcolor: (theme) =>
-            theme.palette[
-              bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
-            ].lighter,
-        }}
-      />
     </Card>
   </Box>
 );

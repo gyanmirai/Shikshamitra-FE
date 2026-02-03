@@ -22,12 +22,12 @@ type Props = CardProps & {
 };
 
 export const PerformersList = ({ title, subheader, list, type, ...other }: Props) => (
-  <Card {...other}>
+  <Card {...other} sx={{}}>
     <CardHeader title={title} subheader={subheader} />
 
     <Box
       sx={{
-        p: 3,
+        p: 2,
         gap: 3,
         display: 'flex',
         flexDirection: 'column',

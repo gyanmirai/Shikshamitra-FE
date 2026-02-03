@@ -1,8 +1,10 @@
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 /* eslint-disable import/order */
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,8 +16,13 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useCreateGroupMutation,
+  useUpdateGroupMutation,
+} from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import {
   Box,
   Grid,
@@ -163,7 +170,16 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
   const [filterTab, setFilterTab] = useState(0); // 0 = Condition Based, 1 = Selection Based
   const formikRef = useRef<any>(null);
   const [currentFilterName, setCurrentFilterName] = useState('');
+  const [createGroup, { isLoading: isCreatingGroup }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateGroupMutation,
+  });
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  const [updateGroup, { isLoading: isUpdatingGroup }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateGroupMutation,
+  });
   const formik = useFormik<IGroupFormValues>({
     initialValues: {
       ...getGroupInitialValues(initialValues),
@@ -182,6 +198,17 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     },
     onSubmit: (values) => {
       // Placeholder submit logic
+      const payload = {
+        name: values.name,
+        description: values.description,
+        ruleBased: values.ruleBased,
+        nameBased: values.nameBased,
+      };
+      if (isEdit) {
+        updateGroup({ groupId: initialValues?.id, body: payload });
+      } else {
+        createGroup({ academicYearId: currentYear?.id, body: payload });
+      }
       onClose?.(values, true);
     },
   });
@@ -1231,6 +1258,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                         ) : (
                           <LoadingButton
                             variant="contained"
+                            loading={isCreatingGroup || isUpdatingGroup}
                             onClick={() => formik.handleSubmit()}
                             startIcon={<Iconify icon={GlobalIcons.submit} />}
                           >
