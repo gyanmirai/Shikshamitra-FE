@@ -37,7 +37,7 @@ export const SummaryCard = ({
   <Box component={Link} href={href} sx={{ textDecoration: 'none', height: '100%' }}>
     <Card
       sx={{
-        p: 2,
+        p: 3,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -56,7 +56,7 @@ export const SummaryCard = ({
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
+        <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
           {title}
         </Typography>
         <Iconify

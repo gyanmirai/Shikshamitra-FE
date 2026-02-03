@@ -10,77 +10,20 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-const announcementNotificationsData = [
-  {
-    id: '1',
-    event: 'New Announcement',
-    triggerCondition: 'When a new announcement is published.',
-    isActive: NotificationStatusType.Active,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'A new announcement "[Announcement Title]" has been published.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Announcement Title]'],
-        placeHolderOptions: [{ value: '[Announcement Title]', label: 'Announcement Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Announcement: "[Announcement Title]"',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Announcement Title]'],
-        placeHolderOptions: [{ value: '[Announcement Title]', label: 'Announcement Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '2',
-    event: 'Announcement Updated',
-    triggerCondition: 'When an existing announcement is modified.',
-    isActive: NotificationStatusType.Active,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'Announcement "[Announcement Title]" has been updated.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Announcement Title]'],
-        placeHolderOptions: [{ value: '[Announcement Title]', label: 'Announcement Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Updated announcement: "[Announcement Title]"',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Announcement Title]'],
-        placeHolderOptions: [{ value: '[Announcement Title]', label: 'Announcement Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '3',
-    event: 'Announcement Deleted',
-    triggerCondition: 'When an announcement is deleted.',
-    isActive: NotificationStatusType.Inactive,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'Announcement "[Announcement Title]" has been deleted.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Announcement Title]'],
-        placeHolderOptions: [{ value: '[Announcement Title]', label: 'Announcement Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-];
+import { ANNOUNCEMENT_NOTIFICATIONS_DATA } from '../constants';
 
-const AnnouncementNotification = ({ dialog, setIsViewMode }: any) => {
-  const [selectedData, setSelectedData] = useState<any>(null);
+import type {
+  INotificationData,
+  INotificationRecipient,
+  INotificationComponentProps,
+} from '../types';
+
+const AnnouncementNotification = ({ dialog, setIsViewMode }: INotificationComponentProps) => {
+  const [selectedData, setSelectedData] = useState<INotificationData | null>(null);
   const [view, setView] = useState(false);
-  const [notifications, setNotifications] = useState(announcementNotificationsData);
+  const [notifications, setNotifications] = useState<INotificationData[]>(
+    ANNOUNCEMENT_NOTIFICATIONS_DATA
+  );
 
   const handleToggleActive = (id: string, checked: boolean) => {
     setNotifications((prev) =>
@@ -95,6 +38,12 @@ const AnnouncementNotification = ({ dialog, setIsViewMode }: any) => {
     );
   };
 
+  /**
+   * Memoization Justification:
+   * Columns configuration involves stable callbacks and JSX, but dependencies like 'dialog'
+   * and 'setIsViewMode' change. Using useMemo ensures columns are strictly referentially stable
+   * unless these dependencies change, avoiding unnecessary table re-renders.
+   */
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -109,7 +58,7 @@ const AnnouncementNotification = ({ dialog, setIsViewMode }: any) => {
         id: 'recipient',
         label: 'Recipient',
         render(value, row) {
-          return row.recipient.map((recipient: any) => (
+          return row.recipient.map((recipient: INotificationRecipient) => (
             <Box key={recipient.name}>{recipient.name.toUpperCase()}</Box>
           ));
         },
@@ -144,14 +93,14 @@ const AnnouncementNotification = ({ dialog, setIsViewMode }: any) => {
               showThreeDots={false}
               showEditIcon
               handleEditClick={() => {
-                setSelectedData(row);
+                setSelectedData(row as INotificationData);
                 dialog.onTrue();
                 setView(false);
                 setIsViewMode(false);
               }}
               showViewIcon
               handleViewClick={() => {
-                setSelectedData(row);
+                setSelectedData(row as INotificationData);
                 setView(true);
                 dialog.onTrue();
                 setIsViewMode(true);
@@ -169,7 +118,16 @@ const AnnouncementNotification = ({ dialog, setIsViewMode }: any) => {
       {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <EditNotificationDialog
-            data={selectedData}
+            data={
+              selectedData
+                ? {
+                    ...selectedData,
+                    communicationChannel: Array.from(
+                      new Set(selectedData.recipient.flatMap((r) => r.communicationChannel))
+                    ),
+                  }
+                : null
+            }
             onClose={() => {
               dialog.onFalse();
               setSelectedData(null);

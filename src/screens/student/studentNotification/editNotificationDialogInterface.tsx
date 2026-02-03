@@ -19,6 +19,6 @@ export interface INotificationData {
 
 export interface IEditNotificationDialogProps {
   onClose: () => void;
-  data: INotificationData;
+  data: INotificationData | null;
   isFromView?: boolean;
 }

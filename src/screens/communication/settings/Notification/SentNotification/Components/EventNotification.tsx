@@ -10,85 +10,18 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-const eventNotificationsData = [
-  {
-    id: '1',
-    event: 'New Event Created',
-    triggerCondition: 'When a new event is scheduled.',
-    isActive: NotificationStatusType.Active,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'A new event "[Event Title]" has been scheduled.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Event Title]'],
-        placeHolderOptions: [{ value: '[Event Title]', label: 'Event Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Event: "[Event Title]" has been added to the calendar.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Event Title]'],
-        placeHolderOptions: [{ value: '[Event Title]', label: 'Event Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '2',
-    event: 'Event Updated',
-    triggerCondition: 'When an event is modified.',
-    isActive: NotificationStatusType.Active,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'Event "[Event Title]" has been updated.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Event Title]'],
-        placeHolderOptions: [{ value: '[Event Title]', label: 'Event Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Updated event: "[Event Title]"',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Event Title]'],
-        placeHolderOptions: [{ value: '[Event Title]', label: 'Event Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '3',
-    event: 'Event Cancelled',
-    triggerCondition: 'When an event is cancelled.',
-    isActive: NotificationStatusType.Inactive,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'Event "[Event Title]" has been cancelled.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Event Title]'],
-        placeHolderOptions: [{ value: '[Event Title]', label: 'Event Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Cancelled event: "[Event Title]"',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Event Title]'],
-        placeHolderOptions: [{ value: '[Event Title]', label: 'Event Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-];
+import { EVENT_NOTIFICATIONS_DATA } from '../constants';
 
-const EventNotification = ({ dialog, setIsViewMode }: any) => {
-  const [selectedData, setSelectedData] = useState<any>(null);
+import type {
+  INotificationData,
+  INotificationRecipient,
+  INotificationComponentProps,
+} from '../types';
+
+const EventNotification = ({ dialog, setIsViewMode }: INotificationComponentProps) => {
+  const [selectedData, setSelectedData] = useState<INotificationData | null>(null);
   const [view, setView] = useState(false);
-  const [notifications, setNotifications] = useState(eventNotificationsData);
+  const [notifications, setNotifications] = useState<INotificationData[]>(EVENT_NOTIFICATIONS_DATA);
 
   const handleToggleActive = (id: string, checked: boolean) => {
     setNotifications((prev) =>
@@ -103,6 +36,12 @@ const EventNotification = ({ dialog, setIsViewMode }: any) => {
     );
   };
 
+  /**
+   * Memoization Justification:
+   * Columns configuration involves stable callbacks and JSX, but dependencies like 'dialog'
+   * and 'setIsViewMode' change. Using useMemo ensures columns are strictly referentially stable
+   * unless these dependencies change, avoiding unnecessary table re-renders.
+   */
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -117,7 +56,7 @@ const EventNotification = ({ dialog, setIsViewMode }: any) => {
         id: 'recipient',
         label: 'Recipient',
         render(value, row) {
-          return row.recipient.map((recipient: any) => (
+          return row.recipient.map((recipient: INotificationRecipient) => (
             <Box key={recipient.name}>{recipient.name.toUpperCase()}</Box>
           ));
         },
@@ -152,14 +91,14 @@ const EventNotification = ({ dialog, setIsViewMode }: any) => {
               showThreeDots={false}
               showEditIcon
               handleEditClick={() => {
-                setSelectedData(row);
+                setSelectedData(row as INotificationData);
                 dialog.onTrue();
                 setView(false);
                 setIsViewMode(false);
               }}
               showViewIcon
               handleViewClick={() => {
-                setSelectedData(row);
+                setSelectedData(row as INotificationData);
                 setView(true);
                 dialog.onTrue();
                 setIsViewMode(true);
@@ -177,7 +116,16 @@ const EventNotification = ({ dialog, setIsViewMode }: any) => {
       {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <EditNotificationDialog
-            data={selectedData}
+            data={
+              selectedData
+                ? {
+                    ...selectedData,
+                    communicationChannel: Array.from(
+                      new Set(selectedData.recipient.flatMap((r) => r.communicationChannel))
+                    ),
+                  }
+                : null
+            }
             onClose={() => {
               dialog.onFalse();
               setSelectedData(null);

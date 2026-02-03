@@ -1,125 +1,45 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  notificationTemplateApi,
-  useGetNotificationTemplatesQuery,
-  useDeleteNotificationTemplateMutation,
-} from 'src/redux/communication/notification/notificationTemplateApi';
+import React from 'react';
+import { Box, Card } from '@mui/material';
 
 import NotificationTemplateForm from './Components/NotificationTemplateForm';
-import NotificationTemplateTable from './Components/NotificationTemplateTemlate';
-
-import type { INotificationTemplate } from './Components/type';
+import { NotificationViewDialog } from './Components/NotificationViewDialog';
+import NotificationTemplateTable from './Components/NotificationTemplateTable';
+import { NotificationBreadcrumbs } from './Components/NotificationBreadcrumbs';
+import { NotificationDeleteDialog } from './Components/NotificationDeleteDialog';
+import { useNotificationTemplateState } from './hooks/useNotificationTemplateState';
+import { useNotificationTemplateActions } from './hooks/useNotificationTemplateActions';
 
 const TemplatesManagement = (props: TabComponentType) => {
-  const [open, setOpen] = useState(false);
-
-  const [editingTemplate, setEditingTemplate] = useState<INotificationTemplate | null>(null);
-  const [viewTemplate, setViewTemplate] = useState<INotificationTemplate | null>(null);
-  const view_dialog = useBoolean();
-
-  const [deleteTemplate, setDeleteTemplate] = useState<INotificationTemplate | null>(null);
-  const confirm_dialog = useBoolean();
-
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-  // Delete document mutation
-  const [deleteTemplateMutation, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteNotificationTemplateMutation,
-  });
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  // close dialog + reset
-  const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setEditingTemplate(null);
-        setOpen(false);
-        dispatch(setIsChanges(false));
-      }, 200);
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      resetState();
-    } else if (!isChanges) {
-      resetState();
-    }
-  };
   const {
-    data: templateData,
-    isLoading: isTemplateLoading,
-    refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetNotificationTemplatesQuery,
-  });
+    open,
+    setOpen,
+    editingTemplate,
+    setEditingTemplate,
+    deleteTemplate,
+    setDeleteTemplate,
+    viewTemplate,
+    setViewTemplate,
+    viewDialog,
+    confirmDialog,
+    handleCloseDialog,
+  } = useNotificationTemplateState();
+
+  const { templateData, isTemplateLoading, isDeleteLoading, handleDelete } =
+    useNotificationTemplateActions();
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {open ? (
-        <CustomBreadcrumbs
-          heading={editingTemplate ? 'Update Template' : 'Add Template'}
-          description={
-            editingTemplate
-              ? 'Update the existing message template for announcements, events, or reminders.'
-              : 'Create a new message template to be used in announcements, events, or reminders.'
-          }
-          links={[
-            { name: 'Communication', href: '/communication/dashboard' },
-            { name: 'Notifications', href: '/communication/notification/send-notification' },
-            {
-              name: 'Templates',
-              onClick(e) {
-                setOpen(false);
-                setEditingTemplate(null);
-              },
-            },
-            { name: editingTemplate ? 'Update Template' : 'Add Template' },
-          ]}
-          sx={{ px: 2 }}
-          isBack
-          onBack={() => {
-            handleCloseDialog(null, false);
-          }}
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Templates"
-          description="View and manage reusable templates including exam notifications, fee reminders, and event announcements."
-          links={[
-            { name: 'Communication', href: '/communication/dashboard' },
-            { name: 'Templates' },
-          ]}
-          sx={{ px: 2 }}
-          action={
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={() => setOpen(true)}
-              sx={{ px: '32px' }}
-            >
-              Template
-            </Button>
-          }
-        />
-      )}
+      <NotificationBreadcrumbs
+        open={open}
+        editingTemplate={editingTemplate}
+        setOpen={setOpen}
+        setEditingTemplate={setEditingTemplate}
+        handleCloseDialog={handleCloseDialog}
+      />
 
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', minHeight: 0 }}>
@@ -136,84 +56,42 @@ const TemplatesManagement = (props: TabComponentType) => {
           setOpenDialog={setOpen}
           setEditData={setEditingTemplate}
           onDelete={(row) => {
-            confirm_dialog.onTrue();
+            confirmDialog.onTrue();
             setDeleteTemplate(row);
           }}
           onEdit={(row) => {
             setOpen(true);
             setEditingTemplate(row);
           }}
-          //   onView={(row) => {
-          //     view_dialog.onTrue();
-          //     setViewTemplate(row);
-          //   }}
+          // onView logic if needed in future
+          // onView={(row) => {
+          //   viewDialog.onTrue();
+          //   setViewTemplate(row);
+          // }}
         />
       )}
 
       {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={confirm_dialog.value}
+      <NotificationDeleteDialog
+        open={confirmDialog.value}
+        deleteTemplate={deleteTemplate}
+        isDeleteLoading={isDeleteLoading}
         onClose={() => {
           setDeleteTemplate(null);
-          confirm_dialog.onFalse();
+          confirmDialog.onFalse();
         }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete template <strong>{deleteTemplate?.templateName}</strong>
-            ?
-          </>
-        }
-        action={
-          <LoadingButton
-            loading={isDeleteLoading}
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={async () => {
-              confirmWithUndo({
-                item: deleteTemplate,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    notificationTemplateApi.util.updateQueryData(
-                      'getNotificationTemplates',
-                      undefined,
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (b: any) => b.id === deleteTemplate?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) => refetch(),
-                onCommit: () => deleteTemplateMutation(deleteTemplate?.id || ''),
-              });
-              confirm_dialog.onFalse();
-              setDeleteTemplate(null);
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
+        onConfirm={() => handleDelete(deleteTemplate, setDeleteTemplate, confirmDialog)}
       />
 
       {/* View Details */}
-      <CustomDialog
-        title={`${viewTemplate?.templateName}`}
-        open={view_dialog.value}
-        handleClose={() => {
+      <NotificationViewDialog
+        open={viewDialog.value}
+        viewTemplate={viewTemplate}
+        onClose={() => {
           setViewTemplate(null);
-          view_dialog.onFalse();
+          viewDialog.onFalse();
         }}
-        maxWidth="md"
-      >
-        ghjk
-        {/* <TemplateViewDetails template={viewTemplate} /> */}
-      </CustomDialog>
+      />
     </Box>
   );
 };

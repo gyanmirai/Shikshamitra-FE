@@ -329,8 +329,6 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     setActiveStep((prev: number) => prev - 1);
   };
 
-  console.log('formik----', formik.values);
-
   const renderGeneralInformation = () => (
     <SectionCard
       title="General Information"
