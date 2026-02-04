@@ -29,6 +29,12 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onView,
   isLoading,
 }) => {
+  /**
+   * Memoization Justification:
+   * Columns are expensive to create on every render if they include complex render functions.
+   * Memoizing ensures reference stability for the CustomizableTable component,
+   * preventing unnecessary table re-renders.
+   */
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -106,8 +112,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         ),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [onDelete, onEdit, onView] // Added dependencies to ensure closures are updated
   );
 
   return (

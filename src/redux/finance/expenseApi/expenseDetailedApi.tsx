@@ -1,40 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { financeModuleApi } from '../financeModuleApi';
 
-import expenseDetailsData from '../../../json/finance/expense/expenseTrackingData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const expenseDetailsApi = createApi({
-  reducerPath: 'ExpenseDetailsApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock routes
-        if (url === '/detailedExpenseData') {
-          return { data: expenseDetailsData.detailedExpenseData };
-        }
-        if (url === '/expenseListData') {
-          return { data: expenseDetailsData.expenseListData };
-        }
-        if (url === '/expenseOptions') {
-          return {
-            data: expenseDetailsData.expenseOptions,
-          };
-        }
-        if (url === '/paymentMethodsConfig') {
-          return {
-            data: expenseDetailsData.paymentMethodsConfig,
-          };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['ExpenseDetails', 'ExpenseOptions', 'paymentMethodsConfig'],
+export const expenseTrackingApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getExpenseDetails: builder.query({
       query: () => ({
@@ -95,6 +61,7 @@ export const expenseDetailsApi = createApi({
       providesTags: ['paymentMethodsConfig'],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const {
@@ -106,4 +73,4 @@ export const {
   useGetExpenseByIdQuery,
   useGetExpenseListQuery,
   useGetPaymentMethodsConfigQuery,
-} = expenseDetailsApi;
+} = expenseTrackingApi;

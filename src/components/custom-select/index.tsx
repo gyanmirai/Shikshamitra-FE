@@ -18,7 +18,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   SelectProps<J extends true ? string[] | number[] : string | number>,
   'onChange' | 'value'
 > & {
-  options: { [K in T]: string | number }[];
+  options: { [K in NoInfer<T>]: string | number }[];
   label?: string;
   multiple?: J;
   value: J extends true ? string[] | number[] : string | number;

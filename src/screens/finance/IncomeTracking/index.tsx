@@ -1,76 +1,32 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { incomeApi, useGetIncomesQuery } from 'src/redux/incomeApi/incomeApi';
-import { useGetIncomeDetailsQuery } from 'src/redux/incomeApi/incomeDetailedApi';
-import { useDeleteIncomeCategoryMutation } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
 import IncomeTable from './Components/IncomeTable';
 import ViewIncomeData from './Components/ViewIncomeData';
 import IncomeTrackingForm from './Components/IncomeTrackingForm';
-
-import type { IIncomeFormValues } from './Components/type';
+import { useIncomeTrackingScreen } from './hooks/useIncomeTrackingScreen';
 
 const IncomeTracking = () => {
-  // State for selected income record
-  const [selectedIncome, setSelectedIncome] = useState<IIncomeFormValues | null>(null);
-
-  // Custom hooks for dialogs
-  const addIncomeDialog = useBoolean();
-  const deleteIncomeDialog = useBoolean();
-  const viewIncomeDialog = useBoolean();
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  const { data: incomeData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIncomesQuery,
-  });
-
-  const { data: incomeDetailedData, refetch } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIncomeDetailsQuery,
-  });
-
-  // DELETE mutation
-  const { deleteIncomeCategory } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteIncomeCategoryMutation,
-  });
-
-  // Redux
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-
-  // Handle form/dialog close
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addIncomeDialog.onFalse();
-      setSelectedIncome(null);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      addIncomeDialog.onFalse();
-      setSelectedIncome(null);
-    }
-  };
-
-  const handleViewDialogClose = () => {
-    setSelectedIncome(null);
-    viewIncomeDialog.onFalse();
-  };
+  const {
+    selectedIncome,
+    setSelectedIncome,
+    addIncomeDialog,
+    deleteIncomeDialog,
+    viewIncomeDialog,
+    incomeData,
+    incomeDetailedData,
+    handleClose,
+    handleViewDialogClose,
+    handleDeleteConfirm,
+  } = useIncomeTrackingScreen();
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -166,49 +122,7 @@ const IncomeTracking = () => {
           </>
         }
         action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={async () => {
-              if (selectedIncome) {
-                deleteIncomeDialog.onFalse();
-                const currentData = incomeData && incomeData.length > 0 ? incomeData : [];
-                confirmWithUndo({
-                  item: selectedIncome,
-                  onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
-                    const index = currentData.findIndex(
-                      (item: any) => item.id === selectedIncome.id
-                    );
-                    if (index !== -1) {
-                      setDeleteIndex(index);
-                      dispatchFn(
-                        incomeApi.util.updateQueryData('getIncomes', undefined, (draft: any) => {
-                          if (draft) {
-                            const paramsIndex = draft.findIndex(
-                              (item: any) => item.id === selectedIncome.id
-                            );
-                            if (paramsIndex !== -1) {
-                              draft.splice(paramsIndex, 1);
-                            }
-                          }
-                        })
-                      );
-                    }
-                  },
-                  onUndoRestore: () => {
-                    refetch();
-                  },
-                  onCommit: async () => {
-                    if (selectedIncome?.id) {
-                      await deleteIncomeCategory(selectedIncome.id);
-                    }
-                  },
-                });
-                setSelectedIncome(null);
-              }
-            }}
-          >
+          <Button variant="contained" color="error" size="small" onClick={handleDeleteConfirm}>
             Yes
           </Button>
         }
@@ -229,10 +143,7 @@ const IncomeTracking = () => {
             </CustomTooltip>
           </Box>
         }
-        handleClose={() => {
-          setSelectedIncome(null);
-          viewIncomeDialog.onFalse();
-        }}
+        handleClose={handleViewDialogClose}
         maxWidth="md"
       >
         <ViewIncomeData

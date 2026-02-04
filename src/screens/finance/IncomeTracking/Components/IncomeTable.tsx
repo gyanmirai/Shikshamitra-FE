@@ -1,11 +1,10 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
-
+import React from 'react';
 import { Box } from '@mui/material';
-import React, { useMemo } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IIncomeFormValues } from './type';
+import { useIncomeTableColumns } from '../hooks/useIncomeTableColumns';
+
+import type { IIncomeFormValues } from '../types';
 
 interface IIncomeTableProps {
   data: IIncomeFormValues[];
@@ -24,86 +23,11 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
   onDelete,
   onView,
 }) => {
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'incomeCategory',
-        label: 'Income Category',
-        align: 'left',
-        minWidth: '160px',
-        sticky: true,
-      },
-      {
-        id: 'incomeName',
-        label: 'Income Name',
-        align: 'left',
-        minWidth: '160px',
-      },
-      {
-        id: 'incomeCategoryTags',
-        label: 'Income Category Tags',
-        minWidth: 200,
-        align: 'left',
-        render(value) {
-          return Array.isArray(value) ? value.join(', ') : '-';
-        },
-      },
-      // {
-      //   id: 'budget',
-      //   label: 'Budget',
-      //   align: 'left',
-      // },
-      {
-        id: 'amount',
-        label: 'Amount',
-        align: 'left',
-        filterType: 'number',
-        render: (value) => `₹ ${value?.toLocaleString()}`,
-      },
-      {
-        id: 'paymentMethod',
-        label: 'Payment Method',
-        align: 'left',
-        minWidth: '160px',
-      },
-      {
-        id: 'date',
-        label: 'Date',
-        align: 'left',
-        filterType: 'date',
-      },
-      {
-        id: 'notes',
-        label: 'Notes',
-        align: 'left',
-        minWidth: '150px',
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        align: 'left',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        minWidth: 50,
-        render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon
-            showDeleteIcon
-            showViewIcon
-            handleViewClick={() => {
-              onView?.(row as IIncomeFormValues);
-            }}
-            handleEditClick={() => onEdit?.(row as IIncomeFormValues)}
-            handleDeleteClick={() => onDelete?.(row as IIncomeFormValues)}
-          />
-        ),
-      },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const columns = useIncomeTableColumns({
+    onView,
+    onEdit,
+    onDelete,
+  });
 
   return (
     <CustomizableTable
@@ -136,4 +60,11 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
   );
 };
 
-export default IncomeTable;
+/**
+ * Memoization Justification:
+ * React.memo is used here to prevent the table from re-rendering
+ * if the `data` prop or handlers haven't changed.
+ * This is crucial for performance when the parent component updates
+ * for reasons unrelated to the table data.
+ */
+export default React.memo(IncomeTable);
