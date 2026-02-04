@@ -180,7 +180,6 @@ export const AccessControlForm = ({
         });
       };
       recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
-      console.log(data, 'data');
       setCheckedItem(data);
     }
   }, [accessControl?.accessibleHierarchy]);

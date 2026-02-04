@@ -67,10 +67,17 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
     }),
     getGroupById: builder.query({
       query: (id) => ({
-        url: `/groups/getById/${id}`,
+        url: `/groups/${id}`,
         method: 'GET',
       }),
       providesTags: ['GroupDetails'],
+    }),
+    getUsersForSelection: builder.mutation({
+      query: (body) => ({
+        url: '/groups/users-for-selection',
+        method: 'POST',
+        data: body,
+      }),
     }),
   }),
   overrideExisting: false,
@@ -87,4 +94,5 @@ export const {
   usePreviewGroupAudienceQuery,
   useGetGroupUsersQuery,
   useGetGroupByIdQuery,
+  useGetUsersForSelectionMutation,
 } = groupManagementApi;

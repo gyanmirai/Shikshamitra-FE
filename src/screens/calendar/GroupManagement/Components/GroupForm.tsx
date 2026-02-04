@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
+import { debounce } from 'lodash';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -9,19 +10,22 @@ import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
-import React, { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import React, { useRef, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
+  useGetGroupByIdQuery,
   useCreateGroupMutation,
   useUpdateGroupMutation,
+  useGetUsersForSelectionMutation,
 } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import {
   Box,
@@ -47,6 +51,7 @@ import AcademicFilterDrawer from './AcademicFilterDrawer';
 import { getGroupInitialValues } from './getGroupInitialValues';
 
 import type { IGroup } from './type';
+import type { TreeNodeData } from './AcademicTreeView';
 // import HorizontalTreeView from './HorizonatalTreeView'; // legacy tree view not used in new flow
 import type { AcademicFilterDrawerProps } from './AcademicFilterDrawer';
 
@@ -61,7 +66,7 @@ export const groupValidationSchema = Yup.object().shape({
     employeeFilters: Yup.array(),
   }),
   nameBased: Yup.object().shape({
-    selectedUserIds: Yup.array(),
+    selectedMembers: Yup.array(),
   }),
 });
 
@@ -165,6 +170,7 @@ interface IGroupFormValues extends IGroup {
 }
 
 const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose }) => {
+  const [usersForSelection, setUsersForSelection] = useState<any[]>([]);
   const academicDrawer = useBoolean();
   const [activeStep, setActiveStep] = useState(0);
   const [filterTab, setFilterTab] = useState(0); // 0 = Condition Based, 1 = Selection Based
@@ -174,12 +180,29 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     type: 'mutation',
     currentQueryAndMutation: useCreateGroupMutation,
   });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: roleData, isLoading: isRoleDataLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRolesQuery,
+  });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: groupData, isLoading: isGroupDataLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGroupByIdQuery,
+    params: {
+      groupId: initialValues?.id,
+    },
+  });
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [updateGroup, { isLoading: isUpdatingGroup }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateGroupMutation,
   });
+  const extractUniqueIds = (rules: Array<{ divisions?: string[] }> = []): string[] =>
+    Array.from(new Set(rules.flatMap((rule) => rule.divisions || [])));
+
   const formik = useFormik<IGroupFormValues>({
     initialValues: {
       ...getGroupInitialValues(initialValues),
@@ -190,7 +213,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     validationSchema: groupValidationSchema,
     validate: (values) => {
       const errors: any = {};
-      if (isRuleBasedEmpty(values.ruleBased) && values.nameBased.selectedUserIds.length === 0) {
+      if (isRuleBasedEmpty(values.ruleBased) && values.nameBased.selectedMembers.length === 0) {
         errors.selection =
           'At least one selection is required (either via Rules or Name Based Selection)';
       }
@@ -212,20 +235,37 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       onClose?.(values, true);
     },
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [getUsersForSelection, { isLoading: isGetUsersForSelectionLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useGetUsersForSelectionMutation,
+  });
+
+  const buildUserSearchPayload = () => ({
+    maxResultCount: 10,
+    skipCount: 0,
+    academicYearId: currentYear?.id,
+    searchTerm: formik.values.searchQuery,
+    divisionFilters: extractUniqueIds(formik.values.nameBased.academicRules),
+    roleFilters: formik.values.nameBased.roles || [],
+    studentFilters: formik.values.nameBased.studentFilters || [],
+    employeeFilters: formik.values.nameBased.employeeFilters || [],
+  });
+
   // attach formik to ref for table render access
   formikRef.current = formik;
   // Keep computed total in sync (number of selected users)
   // useEffect(() => {
-  //   const total = (formik.values.nameBased.selectedUserIds || []).length;
+  //   const total = (formik.values.nameBased.selectedMembers || []).length;
   //   if (formik.values.total !== total) {
   //     formik.setFieldValue('total', total, false);
   //   }
-  // }, [formik, formik.values.nameBased.selectedUserIds]);
+  // }, [formik, formik.values.nameBased.selectedMembers]);
 
   // Selection table columns
   const allIds = dummyRows.map((r) => r.id);
   const allSelected =
-    allIds.length > 0 && allIds.every((id) => formik.values.nameBased.selectedUserIds.includes(id));
+    allIds.length > 0 && allIds.every((id) => formik.values.nameBased.selectedMembers.includes(id));
   const selectionColumns: IColumn[] = [
     {
       id: 'select',
@@ -238,17 +278,17 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       render: (_: any, row: any) => (
         <Checkbox
           size="small"
-          checked={formik.values.nameBased.selectedUserIds.includes(row.id)}
+          checked={formik.values.nameBased.selectedMembers.includes(row.memberId)}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const current = new Set(formik.values.nameBased.selectedUserIds);
-            if (e.target.checked) current.add(row.id);
-            else current.delete(row.id);
-            formik.setFieldValue('nameBased.selectedUserIds', Array.from(current));
+            const current = new Set(formik.values.nameBased.selectedMembers);
+            if (e.target.checked) current.add(row.memberId);
+            else current.delete(row.memberId);
+            formik.setFieldValue('nameBased.selectedMembers', Array.from(current));
           }}
         />
       ),
       renderColumn: () => {
-        const selectedCount = formik.values.nameBased.selectedUserIds.length;
+        const selectedCount = formik.values.nameBased.selectedMembers.length;
         const indeterminate = selectedCount > 0 && !allSelected;
         return (
           <Box display="flex" alignItems="center" gap={0.5}>
@@ -265,16 +305,16 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
         );
       },
     },
-    { id: 'fullName', label: 'Full Name', minWidth: 160, align: 'left' as const, sticky: true },
-    { id: 'type', label: 'Role', minWidth: 100, align: 'left' as const },
-    { id: 'class', label: 'Class', minWidth: 80, align: 'left' as const },
-    { id: 'division', label: 'Division', minWidth: 90, align: 'left' as const },
+    { id: 'displayName', label: 'Full Name', minWidth: 160, align: 'left' as const, sticky: true },
+    { id: 'roleName', label: 'Role', minWidth: 100, align: 'left' as const },
+    { id: 'standardName', label: 'Class', minWidth: 80, align: 'left' as const },
+    { id: 'divisionName', label: 'Division', minWidth: 90, align: 'left' as const },
     { id: 'rollNo', label: 'Roll No', minWidth: 90, align: 'left' as const },
     { id: 'board', label: 'Board', minWidth: 110, align: 'left' as const },
     { id: 'medium', label: 'Medium', minWidth: 110, align: 'left' as const },
     { id: 'department', label: 'Department', minWidth: 140, align: 'left' as const },
     { id: 'designation', label: 'Designation', minWidth: 160, align: 'left' as const },
-    { id: 'employeeCode', label: 'Emp Code', minWidth: 110, align: 'left' as const },
+    { id: 'identifier', label: 'Emp Code', minWidth: 110, align: 'left' as const },
     {
       id: 'status',
       label: 'Status',
@@ -392,6 +432,26 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     </SectionCard>
   );
 
+  const debouncedSearch = useRef(
+    debounce(async (payload) => {
+      const res = await getUsersForSelection(payload).unwrap();
+      setUsersForSelection(res?.items || []);
+    }, 400)
+  ).current;
+
+  useEffect(() => {
+    const search = formik.values.searchQuery?.trim();
+    if (!search) {
+      setUsersForSelection([]);
+      return;
+    }
+    if (search.length < 2) return;
+    debouncedSearch(buildUserSearchPayload());
+    // eslint-disable-next-line consistent-return
+    return () => debouncedSearch.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.searchQuery]);
+
   const handleAcademicApply: AcademicFilterDrawerProps['onApply'] = (
     _ids,
     _breakdown,
@@ -400,21 +460,36 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     hierarchicalSelectedTree,
     currentFilter
   ) => {
-    const extractIds = (nodes: any[], targetType: string): string[] => {
+    // const extractIds = (nodes: any[], targetType: string): string[] => {
+    //   let ids: string[] = [];
+    //   nodes.forEach((n) => {
+    //     if (n.type === targetType) ids.push(n.id);
+    //     if (n.children) ids = ids.concat(extractIds(n.children, targetType));
+    //   });
+    //   return Array.from(new Set(ids));
+    // };
+    const extractOnlyIds = (nodes: TreeNodeData[], targetType: string): string[] => {
       let ids: string[] = [];
-      nodes.forEach((n) => {
-        if (n.type === targetType) ids.push(n.id);
-        if (n.children) ids = ids.concat(extractIds(n.children, targetType));
+      nodes.forEach((node) => {
+        // If the type matches, grab the ID string
+        if (node.type === targetType) {
+          ids.push(node.id);
+        }
+        // If there are children, keep looking deeper
+        if (node.children && node.children.length > 0) {
+          ids = [...ids, ...extractOnlyIds(node.children, targetType)];
+        }
       });
+      // Remove duplicates just in case
       return Array.from(new Set(ids));
     };
 
     const newRule = {
-      boards: extractIds(hierarchicalSelectedTree || [], 'boards'),
-      mediums: extractIds(hierarchicalSelectedTree || [], 'mediums'),
-      stages: extractIds(hierarchicalSelectedTree || [], 'organizations'),
-      classes: extractIds(hierarchicalSelectedTree || [], 'standards'),
-      divisions: extractIds(hierarchicalSelectedTree || [], 'divisions'),
+      boards: extractOnlyIds(hierarchicalSelectedTree || [], 'boards'),
+      mediums: extractOnlyIds(hierarchicalSelectedTree || [], 'mediums'),
+      stages: extractOnlyIds(hierarchicalSelectedTree || [], 'organizations'), // mapping 'organizations' -> 'stages'
+      classes: extractOnlyIds(hierarchicalSelectedTree || [], 'standards'), // mapping 'standards' -> 'classes'
+      divisions: extractOnlyIds(hierarchicalSelectedTree || [], 'divisions'),
     };
 
     if (currentFilter === 'ruleBased') {
@@ -581,46 +656,52 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                       Roles
                     </Typography>
                   </Box>
-                  <Grid container spacing={0.5}>
-                    {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
-                      (role) => (
-                        <Grid size={{ xs: 12 }} key={role}>
-                          <Box
-                            sx={{
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: 1,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                              },
-                            }}
-                          >
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  size="small"
-                                  checked={formik.values.ruleBased.roles?.includes(role)}
-                                  onChange={(e) => {
-                                    const current = new Set(formik.values.ruleBased.roles || []);
-                                    if (e.target.checked) current.add(role);
-                                    else current.delete(role);
-                                    formik.setFieldValue('ruleBased.roles', Array.from(current));
-                                  }}
-                                />
-                              }
-                              label={
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                  {role}
-                                </Typography>
-                              }
-                              sx={{ mr: 0, width: '100%' }}
-                            />
-                          </Box>
-                        </Grid>
-                      )
-                    )}
-                  </Grid>
+                  <Scrollbar sx={{ maxHeight: 300 }}>
+                    <Grid container spacing={0.5}>
+                      {roleData?.items?.length > 0 ? (
+                        roleData?.items?.map((role: any) => (
+                          <Grid size={{ xs: 12 }} key={role?.id}>
+                            <Box
+                              sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                borderRadius: 1,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                                },
+                              }}
+                            >
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    checked={formik.values.ruleBased.roles?.includes(role.id)}
+                                    onChange={(e) => {
+                                      const current = new Set(formik.values.ruleBased.roles || []);
+                                      if (e.target.checked) current.add(role.id);
+                                      else current.delete(role.id);
+                                      formik.setFieldValue('ruleBased.roles', Array.from(current));
+                                    }}
+                                  />
+                                }
+                                label={
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {role?.name}
+                                  </Typography>
+                                }
+                                sx={{ mr: 0, width: '100%' }}
+                              />
+                            </Box>
+                          </Grid>
+                        ))
+                      ) : (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          No roles found
+                        </Typography>
+                      )}
+                    </Grid>
+                  </Scrollbar>
                 </Grid>
               </Grid>
 
@@ -706,46 +787,52 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                       Roles
                     </Typography>
                   </Box>
-                  <Grid container spacing={0.5}>
-                    {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
-                      (role) => (
-                        <Grid size={{ xs: 12 }} key={role}>
-                          <Box
-                            sx={{
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: 1,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                              },
-                            }}
-                          >
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  size="small"
-                                  checked={formik.values.nameBased.roles?.includes(role)}
-                                  onChange={(e) => {
-                                    const current = new Set(formik.values.nameBased.roles || []);
-                                    if (e.target.checked) current.add(role);
-                                    else current.delete(role);
-                                    formik.setFieldValue('nameBased.roles', Array.from(current));
-                                  }}
-                                />
-                              }
-                              label={
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                  {role}
-                                </Typography>
-                              }
-                              sx={{ mr: 0, width: '100%' }}
-                            />
-                          </Box>
-                        </Grid>
-                      )
-                    )}
-                  </Grid>
+                  <Scrollbar sx={{ maxHeight: 300 }}>
+                    <Grid container spacing={0.5}>
+                      {roleData?.items?.length > 0 ? (
+                        roleData?.items?.map((role: any) => (
+                          <Grid size={{ xs: 12 }} key={role.id}>
+                            <Box
+                              sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                borderRadius: 1,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                                },
+                              }}
+                            >
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    checked={formik.values.nameBased.roles?.includes(role.id)}
+                                    onChange={(e) => {
+                                      const current = new Set(formik.values.nameBased.roles || []);
+                                      if (e.target.checked) current.add(role.id);
+                                      else current.delete(role.id);
+                                      formik.setFieldValue('nameBased.roles', Array.from(current));
+                                    }}
+                                  />
+                                }
+                                label={
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {role?.name}
+                                  </Typography>
+                                }
+                                sx={{ mr: 0, width: '100%' }}
+                              />
+                            </Box>
+                          </Grid>
+                        ))
+                      ) : (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          No roles found
+                        </Typography>
+                      )}
+                    </Grid>
+                  </Scrollbar>
                 </Grid>
               </Grid>
 
@@ -822,7 +909,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                           <CustomizableTable
                             tableId="group-selection-table"
                             noDataText="No users found matching your search."
-                            data={dummyRows}
+                            data={usersForSelection}
                             columns={selectionColumns}
                           />
                         </Box>
@@ -850,13 +937,13 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                     }}
                   >
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      Selected ({formik.values.nameBased.selectedUserIds.length})
+                      Selected ({formik.values.nameBased.selectedMembers.length})
                     </Typography>
-                    {formik.values.nameBased.selectedUserIds.length > 0 && (
+                    {formik.values.nameBased.selectedMembers.length > 0 && (
                       <Button
                         size="small"
                         color="error"
-                        onClick={() => formik.setFieldValue('nameBased.selectedUserIds', [])}
+                        onClick={() => formik.setFieldValue('nameBased.selectedMembers', [])}
                         sx={{ fontSize: 12, minWidth: 'auto', px: 1 }}
                       >
                         Clear All
@@ -876,7 +963,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                       border: (theme) => `1px dashed ${theme.palette.divider}`,
                     }}
                   >
-                    {formik.values.nameBased.selectedUserIds.length === 0 ? (
+                    {formik.values.nameBased.selectedMembers.length === 0 ? (
                       <Box
                         sx={{
                           py: 8,
@@ -898,7 +985,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                       </Box>
                     ) : (
                       <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                        {formik.values.nameBased.selectedUserIds.map((id: string) => {
+                        {formik.values.nameBased.selectedMembers.map((id: string) => {
                           const user = dummyRows.find((r) => r.id === id);
                           if (!user) return null;
                           const isStudent = user.type === 'Student';
@@ -964,8 +1051,8 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                                 size="small"
                                 onClick={() => {
                                   formik.setFieldValue(
-                                    'nameBased.selectedUserIds',
-                                    formik.values.nameBased.selectedUserIds.filter(
+                                    'nameBased.selectedMembers',
+                                    formik.values.nameBased.selectedMembers.filter(
                                       (s: string) => s !== id
                                     )
                                   );
@@ -998,6 +1085,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
         onClose={academicDrawer.onFalse}
         currentFilterName={currentFilterName}
         onApply={handleAcademicApply}
+        initialSelectedNodes={
+          currentFilterName === 'ruleBased'
+            ? formik.values.ruleBased.academicTree
+            : formik.values.nameBased.academicTree
+        }
       />
     </SectionCard>
   );
@@ -1059,7 +1151,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                 </Box>
                 <Box sx={{ textAlign: 'left' }}>
                   <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1 }}>
-                    {formik.values.nameBased.selectedUserIds.length || 0}
+                    {formik.values.nameBased.selectedMembers.length || 0}
                   </Typography>
                   <Typography variant="subtitle2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                     Total Users selected
@@ -1077,7 +1169,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                 {/* Calculate students count from selection */}
                 <Typography variant="h4" sx={{ mb: 0.5 }}>
                   {
-                    formik.values.nameBased.selectedUserIds.filter(
+                    formik.values.nameBased.selectedMembers.filter(
                       (id: string) => dummyRows.find((r) => r.id === id)?.type === 'Student'
                     ).length
                   }
@@ -1097,7 +1189,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                 {/* Calculate employee count from selection */}
                 <Typography variant="h4" sx={{ mb: 0.5 }}>
                   {
-                    formik.values.nameBased.selectedUserIds.filter(
+                    formik.values.nameBased.selectedMembers.filter(
                       (id: string) => dummyRows.find((r) => r.id === id)?.type === 'Employee'
                     ).length
                   }
@@ -1278,6 +1370,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
         onClose={academicDrawer.onFalse}
         currentFilterName={currentFilterName}
         onApply={handleAcademicApply}
+        initialSelectedNodes={
+          currentFilterName === 'ruleBased'
+            ? formik.values.ruleBased.academicTree
+            : formik.values.nameBased.academicTree
+        }
       />
     </BackPopUpChecked>
   );

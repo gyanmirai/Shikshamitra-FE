@@ -1,9 +1,14 @@
 // MUI Components (alphabetical)
 /* eslint-disable import/order */ // Disabled due to conflicting auto-sort expectations; functional logic prioritized.
+import type { Board } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 // MUI Material components
 import Box from '@mui/material/Box';
+import Loading from 'src/app/loading';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { useSelector } from 'react-redux';
 import Checkbox from '@mui/material/Checkbox';
 import Collapse from '@mui/material/Collapse';
 import { GlobalIcons } from 'src/utils/icons';
@@ -13,8 +18,12 @@ import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 // MUI Icons
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+
+import { transformApiToTree } from './TransformApiToTree';
 // Icons (moved to ordered block above)
 
 // ---- Types ----
@@ -268,6 +277,7 @@ interface AcademicTreeViewProps {
   /** Disable the Apply button (e.g., while submitting) */
   applying?: boolean;
   onClose?: () => void;
+  initialSelectedNodes?: TreeNodeData[];
 }
 
 const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
@@ -275,7 +285,23 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
   applyLabel = 'Apply',
   applying = false,
   onClose = () => {},
+  initialSelectedNodes = [],
 }) => {
+  // Get current academic year from global state
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  // Query hook for fetching boards data
+  const { data: boards, isLoading: boardsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+
+  // Filter boards for current academic year
+  const allBoards = boards?.items?.filter(
+    (board: Board) => board.academicYearId === currentYear?.id
+  );
+
+  const transformedData = transformApiToTree(allBoards);
   // searchTerm reserved for future filtering UI; currently static
   const [searchTerm] = useState<string>('');
   /**
@@ -296,211 +322,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
     standards: new Map(),
     divisions: new Map(),
   });
-  const [data] = useState<TreeNodeData[]>([
-    {
-      id: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-      name: 'CBSE',
-      type: 'boards',
-      parentId: null,
-      children: [
-        {
-          id: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
-          name: 'English',
-          type: 'mediums',
-          parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-          children: [
-            {
-              id: '3a190322-7664-4197-552d-a7c1f823c69f',
-              name: 'Higher secondary',
-              type: 'organizations',
-              parentId: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
-              children: [],
-            },
-            {
-              id: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-              name: 'Primary',
-              type: 'organizations',
-              parentId: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
-              children: [
-                {
-                  id: '3a18ee92-3395-c001-c029-86323e1facd5',
-                  name: '1',
-                  type: 'standards',
-                  parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                  children: [
-                    {
-                      id: '3a18f304-0b52-a7a2-cd33-c9a23e3d5bbc',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
-                    },
-                    {
-                      id: '3a1945a6-3803-eb88-bb9e-c86b67de63e9',
-                      name: 'B',
-                      type: 'divisions',
-                      parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
-                    },
-                    {
-                      id: '3a195a7c-dea7-857b-9b77-f14761f6da1e',
-                      name: 'C',
-                      type: 'divisions',
-                      parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
-                    },
-                  ],
-                },
-                {
-                  id: '3a18ee9b-6e99-3c0b-2ec2-d585216f6ef8',
-                  name: '2',
-                  type: 'standards',
-                  parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                  children: [
-                    {
-                      id: '3a1a6aaa-2ef1-413b-4112-34c194a874e4',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a18ee9b-6e99-3c0b-2ec2-d585216f6ef8',
-                    },
-                  ],
-                },
-                {
-                  id: '3a18ee9b-9049-87bb-951f-d4959c606312',
-                  name: '3',
-                  type: 'standards',
-                  parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                  children: [
-                    {
-                      id: '3a1a6aaa-7a1a-de93-c96b-a051f26eeac1',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a18ee9b-9049-87bb-951f-d4959c606312',
-                    },
-                  ],
-                },
-                {
-                  id: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
-                  name: '4',
-                  type: 'standards',
-                  parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                  children: [
-                    {
-                      id: '3a18f304-ba4c-50fe-b3a2-a2fcbe9638e8',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
-                    },
-                    {
-                      id: '3a18f306-5def-6513-7156-0ba182e667d0',
-                      name: 'B',
-                      type: 'divisions',
-                      parentId: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: '3a1945a3-e05d-801a-a582-00528d6eeaf9',
-          name: 'Gujarati',
-          type: 'mediums',
-          parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-          children: [
-            {
-              id: '3a1a614c-adc7-f7b5-6158-fa82b26a3152',
-              name: 'Primary',
-              type: 'organizations',
-              parentId: '3a1945a3-e05d-801a-a582-00528d6eeaf9',
-              children: [
-                {
-                  id: '3a1a614c-d4da-3874-984e-5eff5b8af8d7',
-                  name: '1',
-                  type: 'standards',
-                  parentId: '3a1a614c-adc7-f7b5-6158-fa82b26a3152',
-                  children: [
-                    {
-                      id: '3a1a614d-02a3-46d7-204e-007496ee8d20',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a1a614c-d4da-3874-984e-5eff5b8af8d7',
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: '3a195a7b-b927-4af4-09a0-f3d2941f62eb',
-          name: 'Marathi',
-          type: 'mediums',
-          parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-          children: [
-            {
-              id: '3a1a6159-13f8-ce56-a350-244b974b46ba',
-              name: 'Primary',
-              type: 'organizations',
-              parentId: '3a195a7b-b927-4af4-09a0-f3d2941f62eb',
-              children: [
-                {
-                  id: '3a1a6159-2a72-1c82-4b0b-fd482752c873',
-                  name: '1',
-                  type: 'standards',
-                  parentId: '3a1a6159-13f8-ce56-a350-244b974b46ba',
-                  children: [
-                    {
-                      id: '3a1a6159-4bb6-26ef-5c86-c72c152e0af7',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a1a6159-2a72-1c82-4b0b-fd482752c873',
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: '3a18e3e4-fdf3-c9b8-e5f2-3bbda7dd301c',
-      name: 'GSEB',
-      type: 'boards',
-      parentId: null,
-      children: [
-        {
-          id: '3a18e4b9-859f-fc7f-8ec9-4b78f0b75185',
-          name: 'English',
-          type: 'mediums',
-          parentId: '3a18e3e4-fdf3-c9b8-e5f2-3bbda7dd301c',
-          children: [
-            {
-              id: '3a1a60f0-091c-7c71-bbed-9141cfae2dd5',
-              name: 'Primary',
-              type: 'organizations',
-              parentId: '3a18e4b9-859f-fc7f-8ec9-4b78f0b75185',
-              children: [
-                {
-                  id: '3a1a60f0-27fe-506c-ced8-432bf1a7d608',
-                  name: '1',
-                  type: 'standards',
-                  parentId: '3a1a60f0-091c-7c71-bbed-9141cfae2dd5',
-                  children: [
-                    {
-                      id: '3a1a60f0-57cc-11d3-29ed-9ad98ec9a097',
-                      name: 'A',
-                      type: 'divisions',
-                      parentId: '3a1a60f0-27fe-506c-ced8-432bf1a7d608',
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ]);
+
   const typeKeys = ['boards', 'mediums', 'organizations', 'standards', 'divisions'] as const;
 
   /**
@@ -519,6 +341,64 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
     const idSet = new Set(allNodes.map((n) => n.id));
     return { aggregatedSelectedIds: idSet, aggregatedSelectedNodes: allNodes };
   }, [selectedByType]);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getAllNodeIds = (nodes: TreeNodeData[]): string[] => {
+    let ids: string[] = [];
+    nodes.forEach((node) => {
+      ids.push(node.id);
+      if (node.children) {
+        ids = ids.concat(getAllNodeIds(node.children));
+      }
+    });
+    return ids;
+  };
+
+  // Recursively extract all nodes from a hierarchy
+  const flattenHierarchy = (nodes: TreeNodeData[]): TreeNodeData[] => {
+    let flat: TreeNodeData[] = [];
+    nodes.forEach((node) => {
+      flat.push(node);
+      if (node.children) {
+        flat = flat.concat(flattenHierarchy(node.children));
+      }
+    });
+    return flat;
+  };
+
+  /** Type guard mapping for dynamic extension types (fallback ignored). */
+  const ensureKnownType = (t: string): keyof typeof selectedByType | undefined => {
+    if (typeKeys.includes(t as any)) return t as keyof typeof selectedByType;
+    return undefined; // Unknown types are skipped in typed buckets but still tracked in aggregated
+  };
+
+  // Populate initial selection if provided
+  React.useEffect(() => {
+    if (initialSelectedNodes && initialSelectedNodes.length > 0) {
+      // Flatten the hierarchical tree to get all selected nodes
+      const allSelectedNodes = flattenHierarchy(initialSelectedNodes);
+
+      const newSelection = {
+        boards: new Map<string, TreeNodeData>(),
+        mediums: new Map<string, TreeNodeData>(),
+        organizations: new Map<string, TreeNodeData>(),
+        standards: new Map<string, TreeNodeData>(),
+        divisions: new Map<string, TreeNodeData>(),
+      };
+
+      allSelectedNodes.forEach((node) => {
+        const key = ensureKnownType(node.type);
+        if (key) {
+          // We prefer the node from transformedData if available to ensure we have complete children
+          // structure for future toggles, but fallback to initialized node
+          newSelection[key].set(node.id, node);
+        }
+      });
+
+      setSelectedByType(newSelection);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const getAllChildIds = (node: TreeNodeData): string[] => {
     let ids: string[] = [node.id];
@@ -541,12 +421,6 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
     return acc;
   };
 
-  /** Type guard mapping for dynamic extension types (fallback ignored). */
-  const ensureKnownType = (t: string): keyof typeof selectedByType | undefined => {
-    if (typeKeys.includes(t as any)) return t as keyof typeof selectedByType;
-    return undefined; // Unknown types are skipped in typed buckets but still tracked in aggregated
-  };
-
   /** Determine if every node in subtree is selected. */
   const isSubtreeFullySelected = (node: TreeNodeData): boolean => {
     const subtreeIds = getAllChildIds(node); // includes node itself
@@ -565,7 +439,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
         if (n.children?.length) indexNodes(n.children);
       });
     };
-    indexNodes(data);
+    indexNodes(transformedData);
 
     // Helper to collect ancestors (excluding root null parent) upward chain
     const collectAncestors = (n: TreeNodeData): TreeNodeData[] => {
@@ -667,7 +541,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
         if (n.children?.length) traverse(n.children);
       });
     };
-    traverse(data);
+    traverse(transformedData);
     setSelectedByType(buckets);
   };
 
@@ -687,7 +561,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
         standards: Array.from(selectedByType.standards.values()),
         divisions: Array.from(selectedByType.divisions.values()),
       };
-      const hierarchicalSelectedTree = buildSelectedHierarchy(data);
+      const hierarchicalSelectedTree = buildSelectedHierarchy(transformedData);
 
       onApply(
         Array.from(aggregatedSelectedIds),
@@ -743,17 +617,25 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
           bgcolor: (theme) => theme.vars.palette.background.paper,
         }}
       >
-        {data.map((node) => (
-          <Box key={node.id} sx={{ pb: 1, borderBottom: '1px solid', borderColor: 'grey.300' }}>
-            <TreeNode
-              node={node}
-              searchTerm={searchTerm}
-              selectedNodes={aggregatedSelectedIds}
-              isSubtreeFullySelected={isSubtreeFullySelected}
-              toggleSubtree={toggleSubtree}
-            />
+        {boardsLoading ? (
+          <Box
+            sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
+          >
+            <Loading />
           </Box>
-        ))}
+        ) : (
+          transformedData.map((node) => (
+            <Box key={node.id} sx={{ pb: 1, borderBottom: '1px solid', borderColor: 'grey.300' }}>
+              <TreeNode
+                node={node}
+                searchTerm={searchTerm}
+                selectedNodes={aggregatedSelectedIds}
+                isSubtreeFullySelected={isSubtreeFullySelected}
+                toggleSubtree={toggleSubtree}
+              />
+            </Box>
+          ))
+        )}
       </Box>
       {/* Sticky bottom action bar */}
       <Box
