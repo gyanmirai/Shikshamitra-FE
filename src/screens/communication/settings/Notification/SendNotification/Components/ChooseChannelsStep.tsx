@@ -12,7 +12,6 @@ import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/s
 import SelectedMembersSummary from './SelectedMembersSummary';
 
 import type { INotificationSendSchema } from './type';
-import type { IDeliveryChannel } from '../../../DeliveryChannelType/type';
 
 /**
  * Component: ChooseChannelsStep
@@ -22,6 +21,7 @@ import type { IDeliveryChannel } from '../../../DeliveryChannelType/type';
  * - Handling channel toggle logic with memoization
  */
 const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendSchema> }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: deliveryChannelData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeliveryChannelTypeOptionsQuery,
@@ -54,20 +54,13 @@ const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendS
       <SectionCard title="Select Channels">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            {deliveryChannelData?.map((channel: IDeliveryChannel) => {
-              const isSelected = formik.values.channels?.includes(channel.deliveryChannel);
+            {['Email', 'SMS', 'Push Notification']?.map((channel: string) => {
+              const isSelected = formik.values.channels?.includes(channel);
               return (
                 <FormControlLabel
-                  key={channel.deliveryChannel}
-                  control={
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={() => handleToggle(channel.deliveryChannel)}
-                    />
-                  }
-                  label={
-                    <Typography sx={{ whiteSpace: 'nowrap' }}>{channel.deliveryChannel}</Typography>
-                  }
+                  key={channel}
+                  control={<Checkbox checked={isSelected} onChange={() => handleToggle(channel)} />}
+                  label={<Typography sx={{ whiteSpace: 'nowrap' }}>{channel}</Typography>}
                 />
               );
             })}

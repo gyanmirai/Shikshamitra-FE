@@ -100,7 +100,7 @@ const FinanceDashboardOverview = () => {
       bgColor: 'success',
       href: '#',
       labels: [
-        { name: 'Outstanding - 700k', color: 'info' }, // Example value
+        { name: 'Paid - 700k', color: 'success' }, // Example value
         { name: 'Pending - 300k', color: 'warning' }, // Example value
         { name: 'Overdue - 250k', color: 'error' }, // Example value
       ],
@@ -114,10 +114,10 @@ const FinanceDashboardOverview = () => {
       color: 'warning.main',
       bgColor: 'warning',
       href: '#',
-      labels: [
-        { name: 'Salaries - 70%', color: 'warning' },
-        { name: 'Maintenance - 30%', color: 'info' },
-      ],
+      // labels: [
+      //   { name: 'Salaries - 70%', color: 'warning' },
+      //   { name: 'Maintenance - 30%', color: 'info' },
+      // ],
       width: 4,
     },
     {
@@ -128,7 +128,7 @@ const FinanceDashboardOverview = () => {
       color: 'info.main',
       bgColor: 'info',
       href: '#',
-      labels: [{ name: 'Healthy', color: 'success' }],
+      // labels: [{ name: 'Healthy', color: 'success' }],
       width: 4,
     },
   ]);

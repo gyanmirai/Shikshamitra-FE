@@ -11,7 +11,7 @@ import FinanceConcessionCategoryChart from './Components/FinanceConcessionCatego
 
 const FinanceAdminDashboardScreen = () => (
   <Box>
-    <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Grid container spacing={1} sx={{ mb: 1 }}>
       <Grid size={{ xs: 12 }}>
         <FinanceAdminDashboardOverview />
       </Grid>

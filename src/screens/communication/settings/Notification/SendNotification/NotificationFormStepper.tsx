@@ -36,8 +36,8 @@ const NotificationFormStepper = ({ onBack }: NotificationFormStepperProps) => {
    * receives a stable prop if its other dependencies don't change.
    */
   const renderStepItem = useMemo(
-    // eslint-disable-next-line react/no-unstable-nested-components
     () =>
+      // eslint-disable-next-line react/no-unstable-nested-components
       ({ formik, activeStep: step }: any) => (
         <NotificationStepContent
           formik={formik}

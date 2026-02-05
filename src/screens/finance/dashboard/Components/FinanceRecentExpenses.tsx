@@ -21,10 +21,10 @@ type Props = CardProps & {
 export default function FinanceRecentExpenses({ title, subheader, list, ...other }: Props) {
   return (
     <Card {...other} sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
       <Scrollbar>
-        <Box sx={{ p: 3, gap: 3, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ p: 2, gap: 3, display: 'flex', flexDirection: 'column' }}>
           {list.map((item) => (
             <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Avatar alt={item.addedBy} src={item.avatarUrl || ''}>

@@ -1,10 +1,12 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
+import type { BoardMediumOption } from 'src/components/boardMediumDropdown';
 
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
+import BoardMediumDropdown from 'src/components/boardMediumDropdown';
 
 type Props = CardProps & {
   title?: string;
@@ -22,7 +24,7 @@ type Props = CardProps & {
 
 export default function FinanceFeeStatusOverview({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
-
+  const [selectedBoardMedium, setSelectedBoardMedium] = React.useState<BoardMediumOption>();
   const chartColors = chart.colors ?? [
     theme.palette.success.main,
     theme.palette.warning.main,
@@ -56,10 +58,22 @@ export default function FinanceFeeStatusOverview({ title, subheader, chart, ...o
   });
 
   return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+    <Card {...other} sx={{ height: '100%' }}>
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        sx={{ p: 2 }}
+        action={
+          <BoardMediumDropdown
+            value={selectedBoardMedium}
+            onChange={(val) => {
+              setSelectedBoardMedium(val);
+            }}
+          />
+        }
+      />
 
-      <Box sx={{ p: 3, pb: 1 }}>
+      <Box>
         <Chart
           dir="ltr"
           type="bar"

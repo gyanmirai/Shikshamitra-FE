@@ -7,6 +7,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { formatNumber } from 'src/utils/formate_number';
 import { EmptyContent } from 'src/components/empty-content';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -135,7 +136,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: true,
               filterType: 'number',
               minWidth: '120px',
-              render: (value) => `₹ ${value.toLocaleString()}`,
+              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
               id: 'totalFees',
@@ -144,7 +145,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: true,
               filterType: 'number',
               minWidth: '120px',
-              render: (value) => `₹ ${value.toLocaleString()}`,
+              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
               id: 'pendingFees',
@@ -153,7 +154,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               align: 'left',
               isFilter: true,
               minWidth: '130px',
-              render: (value) => `₹ ${value.toLocaleString()}`,
+              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
               id: 'overdueFees',
@@ -162,7 +163,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               align: 'left',
               minWidth: '140px',
               isFilter: true,
-              render: (value) => `₹ ${value.toLocaleString()}`,
+              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
               id: 'status',

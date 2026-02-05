@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -8,7 +9,10 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Button, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetFeeCollectionDetailsQuery } from 'src/redux/feeCollection/feeCollection';
+import {
+  useCollectFeeMutation,
+  useGetFeeCollectionDetailsQuery,
+} from 'src/redux/feeCollection/feeCollection';
 
 import { StudentFeeSummaryCard } from './StudentFeesSummaryCard';
 import PaymentDetailsForm, {
@@ -38,6 +42,12 @@ const FeeCollectComponent = ({
       studentFeeId: student?.id,
     },
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [collectFee, { isLoading: isCollectFeeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCollectFeeMutation,
+  });
+
   const formik = useFormik({
     initialValues: buildInitialValues(),
     validationSchema: buildValidationSchema(currentYear),
@@ -75,9 +85,10 @@ const FeeCollectComponent = ({
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           type="submit"
           variant="contained"
+          loading={isCollectFeeLoading}
           size="small"
           onClick={(e: any) => {
             formik.handleSubmit(e);
@@ -86,7 +97,7 @@ const FeeCollectComponent = ({
           disabled={loading}
         >
           {loading ? 'Submitting...' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

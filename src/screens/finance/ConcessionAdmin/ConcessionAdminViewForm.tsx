@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -11,7 +12,6 @@ import {
   Grid,
   Card,
   Button,
-  Tooltip,
   IconButton,
   Typography,
   CardContent,
@@ -30,7 +30,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   onClose,
 }) => (
   <Box display="flex" flexDirection="column" gap={2} height="100%">
-    <Scrollbar sx={{ p: 3, height: '100%' }}>
+    <Scrollbar sx={{ p: 2, height: '100%' }}>
       <StudentInformationAccordion student={student} />
       {student?.concessions && student.concessions.length > 0 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -43,23 +43,33 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
                 border: (theme) => `1px solid ${theme.palette.divider}`,
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: 'primary.main',
-                    mb: 3,
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <Iconify icon="mdi:file-document-outline" width={24} />
-                  {c.concessionType} Information
-                </Typography>
+              <CardContent sx={{ p: 2 }}>
+                <Box display="flex" alignItems="center" mb={3} gap={1.5}>
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 1.5,
+                      bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+                      color: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Iconify icon="mdi:file-document-outline" width={24} />
+                  </Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    {c.concessionType} Information
+                  </Typography>
+                </Box>
 
-                <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid container spacing={3} sx={{ mb: 2 }}>
                   {/* Fee Heads */}
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Box
@@ -142,8 +152,8 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
 
                 {/* Documents Table */}
                 {c.documents?.length > 0 && (
-                  <Box sx={{ mt: 3 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
                       Attached Documents
                     </Typography>
                     <CustomizableTable
@@ -214,79 +224,58 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
                           ),
                         },
                         {
-                          id: 'actions',
-                          label: 'Actions',
-                          align: 'right',
+                          id: 'view',
+                          label: 'View',
                           isFilter: false,
                           isSort: false,
-                          render: (value, row) => (
-                            <Box display="flex" justifyContent="flex-end" gap={1}>
-                              <Tooltip title="View Document">
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      row.file
-                                        ? window.open(URL.createObjectURL(row.file), '_blank')
-                                        : row.fileUrl
-                                          ? window.open(row.fileUrl, '_blank')
-                                          : null
-                                    }
-                                    disabled={!row.file && !row.fileUrl}
-                                    sx={{
-                                      color: 'info.main',
-                                      bgcolor: (theme) =>
-                                        theme.vars.palette.info.mainChannel &&
-                                        `rgba(${theme.vars.palette.info.mainChannel} / 0.08)`,
-                                      '&:hover': {
-                                        bgcolor: (theme) =>
-                                          theme.vars.palette.info.mainChannel &&
-                                          `rgba(${theme.vars.palette.info.mainChannel} / 0.16)`,
-                                      },
-                                    }}
-                                  >
-                                    <Iconify icon="carbon:view-filled" width={18} />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-
-                              <Tooltip title="Download">
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                      if (row.file) {
-                                        const url = URL.createObjectURL(row.file);
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = row.documentName;
-                                        link.click();
-                                      } else if (row.fileUrl) {
-                                        const link = document.createElement('a');
-                                        link.href = row.fileUrl;
-                                        link.download = row.documentName;
-                                        link.click();
-                                      }
-                                    }}
-                                    disabled={!row.file && !row.fileUrl}
-                                    sx={{
-                                      color: 'primary.main',
-                                      bgcolor: (theme) =>
-                                        theme.vars.palette.primary.mainChannel &&
-                                        `rgba(${theme.vars.palette.primary.mainChannel} / 0.08)`,
-                                      '&:hover': {
-                                        bgcolor: (theme) =>
-                                          theme.vars.palette.primary.mainChannel &&
-                                          `rgba(${theme.vars.palette.primary.mainChannel} / 0.16)`,
-                                      },
-                                    }}
-                                  >
-                                    <Iconify icon="eva:download-fill" width={18} />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                            </Box>
-                          ),
+                          align: 'left',
+                          minWidth: '80px',
+                          render(value, row) {
+                            return (
+                              <IconButton
+                                style={{
+                                  textAlign: 'left',
+                                  marginLeft: '0px',
+                                  padding: '0px',
+                                  justifyContent: 'flex-start',
+                                  display: 'flex',
+                                }}
+                                disabled={row.status !== 'Uploaded'}
+                                onClick={() => {}}
+                              >
+                                <Iconify icon="carbon:view-filled" />
+                              </IconButton>
+                            );
+                          },
+                        },
+                        {
+                          id: 'download',
+                          label: 'Download',
+                          isFilter: false,
+                          isSort: false,
+                          align: 'left',
+                          minWidth: '80px',
+                          render(value, row) {
+                            return (
+                              <IconButton
+                                style={{
+                                  textAlign: 'left',
+                                  marginLeft: '0px',
+                                  padding: '0px',
+                                  justifyContent: 'flex-start',
+                                  display: 'flex',
+                                }}
+                                disabled={row.status !== 'Uploaded'}
+                                onClick={async () => {
+                                  // TODO: Implement download functionality
+                                  // Fetch document content using getStudentDocumentById
+                                  // Create download link with base64 content
+                                }}
+                              >
+                                <Iconify icon="material-symbols:download" width={20} height={20} />
+                              </IconButton>
+                            );
+                          },
                         },
                       ]}
                       data={c.documents}
@@ -300,33 +289,24 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
       )}
     </Scrollbar>
 
-    <DialogActions
-      sx={{
-        p: 2.5,
-        borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
-        bgcolor: 'background.default',
-      }}
-    >
+    <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, width: '100%' }}>
         <Button
           variant="soft"
           color="error"
           onClick={onReject}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          sx={{ px: 2 }}
+          size="small"
         >
           Reject
         </Button>
 
         <Button
-          variant="contained"
+          variant="soft"
           color="success"
           onClick={onApprove}
           startIcon={<Iconify icon={GlobalIcons.tick} />}
-          sx={{
-            px: 2,
-            boxShadow: (theme) => theme.customShadows?.success,
-          }}
+          size="small"
         >
           Approve
         </Button>
