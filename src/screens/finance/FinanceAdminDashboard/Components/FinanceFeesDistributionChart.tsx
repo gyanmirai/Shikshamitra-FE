@@ -62,9 +62,9 @@ export default function FinanceFeesDistributionChart({ title, subheader, chart, 
 
   return (
     <Card {...other} sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
-      <Box sx={{ p: 3, pb: 1 }}>
+      <Box>
         <Chart
           dir="ltr"
           type="bar"

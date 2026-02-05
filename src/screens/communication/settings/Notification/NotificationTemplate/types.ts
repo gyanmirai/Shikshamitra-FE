@@ -1,5 +1,3 @@
-// type.ts
-
 export interface INotificationTemplate {
   id: string; // unique id (e.g. "TMP-001")
   templateName: string; // "Exam Notification"
@@ -7,6 +5,14 @@ export interface INotificationTemplate {
   targetRole: string; // "Student" | "Teacher" | "Parent"
   subject: string; // "12th Exam", "Fee Reminder", "Navratri Celebration"
   message: string;
+}
+
+export interface INotificationTemplateFormValues {
+  templateName: string;
+  targetRole: string;
+  subject: string;
+  message: string;
+  hashtags: string[];
 }
 
 export interface ITemplateTableProps {

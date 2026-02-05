@@ -32,7 +32,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   isFromView,
 }) => {
   // State to store notification data
-  const [notification, setNotification] = useState<INotificationData>(data);
+  const [notification, setNotification] = useState<INotificationData | null>(data);
 
   // Update notification data when props data changes
   useEffect(() => {
@@ -45,10 +45,13 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   // value: new value for the property
   const updateRecipient = (name: string, key: keyof IRecipient, value: any) => {
     if (!isFromView) {
-      setNotification((prev) => ({
-        ...prev,
-        recipient: prev.recipient.map((r) => (r.name === name ? { ...r, [key]: value } : r)),
-      }));
+      setNotification(
+        (prev) =>
+          ({
+            ...(prev as INotificationData),
+            recipient: prev?.recipient.map((r) => (r.name === name ? { ...r, [key]: value } : r)),
+          }) as INotificationData
+      );
     }
   };
 
@@ -56,10 +59,15 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   // name: recipient name to toggle
   // isChecked: new toggle state
   const handleToggle = (name: string, isChecked: boolean) => {
-    setNotification((prev) => ({
-      ...prev,
-      recipient: prev.recipient.map((r) => (r.name === name ? { ...r, isEnable: isChecked } : r)),
-    }));
+    setNotification(
+      (prev) =>
+        ({
+          ...(prev as INotificationData),
+          recipient: prev?.recipient.map((r) =>
+            r.name === name ? { ...r, isEnable: isChecked } : r
+          ),
+        }) as INotificationData
+    );
   };
 
   return (
@@ -69,16 +77,16 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
           <Box display="flex" gap={2} alignItems="center">
             <Box display="flex" flexDirection="row" gap={2} mt={1}>
               <Typography fontWeight="bold">Event Name:</Typography>
-              <Typography>{notification.event}</Typography>
+              <Typography>{notification?.event}</Typography>
             </Box>
             <Box display="flex" flexDirection="row" gap={2} mt={1}>
               <Typography fontWeight="bold">Trigger Condition:</Typography>
-              <Typography>{notification.triggerCondition}</Typography>
+              <Typography>{notification?.triggerCondition}</Typography>
             </Box>
           </Box>
 
           <Box display="flex" flexWrap="wrap" gap={4}>
-            {notification.recipient.map((recipient) => (
+            {notification?.recipient.map((recipient) => (
               <Box
                 key={recipient.name}
                 width="49%"

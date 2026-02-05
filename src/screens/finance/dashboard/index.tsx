@@ -12,7 +12,7 @@ import FinanceMonthlyFeesCollectionTrend from './Components/FinanceMonthlyFeesCo
 
 const FinanceAccountantDashboardScreen = () => (
   <Box>
-    <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Grid container spacing={1} sx={{ mb: 2 }}>
       <Grid size={{ xs: 12 }}>
         <FinanceDashboardOverview />
       </Grid>
@@ -75,7 +75,7 @@ const FinanceAccountantDashboardScreen = () => (
 
       <Grid size={{ xs: 12, md: 6 }}>
         <FinanceOutstandingByClass
-          title="Outstanding Fees by Class"
+          title="Paid Fees by Class"
           chart={{
             labels: [
               'Class 1',

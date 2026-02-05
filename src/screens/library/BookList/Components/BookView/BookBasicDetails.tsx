@@ -229,41 +229,43 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
         }}
       >
         <Box width="100%">
-          <Grid container spacing={3}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
             {/* Book Cover */}
-            <Grid size={{ xs: 12, sm: 4, md: 2 }}>
+            <Box
+              sx={{
+                width: { xs: 140, sm: 180 },
+                flexShrink: 0,
+                mx: { xs: 'auto', sm: 0 },
+              }}
+            >
               <Box
                 sx={{
-                  borderRadius: '10px',
+                  position: 'relative',
+                  borderRadius: '16px',
                   overflow: 'hidden',
-                  boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.grey[500], 0.15)}`,
-                  maxWidth: { xs: 140, sm: '100%' },
-                  mx: { xs: 'auto', sm: 0 },
+                  boxShadow: (theme) => `-8px 8px 24px ${alpha(theme.palette.grey[900], 0.2)}`,
+                  bgcolor: 'background.neutral',
+                  aspectRatio: '2/3',
+                  width: '100%',
                 }}
               >
                 <Image
                   src={book?.bookCoverImages?.[0] || noCover}
                   alt={book?.title || 'No Preview'}
-                  width={250}
-                  height={250}
+                  fill
+                  style={{ objectFit: 'cover' }}
                   unoptimized
-                  style={{
-                    width: '100%',
-                    height: '180px',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
                 />
               </Box>
-            </Grid>
+            </Box>
 
-            {/* Book Details - 5 per row */}
-            <Grid size={{ xs: 12, sm: 8, md: 10 }}>
+            {/* Book Details */}
+            <Box sx={{ flexGrow: 1, width: '100%' }}>
               <Grid container spacing={2}>
                 {details.map((d, index) => (
                   <Grid
                     key={d.label}
-                    size={{ xs: 12, sm: 6, md: d.label === 'Description' ? 12 : 2.4 }}
+                    size={{ xs: 12, sm: 6, md: d.label === 'Description' ? 12 : 3 }}
                   >
                     <Stack
                       direction="row"
@@ -340,8 +342,8 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                   </Grid>
                 ))}
               </Grid>
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Box>
       </AccordionDetails>
     </Accordion>

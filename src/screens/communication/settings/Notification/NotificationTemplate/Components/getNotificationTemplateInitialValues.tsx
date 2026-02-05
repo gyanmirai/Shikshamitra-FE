@@ -1,4 +1,4 @@
-import type { INotificationTemplate } from './type';
+import type { INotificationTemplate } from '../types';
 
 export const getNotificationTemplateInitialValues = (editData?: INotificationTemplate | null) => ({
   templateName: editData?.templateName || '',

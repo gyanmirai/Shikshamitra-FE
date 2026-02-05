@@ -1,6 +1,4 @@
-import React from 'react';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
+import React, { memo } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -8,21 +6,23 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { useRemoveReasonForm } from './hooks/useRemoveReasonForm';
+
 interface IAnnouncementRemoveReasonFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
 }
 
-const AnnouncementRemoveReasonForm = ({ onClose }: IAnnouncementRemoveReasonFormProps) => {
-  const formik = useFormik({
-    initialValues: {
-      reason: '',
-    },
-    validationSchema: Yup.object().shape({
-      reason: Yup.string().required('Reason is required'),
-    }),
-    onSubmit: (values) => {
-      onClose(null, true);
-    },
+/**
+ * AnnouncementRemoveReasonForm Component
+ * Renders a form to capture the reason for removing an announcement.
+ *
+ * Memoization Justification:
+ * Component is pure and mostly static UI. Renders are controlled via useRemoveReasonForm hook.
+ * Re-renders are only necessary when error states change.
+ */
+const AnnouncementRemoveReasonForm = memo(({ onClose }: IAnnouncementRemoveReasonFormProps) => {
+  const { formik, handleCancel, handleReasonChange, handleSubmit } = useRemoveReasonForm({
+    onClose,
   });
 
   return (
@@ -39,10 +39,7 @@ const AnnouncementRemoveReasonForm = ({ onClose }: IAnnouncementRemoveReasonForm
                 multiline
                 rows={3}
                 value={formik.values.reason}
-                onChange={(e) => {
-                  formik.setFieldValue('reason', e.target.value);
-                  formik.setFieldTouched('reason', true);
-                }}
+                onChange={handleReasonChange}
                 error={formik.touched.reason && Boolean(formik.errors.reason)}
                 helperText={formik.touched.reason && formik.errors.reason}
               />
@@ -53,7 +50,7 @@ const AnnouncementRemoveReasonForm = ({ onClose }: IAnnouncementRemoveReasonForm
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
-          onClick={() => onClose(null, false)}
+          onClick={handleCancel}
           variant="outlined"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -66,16 +63,15 @@ const AnnouncementRemoveReasonForm = ({ onClose }: IAnnouncementRemoveReasonForm
           color="error"
           size="small"
           startIcon={<Iconify icon={GlobalIcons.delete} />}
-          onClick={(e: any) => {
-            e.preventDefault();
-            formik.handleSubmit(e);
-          }}
+          onClick={handleSubmit}
         >
           Remove
         </Button>
       </DialogActions>
     </BackPopUpChecked>
   );
-};
+});
+
+AnnouncementRemoveReasonForm.displayName = 'AnnouncementRemoveReasonForm';
 
 export default AnnouncementRemoveReasonForm;

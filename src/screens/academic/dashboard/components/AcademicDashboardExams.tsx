@@ -12,10 +12,13 @@ import {
 
 const AcademicDashboardExams = () => (
   <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
-    <Typography variant="h6">Next 5 Exams</Typography>
+    <Typography variant="h6" ml={1}>
+      Next 5 Exams
+    </Typography>
     <CustomizableTable
       tableId="nextExams"
       columns={[
+        { id: 'examName', label: 'Exam Name' },
         { id: 'subject', label: 'Subject' },
         { id: 'class', label: 'Class' },
         { id: 'date', label: 'Date' },
@@ -35,30 +38,35 @@ const AcademicDashboardExams = () => (
       ]}
       data={[
         {
+          examName: 'Unit Test 1',
           subject: 'Mathematics',
           class: '10-A',
           date: '15-06-2025',
           status: ScheduleExamStatus.Completed, // 5 (Ongoing in UI)
         },
         {
+          examName: 'Unit Test 2',
           subject: 'Physics',
           class: '11',
           date: '15-07-2025',
           status: ScheduleExamStatus.Published, // 2 (Scheduled)
         },
         {
+          examName: 'Unit Test 3',
           subject: 'Chemistry',
           class: '12-B',
           date: '24-06-2025',
           status: ScheduleExamStatus.Completed, // 5 (Ongoing)
         },
         {
+          examName: 'Unit Test 4',
           subject: 'English',
           class: '10',
           date: '01-11-2025',
           status: ScheduleExamStatus.Published, // 2 (Scheduled)
         },
         {
+          examName: 'Unit Test 5',
           subject: 'Gujarati',
           class: '9-A',
           date: '01-12-2025',

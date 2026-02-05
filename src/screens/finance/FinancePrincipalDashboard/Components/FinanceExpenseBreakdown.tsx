@@ -31,39 +31,54 @@ export default function FinanceExpenseBreakdown({ title, subheader, chart, ...ot
   const chartOptions = useChart({
     colors: chartColors,
     labels: chart.labels,
+
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number) => `${val.toFixed(1)}%`,
+      style: {
+        fontSize: '13px',
+        fontWeight: 600,
+      },
+    },
+
     stroke: {
       colors: [theme.palette.background.paper],
     },
+
     legend: {
+      show: true,
       position: 'bottom',
       horizontalAlign: 'center',
     },
+
     tooltip: {
       fillSeriesColor: false,
       y: {
         formatter: (value: number) => fCurrency(value),
         title: {
-          formatter: (seriesName: string) => `${seriesName}`,
+          formatter: (seriesName: string) => seriesName,
         },
       },
     },
+
     plotOptions: {
       pie: {
         donut: {
           labels: {
-            show: false,
+            show: false, // keep false since % is on slices
           },
         },
       },
     },
+
     ...chart.options,
   });
 
   return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+    <Card {...other} sx={{ height: '100%' }}>
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
-      <Box sx={{ p: 3, pb: 1 }}>
+      <Box>
         <Chart
           dir="ltr"
           type="pie"

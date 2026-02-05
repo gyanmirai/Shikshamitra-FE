@@ -371,15 +371,16 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
       <CustomDialog
         open={openAccessionDialog}
         handleClose={() => setOpenAccessionDialog(false)}
-        maxWidth="sm"
+        maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Generate Accession Label</Typography>
+            <Iconify icon="mdi:barcode-scan" width={24} height={24} />
+            <Typography variant="h5">Generate Accession Labels</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Download or print accession labels for all book copies listed below."
+              title="Download or print accession labels for all book copies listed below. Each label contains a unique barcode for easy tracking."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -388,65 +389,196 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
       >
         <Box
           sx={{
-            maxHeight: 400,
-            overflowY: 'auto',
-            pr: 1,
-            paddingLeft: 2,
-            paddingRight: 2,
+            background:
+              'linear-gradient(to bottom, rgba(102, 126, 234, 0.02), rgba(255, 255, 255, 0))',
+            borderRadius: 2,
+            p: 3,
           }}
         >
+          {/* Warning Alert for Pending Accession Numbers */}
           {copies.some((copy) => !copy.accessionNo) && (
             <Box
               sx={{
-                p: 2,
-                backgroundColor: '#ffebee',
+                p: 2.5,
+                mb: 3,
+                background: 'linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%)',
                 borderRadius: 2,
-                border: '1px solid #f44336',
-                color: '#d32f2f',
-                textAlign: 'left',
-                mb: 2,
-                width: '100%',
-                fontWeight: 500,
+                border: '1px solid #ffcdd2',
+                borderLeft: '4px solid #f44336',
                 display: 'flex',
                 alignItems: 'center',
-                boxSizing: 'border-box',
+                gap: 2,
+                boxShadow: '0 2px 8px rgba(244, 67, 54, 0.1)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 4px 12px rgba(244, 67, 54, 0.15)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              Accession number pending
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'rgba(244, 67, 54, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify icon="mdi:alert-circle" width={24} height={24} sx={{ color: '#f44336' }} />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: '#d32f2f', fontWeight: 600, mb: 0.5 }}>
+                  Incomplete Accession Numbers
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#c62828', fontSize: '0.875rem' }}>
+                  Some copies are missing accession numbers. Complete all entries to generate
+                  labels.
+                </Typography>
+              </Box>
             </Box>
           )}
 
-          <Grid container spacing={2} justifyContent="center" alignItems="center">
-            {copies.map((copy, idx) =>
-              copy.accessionNo ? (
-                <Grid size={{ xs: 12, sm: 4 }} key={idx} display="flex" justifyContent="center">
-                  <Box
-                    sx={{
-                      background: '#fff',
-                      borderRadius: 2,
-                      boxShadow: 'var(--shadows-8)',
-                      p: 2,
-                      mb: 2,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      width: 'fit-content',
-                    }}
-                  >
-                    <Barcode
-                      value={copy.accessionNo}
-                      format="CODE128"
-                      width={1}
-                      height={60}
-                      displayValue
-                      background="#ffffff"
-                      lineColor="#000000"
-                    />
-                  </Box>
-                </Grid>
-              ) : null
+          {/* Barcode Cards Grid */}
+          <Box
+            sx={{
+              maxHeight: 450,
+              overflowY: 'auto',
+              pr: 1,
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#f1f1f1',
+                borderRadius: '10px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#888',
+                borderRadius: '10px',
+                '&:hover': {
+                  background: '#555',
+                },
+              },
+            }}
+          >
+            <Grid container spacing={3} justifyContent="flex-start" alignItems="stretch">
+              {copies.map((copy, idx) =>
+                copy.accessionNo ? (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={idx} display="flex">
+                    <Box
+                      sx={{
+                        background: '#fff',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        p: 1.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        width: '100%',
+                        border: '1px solid #e0e0e0',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
+                    >
+                      {/* Barcode */}
+                      <Box
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Barcode
+                          value={copy.accessionNo}
+                          format="CODE128"
+                          width={1}
+                          height={35}
+                          displayValue
+                          lineColor="#000000"
+                          fontSize={11}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                ) : null
+              )}
+            </Grid>
+
+            {/* Empty State */}
+            {copies.filter((copy) => copy.accessionNo).length === 0 && (
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  py: 6,
+                  px: 3,
+                }}
+              >
+                <Box
+                  sx={{
+                    // width: 80,
+                    // height: 80,
+                    borderRadius: '50%',
+                    background:
+                      'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px',
+                  }}
+                >
+                  <Iconify
+                    icon="mdi:barcode-off"
+                    width={40}
+                    height={40}
+                    sx={{ color: '#667eea' }}
+                  />
+                </Box>
+                <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
+                  No Labels Available
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+                  Add accession numbers to generate labels
+                </Typography>
+              </Box>
             )}
-          </Grid>
+          </Box>
+
+          {/* Action Buttons */}
+          {copies.filter((copy) => copy.accessionNo).length > 0 && (
+            <Box
+              sx={{
+                mt: 3,
+                pt: 3,
+                borderTop: '1px solid #e0e0e0',
+                display: 'flex',
+                gap: 2,
+                justifyContent: 'flex-end',
+              }}
+            >
+              <Button
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:download" />}
+                onClick={() => {
+                  // TODO: Implement download functionality
+                }}
+              >
+                Download All
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon="mdi:printer" />}
+                onClick={() => {
+                  // TODO: Implement print functionality
+                  window.print();
+                }}
+              >
+                Print All
+              </Button>
+            </Box>
+          )}
         </Box>
       </CustomDialog>
     </Box>

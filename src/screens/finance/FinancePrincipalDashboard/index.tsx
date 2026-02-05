@@ -5,20 +5,16 @@ import { Box, Grid } from '@mui/material';
 
 // New Components
 
-import FinanceAlertsList from './Components/FinanceAlertsList';
-import FinanceRevenueStreams from './Components/FinanceRevenueStreams';
 import FinanceExpenseBreakdown from './Components/FinanceExpenseBreakdown';
 import FinanceConcessionImpact from './Components/FinanceConcessionImpact';
-import FinanceNeedApprovalList from './Components/FinanceNeedApprovalList';
 import FinancePrincipalOverview from './Components/FinancePrincipalOverview';
 import FinanceFeeStatusOverview from './Components/FinanceFeeStatusOverview';
-import FinanceRecentExpenses from '../dashboard/Components/FinanceRecentExpenses';
 // Reused Components
 import FinanceMonthlyFeesCollectionTrend from '../dashboard/Components/FinanceMonthlyFeesCollectionTrend';
 
 const FinancePrincipalDashboard = () => (
-  <Box sx={{ p: 2 }}>
-    <Grid container spacing={3}>
+  <Box>
+    <Grid container spacing={1}>
       {/* Summary Cards */}
       <Grid size={{ xs: 12 }}>
         <FinancePrincipalOverview />
@@ -73,16 +69,16 @@ const FinancePrincipalDashboard = () => (
       </Grid>
 
       {/* Charts Row 2 */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 8 }}>
         <FinanceFeeStatusOverview
           title="Fee Status Overview"
           subheader="Student Count by Status"
           chart={{
-            labels: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
+            labels: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6'],
             series: [
-              { name: 'Paid', data: [44, 55, 41, 67, 22] },
-              { name: 'Partial', data: [13, 23, 20, 8, 13] },
-              { name: 'Pending', data: [11, 17, 15, 15, 21] },
+              { name: 'Paid', data: [44, 55, 41, 67, 22, 44] },
+              { name: 'Partial', data: [13, 23, 20, 8, 13, 23] },
+              { name: 'Pending', data: [11, 17, 15, 15, 21, 11] },
             ],
           }}
         />
@@ -104,7 +100,7 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
+      {/* <Grid size={{ xs: 12, md: 4 }}>
         <FinanceRevenueStreams
           title="Revenue Streams"
           subheader="Other income sources"
@@ -120,7 +116,6 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
-      {/* Lists Row */}
       <Grid size={{ xs: 12, md: 4 }}>
         <FinanceNeedApprovalList
           title="Pending Approvals"
@@ -228,7 +223,7 @@ const FinancePrincipalDashboard = () => (
             },
           ]}
         />
-      </Grid>
+      </Grid> */}
     </Grid>
   </Box>
 );

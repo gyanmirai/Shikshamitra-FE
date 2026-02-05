@@ -1,9 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { Box, Card, Button } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 
 import GroupForm from './Components/GroupForm';
 import GroupTable from './Components/GroupTable';
@@ -13,6 +18,17 @@ import GroupViewDialog from './Components/GroupViewDialog';
 import type { IGroup } from './Components/type';
 
 const GroupManagement = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const {
+    data: groupData,
+    isLoading: isLoadingGroups,
+    isFetching: isFetchingGroups,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGroupsQuery,
+    params: { AcademicYearId: currentYear?.id },
+  });
   const [open, setOpen] = useState(false); // controls form (add/edit) visibility
   const [editingGroup, setEditingGroup] = useState<IGroup | null>(null);
   const [viewingGroup, setViewingGroup] = useState<IGroup | null>(null); // controls view dialog
@@ -103,6 +119,8 @@ const GroupManagement = () => {
         <GroupViewDialog open={!!viewingGroup} group={viewingGroup} onClose={handleCloseView} />
       ) : (
         <GroupTable
+          data={groupData?.items || []}
+          isLoading={isLoadingGroups || isFetchingGroups}
           onEdit={(group) => {
             setEditingGroup(group);
             setOpen(true);

@@ -37,6 +37,7 @@ export interface AcademicFilterDrawerProps {
     currentFilterName?: string
   ) => void;
   currentFilterName?: string;
+  initialSelectedNodes?: TreeNodeData[];
 }
 
 // Drawer that covers 40% of viewport width
@@ -46,6 +47,7 @@ const AcademicFilterDrawer: React.FC<AcademicFilterDrawerProps> = ({
   onClose,
   onApply,
   currentFilterName = '',
+  initialSelectedNodes = [],
 }) => (
   <Drawer
     anchor="right"
@@ -82,6 +84,7 @@ const AcademicFilterDrawer: React.FC<AcademicFilterDrawerProps> = ({
       <AcademicTreeView
         onClose={onClose}
         onApply={(...rest) => onApply?.(...rest, currentFilterName)}
+        initialSelectedNodes={initialSelectedNodes}
       />
     </Scrollbar>
   </Drawer>

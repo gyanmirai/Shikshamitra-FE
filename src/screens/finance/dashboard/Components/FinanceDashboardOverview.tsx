@@ -37,27 +37,47 @@ export const SummaryCard = ({
   <Box component={Link} href={href} sx={{ textDecoration: 'none', height: '100%' }}>
     <Card
       sx={{
-        p: 2,
+        p: 3,
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 2,
-        flexGrow: 1,
-        cursor: 'pointer',
         height: '100%',
-        transition: 'all 0.3s ease',
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: 'none',
+        transition: (theme) =>
+          theme.transitions.create(['box-shadow', 'transform'], {
+            duration: theme.transitions.duration.short,
+          }),
         '&:hover': {
-          boxShadow: 'var(--shadows-8)',
-          scale: 1.03,
+          boxShadow: (theme) => theme.customShadows.z16,
+          transform: 'translateY(-4px)',
         },
       }}
     >
-      <Box>
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
           {title}
         </Typography>
-        <Typography variant="h4">{count}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+        <Iconify
+          icon={icon}
+          sx={{
+            height: 40,
+            width: 40,
+            color,
+            p: 0.75,
+            borderRadius: '50%',
+            bgcolor: (theme) =>
+              theme.palette[
+                bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
+              ].lighter,
+          }}
+        />
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h3">{count}</Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
           {labels.map((label, idx) => (
             <Label key={idx} color={label.color} variant="soft">
               {label.name}
@@ -65,20 +85,6 @@ export const SummaryCard = ({
           ))}
         </Box>
       </Box>
-      <Iconify
-        icon={icon}
-        sx={{
-          height: 48,
-          width: 48,
-          color,
-          p: 1,
-          borderRadius: '50%',
-          bgcolor: (theme) =>
-            theme.palette[
-              bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
-            ].lighter,
-        }}
-      />
     </Card>
   </Box>
 );
@@ -94,7 +100,7 @@ const FinanceDashboardOverview = () => {
       bgColor: 'success',
       href: '#',
       labels: [
-        { name: 'Outstanding - 700k', color: 'info' }, // Example value
+        { name: 'Paid - 700k', color: 'success' }, // Example value
         { name: 'Pending - 300k', color: 'warning' }, // Example value
         { name: 'Overdue - 250k', color: 'error' }, // Example value
       ],
@@ -108,10 +114,10 @@ const FinanceDashboardOverview = () => {
       color: 'warning.main',
       bgColor: 'warning',
       href: '#',
-      labels: [
-        { name: 'Salaries - 70%', color: 'warning' },
-        { name: 'Maintenance - 30%', color: 'info' },
-      ],
+      // labels: [
+      //   { name: 'Salaries - 70%', color: 'warning' },
+      //   { name: 'Maintenance - 30%', color: 'info' },
+      // ],
       width: 4,
     },
     {
@@ -122,7 +128,7 @@ const FinanceDashboardOverview = () => {
       color: 'info.main',
       bgColor: 'info',
       href: '#',
-      labels: [{ name: 'Healthy', color: 'success' }],
+      // labels: [{ name: 'Healthy', color: 'success' }],
       width: 4,
     },
   ]);

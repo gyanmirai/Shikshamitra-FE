@@ -4,6 +4,8 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface GroupTableProps {
+  data: any[];
+  isLoading: boolean;
   onEdit: (row: any) => void;
   onDelete: (row: any) => void;
   onView: (row: any) => void;
@@ -55,8 +57,16 @@ export const groupList = [
   },
 ];
 
-const GroupTable: React.FC<GroupTableProps> = ({ onEdit, onDelete, onView, setOpen }) => (
+const GroupTable: React.FC<GroupTableProps> = ({
+  data,
+  isLoading,
+  onEdit,
+  onDelete,
+  onView,
+  setOpen,
+}) => (
   <CustomizableTable
+    isLoading={isLoading}
     tableId="group-table"
     noDataText={
       <>
@@ -81,7 +91,7 @@ const GroupTable: React.FC<GroupTableProps> = ({ onEdit, onDelete, onView, setOp
     }
     columns={[
       {
-        id: 'groupName',
+        id: 'name',
         label: 'Group Name',
         align: 'left',
         sticky: true,
@@ -97,13 +107,15 @@ const GroupTable: React.FC<GroupTableProps> = ({ onEdit, onDelete, onView, setOp
         align: 'left',
 
         render: (value) => (
-          <Typography fontSize="13px" variant="caption">
-            {value || '-'}
-          </Typography>
+          <Typography
+            fontSize="13px"
+            variant="caption"
+            dangerouslySetInnerHTML={{ __html: value || '-' }}
+          />
         ),
       },
       {
-        id: 'total',
+        id: 'memberCount',
         label: 'Total Audience',
         align: 'center',
         render: (value) => (
@@ -135,7 +147,7 @@ const GroupTable: React.FC<GroupTableProps> = ({ onEdit, onDelete, onView, setOp
         ),
       },
     ]}
-    data={groupList || []}
+    data={data || []}
   />
 );
 

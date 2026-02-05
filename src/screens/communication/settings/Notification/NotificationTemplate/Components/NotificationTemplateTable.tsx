@@ -1,13 +1,11 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import communicationData from '../../../../../../../communicationData.json';
-
-import type { ITemplateTableProps, INotificationTemplate } from './type';
+import type { ITemplateTableProps, INotificationTemplate } from '../types';
 
 const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
   data,
@@ -85,7 +83,7 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
       tableId="template-data-table"
       isLoading={isLoading}
       noDataText={
-        <>
+        <Box display="flex" flexDirection="column">
           No template data found.
           <Typography
             component="span"
@@ -104,10 +102,10 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
           >
             Add Template
           </Typography>
-        </>
+        </Box>
       }
       columns={columns}
-      data={communicationData?.notificationTemplateData || []}
+      data={data || []}
     />
   );
 };

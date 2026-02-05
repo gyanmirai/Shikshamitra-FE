@@ -1,3 +1,5 @@
+import type { ImportanceLevel } from 'src/enums/importance-level';
+
 // Notification Template
 export interface INotificationTemplate {
   id: string;
@@ -6,14 +8,12 @@ export interface INotificationTemplate {
   targetRole: string;
   subject: string;
   message: string;
-  importance_level: string;
+  importance_level: ImportanceLevel | string;
 }
 
 // Audience Scope
 export interface IAudience {
-  role: string;
-  classes?: string[]; // e.g. ["10", "12"]
-  divisions?: string[]; // e.g. ["A", "B", "C"]
+  educationMediumStageId: string[];
 }
 
 // Members (actual recipients)

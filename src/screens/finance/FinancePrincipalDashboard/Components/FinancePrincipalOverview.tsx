@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import React, { useState } from 'react';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { fCurrency } from 'src/utils/format-number';
-import { Box, Card, Typography } from '@mui/material';
 import CustomizableView from 'src/components/customizable-view';
+
+import { SummaryCard } from '../../dashboard/Components/FinanceDashboardOverview';
 
 // ----------------------------------------------------------------------
 
@@ -23,87 +21,22 @@ interface ICardItem {
   width?: number;
 }
 
-export const SummaryCard = ({
-  id,
-  icon,
-  title,
-  count,
-  color,
-  bgColor,
-  href = '',
-  labels = [],
-  width = 3,
-}: ICardItem) => (
-  <Box component={Link} href={href} sx={{ textDecoration: 'none', height: '100%' }}>
-    <Card
-      sx={{
-        p: 2,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 2,
-        flexGrow: 1,
-        cursor: 'pointer',
-        height: '100%',
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          boxShadow: 'var(--shadows-8)',
-          scale: 1.03,
-        },
-      }}
-    >
-      <Box>
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-          {title}
-        </Typography>
-        <Typography variant="h4">{count}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-          {labels.map((label, idx) => (
-            <Label key={idx} color={label.color} variant="soft">
-              {label.name}
-            </Label>
-          ))}
-        </Box>
-      </Box>
-      <Iconify
-        icon={icon}
-        sx={{
-          height: 48,
-          width: 48,
-          color,
-          p: 1,
-          borderRadius: '50%',
-          bgcolor: (theme) =>
-            theme.palette[
-              bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
-            ].lighter,
-        }}
-      />
-    </Card>
-  </Box>
-);
-
 const FinancePrincipalOverview = () => {
   const [cards, setCards] = useState<ICardItem[]>([
     {
       id: 'CARD_TOTAL_ANNUAL_COLLECTION',
       icon: 'hugeicons:money-bag-02',
-      title: 'Total Annual Collection',
+      title: 'Total Fees',
       count: fCurrency(12500000),
       color: 'success.main',
       bgColor: 'success',
       href: '#',
-      width: 3,
-    },
-    {
-      id: 'CARD_OUTSTANDING_FEES_SUMMARY',
-      icon: 'hugeicons:invoice-01',
-      title: 'Outstanding Fees',
-      count: fCurrency(2500000),
-      color: 'error.main',
-      bgColor: 'error',
-      href: '#',
-      width: 3,
+      width: 4,
+      labels: [
+        { name: 'Paid - 700k', color: 'success' }, // Example value
+        { name: 'Pending - 300k', color: 'warning' }, // Example value
+        { name: 'Overdue - 250k', color: 'error' }, // Example value
+      ],
     },
     {
       id: 'CARD_APPROVAL_REQUIRED',
@@ -113,11 +46,8 @@ const FinancePrincipalOverview = () => {
       color: 'warning.main',
       bgColor: 'warning',
       href: '#',
-      labels: [
-        { name: 'Charges: 8', color: 'warning' },
-        { name: 'Concessions: 7', color: 'info' },
-      ],
-      width: 3,
+      labels: [{ name: 'Concessions: 7', color: 'info' }],
+      width: 4,
     },
     {
       id: 'CARD_NET_PROFITABILITY',
@@ -131,7 +61,7 @@ const FinancePrincipalOverview = () => {
         { name: `Income: ${fCurrency(12500000)}`, color: 'success' },
         { name: `Expense: ${fCurrency(8000000)}`, color: 'error' },
       ],
-      width: 3,
+      width: 4,
     },
   ]);
 

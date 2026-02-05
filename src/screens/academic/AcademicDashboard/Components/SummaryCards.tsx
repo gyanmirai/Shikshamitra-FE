@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { DashboardCard } from 'src/components/dashboard-card';
 import CustomizableView from 'src/components/customizable-view';
+import { SummaryCard } from 'src/screens/finance/dashboard/Components/FinanceDashboardOverview';
 
 // ----------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ const SummaryCards = () => {
       title: 'Total Subjects',
       count: '8',
       color: 'error.main',
-      bgColor: 'error.lighter',
+      bgColor: 'error',
       href: '#',
       labels: [
         { name: 'Core : 6', color: 'primary' },
@@ -41,7 +41,7 @@ const SummaryCards = () => {
       title: 'Overall Chapter Completion',
       count: '75%',
       color: 'success.main',
-      bgColor: 'success.lighter',
+      bgColor: 'success',
       href: '#',
       labels: [
         { name: 'Completed : 75%', color: 'success' },
@@ -55,7 +55,7 @@ const SummaryCards = () => {
       title: 'Overall Exam Performance',
       count: '88%',
       color: 'info.main',
-      bgColor: 'info.lighter',
+      bgColor: 'info',
       labels: [
         { name: 'Pass : 88%', color: 'success' },
         { name: 'Fail : 12%', color: 'error' },
@@ -66,17 +66,7 @@ const SummaryCards = () => {
   ]);
 
   const dashBoardSections = cards.reduce((acc: { [key: string]: React.JSX.Element }, card) => {
-    acc[card.id] = (
-      <DashboardCard
-        icon={card.icon}
-        title={card.title}
-        value={card.count}
-        color={card.color}
-        bgColor={card.bgColor}
-        href={card.href}
-        labels={card.labels}
-      />
-    );
+    acc[card.id] = <SummaryCard {...card} />;
     return acc;
   }, {});
 

@@ -1,7 +1,7 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import { Box } from '@mui/material';
+import { Card } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import { Chart, useChart } from 'src/components/chart';
@@ -55,8 +55,8 @@ export function CommunicationTrendChart({ title, subheader, chart, ...other }: P
   });
 
   return (
-    <Box {...other}>
-      <CardHeader title={title} subheader={subheader} sx={{ mb: 3 }} />
+    <Card {...other} sx={{ p: 2, height: '100%' }}>
+      <CardHeader title={title} subheader={subheader} sx={{ p: 0 }} />
 
       <Chart
         type="area"
@@ -65,6 +65,6 @@ export function CommunicationTrendChart({ title, subheader, chart, ...other }: P
         height={320}
         loadingProps={{ sx: { p: 2.5 } }}
       />
-    </Box>
+    </Card>
   );
 }

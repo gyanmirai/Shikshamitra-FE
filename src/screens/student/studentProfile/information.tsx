@@ -560,7 +560,6 @@ export function StudentInformation(props: StudentTabsComponentType) {
 }
 
 const StudentInformationForm = ({ formik, step, editData, isEdit, isBackClick }: any) => {
-  console.log('editData', editData);
   const initializedStepsRef = useRef<Record<number, boolean>>({});
 
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({

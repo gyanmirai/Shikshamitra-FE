@@ -125,9 +125,11 @@ const BookFormStepper = ({
         } else {
           onClose?.(null, true);
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Book form error:', error);
         shikshaMitraToast.error({
-          message: error?.data?.message || 'Something went wrong. Please try again',
+          message:
+            error?.data?.message || error?.message || 'Something went wrong. Please try again',
         });
       } finally {
         setIsLoading(false);

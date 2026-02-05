@@ -1,111 +1,81 @@
+'use client';
+
 import type { FormikProps } from 'formik';
 
-import React from 'react';
 import { Box } from '@mui/system';
+import React, { useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Checkbox, Typography, FormHelperText, FormControlLabel } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { Grid, Chip, Checkbox, Typography, FormHelperText, FormControlLabel } from '@mui/material';
 import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
 
-import type { INotificationSendSchema } from './type';
-import type { IDeliveryChannel } from '../../../DeliveryChannelType/type';
+import SelectedMembersSummary from './SelectedMembersSummary';
 
+import type { INotificationSendSchema } from './type';
+
+/**
+ * Component: ChooseChannelsStep
+ * Responsibilities:
+ * - Rendering the selected members summary
+ * - Fetching and displaying available delivery channels
+ * - Handling channel toggle logic with memoization
+ */
 const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendSchema> }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: deliveryChannelData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeliveryChannelTypeOptionsQuery,
   });
-  const handleToggle = (channel: string) => {
-    const currentChannels = formik.values.channels || [];
-    if (currentChannels.includes(channel)) {
-      formik.setFieldValue(
-        'channels',
-        currentChannels.filter((c: string) => c !== channel)
-      );
-    } else {
-      formik.setFieldValue('channels', [...currentChannels, channel]);
-    }
-  };
+
+  /**
+   * Memoization Justification:
+   * Event handler for toggling channels.
+   * Prevents re-renders of the channel selection list when the parent component updates.
+   */
+  const handleToggle = useCallback(
+    (channel: string) => {
+      const currentChannels = formik.values.channels || [];
+      if (currentChannels.includes(channel)) {
+        formik.setFieldValue(
+          'channels',
+          currentChannels.filter((c: string) => c !== channel)
+        );
+      } else {
+        formik.setFieldValue('channels', [...currentChannels, channel]);
+      }
+    },
+    [formik]
+  );
 
   return (
     <>
-      <SectionCard title="Selected Members">
-        <Grid size={{ xs: 12 }}>
-          <Typography>
-            {formik.values.members.filter((member: any) => member.isSelect).length > 0
-              ? (() => {
-                  const selectedMembers = formik.values.members
-                    .filter((member: any) => member.isSelect)
-                    .map((member: any) => member.name);
-                  const count = selectedMembers.length;
-                  if (count > 5) {
-                    return (
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          gap: 0.5,
-                          flexWrap: 'wrap',
-                          verticalAlign: 'middle',
-                        }}
-                      >
-                        {selectedMembers.slice(0, 5).map((org: string) => (
-                          <Chip key={org} label={org} size="small" variant="outlined" />
-                        ))}
-                        <Typography component="span" sx={{ ml: 0.5 }}>
-                          +{count - 5}...
-                        </Typography>
-                      </Box>
-                    );
-                  }
-                  return (
-                    <Box
-                      sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', verticalAlign: 'middle' }}
-                    >
-                      {selectedMembers.map((org: string) => (
-                        <Chip key={org} label={org} size="small" variant="outlined" />
-                      ))}
-                    </Box>
-                  );
-                })()
-              : 'Please select members to send notifications'}
-          </Typography>
-        </Grid>
-      </SectionCard>
+      <SelectedMembersSummary formik={formik} />
+
       <SectionCard title="Select Channels">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            {deliveryChannelData?.map((channel: IDeliveryChannel) => {
-              const isSelected = formik.values.channels?.includes(channel.deliveryChannel);
+            {['Email', 'SMS', 'Push Notification']?.map((channel: string) => {
+              const isSelected = formik.values.channels?.includes(channel);
               return (
                 <FormControlLabel
-                  key={channel.deliveryChannel}
-                  control={
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={() => handleToggle(channel.deliveryChannel)}
-                    />
-                  }
-                  label={
-                    <Typography sx={{ whiteSpace: 'nowrap' }}>{channel.deliveryChannel}</Typography>
-                  }
+                  key={channel}
+                  control={<Checkbox checked={isSelected} onChange={() => handleToggle(channel)} />}
+                  label={<Typography sx={{ whiteSpace: 'nowrap' }}>{channel}</Typography>}
                 />
               );
             })}
-            {formik.errors.channels && (
-              <FormHelperText
-                error
-                sx={{
-                  fontSize: '11px !important',
-                  marginBottom: 0,
-                  position: 'none',
-                  marginLeft: ' 0px !important',
-                  bottom: 0,
-                }}
-              >
-                {formik.errors.channels}
-              </FormHelperText>
-            )}
           </Box>
+          {formik.errors.channels && (
+            <FormHelperText
+              error
+              sx={{
+                fontSize: '11px !important',
+                marginLeft: '0px !important',
+              }}
+            >
+              {formik.errors.channels}
+            </FormHelperText>
+          )}
         </Box>
       </SectionCard>
     </>

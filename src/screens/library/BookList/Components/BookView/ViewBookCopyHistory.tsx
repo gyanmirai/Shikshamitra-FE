@@ -24,15 +24,14 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
     params: { bookId: editData?.bookId, accessionNo: editData?.accessionNo },
   });
 
+  const displayData = memberData?.length ? memberData : [];
+
   const columns: IColumn[] = useMemo(
     () => [
       { id: 'memberId', label: 'Member ID', align: 'left', sticky: true, minWidth: 120 },
       { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },
-      { id: 'role', label: 'Role', align: 'left' },
-      { id: 'class', label: 'Class', align: 'left' },
-      { id: 'division', label: 'Division', align: 'left' },
-      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 80 },
+      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 100 },
+      { id: 'role', label: 'Role', align: 'left', minWidth: 100 },
       {
         id: 'issuedDate',
         label: 'Issued Date',
@@ -53,34 +52,29 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
         filterType: 'date',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
-            {dayjs(value).format('DD-MM-YYYY')}
+            {value ? dayjs(value).format('DD-MM-YYYY') : '—'}
           </Typography>
         ),
       },
       {
-        id: 'requestedDate',
-        label: 'Requested Date',
-        minWidth: 150,
+        id: 'daysBorrowed',
+        label: 'Days Borrowed',
         align: 'left',
-        filterType: 'date',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {dayjs(value).format('DD-MM-YYYY')}
-          </Typography>
-        ),
+        minWidth: 130,
+        render: (_value, row: any) => {
+          const issued = dayjs(row.issuedDate);
+          const returned = row.returnDate ? dayjs(row.returnDate) : dayjs();
+          const days = returned.diff(issued, 'day');
+          return (
+            <Typography variant="caption" fontSize="13px" fontWeight={600}>
+              {days} {days === 1 ? 'day' : 'days'}
+            </Typography>
+          );
+        },
       },
-      {
-        id: 'reserveDueDate',
-        label: 'Reserve Due Date',
-        align: 'left',
-        minWidth: 160,
-        filterType: 'date',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {dayjs(value).format('DD-MM-YYYY')}
-          </Typography>
-        ),
-      },
+      { id: 'class', label: 'Class', align: 'left', minWidth: 80 },
+      { id: 'division', label: 'Division', align: 'left', minWidth: 90 },
+      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
     ],
     []
   );
@@ -89,16 +83,28 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
     <Box p={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Grid container spacing={3}>
         <Grid size={12}>
-          {memberData?.length ? (
+          {displayData?.length ? (
             <CustomizableTable
               tableId="reserved-members-table"
               noDataText="No Reserved Members Found"
               isLoading={memberLoading}
               columns={columns}
-              data={memberData || []}
+              data={displayData || []}
             />
           ) : (
-            <Typography>No reservations yet</Typography>
+            <Grid size={{ xs: 12 }}>
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '4px',
+                  backgroundColor: '#e3f2fd',
+                  color: '#2196f3',
+                  textAlign: 'center',
+                }}
+              >
+                No reservations yet
+              </div>
+            </Grid>
           )}
         </Grid>
       </Grid>

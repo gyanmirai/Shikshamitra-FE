@@ -6,14 +6,12 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
 import React, { useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
 
 import SummaryCards from './Components/SummaryCards';
 import { PerformersList } from './Components/Performers';
 import SubjectPassFailChart from './Components/SubjectPassFailChart';
 import SubjectDifficultyHeatmap from './Components/SubjectDifficultyHeatmap';
 import DivisionPerformanceChart from './Components/DivisionPerformanceChart';
-import ChapterCompletionTrendChart from './Components/ChapterCompletionTrendChart';
 import PlannedVsActualProgressChart from './Components/PlannedVsActualProgressChart';
 
 const AcademicDashboardScreen = () => {
@@ -89,31 +87,7 @@ const AcademicDashboardScreen = () => {
 
   return (
     <Box>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClasses(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!classes}
-            />
-          </Box>
-        </Grid>
-
+      <Grid container spacing={1} sx={{ mb: 2 }}>
         <Grid size={{ xs: 12 }}>
           <SummaryCards />
         </Grid>
@@ -122,9 +96,9 @@ const AcademicDashboardScreen = () => {
           <SubjectDifficultyHeatmap />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* <Grid size={{ xs: 12, md: 6 }}>
           <ChapterCompletionTrendChart />
-        </Grid>
+        </Grid> */}
 
         {/* <Grid size={{ xs: 12, md: 6 }}>
           <HomeworkTrendChart />

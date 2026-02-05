@@ -44,9 +44,13 @@ const SubjectDifficultyBarChart = () => {
   });
 
   return (
-    <Card>
-      <CardHeader title="Subject Difficulty" subheader="Failure Rate by Class & Subject" />
-      <Box sx={{ p: 3 }}>
+    <Card sx={{ p: 2, height: '100%' }}>
+      <CardHeader
+        title="Subject Difficulty"
+        subheader="Failure Rate by Class & Subject"
+        sx={{ p: 0 }}
+      />
+      <Box>
         <Chart type="bar" series={series} options={chartOptions} height={364} />
       </Box>
     </Card>

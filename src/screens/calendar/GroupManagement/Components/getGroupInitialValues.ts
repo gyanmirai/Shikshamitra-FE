@@ -16,8 +16,7 @@ export const getGroupInitialValues = (initialValues: any): IGroup & { [key: stri
     roles: initialValues?.nameBased?.roles || [],
     studentFilters: initialValues?.nameBased?.studentFilters || [],
     employeeFilters: initialValues?.nameBased?.employeeFilters || [],
-    selectedUserIds: initialValues?.nameBased?.selectedUserIds || initialValues?.selections || [],
+    selectedMembers: initialValues?.nameBased?.selectedMembers || initialValues?.selections || [],
     academicTree: initialValues?.academicTree || [],
   },
-  // UI-only state (not for submission)
 });

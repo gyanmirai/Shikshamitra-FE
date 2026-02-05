@@ -1,21 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { alpha } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import { Visibility, AttachFile } from '@mui/icons-material';
-import { Box, Card, Tooltip, Typography, IconButton } from '@mui/material';
+import { AttachFile } from '@mui/icons-material';
+import { Box, Card, Typography } from '@mui/material';
+
+import AnnouncementAttachmentCard from './AnnouncementAttachmentCard';
 
 import type { ISchoolWiseAnnouncement } from '../../type';
 
-export default function SchoolWiseAnnouncementDetailCard({
-  announcement,
-}: {
+interface Props {
   announcement: ISchoolWiseAnnouncement | null;
-}) {
+}
+
+const SchoolWiseAnnouncementDetailCard = ({ announcement }: Props) => {
+  const attachment = Array.isArray(announcement?.attachment)
+    ? announcement.attachment[0]
+    : announcement?.attachment;
+
+  const hasAttachment = !!attachment;
+
   return (
     <Box>
-      {announcement?.attachment ? (
+      {hasAttachment ? (
         <Card
           sx={{
             p: 3,
@@ -24,86 +31,7 @@ export default function SchoolWiseAnnouncementDetailCard({
             boxShadow: 'none',
           }}
         >
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={2}
-            sx={{
-              p: 2,
-              borderRadius: 1.5,
-              bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
-              border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
-            }}
-          >
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <AttachFile fontSize="medium" color="action" />
-            </Box>
-            <Box flexGrow={1}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', mb: 0.5 }}>
-                {announcement.attachment.name}
-              </Typography>
-              <Typography
-                component="span"
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 600 }}
-              >
-                {announcement.attachment.size && `${announcement.attachment.size}`}
-              </Typography>
-            </Box>
-            <Box display="flex" gap={1}>
-              <Tooltip title="Preview">
-                <IconButton
-                  size="small"
-                  aria-label="preview"
-                  onClick={() => {
-                    const url = URL.createObjectURL(announcement.attachment);
-                    window.open(url, '_blank');
-                  }}
-                  sx={{
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                    color: 'primary.main',
-                    '&:hover': {
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
-                    },
-                  }}
-                >
-                  <Visibility fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Download">
-                <IconButton
-                  size="small"
-                  aria-label="download"
-                  onClick={() => {
-                    const url = URL.createObjectURL(announcement.attachment);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = announcement.attachment.name;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                  sx={{
-                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                    color: 'success.main',
-                    '&:hover': {
-                      bgcolor: (theme) => alpha(theme.palette.success.main, 0.16),
-                    },
-                  }}
-                >
-                  <Iconify icon="mdi:download" width={20} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
+          <AnnouncementAttachmentCard attachment={attachment} />
         </Card>
       ) : (
         <Card
@@ -141,4 +69,12 @@ export default function SchoolWiseAnnouncementDetailCard({
       )}
     </Box>
   );
-}
+};
+
+/**
+ * Memoization Justification:
+ * Component displays detailed announcement information that only changes if the announcement
+ * object reference changes. Wrapping in memo prevents re-renders when parent components
+ * update for unrelated reasons.
+ */
+export default memo(SchoolWiseAnnouncementDetailCard);

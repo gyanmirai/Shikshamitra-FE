@@ -10,85 +10,19 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-const surveyNotificationsData = [
-  {
-    id: '1',
-    event: 'New Survey Created',
-    triggerCondition: 'When a new survey is published.',
-    isActive: NotificationStatusType.Active,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'A new survey "[Survey Title]" has been published.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Survey Title]'],
-        placeHolderOptions: [{ value: '[Survey Title]', label: 'Survey Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Survey: "[Survey Title]" is now available.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Survey Title]'],
-        placeHolderOptions: [{ value: '[Survey Title]', label: 'Survey Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '2',
-    event: 'Survey Updated',
-    triggerCondition: 'When an existing survey is modified.',
-    isActive: NotificationStatusType.Active,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'Survey "[Survey Title]" has been updated.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Survey Title]'],
-        placeHolderOptions: [{ value: '[Survey Title]', label: 'Survey Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Updated survey: "[Survey Title]"',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Survey Title]'],
-        placeHolderOptions: [{ value: '[Survey Title]', label: 'Survey Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '3',
-    event: 'Survey Closed',
-    triggerCondition: 'When a survey is closed.',
-    isActive: NotificationStatusType.Inactive,
-    recipient: [
-      {
-        name: 'Admin',
-        message: 'Survey "[Survey Title]" has been closed.',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Survey Title]'],
-        placeHolderOptions: [{ value: '[Survey Title]', label: 'Survey Title' }],
-        isEnable: true,
-      },
-      {
-        name: 'Staff',
-        message: 'Closed survey: "[Survey Title]"',
-        communicationChannel: ['In-App'],
-        placeHolder: ['[Survey Title]'],
-        placeHolderOptions: [{ value: '[Survey Title]', label: 'Survey Title' }],
-        isEnable: true,
-      },
-    ],
-  },
-];
+import { SURVEY_NOTIFICATIONS_DATA } from '../constants';
 
-const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
-  const [selectedData, setSelectedData] = useState<any>(null);
+import type {
+  INotificationData,
+  INotificationRecipient,
+  INotificationComponentProps,
+} from '../types';
+
+const SurveyNotification = ({ dialog, setIsViewMode }: INotificationComponentProps) => {
+  const [selectedData, setSelectedData] = useState<INotificationData | null>(null);
   const [view, setView] = useState(false);
-  const [notifications, setNotifications] = useState(surveyNotificationsData);
+  const [notifications, setNotifications] =
+    useState<INotificationData[]>(SURVEY_NOTIFICATIONS_DATA);
 
   const handleToggleActive = (id: string, checked: boolean) => {
     setNotifications((prev) =>
@@ -103,6 +37,12 @@ const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
     );
   };
 
+  /**
+   * Memoization Justification:
+   * Columns configuration involves stable callbacks and JSX, but dependencies like 'dialog'
+   * and 'setIsViewMode' change. Using useMemo ensures columns are strictly referentially stable
+   * unless these dependencies change, avoiding unnecessary table re-renders.
+   */
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -117,7 +57,7 @@ const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
         id: 'recipient',
         label: 'Recipient',
         render(value, row) {
-          return row.recipient.map((recipient: any) => (
+          return row.recipient.map((recipient: INotificationRecipient) => (
             <Box key={recipient.name}>{recipient.name.toUpperCase()}</Box>
           ));
         },
@@ -152,14 +92,14 @@ const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
               showThreeDots={false}
               showEditIcon
               handleEditClick={() => {
-                setSelectedData(row);
+                setSelectedData(row as INotificationData);
                 dialog.onTrue();
                 setView(false);
                 setIsViewMode(false);
               }}
               showViewIcon
               handleViewClick={() => {
-                setSelectedData(row);
+                setSelectedData(row as INotificationData);
                 setView(true);
                 dialog.onTrue();
                 setIsViewMode(true);
@@ -177,7 +117,16 @@ const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
       {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <EditNotificationDialog
-            data={selectedData}
+            data={
+              selectedData
+                ? {
+                    ...selectedData,
+                    communicationChannel: Array.from(
+                      new Set(selectedData.recipient.flatMap((r) => r.communicationChannel))
+                    ),
+                  }
+                : null
+            }
             onClose={() => {
               dialog.onFalse();
               setSelectedData(null);

@@ -11,7 +11,6 @@ import { EmptyContent } from 'src/components/empty-content';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { EventStatus, AnnouncementStatus } from 'src/enums/announcement-status';
-import { getImportanceLevelColor } from 'src/screens/communication/announcement/components/getImportantColor';
 import {
   Box,
   Tab,
@@ -596,27 +595,21 @@ const EmployeeAnnouncement = () => {
           {
             id: 'importance_level',
             label: 'Importance',
-            render: (value) => {
-              const colors = getImportanceLevelColor(value);
-              return (
-                <Typography
-                  component="span"
-                  variant="body2"
-                  sx={{
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: '16px',
-                    backgroundColor: colors.bg,
-                    color: colors.text,
-                    border: `1px solid ${colors.border}`,
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                  }}
-                >
-                  {value}
-                </Typography>
-              );
-            },
+            render: (value) => (
+              <Typography
+                component="span"
+                variant="body2"
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: '16px',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                }}
+              >
+                {value}
+              </Typography>
+            ),
           },
           {
             id: 'audience',

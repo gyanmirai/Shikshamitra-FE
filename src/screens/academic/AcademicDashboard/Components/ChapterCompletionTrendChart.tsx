@@ -38,9 +38,13 @@ const ChapterCompletionTrendChart = () => {
   });
 
   return (
-    <Card>
-      <CardHeader title="Chapter Completion Trend" subheader="Weekly Progress by Subject" />
-      <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+    <Card sx={{ p: 2 }}>
+      <CardHeader
+        title="Chapter Completion Trend"
+        subheader="Weekly Progress by Subject"
+        sx={{ p: 0 }}
+      />
+      <Box dir="ltr">
         <Chart type="line" series={series} options={chartOptions} height={364} />
       </Box>
     </Card>

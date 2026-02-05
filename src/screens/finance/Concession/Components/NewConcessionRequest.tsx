@@ -21,6 +21,8 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 import {
   useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
@@ -172,217 +174,234 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3} sx={{ mb: 2 }}>
-              {/* Board */}
-              <Grid size={6}>
-                <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
-                  <CustomSelect
-                    label="Board *"
-                    options={boards}
-                    labelKey="name"
-                    valueKey="id"
-                    value={formik.values.board}
-                    onChange={(val) => {
-                      formik.setFieldValue('board', val);
-                      formik.setFieldTouched('board', false);
-                      formik.setFieldValue('medium', '');
-                      formik.setFieldValue('className', '');
-                      formik.setFieldValue('division', '');
-                    }}
-                    error={!!formik.errors.board && formik.touched.board}
-                    helperText={(formik.touched.board && formik.errors.board) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Medium */}
-              <Grid size={6}>
-                <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
-                  <CustomSelect
-                    label="Medium *"
-                    disabled={!formik.values.board}
-                    options={mediums}
-                    labelKey="name"
-                    valueKey="id"
-                    value={formik.values.medium}
-                    onChange={(val) => {
-                      formik.setFieldValue('medium', val);
-                      formik.setFieldTouched('medium', false);
-                      formik.setFieldValue('className', '');
-                      formik.setFieldValue('division', '');
-                    }}
-                    error={!!formik.errors.medium && formik.touched.medium}
-                    helperText={(formik.touched.medium && formik.errors.medium) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Class */}
-              <Grid size={6}>
-                <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-                  <CustomSelect
-                    label="Class *"
-                    options={classes || []}
-                    labelKey="name"
-                    disabled={!formik.values.medium}
-                    valueKey="id"
-                    value={formik.values.className}
-                    onChange={(val) => {
-                      formik.setFieldValue('className', val);
-                      formik.setFieldTouched('className', false);
-                      formik.setFieldValue('division', '');
-                    }}
-                    error={!!formik.errors.className && formik.touched.className}
-                    helperText={(formik.touched.className && formik.errors.className) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Division */}
-              <Grid size={6}>
-                <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-                  <CustomSelect
-                    label="Division *"
-                    options={allDivision}
-                    labelKey="name"
-                    disabled={!formik.values.className}
-                    valueKey="id"
-                    value={formik.values.division}
-                    onChange={(val) => {
-                      formik.setFieldValue('division', val);
-                      formik.setFieldTouched('division', false);
-                    }}
-                    error={!!formik.errors.division && formik.touched.division}
-                    helperText={(formik.touched.division && formik.errors.division) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Student */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.studentName && formik.errors.studentName)}
-                >
-                  <Autocomplete
-                    loading={studentLoading}
-                    noOptionsText="No Student Found"
-                    fullWidth
-                    disabled={!formik.values.division}
-                    options={tableData}
-                    value={formik.values.studentName}
-                    onChange={(e, value) => {
-                      formik.setFieldValue('studentName', value);
-                      formik.setFieldTouched('studentName', false);
-                    }}
-                    renderTags={(tagValue, getTagProps) =>
-                      tagValue.map((option, index) => (
-                        <Chip
-                          label={
-                            typeof option === 'string' ? option : (option as { name: string }).name
-                          }
-                          variant="soft"
-                          size="small"
-                          {...getTagProps({ index })}
-                        />
-                      ))
-                    }
-                    getOptionLabel={(option: any) => (option ? option.name : '')}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        size="small"
-                        label="Student *"
-                        fullWidth
-                        error={!!formik.errors.studentName && formik.touched.studentName}
-                        helperText={
-                          (formik.touched.studentName && formik.errors.studentName) as string
-                        }
-                        sx={(theme) => ({
-                          ...(!!(formik.touched.studentName && formik.errors.studentName) &&
-                            !formik.values.division && {
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: `${theme.palette.error.main} !important`,
-                              },
-                              '& .MuiInputLabel-root.Mui-disabled': {
-                                color: `${theme.palette.error.main} !important`,
-                              },
-                            }),
-                        })}
-                      />
-                    )}
-                    renderOption={(props, option) => (
-                      <li
-                        {...props}
-                        key={typeof option === 'string' ? option : (option as { id: string }).id}
-                      >
-                        {typeof option === 'string' ? option : (option as { name: string }).name}
-                      </li>
-                    )}
-                  />
-                </ShakingTextField>
-              </Grid>
-
+            <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.concessions && formik.errors.concessions)}
+                <SectionCard
+                  title="Student Information"
+                  paperProps={{ sx: { ...cardStyle, mb: 0 } }}
                 >
-                  <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={concessionTypes || []}
-                    getOptionLabel={(option: any) => option.concessionName}
-                    value={concessionTypes?.filter((ct: any) =>
-                      formik.values.concessions.some(
-                        (c: any) => c.concessionType === ct.concessionName
-                      )
-                    )}
-                    onChange={(e, selectedOptions) => {
-                      const concessionsData = selectedOptions.map((opt) => ({
-                        concessionType: opt.concessionName,
-                        applicableFeeHeads: opt.applicableFeeHeads || [],
-                        amount: opt.amount || undefined,
-                        percentage: opt.percentage || undefined,
-                        documents: opt.documents || [],
-                      }));
-                      formik.setFieldValue('concessions', concessionsData);
-                    }}
-                    renderOption={(props, option, { selected }) => (
-                      <li {...props}>
-                        <Checkbox
-                          icon={icon}
-                          checkedIcon={checkedIcon}
-                          style={{ marginRight: 8 }}
-                          checked={selected}
-                        />
-                        {option.concessionName}
-                      </li>
-                    )}
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => (
-                        <Chip
-                          label={option.concessionName}
-                          size="small"
-                          {...getTagProps({ index })}
-                          variant="soft"
-                        />
-                      ))
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Concession Type(s) *"
-                        size="small"
-                        fullWidth
-                        error={!!(formik.errors.concessions && formik.touched.concessions)}
-                        helperText={
-                          (formik.touched.concessions && formik.errors.concessions) as string
-                        }
+                  {/* Board */}
+                  <Grid size={6}>
+                    <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
+                      <CustomSelect
+                        label="Board *"
+                        options={boards}
+                        labelKey="name"
+                        valueKey="id"
+                        value={formik.values.board}
+                        onChange={(val) => {
+                          formik.setFieldValue('board', val);
+                          formik.setFieldTouched('board', false);
+                          formik.setFieldValue('medium', '');
+                          formik.setFieldValue('className', '');
+                          formik.setFieldValue('division', '');
+                        }}
+                        error={!!formik.errors.board && formik.touched.board}
+                        helperText={(formik.touched.board && formik.errors.board) as string}
                       />
-                    )}
-                  />
-                </ShakingTextField>
-              </Grid>
+                    </ShakingTextField>
+                  </Grid>
 
+                  {/* Medium */}
+                  <Grid size={6}>
+                    <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
+                      <CustomSelect
+                        label="Medium *"
+                        disabled={!formik.values.board}
+                        options={mediums}
+                        labelKey="name"
+                        valueKey="id"
+                        value={formik.values.medium}
+                        onChange={(val) => {
+                          formik.setFieldValue('medium', val);
+                          formik.setFieldTouched('medium', false);
+                          formik.setFieldValue('className', '');
+                          formik.setFieldValue('division', '');
+                        }}
+                        error={!!formik.errors.medium && formik.touched.medium}
+                        helperText={(formik.touched.medium && formik.errors.medium) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Class */}
+                  <Grid size={6}>
+                    <ShakingTextField
+                      error={!!(formik.touched.className && formik.errors.className)}
+                    >
+                      <CustomSelect
+                        label="Class *"
+                        options={classes || []}
+                        labelKey="name"
+                        disabled={!formik.values.medium}
+                        valueKey="id"
+                        value={formik.values.className}
+                        onChange={(val) => {
+                          formik.setFieldValue('className', val);
+                          formik.setFieldTouched('className', false);
+                          formik.setFieldValue('division', '');
+                        }}
+                        error={!!formik.errors.className && formik.touched.className}
+                        helperText={(formik.touched.className && formik.errors.className) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Division */}
+                  <Grid size={6}>
+                    <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
+                      <CustomSelect
+                        label="Division *"
+                        options={allDivision}
+                        labelKey="name"
+                        disabled={!formik.values.className}
+                        valueKey="id"
+                        value={formik.values.division}
+                        onChange={(val) => {
+                          formik.setFieldValue('division', val);
+                          formik.setFieldTouched('division', false);
+                        }}
+                        error={!!formik.errors.division && formik.touched.division}
+                        helperText={(formik.touched.division && formik.errors.division) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Student */}
+                  <Grid size={{ xs: 12, md: 12 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.studentName && formik.errors.studentName)}
+                    >
+                      <Autocomplete
+                        loading={studentLoading}
+                        noOptionsText="No Student Found"
+                        fullWidth
+                        disabled={!formik.values.division}
+                        options={tableData}
+                        value={formik.values.studentName}
+                        onChange={(e, value) => {
+                          formik.setFieldValue('studentName', value);
+                          formik.setFieldTouched('studentName', false);
+                        }}
+                        renderTags={(tagValue, getTagProps) =>
+                          tagValue.map((option, index) => (
+                            <Chip
+                              label={
+                                typeof option === 'string'
+                                  ? option
+                                  : (option as { name: string }).name
+                              }
+                              variant="soft"
+                              size="small"
+                              {...getTagProps({ index })}
+                            />
+                          ))
+                        }
+                        getOptionLabel={(option: any) => (option ? option.name : '')}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            size="small"
+                            label="Student *"
+                            fullWidth
+                            error={!!formik.errors.studentName && formik.touched.studentName}
+                            helperText={
+                              (formik.touched.studentName && formik.errors.studentName) as string
+                            }
+                            sx={(theme) => ({
+                              ...(!!(formik.touched.studentName && formik.errors.studentName) &&
+                                !formik.values.division && {
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: `${theme.palette.error.main} !important`,
+                                  },
+                                  '& .MuiInputLabel-root.Mui-disabled': {
+                                    color: `${theme.palette.error.main} !important`,
+                                  },
+                                }),
+                            })}
+                          />
+                        )}
+                        renderOption={(props, option) => (
+                          <li
+                            {...props}
+                            key={
+                              typeof option === 'string' ? option : (option as { id: string }).id
+                            }
+                          >
+                            {typeof option === 'string'
+                              ? option
+                              : (option as { name: string }).name}
+                          </li>
+                        )}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <SectionCard title="Concession Details" paperProps={{ sx: { ...cardStyle } }}>
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.concessions && formik.errors.concessions)}
+                    >
+                      <Autocomplete
+                        multiple
+                        disableCloseOnSelect
+                        options={concessionTypes || []}
+                        getOptionLabel={(option: any) => option.concessionName}
+                        value={concessionTypes?.filter((ct: any) =>
+                          formik.values.concessions.some(
+                            (c: any) => c.concessionType === ct.concessionName
+                          )
+                        )}
+                        onChange={(e, selectedOptions) => {
+                          const concessionsData = selectedOptions.map((opt) => ({
+                            concessionType: opt.concessionName,
+                            applicableFeeHeads: opt.applicableFeeHeads || [],
+                            amount: opt.amount || undefined,
+                            percentage: opt.percentage || undefined,
+                            documents: opt.documents || [],
+                          }));
+                          formik.setFieldValue('concessions', concessionsData);
+                        }}
+                        renderOption={(props, option, { selected }) => (
+                          <li {...props}>
+                            <Checkbox
+                              icon={icon}
+                              checkedIcon={checkedIcon}
+                              style={{ marginRight: 8 }}
+                              checked={selected}
+                            />
+                            {option.concessionName}
+                          </li>
+                        )}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              label={option.concessionName}
+                              size="small"
+                              {...getTagProps({ index })}
+                              variant="soft"
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Concession Type(s) *"
+                            size="small"
+                            fullWidth
+                            error={!!(formik.errors.concessions && formik.touched.concessions)}
+                            helperText={
+                              (formik.touched.concessions && formik.errors.concessions) as string
+                            }
+                          />
+                        )}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
+              </Grid>
               {/* Concession Details and Documents per Type */}
               {formik.values.concessions?.length > 0 && (
                 <>

@@ -41,15 +41,15 @@ export const DashboardCard = ({
   const cardContent = (
     <Card
       sx={{
-        p: 2, // Reduced padding for density
+        p: 2.5,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
-        gap: 1.5, // Reduced gap
+        gap: 2,
         height: '100%',
         borderRadius: 2,
         position: 'relative',
-        overflow: 'visible',
+        overflow: 'hidden',
         boxShadow: theme.customShadows?.z1 || theme.shadows[1],
         border: `1px solid ${theme.palette.divider}`,
         transition: theme.transitions.create(['transform', 'box-shadow', 'border-color'], {
@@ -66,48 +66,45 @@ export const DashboardCard = ({
         ...sx,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', width: '100%', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 2 }}>
         {/* Icon/Avatar */}
         <Avatar
           variant="rounded"
           sx={{
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             bgcolor: bgColor,
             color,
             borderRadius: 1.5,
           }}
         >
-          <Iconify icon={icon} width={24} />
+          <Iconify icon={icon} width={28} />
         </Avatar>
 
         {/* Content */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
-            variant="subtitle2"
-            sx={{
-              color: 'text.secondary',
-              fontWeight: 600,
-              mb: 0.25, // Reduced margin
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              fontSize: '0.7rem', // Slightly smaller
-            }}
+            variant="h3"
+            sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: -0.5, mb: 0.25 }}
           >
-            {title}
+            {value}
           </Typography>
 
           <Typography
-            variant="h4"
-            sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: -0.5 }}
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+              fontWeight: 600,
+              textTransform: 'capitalize',
+            }}
           >
-            {value}
+            {title}
           </Typography>
         </Box>
       </Box>
 
       {description && (
-        <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.5, mt: 0.5 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.5 }}>
           {description}
         </Typography>
       )}
@@ -119,13 +116,21 @@ export const DashboardCard = ({
             flexWrap: 'wrap',
             gap: 1.5,
             mt: 'auto',
-            pt: 2, // Reduced top padding
             width: '100%',
-            borderTop: `1px dashed ${theme.palette.divider}`,
           }}
         >
           {labels.map((label, index) => (
-            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box
+              key={index}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.75,
+                py: 0.5,
+                px: 1,
+                borderRadius: 1,
+              }}
+            >
               <SubjectColorIndicator color={`${label.color}.main`} />
               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                 {label.name}
