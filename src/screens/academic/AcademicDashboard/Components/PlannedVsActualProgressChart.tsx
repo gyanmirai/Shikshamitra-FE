@@ -61,7 +61,6 @@ const PlannedVsActualProgressChart = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           mb: 2,
-          px: 1,
         }}
       >
         {/* Title + Subtitle */}

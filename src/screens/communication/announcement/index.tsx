@@ -49,7 +49,7 @@ const Announcement = (props: TabComponentType) => {
   // Stores the announcement being viewed in detail
   const [viewAnnouncement, setViewAnnouncement] = useState<ISchoolWiseAnnouncement | null>(null);
   // Controls the visibility of view announcement dialog
-  const view_dialog = useBoolean();
+  const view_dialog = useBoolean(false);
 
   const [, setRemoveAnnouncement] = useState<ISchoolWiseAnnouncement | null>(null);
   // Controls the visibility of delete confirmation dialog
@@ -132,11 +132,26 @@ const Announcement = (props: TabComponentType) => {
 
             { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
-          sx={{ px: 2 }}
+          // sx={{ px: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
           }}
+        />
+      ) : view_dialog.value ? (
+        <CustomBreadcrumbs
+          heading="View Announcement"
+          description="View and manage all school-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed."
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Announcements' },
+            { name: 'View Announcement' },
+          ]}
+          isBack
+          onBack={() => {
+            view_dialog.onFalse();
+          }}
+          // sx={{ px: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -146,7 +161,7 @@ const Announcement = (props: TabComponentType) => {
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
           ]}
-          sx={{ px: 2 }}
+          // sx={{ px: 2 }}
           action={
             <Button
               size="small"
@@ -167,6 +182,10 @@ const Announcement = (props: TabComponentType) => {
             isEdit={!!editingAnnouncement}
             onClose={handleCloseDialog}
           />
+        </Card>
+      ) : view_dialog.value ? (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <SchoolManagementViewDetails announcement={viewAnnouncement} />
         </Card>
       ) : (
         <AnnouncementTable
@@ -190,6 +209,7 @@ const Announcement = (props: TabComponentType) => {
           }}
           onView={(row) => {
             view_dialog.onTrue();
+            setOpen(false);
             setViewAnnouncement(row);
           }}
           onPublish={(row) => {
@@ -316,30 +336,6 @@ const Announcement = (props: TabComponentType) => {
           </LoadingButton>
         }
       />
-
-      <CustomDialog
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{viewAnnouncement?.title}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View detailed information about this school-wide announcement, including message content, target audience, and publication status."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        open={view_dialog.value}
-        handleClose={() => {
-          setViewAnnouncement(null);
-          view_dialog.onFalse();
-        }}
-        maxWidth="md"
-      >
-        <SchoolManagementViewDetails announcement={viewAnnouncement} />
-      </CustomDialog>
 
       <CustomDialog
         open={confirm_dialog.value}

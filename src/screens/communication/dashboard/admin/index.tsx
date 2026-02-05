@@ -1,14 +1,13 @@
 'use client';
 
 import React from 'react';
+import { Box, Grid } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { CalendarView } from 'src/sections/calendar/view';
-import { DashboardCard } from 'src/components/dashboard-card';
-import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
-import { AnalyticsConversionRates } from 'src/sections/overview/analytics/analytics-conversion-rates';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 
+import AnnouncementCalendar from '../components/AnnouncementCalendar';
 import { CommunicationTrendChart } from '../components/CommunicationTrendChart';
+import CommunicationDashboardOverview from '../components/CommunicationDashboardOverview';
 
 // Placeholder data for charts
 const CHANNEL_USAGE_DATA = [
@@ -54,73 +53,14 @@ const AdminDashboard = () => {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      {/* Summary Cards */}
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardCard
-            title="Total Announcements"
-            value="1,250"
-            icon="mdi:bullhorn"
-            color="primary.main"
-            bgColor="primary.lighter"
-            labels={[
-              { name: 'School 10', color: 'info' },
-              { name: 'Class 25', color: 'secondary' },
-            ]}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardCard
-            title="Active Announcements"
-            value="45"
-            icon="mdi:broadcast"
-            color="info.main"
-            bgColor="info.lighter"
-            labels={[
-              { name: 'Academic 20', color: 'success' },
-              { name: 'Events 15', color: 'warning' },
-            ]}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardCard
-            title="Notifications Sent Today"
-            value="320"
-            icon="mdi:send-circle"
-            color="success.main"
-            bgColor="success.lighter"
-            labels={[
-              { name: 'sent 200', color: 'success' },
-              { name: 'failed 120', color: 'error' },
-            ]}
-          />
-        </Grid>
-      </Grid>
-
-      {/* Calendar View */}
-      <Grid container spacing={3} sx={{ mt: 3 }} size={{ xs: 12 }}>
+      <Grid container spacing={1} sx={{ mb: 2 }}>
+        {/* Overview Section */}
         <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Event Calendar
-              </Typography>
-              <CalendarView />
-            </CardContent>
-          </Card>
+          <CommunicationDashboardOverview />
         </Grid>
-      </Grid>
-
-      {/* Charts Section */}
-      <Grid container spacing={3} sx={{ mt: 3 }}>
-        {/* Delivery Channel Usage */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <AnalyticsCurrentVisits
-            title="Delivery Channel Usage"
-            chart={{
-              series: CHANNEL_USAGE_DATA,
-            }}
-          />
+        {/* Calendar View */}
+        <Grid size={{ xs: 12 }}>
+          <AnnouncementCalendar />
         </Grid>
 
         {/* Weekly Notifications Trend */}
@@ -134,8 +74,18 @@ const AdminDashboard = () => {
           />
         </Grid>
 
+        {/* Delivery Channel Usage */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <AnalyticsCurrentVisits
+            title="Delivery Channel Usage"
+            chart={{
+              series: CHANNEL_USAGE_DATA,
+            }}
+          />
+        </Grid>
+
         {/* Importance Level Breakdown */}
-        <Grid size={{ xs: 12, md: 8 }}>
+        {/* <Grid size={{ xs: 12, md: 8 }}>
           <AnalyticsConversionRates
             title="Importance Level Breakdown"
             chart={{
@@ -148,10 +98,10 @@ const AdminDashboard = () => {
               ],
             }}
           />
-        </Grid>
+        </Grid> */}
 
         {/* Announcement Type Distribution */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        {/* <Grid size={{ xs: 12, md: 4 }}>
           <AnalyticsCurrentVisits
             title="Announcement Type Distribution"
             chart={{
@@ -164,7 +114,7 @@ const AdminDashboard = () => {
               ],
             }}
           />
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );

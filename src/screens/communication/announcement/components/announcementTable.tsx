@@ -645,7 +645,6 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
       <Paper
         sx={{
           mt: '4px',
-          mb: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -660,6 +659,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
           sx={{
             '& .MuiTabs-flexContainer': { gap: 2 },
             flexGrow: 1,
+            pb: 1,
           }}
         >
           {TABS.map((tab) => (
