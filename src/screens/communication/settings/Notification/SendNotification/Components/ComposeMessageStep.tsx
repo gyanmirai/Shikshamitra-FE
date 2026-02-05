@@ -5,6 +5,7 @@ import type { FormikProps } from 'formik';
 import React from 'react';
 import { Editor } from 'src/components/editor';
 import CustomSelect from 'src/components/custom-select';
+import { ImportanceLevel } from 'src/enums/importance-level';
 import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -23,13 +24,8 @@ import type { INotificationSendSchema } from './type';
  * - Layout management for editor and preview
  */
 const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendSchema> }) => {
-  const {
-    templateData,
-    isTemplatesLoading,
-    importanceData,
-    handleEditorChange,
-    handleTemplateChange,
-  } = useComposeMessageStep(formik);
+  const { templateData, isTemplatesLoading, handleEditorChange, handleTemplateChange } =
+    useComposeMessageStep(formik);
 
   return (
     <Grid container spacing={2}>
@@ -79,13 +75,17 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
                 <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
                     label="Importance Level *"
-                    options={importanceData || []}
-                    value={formik.values.selectedTemplate?.importance_level as string}
+                    options={[
+                      { levelName: ImportanceLevel.NORMAL, label: 'Normal' },
+                      { levelName: ImportanceLevel.URGENT, label: 'Urgent' },
+                      { levelName: ImportanceLevel.CRITICAL, label: 'Critical' },
+                    ]}
+                    value={formik.values.selectedTemplate?.importance_level}
                     onChange={(val) =>
                       formik.setFieldValue('selectedTemplate.importance_level', val as string)
                     }
                     valueKey="levelName"
-                    labelKey="levelName"
+                    labelKey="label"
                     formControlProps={{ fullWidth: true }}
                     error={
                       formik.touched.selectedTemplate?.importance_level &&
@@ -94,7 +94,7 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
                     helperText={
                       formik.touched.selectedTemplate?.importance_level &&
                       formik.errors.selectedTemplate?.importance_level
-                        ? formik.errors.selectedTemplate?.importance_level
+                        ? (formik.errors.selectedTemplate?.importance_level as string)
                         : undefined
                     }
                   />
