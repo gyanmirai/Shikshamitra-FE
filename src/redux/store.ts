@@ -63,7 +63,6 @@ import { studentReceiptApi } from './invoiceAndReceipt/studentReceiptApi';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { StudentLeaveApi } from './student/student-leave/student-leave-api';
-import { expenseDetailsApi } from './finance/expenseApi/expenseDetailedApi';
 // import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { memberManagementApi } from './memberManagement/memberManagementApi';
@@ -158,7 +157,6 @@ const reducers = combineReducers({
   // [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
   [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
-  [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,
   [incomeDetailsApi.reducerPath]: incomeDetailsApi.reducer,
   [budgetApi.reducerPath]: budgetApi.reducer,
@@ -259,7 +257,6 @@ const store = configureStore({
       financeModuleApi.middleware,
       expenseApi.middleware,
       academicApi.middleware,
-      expenseDetailsApi.middleware,
       incomeApi.middleware,
       incomeDetailsApi.middleware,
       issueReturnFormApi.middleware,

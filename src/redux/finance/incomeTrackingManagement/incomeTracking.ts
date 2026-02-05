@@ -1,54 +1,54 @@
 import { financeModuleApi } from '../financeModuleApi';
 
-export const incomeCategoryApi = financeModuleApi.injectEndpoints({
+export const incomeTrackingApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getIncomeCategories: builder.query({
+    getIncomeTracking: builder.query({
       query: (academicYearId) => ({
         url: `/finance/incomes?academicYearId=${academicYearId}`,
         method: 'GET',
       }),
-      providesTags: ['IncomeCategories'],
+      providesTags: ['IncomeTracking'],
     }),
 
-    getIncomeCategoryById: builder.query({
+    getIncomeTrackingById: builder.query({
       query: (incomeId) => ({
         url: `/finance/incomes/${incomeId}`,
         method: 'GET',
       }),
-      providesTags: ['IncomeCategories'],
+      providesTags: ['IncomeTracking'],
     }),
 
-    addIncomeCategory: builder.mutation({
+    addIncomeTracking: builder.mutation({
       query: (body: any) => ({
         url: `/finance/incomes`,
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['IncomeCategories'],
+      invalidatesTags: ['IncomeTracking'],
     }),
-    updateIncomeCategory: builder.mutation({
+    updateIncomeTracking: builder.mutation({
       query: ({ incomeId, body }: { incomeId: string; body: any }) => ({
         url: `/finance/incomes/${incomeId}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['IncomeCategories'],
+      invalidatesTags: ['IncomeTracking'],
     }),
-    deleteIncomeCategory: builder.mutation({
+    deleteIncomeTracking: builder.mutation({
       query: (incomeId) => ({
         url: `/finance/incomes/${incomeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['IncomeCategories'],
+      invalidatesTags: ['IncomeTracking'],
     }),
   }),
   overrideExisting: false,
 });
 
 export const {
-  useGetIncomeCategoriesQuery,
-  useGetIncomeCategoryByIdQuery,
-  useAddIncomeCategoryMutation,
-  useUpdateIncomeCategoryMutation,
-  useDeleteIncomeCategoryMutation,
-} = incomeCategoryApi;
+  useGetIncomeTrackingQuery,
+  useGetIncomeTrackingByIdQuery,
+  useAddIncomeTrackingMutation,
+  useUpdateIncomeTrackingMutation,
+  useDeleteIncomeTrackingMutation,
+} = incomeTrackingApi;

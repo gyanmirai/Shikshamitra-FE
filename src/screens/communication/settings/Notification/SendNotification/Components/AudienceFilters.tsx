@@ -4,8 +4,8 @@ import type { Organization } from 'src/types/school';
 import React, { memo } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
-import ShakingTextField from 'src/components/shaking-text-field';
 import { Grid, TextField, IconButton } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { Clear as ClearIcon, Search as SearchIcon } from '@mui/icons-material';
 

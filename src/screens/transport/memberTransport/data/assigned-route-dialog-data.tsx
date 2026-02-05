@@ -13,7 +13,7 @@ interface PickupPoint {
   label: string;
 }
 
-export const availableGrades: Grade[] = [
+export const availableGrades: any[] = [
   { grade: '1', availableStudents: ['Aarav Patel'] },
   { grade: '2', availableStudents: ['Meera Shah'] },
   { grade: '3', availableStudents: ['Rohan Joshi'] },
@@ -23,14 +23,14 @@ export const availableGrades: Grade[] = [
   { grade: '12', availableStudents: ['Neha Sharma', 'Kavita Desai'] },
 ];
 
-export const assignedRoutesList: Route[] = [
+export const assignedRoutesList: any[] = [
   { value: 'R101', label: 'R101' },
   { value: 'R102', label: 'R102' },
   { value: 'R103', label: 'R103' },
   { value: 'R104', label: 'R104' },
 ];
 
-export const pickupPointsList: PickupPoint[] = [
+export const pickupPointsList: any[] = [
   { value: 'School', label: 'School' },
   { value: 'Dindoli', label: 'Dindoli' },
   { value: 'Godadara', label: 'Godadara' },

@@ -17,7 +17,7 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import type { IIncomeFormValues } from './type';
+import type { IIncomeFormValues } from '../types';
 
 const ViewIncomeData = ({
   viewIncomeDialog,

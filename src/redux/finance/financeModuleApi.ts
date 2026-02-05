@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import expenseDetailsData from 'src/json/finance/expense/expenseTrackingData.json';
 import expenseCategoryData from 'src/json/finance/settings/expense-category/expenseCategoryData.json';
 
 import chargesData from '../../../chargesData.json';
@@ -36,6 +37,14 @@ export const financeModuleApi = createApi({
             return { data: expenseCategoryData.expenseCategories };
           case '/budgetOptions':
             return { data: expenseCategoryData.budgetOptions };
+          case '/detailedExpenseData':
+            return { data: expenseDetailsData.detailedExpenseData };
+          case '/expenseListData':
+            return { data: expenseDetailsData.expenseListData };
+          case '/expenseOptions':
+            return { data: expenseDetailsData.expenseOptions };
+          case '/paymentMethodsConfig':
+            return { data: expenseDetailsData.paymentMethodsConfig };
           default:
             return {
               error: {
@@ -62,6 +71,10 @@ export const financeModuleApi = createApi({
     'FeeCollection',
     'FeeDetails',
     'FeeHead',
+    'ExpenseDetails',
+    'ExpenseOptions',
+    'paymentMethodsConfig',
+    'IncomeTracking',
   ],
   endpoints: () => ({}), // inject later
 });

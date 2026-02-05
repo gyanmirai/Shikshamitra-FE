@@ -1,9 +1,14 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+// Define strict type for payment details
+export interface IPaymentDetails {
+  [key: string]: string | number | null | undefined;
+}
+
 export interface IExpenseFormValues {
-  id: any;
-  paymentDetails: any;
+  id?: string | number; // Added optional id for edit mode
+  paymentDetails: IPaymentDetails;
   expenseCategory: string;
   expenseCategoryTags: string[];
   expenseName: string;
@@ -15,6 +20,6 @@ export interface IExpenseFormValues {
 
 export interface IExpenseFormProps {
   open: UseBooleanReturn;
-  onClose: (e: any, isSubmit: boolean) => void;
+  onClose: (e: any, isSubmit?: boolean) => void;
   editData: IExpenseFormValues | null;
 }

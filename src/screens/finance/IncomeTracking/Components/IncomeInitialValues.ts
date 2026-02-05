@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 
-import type { IIncomeFormValues } from './type';
+import type { IIncomeFormValues } from '../types';
 
 export const getInitialIncomeData = (
-  editData: Partial<IIncomeFormValues> | null = null
+  editData: Partial<IIncomeFormValues> | null
 ): IIncomeFormValues => ({
   incomeCategory: editData?.incomeCategory ?? '',
   incomeCategoryTags: editData?.incomeCategoryTags ?? [],

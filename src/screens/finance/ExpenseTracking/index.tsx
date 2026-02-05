@@ -1,92 +1,39 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
+import React from 'react';
 import Loading from 'src/app/loading';
-import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetExpensesQuery } from 'src/redux/finance/expenseApi/expenseApi';
 import { Box, Card, Button, Typography, CircularProgress } from '@mui/material';
-import {
-  expenseDetailsApi,
-  useGetExpenseByIdQuery,
-  useGetExpenseDetailsQuery,
-  useDeleteExpenseDetailsMutation,
-} from 'src/redux/finance/expenseApi/expenseDetailedApi';
 
 import ViewExpenseData from './component/ViewExpenseData';
 import ExpenseCategoryForm from './component/ExpenseCategoryForm';
 import ExpenseCategoryTable from './component/ExpenseCategoryTable';
-
-import type { IExpenseFormValues } from './component/type';
+import { useExpenseManagement } from './hooks/useExpenseManagement';
 
 const FinanceExpenseTracking = () => {
-  // State for selected expense record
-  const [selectedExpense, setSelectedExpense] = useState<IExpenseFormValues | null>(null);
-
-  // Custom hooks for dialogs
-  const addExpenseDialog = useBoolean();
-  const deleteExpenseDialog = useBoolean();
-  const viewExpenseDialog = useBoolean();
-  const { isLoading: expenseLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpensesQuery,
-  });
   const {
-    data: expenseDetailedData,
+    selectedExpense,
+    setSelectedExpense,
+    addExpenseDialog,
+    deleteExpenseDialog,
+    viewExpenseDialog,
+    expenseLoading,
+    expenseDetailedData,
     isLoading,
-    refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpenseDetailsQuery,
-  });
-
-  // GET by ID query
-  const { data: expenseById, isLoading: isLoadingDetails } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpenseByIdQuery,
-    options: {
-      skip: !selectedExpense?.id,
-    },
-  });
-
-  // DELETE mutation
-  const { deleteExpenseDetails } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteExpenseDetailsMutation,
-  });
-
-  // Redux
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  // Handle form/dialog close
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addExpenseDialog.onFalse();
-      setSelectedExpense(null);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      addExpenseDialog.onFalse();
-      setSelectedExpense(null);
-    }
-  };
-
-  const handleViewDialogClose = () => {
-    setSelectedExpense(null);
-    viewExpenseDialog.onFalse();
-  };
+    expenseById,
+    isLoadingDetails,
+    handleClose,
+    handleViewDialogClose,
+    handleEdit,
+    handleDeleteClick,
+    handleViewClick,
+    handleConfirmDelete,
+  } = useExpenseManagement();
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -166,18 +113,9 @@ const FinanceExpenseTracking = () => {
             addExpenseCategory={addExpenseDialog}
             setEditData={setSelectedExpense}
             isLoading={isLoading}
-            onEdit={(data) => {
-              addExpenseDialog.onTrue();
-              setSelectedExpense(data);
-            }}
-            onDelete={(data) => {
-              deleteExpenseDialog.onTrue();
-              setSelectedExpense(data);
-            }}
-            onView={(data) => {
-              viewExpenseDialog.onTrue();
-              setSelectedExpense(data);
-            }}
+            onEdit={handleEdit}
+            onDelete={handleDeleteClick}
+            onView={handleViewClick}
           />
         )}
       </>
@@ -197,42 +135,7 @@ const FinanceExpenseTracking = () => {
           </>
         }
         action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {
-              if (!selectedExpense?.id) return;
-
-              confirmWithUndo({
-                item: selectedExpense,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
-                  dispatchFn(
-                    expenseDetailsApi.util.updateQueryData(
-                      'getExpenseDetails',
-                      undefined,
-                      (draft: any) => {
-                        const list = Array.isArray(draft) ? draft : draft?.data || [];
-                        const index = list.findIndex(
-                          (item: any) => item.id === (selectedExpense as any)?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          list.splice(index, 1);
-                        }
-                      }
-                    )
-                  );
-                },
-                onUndoRestore: () => refetch(),
-                onCommit: async () => {
-                  await deleteExpenseDetails(selectedExpense.id).unwrap();
-                },
-              });
-              deleteExpenseDialog.onFalse();
-              setSelectedExpense(null);
-            }}
-          >
+          <Button variant="contained" color="error" size="small" onClick={handleConfirmDelete}>
             Yes
           </Button>
         }
