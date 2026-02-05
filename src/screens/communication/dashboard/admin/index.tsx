@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Box, Grid } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 
 import AnnouncementCalendar from '../components/AnnouncementCalendar';
@@ -36,56 +35,41 @@ const WEEKLY_NOTIFICATIONS_DATA = {
   ],
 };
 
-const ANNOUNCEMENT_TYPE_DATA = [
-  { label: 'Academic', value: 40 },
-  { label: 'Administrative', value: 30 },
-  { label: 'Events', value: 20 },
-  { label: 'General', value: 10 },
-];
+const AdminDashboard = () => (
+  <Box sx={{ flexGrow: 1 }}>
+    <Grid container spacing={1} sx={{ mb: 2 }}>
+      {/* Overview Section */}
+      <Grid size={{ xs: 12 }}>
+        <CommunicationDashboardOverview />
+      </Grid>
+      {/* Calendar View */}
+      <Grid size={{ xs: 12 }}>
+        <AnnouncementCalendar />
+      </Grid>
 
-const IMPORTANCE_LEVEL_DATA = {
-  categories: ['High', 'Medium', 'Low'],
-  series: [{ name: 'Count', data: [15, 45, 30] }],
-};
+      {/* Weekly Notifications Trend */}
+      <Grid size={{ xs: 12, md: 8 }}>
+        <CommunicationTrendChart
+          title="Weekly Notifications Trend"
+          chart={{
+            categories: WEEKLY_NOTIFICATIONS_DATA.categories,
+            series: WEEKLY_NOTIFICATIONS_DATA.series,
+          }}
+        />
+      </Grid>
 
-const AdminDashboard = () => {
-  const theme = useTheme();
+      {/* Delivery Channel Usage */}
+      <Grid size={{ xs: 12, md: 4 }}>
+        <AnalyticsCurrentVisits
+          title="Delivery Channel Usage"
+          chart={{
+            series: CHANNEL_USAGE_DATA,
+          }}
+        />
+      </Grid>
 
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={1} sx={{ mb: 2 }}>
-        {/* Overview Section */}
-        <Grid size={{ xs: 12 }}>
-          <CommunicationDashboardOverview />
-        </Grid>
-        {/* Calendar View */}
-        <Grid size={{ xs: 12 }}>
-          <AnnouncementCalendar />
-        </Grid>
-
-        {/* Weekly Notifications Trend */}
-        <Grid size={{ xs: 12, md: 8 }}>
-          <CommunicationTrendChart
-            title="Weekly Notifications Trend"
-            chart={{
-              categories: WEEKLY_NOTIFICATIONS_DATA.categories,
-              series: WEEKLY_NOTIFICATIONS_DATA.series,
-            }}
-          />
-        </Grid>
-
-        {/* Delivery Channel Usage */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <AnalyticsCurrentVisits
-            title="Delivery Channel Usage"
-            chart={{
-              series: CHANNEL_USAGE_DATA,
-            }}
-          />
-        </Grid>
-
-        {/* Importance Level Breakdown */}
-        {/* <Grid size={{ xs: 12, md: 8 }}>
+      {/* Importance Level Breakdown */}
+      {/* <Grid size={{ xs: 12, md: 8 }}>
           <AnalyticsConversionRates
             title="Importance Level Breakdown"
             chart={{
@@ -100,8 +84,8 @@ const AdminDashboard = () => {
           />
         </Grid> */}
 
-        {/* Announcement Type Distribution */}
-        {/* <Grid size={{ xs: 12, md: 4 }}>
+      {/* Announcement Type Distribution */}
+      {/* <Grid size={{ xs: 12, md: 4 }}>
           <AnalyticsCurrentVisits
             title="Announcement Type Distribution"
             chart={{
@@ -115,9 +99,8 @@ const AdminDashboard = () => {
             }}
           />
         </Grid> */}
-      </Grid>
-    </Box>
-  );
-};
+    </Grid>
+  </Box>
+);
 
 export default AdminDashboard;

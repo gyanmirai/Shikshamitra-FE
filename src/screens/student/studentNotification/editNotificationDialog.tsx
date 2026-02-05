@@ -25,7 +25,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   data,
   isFromView,
 }) => {
-  const [notification, setNotification] = useState<INotificationData>(data);
+  const [notification, setNotification] = useState<INotificationData | null>(data);
 
   useEffect(() => {
     setNotification(data);
@@ -33,18 +33,28 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
 
   const updateRecipient = (name: string, key: keyof IRecipient, value: any) => {
     if (!isFromView) {
-      setNotification((prev) => ({
-        ...prev,
-        recipient: prev.recipient.map((r) => (r.name === name ? { ...r, [key]: value } : r)),
-      }));
+      setNotification(
+        (prev) =>
+          ({
+            ...prev,
+            recipient: prev?.recipient.map((r) => (r.name === name ? { ...r, [key]: value } : r)),
+          }) as INotificationData
+      );
     }
   };
 
   const handleToggle = (name: string, isChecked: boolean) => {
-    setNotification((prev) => ({
-      ...prev,
-      recipient: prev.recipient.map((r) => (r.name === name ? { ...r, isEnable: isChecked } : r)),
-    }));
+    if (!isFromView) {
+      setNotification(
+        (prev) =>
+          ({
+            ...prev,
+            recipient: prev?.recipient.map((r) =>
+              r.name === name ? { ...r, isEnable: isChecked } : r
+            ),
+          }) as INotificationData
+      );
+    }
   };
 
   return (
@@ -66,7 +76,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                 Event Name
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {notification.event || '-'}
+                {notification?.event || '-'}
               </Typography>
             </Box>
 
@@ -75,13 +85,13 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                 Trigger Condition
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {notification.triggerCondition || '-'}
+                {notification?.triggerCondition || '-'}
               </Typography>
             </Box>
           </Box>
 
           <Grid container spacing={2} sx={{ mt: 2 }}>
-            {notification.recipient.map((recipient) => (
+            {notification?.recipient.map((recipient) => (
               // <Box key={recipient.name} p={2} border="1px solid #ddd" borderRadius="8px">
               <Grid
                 size={{ md: 6 }}
@@ -138,7 +148,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
             ))}
           </Grid>
         </Scrollbar>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <DialogActions>
           <CancelButton
             onClick={() => {
               onClose();

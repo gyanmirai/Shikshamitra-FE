@@ -1,3 +1,5 @@
+import type { ImportanceLevel } from 'src/enums/importance-level';
+
 // Notification Template
 export interface INotificationTemplate {
   id: string;
@@ -6,7 +8,7 @@ export interface INotificationTemplate {
   targetRole: string;
   subject: string;
   message: string;
-  importance_level: string;
+  importance_level: ImportanceLevel | string;
 }
 
 // Audience Scope

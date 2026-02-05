@@ -16,15 +16,15 @@ export interface ISchoolWiseAnnouncement {
   title: string;
   description: string;
   audience: IAudience[];
-  startDate: Dayjs | null;
-  endDate: Dayjs | null;
+  startDate: Dayjs | string | null;
+  endDate: Dayjs | string | null;
   createdBy: string;
-  cratedOn: Dayjs | string | null;
+  createdOn: Dayjs | string | null;
   status: number;
   type: IAnnouncementType[];
   durationUnit?: string;
-  duration: number;
-  attachment: File;
+  duration: string | number;
+  attachment: File | null | string[];
   importance_level?: IImportanceLevel;
   link: string;
   active?: number;
@@ -35,117 +35,30 @@ export interface ISchoolWiseAnnouncement {
 
 /**
  * Interface representing the form values for an announcement
- * @property {string} title - The title of the announcement
- * @property {string} description - The detailed description of the announcement
- * @property {string} status - Current status of the announcement
- * @property {string[]} audience - Array of selected audience groups
- * @property {string[]} organization - Array of selected organizations
- * @property {Dayjs | null} publishDate - Date when the announcement should be published
- * @property {Dayjs | null} expiryDate - Date when the announcement should expire
- * @property {string} category - Category of the announcement
- * @property {string} importance_level - Priority level of the announcement
- * @property {string} link - Optional URL associated with the announcement
- * @property {string[]} notification_preferences - Selected notification methods
- * @property {boolean} isScheduled - Whether the announcement is scheduled for later
  */
 export interface ISchoolWiseAnnouncementFormValues {
-  id: string;
   title: string;
   description: string;
-  status: string;
+  type: IAnnouncementType[];
   audience: IAudience[];
-  organization: string[];
-  publishDate: Dayjs | string | null;
-  expiryDate: Dayjs | string | null;
-  category: string;
-  importance_level: string;
-  link: string;
+  importance_level: IImportanceLevel | null;
+  startDate: Dayjs | null;
+  endDate: Dayjs | null;
+  duration: number | string;
+  durationUnit: string;
   notification_preferences: string[];
-  isScheduled: boolean;
+  isAllowAcknoledgement: boolean;
+  attachment: any; // Using any for file input initially, usually File | null
+  status?: string;
 }
 
 /**
  * Props interface for the AnnouncementForm component
- * @property {function} onSubmit - Handler function called when form is submitted
- * @property {AnnouncementFormValues | null} initialValues - Initial values for the form, optional
- * @property {boolean} isEdit - Flag indicating if form is in edit mode
  */
 export interface ISchoolWiseAnnouncementFormProps {
-  initialValues?: ISchoolWiseAnnouncement | null;
+  initialValues: ISchoolWiseAnnouncement | null;
   isEdit?: boolean;
-  onClose: (e: any, isSubmit: boolean) => void;
-}
-
-export interface SchoolWiseAnnouncementTableProps {
-  data: ISchoolWiseAnnouncement[];
-  onEdit: (announcement: ISchoolWiseAnnouncement) => void;
-  onDelete: (announcementId: string) => void;
-  onView: (announcement: ISchoolWiseAnnouncement) => void;
-  onPublish: (announcement: ISchoolWiseAnnouncement) => void;
-}
-
-export interface IClassWiseAnnouncement {
-  id: string;
-  title: string;
-  description: string;
-  audience: IAudience[];
-  organizations: string[]; // newly added
-  classes: string[]; // newly added
-  divisions: string[]; // newly added
-  startDate: Dayjs | string | null;
-  endDate: Dayjs | string | null;
-  createdBy: string;
-  cratedOn: Dayjs | string | null;
-  status: number;
-  type: IAnnouncementType[];
-  durationUnit?: string;
-  duration: number;
-  attachment: File | null;
-  importance_level?: IImportanceLevel;
-  link: string;
-  active?: number;
-  notification_preferences: string[];
-  isAllowAcknoledgement: boolean;
-  viewedBy?: number;
-}
-
-export interface IClassWiseAnnouncementFormValues {
-  title: string;
-  description: string;
-  audience: IAudience[];
-  publishDate: Dayjs | null;
-  expiryDate: Dayjs | null;
-  className: string[];
-  division: string[];
-  status: string;
-  category: string;
-  importance_level: string;
-  link: string;
-  notification_preferences: string[];
-  isScheduled: boolean;
-}
-
-export interface IClassWiseAnnouncementFormProps {
-  onClose: (e: any, isSubmit: boolean) => void;
-  onSubmit: (values: IClassWiseAnnouncement) => void;
-  initialValues?: IClassWiseAnnouncement | null;
-  isEdit?: boolean;
-}
-
-export interface IClassWiseAnnouncementFormikValues {
-  title: string;
-  description: string;
-  audience: IAudience[];
-  publishDate: Dayjs | null;
-  expiryDate: Dayjs | null;
-  className: string[];
-  division: string[];
-  status: string;
-  category: string;
-  importance_level: string;
-  link: string;
-  notification_preferences: string[];
-  isScheduled: boolean;
+  onClose: (data: any, isSubmit: boolean) => void;
 }
 
 export interface ISchoolWiseAnnouncementTableProps {
@@ -158,15 +71,4 @@ export interface ISchoolWiseAnnouncementTableProps {
   onDelete: (row: ISchoolWiseAnnouncement) => void;
   onView: (row: ISchoolWiseAnnouncement) => void;
   onPublish: (row: ISchoolWiseAnnouncement) => void;
-}
-
-export interface IClassWiseAnnouncementTableProps {
-  setOpen: (value: boolean) => void;
-  data: IClassWiseAnnouncement[];
-  onEdit: (row: IClassWiseAnnouncement) => void;
-  onRemove: (row: IClassWiseAnnouncement) => void;
-  handleSwitchChange: (row: IClassWiseAnnouncement) => void;
-  onDelete: (row: IClassWiseAnnouncement) => void;
-  onView: (row: IClassWiseAnnouncement) => void;
-  onPublish: (row: IClassWiseAnnouncement) => void;
 }

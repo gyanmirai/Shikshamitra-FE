@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { memo } from 'react';
 import { Stack } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -7,11 +9,11 @@ import SchoolWiseAnnouncementDetailsInfoCard from './SchoolWiseAnnouncementDetai
 
 import type { ISchoolWiseAnnouncement } from '../../type';
 
-const SchoolManagementViewDetails = ({
-  announcement,
-}: {
+interface Props {
   announcement: ISchoolWiseAnnouncement | null;
-}) => (
+}
+
+const SchoolManagementViewDetails = ({ announcement }: Props) => (
   <Scrollbar sx={{ maxHeight: 600, p: 2 }}>
     <Stack spacing={3}>
       <SchoolWiseAnnouncementDetailsInfoCard announcement={announcement} />
@@ -20,4 +22,9 @@ const SchoolManagementViewDetails = ({
   </Scrollbar>
 );
 
-export default SchoolManagementViewDetails;
+/**
+ * Memoization Justification:
+ * Component is a container for multiple detail cards. Memoizing prevents re-renders
+ * when the parent state changes unless the announcement object itself changes.
+ */
+export default memo(SchoolManagementViewDetails);

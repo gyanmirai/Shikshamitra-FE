@@ -13,38 +13,53 @@ import EventNotification from './Components/EventNotification';
 import SurveyNotification from './Components/SurveyNotification';
 import AnnouncementNotification from './Components/AnnouncementNotification';
 
+import type { INotificationComponentProps } from './types';
+
 const TABS = [
   {
     value: 'announcement',
     label: 'Announcement',
     icon: <Iconify icon="mdi:bullhorn-outline" width={20} />,
-    component: (props: any) => <AnnouncementNotification {...props} />,
+    component: (props: INotificationComponentProps) => <AnnouncementNotification {...props} />,
   },
   {
     value: 'event',
     label: 'Event',
     icon: <Iconify icon="mdi:calendar-outline" width={20} />,
-    component: (props: any) => <EventNotification {...props} />,
+    component: (props: INotificationComponentProps) => <EventNotification {...props} />,
   },
   {
     value: 'survey',
     label: 'Survey',
     icon: <Iconify icon="mdi:clipboard-outline" width={20} />,
-    component: (props: any) => <SurveyNotification {...props} />,
+    component: (props: INotificationComponentProps) => <SurveyNotification {...props} />,
   },
 ];
 
 const NotificationSettingScreen = () => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'announcement' });
   const dialog = useBoolean(false);
+
+  /**
+   * Memoization Justification:
+   * Prevents re-calculation of currentActiveComponent on every render.
+   * Only re-calculates when the tab in searchParams changes.
+   */
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams?.tab]
   );
+
+  /**
+   * Memoization Justification:
+   * Prevents re-calculation of currentIndex on every render.
+   * Only re-calculates when the tab in searchParams changes.
+   */
   const currentIndex = useMemo(
     () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+
   const [isViewMode, setIsViewMode] = useState(false);
   const [isBackClick, setIsBackClick] = useState(false);
 
@@ -57,7 +72,7 @@ const NotificationSettingScreen = () => {
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Notification', href: '/communication/notification/notificationSetting' },
-            isViewMode ? { name: 'View Notification' } : { name: 'Edit Notification' },
+            { name: 'Notification Setting' },
           ]}
           isBack
           onBack={() => {
@@ -72,6 +87,7 @@ const NotificationSettingScreen = () => {
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Notification', href: '/communication/notification/notificationSetting' },
+            { name: 'Notification Setting' },
           ]}
           sx={{ px: 2 }}
         />

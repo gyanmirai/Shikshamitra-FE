@@ -21,7 +21,7 @@ export interface IGroupRules {
 }
 
 export interface INameBasedRules extends IGroupRules {
-  selectedUserIds: string[];
+  selectedMembers: string[];
 }
 
 export interface IGroup {

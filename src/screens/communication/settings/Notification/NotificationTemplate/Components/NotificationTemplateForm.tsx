@@ -1,159 +1,35 @@
 'use client';
 
-import type { Medium } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
-
-import { debounce } from 'lodash';
-import { useFormik } from 'formik';
+import React from 'react';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
-import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, Button, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  Box,
-  Grid,
-  Chip,
-  Button,
-  Divider,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
-import {
-  useAddNotificationTemplateMutation,
-  useGetNotificationTemplateByIdQuery,
-  useUpdateNotificationTemplateMutation,
-} from 'src/redux/communication/notification/notificationTemplateApi';
 
-import { notificationTemplateValidationSchema } from './notificationTemplateValidation';
-import { getNotificationTemplateInitialValues } from './getNotificationTemplateInitialValues';
+import NotificationTemplatePreview from './NotificationTemplatePreview';
+import NotificationTemplateFormFields from './NotificationTemplateFormFields';
+import { useNotificationTemplateForm } from '../hooks/useNotificationTemplateForm';
 
-import type { INotificationTemplateFormProps } from './type';
+import type { INotificationTemplateFormProps } from '../types';
 
 const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
   open,
   onClose,
   editData,
 }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  const [addNotificationTemplate, { isLoading: isAddLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddNotificationTemplateMutation,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: {
-      skip: !(currentMedium as Medium)?.id,
-    },
-  });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    data: announcementById,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetNotificationTemplateByIdQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id, id: editData?.id },
-    options: {
-      skip: !(currentMedium as Medium)?.id || !editData?.id,
-    },
-  });
-
-  const [updateNotificationTemplate, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateNotificationTemplateMutation,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: {
-      skip: !(currentMedium as Medium)?.id,
-    },
-  });
-  const [tag, setTag] = useState('');
-  const { data: roleOptions, isLoading: roleLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
-  });
-  const formik = useFormik({
-    initialValues: getNotificationTemplateInitialValues(editData),
-    validationSchema: notificationTemplateValidationSchema,
-    onSubmit: async (values) => {
-      try {
-        const roleId = roleOptions?.items?.find((r: any) => r.name === values.targetRole)?.id;
-
-        const payloadData = {
-          templateName: values.templateName,
-          role: roleId,
-          subject: values.subject,
-          message: values.message,
-          tags: values.hashtags,
-        };
-
-        if (editData) {
-          const payload = {
-            academicMediumId: (currentMedium as Medium).id,
-            id: editData.id,
-            data: payloadData,
-          };
-          await updateNotificationTemplate(payload).unwrap();
-          shikshaMitraToast.success({
-            message: `"${values.templateName}" Template updated successfully`,
-          });
-        } else {
-          const payload = {
-            academicMediumId: (currentMedium as Medium).id,
-            data: payloadData,
-          };
-          await addNotificationTemplate(payload).unwrap();
-          shikshaMitraToast.success({
-            message: `"${values.templateName}" Template added successfully`,
-          });
-        }
-        onClose(null, true);
-      } catch (error) {
-        console.error('Failed to save template', error);
-        shikshaMitraToast.error({
-          message: 'Failed to save template',
-        });
-      }
-    },
-  });
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleEditorChange = useCallback(
-    debounce((value, setFieldValue) => {
-      setFieldValue('message', value);
-    }, 300),
-    []
-  );
-
-  const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const trimmed = tag.trim();
-      if (trimmed && !formik.values.hashtags.includes(trimmed)) {
-        formik.setFieldValue('hashtags', [...formik.values.hashtags, trimmed]);
-        setTag('');
-      }
-    }
-  };
-
-  const handleDelete = (deleteTag: any) => {
-    formik.setFieldValue(
-      'hashtags',
-      formik.values.hashtags.filter((t) => t !== deleteTag)
-    );
-  };
+    formik,
+    tag,
+    setTag,
+    roleOptions,
+    roleLoading,
+    isSubmitting,
+    handleEditorChange,
+    handleTagKeyDown,
+    handleDeleteTag,
+  } = useNotificationTemplateForm({ onClose, editData });
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -170,188 +46,24 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
             }}
           >
             <Grid container spacing={2}>
+              {/* Form Fields Section */}
               <Grid size={{ xs: 6 }}>
-                <SectionCard title="Basic Information">
-                  {/* Template Name */}
-                  <Grid size={12}>
-                    <ShakingTextField
-                      error={!!(formik.touched.templateName && formik.errors.templateName) || false}
-                    >
-                      <TextField
-                        fullWidth
-                        label="Template Name *"
-                        name="templateName"
-                        size="small"
-                        value={formik.values.templateName}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .replace(/[^a-zA-Z0-9\s]/g, '')
-                            .split(' ')
-                            .map((word) =>
-                              word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                            )
-                            .join(' ');
-                          formik.setFieldValue('templateName', value);
-                        }}
-                        error={formik.touched.templateName && Boolean(formik.errors.templateName)}
-                        helperText={
-                          (formik.touched.templateName && formik.errors.templateName) as string
-                        }
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Target Role */}
-                  <Grid size={12}>
-                    <CustomSelect
-                      options={roleOptions?.items || []}
-                      value={formik.values.targetRole}
-                      isLoading={roleLoading}
-                      name="targetRole"
-                      label="Role *"
-                      valueKey="name"
-                      labelKey="name"
-                      onChange={(val) => {
-                        formik.setFieldValue('targetRole', val);
-                      }}
-                      error={formik.touched.targetRole && Boolean(formik.errors.targetRole)}
-                      helperText={
-                        ((formik.touched.targetRole && formik.errors.targetRole) as string) || ''
-                      }
-                    />
-                  </Grid>
-
-                  {/* Subject */}
-                  <Grid size={12}>
-                    <ShakingTextField
-                      error={!!(formik.touched.subject && formik.errors.subject) || false}
-                    >
-                      <TextField
-                        fullWidth
-                        label="Subject *"
-                        name="subject"
-                        size="small"
-                        value={formik.values.subject}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            .replace(/[^a-zA-Z\s]/g, '')
-                            .split(' ')
-                            .map((word) =>
-                              word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                            )
-                            .join(' ');
-                          formik.setFieldValue('subject', value);
-                        }}
-                        error={formik.touched.subject && Boolean(formik.errors.subject)}
-                        helperText={(formik.touched.subject && formik.errors.subject) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Message Body */}
-                  <Grid size={12}>
-                    <ShakingTextField
-                      error={!!(formik.touched.message && formik.errors.message) || false}
-                    >
-                      <Editor
-                        mentionable
-                        mentionItems={[
-                          { id: '1', label: 'student Name' },
-                          { id: '2', label: 'Parent Name' },
-                        ]}
-                        value={formik.values.message}
-                        onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
-                        placeholder="Message"
-                        error={!!(formik.touched.message && formik.errors.message)}
-                        // editable={!formik.values.templateName}
-                        helperText={(formik.touched.message && formik.errors.message) || ''}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Tags */}
-                  <Grid size={{ xs: 12 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Tags"
-                      value={tag}
-                      onChange={(e) => setTag(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      InputProps={{
-                        startAdornment: (
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 0.5,
-                              alignItems: 'center',
-                              maxWidth: '100%',
-                            }}
-                          >
-                            {formik.values.hashtags.map((t, index) => (
-                              <Chip
-                                key={index}
-                                label={t}
-                                onDelete={() => handleDelete(t)}
-                                size="small"
-                                sx={{
-                                  mt: 1,
-                                }}
-                              />
-                            ))}
-                          </Box>
-                        ),
-                      }}
-                      sx={{
-                        '& .MuiInputBase-root': {
-                          flexWrap: 'wrap',
-                          alignItems: 'flex-start',
-                          minHeight: 'auto',
-                        },
-                        '& .MuiInputBase-input': {
-                          flexGrow: 1,
-                          minWidth: '80px',
-                        },
-                      }}
-                    />
-                  </Grid>
-                </SectionCard>
+                <NotificationTemplateFormFields
+                  formik={formik}
+                  roleOptions={roleOptions}
+                  roleLoading={roleLoading}
+                  tag={tag}
+                  setTag={setTag}
+                  handleTagKeyDown={handleTagKeyDown}
+                  handleDeleteTag={handleDeleteTag}
+                  handleEditorChange={handleEditorChange}
+                />
               </Grid>
+
+              {/* Preview Section */}
               {formik.values && formik.values.templateName && (
                 <Grid size={{ xs: 6 }}>
-                  <SectionCard title="Preview">
-                    {' '}
-                    <Grid size={12}>
-                      <Box
-                        display="flex"
-                        flexDirection="column"
-                        sx={{ p: 2, border: '1px solid grey', borderRadius: 2 }}
-                      >
-                        <Typography variant="subtitle1" fontWeight="bold">
-                          Subject : {formik.values.subject || 'No Subject'}
-                        </Typography>
-                        <Divider sx={{ my: 1 }} />
-                        {/* Message */}
-                        <Typography variant="subtitle1" fontWeight="bold">
-                          Dear {`{${formik.values.targetRole}_name}`},
-                        </Typography>
-                        <Box sx={{ mb: 2 }}>
-                          <Typography
-                            component="div"
-                            variant="body2"
-                            dangerouslySetInnerHTML={{ __html: formik.values.message || '' }}
-                          />
-                        </Box>
-                        {/* Hashtags */}
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          {formik.values.hashtags?.map((value: string, index: number) => (
-                            <Chip key={index} label={`#${value}`} variant="outlined" size="small" />
-                          ))}
-                        </Box>
-                      </Box>
-                    </Grid>
-                  </SectionCard>
+                  <NotificationTemplatePreview values={formik.values} />
                 </Grid>
               )}
             </Grid>
@@ -368,7 +80,7 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
               Cancel
             </Button>
             <LoadingButton
-              loading={isAddLoading || isUpdateLoading}
+              loading={isSubmitting}
               startIcon={
                 <Iconify
                   icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
