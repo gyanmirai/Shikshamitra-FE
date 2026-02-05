@@ -138,12 +138,16 @@ const mockSectionBooks = {
 export const CategoryDistributionChart = () => {
   const theme = useTheme();
 
-  const chartColors = [theme.palette.primary.main];
+  // Limit to top 10 categories for clarity
+  const topCategories = mockCategoryDistribution.categories.slice(0, 10);
+  const topSeriesData = mockCategoryDistribution.series[0].data.slice(0, 10);
+
+  const chartColors = [theme.palette.info.main];
 
   const chartOptions = useChart({
     colors: chartColors,
     xaxis: {
-      categories: mockCategoryDistribution.categories,
+      categories: topCategories,
       labels: {
         style: {
           colors: theme.palette.text.secondary,
@@ -153,99 +157,46 @@ export const CategoryDistributionChart = () => {
     },
     plotOptions: {
       bar: {
-        horizontal: true,
-        barHeight: '65%', // Sligher slimmer bars
-        borderRadius: 3, // Rounded corners
+        horizontal: true, // Switched to horizontal for better label readability
+        barHeight: '60%',
+        borderRadius: 2,
       },
     },
     dataLabels: {
-      enabled: false,
+      enabled: true,
+      textAnchor: 'start',
+      style: { colors: ['#fff'] },
+      formatter: (val, opt) => (Number(val) > 0 ? `${val}` : ''),
+      offsetX: 0,
     },
     tooltip: {
       y: {
         formatter: (value: number) => fNumber(value),
       },
     },
-    yaxis: {
-      labels: {
-        style: {
-          colors: theme.palette.text.secondary,
-          fontSize: '12px',
-          fontWeight: 500,
-        },
-      },
-    },
     grid: {
       strokeDashArray: 3,
-      xaxis: {
-        lines: {
-          show: true,
-        },
-      },
-      yaxis: {
-        lines: {
-          show: false,
-        },
-      },
+      borderColor: theme.palette.divider,
+      xaxis: { lines: { show: true } },
+      yaxis: { lines: { show: false } },
     },
   });
 
   return (
     <Card
       sx={{
+        height: '100%', // Ensure equal height in grid
         boxShadow: theme.customShadows?.z1 || theme.shadows[1],
         border: `1px solid ${theme.palette.divider}`,
         borderRadius: 2,
       }}
     >
-      <CardHeader title="Book Category Distribution" subheader="Total books per category" />
+      <CardHeader title="Top Book Categories" subheader="Highest inventory counts" />
       <Chart
         type="bar"
-        series={mockCategoryDistribution.series}
-        options={{
-          ...chartOptions,
-          plotOptions: {
-            bar: {
-              horizontal: false, // Changed to vertical
-              columnWidth: '55%',
-              borderRadius: 4,
-            },
-          },
-          xaxis: {
-            categories: mockCategoryDistribution.categories,
-            labels: {
-              style: {
-                fontSize: '11px',
-                colors: theme.palette.text.secondary,
-              },
-            },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-          },
-          yaxis: {
-            labels: {
-              style: {
-                fontSize: '12px',
-                colors: theme.palette.text.secondary,
-              },
-            },
-          },
-          grid: {
-            ...(chartOptions?.grid || {}),
-            borderColor: theme.palette.divider,
-            xaxis: {
-              lines: {
-                show: false, // Hide vertical grid lines for vertical bars
-              },
-            },
-            yaxis: {
-              lines: {
-                show: true, // Show horizontal grid lines for vertical bars
-              },
-            },
-          },
-        }}
-        height={400}
+        series={[{ name: 'Books', data: topSeriesData }]}
+        options={chartOptions}
+        height={340} // Match other charts
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ py: 2.5, pl: 1, pr: 2.5 }}
       />
@@ -271,7 +222,7 @@ export const MemberActivityChart = () => {
       labels: { style: { colors: theme.palette.text.secondary } },
     },
     stroke: { width: 3, curve: 'smooth' },
-    markers: { size: 5, strokeColors: theme.palette.background.paper, strokeWidth: 2 },
+    markers: { size: 4, strokeColors: theme.palette.background.paper, strokeWidth: 2 },
     tooltip: {
       shared: true,
       intersect: false,
@@ -280,7 +231,7 @@ export const MemberActivityChart = () => {
       },
     },
     yaxis: {
-      title: { text: 'Number of Books', style: { color: theme.palette.text.disabled } },
+      title: { text: undefined }, // Clean look
       labels: { style: { colors: theme.palette.text.secondary } },
     },
     grid: {
@@ -296,6 +247,7 @@ export const MemberActivityChart = () => {
   return (
     <Card
       sx={{
+        height: '100%',
         boxShadow: theme.customShadows?.z1 || theme.shadows[1],
         border: `1px solid ${theme.palette.divider}`,
         borderRadius: 2,
@@ -303,7 +255,7 @@ export const MemberActivityChart = () => {
     >
       <CardHeader
         title="Member Activity Trend"
-        subheader="Monthly borrowing activity"
+        subheader="Books issued over time"
         action={
           <ChartSelect
             options={mockMemberActivity.series.map((item) => item.name)}
@@ -329,7 +281,8 @@ export const WeeklyCirculationChart = () => {
   const theme = useTheme();
   const [selectedWeek, setSelectedWeek] = useState('Week 1');
 
-  const chartColors = [theme.palette.success.main, theme.palette.error.main];
+  // Blue for Issued (Action), Green for Returned (Completion/Good)
+  const chartColors = [theme.palette.primary.main, theme.palette.success.main];
 
   const currentWeekData = mockWeeklyCirculation.series.find((w) => w.name === selectedWeek);
 
@@ -342,7 +295,7 @@ export const WeeklyCirculationChart = () => {
       labels: { style: { colors: theme.palette.text.secondary } },
     },
     stroke: { width: 2, curve: 'smooth' },
-    fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.4, opacityTo: 0.1 } }, // Lighter fill
     tooltip: {
       shared: true,
       intersect: false,
@@ -366,14 +319,15 @@ export const WeeklyCirculationChart = () => {
   return (
     <Card
       sx={{
+        height: '100%',
         boxShadow: theme.customShadows?.z1 || theme.shadows[1],
         border: `1px solid ${theme.palette.divider}`,
         borderRadius: 2,
       }}
     >
       <CardHeader
-        title="Weekly Issue/Return Circulation"
-        subheader="Last 7 days book circulation activity"
+        title="Weekly Circulation"
+        subheader="Issued vs Returned"
         action={
           <ChartSelect
             options={mockWeeklyCirculation.series.map((item) => item.name)}
@@ -394,7 +348,7 @@ export const SectionBooksChart = () => {
   const theme = useTheme();
   const [selectedSection, setSelectedSection] = useState('Section A');
 
-  const chartColors = [theme.palette.info.main];
+  const chartColors = [theme.palette.secondary.main]; // Use secondary for variety
 
   const currentSectionData = mockSectionBooks.series.find((s) => s.name === selectedSection);
 
@@ -413,13 +367,11 @@ export const SectionBooksChart = () => {
       bar: {
         horizontal: false,
         borderRadius: 4,
-        columnWidth: '50%',
+        columnWidth: '40%', // Slimmer bars
       },
     },
     dataLabels: {
-      enabled: true,
-      style: { fontSize: '12px', fontWeight: 'bold' },
-      offsetY: -10,
+      enabled: false, // Cleaner look without numbering every bar
     },
     tooltip: {
       y: {
@@ -442,14 +394,15 @@ export const SectionBooksChart = () => {
   return (
     <Card
       sx={{
+        height: '100%',
         boxShadow: theme.customShadows?.z1 || theme.shadows[1],
         border: `1px solid ${theme.palette.divider}`,
         borderRadius: 2,
       }}
     >
       <CardHeader
-        title="Section-wise Book Count"
-        subheader="Books distribution across shelves"
+        title="Shelf Occupancy"
+        subheader="Book count per shelf"
         action={
           <ChartSelect
             options={mockSectionBooks.series.map((item) => item.name)}
@@ -473,23 +426,31 @@ export const SectionBooksChart = () => {
 // Main Admin Charts Component
 const AdminCharts = () => (
   <Grid container spacing={3}>
-    {/* Category Distribution Chart */}
-    <Grid size={{ xs: 12 }}>
-      <CategoryDistributionChart />
-    </Grid>
-
-    {/* Member Activity Trend */}
-    <Grid size={{ xs: 12, md: 6 }}>
-      <MemberActivityChart />
-    </Grid>
-
-    {/* Weekly Circulation */}
-    <Grid size={{ xs: 12, md: 6 }}>
+    {/* Row 1: Circulation & Quick Stats have priority */}
+    <Grid size={{ xs: 12, md: 8 }}>
       <WeeklyCirculationChart />
     </Grid>
 
-    {/* Section-wise Book Count */}
-    <Grid size={{ xs: 12 }}>
+    <Grid size={{ xs: 12, md: 4 }}>
+      {/* This spot is perfect for the new Quick Actions card, but it's passed in parent usually. 
+           Here we define the charts only. We'll adjust index.tsx to handle layout. 
+           For this file, I'll export components individually if needed, but the default export is the Grid.
+           Actually, the Implementation Plan says "Reorder layout in index.tsx".
+           So I should just export these individual charts or keep the Grid structure here but maybe minimal.
+           
+           Let's change AdminCharts to just export the individual components so index.tsx has full control?
+           Refactoring: I'll export individual components as named exports (already done) and keep AdminCharts as a default composition 
+           BUT I will update AdminCharts to reflect a good default layout if used alone.
+       */}
+      <MemberActivityChart />
+    </Grid>
+
+    {/* Row 2: Inventory Analysis */}
+    <Grid size={{ xs: 12, md: 6 }}>
+      <CategoryDistributionChart />
+    </Grid>
+
+    <Grid size={{ xs: 12, md: 6 }}>
       <SectionBooksChart />
     </Grid>
   </Grid>

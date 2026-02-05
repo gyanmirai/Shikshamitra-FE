@@ -32,7 +32,7 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
     currentQueryAndMutation: useUpdateBookCopyStatusMutation,
   });
   const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
-  if (!editData) return null; // handle null data
+
   const options = allowedStatuses.map((status) => ({
     label: LibraryBookStatus[status],
     value: status,
@@ -44,13 +44,14 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
           : 'Book has been reported as lost',
   }));
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const formik = useFormik({
     initialValues: {
-      status: editData.status || 0,
+      status: editData?.status || 0,
       remarks: '',
     },
     onSubmit: async (values) => {
+      if (!editData) return;
+
       await updateBookCopyStatus({
         bookId: editData.bookId,
         accessionNo: editData.accessionNo,
@@ -63,6 +64,8 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
       onClose(null, true); // indicate submit
     },
   });
+
+  if (!editData) return null;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

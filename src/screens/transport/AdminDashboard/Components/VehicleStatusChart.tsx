@@ -8,7 +8,7 @@ const VehicleStatusChart = () => {
     labels: ['Active', 'Inactive', 'Maintenance'],
     stroke: { colors: ['background.paper'] },
     colors: ['#00AB55', '#FF4842', '#FFC107'],
-    legend: { floating: true, horizontalAlign: 'center' },
+    legend: { floating: false, horizontalAlign: 'center', position: 'bottom' },
     dataLabels: { enabled: true, dropShadow: { enabled: false } },
     tooltip: {
       fillSeriesColor: false,
