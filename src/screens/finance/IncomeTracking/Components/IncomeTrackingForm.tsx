@@ -16,7 +16,9 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetPaymentMethodsConfigQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
+import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 import {
   useGetIncomeCategoriesQuery,
   useAddIncomeCategoryMutation,
@@ -25,6 +27,7 @@ import {
 
 import { getInitialIncomeData } from './IncomeInitialValues';
 import { getIncomeFormSchema } from './IncomeValidationSchema';
+import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
 import type { IIncomeTrackingFormProps } from './type';
 
@@ -39,13 +42,13 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
   });
 
   // POST mutation for creating
-  const { addIncomeCategory } = useQueryAndMutation({
+  const [addIncomeCategory, { isLoading: isAddingIncomeCategory }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddIncomeCategoryMutation,
   });
 
   // PUT mutation for updating
-  const { updateIncomeCategory } = useQueryAndMutation({
+  const [updateIncomeCategory, { isLoading: isUpdatingIncomeCategory }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateIncomeCategoryMutation,
   });
@@ -57,7 +60,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
   });
 
   // Extract options from API data with fallbacks
-  const categoryOptions = incomeOptionsData?.budgetOptions || [];
+  const categoryOptions = incomeOptionsData?.categoryOptions || [];
 
   // Use API data for payment methods config, fallback to local config
   const paymentMethodsConfigToUse = paymentMethodsConfigData || [];
@@ -119,364 +122,193 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
     },
   });
 
-  // const selectedPaymentMethod = formik.values.paymentMethod;
-
-  // Get payment fields from API data or fallback to local config
-  // const paymentFields =
-  //   paymentMethodsConfigToUse[selectedPaymentMethod as keyof typeof paymentMethodsConfigToUse] ||
-  //   [];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const renderDynamicField = (field: any) => {
-    const fieldName = `paymentDetails.${field.name}`;
-    const fieldValue = formik.values.paymentDetails?.[field.name] || '';
-
-    // Fix: Properly access nested errors for paymentDetails
-    const isTouched =
-      formik.touched.paymentDetails &&
-      typeof formik.touched.paymentDetails === 'object' &&
-      (formik.touched.paymentDetails as Record<string, boolean>)[field.name];
-
-    const fieldError =
-      isTouched &&
-      (formik.errors.paymentDetails as Record<string, string | undefined>)?.[field.name];
-
-    switch (field.type) {
-      case 'date':
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <DatePicker
-                label={field.label}
-                value={fieldValue ? dayjs(fieldValue) : null}
-                onChange={(newValue) => {
-                  formik.setFieldValue(fieldName, newValue ? newValue.toISOString() : '');
-                  // Trigger validation for this field
-                  formik.setFieldTouched(fieldName, true);
-                }}
-                format="DD/MM/YYYY"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    error: !!fieldError,
-                    helperText: fieldError as string,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      case 'select':
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <CustomSelect
-                label={field.label}
-                options={
-                  field.options?.map((option: string) => ({ value: option, label: option })) || []
-                }
-                value={fieldValue}
-                onChange={(val) => formik.setFieldValue(fieldName, val)}
-                error={!!fieldError}
-                helperText={fieldError as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      case 'multiline':
-        return (
-          <Grid size={12} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                label={field.label}
-                name={fieldName}
-                value={fieldValue}
-                onChange={(e) => formik.setFieldValue(fieldName, e.target.value)}
-                error={!!fieldError}
-                helperText={fieldError as string}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      case 'amount':
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <NumericFormatCustom
-                size="small"
-                fullWidth
-                label={field.label}
-                name={fieldName}
-                value={fieldValue || ''}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  val = val.replace(/[₹,\s]/g, '');
-                  formik.setFieldValue(fieldName, Number(val));
-                }}
-                error={!!fieldError}
-                helperText={fieldError as string}
-                sx={{
-                  width: '100%',
-                  padding: '0',
-                  borderRadius: 1,
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      default:
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <TextField
-                fullWidth
-                size="small"
-                label={field.label}
-                name={fieldName}
-                value={fieldValue}
-                onChange={(e) => {
-                  let { value } = e.target;
-
-                  // Handle specific field transformations
-                  if (
-                    field.name === 'chequeNumber' ||
-                    field.name === 'transactionId' ||
-                    field.name === 'authorizationCode'
-                  ) {
-                    value = value.toUpperCase();
-                  } else if (field.name === 'upiId') {
-                    // UPI ID validation: allow alphanumeric, @, ., -
-                    value = value.toLowerCase().replace(/[^a-z0-9@.-]/g, '');
-                  } else if (field.name === 'cardNumber') {
-                    // Only allow last 4 digits
-                    value = value.replace(/\D/g, '').slice(-4);
-                  } else if (
-                    field.name === 'payeeName' ||
-                    field.name === 'accountHolderName' ||
-                    field.name === 'bankName' ||
-                    field.name === 'cardHolderName'
-                  ) {
-                    value = value
-                      .replace(/[^a-zA-Z\s]/g, '')
-                      .split(' ')
-                      .map((word) =>
-                        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                      )
-                      .join(' ');
-                  }
-
-                  formik.setFieldValue(fieldName, value);
-                }}
-                onBlur={() => formik.setFieldTouched(fieldName, true)}
-                error={!!fieldError}
-                helperText={fieldError as string}
-                inputProps={{
-                  ...(field.pattern ? { pattern: field.pattern } : {}),
-                  ...(field.name === 'cardNumber' ? { maxLength: 4 } : {}),
-                  ...(field.name === 'upiId' ? { placeholder: 'example@upi' } : {}),
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-    }
-  };
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.incomeCategory && formik.errors.incomeCategory)}
-                >
-                  <CustomSelect
-                    label="Income Category *"
-                    options={incomeOptionsData || []}
-                    value={formik.values.incomeCategory}
-                    onChange={(val) => {
-                      formik.setFieldValue('incomeCategory', val);
-                      formik.setFieldTouched('incomeCategory', false);
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                      const selectedCategory = categoryOptions.find(
-                        (cat: { value: string; budget?: string }) => cat.value === val
-                      );
-                    }}
-                    error={!!(formik.touched.incomeCategory && formik.errors.incomeCategory)}
-                    helperText={
-                      (formik.touched.incomeCategory && formik.errors.incomeCategory) as string
-                    }
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.incomeCategoryTags && formik.errors.incomeCategoryTags)}
-                >
-                  <CustomSelect
-                    label="Income Category Tags *"
-                    options={[
-                      { value: 'Donation', label: 'Donation' },
-                      { value: 'Grant', label: 'Grant' },
-                      { value: 'Fee', label: 'Fee' },
-                      { value: 'Fundraiser', label: 'Fundraiser' },
-                      { value: 'Sponsorship', label: 'Sponsorship' },
-                      { value: 'Other', label: 'Other' },
-                    ]}
-                    value={formik.values.incomeCategoryTags || []}
-                    onChange={(val) => formik.setFieldValue('incomeCategoryTags', val)}
-                    error={
-                      !!(formik.touched.incomeCategoryTags && formik.errors.incomeCategoryTags)
-                    }
-                    helperText={
-                      (formik.touched.incomeCategoryTags &&
-                        formik.errors.incomeCategoryTags) as string
-                    }
-                    formControlProps={{ fullWidth: true }}
-                    multiple
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.incomeName && formik.errors.incomeName)}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Income Name *"
-                    name="incomeName"
-                    value={formik.values.incomeName}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        .replace(/[^a-zA-Z0-9\s]/g, '')
-                        .split(' ')
-                        .map((word) =>
-                          word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                        )
-                        .join(' ');
-                      formik.setFieldValue('incomeName', value);
-                    }}
-                    error={!!(formik.touched.incomeName && formik.errors.incomeName)}
-                    helperText={formik.touched.incomeName && formik.errors.incomeName}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
-                  <NumericFormatCustom
-                    size="small"
-                    fullWidth
-                    label="Amount *"
-                    name="amount"
-                    value={formik.values.amount || ''}
-                    onChange={(e) => {
-                      let val = e.target.value;
-                      val = val.replace(/[₹,\s]/g, '');
-                      formik.setFieldValue('amount', Number(val));
-                    }}
-                    error={!!(formik.touched.amount && formik.errors.amount)}
-                    helperText={formik.touched.amount && formik.errors.amount}
-                    sx={{
-                      width: '100%',
-                      padding: '0',
-                      borderRadius: 1,
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
-                >
-                  <CustomSelect
-                    label="Payment Via *"
-                    options={paymentMethodOptions}
-                    value={formik.values.paymentMethod}
-                    onChange={(val) => {
-                      formik.setFieldValue('paymentMethod', val);
-                    }}
-                    error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
-                    helperText={
-                      (formik.touched.paymentMethod && formik.errors.paymentMethod) as string
-                    }
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
-                  <DatePicker
-                    label="Date *"
-                    value={formik.values.date}
-                    onChange={(newValue) => formik.setFieldValue('date', newValue)}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    format="DD/MM/YYYY"
-                    disableFuture
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: !!(formik.touched.date && formik.errors.date),
-                        helperText: formik.touched.date && formik.errors.date,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Dynamic Payment Method Fields */}
-              {/* {paymentFields.length > 0 && (
-                <Grid size={12}>
-                  <Box sx={{ mb: 1 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        mb: 1,
-                        color: 'primary.main',
-                        fontWeight: 600,
-                        borderColor: 'primary.light',
-                        pb: 1,
-                        display: 'inline-block',
-                      }}
+              <Grid size={{ xs: 12 }}>
+                <SectionCard title="Income Details" paperProps={{ sx: { ...cardStyle, mb: 0 } }}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.incomeCategory && formik.errors.incomeCategory)}
                     >
-                      {selectedPaymentMethod} Details
-                    </Typography>
+                      <CustomSelect
+                        label="Income Category *"
+                        options={incomeOptionsData || []}
+                        value={formik.values.incomeCategory}
+                        onChange={(val) => {
+                          formik.setFieldValue('incomeCategory', val);
+                          formik.setFieldTouched('incomeCategory', false);
+                          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                          const selectedCategory = categoryOptions.find(
+                            (cat: { value: string; budget?: string }) => cat.value === val
+                          );
+                        }}
+                        error={!!(formik.touched.incomeCategory && formik.errors.incomeCategory)}
+                        helperText={
+                          (formik.touched.incomeCategory && formik.errors.incomeCategory) as string
+                        }
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-                    <Grid container spacing={3}>
-                      {paymentFields.map((field: any) => renderDynamicField(field))}
-                    </Grid>
-                  </Box>
-                </Grid>
-              )} */}
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={
+                        !!(formik.touched.incomeCategoryTags && formik.errors.incomeCategoryTags)
+                      }
+                    >
+                      <CustomSelect
+                        label="Income Category Tags *"
+                        options={[
+                          { value: 'Donation', label: 'Donation' },
+                          { value: 'Grant', label: 'Grant' },
+                          { value: 'Fee', label: 'Fee' },
+                          { value: 'Fundraiser', label: 'Fundraiser' },
+                          { value: 'Sponsorship', label: 'Sponsorship' },
+                          { value: 'Other', label: 'Other' },
+                        ]}
+                        value={formik.values.incomeCategoryTags || []}
+                        onChange={(val) => formik.setFieldValue('incomeCategoryTags', val)}
+                        error={
+                          !!(formik.touched.incomeCategoryTags && formik.errors.incomeCategoryTags)
+                        }
+                        helperText={
+                          (formik.touched.incomeCategoryTags &&
+                            formik.errors.incomeCategoryTags) as string
+                        }
+                        formControlProps={{ fullWidth: true }}
+                        multiple
+                      />
+                    </ShakingTextField>
+                  </Grid>
 
-              <Grid size={12}>
-                <ShakingTextField>
-                  <TextField
-                    fullWidth
-                    multiline
-                    minRows={3}
-                    label="Notes"
-                    name="notes"
-                    value={formik.values.notes}
-                    onChange={formik.handleChange}
-                  />
-                </ShakingTextField>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.incomeName && formik.errors.incomeName)}
+                    >
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Income Name *"
+                        name="incomeName"
+                        value={formik.values.incomeName}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            .split(' ')
+                            .map((word) =>
+                              word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                            )
+                            .join(' ');
+                          formik.setFieldValue('incomeName', value);
+                        }}
+                        error={!!(formik.touched.incomeName && formik.errors.incomeName)}
+                        helperText={formik.touched.incomeName && formik.errors.incomeName}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
+                      <NumericFormatCustom
+                        size="small"
+                        fullWidth
+                        label="Amount *"
+                        name="amount"
+                        value={formik.values.amount || ''}
+                        onChange={(e) => {
+                          let val = e.target.value;
+                          val = val.replace(/[₹,\s]/g, '');
+                          formik.setFieldValue('amount', Number(val));
+                        }}
+                        error={!!(formik.touched.amount && formik.errors.amount)}
+                        helperText={formik.touched.amount && formik.errors.amount}
+                        sx={{
+                          width: '100%',
+                          padding: '0',
+                          borderRadius: 1,
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
+                      <DatePicker
+                        label="Date *"
+                        value={formik.values.date}
+                        onChange={(newValue) => formik.setFieldValue('date', newValue)}
+                        minDate={dayjs(currentYear?.startDate)}
+                        maxDate={dayjs(currentYear?.endDate)}
+                        format="DD/MM/YYYY"
+                        disableFuture
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            size: 'small',
+                            error: !!(formik.touched.date && formik.errors.date),
+                            helperText: formik.touched.date && formik.errors.date,
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <SectionCard
+                  title="Payment Information"
+                  paperProps={{ sx: { ...cardStyle, mb: 0 } }}
+                >
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
+                    >
+                      <CustomSelect
+                        label="Payment Method *"
+                        options={Object.keys(paymentMethodsConfig).map((method) => ({
+                          value: method,
+                          label: method.charAt(0).toUpperCase() + method.slice(1),
+                        }))}
+                        value={formik.values.paymentMethod}
+                        onChange={(val) => {
+                          formik.setFieldValue('paymentMethod', val);
+                        }}
+                        error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
+                        helperText={
+                          (formik.touched.paymentMethod && formik.errors.paymentMethod) as string
+                        }
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <SectionCard
+                  title="Additional Information"
+                  paperProps={{ sx: { ...cardStyle, mb: 0 } }}
+                >
+                  <Grid size={12}>
+                    <ShakingTextField>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={3}
+                        label="Notes"
+                        name="notes"
+                        value={formik.values.notes}
+                        onChange={formik.handleChange}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                </SectionCard>
               </Grid>
             </Grid>
           </Scrollbar>
@@ -501,8 +333,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
               type="submit"
               size="small"
               variant="contained"
-              loading={isLoading}
-              disabled={isLoading}
+              loading={isAddingIncomeCategory || isUpdatingIncomeCategory}
             >
               {editData ? 'Update' : 'Submit'}
             </LoadingButton>

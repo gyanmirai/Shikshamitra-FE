@@ -1,13 +1,17 @@
+'use client';
+
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
+import type { BoardMediumOption } from 'src/components/boardMediumDropdown';
 
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fCurrency } from 'src/utils/format-number';
 import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
+import BoardMediumDropdown from 'src/components/boardMediumDropdown';
 
-type Props = CardProps & {
+interface Props extends CardProps {
   title?: string;
   subheader?: string;
   chart: {
@@ -19,10 +23,12 @@ type Props = CardProps & {
     }[];
     options?: ChartOptions;
   };
-};
+}
 
 export default function FinanceOutstandingByClass({ title, subheader, chart, ...other }: Props) {
   const theme = useTheme();
+
+  const [selectedBoardMedium, setSelectedBoardMedium] = React.useState<BoardMediumOption>();
 
   const chartColors = chart.colors ?? [theme.palette.error.main];
 
@@ -52,7 +58,23 @@ export default function FinanceOutstandingByClass({ title, subheader, chart, ...
 
   return (
     <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        sx={{ p: 2 }}
+        action={
+          <BoardMediumDropdown
+            value={selectedBoardMedium}
+            onChange={(val) => {
+              setSelectedBoardMedium(val);
+
+              // 🔥 finance API refetch
+              // val.boardId
+              // val.mediumId
+            }}
+          />
+        }
+      />
 
       <Box sx={{ p: 3, pb: 1 }}>
         <Chart

@@ -1,8 +1,6 @@
 export const getInitialNotificationData = () => ({
   audience: {
-    role: '',
-    classes: [],
-    divisions: [],
+    educationMediumStageId: [],
   },
   members: [],
   channels: [],

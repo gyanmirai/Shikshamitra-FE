@@ -9,7 +9,7 @@ import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Tabs, Paper } from '@mui/material';
+import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -216,27 +216,8 @@ const FinanceReconciliation = () => {
           { name: 'Reconciliation', href: '/finance/reconciliation' },
         ]}
       />
-      <Paper
-        sx={{
-          boxShadow: 0,
-          borderRadius: 2,
-          background: '#fff',
-          // p: 2,
-        }}
-        elevation={2}
-      >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{
-            p: 1,
-            gap: 2,
-            borderRadius: '8px',
-            bgcolor: 'background.paper',
-            boxShadow: 'var(--shadows-3)',
-          }}
-        >
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
+        <Box display="flex" justifyContent="space-between">
           <DatePicker
             label="Month-Year"
             format="MMM-YYYY"
@@ -274,7 +255,7 @@ const FinanceReconciliation = () => {
             ))}
           </Tabs>
         </Box>
-      </Paper>
+      </Card>
       <FormSlider
         steps={TABS}
         isBackClick={isBack}

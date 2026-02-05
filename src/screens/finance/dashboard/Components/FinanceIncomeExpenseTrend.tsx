@@ -64,9 +64,9 @@ export default function FinanceIncomeExpenseTrend({ title, subheader, chart, ...
 
   return (
     <Card {...other} sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
-      <Box sx={{ p: 3, pb: 1 }}>
+      <Box sx={{ p: 1, pb: 1 }}>
         <Chart
           dir="ltr"
           type="line"

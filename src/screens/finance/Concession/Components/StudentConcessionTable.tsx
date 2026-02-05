@@ -18,12 +18,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Tab, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   concessionRequestApi,
-  useGetConcessionRequestsListQuery,
   useDeleteConcessionRequestMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
+
+import concessionData from '../../../../../concession.json';
 
 import type { IStudentInfo } from '../type';
 import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
@@ -57,25 +58,25 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     currentQueryAndMutation: useDeleteConcessionRequestMutation,
   });
   // Local state to store filtered boards based on academic year
-  const [boards, setBoards] = useState([]);
+  const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-  const {
-    data: concessionData = [],
-    isLoading: isLoadingConcessionData,
-    refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetConcessionRequestsListQuery,
-    params: {
-      board: selectedBoard,
-      medium: selectedMedium,
-      status: tabs.value,
-    },
-  });
+  // const {
+  //   data: concessionData = [],
+  //   isLoading: isLoadingConcessionData,
+  //   refetch,
+  // } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetConcessionRequestsListQuery,
+  //   params: {
+  //     board: selectedBoard,
+  //     medium: selectedMedium,
+  //     status: tabs.value,
+  //   },
+  // });
   // State to store th  e selected student concession data
   // null when no student is selected
   useEffect(() => {
@@ -88,21 +89,25 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   const concessionCounts = useMemo(
     () => ({
       pending:
-        concessionData?.filter((i: any) => i?.status === ConcessionStatusType.Pending)?.length || 0,
+        concessionData?.concessionData?.filter(
+          (i: any) => i?.status === ConcessionStatusType.Pending
+        )?.length || 0,
       approved:
-        concessionData?.filter((i: any) => i?.status === ConcessionStatusType.Approved)?.length ||
-        0,
+        concessionData?.concessionData?.filter(
+          (i: any) => i?.status === ConcessionStatusType.Approved
+        )?.length || 0,
       rejected:
-        concessionData?.filter((i: any) => i?.status === ConcessionStatusType.Rejected)?.length ||
-        0,
+        concessionData?.concessionData?.filter(
+          (i: any) => i?.status === ConcessionStatusType.Rejected
+        )?.length || 0,
     }),
-    [concessionData]
+    []
   );
 
-  const tableData = useMemo(
-    () => concessionData?.filter((i: any) => i?.status === tabs.value) || [],
-    [concessionData, tabs.value]
-  );
+  // const tableData = useMemo(
+  //   () => concessionData?.filter((i: any) => i?.status === tabs.value) || [],
+  //   [concessionData, tabs.value]
+  // );
 
   const TABS = useMemo(
     () => [
@@ -157,60 +162,62 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between">
-        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
-          <CustomSelect
-            label="Board"
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={selectedBoard}
-            onChange={(value) => {
-              setSelectedBoard(value as string);
-              setSelectedMedium('');
-            }}
-            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-          />
-          <CustomSelect
-            label="Medium"
-            options={mediums || []}
-            labelKey="name"
-            disabled={!selectedBoard}
-            valueKey="id"
-            value={selectedMedium}
-            onChange={(value) => setSelectedMedium(value as string)}
-            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-          />
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              label="Board"
+              options={boards || []}
+              labelKey="name"
+              valueKey="id"
+              value={selectedBoard}
+              onChange={(value) => {
+                setSelectedBoard(value as string);
+                setSelectedMedium('');
+              }}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+            <CustomSelect
+              label="Medium"
+              options={mediums || []}
+              labelKey="name"
+              disabled={!selectedBoard}
+              valueKey="id"
+              value={selectedMedium}
+              onChange={(value) => setSelectedMedium(value as string)}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Tabs
+              value={tabs.value}
+              onChange={tabs.onChange}
+              sx={{
+                '& .MuiTabs-flexContainer': { gap: 2 },
+                flexGrow: 1,
+              }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  sx={{ fontSize: '12px' }}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}
+                      <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
-          <Tabs
-            value={tabs.value}
-            onChange={tabs.onChange}
-            sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
-              flexGrow: 1,
-            }}
-          >
-            {TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                sx={{ fontSize: '12px' }}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}
-                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
-        </Box>
-      </Box>
+      </Card>
 
       <CustomizableTable
         tableId="student-concession-table"
-        isLoading={isLoadingConcessionData}
+        // isLoading={isLoadingConcessionData}
         noDataText={
           <>
             No Concessions Found{' '}
@@ -302,7 +309,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             },
           },
         ]}
-        data={tableData || []}
+        data={concessionData?.concessionRequestData || []}
       />
 
       <ConfirmDialog
@@ -347,7 +354,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
                     );
                     setSelectedConcession(null);
                   },
-                  onUndoRestore: () => refetch(),
+                  onUndoRestore: () => {},
                   onCommit: () => deleteConcessionRequest(selectedConcession.id),
                 });
               }

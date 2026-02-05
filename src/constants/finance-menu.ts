@@ -108,33 +108,15 @@ const financeModule = {
           permissionName: financePermissions.feeCollection,
           icon: menuIconView('mdi:hand-coin-outline'),
         },
-        {
-          title: 'Charges',
-          path: financePaths.charges,
-          _action: 'fee-charges',
-          shortcutKey: 'Alt+F+3',
-          shortcutKeyName: 'Alt+F+3',
-          permissionName: financePermissions.charges,
-          icon: menuIconView('mdi:cash-plus'),
-          // children: [
-          //   {
-          //     title: 'Assign Charge',
-          //     path: '/finance/charge-management/chargesRequest',
-          //     _action: 'charges-request',
-          //     shortcutKey: 'Alt+F+3',
-          //     shortcutKeyName: 'Alt+F+3',
-          //   },
-          //   // ...
-          // ],
-        },
-        //         {
-        //           title: 'Fee Refund',
-        //           path: financePaths.feeRefund,
-        //           _action: 'fee-refund',
-        //           shortcutKey: 'Alt+F+4',
-        //           shortcutKeyName: 'Alt+F+4',
-        //           permissionName: financePermissions.feeRefund,
-        //         },
+        // {
+        //   title: 'Charges',
+        //   path: financePaths.charges,
+        //   _action: 'fee-charges',
+        //   shortcutKey: 'Alt+F+3',
+        //   shortcutKeyName: 'Alt+F+3',
+        //   permissionName: financePermissions.charges,
+        //   icon: menuIconView('mdi:cash-plus'),
+        // },
         {
           title: 'Concession',
           path: financePaths.concession,
