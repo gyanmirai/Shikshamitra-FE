@@ -516,7 +516,7 @@ const StudentProfileView = () => {
           top: 0,
           zIndex: 999,
           backgroundColor: 'background.default',
-          pb: 1,
+          // pb: 1,
           transition: 'all 0.3s ease-in-out',
         }}
       >
