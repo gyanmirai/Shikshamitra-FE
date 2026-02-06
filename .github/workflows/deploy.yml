@@ -23,7 +23,7 @@ jobs:
           node-version: 22
 
       - name: Install deps (prod only)
-        run: npm ci --omit=dev
+        run: HUSKY=0 npm ci --omit=dev
 
       - name: Build Next.js
         run: NODE_OPTIONS="--max-old-space-size=8192" npm run build
