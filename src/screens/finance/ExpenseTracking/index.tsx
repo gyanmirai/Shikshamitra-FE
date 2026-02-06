@@ -82,7 +82,6 @@ const FinanceExpenseTracking = () => {
               Expense
             </Button>
           }
-          sx={{ px: 2 }}
         />
       )}
 

@@ -34,7 +34,6 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentDocumentsQuery } from 'src/redux/student/registration/registration-api';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
-import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
 import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
 import {
   useGetStudentAdmissionQuery,
@@ -533,29 +532,6 @@ const AdmissionScreen = () => {
           isStatus={false}
         />
       </CustomDialog>
-
-      {dialogForCollectFees.value && (
-        // <FeeCollectionForm
-        //   dialogValue={dialog.value}
-        //   onClose={closeDialog}
-        // />
-        <FeeNewCollectionForm
-          isFromStudentAdmissionFlow
-          dialogValue={dialogForCollectFees.value}
-          onClose={() => {
-            dialogForCollectFees.onFalse();
-          }}
-          data={[]}
-        />
-        // <FinanceNewCollectFeeDialog
-        //   isFromStudentAdmission={false}
-        //   onSave={() => {}}
-        //   dialogValue={dialog.value}
-        //   onClose={closeDialog}
-        //   data={selectedStudent}
-        // />
-      )}
-
       {/* <CustomDialog
         open={openDetails.value}
         handleClose={() => {

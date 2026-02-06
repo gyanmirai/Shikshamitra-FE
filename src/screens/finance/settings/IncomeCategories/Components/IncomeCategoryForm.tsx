@@ -152,8 +152,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
               <TextField
                 fullWidth
                 size="small"
-                label="Tags"
-                placeholder="Type a tag and press Enter"
+                label="Tags *"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -169,10 +168,27 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                       }}
                     >
                       {formik.values.tags.map((t: string, index: number) => (
-                        <Chip key={index} label={t} onDelete={() => handleDelete(t)} size="small" />
+                        <Chip
+                          key={index}
+                          label={t}
+                          onDelete={() => handleDelete(t)}
+                          size="small"
+                          sx={{ mt: 1 }}
+                        />
                       ))}
                     </Box>
                   ),
+                }}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    flexWrap: 'wrap',
+                    alignItems: 'flex-start',
+                    minHeight: 'auto',
+                  },
+                  '& .MuiInputBase-input': {
+                    flexGrow: 1,
+                    minWidth: '80px',
+                  },
                 }}
                 error={formik.touched.tags && Boolean(formik.errors.tags)}
                 helperText={
@@ -180,19 +196,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                     ? formik.errors.tags
                     : undefined
                 }
-                sx={{
-                  '& .MuiInputBase-root': {
-                    flexWrap: 'wrap',
-                    alignItems: 'flex-start',
-                    minHeight: 'auto',
-                    pt: '10px',
-                  },
-                  '& .MuiInputBase-input': {
-                    flexGrow: 1,
-                    minWidth: '80px',
-                    mb: '4px',
-                  },
-                }}
               />
             </ShakingTextField>
           </Grid>

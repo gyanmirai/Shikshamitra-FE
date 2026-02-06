@@ -105,7 +105,7 @@ const ConcessionType = () => {
         }
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/setting' },
           { name: 'Concession Type', href: '/finance/concession-type' },
         ]}
         action={
@@ -119,7 +119,6 @@ const ConcessionType = () => {
             Concession Type
           </Button>
         }
-        sx={{ px: 2 }}
       />
       <>
         {/* Form card for creating/editing concession types */}

@@ -198,7 +198,7 @@ const FinanceReceiptBookSetting = () => {
         heading="Receipt Book"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/settings/receipt-book/' },
+          { name: 'Settings', href: '/finance/settings/receipt-book/' },
           { name: 'Receipt Book' },
         ]}
         action={

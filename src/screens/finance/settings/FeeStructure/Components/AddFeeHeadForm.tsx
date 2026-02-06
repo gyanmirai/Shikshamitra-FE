@@ -43,10 +43,10 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
       return;
     }
 
-    // ✅ Get current fee structure array for the class
+    // Get current fee structure array for the class
     const classFeeStructures = formik.values.feeStructureClasses[className] || [];
 
-    // ✅ Get the specific fee structure to update
+    // Get the specific fee structure to update
     const currentStructure = classFeeStructures[feeStructureIndex];
 
     if (!currentStructure) {
@@ -56,7 +56,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
 
     const updatedItems = [...(currentStructure.feeItems || [])];
 
-    // ✅ Prevent duplicates
+    // Prevent duplicates
     const existingHeads = new Set(updatedItems.map((item) => item.feeHead));
     const duplicates = selectedFeeHead.filter((feeHeadValue) => existingHeads.has(feeHeadValue));
 
@@ -65,7 +65,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
       return;
     }
 
-    // ✅ Add only new fee heads
+    // Add only new fee heads
     selectedFeeHead.forEach((feeHeadValue) => {
       const selected = feeHeadOptions.find((opt) => opt.feeHead === feeHeadValue);
       if (selected) {
@@ -79,7 +79,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
       }
     });
 
-    // ✅ Replace feeItems for the specific fee structure
+    // Replace feeItems for the specific fee structure
     const updatedStructure = {
       ...currentStructure,
       feeItems: updatedItems,
@@ -88,7 +88,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
     const updatedClassFeeStructures = [...classFeeStructures];
     updatedClassFeeStructures[feeStructureIndex] = updatedStructure;
 
-    // ✅ Set back in formik
+    // Set back in formik
     formik.setFieldValue(`feeStructureClasses.${className}`, updatedClassFeeStructures);
 
     setSelectedFeeHead([]);
