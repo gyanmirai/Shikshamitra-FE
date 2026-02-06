@@ -17,7 +17,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext }) => {
       maxWidth={false}
       sx={{
         height: '100%',
-        minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
