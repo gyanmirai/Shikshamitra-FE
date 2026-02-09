@@ -52,7 +52,6 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
   const removeConcessionDialog = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
-
   const [deleteConcessionRequest] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionRequestMutation,
@@ -89,25 +88,25 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   const concessionCounts = useMemo(
     () => ({
       pending:
-        concessionData?.concessionData?.filter(
+        concessionData?.concessionRequestData?.filter(
           (i: any) => i?.status === ConcessionStatusType.Pending
         )?.length || 0,
       approved:
-        concessionData?.concessionData?.filter(
+        concessionData?.concessionRequestData?.filter(
           (i: any) => i?.status === ConcessionStatusType.Approved
         )?.length || 0,
       rejected:
-        concessionData?.concessionData?.filter(
+        concessionData?.concessionRequestData?.filter(
           (i: any) => i?.status === ConcessionStatusType.Rejected
         )?.length || 0,
     }),
     []
   );
 
-  // const tableData = useMemo(
-  //   () => concessionData?.filter((i: any) => i?.status === tabs.value) || [],
-  //   [concessionData, tabs.value]
-  // );
+  const tableData = useMemo(
+    () => concessionData?.concessionRequestData?.filter((i: any) => i?.status === tabs.value) || [],
+    [tabs.value]
+  );
 
   const TABS = useMemo(
     () => [
@@ -309,7 +308,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             },
           },
         ]}
-        data={concessionData?.concessionRequestData || []}
+        data={tableData || []}
       />
 
       <ConfirmDialog

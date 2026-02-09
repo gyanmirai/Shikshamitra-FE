@@ -14,11 +14,15 @@ import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { RuleOperator } from 'src/enums/rule-operator';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
-import React, { useRef, useState, useEffect } from 'react';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { StudentFilterField, EmployeeFilterField } from 'src/enums/filter-fields';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
@@ -48,7 +52,9 @@ import {
 import AdditionalFilters from './AdditionalFilters';
 import HierarchyTextView from './HorizonatalTreeView';
 import AcademicFilterDrawer from './AcademicFilterDrawer';
+import { transformApiToTree } from './TransformApiToTree';
 import { getGroupInitialValues } from './getGroupInitialValues';
+import { extractAllRuleIds, pruneTreeBySelectedIds } from './academicTreeUtils';
 
 import type { IGroup } from './type';
 import type { TreeNodeData } from './AcademicTreeView';
@@ -60,7 +66,7 @@ export const groupValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required('Group Name is required'),
   description: Yup.string().nullable(),
   ruleBased: Yup.object().shape({
-    academicRules: Yup.array(),
+    academicRules: Yup.mixed().nullable(),
     roles: Yup.array(),
     studentFilters: Yup.array(),
     employeeFilters: Yup.array(),
@@ -72,18 +78,34 @@ export const groupValidationSchema = Yup.object().shape({
 
 const isRuleBasedEmpty = (ruleBased: any) => {
   if (!ruleBased) return true;
-  const hasAcademic = ruleBased.academicRules?.some(
-    (r: any) =>
-      (r.boards?.length || 0) > 0 ||
+  const r = ruleBased.academicRules;
+  const hasAcademic =
+    r &&
+    !Array.isArray(r) &&
+    ((r.boards?.length || 0) > 0 ||
       (r.mediums?.length || 0) > 0 ||
       (r.stages?.length || 0) > 0 ||
       (r.classes?.length || 0) > 0 ||
-      (r.divisions?.length || 0) > 0
-  );
+      (r.divisions?.length || 0) > 0);
+
+  // Fallback for array if it somehow still is one
+  const hasAcademicArray =
+    Array.isArray(r) &&
+    r.some(
+      (ar: any) =>
+        (ar.boards?.length || 0) > 0 ||
+        (ar.mediums?.length || 0) > 0 ||
+        (ar.stages?.length || 0) > 0 ||
+        (ar.classes?.length || 0) > 0 ||
+        (ar.divisions?.length || 0) > 0
+    );
+
   const hasRoles = (ruleBased.roles?.length || 0) > 0;
   const hasStudentFilters = (ruleBased.studentFilters?.length || 0) > 0;
   const hasEmployeeFilters = (ruleBased.employeeFilters?.length || 0) > 0;
-  return !hasAcademic && !hasRoles && !hasStudentFilters && !hasEmployeeFilters;
+  return (
+    !hasAcademic && !hasAcademicArray && !hasRoles && !hasStudentFilters && !hasEmployeeFilters
+  );
 };
 
 interface GroupFormProps {
@@ -191,7 +213,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     type: 'query',
     currentQueryAndMutation: useGetGroupByIdQuery,
     params: {
-      groupId: initialValues?.id,
+      id: initialValues?.id,
     },
   });
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -200,16 +222,25 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     type: 'mutation',
     currentQueryAndMutation: useUpdateGroupMutation,
   });
-  const extractUniqueIds = (rules: Array<{ divisions?: string[] }> = []): string[] =>
-    Array.from(new Set(rules.flatMap((rule) => rule.divisions || [])));
+
+  const extractUniqueIds = (rules: any): string[] => {
+    if (!rules) return [];
+    if (Array.isArray(rules)) {
+      return Array.from(new Set(rules.flatMap((rule) => rule.divisions || [])));
+    }
+    return rules.divisions || [];
+  };
+
+  const initialData = useMemo(() => getGroupInitialValues(groupData), [groupData]);
 
   const formik = useFormik<IGroupFormValues>({
     initialValues: {
-      ...getGroupInitialValues(initialValues),
+      ...initialData,
       searchQuery: '',
       searchTriggered: false,
       selection: '',
     } as IGroupFormValues,
+    enableReinitialize: true,
     validationSchema: groupValidationSchema,
     validate: (values) => {
       const errors: any = {};
@@ -220,13 +251,74 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       return errors;
     },
     onSubmit: (values) => {
-      // Placeholder submit logic
+      const mapFilters = (filters: any[], isStudent: boolean) => {
+        const fieldMapping: any = isStudent
+          ? {
+              class: StudentFilterField.Class,
+              section: StudentFilterField.Section,
+              gender: StudentFilterField.Gender,
+              admissionStatus: StudentFilterField.AdmissionStatus,
+              name: StudentFilterField.Name,
+            }
+          : {
+              department: EmployeeFilterField.Department,
+              role: EmployeeFilterField.Role,
+              employmentType: EmployeeFilterField.EmploymentType,
+              name: EmployeeFilterField.Name,
+            };
+
+        const operatorMapping: any = {
+          equals: RuleOperator.Equals,
+          notEquals: RuleOperator.NotEquals,
+          contains: RuleOperator.Contains,
+          startsWith: RuleOperator.StartsWith,
+          endsWith: RuleOperator.EndsWith,
+          greaterThan: RuleOperator.GreaterThan,
+          lessThan: RuleOperator.LessThan,
+          greaterOrEqual: RuleOperator.GreaterOrEqual,
+          lessOrEqual: RuleOperator.LessOrEqual,
+          in: RuleOperator.In,
+        };
+
+        return (filters || []).map((f) => {
+          const fieldValue = f.field;
+          const operatorValue = f.operator;
+
+          const field = Number.isNaN(Number(fieldValue))
+            ? fieldMapping[fieldValue]
+            : Number(fieldValue);
+          const operator = Number.isNaN(Number(operatorValue))
+            ? operatorMapping[operatorValue]
+            : Number(operatorValue);
+          return {
+            field: field ?? 0,
+            operator: operator ?? 0,
+            value: f.value,
+          };
+        });
+      };
+
+      const mapRules = (rules: any) => ({
+        divisionIds: extractUniqueIds(rules.academicRules),
+        roleIds: rules.roles || [],
+        studentFilters: mapFilters(rules.studentFilters, true),
+        employeeFilters: mapFilters(rules.employeeFilters, false),
+      });
+
       const payload = {
         name: values.name,
         description: values.description,
-        ruleBased: values.ruleBased,
-        nameBased: values.nameBased,
+        ruleBased: mapRules(values.ruleBased),
+        nameBased: {
+          ...mapRules(values.nameBased),
+          selectedMembers: (values.nameBased.selectedMembers || []).map((m: any) => ({
+            memberType: m.memberType ?? 0,
+            memberId: m.memberId,
+            userId: m.userId,
+          })),
+        },
       };
+
       if (isEdit) {
         updateGroup({ groupId: initialValues?.id, body: payload });
       } else {
@@ -235,8 +327,48 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       onClose?.(values, true);
     },
   });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [getUsersForSelection, { isLoading: isGetUsersForSelectionLoading }] = useQueryAndMutation({
+
+  const { data: boardsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+
+  const allBoards = useMemo(() => {
+    if (!boardsData?.items) return [];
+    return boardsData.items.filter((board: any) => board.academicYearId === currentYear?.id);
+  }, [boardsData, currentYear?.id]);
+
+  const fullAcademicTree = useMemo(() => transformApiToTree(allBoards), [allBoards]);
+
+  useEffect(() => {
+    if (fullAcademicTree.length === 0) return;
+
+    // Helper to generate tree if rules exist but tree is empty
+    const syncTree = (path: 'ruleBased' | 'nameBased') => {
+      const rules = formik.values[path].academicRules;
+      const tree = formik.values[path].academicTree;
+      const selectedIds = extractAllRuleIds(rules);
+
+      if (selectedIds.size > 0 && (!tree || tree.length === 0)) {
+        const pruned = pruneTreeBySelectedIds(fullAcademicTree, selectedIds);
+        formik.setFieldValue(`${path}.academicTree`, pruned);
+      }
+    };
+
+    if (isEdit) {
+      syncTree('ruleBased');
+      syncTree('nameBased');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    fullAcademicTree,
+    isEdit,
+    formik.values.ruleBased.academicRules,
+    formik.values.nameBased.academicRules,
+    formik.setFieldValue,
+  ]);
+
+  const [getUsersForSelection] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useGetUsersForSelectionMutation,
   });
@@ -263,9 +395,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
   // }, [formik, formik.values.nameBased.selectedMembers]);
 
   // Selection table columns
-  const allIds = dummyRows.map((r) => r.id);
-  const allSelected =
-    allIds.length > 0 && allIds.every((id) => formik.values.nameBased.selectedMembers.includes(id));
+  const allSelectedInView =
+    usersForSelection.length > 0 &&
+    usersForSelection.every((row) =>
+      formik.values.nameBased.selectedMembers.some((m: any) => m.memberId === row.memberId)
+    );
   const selectionColumns: IColumn[] = [
     {
       id: 'select',
@@ -275,30 +409,61 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       isFilter: false,
       align: 'left' as const,
       sticky: true,
-      render: (_: any, row: any) => (
-        <Checkbox
-          size="small"
-          checked={formik.values.nameBased.selectedMembers.includes(row.memberId)}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const current = new Set(formik.values.nameBased.selectedMembers);
-            if (e.target.checked) current.add(row.memberId);
-            else current.delete(row.memberId);
-            formik.setFieldValue('nameBased.selectedMembers', Array.from(current));
-          }}
-        />
-      ),
+      render: (_: any, row: any) => {
+        const isSelected = formik.values.nameBased.selectedMembers.some(
+          (m: any) => m.memberId === row.memberId
+        );
+        return (
+          <Checkbox
+            size="small"
+            checked={isSelected}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const current = [...formik.values.nameBased.selectedMembers];
+              if (e.target.checked) {
+                current.push({
+                  memberType: row.memberType ?? 0,
+                  memberId: row.memberId,
+                  userId: row.userId || row.memberId,
+                });
+              } else {
+                const filtered = current.filter((m: any) => m.memberId !== row.memberId);
+                formik.setFieldValue('nameBased.selectedMembers', filtered);
+                return;
+              }
+              formik.setFieldValue('nameBased.selectedMembers', current);
+            }}
+          />
+        );
+      },
       renderColumn: () => {
         const selectedCount = formik.values.nameBased.selectedMembers.length;
-        const indeterminate = selectedCount > 0 && !allSelected;
+        const indeterminate = selectedCount > 0 && !allSelectedInView;
         return (
           <Box display="flex" alignItems="center" gap={0.5}>
             <Checkbox
               size="small"
-              checked={allSelected}
+              checked={allSelectedInView}
               indeterminate={indeterminate}
               onChange={() => {
-                if (allSelected) formik.setFieldValue('nameBased.selectedUserIds', []);
-                else formik.setFieldValue('nameBased.selectedUserIds', allIds);
+                if (allSelectedInView) {
+                  const viewIds = usersForSelection.map((r: any) => r.memberId);
+                  const filtered = formik.values.nameBased.selectedMembers.filter(
+                    (m: any) => !viewIds.includes(m.memberId)
+                  );
+                  formik.setFieldValue('nameBased.selectedMembers', filtered);
+                } else {
+                  const current = [...formik.values.nameBased.selectedMembers];
+                  usersForSelection.forEach((row: any) => {
+                    if (!current.some((m: any) => m.memberId === row.memberId)) {
+                      current.push({
+                        memberType: row.memberType ?? 0,
+                        memberId: row.memberId,
+                        userId: row.userId || row.memberId,
+                      });
+                    }
+                  });
+                  formik.setFieldValue('nameBased.selectedMembers', current);
+                }
               }}
             />
           </Box>
@@ -452,54 +617,46 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.searchQuery]);
 
-  const handleAcademicApply: AcademicFilterDrawerProps['onApply'] = (
-    _ids,
-    _breakdown,
-    _nodes,
-    _breakdownNodes,
-    hierarchicalSelectedTree,
-    currentFilter
-  ) => {
-    // const extractIds = (nodes: any[], targetType: string): string[] => {
-    //   let ids: string[] = [];
-    //   nodes.forEach((n) => {
-    //     if (n.type === targetType) ids.push(n.id);
-    //     if (n.children) ids = ids.concat(extractIds(n.children, targetType));
-    //   });
-    //   return Array.from(new Set(ids));
-    // };
-    const extractOnlyIds = (nodes: TreeNodeData[], targetType: string): string[] => {
-      let ids: string[] = [];
-      nodes.forEach((node) => {
-        // If the type matches, grab the ID string
-        if (node.type === targetType) {
-          ids.push(node.id);
-        }
-        // If there are children, keep looking deeper
-        if (node.children && node.children.length > 0) {
-          ids = [...ids, ...extractOnlyIds(node.children, targetType)];
-        }
-      });
-      // Remove duplicates just in case
-      return Array.from(new Set(ids));
-    };
+  const handleAcademicApply: AcademicFilterDrawerProps['onApply'] = useCallback(
+    (
+      _ids: string[],
+      _breakdown: any,
+      _nodes: any,
+      _breakdownNodes: any,
+      hierarchicalSelectedTree: TreeNodeData[] | undefined,
+      filterName?: string
+    ) => {
+      const extractOnlyIds = (nodes: TreeNodeData[], targetType: string): string[] => {
+        let ids: string[] = [];
+        nodes.forEach((node) => {
+          if (node.type === targetType) {
+            ids.push(node.id);
+          }
+          if (node.children && node.children.length > 0) {
+            ids = [...ids, ...extractOnlyIds(node.children, targetType)];
+          }
+        });
+        return Array.from(new Set(ids));
+      };
 
-    const newRule = {
-      boards: extractOnlyIds(hierarchicalSelectedTree || [], 'boards'),
-      mediums: extractOnlyIds(hierarchicalSelectedTree || [], 'mediums'),
-      stages: extractOnlyIds(hierarchicalSelectedTree || [], 'organizations'), // mapping 'organizations' -> 'stages'
-      classes: extractOnlyIds(hierarchicalSelectedTree || [], 'standards'), // mapping 'standards' -> 'classes'
-      divisions: extractOnlyIds(hierarchicalSelectedTree || [], 'divisions'),
-    };
+      const newRule = {
+        boards: extractOnlyIds(hierarchicalSelectedTree || [], 'boards'),
+        mediums: extractOnlyIds(hierarchicalSelectedTree || [], 'mediums'),
+        stages: extractOnlyIds(hierarchicalSelectedTree || [], 'organizations'),
+        classes: extractOnlyIds(hierarchicalSelectedTree || [], 'standards'),
+        divisions: extractOnlyIds(hierarchicalSelectedTree || [], 'divisions'),
+      };
 
-    if (currentFilter === 'ruleBased') {
-      formik.setFieldValue('ruleBased.academicRules', [newRule]);
-      formik.setFieldValue('ruleBased.academicTree', hierarchicalSelectedTree || []);
-    } else if (currentFilter === 'nameBased') {
-      formik.setFieldValue('nameBased.academicRules', [newRule]);
-      formik.setFieldValue('nameBased.academicTree', hierarchicalSelectedTree || []);
-    }
-  };
+      if (filterName === 'ruleBased') {
+        formik.setFieldValue('ruleBased.academicRules', newRule);
+        formik.setFieldValue('ruleBased.academicTree', hierarchicalSelectedTree || []);
+      } else if (filterName === 'nameBased') {
+        formik.setFieldValue('nameBased.academicRules', newRule);
+        formik.setFieldValue('nameBased.academicTree', hierarchicalSelectedTree || []);
+      }
+    },
+    [formik]
+  );
 
   const renderFilters = () => (
     <SectionCard
@@ -985,13 +1142,20 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                       </Box>
                     ) : (
                       <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                        {formik.values.nameBased.selectedMembers.map((id: string) => {
-                          const user = dummyRows.find((r) => r.id === id);
-                          if (!user) return null;
-                          const isStudent = user.type === 'Student';
+                        {formik.values.nameBased.selectedMembers.map((member: any) => {
+                          const { memberId } = member;
+                          // If search result or dummy rows has this member, we can show details
+                          // But since we store full objects, we might want to store name/etc in the object if needed for UI
+                          // For now, let's try to find it in usersForSelection or fallback to memberId
+                          const user =
+                            usersForSelection.find((u: any) => u.memberId === memberId) ||
+                            dummyRows.find((r) => r.id === memberId) ||
+                            member; // fallback to member itself if it has displayName
+                          const isStudent =
+                            (user.type || user.memberType) === 0 || user.type === 'Student';
                           return (
                             <Box
-                              key={id}
+                              key={memberId}
                               component="li"
                               sx={{
                                 display: 'flex',
@@ -1027,14 +1191,14 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                                   fontWeight: 700,
                                 }}
                               >
-                                {user.fullName.charAt(0)}
+                                {user.displayName?.charAt(0) || user.fullName?.charAt(0) || '?'}
                               </Box>
                               <Box sx={{ minWidth: 0, flexGrow: 1 }}>
                                 <Typography
                                   variant="subtitle2"
                                   sx={{ fontWeight: 600, display: 'block', fontSize: 13 }}
                                 >
-                                  {user.fullName}
+                                  {user.displayName || user.fullName || memberId}
                                 </Typography>
                                 <Typography
                                   variant="caption"
@@ -1053,7 +1217,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                                   formik.setFieldValue(
                                     'nameBased.selectedMembers',
                                     formik.values.nameBased.selectedMembers.filter(
-                                      (s: string) => s !== id
+                                      (s: any) => s.memberId !== memberId
                                     )
                                   );
                                 }}
@@ -1089,6 +1253,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
           currentFilterName === 'ruleBased'
             ? formik.values.ruleBased.academicTree
             : formik.values.nameBased.academicTree
+        }
+        academicRules={
+          currentFilterName === 'ruleBased'
+            ? formik.values.ruleBased.academicRules
+            : formik.values.nameBased.academicRules
         }
       />
     </SectionCard>
@@ -1169,9 +1338,8 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                 {/* Calculate students count from selection */}
                 <Typography variant="h4" sx={{ mb: 0.5 }}>
                   {
-                    formik.values.nameBased.selectedMembers.filter(
-                      (id: string) => dummyRows.find((r) => r.id === id)?.type === 'Student'
-                    ).length
+                    formik.values.nameBased.selectedMembers.filter((m: any) => m.memberType === 0)
+                      .length
                   }
                 </Typography>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -1189,9 +1357,8 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                 {/* Calculate employee count from selection */}
                 <Typography variant="h4" sx={{ mb: 0.5 }}>
                   {
-                    formik.values.nameBased.selectedMembers.filter(
-                      (id: string) => dummyRows.find((r) => r.id === id)?.type === 'Employee'
-                    ).length
+                    formik.values.nameBased.selectedMembers.filter((m: any) => m.memberType === 1)
+                      .length
                   }
                 </Typography>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -1255,6 +1422,10 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     { label: 'Select Audience', content: renderFilters() },
     { label: 'Final Preview', content: renderPreview() },
   ];
+
+  if (isGroupDataLoading && isEdit) {
+    return <LoadingScreen />;
+  }
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -1374,6 +1545,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
           currentFilterName === 'ruleBased'
             ? formik.values.ruleBased.academicTree
             : formik.values.nameBased.academicTree
+        }
+        academicRules={
+          currentFilterName === 'ruleBased'
+            ? formik.values.ruleBased.academicRules
+            : formik.values.nameBased.academicRules
         }
       />
     </BackPopUpChecked>

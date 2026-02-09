@@ -14,7 +14,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 import hostelFeeData from 'src/json/hostel/hostelFeeStructure/hostel-fee-data.json';
-import FinanceEditFeeStructureSettingDialog from 'src/screens/finance/settings/fee-structure/component/finance-edit-fee-structure-setting-dialog';
+// import FinanceEditFeeStructureSettingDialog from 'src/screens/finance/settings/fee-structure/component/finance-edit-fee-structure-setting-dialog';
 
 import HostelFeeCategorySettingDialog from './components/feeStrutureForm';
 
@@ -348,7 +348,7 @@ const HostelFeeStructure = (props: TabComponentType) => {
         //   description="Are you sure you want to delete this item? This action cannot be undone."
         // />
       )}
-      {financeEditFeeStructureDialog.value && (
+      {/* {financeEditFeeStructureDialog.value && (
         <FinanceEditFeeStructureSettingDialog
           data={selectedEntry}
           dialogValue={financeEditFeeStructureDialog}
@@ -357,7 +357,7 @@ const HostelFeeStructure = (props: TabComponentType) => {
           }}
           setSelectedEntry={setSelectedEntry}
         />
-      )}
+      )} */}
     </>
   );
 };

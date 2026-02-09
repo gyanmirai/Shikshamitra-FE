@@ -178,30 +178,6 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
           />
         </ShakingTextField>
       </Grid>
-
-      {/* Payment Method */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField
-          error={!!(formik?.touched?.paymentMethod && formik?.errors?.paymentMethod)}
-        >
-          <CustomSelect
-            name="paymentMethod"
-            label="Payment Methods *"
-            multiple
-            options={[
-              { id: 'cash', name: 'Cash' },
-              { id: 'cheque', name: 'Cheque' },
-              { id: 'upi', name: 'UPI' },
-            ]}
-            labelKey="name"
-            valueKey="id"
-            value={formik?.values?.paymentMethod || ''}
-            onChange={(val) => formik.setFieldValue('paymentMethod', val)}
-            error={formik?.touched?.paymentMethod && Boolean(formik?.errors?.paymentMethod)}
-            helperText={(formik?.touched?.paymentMethod && formik?.errors?.paymentMethod) as string}
-          />
-        </ShakingTextField>
-      </Grid>
     </Grid>
   );
 };

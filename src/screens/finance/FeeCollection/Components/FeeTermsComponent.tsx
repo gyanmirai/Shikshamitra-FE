@@ -63,7 +63,6 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
         flexDirection: 'column',
         ml: 0.5,
         mt: 0.5,
-
         boxShadow: 'var(--shadows-4)',
       }}
     >
@@ -78,7 +77,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
         }}
       >
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Payment Terms
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
@@ -199,7 +198,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     <Label
                       color={
                         FeeCollectionStatusTypeColors[
-                        term.status as FeeCollectionStatusType
+                          term.status as FeeCollectionStatusType
                         ] as LabelColor
                       }
                       variant="soft"

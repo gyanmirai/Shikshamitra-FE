@@ -288,7 +288,10 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 updatedItems.splice(selectedFeeHead, 1);
               }
               setSelectedFeeHead(undefined);
-              formik.setFieldValue(`feeStructureClasses.${className}.feeItems`, updatedItems);
+              formik.setFieldValue(
+                `feeStructureClasses.${className}[${structureIndex}].feeItems`,
+                updatedItems
+              );
               deleteFeeStructureDialog.onFalse();
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}

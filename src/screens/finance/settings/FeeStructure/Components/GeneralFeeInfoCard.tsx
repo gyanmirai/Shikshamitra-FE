@@ -1,26 +1,12 @@
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { InfoItem } from 'src/components/info-item';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Grid, Card, Button, Divider, Collapse, Typography, IconButton } from '@mui/material';
+import { Box, Grid, Card, Divider, Collapse, Typography, IconButton } from '@mui/material';
 
 export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any }) {
   const isExpanded = useBoolean(false);
-
-  const renderLabelValue = (label: string, value: string) => (
-    <Box>
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ display: 'block', mb: 0.5, fontWeight: 500 }}
-      >
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-        {value || '-'}
-      </Typography>
-    </Box>
-  );
 
   return (
     <Card
@@ -71,18 +57,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
           </Box>
         </Box>
 
-        <Box display="flex" alignItems="center" gap={1}>
-          <Button
-            size="small"
-            startIcon={<Iconify icon="solar:pen-bold-duotone" />}
-            sx={{ display: isExpanded.value ? 'flex' : 'none' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle edit action if needed, or rely on just viewing
-            }}
-          >
-            Edit
-          </Button>
+        <Box display="flex" alignItems="flex-end" gap={1}>
           <IconButton
             size="small"
             onClick={isExpanded.onToggle}
@@ -100,17 +75,26 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
         <Divider sx={{ borderStyle: 'dashed' }} />
         <Box sx={{ p: 3, bgcolor: 'white' }}>
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              {renderLabelValue('Board', feeStructure?.boardName)}
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <InfoItem
+                icon={<Iconify icon="solar:black-board-bold-duotone" />}
+                label="Board"
+                value={feeStructure?.boardName}
+              />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              {renderLabelValue('Medium', feeStructure?.mediumName)}
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <InfoItem
+                icon={<Iconify icon="mdi:translate" />}
+                label="Medium"
+                value={feeStructure?.mediumName}
+              />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              {renderLabelValue('Receipt Book', feeStructure?.receiptBook)}
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              {renderLabelValue('Payment Methods', (feeStructure?.paymentMethod || []).join(', '))}
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <InfoItem
+                icon={<Iconify icon="solar:bill-list-bold-duotone" />}
+                label="Receipt Book"
+                value={feeStructure?.receiptBook}
+              />
             </Grid>
           </Grid>
         </Box>

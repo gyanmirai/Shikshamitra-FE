@@ -82,7 +82,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Setting',
+              name: 'Settings',
               href: '/finance/settings/fee-category',
               onClick(e) {
                 handleClose(null, false);
@@ -112,7 +112,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Setting',
+              name: 'Settings',
               href: '/finance/settings/fee-category',
               onClick(e) {
                 handleClose(null, false);
@@ -128,7 +128,6 @@ const FeeStructure = () => {
             },
             { name: 'View Fee Structure', href: '' },
           ]}
-          sx={{ px: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -137,7 +136,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Setting',
+              name: 'Settings',
               href: '/finance/settings/fee-category',
               onClick(e) {
                 handleClose(null, false);
@@ -156,7 +155,6 @@ const FeeStructure = () => {
               Fee Structure
             </Button>
           }
-          sx={{ px: 2 }}
         />
       )}
       <>

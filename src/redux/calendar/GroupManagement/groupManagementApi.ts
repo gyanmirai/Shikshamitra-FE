@@ -66,7 +66,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
       }),
     }),
     getGroupById: builder.query({
-      query: (id) => ({
+      query: ({ id }) => ({
         url: `/groups/${id}`,
         method: 'GET',
       }),

@@ -7,13 +7,13 @@ export interface IAcademicRule {
 }
 
 export interface IFilterRow {
-  field: string;
-  operator: string;
+  field: number;
+  operator: number;
   value: string;
 }
 
 export interface IGroupRules {
-  academicRules: IAcademicRule[];
+  academicRules: IAcademicRule | null;
   roles: string[];
   studentFilters: IFilterRow[];
   employeeFilters: IFilterRow[];
@@ -21,7 +21,7 @@ export interface IGroupRules {
 }
 
 export interface INameBasedRules extends IGroupRules {
-  selectedMembers: string[];
+  selectedMembers: any[];
 }
 
 export interface IGroup {

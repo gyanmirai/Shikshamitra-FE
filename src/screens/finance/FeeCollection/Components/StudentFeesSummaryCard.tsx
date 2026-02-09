@@ -109,7 +109,7 @@ export const StudentFeeSummaryCard: React.FC<{
                         color: 'text.secondary',
                       }}
                     >
-                      ROLL: {student.rollNumber ?? '-'}
+                      Roll No : {student.rollNumber ?? '-'}
                     </Typography>
                   </Stack>
                 </Stack>

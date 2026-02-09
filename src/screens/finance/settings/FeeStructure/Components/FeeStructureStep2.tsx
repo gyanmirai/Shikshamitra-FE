@@ -200,7 +200,6 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                                 <Box display="flex" alignItems="center" gap={1}>
                                   <Button
                                     variant="contained"
-                                    color="primary"
                                     size="small"
                                     startIcon={<Iconify icon="lucide:plus" />}
                                     onClick={(e) => {
@@ -208,7 +207,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                                       e.stopPropagation();
                                     }}
                                   >
-                                    Add Fee Head
+                                    Fee Head
                                   </Button>
 
                                   <Tooltip title="Edit Fee Structure">

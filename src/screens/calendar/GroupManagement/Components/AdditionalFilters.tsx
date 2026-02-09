@@ -1,6 +1,8 @@
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
+import { RuleOperator } from 'src/enums/rule-operator';
+import { StudentFilterField, EmployeeFilterField } from 'src/enums/filter-fields';
 import {
   Box,
   Grid,
@@ -30,38 +32,53 @@ export interface FilterRow {
 }
 
 const studentFieldOptions: FieldOption[] = [
-  { value: 'class', label: 'Class', type: 'select', values: ['1', '2', '3', '4', '5'] },
-  { value: 'section', label: 'Section', type: 'select', values: ['A', 'B', 'C'] },
-  { value: 'gender', label: 'Gender', type: 'select', values: ['Male', 'Female', 'Other'] },
   {
-    value: 'admissionStatus',
+    value: StudentFilterField.Class.toString(),
+    label: 'Class',
+    type: 'select',
+    values: ['1', '2', '3', '4', '5'],
+  },
+  {
+    value: StudentFilterField.Section.toString(),
+    label: 'Section',
+    type: 'select',
+    values: ['A', 'B', 'C'],
+  },
+  {
+    value: StudentFilterField.Gender.toString(),
+    label: 'Gender',
+    type: 'select',
+    values: ['Male', 'Female', 'Other'],
+  },
+  {
+    value: StudentFilterField.AdmissionStatus.toString(),
     label: 'Admission Status',
     type: 'select',
     values: ['Active', 'Inactive', 'Pending'],
   },
-  { value: 'name', label: 'Name', type: 'text' },
+  { value: StudentFilterField.Name.toString(), label: 'Name', type: 'text' },
 ];
 
 const employeeFieldOptions: FieldOption[] = [
   {
-    value: 'department',
+    value: EmployeeFilterField.Department.toString(),
     label: 'Department',
     type: 'select',
     values: ['Admin', 'Teaching', 'Finance', 'HR'],
   },
   {
-    value: 'role',
+    value: EmployeeFilterField.Role.toString(),
     label: 'Role',
     type: 'select',
     values: ['Teacher', 'Principal', 'Accountant', 'Clerk'],
   },
   {
-    value: 'employmentType',
+    value: EmployeeFilterField.EmploymentType.toString(),
     label: 'Employment Type',
     type: 'select',
     values: ['Full-time', 'Part-time', 'Contract'],
   },
-  { value: 'name', label: 'Name', type: 'text' },
+  { value: EmployeeFilterField.Name.toString(), label: 'Name', type: 'text' },
 ];
 
 export interface OperatorOption {
@@ -71,24 +88,52 @@ export interface OperatorOption {
 }
 
 const operatorOptions: OperatorOption[] = [
-  { value: 'equals', label: 'Equals', icon: 'solar:check-circle-bold-duotone' },
-  { value: 'notEquals', label: 'Not Equals', icon: 'solar:forbidden-circle-bold-duotone' },
-  { value: 'contains', label: 'Contains', icon: 'solar:magnifer-bold-duotone' },
-  { value: 'startsWith', label: 'Starts With', icon: 'solar:forward-2-bold-duotone' },
-  { value: 'endsWith', label: 'Ends With', icon: 'solar:back-2-bold-duotone' },
-  { value: 'greaterThan', label: 'Greater Than', icon: 'solar:arrow-up-bold-duotone' },
-  { value: 'lessThan', label: 'Less Than', icon: 'solar:arrow-down-bold-duotone' },
   {
-    value: 'greaterOrEqual',
+    value: RuleOperator.Equals.toString(),
+    label: 'Equals',
+    icon: 'solar:check-circle-bold-duotone',
+  },
+  {
+    value: RuleOperator.NotEquals.toString(),
+    label: 'Not Equals',
+    icon: 'solar:forbidden-circle-bold-duotone',
+  },
+  {
+    value: RuleOperator.Contains.toString(),
+    label: 'Contains',
+    icon: 'solar:magnifer-bold-duotone',
+  },
+  {
+    value: RuleOperator.StartsWith.toString(),
+    label: 'Starts With',
+    icon: 'solar:forward-2-bold-duotone',
+  },
+  {
+    value: RuleOperator.EndsWith.toString(),
+    label: 'Ends With',
+    icon: 'solar:back-2-bold-duotone',
+  },
+  {
+    value: RuleOperator.GreaterThan.toString(),
+    label: 'Greater Than',
+    icon: 'solar:arrow-up-bold-duotone',
+  },
+  {
+    value: RuleOperator.LessThan.toString(),
+    label: 'Less Than',
+    icon: 'solar:arrow-down-bold-duotone',
+  },
+  {
+    value: RuleOperator.GreaterOrEqual.toString(),
     label: 'Greater Or Equal',
     icon: 'solar:double-alt-arrow-up-bold-duotone',
   },
   {
-    value: 'lessOrEqual',
+    value: RuleOperator.LessOrEqual.toString(),
     label: 'Less Or Equal',
     icon: 'solar:double-alt-arrow-down-bold-duotone',
   },
-  { value: 'in', label: 'In', icon: 'solar:list-bold-duotone' },
+  { value: RuleOperator.In.toString(), label: 'In', icon: 'solar:list-bold-duotone' },
 ];
 
 const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameBased' }> = ({

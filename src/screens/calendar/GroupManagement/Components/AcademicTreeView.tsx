@@ -24,6 +24,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 import { transformApiToTree } from './TransformApiToTree';
+import { flattenTree, pruneTreeBySelectedIds } from './academicTreeUtils';
 // Icons (moved to ordered block above)
 
 // ---- Types ----
@@ -278,6 +279,13 @@ interface AcademicTreeViewProps {
   applying?: boolean;
   onClose?: () => void;
   initialSelectedNodes?: TreeNodeData[];
+  academicRules: {
+    boards: string[];
+    mediums: string[];
+    stages: string[];
+    classes: string[];
+    divisions: string[];
+  } | null;
 }
 
 const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
@@ -286,10 +294,10 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
   applying = false,
   onClose = () => {},
   initialSelectedNodes = [],
+  academicRules,
 }) => {
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
   // Query hook for fetching boards data
   const { data: boards, isLoading: boardsLoading } = useQueryAndMutation({
     type: 'query',
@@ -354,17 +362,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
     return ids;
   };
 
-  // Recursively extract all nodes from a hierarchy
-  const flattenHierarchy = (nodes: TreeNodeData[]): TreeNodeData[] => {
-    let flat: TreeNodeData[] = [];
-    nodes.forEach((node) => {
-      flat.push(node);
-      if (node.children) {
-        flat = flat.concat(flattenHierarchy(node.children));
-      }
-    });
-    return flat;
-  };
+  // flattenHierarchy removed as we use flattenTree from utils
 
   /** Type guard mapping for dynamic extension types (fallback ignored). */
   const ensureKnownType = (t: string): keyof typeof selectedByType | undefined => {
@@ -376,7 +374,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
   React.useEffect(() => {
     if (initialSelectedNodes && initialSelectedNodes.length > 0) {
       // Flatten the hierarchical tree to get all selected nodes
-      const allSelectedNodes = flattenHierarchy(initialSelectedNodes);
+      const allSelectedNodes = flattenTree(initialSelectedNodes);
 
       const newSelection = {
         boards: new Map<string, TreeNodeData>(),
@@ -396,9 +394,44 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
       });
 
       setSelectedByType(newSelection);
+    } else if (academicRules && transformedData.length > 0) {
+      // Map academicRules to selectedByType by finding nodes in transformedData
+      const newSelection = {
+        boards: new Map<string, TreeNodeData>(),
+        mediums: new Map<string, TreeNodeData>(),
+        organizations: new Map<string, TreeNodeData>(),
+        standards: new Map<string, TreeNodeData>(),
+        divisions: new Map<string, TreeNodeData>(),
+      };
+
+      const flatTreeNodes = flattenTree(transformedData);
+      const idToNode = new Map(flatTreeNodes.map((n) => [n.id, n]));
+
+      academicRules.boards?.forEach((id) => {
+        const node = idToNode.get(id);
+        if (node) newSelection.boards.set(id, node);
+      });
+      academicRules.mediums?.forEach((id) => {
+        const node = idToNode.get(id);
+        if (node) newSelection.mediums.set(id, node);
+      });
+      academicRules.stages?.forEach((id) => {
+        const node = idToNode.get(id);
+        if (node) newSelection.organizations.set(id, node);
+      });
+      academicRules.classes?.forEach((id) => {
+        const node = idToNode.get(id);
+        if (node) newSelection.standards.set(id, node);
+      });
+      academicRules.divisions?.forEach((id) => {
+        const node = idToNode.get(id);
+        if (node) newSelection.divisions.set(id, node);
+      });
+
+      setSelectedByType(newSelection);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, [initialSelectedNodes, academicRules, transformedData.length]); // Added dependencies to handle async data
 
   const getAllChildIds = (node: TreeNodeData): string[] => {
     let ids: string[] = [node.id];
@@ -504,17 +537,8 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
    * A node is included if it itself is selected OR it has at least one selected descendant.
    * Children array is pruned recursively.
    */
-  const buildSelectedHierarchy = (nodes: TreeNodeData[]): TreeNodeData[] => {
-    const prune = (node: TreeNodeData): TreeNodeData | null => {
-      const children = node.children?.map(prune).filter(Boolean) as TreeNodeData[] | undefined;
-      const isSelected = aggregatedSelectedIds.has(node.id);
-      if (isSelected || (children && children.length)) {
-        return { ...node, children };
-      }
-      return null;
-    };
-    return nodes.map(prune).filter(Boolean) as TreeNodeData[];
-  };
+  const buildSelectedHierarchy = (nodes: TreeNodeData[]): TreeNodeData[] =>
+    pruneTreeBySelectedIds(nodes, aggregatedSelectedIds);
 
   const handleClearAll = () => {
     setSelectedByType({
