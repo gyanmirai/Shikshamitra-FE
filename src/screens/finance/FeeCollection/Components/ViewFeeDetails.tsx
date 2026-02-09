@@ -32,7 +32,7 @@ const ViewFeeDetails = ({
   });
   return (
     <Box display="flex" flexDirection="column" height="100%">
-      <Scrollbar sx={{ height: '100%', p: 2 }}>
+      <Scrollbar sx={{ height: '100%', p: 1 }}>
         <Grid container spacing={2}>
           {/* Row 1 */}
           {/* Left Side: Student Info & Fee Terms */}

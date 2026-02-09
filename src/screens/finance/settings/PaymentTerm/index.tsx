@@ -67,7 +67,7 @@ const PaymentTerm = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addPaymentTermDialog.value ? (
         <CustomBreadcrumbs
-          heading="Payment Terms"
+          heading={addPaymentTermDialog.value ? 'Add Payment Term' : 'Update Payment Term'}
           description={
             selectedPaymentTerm
               ? 'Update existing payment term details such as frequency (monthly, quarterly, custom), due dates, and applicable fee heads to ensure accurate payment scheduling.'
@@ -79,8 +79,9 @@ const PaymentTerm = () => {
           }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
+            { name: 'Settings', href: '/finance/settings/payment-term/' },
             { name: 'Payment Terms', href: '/finance/payment-term' },
+            { name: addPaymentTermDialog.value ? 'Add Payment Term' : 'Update Payment Term' },
           ]}
         />
       ) : (
@@ -93,7 +94,7 @@ const PaymentTerm = () => {
           }
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
+            { name: 'Settings', href: '/finance/setting' },
             { name: 'Payment Terms', href: '/finance/payment-term' },
           ]}
           isBack={addPaymentTermDialog.value}

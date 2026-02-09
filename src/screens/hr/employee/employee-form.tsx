@@ -573,10 +573,10 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             // }
           } else {
-            // await handleBasicInformation(values, formik);
-            // if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Employee added successfully' });
-            // }
+            await handleBasicInformation(values, formik);
+            if (isSaveButton) {
+              shikshaMitraToast.success({ message: 'Employee added successfully' });
+            }
           }
         } else if (activeStep === 1) {
           // await handleFamilyInformation(values, formik);
@@ -619,7 +619,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         handleClose(null, true);
       }
     },
-    [activeStep, editData, handleClose]
+    [activeStep, editData, handleBasicInformation, handleClose]
   );
 
   return (

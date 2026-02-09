@@ -295,7 +295,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               mr: 0.5,
             }}
           >
-            <Typography variant="h6" color="primary.main" sx={{ mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
               Payment Details
             </Typography>
             <Scrollbar sx={{ flexGrow: 1, p: 1, height: '100%' }}>

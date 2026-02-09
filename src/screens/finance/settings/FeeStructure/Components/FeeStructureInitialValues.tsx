@@ -11,7 +11,7 @@ export const getInitialFeeStructureData = (
   medium: editData?.medium || '',
   receiptBook: editData?.receiptBook || '',
   // paymentTerm: editData?.paymentTerm || '',
-  paymentMethod: editData?.paymentMethod || [],
+  // paymentMethod: editData?.paymentMethod || [],
   totalFeeHead: editData?.totalFeeHead ?? 0,
   totalClass: editData?.totalClass ?? 0,
   feeStructureClasses: editData?.feeStructureClasses || {},
