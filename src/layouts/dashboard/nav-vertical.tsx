@@ -116,6 +116,7 @@ export function NavVertical({
           ...hideScrollY,
           flex: '1 1 auto',
           overflowY: 'auto',
+          borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
           '& ul': {
             justifyContent: 'end',
           },
