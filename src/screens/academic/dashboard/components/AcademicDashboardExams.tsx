@@ -12,9 +12,7 @@ import {
 
 const AcademicDashboardExams = () => (
   <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
-    <Typography variant="h6" ml={1}>
-      Next 5 Exams
-    </Typography>
+    <Typography variant="h6">Next 5 Exams</Typography>
     <CustomizableTable
       tableId="nextExams"
       columns={[

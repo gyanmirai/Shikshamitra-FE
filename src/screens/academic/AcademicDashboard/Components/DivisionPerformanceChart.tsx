@@ -59,28 +59,23 @@ const DivisionPerformanceChart = () => {
 
   return (
     <Card sx={{ p: 2, height: '100%' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <CardHeader
-          title="Division-wise Performance"
-          subheader="Average Score per Division"
-          sx={{ p: 0 }}
-        />
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClasses(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '100px', width: '100%' } }}
-        />
-      </Box>
+      <CardHeader
+        title="Division-wise Performance"
+        subheader="Average Score per Division"
+        sx={{ p: 0 }}
+        action={
+          <CustomSelect
+            options={allClass}
+            label="Class"
+            value={classes}
+            onChange={(val) => setClasses(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: '100px', width: '100%' } }}
+          />
+        }
+      />
+
       <Box dir="ltr">
         <Chart type="bar" series={series} options={chartOptions} height={364} />
       </Box>

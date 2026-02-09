@@ -37,54 +37,55 @@ export const SummaryCard = ({
   <Box component={Link} href={href} sx={{ textDecoration: 'none', height: '100%' }}>
     <Card
       sx={{
-        p: 3,
+        p: 2,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '100%',
-        border: '1px solid',
-        borderColor: 'divider',
-        boxShadow: 'none',
-        transition: (theme) =>
-          theme.transitions.create(['box-shadow', 'transform'], {
-            duration: theme.transitions.duration.short,
-          }),
-        '&:hover': {
-          boxShadow: (theme) => theme.customShadows.z16,
-          transform: 'translateY(-4px)',
-        },
+        bgcolor: 'background.paper',
+        boxShadow: 'var(--shadows-1)',
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-          {title}
-        </Typography>
-        <Iconify
-          icon={icon}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box>
+          <Typography variant="subtitle2" color="text.secondary" mb={1}>
+            {title}
+          </Typography>
+          <Typography variant="h4" fontWeight="bold">
+            {count}
+          </Typography>
+        </Box>
+
+        <Box
           sx={{
-            height: 40,
-            width: 40,
-            color,
-            p: 0.75,
+            p: 1,
             borderRadius: '50%',
+            display: 'flex',
+            color: (theme) =>
+              theme.palette[
+                bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
+              ].main,
             bgcolor: (theme) =>
               theme.palette[
                 bgColor as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
               ].lighter,
           }}
-        />
-      </Box>
-
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="h3">{count}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-          {labels.map((label, idx) => (
-            <Label key={idx} color={label.color} variant="soft">
-              {label.name}
-            </Label>
-          ))}
+        >
+          <Iconify icon={icon} width={32} />
         </Box>
       </Box>
+
+      {labels && labels.length > 0 && (
+        <Box sx={{ mt: 0.5 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {labels.map((label, idx) => (
+              <Label key={idx} color={label.color} variant="soft">
+                {label.name}
+              </Label>
+            ))}
+          </Box>
+        </Box>
+      )}
     </Card>
   </Box>
 );

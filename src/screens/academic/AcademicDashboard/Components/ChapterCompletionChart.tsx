@@ -57,7 +57,6 @@ const ChapterCompletionChart = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          px: 1,
         }}
       >
         {/* Title + Subtitle */}

@@ -270,7 +270,6 @@ const GradeEntry = (props: TabComponentType) => {
           { name: 'Examination', href: '/academic/scheduleExam' },
           { name: 'Record Marks' },
         ]}
-        sx={{ px: 2 }}
         action={
           <LoadingButton
             variant="contained"
@@ -294,7 +293,6 @@ const GradeEntry = (props: TabComponentType) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 1,
           p: 1,
           gap: 2,
         }}

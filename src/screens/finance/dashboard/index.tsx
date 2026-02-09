@@ -12,7 +12,7 @@ import FinanceMonthlyFeesCollectionTrend from './Components/FinanceMonthlyFeesCo
 
 const FinanceAccountantDashboardScreen = () => (
   <Box>
-    <Grid container spacing={1} sx={{ mb: 2 }}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <FinanceDashboardOverview />
       </Grid>
