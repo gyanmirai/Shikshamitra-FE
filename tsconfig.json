@@ -3,11 +3,15 @@
     "baseUrl": ".",
     "target": "es5",
     "downlevelIteration": true,
-    "lib": ["dom", "esnext", "dom.iterable"],
+    "lib": [
+      "dom",
+      "esnext",
+      "dom.iterable"
+    ],
     "strict": true,
     "noEmit": true,
     "allowJs": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "module": "esnext",
     "incremental": true,
     "skipLibCheck": true,
@@ -28,6 +32,17 @@
       }
     ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "build/types/**/*.ts"],
-  "exclude": ["node_modules", "**/route.ts", "**/overview/page.ts"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "build/types/**/*.ts",
+    "build/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/route.ts",
+    "**/overview/page.ts"
+  ]
 }
