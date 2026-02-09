@@ -404,6 +404,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     ]
   );
 
+  const handleCloseFullScreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+    fullScreenDialog.onFalse();
+  }, [fullScreenDialog]);
+
   return (
     <>
       {tableContent}
@@ -412,9 +419,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         open={fullScreenDialog.value}
         fullScreen
         title="Table View"
-        handleClose={() => {
-          fullScreenDialog.onFalse();
-        }}
+        handleClose={handleCloseFullScreen}
       >
         {tableContent}
       </CustomDialog>
