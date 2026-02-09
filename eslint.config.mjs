@@ -19,6 +19,7 @@ export default [
   {
     ignores: [
       'eslint.config.mjs',
+      'next-env.d.ts',
       '.eslintrc.js',
       'build/*',
       'dist/*',
