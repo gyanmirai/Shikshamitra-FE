@@ -20,7 +20,6 @@ import {
   Grid,
   Card,
   Stack,
-  Badge,
   Button,
   Divider,
   CardHeader,
@@ -72,10 +71,10 @@ const Attendance = (props: StudentTabsComponentType) => {
       sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
     >
       <Scrollbar>
-        <Grid container spacing={3} sx={{ p: 1, mb: 1 }}>
+        <Grid container spacing={1}>
           {/* Header Section */}
           <Grid size={{ xs: 12 }}>
-            <Card sx={{ p: 3 }}>
+            <Card sx={{ p: 1.5 }}>
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 alignItems="center"
@@ -247,70 +246,228 @@ const Attendance = (props: StudentTabsComponentType) => {
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <CardHeader title="Attendance Calendar" />
-              <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
+              <CardHeader
+                title={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Attendance Calendar
+                    </Typography>
+                  </Box>
+                }
+                sx={{ pb: 1.5 }}
+              />
+              <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', px: 2 }}>
                 <DateCalendar
                   value={date}
                   disableFuture
+                  showDaysOutsideCurrentMonth
                   sx={{
                     width: '100%',
+                    maxHeight: '100%',
                     '& .MuiPickersCalendarHeader-root': { display: 'none' },
-                    '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
-                    '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' },
+                    '& .MuiDayCalendar-header': {
+                      justifyContent: 'space-around',
+                      pb: 1,
+                      '& .MuiDayCalendar-weekDayLabel': {
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        color: 'text.secondary',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      },
+                    },
+                    '& .MuiDayCalendar-weekContainer': {
+                      justifyContent: 'space-around',
+                      mt: 0.75,
+                    },
                   }}
                   slots={{
                     day: (prop: any) => {
                       const { day } = prop;
-                      const absent = day.format('DD-MM-YYYY') === '10-06-2025';
+                      const dateStr = day.format('DD-MM-YYYY');
+                      const absent = dateStr === '10-06-2025';
                       const isSunday = day.day() === 0;
-                      const isHalfDay = day.format('DD-MM-YYYY') === '11-06-2025';
-                      const isHoliday = day.format('DD-MM-YYYY') === '09-06-2025';
+                      const isHalfDay = dateStr === '11-06-2025';
+                      const isHoliday = dateStr === '09-06-2025';
+                      const isLate = dateStr === '12-06-2025';
+                      const isPresent =
+                        !absent &&
+                        !isHalfDay &&
+                        !isHoliday &&
+                        !isSunday &&
+                        !prop.outsideCurrentMonth &&
+                        day.isBefore(dayjs());
 
                       const disabled = isSunday || isHoliday || prop.disabled;
-                      let toolTipTitle = '';
                       let backgroundColor = '';
+                      let textColor = 'text.primary';
+                      let tooltipContent: React.ReactNode = '';
 
                       if (absent) {
-                        backgroundColor = alpha(theme.palette.error.main, 0.1);
-                        toolTipTitle = 'Doctors Appointment';
-                      }
-                      if (isHalfDay) {
-                        toolTipTitle = 'Half Day';
-                      }
-                      if (isHoliday) {
-                        toolTipTitle = 'Public Holiday';
+                        backgroundColor = 'error.lighter';
+                        textColor = 'error.main';
+                        tooltipContent = (
+                          <Box sx={{ p: 0.5 }}>
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                              sx={{ mb: 0.5 }}
+                            >
+                              <Iconify
+                                icon="solar:close-circle-bold"
+                                sx={{ width: 14, color: 'error.light' }}
+                              />
+                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                Absent
+                              </Typography>
+                            </Stack>
+                            <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
+                              Doctors Appointment
+                            </Typography>
+                          </Box>
+                        );
+                      } else if (isHalfDay) {
+                        tooltipContent = (
+                          <Box sx={{ p: 0.5 }}>
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              <Iconify
+                                icon="solar:clock-circle-bold"
+                                sx={{ width: 14, color: 'warning.light' }}
+                              />
+                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                Half Day
+                              </Typography>
+                            </Stack>
+                          </Box>
+                        );
+                      } else if (isHoliday) {
+                        backgroundColor = 'background.neutral';
+                        textColor = 'text.disabled';
+                        tooltipContent = (
+                          <Box sx={{ p: 0.5 }}>
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              <Iconify
+                                icon="solar:calendar-mark-bold"
+                                sx={{ width: 14, color: 'warning.light' }}
+                              />
+                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                Public Holiday
+                              </Typography>
+                            </Stack>
+                          </Box>
+                        );
+                      } else if (isLate) {
+                        backgroundColor = 'warning.lighter';
+                        textColor = 'warning.dark';
+                        tooltipContent = (
+                          <Box sx={{ p: 0.5 }}>
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                              sx={{ mb: 0.5 }}
+                            >
+                              <Iconify
+                                icon="solar:clock-circle-bold"
+                                sx={{ width: 14, color: 'warning.light' }}
+                              />
+                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                Late Arrival
+                              </Typography>
+                            </Stack>
+                            <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
+                              Arrived at 8:15 AM
+                            </Typography>
+                          </Box>
+                        );
+                      } else if (isPresent) {
+                        tooltipContent = (
+                          <Box sx={{ p: 0.5 }}>
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              <Iconify
+                                icon="solar:check-circle-bold"
+                                sx={{ width: 14, color: 'success.light' }}
+                              />
+                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
+                                Present
+                              </Typography>
+                            </Stack>
+                          </Box>
+                        );
                       }
 
                       return (
-                        <CustomTooltip title={toolTipTitle} arrow placement="top">
-                          <Badge
-                            overlap="circular"
-                            variant={isHoliday ? 'dot' : undefined}
-                            color="warning"
-                          >
+                        <CustomTooltip title={tooltipContent} arrow placement="top">
+                          <Box sx={{ position: 'relative' }}>
                             <PickersDay
                               {...prop}
                               day={day}
                               sx={{
-                                fontSize: 12,
+                                position: 'relative',
+                                fontSize: '0.875rem',
                                 fontWeight: disabled ? 400 : 600,
                                 bgcolor: backgroundColor || 'transparent',
-                                borderRadius: '50%',
-                                color: absent ? 'common.white' : 'text.primary',
+                                borderRadius: 1.5,
+                                color: textColor,
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: 'none',
                                 '&:hover': {
-                                  bgcolor: absent
-                                    ? theme.palette.error.dark
-                                    : alpha(theme.palette.primary.main, 0.08),
+                                  bgcolor: backgroundColor || 'action.hover',
+                                  transform: 'translateY(-2px)',
+                                  boxShadow: (t) => `0 4px 8px ${alpha(t.palette.grey[500], 0.16)}`,
+                                },
+                                '&.Mui-selected': {
+                                  bgcolor: 'primary.main',
+                                  color: 'primary.contrastText',
+                                  fontWeight: 700,
+                                  boxShadow: (t) =>
+                                    `0 0 0 2px ${alpha(t.palette.primary.main, 0.24)}`,
+                                  '&:hover': {
+                                    bgcolor: 'primary.dark',
+                                  },
                                 },
                                 ...(isHalfDay && {
-                                  background: `linear-gradient(90deg, ${theme.palette.error.main} 50%, transparent 50%)`,
-                                  color: 'common.white',
+                                  background: (t) =>
+                                    `linear-gradient(135deg, ${t.palette.warning.lighter} 50%, ${alpha(t.palette.warning.lighter, 0.3)} 50%)`,
+                                  color: 'warning.dark',
+                                  fontWeight: 600,
                                 }),
                               }}
                               disabled={disabled}
                             />
-                          </Badge>
+                            {isPresent && (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  bottom: 2,
+                                  right: 2,
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: '50%',
+                                  bgcolor: 'success.main',
+                                  boxShadow: (t) => `0 0 0 2px ${t.palette.background.paper}`,
+                                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                  '@keyframes pulse': {
+                                    '0%, 100%': {
+                                      opacity: 1,
+                                    },
+                                    '50%': {
+                                      opacity: 0.5,
+                                    },
+                                  },
+                                }}
+                              />
+                            )}
+                          </Box>
                         </CustomTooltip>
                       );
                     },
@@ -318,18 +475,90 @@ const Attendance = (props: StudentTabsComponentType) => {
                 />
               </Box>
 
-              <Divider sx={{ borderStyle: 'dashed' }} />
+              <Divider sx={{ borderStyle: 'dashed', mx: 2 }} />
 
-              <Stack
-                direction="row"
-                spacing={2}
-                justifyContent="center"
-                sx={{ p: 3, bgcolor: 'background.neutral' }}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 3,
+                  p: 2.5,
+                  minHeight: 70,
+                  bgcolor: 'action.hover',
+                }}
               >
-                <Dot color="success.main">Today</Dot>
-                <Dot color="warning.main">Holiday</Dot>
-                <Dot color="error.main">Absent / Half-Day</Dot>
-              </Stack>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'success.main',
+                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.success.main, 0.16)}`,
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
+                  >
+                    Present
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'warning.main',
+                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.warning.main, 0.16)}`,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
+                  >
+                    Holiday
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'error.main',
+                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.error.main, 0.16)}`,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
+                  >
+                    Absent
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '50%',
+                      bgcolor: 'info.main',
+                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.info.main, 0.16)}`,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
+                  >
+                    Half-Day
+                  </Typography>
+                </Box>
+              </Box>
             </Card>
           </Grid>
 

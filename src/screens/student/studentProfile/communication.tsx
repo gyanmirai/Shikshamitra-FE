@@ -237,41 +237,45 @@ const Communication = (props: StudentTabsComponentType) => {
   ];
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Box sx={{ p: 3, pb: 2 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h5" fontWeight={700}>
-            Announcements
-          </Typography>
-          <Chip
-            label={`${announcements.length} New`}
-            color="primary"
-            size="small"
-            variant="soft"
-            sx={{ borderRadius: 1, fontWeight: 600 }}
-          />
-        </Stack>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Stay updated with the latest school news and events.
-        </Typography>
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
+      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
+        <Box sx={{ gap: 2, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <Box sx={{ p: 3, pb: 2 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Typography variant="h5" fontWeight={700}>
+                Announcements
+              </Typography>
+              <Chip
+                label={`${announcements.length} New`}
+                color="primary"
+                size="small"
+                variant="soft"
+                sx={{ borderRadius: 1, fontWeight: 600 }}
+              />
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Stay updated with the latest school news and events.
+            </Typography>
+          </Box>
 
-      {/* Scrollable Content */}
-      <Scrollbar sx={{ flexGrow: 1, px: 3, pb: 3 }}>
-        <Stack spacing={2.5}>
-          {announcements.length > 0 ? (
-            announcements.map((announcement, index) => (
-              <AnnouncementCard key={index} {...announcement} />
-            ))
-          ) : (
-            <EmptyContent
-              title="No Announcements"
-              description="You're all caught up! No new announcements at this time."
-              imgUrl="/assets/icons/empty/ic_content.svg"
-            />
-          )}
-        </Stack>
+          {/* Scrollable Content */}
+          <Box sx={{ px: 3, pb: 3 }}>
+            <Stack spacing={2.5}>
+              {announcements.length > 0 ? (
+                announcements.map((announcement, index) => (
+                  <AnnouncementCard key={index} {...announcement} />
+                ))
+              ) : (
+                <EmptyContent
+                  title="No Announcements"
+                  description="You're all caught up! No new announcements at this time."
+                  imgUrl="/assets/icons/empty/ic_content.svg"
+                />
+              )}
+            </Stack>
+          </Box>
+        </Box>
       </Scrollbar>
     </Box>
   );

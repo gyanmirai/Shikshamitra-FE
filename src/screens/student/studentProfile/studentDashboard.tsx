@@ -15,7 +15,7 @@ import type { StudentTabsComponentType } from '.';
 const StudentDashboard = (props: StudentTabsComponentType) => (
   <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
     <Scrollbar>
-      <Grid container spacing={3} sx={{ mb: 3, p: 1 }}>
+      <Grid container spacing={1}>
         <Grid size={12}>
           <Overview />
         </Grid>
