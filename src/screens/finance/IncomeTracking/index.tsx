@@ -72,7 +72,6 @@ const IncomeTracking = () => {
               Income
             </Button>
           }
-          sx={{ px: 2 }}
         />
       )}
 

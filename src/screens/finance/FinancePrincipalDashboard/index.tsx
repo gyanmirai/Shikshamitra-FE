@@ -13,7 +13,7 @@ import FinanceFeeStatusOverview from './Components/FinanceFeeStatusOverview';
 import FinanceMonthlyFeesCollectionTrend from '../dashboard/Components/FinanceMonthlyFeesCollectionTrend';
 
 const FinancePrincipalDashboard = () => (
-  <Box>
+  <Box sx={{ pb: 2 }}>
     <Grid container spacing={1}>
       {/* Summary Cards */}
       <Grid size={{ xs: 12 }}>

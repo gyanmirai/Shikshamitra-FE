@@ -86,8 +86,8 @@ const AcademicDashboardScreen = () => {
   ];
 
   return (
-    <Box>
-      <Grid container spacing={1} sx={{ mb: 2 }}>
+    <Box sx={{ pb: 2 }}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
           <SummaryCards />
         </Grid>

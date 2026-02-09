@@ -225,14 +225,14 @@ const QuizTable = ({
                   label: 'Created At',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 110,
+                  minWidth: 90,
                 },
                 {
                   id: 'quizDate',
                   label: 'Start Date',
                   align: 'left',
                   filterType: 'date',
-                  minWidth: 110,
+                  minWidth: 60,
                 },
                 {
                   id: 'quizEndDate',
@@ -273,7 +273,7 @@ const QuizTable = ({
                   label: 'Passing Marks',
                   align: 'left',
                   filterType: 'number',
-                  minWidth: 140,
+                  minWidth: 100,
                 },
                 {
                   id: 'action',

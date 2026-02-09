@@ -2,8 +2,8 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Box, Card } from '@mui/material';
 import React, { useState, useEffect } from 'react';
+import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 
@@ -63,43 +63,34 @@ const SubjectPassFailChart = () => {
 
   return (
     <Card sx={{ p: 2 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        {/* Title + Subtitle */}
-
-        <Box>
-          <Box sx={{ fontSize: '18px', fontWeight: 600 }}>Exam&apos;s Pass/Fail Rate</Box>
-          <Box sx={{ fontSize: '14px', color: 'text.secondary' }}>Student Performance by Exam</Box>
-        </Box>
-
-        {/* Dropdowns */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <CustomSelect
-            options={allClass}
-            label="Class"
-            value={classes}
-            onChange={(val) => setClasses(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
-          />
-          <CustomSelect
-            options={allDivision}
-            label="Division"
-            value={division}
-            onChange={(val) => setDivision(val as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
-            disabled={!classes}
-          />
-        </Box>
-      </Box>{' '}
+      <CardHeader
+        title="Exam's Pass/Fail Rate"
+        subheader="Student Performance by Exam"
+        sx={{ p: 0 }}
+        action={
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+              disabled={!classes}
+            />
+          </Box>
+        }
+      />
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
         <Chart type="bar" series={series} options={chartOptions} height={364} />
       </Box>

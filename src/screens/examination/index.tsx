@@ -10,7 +10,7 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
-import QuizManagement from './quiz';
+import QuizManagement from './quizManagement';
 import GradeEntry from './gradeEntry/gradeEntry';
 import ScheduleExam from './scheduleExam/ScheduleExam';
 import GradingAndAnalytics from './gradingAndAnalytics';

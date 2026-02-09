@@ -23,7 +23,7 @@ type Props = CardProps & {
 
 export const PerformersList = ({ title, subheader, list, type, ...other }: Props) => (
   <Card {...other} sx={{}}>
-    <CardHeader title={title} subheader={subheader} />
+    <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
     <Box
       sx={{

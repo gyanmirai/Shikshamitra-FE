@@ -117,7 +117,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               { name: 'Examination', href: '/academic/scheduleExam' },
               { name: 'Schedule Exam' },
             ]}
-            sx={{ px: 2 }}
             isBack
             onBack={() => {
               handleClose(null, false);
@@ -132,7 +131,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               { name: 'Examination', href: '/academic/examinationDashboard' },
               { name: 'Schedule Exam' },
             ]}
-            sx={{ px: 2 }}
           />
         ))}
       {open ? (
