@@ -1,10 +1,13 @@
 import React from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify/iconify';
-import { Box, Grid, Card, Stack, Button, Typography, CardContent } from '@mui/material';
+import { Box, Grid, Card, Stack, Button, Divider, Typography } from '@mui/material';
 
 import type { StudentTabsComponentType } from '.';
 
 const StudentTransportProfile = (props: StudentTabsComponentType) => {
+  const theme = useTheme();
+
   // Mock transport data (replace with real props.student values)
   const transport = {
     routeName: 'Route A-1',
@@ -46,180 +49,225 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
   ];
 
   return (
-    <Grid container spacing={2}>
+    <Box sx={{ gap: 2, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
       {/* Action Button */}
-      <Grid size={{ xs: 12 }}>
-        <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={2}>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="mdi:bus" />}
+      <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={2}>
+        <Button
+          variant="contained"
+          size="medium"
+          startIcon={<Iconify icon="solar:bus-bold-duotone" />}
+          sx={{
+            fontWeight: 600,
+            px: 2.5,
+            py: 1,
+            borderRadius: 1.5,
+            boxShadow: theme.customShadows?.z8 || 2,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: theme.customShadows?.z16 || 4,
+            },
+          }}
+        >
+          Request Transport
+        </Button>
+      </Box>
+
+      {/* Cards Grid */}
+      <Grid container spacing={2.5}>
+        {/* Route Details Card */}
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Card
             sx={{
-              fontWeight: 600,
-              px: 1,
+              height: '100%',
+              borderRadius: 2,
+              boxShadow: 'none',
+              border: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: theme.customShadows?.z8 || 3,
+                borderColor: 'transparent',
+                transform: 'translateY(-4px)',
+              },
             }}
           >
-            Request Transport
-          </Button>
-        </Box>
-      </Grid>
-
-      {/* Route Details Card */}
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card
-          sx={{
-            boxShadow: 1,
-            borderRadius: '12px',
-            border: '1px solid',
-            borderColor: 'divider',
-            height: '100%',
-          }}
-        >
-          <CardContent>
-            <Typography
-              variant="h6"
-              color="primary.main"
-              mb={2.5}
-              display="flex"
-              alignItems="center"
-              gap={0.75}
-            >
-              <Iconify icon="mdi:routes" width={24} />
-              Route Details
-            </Typography>
-            <hr
-              style={{
-                border: 'none',
-                borderTop: '1px solid #e0e0e0',
-                margin: '1px',
-                marginBottom: '20px',
-              }}
-            />
-
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'space-between',
-              }}
-            >
-              {routeDetails.map((d) => (
+            {/* Card Header */}
+            <Box sx={{ p: 3, pb: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box
-                  key={d.label}
                   sx={{
-                    maxWidth: 140,
-                    width: '100%',
+                    width: 48,
+                    height: 48,
+                    display: 'flex',
+                    borderRadius: 2,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
                   }}
                 >
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Iconify icon={d.icon} width={20} color="text.secondary" />
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                      >
-                        {d.label}:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
-                        color="text.primary"
-                        sx={{ fontSize: '0.8rem' }}
-                        noWrap
-                        title={String(d.value)}
-                      >
-                        {d.value}
-                      </Typography>
-                    </Box>
-                  </Stack>
+                  <Iconify icon="solar:routing-2-bold-duotone" width={28} />
                 </Box>
-              ))}
+                <Box>
+                  <Typography variant="h6" fontWeight={700} color="text.primary">
+                    Route Details
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Student transport route information
+                  </Typography>
+                </Box>
+              </Stack>
             </Box>
-          </CardContent>
-        </Card>
-      </Grid>
 
-      {/* Driver & Vehicle Details Card */}
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card
-          sx={{
-            boxShadow: 1,
-            borderRadius: '12px',
-            border: '1px solid',
-            borderColor: 'divider',
-            height: '100%',
-          }}
-        >
-          <CardContent>
-            <Typography
-              variant="h6"
-              color="primary.main"
-              mb={2.5}
-              display="flex"
-              alignItems="center"
-              gap={0.75}
-            >
-              <Iconify icon="mdi:account-tie" width={24} />
-              Driver & Vehicle Details
-            </Typography>
-            <hr
-              style={{
-                border: 'none',
-                borderTop: '1px solid #e0e0e0',
-                margin: '1px',
-                marginBottom: '20px',
-              }}
-            />
+            <Divider sx={{ borderStyle: 'dashed' }} />
 
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'space-between',
-              }}
-            >
-              {driverDetails.map((d) => (
+            {/* Card Content */}
+            <Box sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                {routeDetails.map((detail) => (
+                  <Grid key={detail.label} size={{ xs: 12, sm: 6 }}>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            borderRadius: 1.5,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: alpha(theme.palette.info.main, 0.08),
+                            color: 'info.main',
+                          }}
+                        >
+                          <Iconify icon={detail.icon} width={20} />
+                        </Box>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                            sx={{ fontSize: '0.75rem', lineHeight: 1.4, mb: 0.25 }}
+                          >
+                            {detail.label}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            color="text.primary"
+                            sx={{ fontSize: '0.875rem' }}
+                            noWrap
+                            title={String(detail.value)}
+                          >
+                            {detail.value}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Driver & Vehicle Details Card */}
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Card
+            sx={{
+              height: '100%',
+              borderRadius: 2,
+              boxShadow: 'none',
+              border: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: theme.customShadows?.z8 || 3,
+                borderColor: 'transparent',
+                transform: 'translateY(-4px)',
+              },
+            }}
+          >
+            {/* Card Header */}
+            <Box sx={{ p: 3, pb: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box
-                  key={d.label}
                   sx={{
-                    maxWidth: 140,
-                    width: '100%',
+                    width: 48,
+                    height: 48,
+                    display: 'flex',
+                    borderRadius: 2,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: alpha(theme.palette.success.main, 0.1),
+                    color: 'success.main',
                   }}
                 >
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Iconify icon={d.icon} width={20} color="text.secondary" />
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                      >
-                        {d.label}:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
-                        color="text.primary"
-                        sx={{ fontSize: '0.8rem' }}
-                        noWrap
-                        title={String(d.value)}
-                      >
-                        {d.value}
-                      </Typography>
-                    </Box>
-                  </Stack>
+                  <Iconify icon="solar:bus-bold-duotone" width={28} />
                 </Box>
-              ))}
+                <Box>
+                  <Typography variant="h6" fontWeight={700} color="text.primary">
+                    Driver & Vehicle Details
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Vehicle and staff information
+                  </Typography>
+                </Box>
+              </Stack>
             </Box>
-          </CardContent>
-        </Card>
+
+            <Divider sx={{ borderStyle: 'dashed' }} />
+
+            {/* Card Content */}
+            <Box sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                {driverDetails.map((detail) => (
+                  <Grid key={detail.label} size={{ xs: 12, sm: 6 }}>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            display: 'flex',
+                            borderRadius: 1.5,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: alpha(theme.palette.success.main, 0.08),
+                            color: 'success.main',
+                          }}
+                        >
+                          <Iconify icon={detail.icon} width={20} />
+                        </Box>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                            sx={{ fontSize: '0.75rem', lineHeight: 1.4, mb: 0.25 }}
+                          >
+                            {detail.label}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            color="text.primary"
+                            sx={{ fontSize: '0.875rem' }}
+                            noWrap
+                            title={String(detail.value)}
+                          >
+                            {detail.value}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
+    </Box>
   );
 };
 

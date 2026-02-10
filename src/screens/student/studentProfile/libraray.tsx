@@ -177,28 +177,25 @@ const Libraray = (props: StudentTabsComponentType) => {
   };
 
   return (
-    <Box>
-      {/* Tabs */}
-      <Card
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
+    <Card sx={{ display: 'flex', flexDirection: 'row', height: 'calc(100vh - 280px)' }}>
+      <CustomTabs
+        value={tabs.value}
+        onChange={tabs.onChange}
+        orientation="vertical"
+        sx={{ width: 220, borderRight: 1, borderColor: 'divider' }}
+        slotProps={{ tab: { px: 2, justifyContent: 'flex-start' } }}
       >
-        <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
-          ))}
-        </CustomTabs>
-      </Card>
+        {TABS.map((tab) => (
+          <Tab key={tab.value} value={tab.value} label={tab.label} />
+        ))}
+      </CustomTabs>
 
-      {/* Tab Content */}
-      <Scrollbar sx={{ p: 1 }}>{renderTabContent()}</Scrollbar>
-    </Box>
+      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
+        <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+          {renderTabContent()}
+        </Box>
+      </Scrollbar>
+    </Card>
   );
 };
 

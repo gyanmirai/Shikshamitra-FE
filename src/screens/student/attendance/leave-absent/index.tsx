@@ -50,7 +50,6 @@ import {
   Grid,
   Stack,
   Button,
-  Avatar,
   MenuItem,
   TextField,
   IconButton,
@@ -91,7 +90,7 @@ const LeaveAndAbsentScreen = () => {
     }
   };
 
-  const { leaveData, isLoading } = useQueryAndMutation({
+  const { data: leaveData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentLeaveQuery,
   });
@@ -119,12 +118,14 @@ const LeaveAndAbsentScreen = () => {
     () =>
       leaveData?.items?.map((item: any) => ({
         ...item,
-        startDate: dayjs(item.startDate).format('DD/MM/YYYY'),
-        endDate: dayjs(item.endDate).format('DD/MM/YYYY'),
-        name: `${item.student?.lastName} ${item.student?.firstName} ${
-          item.student?.middleName ? item.student?.middleName : ''
-        }`,
-        totalDays: dayjs(item.endDate).diff(item.startDate, 'day'),
+        // Use backend's totalDays value directly
+        totalDays: item.totalDays,
+        // Format leaveDate properly
+        formattedLeaveDate: item.leaveDate ? dayjs(item.leaveDate).format('DD-MM-YYYY') : '-',
+        // Format endDate with null handling
+        formattedEndDate: item.endDate ? dayjs(item.endDate).format('DD-MM-YYYY') : '-',
+        // Strip HTML tags from description for display
+        plainDescription: item.description ? item.description.replace(/<[^>]*>/g, '').trim() : '-',
       })),
     [leaveData]
   );
@@ -168,45 +169,72 @@ const LeaveAndAbsentScreen = () => {
       //   },
       // },
       {
-        id: 'name',
+        id: 'studentName',
         label: 'Student',
         sticky: true,
         render(value, row) {
           return (
             <Box display="flex" alignItems="center" gap={1}>
-              <Avatar sx={{ width: 30, height: 30 }} alt={value} title={value} />
               {value}
             </Box>
           );
         },
       },
-      { id: 'student.educationMediumStage.name', label: 'Organization' },
-      { id: 'student.standard.name', label: 'Class' },
-      { id: 'student.division.name', label: 'Division' },
-      { id: 'leavePolicy.cleaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
+      { id: 'organizationName', label: 'Organization' },
+      { id: 'className', label: 'Class' },
+      { id: 'divisionName', label: 'Division' },
+      { id: 'leaveTypeName', label: 'Leave Type', minWidth: '120px', align: 'left' },
       {
-        id: 'startDate',
+        id: 'formattedLeaveDate',
         label: 'Start Date',
         filterType: 'date',
         minWidth: '120px',
         align: 'left',
       },
       {
-        id: 'endDate',
+        id: 'formattedEndDate',
         label: 'End Date',
         filterType: 'date',
         minWidth: '120px',
         align: 'left',
+        render(value, row) {
+          return row.isHalfDay ? dayjs(row.leaveDate).format('DD-MM-YYYY') : value;
+        },
       },
       {
         id: 'totalDays',
         label: 'Total Days',
-        minWidth: '10vw',
+        minWidth: '120px',
         filterType: 'number',
         align: 'left',
+        render(value, row) {
+          if (value === null || value === undefined || Number.isNaN(value)) return '-';
+          const days = parseFloat(value);
+          if (days === 0.5) return 'Half Day';
+          return days === 1 ? '1 Day' : `${days} Days`;
+        },
       },
-      { id: 'description', label: 'Description' },
-      { id: 'rejectionReason', label: 'Remarks' },
+      {
+        id: 'plainDescription',
+        label: 'Description',
+        minWidth: '200px',
+        render(value, row) {
+          return (
+            <Box
+              sx={{
+                maxWidth: '300px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+              title={value}
+            >
+              {value || '-'}
+            </Box>
+          );
+        },
+      },
+      { id: 'remarks', label: 'Remarks' },
       {
         id: 'status',
         label: 'Status',
@@ -338,7 +366,7 @@ const LeaveAndAbsentScreen = () => {
           </Box>
         }
       >
-        <LeaveRequestForm handleClose={handleClose} />
+        <LeaveRequestForm handleClose={handleClose} isLoading={isLoading} />
       </CustomDialog>
       <CustomDialog
         title="Remarks"
@@ -367,8 +395,10 @@ export default LeaveAndAbsentScreen;
 
 const LeaveRequestForm = ({
   handleClose,
+  isLoading,
 }: {
   handleClose: (e: any, isSubmit: boolean) => void;
+  isLoading: boolean;
 }) => {
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -409,7 +439,7 @@ const LeaveRequestForm = ({
   }, [allClass, classes]);
 
   // Returns getStudents function, StudentsData response and loading state
-  const [getStudents, { data: StudentsData }] = useQueryAndMutation({
+  const [getStudents, { data: StudentsData, isLoading: isStudentsLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
@@ -508,7 +538,7 @@ const LeaveRequestForm = ({
             studentLeaveTypeId: val.leaveType,
             isHalfDay: val.isHalfDay,
             description: val.description,
-            attachment: val.docs.replace(/^data:\w+\/\w+;base64,/, ''),
+            attachment: val.docs.replace(/^data:\w+\/\w+;base64,/, '') || undefined,
             attachmentFileName: `${student?.firstName} ${student?.lastName} ${val.leaveType} ${val.startDate?.format(dateFormat)}`,
             attachmentContentType: 'string',
 
@@ -574,9 +604,16 @@ const LeaveRequestForm = ({
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <CustomTooltip placement="top" title={student ? `${student}` : undefined}>
+            <CustomTooltip
+              placement="top"
+              title={
+                student
+                  ? `${student?.firstName || ''} ${student?.lastName || ''}`.trim()
+                  : undefined
+              }
+            >
               <Autocomplete
-                loading={false}
+                loading={isStudentsLoading}
                 noOptionsText="No Student Found"
                 sx={{ width: '100%' }}
                 value={student}

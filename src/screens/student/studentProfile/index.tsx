@@ -22,7 +22,7 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import { Box, Tab, Card, Tabs, Paper, Avatar, Divider, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Paper, Avatar, Divider, MenuItem, Typography } from '@mui/material';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -48,7 +48,7 @@ const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
+    icon: <Iconify icon="lucide:layout-dashboard" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentDashboard {...props} />
     ),
@@ -56,7 +56,7 @@ const TABS = [
   {
     value: 'information',
     label: 'Information',
-    icon: <Iconify icon="solar:user-id-bold" width={20} />,
+    icon: <Iconify icon="et:documents" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentInformation {...props} />
     ),
@@ -64,7 +64,7 @@ const TABS = [
   {
     value: 'attendance',
     label: 'Attendance',
-    icon: <Iconify icon="solar:bill-list-bold" width={20} />,
+    icon: <Iconify icon="solar:calendar-mark-outline" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Attendance {...props} />
     ),
@@ -72,7 +72,7 @@ const TABS = [
   {
     value: 'academic',
     label: 'Academic',
-    icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
+    icon: <Iconify icon="solar:square-academic-cap-2-broken" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Academic {...props} />
     ),
@@ -86,7 +86,7 @@ const TABS = [
   {
     value: 'finance',
     label: 'Finance',
-    icon: <Iconify icon="map:finance" width={20} />,
+    icon: <Iconify icon="lucide:landmark" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Finance {...props} />
     ),
@@ -94,7 +94,7 @@ const TABS = [
   {
     value: 'documents',
     label: 'Documents',
-    icon: <Iconify icon="ion:documents" width={20} />,
+    icon: <Iconify icon="solar:document-text-outline" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Document {...props} />
     ),
@@ -102,7 +102,7 @@ const TABS = [
   {
     value: 'communications',
     label: 'Communications',
-    icon: <Iconify icon="maki:communications-tower" width={20} />,
+    icon: <Iconify icon="fluent-mdl2:office-chat" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Communication {...props} />
     ),
@@ -110,7 +110,7 @@ const TABS = [
   {
     value: 'transportation',
     label: 'Transportation',
-    icon: <Iconify icon="solar:bus-bold" width={20} />,
+    icon: <Iconify icon="gis:route" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentTransportProfile {...props} />
     ),
@@ -118,7 +118,7 @@ const TABS = [
   {
     value: 'library',
     label: 'Library',
-    icon: <Iconify icon="mdi:library" width={20} />,
+    icon: <Iconify icon="ph:books-light" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Library {...props} />
     ),
@@ -126,7 +126,7 @@ const TABS = [
   {
     value: 'calender',
     label: 'Calendar',
-    icon: <Iconify icon="mdi:calendar-month-outline" width={20} />,
+    icon: <Iconify icon="radix-icons:calendar" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentCalendar {...props} />
     ),
@@ -510,208 +510,197 @@ const StudentProfileView = () => {
     <LoadingScreen />
   ) : (
     <>
-      <Box
+      <Paper
         sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 999,
-          backgroundColor: 'background.default',
-          // pb: 1,
-          transition: 'all 0.3s ease-in-out',
+          mb: 1,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          boxShadow: 'var(--shadows-4)',
         }}
       >
-        <Card
+        <Paper
           sx={{
-            mb: 1,
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-            boxShadow: 'var(--shadows-4)',
+            py: isScrolled ? 0.5 : 0.75,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
+            borderRadius: 1,
+            transition: 'all 0.3s ease-in-out',
           }}
         >
-          <Paper
-            sx={{
-              py: isScrolled ? 0.5 : 0.75,
-              px: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
-              borderRadius: 1,
-              transition: 'all 0.3s ease-in-out',
-            }}
+          <Box
+            display="flex"
+            gap={isScrolled ? 1.5 : 2}
+            alignItems="center"
+            sx={{ transition: 'gap 0.3s ease-in-out' }}
           >
-            <Box
-              display="flex"
-              gap={isScrolled ? 1.5 : 2}
-              alignItems="center"
-              sx={{ transition: 'gap 0.3s ease-in-out' }}
-            >
-              {!isScrolled && (
-                <Avatar
-                  src={convertBase64Format(currentStudent?.profilePicture)}
-                  alt={`${currentStudent?.firstName} ${currentStudent?.lastName}`}
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    transition: 'all 0.3s ease-in-out',
-                    opacity: isScrolled ? 0 : 1,
-                  }}
-                />
-              )}
-              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    fontSize: isScrolled ? '10px' : '12px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  Name
-                </Typography>
-                <Typography
-                  fontWeight={500}
-                  variant="body2"
-                  sx={{
-                    fontSize: isScrolled ? '12px' : '14px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  {currentStudent?.lastName || '-'} {currentStudent?.firstName || '-'}{' '}
-                  {currentStudent?.middleName || '-'}
-                </Typography>
-              </Box>
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+            {!isScrolled && (
+              <Avatar
+                src={convertBase64Format(currentStudent?.profilePicture)}
+                alt={`${currentStudent?.firstName} ${currentStudent?.lastName}`}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  transition: 'all 0.3s ease-in-out',
+                  opacity: isScrolled ? 0 : 1,
+                }}
               />
-              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    fontSize: isScrolled ? '10px' : '12px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  Gr No.
-                </Typography>
-                <Typography
-                  fontWeight={500}
-                  variant="body2"
-                  sx={{
-                    fontSize: isScrolled ? '12px' : '14px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  {currentStudent?.grNoRecord || '-'}
-                </Typography>
-              </Box>
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-              />
-              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    fontSize: isScrolled ? '10px' : '12px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  Roll No.
-                </Typography>
-                <Typography
-                  fontWeight={500}
-                  variant="body2"
-                  sx={{
-                    fontSize: isScrolled ? '12px' : '14px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  {currentStudent?.rollNo || '-'}
-                </Typography>
-              </Box>
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-              />
-              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    fontSize: isScrolled ? '10px' : '12px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  Class
-                </Typography>
-                <Typography
-                  fontWeight={500}
-                  variant="body2"
-                  sx={{
-                    fontSize: isScrolled ? '12px' : '14px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  {currentStudent?.standard?.name}-{currentStudent?.division?.name}
-                </Typography>
-              </Box>
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-              />
-              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    fontSize: isScrolled ? '10px' : '12px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  Medium
-                </Typography>
-                <Typography
-                  fontWeight={500}
-                  variant="body2"
-                  sx={{
-                    fontSize: isScrolled ? '12px' : '14px',
-                    transition: 'font-size 0.3s ease-in-out',
-                  }}
-                >
-                  {currentStudent?.educationMedium?.name || '-'}
-                </Typography>
-              </Box>
+            )}
+            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: isScrolled ? '10px' : '12px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                Name
+              </Typography>
+              <Typography
+                fontWeight={500}
+                variant="body2"
+                sx={{
+                  fontSize: isScrolled ? '12px' : '14px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                {currentStudent?.lastName || '-'} {currentStudent?.firstName || '-'}{' '}
+                {currentStudent?.middleName || '-'}
+              </Typography>
             </Box>
-          </Paper>
-        </Card>
-        <Paper elevation={2} sx={{ px: 2 }}>
-          <Tabs
-            value={tabs.value}
-            onChange={tabs.onChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
-            role="tablist"
-          >
-            {TABS.map((tab) => (
-              <Tab
-                sx={{ fontSize: '12px' }}
-                key={tab.value}
-                value={tab.value}
-                icon={tab.icon}
-                label={tab.label}
-                role="tab"
-              />
-            ))}
-          </Tabs>
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+            />
+            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: isScrolled ? '10px' : '12px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                Gr No.
+              </Typography>
+              <Typography
+                fontWeight={500}
+                variant="body2"
+                sx={{
+                  fontSize: isScrolled ? '12px' : '14px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                {currentStudent?.grNoRecord || '-'}
+              </Typography>
+            </Box>
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+            />
+            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: isScrolled ? '10px' : '12px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                Roll No.
+              </Typography>
+              <Typography
+                fontWeight={500}
+                variant="body2"
+                sx={{
+                  fontSize: isScrolled ? '12px' : '14px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                {currentStudent?.rollNo || '-'}
+              </Typography>
+            </Box>
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+            />
+            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: isScrolled ? '10px' : '12px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                Class
+              </Typography>
+              <Typography
+                fontWeight={500}
+                variant="body2"
+                sx={{
+                  fontSize: isScrolled ? '12px' : '14px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                {currentStudent?.standard?.name}-{currentStudent?.division?.name}
+              </Typography>
+            </Box>
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+            />
+            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  fontSize: isScrolled ? '10px' : '12px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                Medium
+              </Typography>
+              <Typography
+                fontWeight={500}
+                variant="body2"
+                sx={{
+                  fontSize: isScrolled ? '12px' : '14px',
+                  transition: 'font-size 0.3s ease-in-out',
+                }}
+              >
+                {currentStudent?.educationMedium?.name || '-'}
+              </Typography>
+            </Box>
+          </Box>
         </Paper>
-      </Box>
+      </Paper>
+      <Paper elevation={2} sx={{ px: 2, mb: 1 }}>
+        <Tabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              value={tab.value}
+              icon={tab.icon}
+              label={tab.label}
+              role="tab"
+            />
+          ))}
+        </Tabs>
+      </Paper>
 
       {currentActiveComponent?.component && (
         <currentActiveComponent.component tabs={tabs} student={currentStudent} refetch={refetch} />

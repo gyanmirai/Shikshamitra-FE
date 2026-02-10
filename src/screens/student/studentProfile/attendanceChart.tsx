@@ -62,7 +62,7 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
       <ChartLegends
         labels={chartOptions?.labels}
         colors={chartOptions?.colors}
-        sx={{ p: 3, justifyContent: 'center' }}
+        sx={{ p: 3, justifyContent: 'center', bgcolor: 'action.hover', minHeight: 70 }}
       />
     </Card>
   );
