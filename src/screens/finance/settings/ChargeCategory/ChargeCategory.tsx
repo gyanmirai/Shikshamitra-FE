@@ -14,7 +14,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -27,13 +26,11 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
-  Chip,
   Stack,
   Button,
   Switch,
   TextField,
   Typography,
-  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -201,15 +198,6 @@ const FinanceChargeCategory = () => {
         align: 'left',
       },
       {
-        id: 'roles',
-        label: 'Roles',
-        minWidth: '200px',
-        isSort: true,
-        isFilter: true,
-        align: 'left',
-        render: (value: any) => value?.map((role: any) => role.name).join(', '),
-      },
-      {
         id: 'actions',
         label: 'Actions',
         minWidth: '70px',
@@ -345,20 +333,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
   const validationSchema = Yup.object().shape({
     chargeName: Yup.string().required('Charge Category Name is required'),
     isRefundable: Yup.boolean().required(),
-    roles: Yup.array().when('isRefundable', {
-      is: true,
-      then: (schema) =>
-        schema
-          .min(1, 'At least one role must be selected when approval is required')
-          .required('Role is required when approval is required'),
-      otherwise: (schema) => schema.optional(),
-    }),
     description: Yup.string().optional(),
-  });
-
-  const { data } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
   });
 
   // Initialize formik form with initial values and submit handler
@@ -366,7 +341,6 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
     initialValues: {
       chargeName: editData?.chargeName || '',
       isRefundable: editData?.isRefundable === 'Yes' || false,
-      roles: editData?.roles || [],
       description: editData?.description || '',
     },
     validationSchema,
@@ -441,47 +415,6 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
                 label="Approval Required?"
               />
             </Box>
-
-            {formik.values.isRefundable && (
-              <ShakingTextField error={!!(formik.touched.roles && formik.errors.roles) || false}>
-                <Autocomplete
-                  disabled={isLoading}
-                  multiple
-                  options={data?.items || []}
-                  value={formik.values.roles}
-                  getOptionLabel={(option: any) => option?.name || ''}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  renderTags={(tagValue, getTagProps) =>
-                    tagValue.map((option, index) => {
-                      const tagProps = getTagProps({ index });
-                      return (
-                        <Chip
-                          // Key is already provided by getTagProps
-                          label={option.name}
-                          variant="soft"
-                          size="small"
-                          {...tagProps} // now safe to spread the rest
-                        />
-                      );
-                    })
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Role *"
-                      size="small"
-                      fullWidth
-                      sx={{ width: '100%', minWidth: '200px' }}
-                      error={formik.touched.roles && Boolean(formik.errors.roles)}
-                      helperText={(formik.touched.roles && formik.errors.roles) as string}
-                    />
-                  )}
-                  onChange={(e, newValue) => {
-                    formik.setFieldValue('roles', newValue);
-                  }}
-                />
-              </ShakingTextField>
-            )}
 
             {/* Description Field */}
             <ShakingTextField
