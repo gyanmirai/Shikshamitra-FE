@@ -40,8 +40,8 @@ export default function ConcessionsCard() {
     >
       <Box
         sx={{
-          p: 2,
-          pb: 2,
+          p: 1,
+          pb: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -72,13 +72,13 @@ export default function ConcessionsCard() {
       </Box>
 
       <CardContent sx={{ p: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Scrollbar sx={{ flexGrow: 1, px: 3, pb: 3, maxHeight: '100%' }}>
-          <Stack spacing={2}>
+        <Scrollbar sx={{ flexGrow: 1, px: 1, pb: 1, maxHeight: '100%' }}>
+          <Stack spacing={1}>
             {concessions.map((item, index) => (
               <Box
                 key={index}
                 sx={{
-                  p: 2,
+                  p: 1,
                   borderRadius: 2,
                   bgcolor: alpha(theme.palette.background.neutral || theme.palette.grey[100], 0.5),
                   border: '1px solid',

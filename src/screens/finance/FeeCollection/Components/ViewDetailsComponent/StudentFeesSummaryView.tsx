@@ -7,7 +7,7 @@ export const StudentFeesSummaryView = ({ student }: any) => {
   return (
     <Card
       sx={{
-        p: 2,
+        p: 1,
         borderRadius: 2,
         height: '100%',
         boxShadow: theme.customShadows?.card || theme.shadows[3],

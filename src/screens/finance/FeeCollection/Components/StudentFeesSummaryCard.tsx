@@ -15,7 +15,7 @@ export const StudentFeeSummaryCard: React.FC<{
 }> = ({ student, showHeader = true }) => {
   if (!student) {
     return (
-      <Card sx={{ p: 3, textAlign: 'center' }}>
+      <Card sx={{ p: 1, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
           No student data available
         </Typography>
@@ -32,14 +32,14 @@ export const StudentFeeSummaryCard: React.FC<{
         flexDirection: 'column',
         ml: 0.5,
         mt: 0.5,
-        mb: 2,
-        p: 2,
+        mb: 1,
+        p: 1,
         boxShadow: 'var(--shadows-4)',
       }}
     >
       {/* <Paper sx={{ p: 2, mb: 1, boxShadow: (theme) => theme.customShadows?.z4 }}> */}
       {showHeader && (
-        <Grid container spacing={2} alignItems="center">
+        <Grid container spacing={1} alignItems="center">
           <Grid
             size={{ xs: 12, md: 5, lg: 4 }}
             sx={{

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { financePaths } from 'src/constants/finance-menu';
 import { fNumber, fCurrency } from 'src/utils/format-number';
 import CustomizableView from 'src/components/customizable-view';
 
@@ -30,7 +31,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fNumber(8),
       color: 'info.main',
       bgColor: 'info',
-      href: '#',
+      href: financePaths.concession,
       width: 4,
     },
     {
@@ -40,7 +41,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fCurrency(12500000),
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
+      href: financePaths.feeCollection,
       width: 4,
     },
     {
@@ -50,7 +51,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fCurrency(8500000),
       color: 'error.main',
       bgColor: 'error',
-      href: '#',
+      href: financePaths.expenseTracking,
       width: 4,
     },
   ]);

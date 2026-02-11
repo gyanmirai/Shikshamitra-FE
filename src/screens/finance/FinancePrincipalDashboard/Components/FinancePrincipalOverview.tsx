@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { fCurrency } from 'src/utils/format-number';
+import { financePaths } from 'src/constants/finance-menu';
 import CustomizableView from 'src/components/customizable-view';
 
 import { SummaryCard } from '../../dashboard/Components/FinanceDashboardOverview';
@@ -30,7 +31,7 @@ const FinancePrincipalOverview = () => {
       count: fCurrency(12500000),
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
+      href: financePaths.feeCollection,
       width: 4,
       labels: [
         { name: 'Paid - 700k', color: 'success' }, // Example value
@@ -45,7 +46,7 @@ const FinancePrincipalOverview = () => {
       count: '15',
       color: 'warning.main',
       bgColor: 'warning',
-      href: '#',
+      href: financePaths.concession,
       labels: [{ name: 'Concessions: 7', color: 'info' }],
       width: 4,
     },
@@ -56,7 +57,7 @@ const FinancePrincipalOverview = () => {
       count: fCurrency(4500000),
       color: 'info.main',
       bgColor: 'info',
-      href: '#',
+      href: financePaths.incomeTracking,
       labels: [
         { name: `Income: ${fCurrency(12500000)}`, color: 'success' },
         { name: `Expense: ${fCurrency(8000000)}`, color: 'error' },

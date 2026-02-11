@@ -102,7 +102,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               label: 'Name',
               align: 'left',
               isFilter: true,
-              minWidth: '200px',
+              minWidth: '300px',
               sticky: true,
               render: (value, row) => (
                 <Typography variant="caption" fontSize="13px">
@@ -115,7 +115,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               label: 'Class/Div',
               isFilter: true,
               align: 'left',
-              minWidth: '90px',
+              minWidth: '70px',
               render: (value, row) => (
                 <Typography variant="caption" fontSize="13px">
                   {value || '-'}-{row.division}
@@ -127,7 +127,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               label: 'Roll No.',
               align: 'left',
               isFilter: true,
-              minWidth: '90px',
             },
             {
               id: 'paybleFees',

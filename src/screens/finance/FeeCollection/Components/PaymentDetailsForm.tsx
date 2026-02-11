@@ -268,7 +268,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
       flexGrow={1}
       sx={{ height: '100%', overflow: 'hidden' }}
     >
-      <Grid container spacing={2} sx={{ flexGrow: 1, minHeight: 0 }} mb={1}>
+      <Grid container spacing={1} sx={{ flexGrow: 1, minHeight: 0 }} mb={1}>
         <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
           <FeeTermsComponent
             formik={formik}
@@ -285,7 +285,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              p: 2,
+              p: 1,
               borderRadius: 1,
               boxShadow: 'var(--shadows-4)',
               bgcolor: theme.vars.palette.background.paper,
@@ -295,16 +295,16 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               mr: 0.5,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Payment Details
             </Typography>
-            <Scrollbar sx={{ flexGrow: 1, p: 1, height: '100%' }}>
-              <Grid container spacing={3} pt={1}>
+            <Scrollbar sx={{ flexGrow: 1, p: 1 }}>
+              <Grid container spacing={3} pb={1}>
                 {/* Terms Selection Section */}
 
                 <Grid size={{ xs: 12, md: 4 }}>
                   <Typography
-                    variant="body2"
+                    variant="subtitle1"
                     color="text.primary"
                     sx={{ fontWeight: 500, lineHeight: 1.5 }}
                   >

@@ -69,7 +69,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       {/* HEADER SECTION */}
       <Box
         sx={{
-          p: 2,
+          p: 1,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -92,8 +92,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
               display: 'flex',
               alignItems: 'center',
               gap: 1,
-              px: 1.5,
-              py: 0.75,
+              px: 1,
+              py: 0.5,
               borderRadius: 1,
               borderColor: 'divider',
               bgcolor: 'background.neutral',
@@ -121,8 +121,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       </Box>
 
       {/* LIST SECTION */}
-      <Scrollbar sx={{ flexGrow: 1, p: 2, height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={1.5}>
+      <Scrollbar sx={{ flexGrow: 1, p: 1, height: '100%' }}>
+        <Box display="flex" flexDirection="column" gap={1.5} pb={1}>
           {terms?.map((term: any) => {
             const isSelected = selectedTerms?.some((t) => t.id === term.id);
             const isPaid = FeeCollectionStatusType.Paid === term.status;
@@ -131,7 +131,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
               <Card
                 key={term.id}
                 sx={{
-                  p: 2,
+                  p: 1,
                   borderRadius: 1.5,
                   cursor: 'pointer',
                   transition: 'all 0.2s ease-in-out',
