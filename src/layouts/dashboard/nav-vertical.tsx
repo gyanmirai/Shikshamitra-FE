@@ -73,6 +73,7 @@ export function NavVertical({
 
   return (
     <Box
+      id="onboarding-sidebar"
       sx={{
         top: 0,
         left: 0,

@@ -57,7 +57,7 @@ export function useConfirmDialog(): [(options: ConfirmOptions) => Promise<boolea
   };
 
   const ConfirmDialog = dialogState ? (
-    <Dialog open={dialogState.open} onClose={() => handleClose(false)}>
+    <Dialog open={dialogState.open} onClose={() => handleClose(false)} sx={{ zIndex: 2147483647 }}>
       <DialogTitle>
         <Box display="flex" alignItems="center" gap={1}>
           {iconMap[dialogState.icon!]}
