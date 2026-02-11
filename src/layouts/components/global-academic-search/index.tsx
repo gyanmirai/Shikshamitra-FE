@@ -14,6 +14,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
+import { setDriverNextEnabled } from 'src/utils/driverBtnConfig';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 import {
@@ -170,6 +171,7 @@ const GlobalAcademicSearch = () => {
                   open={isDropdownOpen}
                   onOpen={() => setIsDropdownOpen(true)}
                   onClose={() => setIsDropdownOpen(false)}
+                  // disablePortal={false}
                   options={Array.from(
                     new Map(options.map((item) => [item.academicYear.name, item])).values()
                   )}
@@ -192,6 +194,10 @@ const GlobalAcademicSearch = () => {
                       dispatch(setCurrentBoard(newValue?.board));
                       dispatch(setCurrentMedium(newValue?.medium));
                       setSelectedDivision(newValue);
+                    }
+
+                    if (currentYear?.name || (confirmed && newValue?.academicYear?.name)) {
+                      setDriverNextEnabled(true);
                     }
                   }}
                   slotProps={{
@@ -217,8 +223,9 @@ const GlobalAcademicSearch = () => {
                       },
                     },
                     popper: {
+                      // disablePortal: false,
                       sx: {
-                        zIndex: 9999999999,
+                        zIndex: '9999999999 !important',
                       },
                     },
                   }}
@@ -230,6 +237,7 @@ const GlobalAcademicSearch = () => {
               ) : (
                 <Autocomplete
                   open={isDropdownOpen}
+                  // disablePortal={false}
                   onOpen={() => setIsDropdownOpen(true)}
                   onClose={() => setIsDropdownOpen(false)}
                   options={options}
@@ -252,6 +260,10 @@ const GlobalAcademicSearch = () => {
                       dispatch(setCurrentBoard(newValue?.board));
                       dispatch(setCurrentMedium(newValue?.medium));
                       setSelectedDivision(newValue);
+                    }
+
+                    if (currentYear?.name || (confirmed && newValue?.academicYear?.name)) {
+                      setDriverNextEnabled(true);
                     }
                   }}
                   renderOption={(props, option) => {
@@ -295,8 +307,9 @@ const GlobalAcademicSearch = () => {
                       },
                     },
                     popper: {
+                      // disablePortal: false,
                       sx: {
-                        zIndex: 9999999999,
+                        zIndex: `${9999999999} !important`,
                       },
                     },
                   }}

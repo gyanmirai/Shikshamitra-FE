@@ -9,9 +9,11 @@
 .driver-popover {
   border-radius: 16px !important;
   padding: 16px !important;
-  box-shadow: 0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12) !important;
+  box-shadow:
+    0 0 2px 0 rgba(145, 158, 171, 0.2),
+    0 12px 24px -4px rgba(145, 158, 171, 0.12) !important;
   background-color: #ffffff !important;
-  color: #1C252E !important;
+  color: #1c252e !important;
   max-width: 360px !important;
   border: none !important;
   font-family: inherit !important;
@@ -19,7 +21,7 @@
 
 /* Arrow */
 .driver-popover-arrow {
-  content: "";
+  content: '';
   display: block !important;
   position: absolute;
   width: 0;
@@ -30,28 +32,28 @@
 }
 
 /* Arrow Positioning & Color (White to match popover) */
-.driver-popover[data-side="left"] .driver-popover-arrow {
+.driver-popover[data-side='left'] .driver-popover-arrow {
   right: -10px; /* positioned on right side of popover */
   top: 50%;
   margin-top: -10px;
   border-left-color: #ffffff;
 }
 
-.driver-popover[data-side="right"] .driver-popover-arrow {
+.driver-popover[data-side='right'] .driver-popover-arrow {
   left: -10px; /* positioned on left side of popover */
   top: 50%;
   margin-top: -10px;
   border-right-color: #ffffff;
 }
 
-.driver-popover[data-side="top"] .driver-popover-arrow {
+.driver-popover[data-side='top'] .driver-popover-arrow {
   bottom: -10px; /* positioned on bottom of popover */
   left: 50%;
   margin-left: -10px;
   border-top-color: #ffffff;
 }
 
-.driver-popover[data-side="bottom"] .driver-popover-arrow {
+.driver-popover[data-side='bottom'] .driver-popover-arrow {
   top: -10px; /* positioned on top of popover */
   left: 50%;
   margin-left: -10px;
@@ -64,7 +66,7 @@
   font-weight: 700 !important;
   line-height: 1.5 !important;
   margin-bottom: 8px !important;
-  color: #1C252E !important;
+  color: #1c252e !important;
 }
 
 /* Description */
@@ -88,7 +90,7 @@
 /* Progress text */
 .driver-popover-progress-text {
   font-size: 0.75rem !important;
-  color: #919EAB !important;
+  color: #919eab !important;
   margin-right: auto !important; /* Push progress text to the left */
 }
 
@@ -108,42 +110,42 @@
 /* Next / Finish Button (Primary) */
 .driver-popover-next-btn,
 .driver-popover-done-btn {
-  background-color: #212B36 !important; /* Dark neutral color for primary action */
+  background-color: #212b36 !important; /* Dark neutral color for primary action */
   color: #ffffff !important;
-  border: 1px solid #212B36 !important;
+  border: 1px solid #212b36 !important;
 }
 
 .driver-popover-next-btn:hover,
 .driver-popover-done-btn:hover {
-  background-color: #454F5B !important;
-  border-color: #454F5B !important;
+  background-color: #454f5b !important;
+  border-color: #454f5b !important;
   box-shadow: 0 8px 16px 0 rgba(145, 158, 171, 0.16) !important;
 }
 
 /* Previous Button (Secondary) */
 .driver-popover-prev-btn {
   background-color: transparent !important;
-  color: #1C252E !important;
+  color: #1c252e !important;
   border: 1px solid rgba(145, 158, 171, 0.32) !important;
 }
 
 .driver-popover-prev-btn:hover {
   background-color: rgba(145, 158, 171, 0.08) !important;
-  border-color: #1C252E !important;
+  border-color: #1c252e !important;
 }
 
 /* Disabled State */
-.driver-popover-next-btn[style*="pointer-events: none"] {
+.driver-popover-next-btn[style*='pointer-events: none'] {
   opacity: 0.48 !important;
   cursor: not-allowed !important;
-  background-color: #919EAB !important;
-  border-color: #919EAB !important;
+  background-color: #919eab !important;
+  border-color: #919eab !important;
   color: #ffffff !important;
 }
 
 /* Close Button (X) */
 .driver-popover-close-btn {
-  color: #919EAB !important;
+  color: #919eab !important;
   transition: color 200ms ease !important;
   position: absolute !important;
   top: 12px !important;
@@ -161,7 +163,30 @@
 }
 
 .driver-popover-close-btn:hover {
-  color: #1C252E !important;
+  color: #1c252e !important;
   background-color: rgba(145, 158, 171, 0.08) !important;
   border-radius: 50% !important;
+}
+.MuiAutocomplete-popper {
+  pointer-events: auto !important;
+  z-index: 2147483647 !important;
+}
+/* Driver popover clickable */
+.driver-active .driver-popover,
+.driver-active .driver-popover * {
+  pointer-events: auto !important;
+}
+
+/* MUI autocomplete dropdown clickable */
+.driver-active .MuiAutocomplete-popper,
+.driver-active .MuiAutocomplete-popper * {
+  pointer-events: auto !important;
+}
+
+/* MUI dialogs clickable */
+.driver-active .MuiDialog-root,
+.driver-active .MuiDialog-root *,
+.driver-active .MuiModal-root,
+.driver-active .MuiModal-root * {
+  pointer-events: auto !important;
 }

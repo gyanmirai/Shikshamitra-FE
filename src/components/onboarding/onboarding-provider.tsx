@@ -3,12 +3,18 @@
 import './onboarding-custom.css';
 import 'driver.js/dist/driver.css';
 
+import type { RootState } from 'src/redux/store';
+
 import { driver } from 'driver.js';
 import { useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { onboardingSteps } from 'src/config/onboarding-config';
+import { setDriverNextEnabled } from 'src/utils/driverBtnConfig';
 
 export default function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const driverObj = useRef<any>(null);
+  // Redux state selectors for current academic selections
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     // Check if onboarding is already completed
@@ -19,16 +25,15 @@ export default function OnboardingProvider({ children }: { children: React.React
     driverObj.current = driver({
       showProgress: true,
       steps: onboardingSteps,
-      allowClose: true,
+      allowClose: false,
+      disableActiveInteraction: false,
       onDestroyed: () => {
         localStorage.setItem('onboarding_completed', 'true');
       },
       onHighlightStarted: (element: any) => {
-        if (element?.node?.getAttribute('data-onboarding') === 'academic-year') {
-          // Add a small delay to ensure the popover is rendered before opening the dropdown
-          setTimeout(() => {
-            window.dispatchEvent(new Event('onboarding-open-academic-dropdown'));
-          }, 300);
+        if (element?.getAttribute?.('data-onboarding') === 'academic-year') {
+          // disable next button initially
+          setTimeout(() => !currentYear?.name && setDriverNextEnabled(false), 50);
         }
       },
       nextBtnText: 'Next &rarr;',
@@ -49,6 +54,7 @@ export default function OnboardingProvider({ children }: { children: React.React
         driverObj.current.destroy();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Effect to manage 'Next' button state based on academic year selection

@@ -10,6 +10,7 @@ export const onboardingSteps: DriveStep[] = [
       side: 'bottom',
       align: 'center',
     },
+    disableActiveInteraction: false,
   },
   {
     element: '#onboarding-sidebar',
