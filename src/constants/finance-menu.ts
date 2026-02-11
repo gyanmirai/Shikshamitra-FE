@@ -107,15 +107,15 @@ const financeModule = {
           permissionName: financePermissions.feeCollection,
           icon: menuIconView('mdi:hand-coin-outline'),
         },
-        // {
-        //   title: 'Charges',
-        //   path: financePaths.charges,
-        //   _action: 'fee-charges',
-        //   shortcutKey: 'Alt+F+3',
-        //   shortcutKeyName: 'Alt+F+3',
-        //   permissionName: financePermissions.charges,
-        //   icon: menuIconView('mdi:cash-plus'),
-        // },
+        {
+          title: 'Charges',
+          path: financePaths.charges,
+          _action: 'fee-charges',
+          shortcutKey: 'Alt+F+3',
+          shortcutKeyName: 'Alt+F+3',
+          permissionName: financePermissions.charges,
+          icon: menuIconView('mdi:cash-plus'),
+        },
         {
           title: 'Concession',
           path: financePaths.concession,
@@ -124,9 +124,6 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+5',
           permissionName: financePermissions.concession,
           icon: menuIconView('mdi:ticket-percent-outline'),
-          // children: [
-          //   // ...
-          // ],
         },
         {
           title: 'Invoice & Receipt',

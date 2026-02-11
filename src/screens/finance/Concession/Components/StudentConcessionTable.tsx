@@ -63,20 +63,8 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-  // const {
-  //   data: concessionData = [],
-  //   isLoading: isLoadingConcessionData,
-  //   refetch,
-  // } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetConcessionRequestsListQuery,
-  //   params: {
-  //     board: selectedBoard,
-  //     medium: selectedMedium,
-  //     status: tabs.value,
-  //   },
-  // });
-  // State to store th  e selected student concession data
+
+  // State to store the selected student concession data
   // null when no student is selected
   useEffect(() => {
     // Filter boards based on academic year ID from edit data

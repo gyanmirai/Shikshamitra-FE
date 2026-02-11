@@ -1,13 +1,17 @@
+import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import React, { useMemo, useCallback } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Tabs, Card, MenuItem, MenuList, Typography } from '@mui/material';
 
 import type { IChargeData } from './type';
@@ -29,7 +33,23 @@ const ChargesTable = ({
   onReject: (data: IChargeData) => void;
   onRemove: (data: IChargeData) => void;
 }) => {
-  // 🔹 Tab Counts
+  // Local state to store filtered boards based on academic year
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
+
+  // State to store the selected student concession data
+  // null when no student is selected
+  useEffect(() => {
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
+  // Tab Counts
   const chargeCounts = useMemo(
     () => ({
       pending:
@@ -118,31 +138,56 @@ const ChargesTable = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2 }}>
-        <Box display="flex" justifyContent="space-between" sx={{ pb: 1 }}>
-          <Tabs
-            value={tabs.value}
-            onChange={tabs.onChange}
-            sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
-              flexGrow: 1,
-              pb: 1,
-            }}
-          >
-            {TABS.map((tab) => (
-              <Tab
-                sx={{ fontSize: '12px' }}
-                key={tab.value}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}
-                    <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-                  </Box>
-                }
-                value={tab.value}
-              />
-            ))}
-          </Tabs>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              label="Board"
+              options={boards || []}
+              labelKey="name"
+              valueKey="id"
+              value={selectedBoard}
+              onChange={(value) => {
+                setSelectedBoard(value as string);
+                setSelectedMedium('');
+              }}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+            <CustomSelect
+              label="Medium"
+              options={mediums || []}
+              labelKey="name"
+              disabled={!selectedBoard}
+              valueKey="id"
+              value={selectedMedium}
+              onChange={(value) => setSelectedMedium(value as string)}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Tabs
+              value={tabs.value}
+              onChange={tabs.onChange}
+              sx={{
+                '& .MuiTabs-flexContainer': { gap: 2 },
+                flexGrow: 1,
+              }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  sx={{ fontSize: '12px' }}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}
+                      <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          </Box>
         </Box>
       </Card>
 

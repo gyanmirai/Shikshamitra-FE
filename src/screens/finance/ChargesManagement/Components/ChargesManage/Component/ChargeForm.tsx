@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Division } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -10,16 +10,16 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { Box, Grid, Button, Checkbox, TextField, Autocomplete, DialogActions } from '@mui/material';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
 import type { IChargeFormProps } from './type';
@@ -27,18 +27,23 @@ import type { IChargeFormProps } from './type';
 const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProps) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [, setAllDivision] = useState<Division[]>([]);
+  // State
+  const [boards, setBoards] = useState<any[]>([]);
+  const [mediums, setMediums] = useState<any[]>([]);
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
 
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+  // Queries
+  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetClassByMediumQuery,
+  });
+
+  const [getFilterStudents] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  // Memoize initial values to prevent re-creation on every render
+  // Memoize initial values
   const initialValues = useMemo(() => {
     if (isEdit && editData) {
       return {
@@ -105,6 +110,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
           (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
         ),
       priority: Yup.string().required('Priority is required'),
+      board: Yup.string().required('Board is required'),
+      medium: Yup.string().required('Medium is required'),
       class: Yup.string().required('Class is required'),
       division: Yup.string().required('Division is required'),
       studentName: Yup.object().nullable().required('Student is required'),
@@ -116,59 +123,26 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
 
-  // Update classes when medium changes (only when medium changes)
+  // Load boards on year change
   useEffect(() => {
-    if (medium?.educationMediumStages) {
-      const allClasses = medium.educationMediumStages.flatMap(
-        (stage: Organization) => stage.standards || []
-      );
-      setAllClass(allClasses);
-    }
-  }, [medium]); // Only depend on medium
+    setBoards(currentYear?.boards || []);
+  }, [currentYear]);
 
-  // Load divisions when class changes and allClass is available
+  // Load mediums when board changes
   useEffect(() => {
-    if (values.class && allClass.length > 0) {
-      const selectedClassDivisions =
-        allClass.find((cls) => cls.id === values.class || cls.name === values.class)?.divisions ||
-        [];
+    const selectedBoard = boards.find((b: any) => b.id === values.board);
+    setMediums(selectedBoard?.educationMediums || []);
 
-      const divisionsWithAll = [
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          strength: 0,
-          standardId: '',
-        },
-        ...selectedClassDivisions,
-      ];
-      setAllDivision(divisionsWithAll);
+    // Fetch classes if medium is already selected (e.g. edit mode) or re-selected
+    if (values.medium) {
+      getClassByMedium(values.medium);
     }
-  }, [values.class, allClass]); // Only depend on class value and allClass
-  // Fetch students when class and divisions are selected
+  }, [values.board, values.medium, boards, getClassByMedium]);
+
+  // Load divisions when class changes
   useEffect(() => {
-    if (values.class && values.division) {
-      const filterCriteria = {
-        classIds: [values.class],
-        divisionIds: [values.division],
-      };
-      getStudents(filterCriteria);
-    }
-  }, [values.class, values.division, getStudents]);
-
-  // Student table data
-  const tableData = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
+    setAllDivision(classes?.find((cls: any) => cls.id === values.class)?.divisions || []);
+  }, [values.class, classes]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -229,11 +203,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         value={values.amount || ''}
                         onChange={(e) => {
                           let val = e.target.value;
-                          // Remove currency symbol, commas, spaces and negative signs
                           val = val.replace(/\D/g, '');
-                          // Convert to number and ensure it's positive
                           if (/^\d*$/.test(val)) {
-                            setFieldValue('amount', val); // keep it as string while typing
+                            setFieldValue('amount', val);
                           }
                         }}
                         sx={{
@@ -253,7 +225,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         label="Due Date *"
                         name="dueDate"
                         format="DD/MM/YYYY"
-                        minDate={dayjs().startOf('day')} // disables all past dates
+                        minDate={dayjs().startOf('day')}
                         maxDate={dayjs(currentYear?.endDate)}
                         value={dayjs(values.dueDate) || null}
                         onChange={(newValue) => setFieldValue('dueDate', newValue)}
@@ -294,18 +266,68 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Student Information" paperProps={{ sx: { ...cardStyle } }}>
+                  {/* Board */}
+                  <Grid size={{ xs: 6 }}>
+                    <ShakingTextField error={!!(touched.board && errors.board)}>
+                      <CustomSelect
+                        label="Board *"
+                        options={boards}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.board}
+                        onChange={(val) => {
+                          setFieldValue('board', val);
+                          setFieldTouched('board', false);
+                          setFieldValue('medium', '');
+                          setFieldValue('class', '');
+                          setFieldValue('division', '');
+                          setFieldValue('studentName', null);
+                        }}
+                        error={!!errors.board && touched.board}
+                        helperText={(touched.board && errors.board) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Medium */}
+                  <Grid size={{ xs: 6 }}>
+                    <ShakingTextField error={!!(touched.medium && errors.medium)}>
+                      <CustomSelect
+                        label="Medium *"
+                        disabled={!values.board}
+                        options={mediums}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.medium}
+                        onChange={(val) => {
+                          setFieldValue('medium', val);
+                          setFieldTouched('medium', false);
+                          setFieldValue('class', '');
+                          setFieldValue('division', '');
+                          setFieldValue('studentName', null);
+                        }}
+                        error={!!errors.medium && touched.medium}
+                        helperText={(touched.medium && errors.medium) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Class */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.class && errors.class) || false}>
                       <CustomSelect
                         name="class"
                         label="Class *"
-                        options={allClass}
+                        options={classes || []}
                         labelKey="name"
                         valueKey="id"
                         value={values.class}
+                        disabled={!values.medium}
                         onChange={(value) => {
                           setFieldValue('class', value);
                           setFieldTouched('class', false);
+                          setFieldValue('division', '');
+                          setFieldValue('studentName', null);
                         }}
                         error={!!(touched.class && errors.class) || false}
                         helperText={(touched.class && errors.class) || ''}
@@ -315,6 +337,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     </ShakingTextField>
                   </Grid>
 
+                  {/* Division */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.division && errors.division) || false}>
                       <CustomSelect
@@ -323,14 +346,12 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         labelKey="name"
                         valueKey="id"
                         disabled={!values.class}
-                        options={
-                          allClass?.find((i: Standards) => i.id === values.class)?.divisions || []
-                        }
+                        options={allDivision}
                         value={values.division}
                         onChange={(value) => {
                           setFieldValue('division', value);
                           setFieldTouched('division', false);
-                          setFieldValue('studentName', '');
+                          setFieldValue('studentName', null);
                         }}
                         formControlProps={{ sx: { width: '100%' } }}
                         error={!!(touched.division && errors.division)}
@@ -343,51 +364,46 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     <ShakingTextField
                       error={!!(touched.studentName && errors.studentName) || false}
                     >
-                      <Autocomplete
-                        loading={isLoading}
-                        fullWidth
-                        disableCloseOnSelect
-                        value={values.studentName}
+                      <PaginatedSearchSelect
+                        key={`${values.class}-${values.division}`}
+                        label="Student *"
                         disabled={!values.division}
-                        onChange={(e, value: any) => {
-                          setFieldValue('studentName', value);
-                          setFieldTouched('studentName', false);
+                        fetchOptions={async (query, page) => {
+                          if (!values.division) return { data: [], hasMore: false };
+
+                          const res = await getFilterStudents({
+                            page,
+                            pageSize: 10,
+                            academicYearId: currentYear.id,
+                            standardId: values.class,
+                            divisionId: values.division,
+                            search: query,
+                          }).unwrap();
+
+                          const hasMore = res.currentPage !== res.totalPages;
+                          return {
+                            data: res?.items?.map((item: any) => ({
+                              label: `${item.firstName} ${item.lastName} ${item.middleName}`,
+                              id: item.studentId,
+                            })),
+                            hasMore,
+                          };
                         }}
-                        options={tableData}
-                        getOptionLabel={(option: any) => option?.name || ''}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        renderOption={(props, option, { selected }) => (
-                          <li {...props} key={option.id}>
-                            <Checkbox
-                              icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                              checkedIcon={<CheckBoxIcon fontSize="small" />}
-                              style={{ marginRight: 8 }}
-                              checked={selected}
-                            />
-                            {option.name}
+                        value={values.studentName}
+                        renderOption={(prop, option: any) => (
+                          <li {...prop} key={option.id}>
+                            {option.label}
                           </li>
                         )}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            size="small"
-                            label="Student *"
-                            fullWidth
-                            error={!!(touched.studentName && errors.studentName)}
-                            helperText={(touched.studentName && errors.studentName) as string}
-                            sx={(theme) => ({
-                              ...(!!(touched.studentName && errors.studentName) &&
-                                !values.division && {
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: `${theme.palette.error.main} !important`,
-                                  },
-                                  '& .MuiInputLabel-root.Mui-disabled': {
-                                    color: `${theme.palette.error.main} !important`,
-                                  },
-                                }),
-                            })}
-                          />
-                        )}
+                        getOptionLabel={(option: any) => option?.label || ''}
+                        minChars={2}
+                        onChange={(_, value) => setFieldValue('studentName', value)}
+                        debounceMs={400}
+                        placeholder="Search by name"
+                        sx={{ minWidth: 250 }}
+                        size="small"
+                        error={!!(touched.studentName && errors.studentName) || false}
+                        helperText={(touched.studentName && errors.studentName) || ''}
                       />
                     </ShakingTextField>
                   </Grid>
