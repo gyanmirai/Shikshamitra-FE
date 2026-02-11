@@ -13,6 +13,7 @@ import { varAlpha, stylesMode } from 'src/theme/styles';
 import { bulletColor } from 'src/components/nav-section';
 import { iconButtonClasses } from '@mui/material/IconButton';
 import { useSettingsContext } from 'src/components/settings';
+import OnboardingProvider from 'src/components/onboarding/onboarding-provider';
 
 import { Main } from './main';
 import { NavMobile } from './nav-mobile';
@@ -56,7 +57,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
   const isNavVertical = isNavMini || settings.navLayout === 'vertical';
 
   return (
-    <>
+    <OnboardingProvider>
       <NavMobile
         data={navData}
         open={mobileNavOpen.value}
@@ -203,7 +204,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
       >
         <Main isNavHorizontal={isNavHorizontal}>{children}</Main>
       </LayoutSection>
-    </>
+    </OnboardingProvider>
   );
 }
 

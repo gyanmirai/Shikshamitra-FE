@@ -113,9 +113,9 @@ const GlobalAcademicSearch = () => {
   }, [allData]);
 
   // State for selected division in autocomplete
-  const [selectedDivision, setSelectedDivision] = React.useState<
-    undefined | GlobalAcademicSearchOption
-  >(undefined);
+  const [selectedDivision, setSelectedDivision] = React.useState<GlobalAcademicSearchOption | null>(
+    null
+  );
   const options = getDivisionOptions();
 
   // Effect to update selected division when current selections change
@@ -137,150 +137,185 @@ const GlobalAcademicSearch = () => {
     pathname.startsWith(route)
   );
 
-  return isYearLoading || isBoardLoading ? (
-    <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
-  ) : (
-    <>
-      {ConfirmDialog}
-      <CustomTooltip
-        arrow
-        title={!currentYear?.name ? 'Select Academic Year, Board and Medium' : undefined}
-        placement="left"
-      >
-        <AnimatedWrapper error={!currentYear?.name}>
-          {isShowOnlyYearModule ? (
-            <Autocomplete
-              options={Array.from(
-                new Map(options.map((item) => [item.academicYear.name, item])).values()
-              )}
-              getOptionLabel={(option) => option.academicYear.name}
-              value={(selectedDivision ?? undefined) as any}
-              loading={isYearLoading || isBoardLoading}
-              clearIcon={false}
-              disableClearable
-              size="small"
-              onChange={async (event, newValue) => {
-                const confirmed = await showConfirm({
-                  title: 'Change Academic Year, Board and Medium',
-                  message: !currentYear?.name
-                    ? `Are you sure you want to set academic year ${newValue?.academicYear?.name}?`
-                    : `Are you sure you want to change academic year from  ${currentYear?.name || ''} to ${newValue?.academicYear?.name} ?`,
-                  icon: 'warning',
-                });
-                if (confirmed) {
-                  dispatch(setCurrentYear(newValue?.academicYear));
-                  dispatch(setCurrentBoard(newValue?.board));
-                  dispatch(setCurrentMedium(newValue?.medium));
-                  setSelectedDivision(newValue);
-                }
-              }}
-              slotProps={{
-                listbox: {
-                  sx: {
-                    '& .MuiAutocomplete-option': {
-                      '&[aria-selected="true"]': {
-                        backgroundColor: 'action.hover',
-                      },
-                      '&:hover': {
-                        backgroundColor: 'action.hover !important',
-                      },
-                      '&.Mui-focused': {
-                        backgroundColor: 'transparent',
-                      },
-                      '&.Mui-focused:hover': {
-                        backgroundColor: 'action.hover !important',
-                      },
-                      '&[aria-selected="true"]:hover': {
-                        backgroundColor: 'action.hover !important',
-                      },
-                    },
-                  },
-                },
-              }}
-              renderInput={(params) => (
-                <TextField {...params} variant="filled" size="small" label="Academic Year" />
-              )}
-              sx={{ minWidth: '200px', width: '100%', '& *': { fontSize: '14px !important' } }}
-            />
-          ) : (
-            <Autocomplete
-              options={options}
-              getOptionLabel={(option) => option.label}
-              value={(selectedDivision ?? undefined) as any}
-              loading={isYearLoading || isBoardLoading}
-              clearIcon={false}
-              disableClearable
-              size="small"
-              onChange={async (event, newValue) => {
-                const confirmed = await showConfirm({
-                  title: 'Change Academic Year, Board and Medium',
-                  message: !currentYear?.name
-                    ? `Are you sure you want to set academic year, board and medium  ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`
-                    : `Are you sure you want to change academic year, board and medium from  ${currentYear?.name || ''} / ${currentBoard?.name || ''} / ${currentMedium?.name || ''} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
-                  icon: 'warning',
-                });
-                if (confirmed) {
-                  dispatch(setCurrentYear(newValue?.academicYear));
-                  dispatch(setCurrentBoard(newValue?.board));
-                  dispatch(setCurrentMedium(newValue?.medium));
-                  setSelectedDivision(newValue);
-                }
-              }}
-              renderOption={(props, option) => {
-                const isSelected =
-                  option.academicYear.id === currentYear?.id &&
-                  option.board.id === currentBoard?.id &&
-                  option.medium.id === currentMedium?.id;
-                const { key, ...restProps } = props;
-                return (
-                  <Box
-                    component="li"
-                    key={key}
-                    {...restProps}
-                    data-selected={isSelected}
-                    sx={{
-                      backgroundColor: isSelected ? 'action.hover' : 'transparent',
-                      '&:hover': {
-                        backgroundColor: 'action.hover !important',
-                      },
-                    }}
-                  >
-                    {option.label}
-                  </Box>
-                );
-              }}
-              slotProps={{
-                listbox: {
-                  sx: {
-                    '& .MuiAutocomplete-option.Mui-focused': {
-                      backgroundColor: 'transparent',
-                    },
-                    '& .MuiAutocomplete-option.Mui-focused:hover': {
-                      backgroundColor: 'action.hover !important',
-                    },
-                    '& .MuiAutocomplete-option[data-selected="true"]': {
-                      backgroundColor: 'action.hover',
-                    },
-                    '& .MuiAutocomplete-option[data-selected="true"]:hover': {
-                      backgroundColor: 'action.hover !important',
-                    },
-                  },
-                },
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="filled"
+  // --- Start of Onboarding Logic ---
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
+  useEffect(() => {
+    const handleOpenDropdown = () => {
+      setIsDropdownOpen(true);
+    };
+
+    window.addEventListener('onboarding-open-academic-dropdown', handleOpenDropdown);
+    return () => {
+      window.removeEventListener('onboarding-open-academic-dropdown', handleOpenDropdown);
+    };
+  }, []);
+  // --- End of Onboarding Logic ---
+
+  return (
+    <Box data-onboarding="academic-year">
+      {isYearLoading || isBoardLoading ? (
+        <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
+      ) : (
+        <>
+          {ConfirmDialog}
+          <CustomTooltip
+            arrow
+            title={!currentYear?.name ? 'Select Academic Year, Board and Medium' : undefined}
+            placement="bottom"
+          >
+            <AnimatedWrapper error={!currentYear?.name}>
+              {isShowOnlyYearModule ? (
+                <Autocomplete
+                  open={isDropdownOpen}
+                  onOpen={() => setIsDropdownOpen(true)}
+                  onClose={() => setIsDropdownOpen(false)}
+                  options={Array.from(
+                    new Map(options.map((item) => [item.academicYear.name, item])).values()
+                  )}
+                  getOptionLabel={(option) => option.academicYear.name}
+                  value={selectedDivision}
+                  loading={isYearLoading || isBoardLoading}
+                  clearIcon={false}
+                  disableClearable={!!selectedDivision}
                   size="small"
-                  label="Academic Year, Board and Medium"
+                  onChange={async (event, newValue) => {
+                    const confirmed = await showConfirm({
+                      title: 'Change Academic Year, Board and Medium',
+                      message: !currentYear?.name
+                        ? `Are you sure you want to set academic year ${newValue?.academicYear?.name}?`
+                        : `Are you sure you want to change academic year from  ${currentYear?.name || ''} to ${newValue?.academicYear?.name} ?`,
+                      icon: 'warning',
+                    });
+                    if (confirmed) {
+                      dispatch(setCurrentYear(newValue?.academicYear));
+                      dispatch(setCurrentBoard(newValue?.board));
+                      dispatch(setCurrentMedium(newValue?.medium));
+                      setSelectedDivision(newValue);
+                    }
+                  }}
+                  slotProps={{
+                    listbox: {
+                      sx: {
+                        '& .MuiAutocomplete-option': {
+                          '&[aria-selected="true"]': {
+                            backgroundColor: 'action.hover',
+                          },
+                          '&:hover': {
+                            backgroundColor: 'action.hover !important',
+                          },
+                          '&.Mui-focused': {
+                            backgroundColor: 'transparent',
+                          },
+                          '&.Mui-focused:hover': {
+                            backgroundColor: 'action.hover !important',
+                          },
+                          '&[aria-selected="true"]:hover': {
+                            backgroundColor: 'action.hover !important',
+                          },
+                        },
+                      },
+                    },
+                    popper: {
+                      sx: {
+                        zIndex: 9999999999,
+                      },
+                    },
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} variant="filled" size="small" label="Academic Year" />
+                  )}
+                  sx={{ minWidth: '200px', width: '100%', '& *': { fontSize: '14px !important' } }}
+                />
+              ) : (
+                <Autocomplete
+                  open={isDropdownOpen}
+                  onOpen={() => setIsDropdownOpen(true)}
+                  onClose={() => setIsDropdownOpen(false)}
+                  options={options}
+                  getOptionLabel={(option) => option.label}
+                  value={selectedDivision}
+                  loading={isYearLoading || isBoardLoading}
+                  clearIcon={false}
+                  disableClearable={!!selectedDivision}
+                  size="small"
+                  onChange={async (event, newValue) => {
+                    const confirmed = await showConfirm({
+                      title: 'Change Academic Year, Board and Medium',
+                      message: !currentYear?.name
+                        ? `Are you sure you want to set academic year, board and medium  ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`
+                        : `Are you sure you want to change academic year, board and medium from  ${currentYear?.name || ''} / ${currentBoard?.name || ''} / ${currentMedium?.name || ''} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
+                      icon: 'warning',
+                    });
+                    if (confirmed) {
+                      dispatch(setCurrentYear(newValue?.academicYear));
+                      dispatch(setCurrentBoard(newValue?.board));
+                      dispatch(setCurrentMedium(newValue?.medium));
+                      setSelectedDivision(newValue);
+                    }
+                  }}
+                  renderOption={(props, option) => {
+                    const isSelected =
+                      option.academicYear.id === currentYear?.id &&
+                      option.board.id === currentBoard?.id &&
+                      option.medium.id === currentMedium?.id;
+                    const { key, ...restProps } = props;
+                    return (
+                      <Box
+                        component="li"
+                        key={key}
+                        {...restProps}
+                        data-selected={isSelected}
+                        sx={{
+                          backgroundColor: isSelected ? 'action.hover' : 'transparent',
+                          '&:hover': {
+                            backgroundColor: 'action.hover !important',
+                          },
+                        }}
+                      >
+                        {option.label}
+                      </Box>
+                    );
+                  }}
+                  slotProps={{
+                    listbox: {
+                      sx: {
+                        '& .MuiAutocomplete-option.Mui-focused': {
+                          backgroundColor: 'transparent',
+                        },
+                        '& .MuiAutocomplete-option.Mui-focused:hover': {
+                          backgroundColor: 'action.hover !important',
+                        },
+                        '& .MuiAutocomplete-option[data-selected="true"]': {
+                          backgroundColor: 'action.hover',
+                        },
+                        '& .MuiAutocomplete-option[data-selected="true"]:hover': {
+                          backgroundColor: 'action.hover !important',
+                        },
+                      },
+                    },
+                    popper: {
+                      sx: {
+                        zIndex: 9999999999,
+                      },
+                    },
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="filled"
+                      size="small"
+                      label="Academic Year, Board and Medium"
+                    />
+                  )}
+                  sx={{ minWidth: '300px', width: '100%', '& *': { fontSize: '14px !important' } }}
                 />
               )}
-              sx={{ minWidth: '280px', width: '100%', '& *': { fontSize: '14px !important' } }}
-            />
-          )}
-        </AnimatedWrapper>
-      </CustomTooltip>
-    </>
+            </AnimatedWrapper>
+          </CustomTooltip>
+        </>
+      )}
+    </Box>
   );
 };
 export default GlobalAcademicSearch;

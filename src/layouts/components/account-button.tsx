@@ -40,6 +40,7 @@ export function AccountButton({ open, photoURL, displayName, sx, ...other }: Acc
 
   return (
     <IconButton
+      id="onboarding-user-profile"
       component={motion.button}
       whileTap="tap"
       whileHover="hover"
