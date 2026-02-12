@@ -281,11 +281,14 @@ const HrEmployee = () => {
       {open ? (
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <CustomBreadcrumbs
-            heading={`${editData?.id ? 'Edit' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
+            heading={`${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
             links={[
               { name: 'HR/Staff', href: '/hr/dashboard/' },
               { name: 'Employee', href: '/hr/employee/' },
               { name: 'Employee List', href: '/hr/employee/' },
+              {
+                name: `${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`,
+              },
             ]}
             description="Fill out the form below with personal, contact, and employment details. Required fields are marked with an asterisk (*)."
             isBack

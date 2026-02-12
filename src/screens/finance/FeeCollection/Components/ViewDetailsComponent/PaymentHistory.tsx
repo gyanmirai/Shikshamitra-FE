@@ -20,7 +20,7 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
       sx={{
         borderRadius: 2,
         height: '450px',
-        p: 2,
+        p: 1,
         display: 'flex',
         flexDirection: 'column',
         border: (theme) => `1px solid ${theme.palette.divider}`,

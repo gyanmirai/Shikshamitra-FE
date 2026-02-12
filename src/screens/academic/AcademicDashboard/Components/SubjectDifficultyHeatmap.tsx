@@ -37,15 +37,15 @@ const SubjectDifficultyBarChart = () => {
   }, [allClass, classes]);
   const series = [
     {
-      name: 'Class 10',
+      name: 'Div A',
       data: [45, 30, 15, 20, 10],
     },
     {
-      name: 'Class 9',
+      name: 'Div B',
       data: [40, 35, 20, 25, 15],
     },
     {
-      name: 'Class 8',
+      name: 'Div C',
       data: [35, 25, 10, 15, 5],
     },
   ];
@@ -91,16 +91,6 @@ const SubjectDifficultyBarChart = () => {
               labelKey="name"
               valueKey="id"
               formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
-              disabled={!classes}
             />
           </Box>
         }

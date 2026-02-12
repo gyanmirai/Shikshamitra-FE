@@ -10,8 +10,8 @@ import FinanceAdminDashboardOverview from './Components/FinanceAdminDashboardOve
 import FinanceConcessionCategoryChart from './Components/FinanceConcessionCategoryChart';
 
 const FinanceAdminDashboardScreen = () => (
-  <Box>
-    <Grid container spacing={1} sx={{ mb: 1 }}>
+  <Box pb={1}>
+    <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
         <FinanceAdminDashboardOverview />
       </Grid>
@@ -41,7 +41,7 @@ const FinanceAdminDashboardScreen = () => (
 
       <Grid size={{ xs: 12, md: 4 }}>
         <FinanceRequestStatusChart
-          title="Request Status"
+          title="Concession Request Status"
           chart={{
             series: [
               { label: 'Approved', value: 45 },
@@ -52,7 +52,7 @@ const FinanceAdminDashboardScreen = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceFeesDistributionChart
           title="Student Fees Distribution"
           chart={{
@@ -91,11 +91,17 @@ const FinanceAdminDashboardScreen = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceConcessionCategoryChart
           title="Concession by Category"
           chart={{
-            labels: ['SC', 'ST', 'OBC', 'Scholarship', 'Staff Child'],
+            labels: [
+              'Merit-Based Concession',
+              'Scholarship Concession',
+              'Sibling Concession',
+              'Staff Child Concession',
+              'Financial Aid Concession',
+            ],
             series: [
               {
                 name: 'Concessions',

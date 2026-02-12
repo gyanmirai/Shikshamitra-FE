@@ -68,7 +68,7 @@ export const FeeTermAccordion = () => {
     >
       <Box
         sx={{
-          p: 2,
+          p: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -86,12 +86,12 @@ export const FeeTermAccordion = () => {
       <Scrollbar
         sx={{
           flexGrow: 1,
-          maxHeight: 500,
-          p: 2,
+          maxHeight: 400,
+          p: 1,
           bgcolor: alpha(theme.palette.background.neutral, 0.4),
         }}
       >
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {feeCollectionData?.terms.map((term: any) => {
             const pending = term.total - term.paid;
 
@@ -119,12 +119,11 @@ export const FeeTermAccordion = () => {
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
                   sx={{
-                    px: 2.5,
-                    py: 1,
+                    px: 1.5,
+                    py: 0,
                     '& .MuiAccordionSummary-content': {
-                      margin: '12px 0',
                       flexWrap: 'wrap',
-                      gap: 2,
+                      gap: 1,
                       alignItems: 'center',
                     },
                     '&:hover': {
@@ -135,7 +134,7 @@ export const FeeTermAccordion = () => {
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    spacing={2}
+                    spacing={1}
                     flex={1}
                   >
                     {/* Term Info */}
@@ -161,7 +160,7 @@ export const FeeTermAccordion = () => {
                           sx={{ height: 24, alignSelf: 'center' }}
                         />
                       }
-                      spacing={2}
+                      spacing={1}
                       alignItems="center"
                       sx={{
                         bgcolor: alpha(theme.palette.background.neutral, 0.7),

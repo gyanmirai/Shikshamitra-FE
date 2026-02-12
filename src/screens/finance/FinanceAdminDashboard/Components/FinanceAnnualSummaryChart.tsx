@@ -59,6 +59,11 @@ export default function FinanceAnnualSummaryChart({ title, subheader, chart, ...
         },
       },
     },
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'right',
+    },
     ...chart.options,
   });
 

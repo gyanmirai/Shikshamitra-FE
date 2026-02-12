@@ -4,6 +4,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fCurrency } from 'src/utils/format-number';
 import { Box, Card, Typography } from '@mui/material';
+import { financePaths } from 'src/constants/finance-menu';
 import CustomizableView from 'src/components/customizable-view';
 
 // ----------------------------------------------------------------------
@@ -71,7 +72,7 @@ export const SummaryCard = ({
               ].lighter,
           }}
         >
-          <Iconify icon={icon} width={32} />
+          <Iconify icon={icon} width={28} height={28} />
         </Box>
       </Box>
 
@@ -99,7 +100,7 @@ const FinanceDashboardOverview = () => {
       count: fCurrency(1250000), // This would be the sum of outstanding, pending, and overdue
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
+      href: financePaths.feeCollection,
       labels: [
         { name: 'Paid - 700k', color: 'success' }, // Example value
         { name: 'Pending - 300k', color: 'warning' }, // Example value
@@ -114,7 +115,7 @@ const FinanceDashboardOverview = () => {
       count: fCurrency(320000),
       color: 'warning.main',
       bgColor: 'warning',
-      href: '#',
+      href: financePaths.expenseTracking,
       // labels: [
       //   { name: 'Salaries - 70%', color: 'warning' },
       //   { name: 'Maintenance - 30%', color: 'info' },
@@ -128,7 +129,7 @@ const FinanceDashboardOverview = () => {
       count: fCurrency(930000),
       color: 'info.main',
       bgColor: 'info',
-      href: '#',
+      href: financePaths.incomeTracking,
       // labels: [{ name: 'Healthy', color: 'success' }],
       width: 4,
     },

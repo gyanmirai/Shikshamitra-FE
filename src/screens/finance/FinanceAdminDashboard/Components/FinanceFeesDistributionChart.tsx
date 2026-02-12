@@ -60,6 +60,11 @@ export default function FinanceFeesDistributionChart({ title, subheader, chart, 
         formatter: (value: number) => fCurrency(value),
       },
     },
+    legend: {
+      show: true,
+      position: 'bottom',
+      horizontalAlign: 'center',
+    },
     ...chart.options,
   });
 

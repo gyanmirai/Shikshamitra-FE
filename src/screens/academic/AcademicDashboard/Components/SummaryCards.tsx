@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { academicPaths } from 'src/constants/academic-menu';
 import CustomizableView from 'src/components/customizable-view';
 import { SummaryCard } from 'src/screens/finance/dashboard/Components/FinanceDashboardOverview';
 
@@ -28,7 +29,7 @@ const SummaryCards = () => {
       count: '8',
       color: 'error.main',
       bgColor: 'error',
-      href: '#',
+      href: academicPaths.curriculum.settings.subjectsCreation,
       labels: [
         { name: 'Core : 6', color: 'primary' },
         { name: 'Elective : 2', color: 'secondary' },
@@ -42,7 +43,7 @@ const SummaryCards = () => {
       count: '75%',
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
+      href: academicPaths.curriculum.chaptersManagement,
       labels: [
         { name: 'Completed : 75%', color: 'success' },
         { name: 'Pending : 25%', color: 'warning' },
@@ -51,7 +52,7 @@ const SummaryCards = () => {
     },
     {
       id: 'overall_exam_performance',
-      icon: 'solar:medal-star-bold-duotone',
+      icon: 'solar:medal-star-linear',
       title: 'Overall Exam Performance',
       count: '88%',
       color: 'info.main',
@@ -60,7 +61,7 @@ const SummaryCards = () => {
         { name: 'Pass : 88%', color: 'success' },
         { name: 'Fail : 12%', color: 'error' },
       ],
-      href: '#',
+      href: academicPaths.examination.recordMarks,
       width: 4,
     },
   ]);
