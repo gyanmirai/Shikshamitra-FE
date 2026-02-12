@@ -1,20 +1,12 @@
 import React from 'react';
+import confetti from 'canvas-confetti';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CalendarView } from 'src/sections/calendar/view';
-import {
-  Box,
-  Card,
-  Chip,
-  Stack,
-  Button,
-  Avatar,
-  Divider,
-  CardHeader,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Chip, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 
 const birthdays = [
   {
@@ -23,9 +15,7 @@ const birthdays = [
     class: '5A',
     date: 'Today',
     isToday: true,
-    initials: 'AS',
-    color: 'primary.main',
-    bgColor: 'primary.lighter',
+    avatarUrl: '/assets/images/avatars/avatar_1.jpg',
   },
   {
     id: 2,
@@ -33,9 +23,7 @@ const birthdays = [
     class: '5A',
     date: 'Tomorrow',
     isToday: false,
-    initials: 'PP',
-    color: 'success.main',
-    bgColor: 'success.lighter',
+    avatarUrl: '/assets/images/avatars/avatar_2.jpg',
   },
   {
     id: 3,
@@ -43,9 +31,7 @@ const birthdays = [
     class: '4B',
     date: 'Dec 29',
     isToday: false,
-    initials: 'RK',
-    color: 'info.main',
-    bgColor: 'info.lighter',
+    avatarUrl: '/assets/images/avatars/avatar_3.jpg',
   },
   {
     id: 4,
@@ -53,19 +39,74 @@ const birthdays = [
     class: '3C',
     date: 'Dec 30',
     isToday: false,
-    initials: 'MS',
-    color: 'warning.main',
-    bgColor: 'warning.lighter',
+    avatarUrl: '/assets/images/avatars/avatar_4.jpg',
+  },
+  {
+    id: 5,
+    name: 'Sohan Kumar',
+    class: '6A',
+    date: 'Dec 31',
+    isToday: false,
+    avatarUrl: '/assets/images/avatars/avatar_5.jpg',
+  },
+  {
+    id: 6,
+    name: 'Anita Roy',
+    class: '7B',
+    date: 'Jan 01',
+    isToday: false,
+    avatarUrl: '/assets/images/avatars/avatar_6.jpg',
+  },
+  {
+    id: 7,
+    name: 'Vikram Singh',
+    class: '8C',
+    date: 'Jan 02',
+    isToday: false,
+    avatarUrl: '/assets/images/avatars/avatar_7.jpg',
+  },
+  {
+    id: 8,
+    name: 'Rahul Gupta',
+    class: '9A',
+    date: 'Jan 03',
+    isToday: false,
+    avatarUrl: '/assets/images/avatars/avatar_8.jpg',
+  },
+  {
+    id: 9,
+    name: 'Pooja Sharma',
+    class: '10B',
+    date: 'Jan 04',
+    isToday: false,
+    avatarUrl: '/assets/images/avatars/avatar_9.jpg',
+  },
+  {
+    id: 10,
+    name: 'Karan Mehra',
+    class: '11C',
+    date: 'Jan 05',
+    isToday: false,
+    avatarUrl: '/assets/images/avatars/avatar_10.jpg',
   },
 ];
 
 const Birthdays = () => {
-  // Boolean state to control calendar dialog visibility
   const viewCalendarDialog = useBoolean();
+  const [wishedStudents, setWishedStudents] = React.useState<number[]>([]);
+
+  const handleWish = (id: number) => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+    });
+    setWishedStudents((prev) => [...prev, id]);
+  };
 
   return (
     <>
-      <Card>
+      <Card sx={{ height: 480, display: 'flex', flexDirection: 'column' }}>
         <CardHeader
           title={
             <Stack direction="row" alignItems="center" spacing={1}>
@@ -79,147 +120,108 @@ const Birthdays = () => {
               size="small"
               color="inherit"
               endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
+              onClick={viewCalendarDialog.onTrue}
             >
-              View All
+              View Calendar
             </Button>
           }
+          sx={{ flexShrink: 0 }}
         />
-        <Stack spacing={2} sx={{ p: 3 }}>
-          {birthdays.map((student) => (
-            <Box
-              key={student.id}
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                border: (theme) =>
-                  student.isToday
-                    ? `2px solid ${theme.palette.primary.main}`
-                    : `1px solid ${theme.palette.divider}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: student.isToday
-                  ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 105, 180, 0.1) 100%)'
-                  : 'transparent',
-                position: 'relative',
-                overflow: 'hidden',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  boxShadow: student.isToday ? 4 : 2,
-                },
-                '&::before': student.isToday
-                  ? {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background:
-                        'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%)',
-                      animation: 'shimmer 3s infinite',
-                    }
-                  : {},
-                '@keyframes shimmer': {
-                  '0%': { transform: 'translateX(-100%)' },
-                  '100%': { transform: 'translateX(100%)' },
-                },
-              }}
-            >
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Box sx={{ position: 'relative' }}>
-                  <Avatar
-                    sx={{
-                      bgcolor: student.bgColor,
-                      color: student.color,
-                      fontWeight: 'bold',
-                      width: student.isToday ? 56 : 48,
-                      height: student.isToday ? 56 : 48,
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    {student.initials}
-                  </Avatar>
-                  {student.isToday && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: -8,
-                        right: -8,
-                        animation: 'bounce 2s infinite',
-                        '@keyframes bounce': {
-                          '0%, 100%': { transform: 'translateY(0)' },
-                          '50%': { transform: 'translateY(-10px)' },
-                        },
-                      }}
-                    >
-                      <Iconify icon="noto:party-popper" width={24} />
+
+        <Scrollbar sx={{ flexGrow: 1 }}>
+          <Stack spacing={1} sx={{ p: 1 }}>
+            {birthdays.map((student) => {
+              const isWished = wishedStudents.includes(student.id);
+
+              return (
+                <Box
+                  key={student.id}
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    bgcolor: student.isToday ? 'primary.lighter' : 'transparent',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: 'transparent',
+                      bgcolor: 'background.neutral',
+                      transform: 'scale(1.02)',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box sx={{ position: 'relative' }}>
+                      <Avatar
+                        src={student.avatarUrl}
+                        alt={student.name}
+                        sx={{ width: 48, height: 48 }}
+                      />
+                      {student.isToday && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            right: 0,
+                            bgcolor: 'background.paper',
+                            borderRadius: '50%',
+                            width: 20,
+                            height: 20,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 1,
+                          }}
+                        >
+                          <Typography variant="caption">🎉</Typography>
+                        </Box>
+                      )}
                     </Box>
-                  )}
+
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {student.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Class {student.class}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    {student.isToday ? (
+                      <Button
+                        size="small"
+                        variant={isWished ? 'soft' : 'contained'}
+                        color={isWished ? 'success' : 'primary'}
+                        startIcon={
+                          <Iconify
+                            icon={isWished ? 'mdi:check-circle-outline' : 'mdi:gift-outline'}
+                          />
+                        }
+                        onClick={() => !isWished && handleWish(student.id)}
+                        sx={{ borderRadius: 3, px: 2 }}
+                      >
+                        {isWished ? 'Wished!' : 'Wish'}
+                      </Button>
+                    ) : (
+                      <Chip label={student.date} size="small" variant="soft" color="default" />
+                    )}
+                  </Stack>
                 </Box>
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      fontWeight: student.isToday ? 700 : 600,
-                      fontSize: student.isToday ? '1rem' : '0.875rem',
-                    }}
-                  >
-                    {student.name}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Class {student.class}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Stack direction="row" spacing={1} alignItems="center">
-                {student.isToday ? (
-                  <Chip
-                    label="🎉 Today"
-                    size="small"
-                    sx={{
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      fontWeight: 700,
-                      animation: 'pulse 2s infinite',
-                      '@keyframes pulse': {
-                        '0%, 100%': { transform: 'scale(1)' },
-                        '50%': { transform: 'scale(1.05)' },
-                      },
-                    }}
-                  />
-                ) : (
-                  <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                    {student.date}
-                  </Typography>
-                )}
-                <Iconify icon="mdi:cake-variant" width={20} color={student.color} />
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
-        <Divider />
-        <Box sx={{ p: 2, textAlign: 'right' }}>
-          <Button
-            size="small"
-            color="inherit"
-            onClick={() => {
-              viewCalendarDialog.onTrue();
-            }}
-            endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
-          >
-            View Calendar
-          </Button>
-        </Box>
+              );
+            })}
+          </Stack>
+        </Scrollbar>
       </Card>
 
       <CustomDialog
         maxWidth="md"
         open={viewCalendarDialog.value}
-        handleClose={() => {
-          viewCalendarDialog.onFalse();
-        }}
+        handleClose={viewCalendarDialog.onFalse}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Student Birthdays</Typography>

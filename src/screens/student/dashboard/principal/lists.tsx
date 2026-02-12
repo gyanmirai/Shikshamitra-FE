@@ -66,7 +66,7 @@ const studentLeaveRequests = [
 ];
 
 const PrincipalLists = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {/* Top Performers */}
     <Grid size={{ xs: 12 }}>
       <Card>
@@ -82,7 +82,7 @@ const PrincipalLists = () => (
             </Button>
           }
         />
-        <Stack spacing={2} sx={{ p: 3 }}>
+        <Stack spacing={1} sx={{ p: 1 }}>
           {topPerformers.map((student) => (
             <Box
               key={student.id}

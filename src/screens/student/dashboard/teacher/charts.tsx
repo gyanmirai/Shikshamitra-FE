@@ -1,6 +1,6 @@
 import React from 'react';
-import { Chart, useChart } from 'src/components/chart';
-import { Box, Grid, Card, CardHeader } from '@mui/material';
+import { Chart, useChart, ChartLegends } from 'src/components/chart';
+import { Box, Grid, Card, Divider, CardHeader } from '@mui/material';
 
 const TeacherCharts = () => {
   // My Class Attendance Trend (Line Chart)
@@ -42,8 +42,7 @@ const TeacherCharts = () => {
       colors: ['#fff'],
     },
     legend: {
-      position: 'bottom',
-      horizontalAlign: 'center',
+      show: false,
     },
     dataLabels: {
       enabled: true,
@@ -79,7 +78,11 @@ const TeacherCharts = () => {
       bar: {
         columnWidth: '45%',
         borderRadius: 4,
+        distributed: true,
       },
+    },
+    legend: {
+      show: false,
     },
     xaxis: {
       categories: ['Math', 'Science', 'English', 'History', 'Geography'],
@@ -94,12 +97,12 @@ const TeacherCharts = () => {
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       {/* My Class Attendance Trend - Full Width */}
       <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader title="My Class Attendance Trend" />
-          <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+          <Box sx={{ p: 1, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"
               type="area"
@@ -115,7 +118,7 @@ const TeacherCharts = () => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
           <CardHeader title="Student Distribution" />
-          <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+          <Box sx={{ p: 1, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"
               type="pie"
@@ -124,6 +127,12 @@ const TeacherCharts = () => {
               height={300}
             />
           </Box>
+          <Divider sx={{ borderStyle: 'dashed' }} />
+          <ChartLegends
+            labels={studentDistributionOptions?.labels}
+            colors={studentDistributionOptions?.colors}
+            sx={{ p: 3, justifyContent: 'center' }}
+          />
         </Card>
       </Grid>
 
@@ -131,7 +140,7 @@ const TeacherCharts = () => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
           <CardHeader title="Subject Performance" />
-          <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+          <Box sx={{ p: 1, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"
               type="bar"
@@ -140,6 +149,12 @@ const TeacherCharts = () => {
               height={300}
             />
           </Box>
+          <Divider sx={{ borderStyle: 'dashed' }} />
+          <ChartLegends
+            labels={classPerformanceOptions?.xaxis?.categories}
+            colors={classPerformanceOptions?.colors}
+            sx={{ p: 3, justifyContent: 'center' }}
+          />
         </Card>
       </Grid>
     </Grid>

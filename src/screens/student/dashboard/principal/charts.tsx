@@ -94,7 +94,7 @@ const PrincipalCharts = () => {
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       {/* Monthly Attendance Trend - Full Width */}
       <Grid size={{ xs: 12 }}>
         <Card>

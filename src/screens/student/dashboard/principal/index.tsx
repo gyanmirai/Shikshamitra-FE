@@ -8,16 +8,16 @@ import PrincipalBirthdays from './birthdays';
 import PrincipalHouseDistribution from './house-distribution';
 
 const PrincipalDashboard = () => (
-  <Box sx={{ p: 3 }}>
-    <Box sx={{ mb: 4 }}>
+  <Box>
+    <Box sx={{ mb: 1 }}>
       <PrincipalKPICards />
     </Box>
 
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ mb: 1 }}>
       <PrincipalCharts />
     </Box>
 
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ mb: 1 }}>
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <PrincipalHouseDistribution />
@@ -28,7 +28,7 @@ const PrincipalDashboard = () => (
       </Grid>
     </Box>
 
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ mb: 1 }}>
       <PrincipalLists />
     </Box>
   </Box>

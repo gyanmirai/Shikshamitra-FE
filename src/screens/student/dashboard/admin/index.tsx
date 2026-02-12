@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Grid } from '@mui/material';
 
 import AdminLists from './lists';
@@ -7,33 +7,51 @@ import Birthdays from './birthdays';
 import AdminKPICards from './kpi-cards';
 import HouseDistribution from './house-distribution';
 
-const AdminDashboard = () => (
-  <Box sx={{ p: 0 }}>
-    <Grid container spacing={1}>
-      <Grid size={{ xs: 12 }}>
-        <AdminKPICards />
-      </Grid>
+const AdminDashboard = () => {
+  // State for Global Filters (Mock navigation/state)
+  const [academicYear, setAcademicYear] = useState('2024-2025');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-      <Grid size={{ xs: 12 }}>
-        <AdminCharts />
-      </Grid>
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-      <Grid size={{ xs: 12 }}>
-        <Grid container spacing={1}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <HouseDistribution />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Birthdays />
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <Box>
+      <Grid container spacing={1}>
+        {/* 1. Upgrade Top KPI Cards */}
+        <Grid size={{ xs: 12 }}>
+          <AdminKPICards />
+        </Grid>
+
+        {/* 2. Improve Enrollment & 4. Exam Status & 5. Participation */}
+        <Grid size={{ xs: 12 }}>
+          <AdminCharts />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Grid container spacing={1}>
+            {/* 6. House Distribution */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <HouseDistribution />
+            </Grid>
+            {/* 7. Upgraded Birthdays */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Birthdays />
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
 
-      <Grid size={{ xs: 12 }}>
-        <AdminLists />
+        <Grid size={{ xs: 12 }}>
+          <AdminLists />
+        </Grid>
       </Grid>
-    </Grid>
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default AdminDashboard;

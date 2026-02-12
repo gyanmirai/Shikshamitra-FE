@@ -6,16 +6,16 @@ import TeacherCharts from './charts';
 import TeacherKPICards from './kpi-cards';
 
 const TeacherDashboard = () => (
-  <Box sx={{ p: 3 }}>
-    <Box sx={{ mb: 4 }}>
+  <Box>
+    <Box sx={{ mb: 1 }}>
       <TeacherKPICards />
     </Box>
 
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ mb: 1 }}>
       <TeacherCharts />
     </Box>
 
-    <Box sx={{ mb: 4 }}>
+    <Box sx={{ mb: 1 }}>
       <TeacherLists />
     </Box>
   </Box>

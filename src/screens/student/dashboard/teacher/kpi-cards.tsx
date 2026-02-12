@@ -43,7 +43,7 @@ const kpiData = [
 ];
 
 const TeacherKPICards = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {kpiData.map((kpi) => (
       <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
         <DashboardCard

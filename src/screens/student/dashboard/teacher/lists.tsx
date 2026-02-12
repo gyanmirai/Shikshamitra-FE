@@ -64,7 +64,7 @@ const absentStudents = [
 ];
 
 const TeacherLists = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {/* Upcoming Exams */}
     <Grid size={{ xs: 12 }}>
       <Card>
@@ -80,7 +80,7 @@ const TeacherLists = () => (
             </Button>
           }
         />
-        <Stack spacing={2} sx={{ p: 3 }}>
+        <Stack spacing={2} sx={{ p: 1 }}>
           {upcomingExams.map((exam) => (
             <Box
               key={exam.id}
@@ -109,7 +109,7 @@ const TeacherLists = () => (
     </Grid>
 
     {/* Absent Students */}
-    <Grid size={{ xs: 12 }}>
+    <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
       <Card>
         <CardHeader
           title="Absent Students Today"
@@ -124,7 +124,7 @@ const TeacherLists = () => (
             </Button>
           }
         />
-        <Stack spacing={2} sx={{ p: 3 }}>
+        <Stack spacing={2} sx={{ p: 1 }}>
           {absentStudents.map((student) => (
             <Box
               key={student.id}
