@@ -1,0 +1,163 @@
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
+import { useMemo } from 'react';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+import {
+  Box,
+  Card,
+  Stack,
+  Button,
+  Avatar,
+  Tooltip,
+  CardHeader,
+  Typography,
+  IconButton,
+} from '@mui/material';
+
+// ----------------------------------------------------------------------
+
+const absentStudents = [
+  {
+    id: 1,
+    name: 'Kavita Roy',
+    reason: 'Uninformed',
+    status: 'uninformed', // Red
+    attendance: 82,
+    trend: [1, 1, 1, 0, 0], // 1 = Present, 0 = Absent
+    avatarUrl: '',
+    class: '5-A',
+  },
+  {
+    id: 2,
+    name: 'Manoj Kumar',
+    reason: 'Sick Leave',
+    status: 'approved', // Green
+    attendance: 90,
+    trend: [1, 1, 0, 1, 0],
+    avatarUrl: '',
+    class: '5-A',
+  },
+  {
+    id: 3,
+    name: 'Sina Khan',
+    reason: 'Family Function',
+    status: 'approved',
+    attendance: 88,
+    trend: [1, 0, 1, 1, 0],
+    avatarUrl: '',
+    class: '5-A',
+  },
+];
+
+const MiniTrend = ({ data }: { data: number[] }) => (
+  <Stack direction="row" spacing={0.5} alignItems="center">
+    {data.map((val, index) => (
+      <Tooltip key={index} title={val === 1 ? 'Present' : 'Absent'} arrow placement="top">
+        <Box
+          sx={{
+            width: 4,
+            height: 16,
+            borderRadius: 1,
+            bgcolor: val === 1 ? 'success.main' : 'error.main',
+          }}
+        />
+      </Tooltip>
+    ))}
+  </Stack>
+);
+
+const AbsentStudents = () => {
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Student',
+        render: (value, row) => (
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Avatar src={row.avatarUrl} alt={row.name} sx={{ width: 40, height: 40 }} />
+            <Box>
+              <Typography variant="subtitle2" noWrap>
+                {row.name}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: 13 }}>
+                {row.class} • {row.attendance}% Attendance
+              </Typography>
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        id: 'reason',
+        label: 'Reason',
+        render: (value, row) => (
+          <Label
+            variant="soft"
+            color={
+              row.status === 'approved'
+                ? 'success'
+                : row.status === 'uninformed'
+                  ? 'error'
+                  : 'warning'
+            }
+          >
+            {row.reason}
+          </Label>
+        ),
+      },
+      {
+        id: 'trend',
+        label: 'Last 5 Days',
+        render: (value, row) => (
+          <Stack spacing={0.5} alignItems="flex-start">
+            <MiniTrend data={row.trend} />
+          </Stack>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        render: (value, row) => (
+          <Tooltip title="Call Parent">
+            <IconButton size="small" sx={{ color: 'primary.main', bgcolor: 'primary.lighter' }}>
+              <Iconify icon="mdi:phone" width={18} />
+            </IconButton>
+          </Tooltip>
+        ),
+      },
+    ],
+    []
+  );
+
+  return (
+    <Card sx={{ mb: 1 }}>
+      <CardHeader
+        sx={{ ml: -1, mt: -1 }}
+        title="Absent Students Today"
+        subheader="3 Students Absent"
+        action={
+          <Button
+            size="small"
+            color="inherit"
+            endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+          >
+            View All
+          </Button>
+        }
+      />
+      <Box sx={{ p: 1 }}>
+        <CustomizableTable
+          tableId="absent-students-table"
+          columns={columns}
+          data={absentStudents}
+          isPagination={false}
+          isFilter={false}
+          isShowedDense={false}
+        />
+      </Box>
+    </Card>
+  );
+};
+
+export default AbsentStudents;

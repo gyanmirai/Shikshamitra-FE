@@ -106,10 +106,10 @@ const Birthdays = () => {
 
   return (
     <>
-      <Card sx={{ height: 480, display: 'flex', flexDirection: 'column' }}>
+      <Card sx={{ height: 500, display: 'flex', flexDirection: 'column' }}>
         <CardHeader
           title={
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: -1, ml: -1 }}>
               <Iconify icon="mdi:cake-variant" width={24} color="primary.main" />
               <Typography variant="h6">Birthdays</Typography>
             </Stack>
@@ -130,90 +130,151 @@ const Birthdays = () => {
 
         <Scrollbar sx={{ flexGrow: 1 }}>
           <Stack spacing={1} sx={{ p: 1 }}>
-            {birthdays.map((student) => {
-              const isWished = wishedStudents.includes(student.id);
+            {birthdays.some((student) => student.isToday) && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, ml: 1 }}>
+                  Today
+                </Typography>
+                <Stack spacing={1}>
+                  {birthdays
+                    .filter((student) => student.isToday)
+                    .map((student) => {
+                      const isWished = wishedStudents.includes(student.id);
 
-              return (
-                <Box
-                  key={student.id}
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    bgcolor: student.isToday ? 'primary.lighter' : 'transparent',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      borderColor: 'transparent',
-                      bgcolor: 'background.neutral',
-                      transform: 'scale(1.02)',
-                      boxShadow: 'none',
-                    },
-                  }}
-                >
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Box sx={{ position: 'relative' }}>
-                      <Avatar
-                        src={student.avatarUrl}
-                        alt={student.name}
-                        sx={{ width: 48, height: 48 }}
-                      />
-                      {student.isToday && (
+                      return (
                         <Box
+                          key={student.id}
                           sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            right: 0,
-                            bgcolor: 'background.paper',
-                            borderRadius: '50%',
-                            width: 20,
-                            height: 20,
+                            p: 2,
+                            borderRadius: 2,
+                            border: (theme) => `1px solid ${theme.palette.divider}`,
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: 1,
+                            justifyContent: 'space-between',
+                            bgcolor: 'primary.lighter',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              borderColor: 'transparent',
+                              bgcolor: 'background.neutral',
+                              transform: 'scale(1.02)',
+                              boxShadow: 'none',
+                            },
                           }}
                         >
-                          <Typography variant="caption">🎉</Typography>
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Box sx={{ position: 'relative' }}>
+                              <Avatar
+                                src={student.avatarUrl}
+                                alt={student.name}
+                                sx={{ width: 48, height: 48 }}
+                              />
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  bottom: 0,
+                                  right: 0,
+                                  bgcolor: 'background.paper',
+                                  borderRadius: '50%',
+                                  width: 20,
+                                  height: 20,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: 1,
+                                }}
+                              >
+                                <Typography variant="caption">🎉</Typography>
+                              </Box>
+                            </Box>
+
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                {student.name}
+                              </Typography>
+                              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                Class {student.class}
+                              </Typography>
+                            </Box>
+                          </Stack>
+
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Button
+                              size="small"
+                              variant={isWished ? 'soft' : 'contained'}
+                              color={isWished ? 'success' : 'primary'}
+                              startIcon={
+                                <Iconify
+                                  icon={isWished ? 'mdi:check-circle-outline' : 'mdi:gift-outline'}
+                                />
+                              }
+                              onClick={() => !isWished && handleWish(student.id)}
+                              sx={{ borderRadius: 3, px: 2 }}
+                            >
+                              {isWished ? 'Wished!' : 'Wish'}
+                            </Button>
+                          </Stack>
                         </Box>
-                      )}
-                    </Box>
+                      );
+                    })}
+                </Stack>
+              </Box>
+            )}
 
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {student.name}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        Class {student.class}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    {student.isToday ? (
-                      <Button
-                        size="small"
-                        variant={isWished ? 'soft' : 'contained'}
-                        color={isWished ? 'success' : 'primary'}
-                        startIcon={
-                          <Iconify
-                            icon={isWished ? 'mdi:check-circle-outline' : 'mdi:gift-outline'}
-                          />
-                        }
-                        onClick={() => !isWished && handleWish(student.id)}
-                        sx={{ borderRadius: 3, px: 2 }}
+            {birthdays.some((student) => !student.isToday) && (
+              <Box sx={{ mt: birthdays.some((student) => student.isToday) ? 2 : 0 }}>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, ml: 1 }}>
+                  Upcoming
+                </Typography>
+                <Stack spacing={1}>
+                  {birthdays
+                    .filter((student) => !student.isToday)
+                    .map((student) => (
+                      <Box
+                        key={student.id}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          border: (theme) => `1px solid ${theme.palette.divider}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          bgcolor: 'transparent',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: 'transparent',
+                            bgcolor: 'background.neutral',
+                            transform: 'scale(1.02)',
+                            boxShadow: 'none',
+                          },
+                        }}
                       >
-                        {isWished ? 'Wished!' : 'Wish'}
-                      </Button>
-                    ) : (
-                      <Chip label={student.date} size="small" variant="soft" color="default" />
-                    )}
-                  </Stack>
-                </Box>
-              );
-            })}
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box sx={{ position: 'relative' }}>
+                            <Avatar
+                              src={student.avatarUrl}
+                              alt={student.name}
+                              sx={{ width: 48, height: 48 }}
+                            />
+                          </Box>
+
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                              {student.name}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                              Class {student.class}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Chip label={student.date} size="small" variant="soft" color="default" />
+                        </Stack>
+                      </Box>
+                    ))}
+                </Stack>
+              </Box>
+            )}
           </Stack>
         </Scrollbar>
       </Card>

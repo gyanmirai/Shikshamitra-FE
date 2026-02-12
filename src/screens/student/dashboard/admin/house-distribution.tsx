@@ -1,6 +1,7 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Card, Stack, CardHeader, Typography, LinearProgress } from '@mui/material';
 
@@ -51,7 +52,25 @@ export default function HouseDistribution() {
 
   return (
     <Card sx={{ height: '100%' }}>
-      <CardHeader title="House Distribution" />
+      <CardHeader
+        sx={{ mt: -1, ml: -1 }}
+        title={
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box component="span">House Distribution</Box>
+            <CustomTooltip
+              title="Distribution of students across different school houses."
+              arrow
+              placement="top"
+            >
+              <Iconify
+                icon="eva:info-outline"
+                width={18}
+                sx={{ color: 'text.disabled', cursor: 'pointer' }}
+              />
+            </CustomTooltip>
+          </Stack>
+        }
+      />
 
       <Stack spacing={3} sx={{ p: 3 }}>
         <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>

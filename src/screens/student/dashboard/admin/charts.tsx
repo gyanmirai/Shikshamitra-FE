@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Grid, Card, Stack, CardHeader, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
@@ -36,22 +38,6 @@ const AdminCharts = () => {
       y: {
         formatter: (value: number) => fNumber(value),
       },
-    },
-    annotations: {
-      yaxis: [
-        {
-          y: 100,
-          borderColor: '#FF4560',
-          label: {
-            borderColor: '#FF4560',
-            style: {
-              color: '#fff',
-              background: '#FF4560',
-            },
-            text: 'Target (100)',
-          },
-        },
-      ],
     },
   });
 
@@ -157,7 +143,20 @@ const AdminCharts = () => {
       },
     },
     xaxis: {
-      categories: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
+      categories: [
+        'Class 1',
+        'Class 2',
+        'Class 3',
+        'Class 4',
+        'Class 5',
+        'Class 6',
+        'Class 7',
+        'Class 8',
+        'Class 9',
+        'Class 10',
+        'Class 11',
+        'Class 12',
+      ],
     },
     tooltip: {
       y: {
@@ -172,17 +171,41 @@ const AdminCharts = () => {
   const classParticipationSeries = [
     {
       name: 'Students',
-      data: [44, 55, 41, 67, 22],
+      data: [44, 55, 41, 67, 22, 12, 34, 56, 78, 90, 12, 34],
     },
   ];
+
+  const renderTitleWithTooltip = (title: string, tooltip: string) => (
+    <Stack direction="row" alignItems="center" spacing={1}>
+      <Box component="span">{title}</Box>
+      <CustomTooltip title={tooltip} arrow placement="top">
+        <Iconify
+          icon="eva:info-outline"
+          width={18}
+          sx={{ color: 'text.disabled', cursor: 'pointer' }}
+        />
+      </CustomTooltip>
+    </Stack>
+  );
 
   return (
     <Grid container spacing={1}>
       {/* Enrollment Trend - Full Width */}
       <Grid size={{ xs: 12 }}>
         <Card>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 2 }}>
-            <CardHeader title="Enrollment Trend" subheader="Compared to previous year" />
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ pr: 2, ml: -1, mt: -1 }}
+          >
+            <CardHeader
+              title={renderTitleWithTooltip(
+                'Enrollment Trend',
+                'Displays student admission growth over time.'
+              )}
+              subheader="Compared to previous year"
+            />
             <ToggleButtonGroup
               value={enrollmentPeriod}
               exclusive
@@ -235,7 +258,13 @@ const AdminCharts = () => {
       {/* Entrance Exam Status - Half Width */}
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
-          <CardHeader title="Entrance Exam Status" />
+          <CardHeader
+            sx={{ mt: -1, ml: -1 }}
+            title={renderTitleWithTooltip(
+              'Entrance Exam Status',
+              'Breakdown of entrance exam results (Passed/Failed/Awaiting).'
+            )}
+          />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"
@@ -251,7 +280,13 @@ const AdminCharts = () => {
       {/* Class-wise Participation - Half Width */}
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
-          <CardHeader title="Class-wise Participation" />
+          <CardHeader
+            sx={{ mt: -1, ml: -1 }}
+            title={renderTitleWithTooltip(
+              'Class-wise Participation',
+              'Student participation metrics across different classes.'
+            )}
+          />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"

@@ -1,8 +1,10 @@
 import { Label } from 'src/components/label';
+import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
@@ -16,6 +18,7 @@ import {
   CardHeader,
   Typography,
   InputAdornment,
+  CircularProgress,
 } from '@mui/material';
 
 // ----------------------------------------------------------------------
@@ -43,6 +46,16 @@ const upcomingExams = [
   },
   {
     id: 3,
+    time: '11:00 - 12:00',
+    date: '2025-06-10T11:00:00',
+    displayDate: 'June 10, 2025',
+    details: 'English Proficiency',
+    type: 'Entrance',
+    status: 'Completed',
+    students: 103,
+  },
+  {
+    id: 4,
     time: '11:00 - 12:00',
     date: '2025-06-10T11:00:00',
     displayDate: 'June 10, 2025',
@@ -140,6 +153,10 @@ const AdminLists = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [openViewAll, setOpenViewAll] = useState(false);
 
+  const router = useRouter();
+
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+
   const examColumns: any[] = [
     { id: 'details', label: 'Exam Name', align: 'left' },
     { id: 'displayDate', label: 'Date', align: 'left' },
@@ -175,119 +192,6 @@ const AdminLists = () => {
 
   return (
     <Grid container spacing={1}>
-      {/* Upcoming Entrance Exam */}
-      {/* <Grid size={{ xs: 12, md: 6 }}>
-        <Card
-          sx={{
-            boxShadow: (theme) => theme.shadows[2],
-            borderRadius: 2,
-            height: 480,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <CardHeader
-            title="Upcoming & Recent Exams"
-            titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
-            action={
-              <Button
-                size="small"
-                onClick={() => setOpenViewAll(true)}
-                color="inherit"
-                endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
-                sx={{ fontWeight: 600, color: 'text.secondary' }}
-              >
-                View all
-              </Button>
-            }
-            sx={{ pb: 0, flexShrink: 0 }}
-          />
-
-          <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
-            <Stack spacing={1}>
-              {upcomingExams.map((exam) => (
-                <Box
-                  key={exam.id}
-                  sx={{
-                    p: 2,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                    borderRadius: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      borderColor: 'transparent',
-                      bgcolor: 'background.neutral',
-                      transform: 'scale(1.02)',
-                      boxShadow: 'none',
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 4,
-                      height: 48,
-                      borderRadius: 0.5,
-                      bgcolor: exam.status === 'Completed' ? 'success.main' : 'warning.main',
-                      flexShrink: 0,
-                    }}
-                  />
-
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                      <Box>
-                        <Typography variant="subtitle2" sx={{ fontSize: '0.925rem' }}>
-                          {exam.details}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          {exam.students} Students Registered
-                        </Typography>
-                      </Box>
-                    </Stack>
-
-                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 1 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          color: 'text.secondary',
-                          typography: 'caption',
-                        }}
-                      >
-                        <Iconify icon="mdi:clock-outline" width={16} sx={{ mr: 0.5 }} />
-                        {exam.time}
-                      </Box>
-                      <Box
-                        sx={{ width: 4, height: 4, bgcolor: 'text.disabled', borderRadius: '50%' }}
-                      />
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          color: 'text.secondary',
-                          typography: 'caption',
-                        }}
-                      >
-                        <Iconify icon="mdi:calendar-blank-outline" width={16} sx={{ mr: 0.5 }} />
-                        {exam.displayDate}
-                      </Box>
-                      <Label variant="soft" color={exam.type === 'Entrance' ? 'info' : 'warning'}>
-                        {exam.type}
-                      </Label>
-                    </Stack>
-                  </Box>
-
-                  <Button size="small" variant="outlined" color="inherit">
-                    View
-                  </Button>
-                </Box>
-              ))}
-            </Stack>
-          </Scrollbar>
-        </Card>
-      </Grid> */}
-
       <Grid size={{ xs: 12, md: 6 }}>
         <Card
           sx={{
@@ -312,7 +216,7 @@ const AdminLists = () => {
                 View all
               </Button>
             }
-            sx={{ pb: 0, flexShrink: 0 }}
+            sx={{ pb: 0, flexShrink: 0, mt: -1, ml: -1 }}
           />
 
           <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
@@ -320,6 +224,10 @@ const AdminLists = () => {
               {upcomingExams.map((exam) => (
                 <Box
                   key={exam.id}
+                  onClick={() => {
+                    setLoadingId(exam.id);
+                    router.push(studentPaths.enrollment.entranceExam);
+                  }}
                   sx={{
                     p: 2,
                     border: (theme) => `1px solid ${theme.palette.divider}`,
@@ -329,6 +237,7 @@ const AdminLists = () => {
                     gap: 2,
                     position: 'relative',
                     transition: 'all 0.2s',
+                    cursor: 'pointer',
                     '&:hover': {
                       borderColor: 'transparent',
                       bgcolor: 'background.neutral',
@@ -337,6 +246,26 @@ const AdminLists = () => {
                     },
                   }}
                 >
+                  {loadingId === exam.id && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        zIndex: 9,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        backdropFilter: 'blur(2px)',
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      <CircularProgress size={24} color="primary" />
+                    </Box>
+                  )}
                   <Box
                     sx={{
                       width: 4,
@@ -424,7 +353,7 @@ const AdminLists = () => {
             <CardHeader
               title="Student Enrollment"
               subheader="Recent applications"
-              sx={{ p: 0, width: '100%', mb: { xs: 2, sm: 0 } }}
+              sx={{ p: 0, width: '100%', mb: { xs: 2, sm: 0 }, mt: -1, ml: -1 }}
             />
 
             <Stack direction="row" spacing={1} sx={{ width: 350, flexShrink: 0 }}>
