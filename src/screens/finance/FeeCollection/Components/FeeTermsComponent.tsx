@@ -1,59 +1,57 @@
-import type { LabelColor } from 'src/components/label';
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Card, Paper, Switch, Checkbox, Typography, IconButton } from '@mui/material';
+import { formatNumber } from 'src/utils/formate_number';
+import { Box, Card, Paper, Divider, Checkbox, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
-import FeeInstallmentDialog from './FeeInstallmentDialog';
-
-import type { ITerm, IFeeCharge, ITermsToCollectProps } from './type';
+import type { IFeeHead, IFeeCharge, ITermsToCollectProps } from './type';
 
 const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   formik,
-  terms = [],
-  selectedTerms,
-  onTermSelect,
+  feeHeads = [],
+  charges = [],
   showError,
   errorMessage,
 }) => {
-  // State to track which term is currently expanded (only one at a time)
-  // const [expanded, setExpanded] = useState<string | null>(null);
-  const openTermDialog = useBoolean();
-  const [selectedTerm, setSelectedTerm] = useState<ITerm | null>(null);
-  // Get the current theme for styling
   const theme = useTheme();
 
-  // Toggle expansion of a term's details (collapse if already expanded, expand if collapsed)
-  // const toggleExpand = (id: string) => {
-  //   setExpanded(expanded === id ? null : id);
-  // };
-
-  // Handle term selection/deselection for fee collection
-  const toggleSelect = (term: ITerm | IFeeCharge) => {
-    // const newSelected = selectedTerms.includes(id)
-    //   ? selectedTerms.filter((t) => t !== id) // Remove from selection if already selected
-    //   : [...selectedTerms, id]; // Add to selection if not selected
-    // onTermSelect(newSelected);
-
-    if (selectedTerms.some((t) => t.id === term.id)) {
-      const newSelected: (ITerm | IFeeCharge)[] = selectedTerms.filter((t) => t.id !== term.id);
-      onTermSelect(newSelected);
+  const toggleFeeHead = (head: IFeeHead) => {
+    const isSelected = formik.values.selectedFeeHeads.some((fh) => fh.feeHeadId === head.feeHeadId);
+    if (isSelected) {
+      formik.setFieldValue(
+        'selectedFeeHeads',
+        formik.values.selectedFeeHeads.filter((fh) => fh.feeHeadId !== head.feeHeadId)
+      );
     } else {
-      onTermSelect([...selectedTerms, term]);
+      formik.setFieldValue('selectedFeeHeads', [
+        ...formik.values.selectedFeeHeads,
+        { feeHeadId: head.feeHeadId, amount: head.pendingAmount },
+      ]);
     }
   };
+
+  const toggleCharge = (charge: IFeeCharge) => {
+    const isSelected = formik.values.selectedCharges.some((ch) => ch.chargeId === charge.chargeId);
+    if (isSelected) {
+      formik.setFieldValue(
+        'selectedCharges',
+        formik.values.selectedCharges.filter((ch) => ch.chargeId !== charge.chargeId)
+      );
+    } else {
+      formik.setFieldValue('selectedCharges', [
+        ...formik.values.selectedCharges,
+        { chargeId: charge.chargeId, amount: charge.amount },
+      ]);
+    }
+  };
+
   return (
-    // <Card sx={{ boxShadow: 'var(--shadows-4)', ml: 0.5, mt: 0.5 }}>
     <Card
       sx={{
         borderRadius: 2,
@@ -69,7 +67,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       {/* HEADER SECTION */}
       <Box
         sx={{
-          p: 1,
+          p: 1.5,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -78,177 +76,120 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       >
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Payment Terms
+            General Fee Structure
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            Select terms to collect fees
+            Select items to pay
           </Typography>
         </Box>
-
-        {selectedTerms.length > 0 && (
-          <Paper
-            variant="outlined"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              borderColor: 'divider',
-              bgcolor: 'background.neutral',
-            }}
-          >
-            <Switch
-              size="small"
-              checked={formik.values.includeCharges}
-              onChange={(e) => formik.setFieldValue('includeCharges', e.target.checked)}
-              sx={{ ml: -0.5 }}
-            />
-            <Typography variant="subtitle2" sx={{ fontSize: '0.875rem' }}>
-              Include Charges
-            </Typography>
-            <CustomTooltip title="If enabled, pending charges are added to the payable amount first, followed by fee heads. If disabled, pending charges move to the next term.">
-              <Iconify
-                icon={GlobalIcons.question}
-                width={16}
-                color="text.disabled"
-                sx={{ cursor: 'help', '&:hover': { color: 'text.primary' } }}
-              />
-            </CustomTooltip>
-          </Paper>
-        )}
       </Box>
 
       {/* LIST SECTION */}
-      <Scrollbar sx={{ flexGrow: 1, p: 1, height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={1.5} pb={1}>
-          {terms?.map((term: any) => {
-            const isSelected = selectedTerms?.some((t) => t.id === term.id);
-            const isPaid = FeeCollectionStatusType.Paid === term.status;
+      <Scrollbar sx={{ flexGrow: 1, p: 1.5, height: '100%' }}>
+        <Box display="flex" flexDirection="column" gap={2} pb={2}>
+          {/* Fee Heads Section */}
+          <Box>
+            <Typography variant="h6" color="primary" sx={{ mb: 1.5 }}>
+              Fee Heads
+            </Typography>
+            <Box display="flex" flexDirection="column" gap={1}>
+              {feeHeads.map((head) => {
+                const isSelected = formik.values.selectedFeeHeads.some(
+                  (fh) => fh.feeHeadId === head.feeHeadId
+                );
+                const isPaid = head.pendingAmount === 0;
 
-            return (
-              <Card
-                key={term.id}
-                sx={{
-                  p: 1,
-                  borderRadius: 1.5,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease-in-out',
-                  position: 'relative',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: isSelected ? 'primary.main' : 'transparent',
-                  backgroundColor: isSelected
-                    ? alpha(theme.palette.primary.main, 0.04)
-                    : theme.palette.background.default,
-                  boxShadow: isSelected
-                    ? `0 0 0 1px ${theme.palette.primary.main}`
-                    : 'var(--shadows-4)',
-                  ...(isPaid && {
-                    opacity: 0.7,
-                    backgroundColor: alpha(theme.palette.grey[500], 0.04),
-                    borderColor: 'transparent',
-                  }),
-                  '&:hover': {
-                    borderColor: !isPaid ? 'primary.main' : 'transparent',
-                    boxShadow: !isPaid ? theme.customShadows?.z4 : 'none',
-                    transform: !isPaid ? 'translateY(-1px)' : 'none',
-                  },
-                }}
-              >
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  {/* LEFT: Checkbox + Details */}
-                  <Box display="flex" gap={2} alignItems="center">
-                    <Checkbox
-                      disabled={isPaid}
-                      checked={isSelected || isPaid}
-                      onChange={() => toggleSelect(term)}
-                      sx={{
-                        p: 0,
-                        '&.Mui-checked': {
-                          color: 'primary.main',
-                        },
-                      }}
-                    />
-
-                    <Box>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 600,
-                          color: isPaid ? 'text.disabled' : 'text.primary',
-                          mb: 0.5,
-                        }}
-                      >
-                        {term.name}
-                      </Typography>
-
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Iconify icon={GlobalIcons.calenderIcon} width={14} color="text.disabled" />
-                        <Typography variant="body2" color="text.secondary">
-                          Due: {term.dueDate}
+                return (
+                  <Card
+                    key={head.feeHeadId}
+                    sx={{
+                      p: 1,
+                      borderRadius: 1,
+                      border: `1px solid ${isSelected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.1)}`,
+                      bgcolor: isSelected
+                        ? alpha(theme.palette.primary.main, 0.04)
+                        : 'background.default',
+                      ...(isPaid && { opacity: 0.7, bgcolor: 'action.disabledBackground' }),
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box display="flex" alignItems="center" gap={1.5}>
+                        <Checkbox
+                          size="small"
+                          checked={isSelected || isPaid}
+                          disabled={isPaid}
+                          onChange={() => toggleFeeHead(head)}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            {head.feeHeadName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Total: ₹{formatNumber(head.totalAmount)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box textAlign="right">
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          ₹{formatNumber(head.pendingAmount)}
                         </Typography>
+                        <Label variant="soft" color={FeeCollectionStatusTypeColors[head.status]}>
+                          {FeeCollectionStatusType[head.status]}
+                        </Label>
                       </Box>
                     </Box>
-                  </Box>
+                  </Card>
+                );
+              })}
+            </Box>
+          </Box>
 
-                  {/* RIGHT: Status + Amount + Action */}
-                  <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
-                    <Label
-                      color={
-                        FeeCollectionStatusTypeColors[
-                          term.status as FeeCollectionStatusType
-                        ] as LabelColor
-                      }
-                      variant="soft"
-                    >
-                      {FeeCollectionStatusType[term.status as FeeCollectionStatusType]}
-                    </Label>
+          <Divider />
 
-                    <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ fontWeight: 700, color: 'text.primary' }}
-                      >
-                        ₹ {term.total.toLocaleString()}
-                      </Typography>
-                      {term.paid > 0 && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ textDecoration: 'line-through' }}
-                        >
-                          ₹ {term.paid.toLocaleString()}
+          {/* Charges Section */}
+          <Box>
+            <Typography variant="h6" color="error" sx={{ mb: 1.5 }}>
+              Additional Charges
+            </Typography>
+            <Box display="flex" flexDirection="column" gap={1}>
+              {charges.map((charge) => {
+                const isSelected = formik.values.selectedCharges.some(
+                  (ch) => ch.chargeId === charge.chargeId
+                );
+
+                return (
+                  <Card
+                    key={charge.chargeId}
+                    sx={{
+                      p: 1,
+                      borderRadius: 1,
+                      border: `1px solid ${isSelected ? theme.palette.error.main : alpha(theme.palette.divider, 0.1)}`,
+                      bgcolor: isSelected
+                        ? alpha(theme.palette.error.main, 0.04)
+                        : 'background.default',
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box display="flex" alignItems="center" gap={1.5}>
+                        <Checkbox
+                          size="small"
+                          checked={isSelected}
+                          onChange={() => toggleCharge(charge)}
+                          color="error"
+                        />
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {charge.chargeName}
                         </Typography>
-                      )}
-
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openTermDialog.onTrue();
-                          setSelectedTerm(term);
-                        }}
-                        sx={{
-                          ml: 0.5,
-                          width: 28,
-                          height: 28,
-                          color: 'primary.main',
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          '&:hover': {
-                            bgcolor: alpha(theme.palette.primary.main, 0.2),
-                          },
-                        }}
-                      >
-                        <Iconify icon={GlobalIcons.eye} width={16} />
-                      </IconButton>
+                      </Box>
+                      <Typography variant="subtitle2" color="error.main" fontWeight={700}>
+                        ₹{formatNumber(charge.amount)}
+                      </Typography>
                     </Box>
-                  </Box>
-                </Box>
-              </Card>
-            );
-          })}
+                  </Card>
+                );
+              })}
+            </Box>
+          </Box>
 
           {showError && errorMessage && (
             <Paper
@@ -270,15 +211,6 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
           )}
         </Box>
       </Scrollbar>
-
-      <FeeInstallmentDialog
-        open={openTermDialog}
-        onClose={() => {
-          openTermDialog.onFalse();
-          setSelectedTerm(null);
-        }}
-        selectedTerm={selectedTerm}
-      />
     </Card>
   );
 };

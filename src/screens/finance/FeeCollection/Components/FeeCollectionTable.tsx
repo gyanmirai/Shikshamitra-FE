@@ -156,15 +156,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
-              id: 'overdueFees',
-              label: 'Overdue Fees',
-              filterType: 'number',
-              align: 'left',
-              minWidth: '140px',
-              isFilter: true,
-              render: (value) => `₹ ${formatNumber(value)}`,
-            },
-            {
               id: 'status',
               label: 'Status',
               align: 'left',
@@ -172,7 +163,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               filterType: 'enum',
               enumOptions: FeeCollectionStatusOptions,
               sticky: true,
-              minWidth: '90px',
+              minWidth: '60px',
               render(value) {
                 const color = FeeCollectionStatusTypeColors[
                   value as FeeCollectionStatusType
