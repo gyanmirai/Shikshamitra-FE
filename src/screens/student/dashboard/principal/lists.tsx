@@ -1,4 +1,3 @@
-import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Card, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 
@@ -66,9 +65,9 @@ const studentLeaveRequests = [
 ];
 
 const PrincipalLists = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {/* Top Performers */}
-    <Grid size={{ xs: 12 }}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card>
         <CardHeader
           title="Top Performers"
@@ -82,7 +81,7 @@ const PrincipalLists = () => (
             </Button>
           }
         />
-        <Stack spacing={2} sx={{ p: 3 }}>
+        <Stack spacing={1} sx={{ p: 1 }}>
           {topPerformers.map((student) => (
             <Box
               key={student.id}
@@ -114,7 +113,7 @@ const PrincipalLists = () => (
     </Grid>
 
     {/* Approved/Rejected Leave Today */}
-    <Grid size={{ xs: 12 }}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card>
         <CardHeader
           title="Approved/Rejected Leave Today"

@@ -1,36 +1,27 @@
 import React from 'react';
-import { Box, Grid } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 
-import PrincipalLists from './lists';
+// Components
 import PrincipalCharts from './charts';
+import AlertCenter from './alert-center';
 import PrincipalKPICards from './kpi-cards';
-import PrincipalBirthdays from './birthdays';
-import PrincipalHouseDistribution from './house-distribution';
+import PrincipalStaffOperations from './staff-operations';
 
 const PrincipalDashboard = () => (
-  <Box sx={{ p: 3 }}>
-    <Box sx={{ mb: 4 }}>
+  <Box>
+    <Stack spacing={1}>
+      {/* 2. Executive KPI Summary */}
       <PrincipalKPICards />
-    </Box>
 
-    <Box sx={{ mb: 4 }}>
+      {/* 3. Alert Center */}
+      <AlertCenter />
+
+      {/* 4. Academic Insights */}
       <PrincipalCharts />
-    </Box>
 
-    <Box sx={{ mb: 4 }}>
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PrincipalHouseDistribution />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PrincipalBirthdays />
-        </Grid>
-      </Grid>
-    </Box>
-
-    <Box sx={{ mb: 4 }}>
-      <PrincipalLists />
-    </Box>
+      {/* 6. Staff & Operations */}
+      <PrincipalStaffOperations />
+    </Stack>
   </Box>
 );
 

@@ -1,58 +1,75 @@
-import React from 'react';
 import { Grid } from '@mui/material';
-import { fNumber } from 'src/utils/format-number';
-import { DashboardCard } from 'src/components/dashboard-card';
+import { studentPaths } from 'src/constants/student-menu';
+import { academicPaths } from 'src/constants/academic-menu';
 
-const kpiData = [
+import CompactKPICard from '../principal/kpi-card-item';
+
+interface KPIItem {
+  id: string;
+  title: string;
+  value: string;
+  percent: number;
+  chart: { data: number[] };
+  icon: string;
+  status: 'info' | 'success' | 'warning' | 'primary';
+  path?: string;
+}
+
+const kpiData: KPIItem[] = [
   {
-    id: 'TC_CLASS_STRENGTH',
+    id: 'CLASS_STRENGTH',
     title: 'Class Strength',
-    value: fNumber(45),
-    labels: [
-      { name: `Male ${fNumber(23)}`, color: 'success' as const },
-      { name: `Female ${fNumber(22)}`, color: 'warning' as const },
-    ],
-    icon: 'mdi:google-classroom',
-    color: 'primary.main',
-    bgColor: 'primary.lighter',
+    value: '45',
+    percent: 0, // No change usually
+    chart: { data: [45, 45, 45, 45, 45, 45, 45, 45, 45, 45] },
+    icon: 'mdi:account-group-outline',
+    status: 'info' as const,
+    path: studentPaths.records.studentList,
   },
   {
-    id: 'TC_PRESENT',
+    id: 'PRESENT_TODAY',
     title: 'Present Today',
-    value: fNumber(42),
-    labels: [
-      { name: '93% Attendance', color: 'success' as const },
-      { name: `Absent ${fNumber(3)}`, color: 'error' as const },
-    ],
+    value: '42',
+    percent: 2.4, // Comparison vs yesterday
+    chart: { data: [40, 41, 42, 38, 39, 42, 41, 40, 41, 42] },
     icon: 'mdi:account-check-outline',
-    color: 'success.main',
-    bgColor: 'success.lighter',
+    status: 'success' as const,
+    path: studentPaths.attendance.markAttendance,
   },
   {
-    id: 'TC_HOMEWORK_PENDING',
-    title: 'Assignment Pending',
-    value: fNumber(12),
-    labels: [
-      { name: `Submitted ${fNumber(33)}`, color: 'success' as const },
-      { name: 'Due Today', color: 'warning' as const },
-    ],
-    icon: 'mdi:book-open-page-variant-outline',
-    color: 'warning.main',
-    bgColor: 'warning.lighter',
+    id: 'ASSIGNMENT_STATUS',
+    title: 'Pending Assignments',
+    value: '12',
+    percent: -5.0,
+    chart: { data: [15, 14, 18, 12, 10, 12, 8, 14, 15, 12] },
+    icon: 'mdi:clipboard-clock-outline',
+    status: 'warning' as const,
+    path: academicPaths.homework.learningTasks,
+  },
+  {
+    id: 'CLASS_PERFORMANCE',
+    title: 'Class Performance',
+    value: '78%',
+    percent: 3.5, // Improved
+    chart: { data: [65, 68, 70, 72, 74, 75, 76, 75, 77, 78] },
+    icon: 'mdi:chart-line',
+    status: 'primary' as const,
+    path: academicPaths.examination.recordMarks,
   },
 ];
 
 const TeacherKPICards = () => (
-  <Grid container spacing={3}>
+  <Grid container spacing={1}>
     {kpiData.map((kpi) => (
-      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
-        <DashboardCard
+      <Grid size={{ xs: 12, sm: 6, md: 3 }} key={kpi.id}>
+        <CompactKPICard
           title={kpi.title}
           value={kpi.value}
           icon={kpi.icon}
-          color={kpi.color}
-          bgColor={kpi.bgColor}
-          labels={kpi.labels}
+          percentChange={kpi.percent}
+          trendData={kpi.chart.data}
+          status={kpi.status}
+          path={kpi.path}
         />
       </Grid>
     ))}

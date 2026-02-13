@@ -1,9 +1,36 @@
-import React from 'react';
+import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
-import { Box, Grid, Card, CardHeader } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Stack, CardHeader, Typography, LinearProgress } from '@mui/material';
+
+import ClassDivisionFilter from './class-division-filter';
+
+// ... (existing imports)
+
+// ... inside the component
+<CardHeader
+  sx={{ ml: -1, mt: -1 }}
+  title={
+    <Stack direction="row" alignItems="center" spacing={1}>
+      <Box component="span">Performance Extremes</Box>
+      <CustomTooltip
+        title="Breakdown of top and bottom performing classes based on recent exam scores."
+        arrow
+        placement="top"
+      >
+        <Iconify
+          icon="eva:info-outline"
+          width={18}
+          sx={{ color: 'text.disabled', cursor: 'pointer' }}
+        />
+      </CustomTooltip>
+    </Stack>
+  }
+  subheader="Top & Bottom 3 Classes"
+/>;
 
 const PrincipalCharts = () => {
-  // Monthly Attendance Trend (Line Chart)
+  // 1. Monthly Attendance Trend (Line Chart)
   const attendanceTrendOptions = useChart({
     xaxis: {
       categories: [
@@ -22,9 +49,8 @@ const PrincipalCharts = () => {
       ],
     },
     tooltip: {
-      x: {
-        format: 'dd/MM/yy HH:mm',
-      },
+      x: { show: false },
+      marker: { show: false },
     },
   });
 
@@ -35,109 +61,131 @@ const PrincipalCharts = () => {
     },
   ];
 
-  // Gender Ratio (Pie Chart)
-  const genderRatioOptions = useChart({
-    labels: ['Male', 'Female'],
+  // 2. Exam's Pass/Fail Rate (Bar Chart)
+  const examPerformanceOptions = useChart({
     stroke: {
-      colors: ['#fff'],
-    },
-    legend: {
-      position: 'bottom',
-      horizontalAlign: 'center',
-    },
-    dataLabels: {
-      enabled: true,
-      dropShadow: {
-        enabled: false,
-      },
-    },
-    tooltip: {
-      fillSeriesColor: false,
-      y: {
-        formatter: (value: number) => `${value}%`,
-        title: {
-          formatter: (seriesName: string) => `${seriesName}`,
-        },
-      },
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          labels: {
-            show: false,
-          },
-        },
-      },
-    },
-  });
-
-  const genderRatioSeries = [55, 45];
-
-  // Class-wise Academic Performance (Bar Chart)
-  const classPerformanceOptions = useChart({
-    plotOptions: {
-      bar: {
-        columnWidth: '45%',
-        borderRadius: 4,
-      },
+      show: true,
+      width: 2,
+      colors: ['transparent'],
     },
     xaxis: {
-      categories: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
+      categories: ['Unit Test 1', 'Unit Test 2', 'Mid Term Exam', 'Final Exam'],
+    },
+    colors: ['#00AB55', '#FF4842'], // Success, Error
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val} students`,
+      },
     },
   });
 
-  const classPerformanceSeries = [
-    {
-      name: 'Avg Score',
-      data: [7.5, 8.2, 7.8, 8.5, 7.2],
-    },
+  const examPerformanceSeries = [
+    { name: 'Passed', data: [45, 52, 38, 33] },
+    { name: 'Failed', data: [35, 41, 62, 13] },
+  ];
+  // 4. Top/Bottom Performing Classes (List/Progress)
+  const classPerformance = [
+    { class: 'Class 10A', score: 92, type: 'top' },
+    { class: 'Class 7B', score: 89, type: 'top' },
+    { class: 'Class 5C', score: 88, type: 'top' },
+    { class: 'Class 8C', score: 65, type: 'bottom' },
+    { class: 'Class 9A', score: 62, type: 'bottom' },
+    { class: 'Class 6B', score: 58, type: 'bottom' },
   ];
 
   return (
-    <Grid container spacing={3}>
-      {/* Monthly Attendance Trend - Full Width */}
-      <Grid size={{ xs: 12 }}>
-        <Card>
-          <CardHeader title="Monthly Attendance Trend" />
+    <Grid container spacing={1}>
+      {/* Monthly Attendance */}
+      <Grid size={{ xs: 12, md: 8 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader
+            sx={{ ml: -1, mt: -1 }}
+            title="Monthly Attendance Trend"
+            subheader="(+4%) than last year"
+            action={<ClassDivisionFilter />}
+          />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"
               type="area"
               series={attendanceTrendSeries}
               options={attendanceTrendOptions}
-              height={364}
+              height={320}
             />
           </Box>
         </Card>
       </Grid>
 
-      {/* Gender Ratio - Half Width */}
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
-          <CardHeader title="Gender Ratio" />
-          <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-            <Chart
-              dir="ltr"
-              type="pie"
-              series={genderRatioSeries}
-              options={genderRatioOptions}
-              height={300}
-            />
-          </Box>
+      {/* Top/Bottom Performing Classes */}
+      <Grid size={{ xs: 12, md: 4 }}>
+        <Card sx={{ height: '100%' }}>
+          <CardHeader
+            sx={{ ml: -1, mt: -1 }}
+            title={
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Box component="span">Performance Extremes</Box>
+                <CustomTooltip
+                  title="List of top 3 and bottom 3 performing classes based on recent assessment scores."
+                  arrow
+                  placement="top"
+                >
+                  <Iconify
+                    icon="eva:info-outline"
+                    width={18}
+                    sx={{ color: 'text.disabled', cursor: 'pointer' }}
+                  />
+                </CustomTooltip>
+              </Stack>
+            }
+            subheader="Top & Bottom 3 Classes"
+          />
+          <Stack spacing={3} sx={{ p: 3 }}>
+            {classPerformance.map((item) => (
+              <Box key={item.class}>
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="subtitle2">{item.class}</Typography>
+                  <Typography
+                    variant="subtitle2"
+                    color={item.type === 'top' ? 'success.main' : 'error.main'}
+                  >
+                    {item.score}%
+                  </Typography>
+                </Stack>
+                <LinearProgress
+                  variant="determinate"
+                  value={item.score}
+                  color={item.type === 'top' ? 'success' : 'error'}
+                  sx={{
+                    height: 8,
+                    borderRadius: 1,
+                    bgcolor: (theme) =>
+                      item.type === 'top'
+                        ? theme.palette.success.lighter
+                        : theme.palette.error.lighter,
+                  }}
+                />
+              </Box>
+            ))}
+          </Stack>
         </Card>
       </Grid>
 
-      {/* Class-wise Academic Performance - Half Width */}
-      <Grid size={{ xs: 12, md: 6 }}>
+      {/* Exam's Pass/Fail Rate */}
+      <Grid size={{ xs: 12 }}>
         <Card>
-          <CardHeader title="Class-wise Academic Performance" />
+          <CardHeader
+            title="Exam's Pass/Fail Rate"
+            subheader="Student Performance by Exam"
+            sx={{ ml: -1, mt: -1 }}
+            action={<ClassDivisionFilter />}
+          />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart
               dir="ltr"
               type="bar"
-              series={classPerformanceSeries}
-              options={classPerformanceOptions}
-              height={300}
+              series={examPerformanceSeries}
+              options={examPerformanceOptions}
+              height={320}
             />
           </Box>
         </Card>

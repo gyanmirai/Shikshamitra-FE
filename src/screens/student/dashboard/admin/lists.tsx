@@ -1,28 +1,113 @@
-import React from 'react';
 import { Label } from 'src/components/label';
+import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Card, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { studentPaths } from 'src/constants/student-menu';
+import CustomizableTable from 'src/components/customizabaleTable';
+import {
+  Box,
+  Card,
+  Grid,
+  Stack,
+  Avatar,
+  Button,
+  MenuItem,
+  TextField,
+  CardHeader,
+  Typography,
+  InputAdornment,
+  CircularProgress,
+} from '@mui/material';
+
+// ----------------------------------------------------------------------
 
 const upcomingExams = [
   {
     id: 1,
-    time: '9:00 to 10:00',
-    date: 'June 10, 2024',
-    details: 'Exam for 101 Students 20',
+    time: '9:00 - 10:00',
+    date: '2025-06-10T09:00:00', // ISO format for countdown
+    displayDate: 'June 10, 2025',
+    details: 'Mathematics Entrance Exam',
+    type: 'Entrance',
+    status: 'Scheduled',
+    students: 101,
   },
   {
     id: 2,
-    time: '10:00 to 11:00',
-    date: 'June 10, 2024',
-    details: 'Exam for 102 Students 20',
+    time: '10:00 - 11:00',
+    date: '2025-06-10T10:00:00',
+    displayDate: 'June 10, 2025',
+    details: 'Science Placement Test',
+    type: 'Internal',
+    status: 'Scheduled',
+    students: 102,
   },
   {
     id: 3,
-    time: '11:00 to 12:00',
-    date: 'June 10, 2024',
-    details: 'Exam for 103 Students 20',
+    time: '11:00 - 12:00',
+    date: '2025-06-10T11:00:00',
+    displayDate: 'June 10, 2025',
+    details: 'English Proficiency',
+    type: 'Entrance',
+    status: 'Completed',
+    students: 103,
+  },
+  {
+    id: 4,
+    time: '11:00 - 12:00',
+    date: '2025-06-10T11:00:00',
+    displayDate: 'June 10, 2025',
+    details: 'English Proficiency',
+    type: 'Entrance',
+    status: 'Completed',
+    students: 103,
   },
 ];
+
+// Countdown Helper
+const useCountdown = (targetDate: string) => {
+  const countDownDate = new Date(targetDate).getTime();
+  const [countDown, setCountDown] = useState(countDownDate - new Date().getTime());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountDown(countDownDate - new Date().getTime());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [countDownDate]);
+
+  return getReturnValues(countDown);
+};
+
+const getReturnValues = (countDown: number) => {
+  const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (countDown < 0) return { days: 0, hours: 0, minutes: 0, expired: true };
+  return { days, hours, minutes, expired: false };
+};
+
+const CountdownTimer = ({ date }: { date: string }) => {
+  const { days, hours, minutes, expired } = useCountdown(date);
+
+  if (expired) return <Label color="default">Completed</Label>;
+
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      <Iconify icon="mdi:timer-outline" width={16} sx={{ color: 'warning.main' }} />
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main' }}>
+        {days > 0 ? `${days}d ` : ''}
+        {hours}h {minutes}m left
+      </Typography>
+    </Stack>
+  );
+};
+
+// ----------------------------------------------------------------------
 
 const studentEnrollment = [
   {
@@ -33,8 +118,6 @@ const studentEnrollment = [
     enrollmentDate: '06-06-2024',
     status: 'Documents Pending',
     avatarUrl: '/assets/images/avatars/avatar_1.jpg',
-    statusColor: 'warning.main',
-    statusBg: 'warning.lighter',
   },
   {
     id: 2,
@@ -44,8 +127,6 @@ const studentEnrollment = [
     enrollmentDate: '05-06-2024',
     status: 'Enrolled',
     avatarUrl: '/assets/images/avatars/avatar_2.jpg',
-    statusColor: 'success.main',
-    statusBg: 'success.lighter',
   },
   {
     id: 3,
@@ -55,179 +136,322 @@ const studentEnrollment = [
     enrollmentDate: '04-06-2024',
     status: 'In Progress',
     avatarUrl: '/assets/images/avatars/avatar_3.jpg',
-    statusColor: 'info.main',
-    statusBg: 'info.lighter',
+  },
+  {
+    id: 4,
+    name: 'Ishaan Gupta',
+    class: 'Class 2',
+    section: 'Section C',
+    enrollmentDate: '03-06-2024',
+    status: 'Rejected',
+    avatarUrl: '/assets/images/avatars/avatar_4.jpg',
   },
 ];
 
-const AdminLists = () => (
-  <Grid container spacing={1}>
-    {/* Upcoming Entrance Exam */}
-    <Grid size={{ xs: 12 }}>
-      <Card sx={{ boxShadow: (theme) => theme.shadows[2], borderRadius: 2 }}>
-        <CardHeader
-          title="Upcoming Entrance Exam"
-          titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
-          action={
-            <Button
-              size="small"
-              color="inherit"
-              endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
-              sx={{ fontWeight: 600, color: 'text.secondary' }}
-            >
-              View all
-            </Button>
-          }
-          sx={{ pb: 0 }}
-        />
-        <Stack spacing={2.5} sx={{ p: 3 }}>
-          {upcomingExams.map((exam) => (
-            <Box
-              key={exam.id}
-              sx={{
-                p: 2,
-                borderRadius: 1.5,
-                bgcolor: 'background.neutral',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  bgcolor: 'action.hover',
-                  transform: 'translateX(4px)',
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: 56,
-                  height: 56,
-                  borderRadius: 1,
-                  bgcolor: 'background.paper',
-                  boxShadow: 1,
-                  flexShrink: 0,
-                }}
+const AdminLists = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [openViewAll, setOpenViewAll] = useState(false);
+
+  const router = useRouter();
+
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+
+  const examColumns: any[] = [
+    { id: 'details', label: 'Exam Name', align: 'left' },
+    { id: 'displayDate', label: 'Date', align: 'left' },
+    { id: 'time', label: 'Time', align: 'left' },
+    {
+      id: 'type',
+      label: 'Type',
+      align: 'left',
+      render: (value: string) => (
+        <Label variant="soft" color={value === 'Entrance' ? 'info' : 'warning'}>
+          {value}
+        </Label>
+      ),
+    },
+    { id: 'students', label: 'Registered', align: 'center' },
+    {
+      id: 'status',
+      label: 'Status',
+      align: 'left',
+      render: (value: string) => (
+        <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
+          {value}
+        </Label>
+      ),
+    },
+  ];
+
+  const filteredEnrollments = studentEnrollment.filter((student) => {
+    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || student.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <Grid container spacing={1}>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Card
+          sx={{
+            boxShadow: (theme) => theme.shadows[2],
+            borderRadius: 2,
+            height: 480,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <CardHeader
+            title="Upcoming & Recent Exams"
+            titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
+            action={
+              <Button
+                size="small"
+                onClick={() => setOpenViewAll(true)}
+                color="inherit"
+                endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
+                sx={{ fontWeight: 600, color: 'text.secondary' }}
               >
-                <Iconify icon="mdi:calendar-clock" width={24} sx={{ color: 'primary.main' }} />
-              </Box>
+                View all
+              </Button>
+            }
+            sx={{ pb: 0, flexShrink: 0, mt: -1, ml: -1 }}
+          />
 
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontSize: '0.925rem' }}>
-                  {exam.details}
-                </Typography>
-                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 0.5 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.secondary',
-                      typography: 'caption',
-                    }}
-                  >
-                    <Iconify icon="mdi:clock-outline" width={16} sx={{ mr: 0.5 }} />
-                    {exam.time}
-                  </Box>
-                  <Box
-                    sx={{ width: 4, height: 4, bgcolor: 'text.disabled', borderRadius: '50%' }}
-                  />
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.secondary',
-                      typography: 'caption',
-                    }}
-                  >
-                    <Iconify icon="mdi:calendar-blank-outline" width={16} sx={{ mr: 0.5 }} />
-                    {exam.date}
-                  </Box>
-                </Stack>
-              </Box>
-            </Box>
-          ))}
-        </Stack>
-      </Card>
-    </Grid>
-
-    {/* Student Enrollment */}
-    <Grid size={{ xs: 12 }}>
-      <Card sx={{ boxShadow: (theme) => theme.shadows[2], borderRadius: 2 }}>
-        <CardHeader
-          title="Student Enrollment"
-          subheader="New students joining the school"
-          titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
-          subheaderTypographyProps={{ variant: 'body2', sx: { mt: 0.5 } }}
-          action={
-            <Button
-              size="small"
-              color="inherit"
-              endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
-              sx={{ fontWeight: 600, color: 'text.secondary' }}
-            >
-              View All
-            </Button>
-          }
-          sx={{ pb: 0 }}
-        />
-        <Stack spacing={2} sx={{ p: 3 }}>
-          {studentEnrollment.map((student) => (
-            <Box
-              key={student.id}
-              sx={{
-                p: 2,
-                borderRadius: 1.5,
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: 'primary.light',
-                  bgcolor: (theme) => theme.palette.action.hover,
-                },
-              }}
-            >
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar
-                  src={student.avatarUrl}
-                  alt={student.name}
-                  sx={{ width: 48, height: 48, boxShadow: (theme) => theme.customShadows?.z8 || 1 }}
-                />
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    {student.name}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: 'text.secondary',
-                      display: 'flex',
-                      alignItems: 'center',
-                      mt: 0.5,
-                      gap: 1,
-                    }}
-                  >
+          <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
+            <Stack spacing={1}>
+              {upcomingExams.map((exam) => (
+                <Box
+                  key={exam.id}
+                  onClick={() => {
+                    setLoadingId(exam.id);
+                    router.push(studentPaths.enrollment.entranceExam);
+                  }}
+                  sx={{
+                    p: 2,
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    position: 'relative',
+                    transition: 'all 0.2s',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      borderColor: 'transparent',
+                      bgcolor: 'background.neutral',
+                      transform: 'scale(1.02)',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {loadingId === exam.id && (
                     <Box
-                      component="span"
-                      sx={{ bgcolor: 'action.selected', px: 0.75, py: 0.25, borderRadius: 0.5 }}
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        zIndex: 9,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        backdropFilter: 'blur(2px)',
+                        borderRadius: 1.5,
+                      }}
                     >
-                      {student.class}
+                      <CircularProgress size={24} color="primary" />
                     </Box>
-                    <span>•</span>
-                    <span>{student.section}</span>
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+                  )}
+                  <Box
+                    sx={{
+                      width: 4,
+                      height: 48,
+                      borderRadius: 0.5,
+                      bgcolor: exam.status === 'Completed' ? 'success.main' : 'warning.main',
+                      flexShrink: 0,
+                    }}
+                  />
+
+                  <Box sx={{ flex: 1, minWidth: 0, pr: 1 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontSize: '0.925rem' }}>
+                          {exam.details}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          {exam.students} Students Registered
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1}
+                      sx={{ mt: 1, flexWrap: 'wrap' }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: 'text.secondary',
+                          typography: 'caption',
+                        }}
+                      >
+                        <Iconify icon="mdi:clock-outline" width={16} sx={{ mr: 0.5 }} />
+                        {exam.time}
+                      </Box>
+                      <Box
+                        sx={{ width: 4, height: 4, bgcolor: 'text.disabled', borderRadius: '50%' }}
+                      />
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: 'text.secondary',
+                          typography: 'caption',
+                        }}
+                      >
+                        <Iconify icon="mdi:calendar-blank-outline" width={16} sx={{ mr: 0.5 }} />
+                        {exam.displayDate}
+                      </Box>
+                      <Label variant="soft" color={exam.type === 'Entrance' ? 'info' : 'warning'}>
+                        {exam.type}
+                      </Label>
+                    </Stack>
+                  </Box>
+
+                  {/* Eye Icon positioned at top-right */}
+                </Box>
+              ))}
+            </Stack>
+          </Scrollbar>
+        </Card>
+      </Grid>
+
+      {/* Student Enrollment */}
+      <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Card
+          sx={{
+            boxShadow: (theme) => theme.shadows[2],
+            borderRadius: 2,
+            height: 480,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ p: 3, pb: 2, flexShrink: 0 }}
+          >
+            <CardHeader
+              title="Student Enrollment"
+              subheader="Recent applications"
+              sx={{ p: 0, width: '100%', mb: { xs: 2, sm: 0 }, mt: -1, ml: -1 }}
+            />
+
+            <Stack direction="row" spacing={1} sx={{ width: 350, flexShrink: 0 }}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Search"
+                value={searchTerm}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Iconify icon="mdi:magnify" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                select
+                size="small"
+                value={statusFilter}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setStatusFilter(e.target.value)
+                }
+                sx={{ width: 130, flexShrink: 0 }}
+              >
+                <MenuItem value="All">All Status</MenuItem>
+                <MenuItem value="Enrolled">Enrolled</MenuItem>
+                <MenuItem value="In Progress">In Progress</MenuItem>
+                <MenuItem value="Documents Pending">Pending</MenuItem>
+                <MenuItem value="Rejected">Rejected</MenuItem>
+              </TextField>
+            </Stack>
+          </Stack>
+
+          <Scrollbar sx={{ p: 1, pt: 0, flexGrow: 1 }}>
+            <Stack spacing={2} sx={{ p: 1 }}>
+              {filteredEnrollments.map((student) => (
+                <Box
+                  key={student.id}
+                  sx={{
+                    p: 2,
+                    borderRadius: 1.5,
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      borderColor: 'transparent',
+                      bgcolor: 'background.neutral',
+                      transform: 'scale(1.02)',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar
+                      src={student.avatarUrl}
+                      alt={student.name}
+                      sx={{ width: 48, height: 48 }}
+                    />
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        {student.name}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.secondary',
+                          display: 'flex',
+                          alignItems: 'center',
+                          mt: 0.5,
+                          gap: 1,
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{ bgcolor: 'action.selected', px: 0.75, py: 0.25, borderRadius: 0.5 }}
+                        >
+                          {student.class}
+                        </Box>
+                        <span>•</span>
+                        <span>{student.section}</span>
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Stack alignItems="flex-end" spacing={0.5}>
                     <Label
                       color={
                         student.status === 'Enrolled'
                           ? 'success'
                           : student.status === 'In Progress'
                             ? 'info'
-                            : 'warning'
+                            : student.status === 'Rejected'
+                              ? 'error'
+                              : 'warning'
                       }
                       variant="soft"
                     >
@@ -238,14 +462,36 @@ const AdminLists = () => (
                     </Typography>
                   </Stack>
                 </Box>
-              </Stack>
-              <Iconify icon="mdi:chevron-right" width={20} sx={{ color: 'text.disabled' }} />
-            </Box>
-          ))}
-        </Stack>
-      </Card>
+              ))}
+
+              {filteredEnrollments.length === 0 && (
+                <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+                  <Typography>No students found</Typography>
+                </Box>
+              )}
+            </Stack>
+          </Scrollbar>
+        </Card>
+      </Grid>
+
+      <CustomDialog
+        open={openViewAll}
+        handleClose={() => setOpenViewAll(false)}
+        title="Upcoming & Recent Exams"
+        maxWidth="lg"
+      >
+        <CustomizableTable
+          columns={examColumns}
+          data={upcomingExams}
+          tableId="upcoming-exams-table"
+          isSearch={false}
+          isFilter={false}
+          isPagination={false}
+          wrapperProps={{ sx: { height: '60vh' }, padding: 1 }}
+        />
+      </CustomDialog>
     </Grid>
-  </Grid>
-);
+  );
+};
 
 export default AdminLists;

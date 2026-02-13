@@ -5,7 +5,7 @@ import type { ChartOptions } from './types';
 
 // ----------------------------------------------------------------------
 
-export function useChart(options?: ChartOptions): ChartOptions {
+export function useChart(options?: ChartOptions): NonNullable<ChartOptions> {
   const theme = useTheme();
 
   const LABEL_TOTAL = {
