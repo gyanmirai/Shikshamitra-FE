@@ -91,7 +91,7 @@ const FeeCollectComponent = ({
     initialValues: buildInitialValues(),
     validationSchema: buildValidationSchema(currentYear),
     enableReinitialize: true,
-    onSubmit: async (values) => {
+    onSubmit: (values) => {
       const payload = {
         studentId: student?.id,
         academicYearId: currentYear?.id,
@@ -110,8 +110,6 @@ const FeeCollectComponent = ({
           details: p.details,
         })),
       };
-
-      console.log('Dummy Submit Payload:', payload);
 
       // Simulating successful submit
       if (onSubmit) {

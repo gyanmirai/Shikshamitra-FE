@@ -20,7 +20,7 @@ const RefundChargesList: React.FC<ChargesListProps> = ({
   <Box mt={2}>
     {(charges ?? []).length > 0 && (
       <Typography variant="subtitle1" fontWeight={600} color="error" mb={1}>
-        Charges - (₹ {charges?.reduce((sum, c) => sum + c.total, 0).toLocaleString()})
+        Charges - (₹ {charges?.reduce((sum, c) => sum + (c?.total ?? 0), 0).toLocaleString()})
       </Typography>
     )}
 
@@ -46,12 +46,12 @@ const RefundChargesList: React.FC<ChargesListProps> = ({
                 disabled={termSelected} // ✅ disable if whole term is selected
               />
               <Typography variant="subtitle2" fontWeight={600}>
-                {ch.name}
+                {ch.chargeName}
               </Typography>
             </Box>
 
             <Typography fontWeight={400}>
-              ₹ {ch.paid.toLocaleString()} / ₹ {ch.total.toLocaleString()}
+              ₹ {ch?.paid?.toLocaleString()} / ₹ {ch?.total?.toLocaleString()}
             </Typography>
           </Box>
         </Box>

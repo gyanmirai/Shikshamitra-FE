@@ -47,6 +47,7 @@ export const buildValidationSchema = (currentYear: any) =>
             })
             .required('Amount is required')
             .positive('Amount must be positive'),
+          // eslint-disable-next-line func-names
           details: Yup.object().test('details-validation', function (details) {
             const { paymentMethod } = this.parent;
             const fields = paymentMethodsConfig[paymentMethod as keyof typeof paymentMethodsConfig];
@@ -75,6 +76,7 @@ export const buildValidationSchema = (currentYear: any) =>
     .test(
       'total-amount-match',
       'Total payment amount must match the total payable amount',
+      // eslint-disable-next-line func-names
       function (values: any) {
         if (!values) return true;
         const totalPayable = values.totalPayableAmount || 0;
@@ -218,7 +220,6 @@ export default function PaymentDetailsForm({
   //   type: 'query',
   //   currentQueryAndMutation: useGetFeeTermsQuery,
   // });
-  console.log('formik values----', formik.values);
   useEffect(() => {
     const { selectedFeeHeads, selectedCharges } = formik.values;
 
@@ -233,7 +234,9 @@ export default function PaymentDetailsForm({
     formik.setFieldValue('totalAmount', calculatedAmount === 0 ? '' : calculatedAmount.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     JSON.stringify(formik.values.selectedFeeHeads),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     JSON.stringify(formik.values.selectedCharges),
   ]);
 
