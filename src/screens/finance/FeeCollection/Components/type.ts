@@ -1,5 +1,6 @@
 import type { FormikProps } from 'formik';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 export interface IFeeData {
   id: string | number;
@@ -30,10 +31,14 @@ export interface IFeeTableProps {
 export interface IFeeTerm {
   id: string | number;
   termName: string; // e.g. "January 2025"
+  name?: string; // alias for termName used in some components
   dueDate: string; // ISO string
   paidAmount: number;
+  paid?: number; // alias for paidAmount
   totalAmount: number;
+  total?: number; // alias for totalAmount
   feeHeads: IFeeHead[];
+  charges?: IFeeCharge[];
 }
 
 // Payment details entered during collection
@@ -72,43 +77,65 @@ export interface IStudentFee {
 }
 
 export interface IFeeHead {
-  name: string;
-  paid: number;
-  total: number;
-  status: number;
-  id: string;
+  feeHeadId: string;
+  feeHeadName: string;
+  name?: string; // alias for feeHeadName
+  totalAmount: number;
+  total?: number; // alias for totalAmount
+  paidAmount: number;
+  paid?: number; // alias for paidAmount
+  pendingAmount: number;
+  status: FeeCollectionStatusType;
 }
 
 export interface IFeeCharge {
-  id: string;
-  name: string;
-  paid: number;
-  total: number;
-  dueDate: string;
-  status: number;
+  chargeId: string;
+  id?: string | number; // alias for chargeId or index
+  chargeName: string;
+  amount: number;
+  total?: number;
+  dueDate?: string;
+  paid?: number;
+  status?: number | string;
 }
 
-export interface ITerm {
-  id: string;
-  name: string;
-  dueDate: string;
-  paid: number;
-  total: number;
-  status: number;
-  feeHeads: IFeeHead[];
-  charges?: IFeeCharge[];
+export interface IPaymentEntry {
+  paymentMethod: string;
+  amount: string | number;
+  details: Record<string, any>;
+}
+
+export interface IPaymentFormValues {
+  payments: IPaymentEntry[];
+  selectedFeeHeads: { feeHeadId: string; amount: number }[];
+  selectedCharges: { chargeId: string; amount: number }[];
+  totalAmount: string | number; // This is the total from payment methods
+  totalPayableAmount: number; // This is the sum of selected fees/charges
+  receivedAmount: string | number;
+  notes: string;
+  includeCharges?: boolean;
+  [key: string]: any; // For dynamic payment method fields
 }
 
 export interface ITermsToCollectProps {
-  formik: any;
-  terms: any | null; // Optional terms data
-  selectedTerms: any[];
-  onTermSelect: (selectedTerms: any[]) => void;
+  formik: FormikProps<IPaymentFormValues>;
+  feeHeads: IFeeHead[];
+  charges: IFeeCharge[];
+  showError?: boolean;
+  errorMessage?: string;
+}
+
+export interface ITermsToCollectDetailedProps {
+  terms: IFeeTerm[];
+  selectedTerms: (string | number)[];
+  onTermSelect: (selected: (string | number)[]) => void;
   showError?: boolean;
   errorMessage?: string;
 }
 export interface IPaymentDetailsFormProps {
-  formik: FormikProps<any>; // Formik instance passed from parent
+  formik: FormikProps<IPaymentFormValues>;
+  feeHeads?: IFeeHead[];
+  charges?: IFeeCharge[];
 }
 
 export interface IPaymentFieldConfig {

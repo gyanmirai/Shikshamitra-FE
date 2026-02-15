@@ -1,5 +1,6 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { Standards } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -18,6 +19,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { DocumentType } from 'src/enums/documnet-type';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
@@ -28,6 +30,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
 import { RegistrationStatusType } from 'src/enums/registration-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -67,19 +70,23 @@ import {
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 import { ViewDocuments } from '../register/RenderDocument';
+import FeeStructureAssignmentForm from './FeeStructureAssignmentForm';
 
 import type { IInquiryData } from '../Inquiry/type';
 
 const AdmissionScreen = () => {
   const tabs = useTabs(RegistrationStatusType.Pending);
-  const dialogForCollectFees = useBoolean();
+  const dialogForAssignFeeStructure = useBoolean();
   const divisionDialog = useBoolean();
   const statusDialog = useBoolean();
   const followUpDialog = useBoolean();
   const [open, setOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const [editData, setEditData] = useState<IInquiryData | null>(null);
-
+  // Get the isChanges state from the Redux store
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get the dispatch function from the Redux store
+  const dispatch = useDispatch();
   const { data: admissionData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAdmissionQuery,
@@ -118,6 +125,18 @@ const AdmissionScreen = () => {
     ],
     [counts]
   );
+
+  // Reset form and close dialog
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      dialogForAssignFeeStructure.onFalse();
+      setEditData(null);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      dialogForAssignFeeStructure.onFalse();
+      setEditData(null);
+    }
+  };
 
   const tableData = useMemo(
     () =>
@@ -317,16 +336,20 @@ const AdmissionScreen = () => {
                     <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
                     Assign Division
                   </MenuItem>
-                  {/* <MenuItem
-                        onClick={() => {
-                          dialogForCollectFees.onTrue();
-                        }}
-                      >
-                        <Iconify icon="tdesign:money" />
-                        Pay Fees
-                      </MenuItem> */}
                   <MenuItem
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dialogForAssignFeeStructure.onTrue();
+                      setEditData(row as IInquiryData);
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="tdesign:money" />
+                    Assign Fee Structure
+                  </MenuItem>
+                  <MenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
                       followUpDialog.onTrue();
                       setEditData(row as IInquiryData);
                       popover.onClose();
@@ -343,7 +366,7 @@ const AdmissionScreen = () => {
         },
       },
     ],
-    [divisionDialog, followUpDialog, selectedStudents, tableData]
+    [dialogForAssignFeeStructure, divisionDialog, followUpDialog, selectedStudents, tableData]
   );
 
   return (
@@ -416,7 +439,14 @@ const AdmissionScreen = () => {
           userList={selectedStudents}
         />
       )}
-
+      <CustomDialog
+        open={dialogForAssignFeeStructure.value}
+        handleClose={dialogForAssignFeeStructure.onFalse}
+        title="Assign Fee Structure"
+        maxWidth="sm"
+      >
+        <FeeStructureAssignmentForm student={editData} handleClose={handleClose} />
+      </CustomDialog>
       <CustomDialog
         maxWidth="xl"
         open={open}

@@ -14,102 +14,90 @@ import { Box, Card, Grid, Divider, MenuItem, TextField, Typography } from '@mui/
 
 import FeeTermsComponent from './FeeTermsComponent';
 import { paymentMethodsConfig } from './paymentConfigMethods';
-import feeCollectionData from '../../../../../financeFeeCollection.json';
 
-import type { IPaymentFieldConfig, IPaymentDetailsFormProps } from './type';
+import type { IPaymentFormValues, IPaymentFieldConfig, IPaymentDetailsFormProps } from './type';
 
-export const buildInitialValues = () => {
-  const initialValues: Record<string, any> = {
-    selectedMethods: [],
-    selectedTerms: [],
-    includeCharges: true,
+export const buildInitialValues = (): IPaymentFormValues => {
+  const initialValues: IPaymentFormValues = {
+    payments: [],
+    selectedFeeHeads: [],
+    selectedCharges: [],
     totalAmount: '',
+    totalPayableAmount: 0,
     receivedAmount: '',
     notes: '',
   };
-
-  Object.keys(paymentMethodsConfig).forEach((method) => {
-    initialValues[method] = {};
-    const methodConfig = paymentMethodsConfig[method as keyof typeof paymentMethodsConfig];
-    methodConfig.forEach((field) => {
-      initialValues[method][field.name] = field.type === 'date' ? null : '';
-    });
-  });
   return initialValues;
 };
 
 export const buildValidationSchema = (currentYear: any) =>
   Yup.object({
-    selectedMethods: Yup.array().min(1, 'Select at least one payment method'),
-    selectedTerms: Yup.array().min(1, 'Select at least one term to collect'),
-    totalAmount: Yup.number()
-      .transform((value, originalValue) => {
-        if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s,]/g, '');
-          const n = Number(cleaned);
-          return Number.isNaN(n) ? value : n;
-        }
-        return value;
-      })
-      .required('Total amount is required')
-      .positive('Amount must be positive'),
-    notes: Yup.string(),
+    payments: Yup.array()
+      .of(
+        Yup.object({
+          paymentMethod: Yup.string().required('Payment method is required'),
+          amount: Yup.number()
+            .transform((value, originalValue) => {
+              if (typeof originalValue === 'string') {
+                const cleaned = originalValue.replace(/[₹,\s,]/g, '');
+                const n = Number(cleaned);
+                return Number.isNaN(n) ? value : n;
+              }
+              return value;
+            })
+            .required('Amount is required')
+            .positive('Amount must be positive'),
+          // eslint-disable-next-line func-names
+          details: Yup.object().test('details-validation', function (details) {
+            const { paymentMethod } = this.parent;
+            const fields = paymentMethodsConfig[paymentMethod as keyof typeof paymentMethodsConfig];
+            if (!fields) return true;
 
-    // per-method schemas generated from config (each will validate required, pattern, date etc.)
-    ...Object.fromEntries(
-      Object.entries(paymentMethodsConfig).map(([method, fields]) => [
-        method,
-        Yup.object(
-          Object.fromEntries(
-            fields.map((field) => [field.name, buildCollectionFieldValidation(field, currentYear)])
-          )
-        ),
-      ])
-    ),
+            const schema = Yup.object(
+              Object.fromEntries(
+                fields
+                  .filter((f) => f.name !== 'amount')
+                  .map((field) => [field.name, buildCollectionFieldValidation(field, currentYear)])
+              )
+            );
+
+            try {
+              schema.validateSync(details);
+              return true;
+            } catch (err: any) {
+              return this.createError({ message: err.message, path: this.path });
+            }
+          }),
+        })
+      )
+      .min(1, 'Select at least one payment method'),
   })
-    // Individual amount validation - each payment method amount should not exceed totalAmount
+    // Validation to ensure totalAmount from payment methods matches totalPayableAmount
     .test(
-      'individual-payment-amounts',
-      'Individual payment amount cannot exceed total amount',
+      'total-amount-match',
+      'Total payment amount must match the total payable amount',
       // eslint-disable-next-line func-names
       function (values: any) {
         if (!values) return true;
+        const totalPayable = values.totalPayableAmount || 0;
+        const totalFromMethods = Number(String(values.totalAmount).replace(/[₹,\s,]/g, '')) || 0;
 
-        // Parse totalAmount robustly
-        const totalRaw = values.totalAmount ?? 0;
-        const total = Number(String(totalRaw).replace(/[₹,\s,]/g, '')) || 0;
-
-        if (Array.isArray(values.selectedMethods)) {
-          // eslint-disable-next-line no-restricted-syntax
-          for (const method of values.selectedMethods) {
-            const methodData = values[method];
-            // eslint-disable-next-line no-continue
-            if (!methodData) continue;
-
-            const amountRaw = methodData.amount;
-            // eslint-disable-next-line no-continue
-            if (amountRaw == null || amountRaw === '') continue;
-
-            const parsed = Number(String(amountRaw).replace(/[₹,\s,]/g, ''));
-            if (!Number.isNaN(parsed) && parsed > total) {
-              return this.createError({
-                path: `${method}.amount`,
-                message: `${method} amount (₹${parsed.toLocaleString()}) cannot be greater than total amount (₹${total.toLocaleString()})`,
-              });
-            }
-          }
+        if (totalFromMethods !== totalPayable) {
+          return this.createError({
+            path: 'totalAmount',
+            message: `Total payment (₹${totalFromMethods.toLocaleString()}) must match total payable (₹${totalPayable.toLocaleString()})`,
+          });
         }
-
         return true;
       }
     )
-    // Root-level test to ensure sum(amounts for selected methods) <= totalAmount
+    // Root-level test to ensure sum(amounts for selected methods) matches totalAmount
     .test(
       'sum-of-payment-amounts',
-      'Sum of all payment amounts should not be greater than Total Amount',
+      'Sum of all payment amounts should match Total Amount',
       // eslint-disable-next-line func-names
       function (values: any) {
-        if (!values) return true;
+        if (!values || !Array.isArray(values.payments)) return true;
 
         // Parse totalAmount robustly
         const totalRaw = values.totalAmount ?? 0;
@@ -118,32 +106,24 @@ export const buildValidationSchema = (currentYear: any) =>
         let sum = 0;
         const methodAmounts: { method: string; amount: number }[] = [];
 
-        if (Array.isArray(values.selectedMethods)) {
-          // eslint-disable-next-line no-restricted-syntax
-          for (const method of values.selectedMethods) {
-            const methodData = values[method];
-            // eslint-disable-next-line no-continue
-            if (!methodData) continue;
-
-            const amountRaw = methodData.amount;
-            // eslint-disable-next-line no-continue
-            if (amountRaw == null || amountRaw === '') continue;
-
+        values.payments.forEach((payment: any) => {
+          const amountRaw = payment.amount;
+          if (amountRaw != null && amountRaw !== '') {
             const parsed = Number(String(amountRaw).replace(/[₹,\s,]/g, ''));
             if (!Number.isNaN(parsed)) {
               sum += parsed;
-              methodAmounts.push({ method, amount: parsed });
+              methodAmounts.push({ method: payment.paymentMethod, amount: parsed });
             }
           }
-        }
+        });
 
-        if (sum > total) {
+        if (sum !== total) {
           const methodBreakdown = methodAmounts
             .map(({ method, amount }) => `${method}: ₹${amount.toLocaleString()}`)
             .join(', ');
 
           return this.createError({
-            message: `Sum of payment amounts (₹${sum.toLocaleString()}) exceeds total amount (₹${total.toLocaleString()}). Breakdown: ${methodBreakdown}`,
+            message: `Sum of payment amounts (₹${sum.toLocaleString()}) must match total amount (₹${total.toLocaleString()}). Breakdown: ${methodBreakdown}`,
           });
         }
 
@@ -230,36 +210,35 @@ export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, curre
   return schema;
 };
 
-export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps) {
+export default function PaymentDetailsForm({
+  formik,
+  feeHeads = [],
+  charges = [],
+}: IPaymentDetailsFormProps) {
   const theme = useTheme();
   // const { data: feeTermsData } = useQueryAndMutation({
   //   type: 'query',
   //   currentQueryAndMutation: useGetFeeTermsQuery,
   // });
-
   useEffect(() => {
-    const { selectedTerms, includeCharges } = formik.values;
+    const { selectedFeeHeads, selectedCharges } = formik.values;
 
-    if (selectedTerms.length === 0) {
-      formik.setFieldValue('totalAmount', '');
-      return;
-    }
+    const totalHeads = selectedFeeHeads.reduce((sum: number, head: any) => sum + head.amount, 0);
+    const totalCharges = selectedCharges.reduce(
+      (sum: number, charge: any) => sum + charge.amount,
+      0
+    );
+    const calculatedAmount = totalHeads + totalCharges;
 
-    const amount = selectedTerms.reduce((pre: number, term: any) => {
-      if (includeCharges) {
-        return pre + (term.total - (term.paid || 0));
-      }
-      // Only feeHeads when charges excluded
-      const feeHeadsTotal = term.feeHeads?.reduce(
-        (s: number, fh: any) => s + (fh.total - (fh.paid || 0)),
-        0
-      );
-      return pre + feeHeadsTotal;
-    }, 0);
-
-    formik.setFieldValue('totalAmount', amount === 0 ? '' : amount.toString());
+    formik.setFieldValue('totalPayableAmount', calculatedAmount);
+    formik.setFieldValue('totalAmount', calculatedAmount === 0 ? '' : calculatedAmount.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(formik.values.selectedTerms), formik.values.includeCharges]);
+  }, [
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    JSON.stringify(formik.values.selectedFeeHeads),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    JSON.stringify(formik.values.selectedCharges),
+  ]);
 
   return (
     <Box
@@ -271,12 +250,13 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
       <Grid container spacing={1} sx={{ flexGrow: 1, minHeight: 0 }} mb={1}>
         <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
           <FeeTermsComponent
-            formik={formik}
-            terms={feeCollectionData?.terms}
-            selectedTerms={formik.values.selectedTerms}
-            onTermSelect={(selectedTerms) => formik.setFieldValue('selectedTerms', selectedTerms)}
-            showError={formik.touched.selectedTerms && Boolean(formik.errors.selectedTerms)}
-            errorMessage={formik.errors.selectedTerms as string}
+            formik={formik as any}
+            feeHeads={feeHeads}
+            charges={charges}
+            showError={
+              formik.touched.totalPayableAmount && Boolean(formik.errors.totalPayableAmount)
+            }
+            errorMessage={formik.errors.totalPayableAmount as string}
           />
         </Grid>
 
@@ -295,123 +275,141 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               mr: 0.5,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Payment Details
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Payment Details
+              </Typography>
+              <Typography
+                variant="subtitle1"
+                color="text.primary"
+                sx={{ fontWeight: 500, lineHeight: 1.5 }}
+              >
+                Total Amount : <strong>₹ {formatNumber(formik.values.totalAmount)}</strong>
+              </Typography>
+            </Box>
             <Scrollbar sx={{ flexGrow: 1, p: 1 }}>
               <Grid container spacing={3} pb={1}>
                 {/* Terms Selection Section */}
-
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <Typography
-                    variant="subtitle1"
-                    color="text.primary"
-                    sx={{ fontWeight: 500, lineHeight: 1.5 }}
-                  >
-                    Total Amount : <strong>₹ {formatNumber(formik.values.totalAmount)}</strong>
-                  </Typography>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 8 }}>
+                <Grid size={{ xs: 12, md: 7 }}>
                   <ShakingTextField
-                    error={formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)}
+                    error={formik.touched.payments && Boolean(formik.errors.payments)}
                   >
                     <CustomSelect
                       options={Object.keys(paymentMethodsConfig).map((method) => ({
                         value: method,
                         label: method.charAt(0).toUpperCase() + method.slice(1),
                       }))}
-                      // disabled={!formik.values.totalAmount}
+                      disabled={!formik.values.totalPayableAmount}
                       label="Payment Methods *"
-                      value={formik.values.selectedMethods}
-                      onChange={(value) => formik.setFieldValue('selectedMethods', value)}
-                      error={
-                        formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)
-                      }
+                      value={formik.values.payments?.map((p) => p.paymentMethod) || []}
+                      onChange={(selectedMethods: string[] | number[]) => {
+                        const methods = selectedMethods as string[];
+                        const currentPayments = [...(formik.values.payments || [])];
+
+                        // Add new methods
+                        methods.forEach((method) => {
+                          if (!currentPayments.some((p) => p.paymentMethod === method)) {
+                            const methodConfig =
+                              paymentMethodsConfig[method as keyof typeof paymentMethodsConfig] ||
+                              [];
+                            const details: Record<string, any> = {};
+                            methodConfig.forEach((field) => {
+                              if (field.name !== 'amount') {
+                                details[field.name] = field.type === 'date' ? null : '';
+                              }
+                            });
+                            currentPayments.push({
+                              paymentMethod: method,
+                              amount: '',
+                              details,
+                            });
+                          }
+                        });
+
+                        // Remove unselected methods
+                        const filteredPayments = currentPayments.filter((p) =>
+                          methods.includes(p.paymentMethod)
+                        );
+
+                        formik.setFieldValue('payments', filteredPayments);
+                      }}
+                      error={formik.touched.payments && Boolean(formik.errors.payments)}
                       helperText={
-                        (formik.touched.selectedMethods && formik.errors.selectedMethods) as string
+                        (formik.touched.payments && typeof formik.errors.payments === 'string'
+                          ? formik.errors.payments
+                          : '') as string
                       }
                       multiple
                       formControlProps={{ sx: { width: '100%' } }}
-                      name="selectedMethods"
+                      name="payments"
                     />
                   </ShakingTextField>
                 </Grid>
 
-                {formik.values.selectedMethods.map((method: string) => (
-                  <Grid size={{ xs: 12 }} key={method}>
+                {formik.values.payments?.map((payment, index) => (
+                  <Grid size={{ xs: 12 }} key={payment.paymentMethod}>
                     <Box
-                      key={method}
                       sx={{
                         overflow: 'hidden',
                         mt: -2,
                       }}
                     >
                       <Typography variant="h6" color="primary.main">
-                        {method}
+                        {payment.paymentMethod}
                       </Typography>
                       <Grid container spacing={3} mt={1}>
-                        {paymentMethodsConfig[method as keyof typeof paymentMethodsConfig]?.map(
-                          (field: IPaymentFieldConfig) => (
-                            <Grid size={{ xs: 6 }} key={`${method}-${field.name}`}>
-                              {/* your field rendering logic stays the same */}
+                        {paymentMethodsConfig[
+                          payment.paymentMethod as keyof typeof paymentMethodsConfig
+                        ]?.map((field: IPaymentFieldConfig) => {
+                          const isAmountField = field.name === 'amount';
+                          const fieldPath = isAmountField
+                            ? `payments[${index}].amount`
+                            : `payments[${index}].details.${field.name}`;
 
+                          const fieldValue = isAmountField
+                            ? payment.amount
+                            : payment.details[field.name];
+
+                          const isTouched = isAmountField
+                            ? (formik.touched.payments as any)?.[index]?.amount
+                            : (formik.touched.payments as any)?.[index]?.details?.[field.name];
+
+                          const errorMsg = isAmountField
+                            ? (formik.errors.payments as any)?.[index]?.amount
+                            : (formik.errors.payments as any)?.[index]?.details?.[field.name];
+
+                          return (
+                            <Grid size={{ xs: 6 }} key={`${payment.paymentMethod}-${field.name}`}>
                               {field.type === 'date' ? (
-                                <ShakingTextField
-                                  error={
-                                    (formik.touched as any)[method]?.[field.name] &&
-                                    Boolean((formik.errors as any)[method]?.[field.name])
-                                  }
-                                >
+                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
                                   <DatePicker
                                     label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={
-                                      formik.values[method][field.name]
-                                        ? dayjs(formik.values[method][field.name])
-                                        : null
-                                    }
+                                    value={fieldValue ? dayjs(fieldValue) : null}
                                     format="DD/MM/YYYY"
-                                    onChange={(date) =>
-                                      formik.setFieldValue(`${method}.${field.name}`, date)
-                                    }
+                                    onChange={(date) => formik.setFieldValue(fieldPath, date)}
                                     sx={{ width: '100%' }}
                                     slotProps={{
                                       textField: {
                                         size: 'small',
                                         fullWidth: true,
-                                        error:
-                                          (formik.touched as any)[method]?.[field.name] &&
-                                          Boolean((formik.errors as any)[method]?.[field.name]),
-                                        helperText:
-                                          (formik.touched as any)[method]?.[field.name] &&
-                                          (formik.errors as any)[method]?.[field.name],
+                                        error: isTouched && Boolean(errorMsg),
+                                        helperText: isTouched && errorMsg,
                                       },
                                     }}
                                   />
                                 </ShakingTextField>
                               ) : field.type === 'select' ? (
-                                <ShakingTextField
-                                  error={
-                                    (formik.touched as any)[method]?.[field.name] &&
-                                    Boolean((formik.errors as any)[method]?.[field.name])
-                                  }
-                                >
+                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
                                   <TextField
                                     select
                                     fullWidth
                                     label={`${field.label}${field.required ? ' *' : ''}`}
-                                    name={`${method}.${field.name}`}
-                                    value={formik.values[method][field.name]}
+                                    name={fieldPath}
+                                    value={fieldValue}
                                     onChange={formik.handleChange}
                                     size="small"
-                                    error={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      Boolean((formik.errors as any)[method]?.[field.name])
-                                    }
-                                    helperText={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      (formik.errors as any)[method]?.[field.name]
-                                    }
+                                    error={isTouched && Boolean(errorMsg)}
+                                    helperText={isTouched && errorMsg}
                                     sx={{ width: '100%' }}
                                   >
                                     {field.options?.map((opt: any) => (
@@ -422,12 +420,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                   </TextField>
                                 </ShakingTextField>
                               ) : field.type === 'multiline' ? (
-                                <ShakingTextField
-                                  error={
-                                    (formik.touched as any)[method]?.[field.name] &&
-                                    Boolean((formik.errors as any)[method]?.[field.name])
-                                  }
-                                >
+                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
                                   <TextField
                                     fullWidth
                                     multiline
@@ -435,82 +428,53 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                     minRows={2}
                                     size="small"
                                     label={`${field.label}${field.required ? ' *' : ''}`}
-                                    name={`${method}.${field.name}`}
-                                    value={formik.values[method][field.name]}
+                                    name={fieldPath}
+                                    value={fieldValue}
                                     onChange={formik.handleChange}
-                                    error={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      Boolean((formik.errors as any)[method]?.[field.name])
-                                    }
-                                    helperText={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      (formik.errors as any)[method]?.[field.name]
-                                    }
+                                    error={isTouched && Boolean(errorMsg)}
+                                    helperText={isTouched && errorMsg}
                                   />
                                 </ShakingTextField>
                               ) : field.type === 'amount' ? (
-                                <ShakingTextField
-                                  error={
-                                    (formik.touched as any)[method]?.[field.name] &&
-                                    Boolean((formik.errors as any)[method]?.[field.name])
-                                  }
-                                >
+                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
                                   <NumericFormatCustom
                                     size="small"
                                     fullWidth
                                     label={`${field.label}${field.required ? ' *' : ''}`}
-                                    name={`${method}.${field.name}`}
-                                    value={formik.values[method][field.name]}
+                                    name={fieldPath}
+                                    value={fieldValue}
                                     onChange={formik.handleChange}
-                                    error={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      Boolean((formik.errors as any)[method]?.[field.name])
-                                    }
-                                    helperText={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      (formik.errors as any)[method]?.[field.name]
-                                    }
+                                    error={isTouched && Boolean(errorMsg)}
+                                    helperText={isTouched && errorMsg}
                                   />
                                 </ShakingTextField>
                               ) : (
-                                <ShakingTextField
-                                  error={
-                                    (formik.touched as any)[method]?.[field.name] &&
-                                    Boolean((formik.errors as any)[method]?.[field.name])
-                                  }
-                                >
+                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
                                   <TextField
                                     fullWidth
                                     type={field.type}
                                     label={`${field.label}${field.required ? ' *' : ''}`}
                                     size="small"
-                                    name={`${method}.${field.name}`}
-                                    value={formik.values[method][field.name]}
+                                    name={fieldPath}
+                                    value={fieldValue}
                                     onChange={(e) => {
                                       const newValue = e.target.value;
 
                                       if (field.pattern) {
                                         if (newValue === '') {
-                                          formik.setFieldValue(`${method}.${field.name}`, newValue);
+                                          formik.setFieldValue(fieldPath, newValue);
                                           return;
                                         }
 
-                                        // Define allowed chars manually
                                         const allowedChars = 'a-zA-Z0-9 ';
                                         const typingRegex = new RegExp(`^[${allowedChars}]*$`);
 
-                                        if (!typingRegex.test(newValue)) return; // block invalid chars
+                                        if (!typingRegex.test(newValue)) return;
                                       }
-                                      formik.setFieldValue(`${method}.${field.name}`, newValue);
+                                      formik.setFieldValue(fieldPath, newValue);
                                     }}
-                                    error={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      Boolean((formik.errors as any)[method]?.[field.name])
-                                    }
-                                    helperText={
-                                      (formik.touched as any)[method]?.[field.name] &&
-                                      (formik.errors as any)[method]?.[field.name]
-                                    }
+                                    error={isTouched && Boolean(errorMsg)}
+                                    helperText={isTouched && errorMsg}
                                     inputProps={
                                       field.type === 'number'
                                         ? { min: field.min, max: field.max }
@@ -520,8 +484,8 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                 </ShakingTextField>
                               )}
                             </Grid>
-                          )
-                        )}
+                          );
+                        })}
                       </Grid>
                       <Divider
                         sx={{

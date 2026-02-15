@@ -150,13 +150,6 @@ export const StudentFeeSummaryCard: React.FC<{
                   bgcolor: 'warning.lighter',
                   icon: 'solar:clock-circle-outline',
                 },
-                {
-                  label: 'Overdue',
-                  value: student.overdueFees,
-                  color: 'error.main',
-                  bgcolor: 'error.lighter',
-                  icon: 'solar:bell-bing-outline',
-                },
               ].map((item, index) => (
                 <Box
                   key={index}

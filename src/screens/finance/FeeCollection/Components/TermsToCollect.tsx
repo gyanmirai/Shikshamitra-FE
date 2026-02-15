@@ -12,23 +12,23 @@ import {
 
 import ChargesList from './ChargesList';
 
-import type { ITermsToCollectProps } from './type';
+import type { IFeeTerm, IFeeHead, ITermsToCollectDetailedProps } from './type';
 
-const TermsToCollect: React.FC<ITermsToCollectProps> = ({
+const TermsToCollect: React.FC<ITermsToCollectDetailedProps> = ({
   terms = [],
   selectedTerms,
   onTermSelect,
   showError,
   errorMessage,
 }) => {
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | number | null>(null);
   const theme = useTheme();
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (id: string | number) => {
     setExpanded(expanded === id ? null : id);
   };
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (id: string | number) => {
     const newSelected = selectedTerms.includes(id)
       ? selectedTerms.filter((t) => t !== id)
       : [...selectedTerms, id];
@@ -49,7 +49,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
         Select Installment to Collect Fees
       </Typography>
-      {terms?.map((term: any) => (
+      {terms?.map((term: IFeeTerm) => (
         <Box
           key={term.id}
           sx={{ border: '1px solid #ddd', borderRadius: 2, mb: 1.5, overflow: 'hidden' }}
@@ -62,7 +62,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
               />
               <Box>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  {term.name}
+                  {term.name ?? term.termName}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Due: {term.dueDate}
@@ -71,7 +71,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
               <Typography fontWeight={600}>
-                ₹ {term.paid.toLocaleString()} / ₹ {term.total.toLocaleString()}
+                ₹ {(term.paid ?? term.paidAmount ?? 0).toLocaleString()} / ₹{' '}
+                {(term.total ?? term.totalAmount ?? 0).toLocaleString()}
               </Typography>
               <IconButton size="small" onClick={() => toggleExpand(term.id)}>
                 {expanded === term.id ? <ExpandLess /> : <ExpandMore />}
@@ -85,37 +86,34 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
               <Typography variant="body2" color="primary" fontWeight={600} mb={1}>
                 Fee Head Breakdown
               </Typography>
-              {term.feeHeads.map((head: any) => (
+              {term.feeHeads.map((head: IFeeHead) => (
                 <Box
-                  key={head.name}
+                  key={head.feeHeadId ?? head.name}
                   display="flex"
                   alignItems="center"
                   justifyContent="space-between"
                   p={1}
                   sx={{ border: '1px solid #eee', borderRadius: 1, mb: 1 }}
                 >
-                  <Typography>{head.name}</Typography>
+                  <Typography>{head.name ?? head.feeHeadName}</Typography>
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography fontWeight={500}>
-                      ₹ {head.paid.toLocaleString()} / ₹ {head.total.toLocaleString()}
+                      ₹ {(head.paid ?? head.paidAmount ?? 0).toLocaleString()} / ₹{' '}
+                      {(head.total ?? head.totalAmount ?? 0).toLocaleString()}
                     </Typography>
                     <Label
                       color={
                         FeeCollectionStatusTypeColors[
-                          head.status as FeeCollectionStatusType
+                          head.status as unknown as FeeCollectionStatusType
                         ] as LabelColor
                       }
                     >
-                      {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
+                      {FeeCollectionStatusType[head.status as unknown as FeeCollectionStatusType]}
                     </Label>
                   </Box>
                 </Box>
               ))}
-              <ChargesList
-                charges={term.charges}
-                selectedCharges={[]}
-                toggleSelect={(updatedIds) => {}}
-              />
+              <ChargesList charges={term.charges} selectedCharges={[]} toggleSelect={() => {}} />
             </Box>
           </Collapse>
         </Box>

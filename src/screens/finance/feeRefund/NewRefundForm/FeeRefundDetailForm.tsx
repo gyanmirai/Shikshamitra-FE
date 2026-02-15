@@ -16,7 +16,7 @@ import TermsToRefund from './TermsToRefund';
 import { getInitialPaymentDetails } from '../Components/RefundProcessForm';
 import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
-import type { ITerm, IFeeHead, IPaymentFieldConfig } from '../../FeeCollection/Components/type';
+import type { IFeeHead, IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
 export default function FeeRefundDetailsForm({ formik }: any) {
   const theme = useTheme();
@@ -28,23 +28,23 @@ export default function FeeRefundDetailsForm({ formik }: any) {
   useEffect(() => {
     let total = 0; // Whole terms
 
-    formik.values.selectedTerms.forEach((term: ITerm) => {
+    formik.values.selectedTerms.forEach((term: any) => {
       total += term.paid;
-    }); // Fee heads (only if term not fully selected)
+    });
 
-    feeTermsData?.forEach((term: ITerm) => {
-      if (!formik.values.selectedTerms.some((t: ITerm) => t.id === term.id)) {
-        term.feeHeads.forEach((head) => {
+    feeTermsData?.forEach((term: any) => {
+      if (!formik.values.selectedTerms.some((t: any) => t.id === term.id)) {
+        term.feeHeads.forEach((head: any) => {
           if (formik.values.selectedFeeHeads.includes(`${term.id}-${head.name}`)) {
             total += head.paid;
           }
         });
       }
-    }); // Charges (only if term not fully selected)
+    });
 
-    feeTermsData?.forEach((term: ITerm) => {
-      if (!formik.values.selectedTerms.some((t: ITerm) => t.id === term.id)) {
-        term?.charges?.forEach((charge) => {
+    feeTermsData?.forEach((term: any) => {
+      if (!formik.values.selectedTerms.some((t: any) => t.id === term.id)) {
+        term?.charges?.forEach((charge: any) => {
           // ⭐ MATCH the charge ID property used in TermsToRefund component (`${term.id}-${charge.id}`)
           if (formik.values.selectedCharges.includes(`${term.id}-${charge.id}`)) {
             // ⭐ Use charge.paid for the amount to refund
@@ -71,7 +71,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
               <TermsToRefund
                 terms={feeTermsData}
                 selectedTerms={formik.values.selectedTerms}
-                onTermSelect={(selectedTerms: (ITerm | IFeeHead)[]) =>
+                onTermSelect={(selectedTerms: (any | IFeeHead)[]) =>
                   formik.setFieldValue('selectedTerms', selectedTerms)
                 }
                 selectedFeeHeads={formik.values.selectedFeeHeads}

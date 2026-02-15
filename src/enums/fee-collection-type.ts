@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label';
+
 export enum FeeCollectionStatusType {
   Paid,
   Pending,
@@ -19,7 +21,7 @@ export const FeeCollectionStatusOptions = [
   },
 ];
 
-export const FeeCollectionStatusTypeColors = {
+export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, LabelColor> = {
   [FeeCollectionStatusType.Paid]: 'success',
   [FeeCollectionStatusType.Pending]: 'warning',
   [FeeCollectionStatusType.Overdue]: 'error',

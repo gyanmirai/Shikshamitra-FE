@@ -8,13 +8,13 @@ import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '
 
 import ChargesList from './RefundChargesList';
 
-import type { ITerm, IFeeHead, IFeeCharge } from '../../FeeCollection/Components/type';
+import type { IFeeHead, IFeeCharge } from '../../FeeCollection/Components/type';
 
-export interface ITermsToRefundProps {
-  terms: ITerm[] | null;
+export interface anysToRefundProps {
+  terms: any[] | null;
 
-  selectedTerms: (ITerm | IFeeHead)[]; // ["term1", "term2"]
-  onTermSelect: (selected: (ITerm | IFeeHead)[]) => void;
+  selectedTerms: (any | IFeeHead)[]; // ["term1", "term2"]
+  onTermSelect: (selected: (any | IFeeHead)[]) => void;
 
   selectedFeeHeads: string[]; // ["termId-headName"]
   onFeeHeadSelect: (selected: string[]) => void;
@@ -26,7 +26,7 @@ export interface ITermsToRefundProps {
   errorMessage?: string;
 }
 
-const TermsToRefund: React.FC<ITermsToRefundProps> = ({
+const TermsToRefund: React.FC<anysToRefundProps> = ({
   terms = [],
   selectedTerms = [],
   onTermSelect,
@@ -42,20 +42,20 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
 
   const toggleExpand = (id: string) => setExpanded(expanded === id ? null : id);
 
-  const toggleTerm = (term: ITerm) => {
-    const isSelected = selectedTerms.some((t) => t.id === term.id);
+  const toggleTerm = (term: any) => {
+    const isSelected = selectedTerms.some((t: any) => t.id === term.id);
 
     if (isSelected) {
       // Deselect term and all children
-      onTermSelect(selectedTerms.filter((t) => t.id !== term.id));
-      onFeeHeadSelect(selectedFeeHeads.filter((k) => !k.startsWith(term.id)));
-      onChargeSelect(selectedCharges.filter((k) => !k.startsWith(term.id)));
+      onTermSelect(selectedTerms.filter((t: any) => t.id !== term.id));
+      onFeeHeadSelect(selectedFeeHeads.filter((k: any) => !k.startsWith(term.id)));
+      onChargeSelect(selectedCharges.filter((k: any) => !k.startsWith(term.id)));
     } else {
       // Select term and all children
       onTermSelect([...selectedTerms, term]);
 
-      const allHeads = term.feeHeads.map((h) => `${term.id}-${h.name}`);
-      const allCharges = term?.charges?.map((c) => `${term.id}-${c.id}`) || [];
+      const allHeads = term.feeHeads.map((h: any) => `${term.id}-${h.name}`);
+      const allCharges = term?.charges?.map((c: any) => `${term.id}-${c.id}`) || [];
 
       onFeeHeadSelect(Array.from(new Set([...selectedFeeHeads, ...allHeads])));
       onChargeSelect(Array.from(new Set([...selectedCharges, ...allCharges])));
@@ -125,10 +125,10 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                   Select Fee Heads to Refund
                 </Typography>
 
-                {term.feeHeads.map((head, indx) => {
+                {term.feeHeads.map((head: any, indx: number) => {
                   const key = `${term.id}-${head.name}`;
                   const isSelected = selectedFeeHeads.includes(key);
-                  const termSelected = selectedTerms.some((t) => t.id === term.id);
+                  const termSelected = selectedTerms.some((t: any) => t.id === term.id);
 
                   const handleToggleHead = () => {
                     let updated = [...selectedFeeHeads];

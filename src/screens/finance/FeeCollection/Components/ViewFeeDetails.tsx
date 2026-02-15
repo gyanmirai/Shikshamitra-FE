@@ -8,7 +8,7 @@ import { useGetFeeCollectionDetailsQuery } from 'src/redux/feeCollection/feeColl
 import PaymentHistory from './ViewDetailsComponent/PaymentHistory';
 import FeeOverview from './ViewDetailsComponent/FeeOverviewDetails';
 import ConcessionsCard from './ViewDetailsComponent/concessionDetails';
-import { FeeTermAccordion } from './ViewDetailsComponent/FeeTermsViewDetails';
+import { ConsolidatedFeeDetails } from './ViewDetailsComponent/FeeTermsViewDetails';
 import { StudentFeesSummaryView } from './ViewDetailsComponent/StudentFeesSummaryView';
 
 import type { IStudentFee } from './type';
@@ -43,7 +43,7 @@ const ViewFeeDetails = ({
               </Grid>
 
               <Grid size={{ xs: 12 }}>
-                <FeeTermAccordion />
+                <ConsolidatedFeeDetails />
               </Grid>
             </Grid>
           </Grid>
