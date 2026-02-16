@@ -273,7 +273,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
               {typeof selectedFeeHead === 'number'
                 ? formik.values.feeStructureClasses[className][structureIndex]?.feeHeads[
                     selectedFeeHead
-                  ]?.name
+                  ]?.feeHeadName
                 : ''}
             </strong>
             ?
