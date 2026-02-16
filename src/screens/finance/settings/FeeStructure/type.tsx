@@ -3,31 +3,33 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 
 export interface IClassWiseFeeItem {
-  feeCategory: string;
-  feeHead: string;
+  id?: string;
+  feeHeadId: string;
+  feeHeadName?: string; // for UI display
   amount: number;
   isOneTime: boolean;
-  required: boolean;
+  isOptional: boolean;
 }
 
 export interface IClassWiseFeeData {
-  feeStructureName: string; // class-level fee structure name
+  name: string; // class-level fee structure name
   status: FeeStructureClassStatusType;
-  feeItems: IClassWiseFeeItem[];
+  feeHeads: IClassWiseFeeItem[];
 }
 
 export interface IFeeStructure {
   id: any;
-  feeStructureName: string;
-  academicYear?: string;
+  name: string;
+  academicYearId?: string;
   academicYearName?: string;
 
-  board?: string;
+  boardId?: string;
   boardName?: string;
+  mediumId?: string;
   mediumName?: string;
-  medium?: string;
   status: number;
-  receiptBook: string;
+  receiptBookId?: string;
+  receiptBookName?: string;
   // paymentTerm: string;
   totalFeeHead?: number;
   totalClass?: number;
@@ -39,6 +41,7 @@ export interface IFeeStructure {
 
 export interface IFeeStructureTableProps {
   data: IFeeStructure[];
+  isLoading: boolean;
   addFeeStructure: UseBooleanReturn;
   editData: IFeeStructure | null;
   setEditData: (data: IFeeStructure | null) => void;

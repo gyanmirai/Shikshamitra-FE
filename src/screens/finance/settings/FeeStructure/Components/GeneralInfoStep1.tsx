@@ -11,8 +11,9 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useGetReceiptBooksQuery } from 'src/redux/finance/receiptBookApi';
 
-import type { IFeeStructure, IClassWiseFeeData } from '../type';
+import type { IFeeStructure } from '../type';
 
 type Props = {
   formik: FormikProps<IFeeStructure>;
@@ -21,12 +22,12 @@ type Props = {
 
 const GeneralInfoStep = ({ formik, editData }: Props) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  // Queries
-  // const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetYearQuery,
-  // });
+  // GET receipt book
+  const { data: receiptBookData, isLoading: receiptBookLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReceiptBooksQuery,
+    params: { academicYearId: currentYear?.id },
+  });
   const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
@@ -36,73 +37,53 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
+  console.log('initalvalues values----', formik.initialValues);
 
+  console.log('formik values----', formik.values);
   // Local state
   const [boards, setBoards] = useState<any[]>([]);
-  const [, setSelectedAcademicYear] = useState<string>();
 
   useEffect(() => {
-    if (!editData && currentYear && board?.items) {
-      const filteredBoards = board.items.filter((b: any) => b.academicYearId === currentYear.id);
+    if (board?.items && formik.values.academicYearId) {
+      const filteredBoards = board.items.filter(
+        (b: any) => b.academicYearId === formik.values.academicYearId
+      );
       setBoards(filteredBoards);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editData, currentYear, board?.items]);
+  }, [board?.items, formik.values.academicYearId]);
 
   useEffect(() => {
-    if (editData) {
-      const findBoards = board?.items?.filter(
-        (item: any) => item.academicYearId === editData.academicYear
-      );
-      setBoards(findBoards);
-
-      setSelectedAcademicYear(editData.academicYearName || currentYear?.name || '');
-      // formik?.setFieldValue('academicYear', currentYear?.id);
-      // formik.setFieldValue('academicYearName', currentYear?.name);
-      if (editData.medium) {
-        getClassByMedium(editData.medium);
-      }
+    if (formik.values.mediumId) {
+      getClassByMedium(formik.values.mediumId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editData, board?.items, currentYear?.name, getClassByMedium]);
+  }, [formik.values.mediumId, getClassByMedium]);
 
-  //   Initialize class-wise fee structure if medium changes
-  // Initialize class-wise fee structure if medium changes
+  // Store class list for names in formik state
   useEffect(() => {
-    if (classes?.length > 0 && !editData) {
-      const updatedClassWiseFees: Record<string, IClassWiseFeeData[]> = {};
-
-      classes.forEach((classItem: any) => {
-        const className = classItem.name;
-
-        // initialize with ONE empty fee structure
-        updatedClassWiseFees[className] = [];
-      });
-      formik.setFieldValue('feeStructureClasses', updatedClassWiseFees);
+    if (classes?.length > 0) {
+      formik.setFieldValue('classList', classes);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, editData, formik.setFieldValue]);
+  }, [classes, editData]);
 
   return (
     <Grid container spacing={3}>
       {/* Fee Structure Name */}
       <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField
-          error={!!(formik?.touched?.feeStructureName && formik?.errors?.feeStructureName)}
-        >
+        <ShakingTextField error={!!(formik?.touched?.name && formik?.errors?.name)}>
           <TextField
             fullWidth
             size="small"
-            name="feeStructureName"
+            name="name"
             label="Fee Structure Name *"
-            value={formik?.values?.feeStructureName}
+            value={formik?.values?.name}
             onChange={(e) => {
               const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const capitalized = capitalize(onlyLetters);
-              formik.setFieldValue('feeStructureName', capitalized);
+              formik.setFieldValue('name', capitalized);
             }}
-            error={formik?.touched?.feeStructureName && Boolean(formik?.errors?.feeStructureName)}
-            helperText={formik?.touched?.feeStructureName && formik?.errors?.feeStructureName}
+            error={formik?.touched?.name && Boolean(formik?.errors?.name)}
+            helperText={formik?.touched?.name && formik?.errors?.name}
           />
         </ShakingTextField>
       </Grid>
@@ -111,70 +92,76 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
 
       {/* Board */}
       <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik?.touched?.board && formik?.errors?.board)}>
+        <ShakingTextField error={!!(formik?.touched?.boardId && formik?.errors?.boardId)}>
           <CustomSelect
             name="board"
             label="Board *"
             labelKey="name"
             valueKey="id"
             options={boards || []}
-            value={formik?.values?.board || ''}
+            value={formik?.values?.boardId || ''}
             onChange={(val) => {
               const selectedBoard = boards?.find((item) => item.id === val);
-              formik?.setFieldValue('board', val);
+              formik?.setFieldValue('boardId', val);
               formik.setFieldValue('boardName', selectedBoard?.name);
             }}
             // loading={boardLoading}
-            error={formik?.touched?.board && Boolean(formik?.errors?.board)}
-            helperText={(formik?.touched?.board && formik?.errors?.board) as string}
+            error={formik?.touched?.boardId && Boolean(formik?.errors?.boardId)}
+            helperText={(formik?.touched?.boardId && formik?.errors?.boardId) as string}
           />
         </ShakingTextField>
       </Grid>
 
       {/* Medium */}
       <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik?.touched?.medium && formik?.errors?.medium)}>
+        <ShakingTextField error={!!(formik?.touched?.mediumId && formik?.errors?.mediumId)}>
           <CustomSelect
             name="medium"
             label="Medium *"
-            disabled={!formik.values.board}
+            disabled={!formik.values.boardId}
             options={
-              board?.items?.find((item: Board) => item.id === formik?.values?.board)
+              board?.items?.find((item: Board) => item.id === formik?.values?.boardId)
                 ?.educationMediums || []
             }
             labelKey="name"
             valueKey="id"
-            value={formik?.values?.medium || ''}
+            value={formik?.values?.mediumId || ''}
             onChange={(val) => {
               const selectedMedium = board?.items
-                ?.find((item: Board) => item.id === formik?.values?.board)
+                ?.find((item: Board) => item.id === formik?.values?.boardId)
                 ?.educationMediums?.find((m: Medium) => m.id === val);
-              formik.setFieldValue('medium', val);
+              formik.setFieldValue('mediumId', val);
               formik.setFieldValue('mediumName', selectedMedium?.name);
               getClassByMedium(val);
             }}
-            error={formik?.touched?.medium && Boolean(formik?.errors?.medium)}
-            helperText={(formik?.touched?.medium && formik?.errors?.medium) as string}
+            error={formik?.touched?.mediumId && Boolean(formik?.errors?.mediumId)}
+            helperText={(formik?.touched?.mediumId && formik?.errors?.mediumId) as string}
           />
         </ShakingTextField>
       </Grid>
 
       {/* Receipt Book */}
       <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik?.touched?.receiptBook && formik?.errors?.receiptBook)}>
+        <ShakingTextField
+          error={!!(formik?.touched?.receiptBookId && formik?.errors?.receiptBookId)}
+        >
           <CustomSelect
             name="receiptBook"
             label="Receipt Book *"
-            options={[
-              { id: 'book1', name: 'Receipt Book 1' },
-              { id: 'book2', name: 'Receipt Book 2' },
-            ]}
+            options={receiptBookData?.items || []}
             labelKey="name"
             valueKey="id"
-            value={formik?.values?.receiptBook}
-            onChange={(val) => formik.setFieldValue('receiptBook', val)}
-            error={formik?.touched?.receiptBook && Boolean(formik?.errors?.receiptBook)}
-            helperText={(formik?.touched?.receiptBook && formik?.errors?.receiptBook) as string}
+            isLoading={receiptBookLoading}
+            value={formik?.values?.receiptBookId || ''}
+            onChange={(val) => {
+              formik.setFieldValue('receiptBookId', val);
+              const selectedReceiptBook = receiptBookData?.items?.find(
+                (item: any) => item.id === val
+              );
+              formik.setFieldValue('receiptBookName', selectedReceiptBook?.name);
+            }}
+            error={formik?.touched?.receiptBookId && Boolean(formik?.errors?.receiptBookId)}
+            helperText={(formik?.touched?.receiptBookId && formik?.errors?.receiptBookId) as string}
           />
         </ShakingTextField>
       </Grid>

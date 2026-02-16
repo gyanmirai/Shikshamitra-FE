@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Box, Grid } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useGetStandardFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import ClassSelectionView from './ClassSelectionView';
 import FeeStructureViewCard from './FeeStructureViewCard';
+import FeeStructureSkeleton from './FeeStructureSkeleton';
 import ViewBasicDetailsOfStructure from './ViewBasicDetailsOfStructure';
+import { standardFeeStructureInitialValues } from '../FeeStructureInitialValues';
 
 import type { IFeeStructure } from '../../type';
 
@@ -20,8 +25,39 @@ const ViewFeeStructure = ({
   data: IFeeStructure | null;
 }) => {
   const [expanded, setExpanded] = useState<number | false>(0); // 0 = first open by default
+  const [selectedClassId, setSelectedClassId] = React.useState<string | null>(null);
 
-  const [selectedClass, setSelectedClass] = React.useState<string | null>(null);
+  const [
+    getClassByMedium,
+    { data: classes, isLoading: isLoadingClasses, isFetching: isLoadingClassesFetching },
+  ] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetClassByMediumQuery,
+  });
+
+  const { data: standardFeeStructure, isFetching } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStandardFeeStructureQuery,
+    params: { feeStructureId: feeStructure?.id, standardId: selectedClassId },
+    options: { skip: !feeStructure?.id || !selectedClassId },
+  });
+
+  const mappedFeeStructures = React.useMemo(() => {
+    if (!standardFeeStructure) return [];
+    return standardFeeStructureInitialValues(standardFeeStructure).standardFeeStructures;
+  }, [standardFeeStructure]);
+
+  React.useEffect(() => {
+    if (feeStructure?.mediumId) {
+      getClassByMedium(feeStructure.mediumId);
+    }
+  }, [feeStructure?.mediumId, getClassByMedium]);
+
+  React.useEffect(() => {
+    if (classes && classes.length > 0 && !selectedClassId) {
+      setSelectedClassId(classes[0].id);
+    }
+  }, [classes, selectedClassId]);
 
   if (!feeStructure) return null;
 
@@ -29,23 +65,29 @@ const ViewFeeStructure = ({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ViewBasicDetailsOfStructure feeStructure={feeStructure} />
       {/* Class Selection */}
-      <Grid container spacing={2}>
+      <Grid container spacing={1}>
         <ClassSelectionView
-          feeStructureClasses={feeStructure.feeStructureClasses}
-          selectedClass={selectedClass}
-          onSelectClass={setSelectedClass}
+          classList={classes || []}
+          selectedClass={selectedClassId}
+          onSelectClass={setSelectedClassId}
+          isLoading={isLoadingClassesFetching || isLoadingClasses}
         />
 
         {/* Fee Structure Details */}
-        {selectedClass && (
-          <Grid size={{ xs: 12, md: 9.6 }} mb={2}>
-            <SectionCard title={`Fee Structure For Class : ${selectedClass}`}>
-              <Scrollbar sx={{ maxHeight: '480px' }}>
-                {feeStructure.feeStructureClasses[selectedClass]?.length ? (
-                  feeStructure.feeStructureClasses[selectedClass].map((structure, idx) => (
+        {selectedClassId && (
+          <Grid size={{ xs: 12, md: 9.6 }}>
+            <SectionCard
+              title={`Fee Structure For : ${classes?.find((c: any) => c.id === selectedClassId)?.name || ''}`}
+              paperProps={{ sx: { p: 1 } }}
+            >
+              <Scrollbar sx={{ height: '480px' }}>
+                {isFetching ? (
+                  <FeeStructureSkeleton />
+                ) : mappedFeeStructures.length ? (
+                  mappedFeeStructures.map((structure: any, idx: number) => (
                     <FeeStructureViewCard
                       key={idx}
-                      className={selectedClass}
+                      className={selectedClassId}
                       feeStructure={structure}
                       index={idx}
                       expanded={expanded === idx}
@@ -54,7 +96,7 @@ const ViewFeeStructure = ({
                     />
                   ))
                 ) : (
-                  <EmptyContent title="No Fee Structure Created" />
+                  <EmptyContent title="No Fee Structure Created" mt={10} />
                 )}
               </Scrollbar>
             </SectionCard>

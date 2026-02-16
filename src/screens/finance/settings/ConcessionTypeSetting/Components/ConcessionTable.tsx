@@ -7,6 +7,8 @@ import React, { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { ConcessionBasedOn } from '../type';
+
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
 const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
@@ -20,14 +22,16 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
 }) => {
   const tableData = useMemo(
     () =>
-      (data || []).map((row: IConcessionTypeForm) => ({
+      (data || []).map((row: any) => ({
         ...row,
         amountPercentageValue:
-          row.concessionType === 'fixed'
+          row.basedOn === ConcessionBasedOn.Fixed
             ? `₹ ${row.amount?.toLocaleString()}`
-            : `${row.percentage}%`,
-        applicableFeeHeadsValue: row.applicableFeeHeads?.join(', '),
-        documentRequiredValue: row.documentRequired ? 'Yes' : 'No',
+            : `${row.amount}%`,
+        applicableFeeHeadsValue: (row.applicableFeeHeads || [])
+          .map((item: any) => item.name)
+          .join(', '),
+        documentRequiredValue: row.isDocumentRequired ? 'Yes' : 'No',
       })),
     [data]
   );
@@ -35,14 +39,15 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'concessionName',
+        id: 'name',
         label: 'Name',
         align: 'left',
       },
       {
-        id: 'concessionType',
+        id: 'basedOn',
         label: 'Based On',
         align: 'left',
+        render: (value) => (value === ConcessionBasedOn.Fixed ? 'Fixed' : 'Percentage'),
       },
       {
         id: 'amountPercentageValue',
@@ -55,9 +60,10 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         align: 'left',
       },
       {
-        id: 'documentRequiredValue',
+        id: 'isDocumentRequired',
         label: 'Documents Required',
         align: 'left',
+        render: (value, row) => (row.isDocumentRequired ? 'Yes' : 'No'),
       },
       {
         id: 'actions',

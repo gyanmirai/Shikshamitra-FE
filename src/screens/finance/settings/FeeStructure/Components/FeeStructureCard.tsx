@@ -55,14 +55,9 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   {index + 1}.
                 </Typography>
               </Grid>
-              <Grid size={2.5} sx={{ pr: 1 }}>
-                <Typography variant="subtitle2" noWrap>
-                  {item.feeCategory}
-                </Typography>
-              </Grid>
-              <Grid size={2.5} sx={{ pr: 1 }}>
+              <Grid size={5} sx={{ pr: 1 }}>
                 <Typography variant="body2" noWrap>
-                  {item.feeHead}
+                  {item.feeHeadName}
                 </Typography>
               </Grid>
               <Grid size={2} sx={{ pr: 2 }}>
@@ -70,7 +65,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   size="small"
                   fullWidth
                   placeholder="0.00"
-                  name={`feeStructureClasses.${className}[${index}].feeItems.${index}.amount`}
+                  name={`feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].amount`}
                   value={item.amount || ''}
                   onChange={(e) => {
                     let val = e.target.value;
@@ -78,11 +73,8 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                     if (!/^\d*$/.test(val)) return;
                     if (val.length > 5) return;
 
-                    const updatedItems = [...feeItems];
-                    updatedItems[index].amount = Number(val);
-
                     formik.setFieldValue(
-                      `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].amount`,
+                      `feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].amount`,
                       Number(val)
                     );
                   }}
@@ -118,9 +110,9 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   error={
                     !!(
                       (formik?.touched?.feeStructureClasses as any)?.[className]?.[structureIndex]
-                        ?.feeItems?.[index]?.amount &&
+                        ?.feeHeads?.[index]?.amount &&
                       (formik?.errors?.feeStructureClasses as any)?.[className]?.[structureIndex]
-                        ?.feeItems?.[index]?.amount
+                        ?.feeHeads?.[index]?.amount
                     )
                   }
                 />
@@ -132,7 +124,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   component="div"
                   onClick={() => {
                     formik.setFieldValue(
-                      `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].isOneTime`,
+                      `feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].isOneTime`,
                       !item.isOneTime
                     );
                   }}
@@ -176,8 +168,8 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   component="div"
                   onClick={() => {
                     formik.setFieldValue(
-                      `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].required`,
-                      !item.required
+                      `feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].isOptional`,
+                      !item.isOptional
                     );
                   }}
                   sx={{
@@ -185,15 +177,15 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                     alignItems: 'center',
                     gap: 0.5,
                     cursor: 'pointer',
-                    color: !item.required ? 'info.main' : 'text.disabled',
-                    bgcolor: !item.required
+                    color: item.isOptional ? 'info.main' : 'text.disabled',
+                    bgcolor: item.isOptional
                       ? (theme) => varAlpha(theme.palette.info.mainChannel, 0.08)
                       : 'transparent',
                     px: 1,
                     py: 0.5,
                     borderRadius: 1,
                     border: '1px solid',
-                    borderColor: !item.required
+                    borderColor: item.isOptional
                       ? (theme) => varAlpha(theme.palette.info.mainChannel, 0.2)
                       : 'transparent',
                     transition: 'all 0.2s',
@@ -203,7 +195,9 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   }}
                 >
                   <Iconify
-                    icon={!item.required ? 'solar:check-circle-bold' : 'solar:check-circle-outline'}
+                    icon={
+                      item.isOptional ? 'solar:check-circle-bold' : 'solar:check-circle-outline'
+                    }
                     width={16}
                   />
                   <Typography variant="caption" fontWeight={600}>
@@ -274,7 +268,15 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
         title="Delete"
         content={
           <>
-            Are you sure you want to delete fee structure <strong>{className}</strong>?
+            Are you sure you want to delete fee head{' '}
+            <strong>
+              {typeof selectedFeeHead === 'number'
+                ? formik.values.feeStructureClasses[className][structureIndex]?.feeHeads[
+                    selectedFeeHead
+                  ]?.name
+                : ''}
+            </strong>
+            ?
           </>
         }
         action={
@@ -283,14 +285,14 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
             color="error"
             size="small"
             onClick={() => {
-              const updatedItems = [...feeItems];
+              const updatedHeads = [...feeItems];
               if (typeof selectedFeeHead === 'number') {
-                updatedItems.splice(selectedFeeHead, 1);
+                updatedHeads.splice(selectedFeeHead, 1);
               }
               setSelectedFeeHead(undefined);
               formik.setFieldValue(
-                `feeStructureClasses.${className}[${structureIndex}].feeItems`,
-                updatedItems
+                `feeStructureClasses.${className}[${structureIndex}].feeHeads`,
+                updatedHeads
               );
               deleteFeeStructureDialog.onFalse();
             }}

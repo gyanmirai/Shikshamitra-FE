@@ -39,6 +39,21 @@ export const StudentAdmissionApi = createApi({
       }),
       providesTags: ['Student-Admission'],
     }),
+    getStandardFeeStructure: builder.query({
+      query: (standardId) => ({
+        url: `/student-fee-structure/student/${standardId}`,
+        method: 'GET',
+      }),
+      providesTags: ['Student-Admission'],
+    }),
+    assignFeeStructure: builder.mutation({
+      query: ({ body }) => ({
+        url: `/student-fee-structure/assign`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Student-Admission'],
+    }),
   }),
 });
 
@@ -47,4 +62,6 @@ export const {
   useChangeAdmissionStatusMutation,
   useAssignDivisionTOStudentMutation,
   useGetDivisionForStandardQuery,
+  useAssignFeeStructureMutation,
+  useGetStandardFeeStructureQuery,
 } = StudentAdmissionApi;

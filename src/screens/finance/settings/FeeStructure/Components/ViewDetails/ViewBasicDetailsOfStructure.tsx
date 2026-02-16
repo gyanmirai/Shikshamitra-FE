@@ -26,7 +26,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
   return (
     <Card
       sx={{
-        mb: 3,
+        mb: 1,
         borderRadius: 2,
         boxShadow: theme.shadows[2], // Soft shadow provided by theme
         overflow: 'visible', // Ensure content doesn't get clipped if we add popovers later, though not needed now
@@ -35,55 +35,46 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       <CardHeader
         title="Fee Structure Information"
         subheader="Basic details associated with this structure"
+        sx={{ p: 1 }}
         titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
         subheaderTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
-        sx={{ pb: 2 }}
+        action={
+          <Label
+            variant="soft"
+            color={feeStructure?.status === 1 ? 'success' : 'error'}
+            sx={{ mr: 1 }}
+          >
+            {feeStructure?.status === 1 ? 'Active' : 'Inactive'}
+          </Label>
+        }
       />
       <Divider sx={{ borderStyle: 'dashed' }} />
 
-      <CardContent sx={{ pt: 3 }}>
-        <Grid container spacing={3}>
+      <CardContent sx={{ p: 1 }}>
+        <Grid container spacing={2}>
           {/* Fee Structure Name */}
           <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            {renderDetailItem('Fee Structure Name', feeStructure?.feeStructureName)}
+            {renderDetailItem('Fee Structure Name', feeStructure?.name)}
           </Grid>
 
           {/* Academic Year */}
           <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            {renderDetailItem('Academic Year', feeStructure?.academicYear)}
+            {renderDetailItem('Academic Year', feeStructure?.academicYearName)}
           </Grid>
 
           {/* Board */}
           <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            {renderDetailItem('Board', feeStructure?.board)}
+            {renderDetailItem('Board', feeStructure?.boardName)}
           </Grid>
 
           {/* Medium */}
           <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            {renderDetailItem('Medium', feeStructure?.medium)}
+            {renderDetailItem('Medium', feeStructure?.mediumName)}
           </Grid>
 
           {/* Receipt Book */}
           <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            {renderDetailItem('Receipt Book', feeStructure?.receiptBook)}
-          </Grid>
-
-          {/* Status - Special handling for Label */}
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mb: 0.5, display: 'block', fontWeight: 500 }}
-            >
-              Status
-            </Typography>
-            <Label
-              variant="soft"
-              color={feeStructure?.status === 1 ? 'success' : 'error'}
-              sx={{ textTransform: 'uppercase', fontWeight: 700 }}
-            >
-              {feeStructure?.status === 1 ? 'Active' : 'Inactive'}
-            </Label>
+            {renderDetailItem('Receipt Book', feeStructure?.receiptBookName)}
           </Grid>
         </Grid>
       </CardContent>

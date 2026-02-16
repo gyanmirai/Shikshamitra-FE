@@ -32,54 +32,36 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   onClose,
   allData,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // POST mutation for creating
-  const { addReceiptBook } = useQueryAndMutation({
+  const [addReceiptBook, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddReceiptBookMutation,
   });
 
   // PUT mutation for updating
-  const { updateReceiptBook } = useQueryAndMutation({
+  const [updateReceiptBook, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateReceiptBookMutation,
   });
 
-  // Get isChanges state from Redux store
-  useSelector((state: RootState) => state.confirmPopup);
-  // State to track and display duplicate receipt book name error
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { currentYear, currentMedium, setCurrentMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
-
-  useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear?.boards]);
   // Memoized initial values for the form based on whether editing existing or creating new
   const initialValues = useMemo<IReceiptBook>(
     () => ({
-      id: isEdit
-        ? (data?.id ?? Math.floor(Math.random() * 10000))
-        : Math.floor(Math.random() * 10000),
-      board: isEdit ? (data?.board ?? '') : '',
-      medium: isEdit ? (data?.medium ?? '') : '',
-      organization: isEdit ? (data?.organization ?? '') : '',
-      receiptBookName: isEdit ? (data?.receiptBookName ?? '') : '',
+      boardId: isEdit ? (data?.boardId ?? '') : '',
+      mediumId: isEdit ? (data?.mediumId ?? '') : '',
+      mediumStageId: isEdit ? (data?.mediumStageId ?? '') : '',
+      name: isEdit ? (data?.name ?? '') : '',
       prefix: isEdit ? (data?.prefix ?? '') : '',
       suffix: isEdit ? (data?.suffix ?? '') : '',
       startingNumber: isEdit ? (data?.startingNumber ?? 0) : '',
       endingNumber: isEdit ? (data?.endingNumber ?? 0) : '',
       description: isEdit ? (data?.description ?? '') : '',
-      toggle: isEdit ? (data?.toggle ?? false) : false,
-      action: isEdit ? (data?.action ?? '') : '',
+      isActive: isEdit ? (data?.isActive ?? false) : false,
     }),
     [data, isEdit]
   );
@@ -91,14 +73,12 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        setIsLoading(true);
-
         // Transform form data to API format
         const payload = {
-          boardId: values.board,
-          mediumId: values.medium,
-          mediumStageId: values.organization,
-          name: values.receiptBookName,
+          boardId: values.boardId,
+          mediumId: values.mediumId,
+          mediumStageId: values.mediumStageId,
+          name: values.name,
           prefix: values.prefix || '',
           suffix: values.suffix || '',
           startingNumber: Number(values.startingNumber) || 0,
@@ -109,19 +89,19 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
         if (isEdit && data?.id) {
           // Update existing receipt book
           await updateReceiptBook({
-            receiptBookId: data.id,
+            id: data.id,
             body: payload,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `${values.receiptBookName} Receipt Book updated successfully`,
+            message: `${values.name} Receipt Book updated successfully`,
           });
         } else {
           // Create new receipt book
-          await addReceiptBook(payload).unwrap();
+          await addReceiptBook({ academicYearId: currentYear?.id, body: payload }).unwrap();
 
           shikshaMitraToast.success({
-            message: `${values.receiptBookName} Receipt Book added successfully`,
+            message: `${values.name} Receipt Book added successfully`,
           });
         }
         onClose(null, true);
@@ -130,11 +110,23 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
         shikshaMitraToast.error({
           message: `Failed to ${isEdit ? 'update' : 'create'} receipt book`,
         });
-      } finally {
-        setIsLoading(false);
       }
     },
   });
+
+  useEffect(() => {
+    setBoards(currentYear?.boards || []);
+    setMediums(
+      currentYear?.boards?.find((board: Board) => board.id === formik.values.boardId)
+        ?.educationMediums || []
+    );
+    setAllOrganization(
+      currentYear?.boards
+        ?.find((board: Board) => board.id === formik.values.boardId)
+        ?.educationMediums?.find((medium: Medium) => medium.id === formik.values.mediumId)
+        ?.educationMediumStages || []
+    );
+  }, [currentYear?.boards, formik.values.boardId, formik.values.mediumId]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -170,7 +162,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           {/* Board Field */}
           <Grid size={{ xs: 12, sm: 6 }}>
             {(() => {
-              const field = 'board';
+              const field = 'boardId';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
               const helperText = (formik.touched[field] && formik.errors[field]) as string;
               return (
@@ -180,14 +172,14 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     options={boards || []}
                     labelKey="name"
                     valueKey="id"
-                    value={formik.values.board}
+                    value={formik.values.boardId}
                     onChange={(value) => {
-                      formik.setFieldValue('board', value as string);
-                      formik.setFieldTouched('board', false);
+                      formik.setFieldValue('boardId', value as string);
+                      formik.setFieldTouched('boardId', false);
                       const selectedBoard = boards.find((b) => b.id === value);
                       setMediums(selectedBoard?.educationMediums || []);
-                      formik.setFieldValue('medium', '');
-                      formik.setFieldValue('organization', '');
+                      formik.setFieldValue('mediumId', '');
+                      formik.setFieldValue('mediumStageId', '');
                     }}
                     formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
                     error={error}
@@ -200,7 +192,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
 
           <Grid size={{ xs: 12, sm: 6 }}>
             {(() => {
-              const field = 'medium';
+              const field = 'mediumId';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
               const helperText = (formik.touched[field] && formik.errors[field]) as string;
               return (
@@ -209,12 +201,12 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Medium *"
                     options={mediums || []}
                     labelKey="name"
-                    disabled={!formik.values.board}
+                    disabled={!formik.values.boardId}
                     valueKey="id"
-                    value={formik.values.medium}
+                    value={formik.values.mediumId}
                     onChange={(value) => {
-                      formik.setFieldValue('medium', value as string);
-                      formik.setFieldTouched('medium', false);
+                      formik.setFieldValue('mediumId', value as string);
+                      formik.setFieldTouched('mediumId', false);
                       const selectedMedium = mediums.find((m) => m.id === value);
                       setAllOrganization(selectedMedium?.educationMediumStages || []);
                       formik.setFieldValue('organization', '');
@@ -231,7 +223,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           {/* Organization Field */}
           <Grid size={{ xs: 12, md: 6 }}>
             {(() => {
-              const field = 'organization';
+              const field = 'mediumStageId';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
               const helperText = (formik.touched[field] && formik.errors[field]) as string;
               return (
@@ -239,10 +231,10 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                   <CustomSelect
                     options={allOrganization}
                     label="Organization *"
-                    value={formik.values.organization}
-                    disabled={!formik.values.medium}
+                    value={formik.values.mediumStageId}
+                    disabled={!formik.values.mediumId}
                     onChange={(val) => {
-                      formik.setFieldValue('organization', val as any);
+                      formik.setFieldValue('mediumStageId', val as any);
                     }}
                     labelKey="name"
                     valueKey="id"
@@ -257,7 +249,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           {/* Receipt Book Name Field */}
           <Grid size={{ xs: 12, sm: 6 }}>
             {(() => {
-              const field = 'receiptBookName';
+              const field = 'name';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
               const helperText = formik.touched[field] && formik.errors[field];
               return (
@@ -436,8 +428,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           type="submit"
           variant="contained"
           size="small"
-          loading={isLoading}
-          disabled={isLoading}
+          loading={isAddLoading || isUpdateLoading}
         >
           {data ? 'Update' : 'Submit'}
         </LoadingButton>
@@ -454,9 +445,9 @@ const getReceiptPreview = (
   mediums: Medium[],
   allOrganization: Organization[]
 ): string => {
-  const boardName = boards?.find((b: any) => b.id === values.board)?.name || '----';
-  const mediumName = mediums?.find((m) => m.id === values.medium)?.name || '----';
-  const orgName = allOrganization?.find((o) => o.id === values.organization)?.name || '----';
+  const boardName = boards?.find((b: any) => b.id === values.boardId)?.name || '----';
+  const mediumName = mediums?.find((m) => m.id === values.mediumId)?.name || '----';
+  const orgName = allOrganization?.find((o) => o.id === values.mediumStageId)?.name || '----';
 
   const prefix = values.prefix || '';
   const startNum = values.startingNumber || '';

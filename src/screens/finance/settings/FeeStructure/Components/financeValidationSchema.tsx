@@ -3,10 +3,10 @@ import * as yup from 'yup';
 export const finaceFeeStructureValidationSchema = [
   // Step 1: Fee Structure Basic Details
   yup.object().shape({
-    feeStructureName: yup.string().required('Fee Structure Name is required'),
-    board: yup.string().required('Board is required'),
-    medium: yup.string().required('Medium is required'),
-    receiptBook: yup.string().required('Receipt Book is required'),
+    name: yup.string().required('Fee Structure Name is required'),
+    boardId: yup.string().required('Board is required'),
+    mediumId: yup.string().required('Medium is required'),
+    receiptBookId: yup.string().required('Receipt Book is required'),
     paymentMethod: yup.array().of(yup.string()).min(1, 'At least one Payment Method is required'),
   }),
 

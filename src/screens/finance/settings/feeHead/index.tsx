@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -13,12 +14,15 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useGetFeeHeadsQuery,
+  FeeHeadManagementApi,
   usePatchFeeHeadMutation,
+  useDeleteFeeHeadMutation,
 } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import FeeHeadForm from './Components/FeeHeadForm';
@@ -27,22 +31,35 @@ import FeeHeadTable from './Components/FeeHeadTable';
 import type { IFeeHead } from './Components/type';
 
 const FeeHeadCreation = () => {
-  // Custom hook to fetch fee head data
-  const { data: feeHeadData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeHeadsQuery,
-  });
-
-  // PATCH mutation for status change
-  const { patchFeeHead, isLoading: isPatching } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [patchFeeHead, { isLoading: isPatchFeeHeadLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePatchFeeHeadMutation,
+  });
+
+  // Custom hook to fetch fee head data
+  const {
+    data: feeHeadData,
+    refetch,
+    isLoading: isFeeHeadLoading,
+    isFetching: isFeeHeadFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeHeadsQuery,
+    params: { academicYearId: currentYear?.id },
+  });
+
+  // DELETE mutation
+  const [deleteFeeHead] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteFeeHeadMutation,
   });
 
   // Dialog control states
   const addFeeHeadDialog = useBoolean(); // Controls add/edit fee head dialog
   const activeDialog = useBoolean(); // Controls active/inactive confirmation dialog
-  const [open, setOpen] = useState(false); // Controls main dialog visibility
+  const deleteDialog = useBoolean(); // Controls delete confirmation dialog
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup); // Tracks unsaved changes
@@ -104,16 +121,19 @@ const FeeHeadCreation = () => {
           setSelectedFeeHead(data);
           addFeeHeadDialog.onTrue();
         }}
-        open={open}
+        onDelete={(data) => {
+          setSelectedEntry(data);
+          deleteDialog.onTrue();
+        }}
+        onToggle={(data) => {
+          setSelectedEntry(data);
+          activeDialog.onTrue();
+        }}
+        isLoading={isFeeHeadLoading || isFeeHeadFetching}
         onAddFeeHead={addFeeHeadDialog}
-        setOpenDialog={setOpen}
         editData={selectedFeeHead}
         setEditData={setSelectedFeeHead}
-        data={feeHeadData}
-        //  New props for toggle functionality
-        activeDialog={activeDialog}
-        selectedEntry={selectedEntry}
-        setSelectedEntry={setSelectedEntry}
+        data={feeHeadData?.items}
       />
 
       {/* Add/Edit Fee Head Dialog */}
@@ -137,7 +157,7 @@ const FeeHeadCreation = () => {
               title={
                 selectedFeeHead
                   ? 'You can update the fee head details including name, category, and description.'
-                  : 'This modal allows creating a new fee head by selecting the appropriate fee category and entering the fee head name. It helps in organizing the fee structure into well-defined categories and heads, ensuring clarity and accuracy in financial management.'
+                  : 'Add a new fee head by selecting a category and entering a name.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -148,7 +168,60 @@ const FeeHeadCreation = () => {
         <FeeHeadForm open={addFeeHeadDialog} onClose={handleClose} editData={selectedFeeHead} />
       </CustomDialog>
 
-      {/* Active/Inactive Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          setTimeout(() => {
+            setSelectedEntry(null);
+          }, 200);
+          deleteDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete fee head <strong>{selectedEntry?.name}</strong>?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedEntry,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    FeeHeadManagementApi.util.updateQueryData(
+                      'getFeeHeads',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === (selectedEntry as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () =>
+                  deleteFeeHead({
+                    id: (selectedEntry as any).id,
+                  }),
+              });
+              deleteDialog.onFalse();
+              setSelectedEntry(null);
+            }}
+          >
+            Yes
+          </LoadingButton>
+        }
+      />
+
       <ConfirmDialog
         open={activeDialog.value}
         onClose={() => {
@@ -157,39 +230,34 @@ const FeeHeadCreation = () => {
           }, 200);
           activeDialog.onFalse();
         }}
-        title={selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
+        title="Active"
         content={
           <>
-            Are you sure you want move <strong>{selectedEntry?.feeHeadName}</strong> fee head to{' '}
-            {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}?
+            Are you sure you want to active fee head <strong>{selectedEntry?.name}</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
+            color="error"
             size="small"
-            loading={isPatching}
-            disabled={isPatching}
+            loading={isPatchFeeHeadLoading}
             startIcon={
-              <Iconify
-                icon={selectedEntry?.toggle === true ? GlobalIcons.draftIcon : GlobalIcons.publish}
-              />
+              <Iconify icon={selectedEntry?.isActive ? GlobalIcons.cancel : GlobalIcons.tick} />
             }
             onClick={async () => {
               if (!selectedEntry?.id) return;
-
               try {
                 await patchFeeHead({
                   feeHeadId: selectedEntry.id,
-                  body: { isActive: selectedEntry?.toggle !== true },
+                  body: { isActive: !selectedEntry.isActive },
                 }).unwrap();
 
-                const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
                 shikshaMitraToast.success({
                   message: (
                     <>
-                      Fee Head: <strong>{selectedEntry?.feeHeadName}</strong> moved to {status}{' '}
-                      successfully.
+                      Fee Head: <strong>{selectedEntry?.name}</strong>{' '}
+                      {selectedEntry.isActive ? 'activated' : 'deactivated'} successfully.
                     </>
                   ),
                 });
@@ -198,15 +266,15 @@ const FeeHeadCreation = () => {
                 }, 200);
                 activeDialog.onFalse();
               } catch (error) {
-                console.error('Status change failed:', error);
+                console.error('Delete operation failed:', error);
                 shikshaMitraToast.error({
-                  message: 'Failed to change fee head status',
+                  message: 'Failed to delete fee head',
                 });
               }
             }}
           >
-            {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
-          </Button>
+            {selectedEntry?.isActive ? 'Deactivate' : 'Activate'}
+          </LoadingButton>
         }
       />
     </Box>

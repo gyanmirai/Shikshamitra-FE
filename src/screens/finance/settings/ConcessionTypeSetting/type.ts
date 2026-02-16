@@ -1,16 +1,39 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+export enum ConcessionBasedOn {
+  Fixed = 0,
+  Percentage = 1,
+}
+
+export enum ConcessionDocumentFormat {
+  Pdf = 0,
+  Jpeg = 1,
+  Png = 2,
+  Doc = 3,
+  Docx = 4,
+  Xls = 5,
+}
+
+export const ConcessionDocumentFormatArray = [
+  { label: 'PDF', value: ConcessionDocumentFormat.Pdf },
+  { label: 'JPEG', value: ConcessionDocumentFormat.Jpeg },
+  { label: 'PNG', value: ConcessionDocumentFormat.Png },
+  { label: 'DOC', value: ConcessionDocumentFormat.Doc },
+  { label: 'DOCX', value: ConcessionDocumentFormat.Docx },
+  { label: 'XLS', value: ConcessionDocumentFormat.Xls },
+];
+
 export interface IConcessionDocument {
   id?: number | string; // optional (for editing / backend reference)
   documentName: string;
-  documentSize: number | string; // e.g. "5mb"
-  acceptedFormat: string[]; // e.g. [{label: 'Image', value: 1}, {label: 'PDF', value: 2}]
+  documentSize: number | string; // bytes
+  acceptedFormat: number[]; // e.g. [0, 1]
 }
 
 export interface IConcessionTypeForm {
   id?: string; // for editing
-  concessionName: string;
-  concessionType: string;
+  name: string;
+  concessionType: 'fixed' | 'percentage' | string;
   amount?: number; // required if type = "fixed"
   percentage?: number; // required if type = "percentage"
   applicableFeeHeads: string[]; // selected fee heads

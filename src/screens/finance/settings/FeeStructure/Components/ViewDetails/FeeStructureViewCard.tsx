@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Label } from 'src/components/label';
 import { NumericFormat } from 'react-number-format';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import { formatNumber } from 'src/utils/formate_number';
@@ -32,13 +33,13 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
   onChange,
   feeStructureMain,
 }) => {
-  const [feeItems] = useState(feeStructure.feeItems);
+  const feeHeads = feeStructure.feeHeads || [];
 
-  if (!feeItems || feeItems.length === 0) {
+  if (!feeHeads || feeHeads.length === 0) {
     return <EmptyContent title="No Fee Structure Available" />;
   }
 
-  const totalFeeAmount = feeItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+  const totalFeeAmount = feeHeads.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
     <Accordion
@@ -50,12 +51,12 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
         borderRadius: 1,
         '&:before': { display: 'none' },
         width: '100%',
-        mb: expanded ? 0 : 2,
+        mb: expanded ? 0 : 1,
       }}
     >
       <AccordionSummary expandIcon={<GridExpandMoreIcon />}>
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <Typography sx={{ fontWeight: 600, flex: 1 }}>{feeStructure.feeStructureName}</Typography>
+          <Typography sx={{ fontWeight: 600, flex: 1 }}>{feeStructure.name}</Typography>
           <Chip
             label={`Total : ${formatNumber(totalFeeAmount, 'INR')}`}
             color="success"
@@ -70,10 +71,8 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
           tableId="fee-items-table"
           noDataText="No Fee Items Found"
           columns={[
-            { id: 'feeCategory', label: 'Category', align: 'left' },
-
-            { id: 'feeHead', label: 'Name', align: 'left' },
-
+            { id: 'categoryName', label: 'Category', align: 'left' },
+            { id: 'feeHeadName', label: 'Name', align: 'left' },
             {
               id: 'amount',
               label: 'Amount',
@@ -91,24 +90,32 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
               align: 'left',
               render: (value) =>
                 value ? (
-                  <Chip label="One Time" color="info" size="small" variant="soft" />
+                  <Label color="info" variant="soft">
+                    One Time
+                  </Label>
                 ) : (
-                  <Chip label="Recurring" color="default" size="small" variant="soft" />
+                  <Label color="default" variant="soft">
+                    Recurring
+                  </Label>
                 ),
             },
             {
-              id: 'required',
+              id: 'isOptional',
               label: 'Status',
               align: 'left',
               render: (value) =>
-                value ? (
-                  <Chip label="Mandatory" color="success" size="small" variant="soft" />
+                !value ? (
+                  <Label color="success" variant="soft">
+                    Mandatory
+                  </Label>
                 ) : (
-                  <Chip label="Optional" color="warning" size="small" variant="soft" />
+                  <Label color="warning" variant="soft">
+                    Optional
+                  </Label>
                 ),
             },
           ]}
-          data={feeItems || []}
+          data={feeHeads || []}
         />
 
         {/* <Grid container spacing={2}>

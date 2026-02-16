@@ -1,19 +1,18 @@
 import type { FormikProps } from 'formik';
+import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Button, DialogActions, FormHelperText } from '@mui/material';
+import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IFeeStructure } from '../type';
-
-interface FeeHeadOption {
-  category: string;
-  feeHead: string;
-}
 
 interface Props {
   formik: FormikProps<IFeeStructure>;
@@ -21,12 +20,6 @@ interface Props {
   feeStructureIndex: number;
   onClose: (e: any, isSubmit: boolean) => void;
 }
-
-const feeHeadOptions: FeeHeadOption[] = [
-  { category: 'Academics', feeHead: 'Tuition Fee' },
-  { category: 'Academics', feeHead: 'Library Fee' },
-  { category: 'Transport', feeHead: 'Transport Fee' },
-];
 
 const AddFeeHeadDialogContent: React.FC<Props> = ({
   formik,
@@ -37,6 +30,12 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
   const [selectedFeeHead, setSelectedFeeHead] = useState<string[]>([]);
   const [error, setError] = useState('');
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: feeHeadData, isLoading: isFeeHeadLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeHeadsQuery,
+    params: { academicYearId: currentYear?.id },
+  });
   const handleSubmit = () => {
     if (!selectedFeeHead.length) {
       setError('Please select at least one Fee Head');
@@ -54,35 +53,35 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
       return;
     }
 
-    const updatedItems = [...(currentStructure.feeItems || [])];
+    const updatedHeads = [...(currentStructure.feeHeads || [])];
 
     // Prevent duplicates
-    const existingHeads = new Set(updatedItems.map((item) => item.feeHead));
-    const duplicates = selectedFeeHead.filter((feeHeadValue) => existingHeads.has(feeHeadValue));
+    const existingHeads = new Set(updatedHeads.map((item) => item.feeHeadId));
+    const duplicates = selectedFeeHead.filter((feeHeadId) => existingHeads.has(feeHeadId));
 
     if (duplicates.length) {
-      setError(`Fee Head(s) already added: ${duplicates.join(', ')}`);
+      setError(`Some Fee Head(s) are already added.`);
       return;
     }
 
     // Add only new fee heads
-    selectedFeeHead.forEach((feeHeadValue) => {
-      const selected = feeHeadOptions.find((opt) => opt.feeHead === feeHeadValue);
+    selectedFeeHead.forEach((feeHeadId) => {
+      const selected = feeHeadData?.items?.find((opt: any) => opt.id === feeHeadId);
       if (selected) {
-        updatedItems.push({
-          feeCategory: selected.category,
-          feeHead: selected.feeHead,
+        updatedHeads.push({
+          feeHeadId: selected.id,
+          feeHeadName: selected.name,
           amount: 0,
           isOneTime: false,
-          required: true,
+          isOptional: false,
         });
       }
     });
 
-    // Replace feeItems for the specific fee structure
+    // Replace feeHeads for the specific fee structure
     const updatedStructure = {
       ...currentStructure,
-      feeItems: updatedItems,
+      feeHeads: updatedHeads,
     };
 
     const updatedClassFeeStructures = [...classFeeStructures];
@@ -103,10 +102,11 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
           name="feeHead"
           label="Fee Head *"
           multiple
-          options={feeHeadOptions}
+          isLoading={isFeeHeadLoading}
+          options={feeHeadData?.items || []}
           value={selectedFeeHead}
-          labelKey="feeHead"
-          valueKey="feeHead"
+          labelKey="name"
+          valueKey="id"
           onChange={(value) => {
             setSelectedFeeHead(value as string[]);
             if (error) setError('');

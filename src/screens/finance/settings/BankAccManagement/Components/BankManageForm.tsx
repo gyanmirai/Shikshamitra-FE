@@ -1,8 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -13,28 +16,27 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
-  useAddBankAccountMutation,
-  useUpdateBankAccountMutation,
+  usePutBankAccountMutation,
+  usePostBankAccountMutation,
 } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import { getBankAccountInitialValues } from './bankInitialValues';
+import { BankAccountType, type IBankAccountFormProps } from './type';
 import { bankAccountValidationSchema } from './BankValidationSchema';
 
-import type { IBankAccountFormProps } from './type';
-
 const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editData }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // POST mutation for creating
-  const { addBankAccount } = useQueryAndMutation({
+  const [addBankAccount, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddBankAccountMutation,
+    currentQueryAndMutation: usePostBankAccountMutation,
   });
 
   // PUT mutation for updating
-  const { updateBankAccount } = useQueryAndMutation({
+  const [updateBankAccount, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateBankAccountMutation,
+    currentQueryAndMutation: usePutBankAccountMutation,
   });
 
   const formik = useFormik({
@@ -42,20 +44,17 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     validationSchema: bankAccountValidationSchema,
     onSubmit: async (values) => {
       try {
-        setIsLoading(true);
-
         // Transform form data to API format
         const payload = {
           bankName: values.bankName,
           branchName: values.branchName,
           branchAddress: values.branchAddress || '',
-          accountHolderName: values.accountName,
+          accountHolderName: values.accountHolderName,
           accountType: values.accountType,
-          accountNumber: values.accountNumber,
-          purpose: values.accountPurpose || '',
+          accountNumber: String(values.accountNumber),
+          purpose: values.purpose || '',
           ifscCode: values.ifscCode,
           upiId: values.upiId || '',
-          isActive: true,
         };
 
         if (editData?.id) {
@@ -68,7 +67,10 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
           shikshaMitraToast.success({ message: `Bank Account updated successfully` });
         } else {
           // Create new bank account
-          await addBankAccount(payload).unwrap();
+          await addBankAccount({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({ message: `Bank Account added successfully` });
         }
@@ -78,8 +80,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         shikshaMitraToast.error({
           message: `Failed to ${editData ? 'update' : 'create'} bank account`,
         });
-      } finally {
-        setIsLoading(false);
       }
     },
   });
@@ -151,23 +151,23 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
           {/* Account Name */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
-              error={formik.touched.accountName && Boolean(formik.errors.accountName)}
+              error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
             >
               <TextField
                 fullWidth
                 size="small"
                 label="Account Holder Name *"
-                name="accountName"
-                value={formik.values.accountName}
+                name="accountHolderName"
+                value={formik.values.accountHolderName}
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-zA-Z\s]/g, '') // Allow only letters and spaces
                     .replace(/\s+/g, ' ') // Replace multiple spaces with single space
                     .trimStart(); // Remove leading spaces
-                  formik.setFieldValue('accountName', value);
+                  formik.setFieldValue('accountHolderName', value);
                 }}
-                error={formik.touched.accountName && Boolean(formik.errors.accountName)}
-                helperText={formik.touched.accountName && formik.errors.accountName}
+                error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
+                helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
               />
             </ShakingTextField>
           </Grid>
@@ -180,10 +180,8 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               <CustomSelect
                 label="Account Type *"
                 options={[
-                  { value: 'Savings', label: 'Savings' },
-                  { value: 'Current', label: 'Current' },
-                  { value: 'Salary', label: 'Salary' },
-                  { value: 'Other', label: 'Other' },
+                  { value: BankAccountType.Saving, label: 'Saving' },
+                  { value: BankAccountType.Current, label: 'Current' },
                 ]}
                 value={formik.values.accountType}
                 onChange={(val) => formik.setFieldValue('accountType', val)}
@@ -221,8 +219,8 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               multiline
               rows={3}
               label="Account Purpose"
-              name="accountPurpose"
-              value={formik.values.accountPurpose}
+              name="purpose"
+              value={formik.values.purpose}
               onChange={formik.handleChange}
             />
           </Grid>
@@ -289,8 +287,8 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
           type="submit"
           variant="contained"
           size="small"
-          loading={isLoading}
-          disabled={isLoading}
+          loading={isAddLoading || isUpdateLoading}
+          disabled={isAddLoading || isUpdateLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}

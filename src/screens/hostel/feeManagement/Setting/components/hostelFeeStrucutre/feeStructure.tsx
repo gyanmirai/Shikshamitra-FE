@@ -208,7 +208,7 @@ const HostelFeeStructure = (props: TabComponentType) => {
           handleClose={() => {
             closeHandler();
           }}
-          title={isEdit ? 'Edit Fee Structure' : 'Add Fee Structure'}
+          title={isEdit ? 'Update Fee Structure' : 'Add Fee Structure'}
           maxWidth="md"
         >
           <HostelFeeCategorySettingDialog
