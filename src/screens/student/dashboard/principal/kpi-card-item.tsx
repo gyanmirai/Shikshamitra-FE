@@ -43,14 +43,17 @@ export default function CompactKPICard({
     }
   };
 
+  const mainColor = theme.palette[status].main;
+  const lightColor = theme.palette[status].light;
+
   const chartOptions = useChart({
-    colors: [theme.palette[status].main],
+    colors: [mainColor],
     fill: {
       type: 'gradient',
       gradient: {
         colorStops: [
-          { offset: 0, color: theme.palette[status].light, opacity: 1 },
-          { offset: 100, color: theme.palette[status].main, opacity: 1 },
+          { offset: 0, color: lightColor, opacity: 1 },
+          { offset: 100, color: mainColor, opacity: 1 },
         ],
       },
     },
