@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 export type useSearchParamReturnType = [Record<string, string>, (obj: Record<string, any>) => void];
@@ -7,38 +7,50 @@ export const useSearchParam = (
   defaultValues: Record<string, string> = {}
 ): useSearchParamReturnType => {
   const searchParams = useSearchParams();
-  const pathName = usePathname();
   const router = useRouter();
-  const values: Record<string, string> = Object.fromEntries(searchParams.entries());
-  const [state, setState] = useState<Record<string, string>>({ ...defaultValues, ...values });
+  const pathname = usePathname();
+
+  // Merge defaults with actual search params
+  const values = useMemo(() => {
+    const params = Object.fromEntries(searchParams.entries());
+    return { ...defaultValues, ...params };
+  }, [searchParams, defaultValues]);
+
   const setParam = useCallback(
-    (obj: Record<string, any> | ((params: Record<string, any>) => Record<string, any>)): void => {
+    (obj: Record<string, any> | ((params: Record<string, any>) => Record<string, any>)) => {
+      const current = new URLSearchParams(searchParams.toString());
+      const currentObj = Object.fromEntries(current.entries());
+
+      let updates = {};
+
       if (typeof obj === 'function') {
-        setState((prevState) => ({
-          ...prevState,
-          ...obj(prevState),
-        }));
+        // When using function update, pass the current EFFECTIVE state (including defaults)
+        const mergedCurrent = { ...defaultValues, ...currentObj };
+        updates = obj(mergedCurrent);
       } else {
-        setState((pre) => ({ ...pre, ...obj }));
+        updates = obj;
       }
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') {
+          current.delete(key);
+        } else {
+          current.set(key, String(value));
+        }
+      });
+
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+
+      router.push(`${pathname}${query}`);
     },
-    []
+    [defaultValues, searchParams, pathname, router]
   );
 
-  useEffect(() => {
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    Object.entries(state).forEach(([key, value]) => {
-      if (value) {
-        newSearchParams.set(key, value);
-      } else {
-        newSearchParams.delete(key);
-      }
-    });
-    const newPath = `${pathName}?${newSearchParams.toString()}`;
-    router.push(newPath);
-  }, [pathName, router, searchParams, state]);
+  // Note: We removed the auto-sync useEffect that pushed defaults to the URL.
+  // This prevents the infinite loop. 'values' will still return the defaults correctly.
 
-  return [state, setParam];
+  return [values, setParam];
 };
 
 // Helper: Parse search params into an object

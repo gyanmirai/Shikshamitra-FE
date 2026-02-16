@@ -20,11 +20,9 @@ import {
   Grid,
   Card,
   Stack,
-  Button,
   Divider,
   CardHeader,
   Typography,
-  ButtonGroup,
   CircularProgress,
 } from '@mui/material';
 
@@ -74,41 +72,70 @@ const Attendance = (props: StudentTabsComponentType) => {
         <Grid container spacing={1}>
           {/* Header Section */}
           <Grid size={{ xs: 12 }}>
-            <Card sx={{ p: 1.5 }}>
+            <Card
+              sx={{
+                p: 2,
+                boxShadow: (t) => `0 8px 24px -4px ${alpha(t.palette.primary.main, 0.08)}`,
+              }}
+            >
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 alignItems="center"
                 justifyContent="space-between"
-                spacing={2}
+                spacing={3}
               >
-                <DatePicker
-                  format="MMM-YYYY"
-                  views={['year', 'month']}
-                  label="Select Month Year"
-                  value={date}
-                  onChange={(newValue) => {
-                    setDate(newValue);
-                  }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      sx: { minWidth: 200 },
-                    },
-                  }}
-                />
+                {/* Left Side */}
+                <Box>
+                  <DatePicker
+                    format="MMM YYYY"
+                    views={['year', 'month']}
+                    value={date}
+                    onChange={(newValue) => setDate(newValue)}
+                    slotProps={{
+                      textField: {
+                        variant: 'standard',
+                        InputProps: {
+                          disableUnderline: true,
+                          sx: { typography: 'h4', fontWeight: 700, color: 'text.primary' },
+                        },
+                        sx: { width: 160 },
+                      },
+                    }}
+                  />
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      22 Working Days
+                    </Typography>
+                    <Box
+                      sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }}
+                    />
+                    <Typography variant="body2" color="error.main" fontWeight={600}>
+                      2 Absent
+                    </Typography>
+                  </Stack>
+                </Box>
 
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Overall Attendance
-                  </Typography>
-
+                {/* Right Side */}
+                <Stack direction="row" alignItems="center" spacing={3}>
                   <Box position="relative" display="inline-flex">
                     <CircularProgress
                       variant="determinate"
+                      value={100}
+                      size={64}
+                      thickness={3}
+                      sx={{ color: 'grey.200', position: 'absolute' }}
+                    />
+                    <CircularProgress
+                      variant="determinate"
                       value={90}
-                      size={40}
-                      thickness={4}
-                      sx={{ color: 'info.main' }}
+                      size={64}
+                      thickness={3}
+                      sx={{
+                        color: 'success.main',
+                        strokeLinecap: 'round',
+                        filter: (t) =>
+                          `drop-shadow(0 4px 8px ${alpha(t.palette.success.main, 0.24)})`,
+                      }}
                     />
                     <Box
                       sx={{
@@ -122,30 +149,17 @@ const Attendance = (props: StudentTabsComponentType) => {
                         justifyContent: 'center',
                       }}
                     >
-                      <Typography
-                        variant="caption"
-                        component="div"
-                        color="text.primary"
-                        fontWeight="bold"
-                      >
+                      <Typography variant="h6" fontWeight={800} color="success.dark">
                         90%
                       </Typography>
                     </Box>
                   </Box>
 
-                  <CustomTooltip
-                    placement="top"
-                    title={
-                      <Stack spacing={1} sx={{ p: 1 }}>
-                        <Dot color="primary.main">{'>80%'}</Dot>
-                        <Dot color="warning.main">70% - 80%</Dot>
-                        <Dot color="info.main">50% - 70%</Dot>
-                        <Dot color="error.main">{'<50%'}</Dot>
-                      </Stack>
-                    }
-                  >
-                    <Iconify icon="mdi:help-circle-outline" sx={{ color: 'text.disabled' }} />
-                  </CustomTooltip>
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      Good Attendance
+                    </Typography>
+                  </Box>
                 </Stack>
               </Stack>
             </Card>
@@ -158,35 +172,62 @@ const Attendance = (props: StudentTabsComponentType) => {
               <AttendanceChart
                 title={
                   <Stack
+                    sx={{ ml: -1, mt: -1 }}
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
                     width="100%"
                   >
                     <Typography variant="h6">Attendance Progress</Typography>
-                    <ButtonGroup size="small" variant="outlined" color="inherit">
-                      <Button
-                        variant="outlined"
-                        color="inherit"
-                        onClick={() => setActiveButton('yearly')}
-                      >
-                        Yearly
-                      </Button>
-                      <Button
-                        variant={activeButton === 'monthly' ? 'contained' : 'outlined'}
-                        color={activeButton === 'monthly' ? 'primary' : 'inherit'}
-                        onClick={() => setActiveButton('monthly')}
-                      >
-                        Monthly
-                      </Button>
-                    </ButtonGroup>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ bgcolor: 'background.neutral', p: 0.5, borderRadius: 1.5 }}
+                    >
+                      {['Monthly', 'Yearly'].map((view) => (
+                        <Box
+                          key={view}
+                          onClick={() =>
+                            setActiveButton(view.toLowerCase() as 'monthly' | 'yearly')
+                          }
+                          sx={{
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 1,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            ...(activeButton === view.toLowerCase()
+                              ? {
+                                  bgcolor: 'background.paper',
+                                  boxShadow: (t) =>
+                                    t.palette.mode === 'light'
+                                      ? `0 2px 4px ${alpha(t.palette.grey[500], 0.16)}`
+                                      : `0 2px 4px ${alpha(t.palette.common.black, 0.4)}`,
+                                  color: 'text.primary',
+                                  fontWeight: 600,
+                                }
+                              : {
+                                  color: 'text.secondary',
+                                  '&:hover': { color: 'text.primary' },
+                                }),
+                          }}
+                        >
+                          <Typography variant="subtitle2">{view}</Typography>
+                        </Box>
+                      ))}
+                    </Stack>
                   </Stack>
                 }
                 chart={{
-                  colors: [theme.palette.primary.main, theme.palette.error.main],
+                  colors: [
+                    theme.palette.primary.main,
+                    theme.palette.error.main,
+                    theme.palette.warning.main,
+                  ],
                   series: [
-                    { label: 'Present', value: 75 },
-                    { label: 'Absent', value: 10 },
+                    { label: 'Present', value: 22 },
+                    { label: 'Absent', value: 2 },
+                    { label: 'Holiday', value: 3 },
                   ],
                 }}
                 sx={{ height: '100%' }}
@@ -201,22 +242,43 @@ const Attendance = (props: StudentTabsComponentType) => {
                     width="100%"
                   >
                     <Typography variant="h6">Attendance Progress</Typography>
-                    <ButtonGroup size="small" variant="outlined" color="inherit">
-                      <Button
-                        variant={activeButton === 'yearly' ? 'contained' : 'outlined'}
-                        color={activeButton === 'yearly' ? 'primary' : 'inherit'}
-                        onClick={() => setActiveButton('yearly')}
-                      >
-                        Yearly
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="inherit"
-                        onClick={() => setActiveButton('monthly')}
-                      >
-                        Monthly
-                      </Button>
-                    </ButtonGroup>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{ bgcolor: 'background.neutral', p: 0.5, borderRadius: 1.5 }}
+                    >
+                      {['Monthly', 'Yearly'].map((view) => (
+                        <Box
+                          key={view}
+                          onClick={() =>
+                            setActiveButton(view.toLowerCase() as 'monthly' | 'yearly')
+                          }
+                          sx={{
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 1,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            ...(activeButton === view.toLowerCase()
+                              ? {
+                                  bgcolor: 'background.paper',
+                                  boxShadow: (t) =>
+                                    t.palette.mode === 'light'
+                                      ? `0 2px 4px ${alpha(t.palette.grey[500], 0.16)}`
+                                      : `0 2px 4px ${alpha(t.palette.common.black, 0.4)}`,
+                                  color: 'text.primary',
+                                  fontWeight: 600,
+                                }
+                              : {
+                                  color: 'text.secondary',
+                                  '&:hover': { color: 'text.primary' },
+                                }),
+                          }}
+                        >
+                          <Typography variant="subtitle2">{view}</Typography>
+                        </Box>
+                      ))}
+                    </Stack>
                   </Stack>
                 }
                 chart={{
@@ -256,7 +318,7 @@ const Attendance = (props: StudentTabsComponentType) => {
             >
               <CardHeader
                 title={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: -1, mt: -1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       Attendance Calendar
                     </Typography>
@@ -485,8 +547,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                   alignItems: 'center',
                   gap: 3,
                   p: 2.5,
-                  minHeight: 70,
-                  bgcolor: 'action.hover',
+                  minHeight: 100,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -496,8 +557,6 @@ const Attendance = (props: StudentTabsComponentType) => {
                       height: 12,
                       borderRadius: '50%',
                       bgcolor: 'success.main',
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.success.main, 0.16)}`,
-                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }}
                   />
                   <Typography
@@ -507,6 +566,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     Present
                   </Typography>
                 </Box>
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box
                     sx={{
@@ -514,7 +574,6 @@ const Attendance = (props: StudentTabsComponentType) => {
                       height: 12,
                       borderRadius: '50%',
                       bgcolor: 'warning.main',
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.warning.main, 0.16)}`,
                     }}
                   />
                   <Typography
@@ -524,6 +583,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     Holiday
                   </Typography>
                 </Box>
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box
                     sx={{
@@ -531,7 +591,6 @@ const Attendance = (props: StudentTabsComponentType) => {
                       height: 12,
                       borderRadius: '50%',
                       bgcolor: 'error.main',
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.error.main, 0.16)}`,
                     }}
                   />
                   <Typography
@@ -541,6 +600,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                     Absent
                   </Typography>
                 </Box>
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box
                     sx={{
@@ -548,7 +608,6 @@ const Attendance = (props: StudentTabsComponentType) => {
                       height: 12,
                       borderRadius: '50%',
                       bgcolor: 'info.main',
-                      boxShadow: (t) => `0 0 0 3px ${alpha(t.palette.info.main, 0.16)}`,
                     }}
                   />
                   <Typography
@@ -601,6 +660,9 @@ const Attendance = (props: StudentTabsComponentType) => {
                 { id: 'reason', label: 'Reason', minWidth: '10%' },
                 { id: 'remarks', label: 'Remarks', minWidth: '20%' },
               ]}
+              isPagination={false}
+              isShowedDense={false}
+              isFilter={false}
             />
           </Grid>
         </Grid>

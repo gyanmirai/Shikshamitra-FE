@@ -1,11 +1,11 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Box, Tab, Card } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs';
+import { Box, Card, Grid, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -25,18 +25,22 @@ const TABS = [
   {
     value: 'borrowed-books',
     label: 'Borrowed Books',
+    icon: <Iconify icon="solar:book-outline" width={20} />,
   },
   {
     value: 'reserved-books',
     label: 'Reserved Books',
+    icon: <Iconify icon="solar:bookmark-outline" width={20} />,
   },
   {
     value: 'charges',
     label: 'Charges',
+    icon: <Iconify icon="solar:bill-list-outline" width={20} />,
   },
   {
     value: 'borrow-history',
     label: 'Borrow History',
+    icon: <Iconify icon="solar:history-outline" width={20} />,
   },
 ];
 
@@ -177,25 +181,92 @@ const Libraray = (props: StudentTabsComponentType) => {
   };
 
   return (
-    <Card sx={{ display: 'flex', flexDirection: 'row', height: 'calc(100vh - 280px)' }}>
-      <CustomTabs
-        value={tabs.value}
-        onChange={tabs.onChange}
-        orientation="vertical"
-        sx={{ width: 220, borderRight: 1, borderColor: 'divider' }}
-        slotProps={{ tab: { px: 2, justifyContent: 'flex-start' } }}
-      >
-        {TABS.map((tab) => (
-          <Tab key={tab.value} value={tab.value} label={tab.label} />
-        ))}
-      </CustomTabs>
+    <Grid
+      container
+      spacing={1}
+      sx={{
+        mt: 0,
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 280px)',
+        minHeight: '0',
+      }}
+    >
+      {/* Left Section - Navigation List */}
+      <Grid size={{ xs: 12, md: 4, lg: 2.3 }} sx={{ height: '100%' }}>
+        <Card sx={{ height: '100%', p: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+            }}
+          >
+            {TABS.map((tab) => {
+              const isSelected = tabs.value === tab.value;
+              return (
+                <Button
+                  key={tab.value}
+                  onClick={(e) => tabs.onChange(e, tab.value)}
+                  variant="text"
+                  color="inherit"
+                  startIcon={tab.icon}
+                  sx={{
+                    position: 'relative',
+                    justifyContent: 'flex-start',
+                    px: 2,
+                    py: 1.5,
+                    textAlign: 'left',
+                    backgroundColor: (theme) =>
+                      isSelected ? theme.palette.action.hover : 'transparent',
+                    color: isSelected ? 'inherit' : 'text.secondary',
+                    ...(isSelected
+                      ? {
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            left: '2px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: '4px',
+                            height: '80%',
+                            borderLeft: (theme) =>
+                              isSelected ? `4px solid ${theme.palette.primary.main}` : 'none',
+                          },
+                        }
+                      : {}),
+                  }}
+                >
+                  {tab.label}
+                </Button>
+              );
+            })}
+          </Box>
+        </Card>
+      </Grid>
 
-      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
-        <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-          {renderTabContent()}
+      {/* Right Section - Content */}
+      <Grid size={{ xs: 12, md: 8, lg: 9.7 }} sx={{ height: '100%' }}>
+        <Box
+          sx={{
+            gap: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '0',
+          }}
+        >
+          <Card sx={{ p: 1, flexGrow: 1, height: '100%', overflow: 'hidden' }}>
+            <Scrollbar sx={{ height: '100%' }}>
+              <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+                {renderTabContent()}
+              </Box>
+            </Scrollbar>
+          </Card>
         </Box>
-      </Scrollbar>
-    </Card>
+      </Grid>
+    </Grid>
   );
 };
 

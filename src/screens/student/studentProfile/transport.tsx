@@ -54,13 +54,13 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
       <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={2}>
         <Button
           variant="contained"
-          size="medium"
+          size="small"
           startIcon={<Iconify icon="solar:bus-bold-duotone" />}
           sx={{
-            fontWeight: 600,
-            px: 2.5,
-            py: 1,
-            borderRadius: 1.5,
+            fontWeight: 500,
+            px: 2,
+            py: 0.5,
+
             boxShadow: theme.customShadows?.z8 || 2,
             transition: 'all 0.3s ease',
             '&:hover': {
@@ -72,11 +72,10 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
           Request Transport
         </Button>
       </Box>
-
       {/* Cards Grid */}
-      <Grid container spacing={2.5}>
+      <Grid container spacing={1}>
         {/* Route Details Card */}
-        <Grid size={{ xs: 12, lg: 6 }}>
+        <Grid size={{ xs: 12 }}>
           <Card
             sx={{
               height: '100%',
@@ -92,7 +91,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             }}
           >
             {/* Card Header */}
-            <Box sx={{ p: 3, pb: 2 }}>
+            <Box sx={{ p: 1, pb: 1 }}>
               <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box
                   sx={{
@@ -122,10 +121,10 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             <Divider sx={{ borderStyle: 'dashed' }} />
 
             {/* Card Content */}
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: 1 }}>
               <Grid container spacing={3}>
                 {routeDetails.map((detail) => (
-                  <Grid key={detail.label} size={{ xs: 12, sm: 6 }}>
+                  <Grid key={detail.label} size={{ xs: 12, sm: 3 }}>
                     <Stack spacing={1}>
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <Box
@@ -170,9 +169,8 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             </Box>
           </Card>
         </Grid>
-
         {/* Driver & Vehicle Details Card */}
-        <Grid size={{ xs: 12, lg: 6 }}>
+        <Grid size={{ xs: 12 }}>
           <Card
             sx={{
               height: '100%',
@@ -188,7 +186,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             }}
           >
             {/* Card Header */}
-            <Box sx={{ p: 3, pb: 2 }}>
+            <Box sx={{ p: 1, pb: 1 }}>
               <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box
                   sx={{
@@ -218,10 +216,10 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             <Divider sx={{ borderStyle: 'dashed' }} />
 
             {/* Card Content */}
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: 1 }}>
               <Grid container spacing={3}>
                 {driverDetails.map((detail) => (
-                  <Grid key={detail.label} size={{ xs: 12, sm: 6 }}>
+                  <Grid key={detail.label} size={{ xs: 12, sm: 3 }}>
                     <Stack spacing={1}>
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <Box
