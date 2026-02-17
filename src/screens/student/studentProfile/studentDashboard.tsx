@@ -13,8 +13,8 @@ import SubjectsTeachersStudentDashboard from './studentDashbordComponent/subject
 import type { StudentTabsComponentType } from '.';
 
 const StudentDashboard = (props: StudentTabsComponentType) => (
-  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-    <Scrollbar>
+  <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
+    <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
       <Grid container spacing={1}>
         <Grid size={12}>
           <Overview />

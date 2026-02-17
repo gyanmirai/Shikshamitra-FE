@@ -123,7 +123,7 @@ export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 2,
-          p: 3,
+          p: 1,
           textAlign: 'center',
         }}
       >

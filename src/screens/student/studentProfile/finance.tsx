@@ -35,7 +35,7 @@ import { students } from './finance-profile-data/finance-profile-fee-data';
 import type { StudentTabsComponentType } from '.';
 import type { PaymentDate } from './finance-profile-data/finance-profile-fee-data';
 
-const Finance = (_props: StudentTabsComponentType) => {
+const Finance = (props: StudentTabsComponentType) => {
   const receiptDialog = useBoolean();
   const theme = useTheme();
 

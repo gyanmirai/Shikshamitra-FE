@@ -65,10 +65,8 @@ const Attendance = (props: StudentTabsComponentType) => {
   const theme = useTheme();
 
   return (
-    <Box
-      sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
-    >
-      <Scrollbar>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
+      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
         <Grid container spacing={1}>
           {/* Header Section */}
           <Grid size={{ xs: 12 }}>
@@ -537,7 +535,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                 />
               </Box>
 
-              <Divider sx={{ borderStyle: 'dashed', mx: 2 }} />
+              <Divider sx={{ borderStyle: 'dashed', mx: 0.5 }} />
 
               <Box
                 sx={{
@@ -546,8 +544,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                   gap: 3,
-                  p: 2.5,
-                  minHeight: 100,
+                  p: 3,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
