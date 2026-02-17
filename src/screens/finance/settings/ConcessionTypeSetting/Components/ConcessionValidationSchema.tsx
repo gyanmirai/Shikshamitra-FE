@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 
 export const concessionTypeValidationSchema = Yup.object().shape({
-  concessionName: Yup.string().trim().required('Concession Name is required'),
+  name: Yup.string().trim().required('Concession Name is required'),
 
   concessionType: Yup.string()
     .oneOf(['fixed', 'percentage'], 'Invalid concession type')
@@ -40,7 +40,7 @@ export const concessionTypeValidationSchema = Yup.object().shape({
               .required('Document Size is required')
               .max(20, 'Max 20 Document Size can be add'),
             acceptedFormat: Yup.array()
-              .of(Yup.string().trim())
+              .of(Yup.number())
               .min(1, 'At least one file format is required')
               .required('Accepted formats are required'),
           })

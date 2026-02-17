@@ -22,11 +22,11 @@ import { getVehicleTypeInitialValues } from './VehicleTypeInitialValues';
 import type { IVehicleTypeFormProps } from './type';
 
 const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editData }) => {
-  const { addVehicleType, isLoading: isAdding } = useQueryAndMutation({
+  const [addVehicleType, { isLoading: isAdding }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddVehicleTypeMutation,
   });
-  const { updateVehicleType, isLoading: isUpdating } = useQueryAndMutation({
+  const [updateVehicleType, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateVehicleTypeMutation,
   });

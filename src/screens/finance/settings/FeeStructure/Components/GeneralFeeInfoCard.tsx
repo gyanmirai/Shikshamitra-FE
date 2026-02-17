@@ -49,7 +49,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
 
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {feeStructure?.feeStructureName || 'New Fee Structure'}
+              {feeStructure?.name || 'New Fee Structure'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Academic Year: {feeStructure?.academicYearName || 'Not selected'}
@@ -93,7 +93,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
               <InfoItem
                 icon={<Iconify icon="solar:bill-list-bold-duotone" />}
                 label="Receipt Book"
-                value={feeStructure?.receiptBook}
+                value={feeStructure?.receiptBookName}
               />
             </Grid>
           </Grid>

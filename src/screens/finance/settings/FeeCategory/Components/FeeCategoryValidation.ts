@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 
 export const feeCategoryValidationSchema = Yup.object().shape({
-  feeCategoryName: Yup.string()
+  name: Yup.string()
     .required('Fee Category Name is required')
     .test('min-length', 'Fee Category Name is Too short', (value) =>
       value ? value.replace(/\s/g, '').length >= 2 : false

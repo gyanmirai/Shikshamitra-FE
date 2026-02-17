@@ -1,80 +1,70 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
-import chargeCategoryData from 'src/json/finance/settings/charges/chargeCategoryData.json';
+import { financeModuleApi } from './financeModuleApi';
 
-const isDev = process.env.NODE_ENV === 'development';
-
-export const ChargeCategoryApi = createApi({
-  reducerPath: 'ChargeCategoryApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock routes
-        if (url === '/chargeCategories') {
-          return { data: chargeCategoryData.chargeCategories };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['charge-category'],
+export const chargeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get charge categories data
-    getChargeCategory: builder.query({
-      query: () => ({
-        url: '/finance/charge-categories',
+    // Get charge categories data (paginated)
+    getChargeCategories: builder.query({
+      query: (params: {
+        academicYearId: string;
+        page?: number;
+        pageSize?: number;
+        search?: string;
+      }) => ({
+        url: '/charge-categories',
         method: 'GET',
+        params,
       }),
-      providesTags: ['charge-category'],
+      providesTags: ['Charge-Category'],
     }),
 
     // Get charge category by id
     getChargeCategoryById: builder.query({
-      query: (academicYearId: string) => ({
-        url: `/finance/charge-categories/${academicYearId}`,
+      query: ({ chargeCategoryId }: { chargeCategoryId: string }) => ({
+        url: `/charge-categories/${chargeCategoryId}`,
         method: 'GET',
       }),
-      providesTags: ['charge-category'],
+      providesTags: ['Charge-Category'],
     }),
 
     // Post charge category
     postChargeCategory: builder.mutation({
-      query: (body) => ({
-        url: `/finance/charge-categories`,
+      query: ({ academicYearId, body }: { academicYearId: string; body: any }) => ({
+        url: `/charge-categories`,
         method: 'POST',
-        body,
+        data: body,
+        params: {
+          academicYearId,
+        },
       }),
-      invalidatesTags: ['charge-category'],
+      invalidatesTags: ['Charge-Category'],
     }),
 
     // Put charge category
     putChargeCategory: builder.mutation({
-      query: ({ chargeCategoryId, body }) => ({
-        url: `/finance/charge-categories/${chargeCategoryId}`,
+      query: ({ chargeCategoryId, body }: { chargeCategoryId: string; body: any }) => ({
+        url: `/charge-categories/${chargeCategoryId}`,
         method: 'PUT',
-        body,
+        data: body,
       }),
-      invalidatesTags: ['charge-category'],
+      invalidatesTags: ['Charge-Category'],
     }),
 
     // Delete charge category
     deleteChargeCategory: builder.mutation({
-      query: (chargeCategoryId: string) => ({
-        url: `/finance/charge-categories/${chargeCategoryId}`,
+      query: ({ chargeCategoryId }: { chargeCategoryId: string }) => ({
+        url: `/charge-categories/${chargeCategoryId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['charge-category'],
+      invalidatesTags: ['Charge-Category'],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const {
-  useGetChargeCategoryQuery,
+  useGetChargeCategoriesQuery,
   useGetChargeCategoryByIdQuery,
   usePostChargeCategoryMutation,
   usePutChargeCategoryMutation,
   useDeleteChargeCategoryMutation,
-} = ChargeCategoryApi;
+} = chargeCategoryApi;

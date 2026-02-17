@@ -35,8 +35,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
-  ChargeCategoryApi,
-  useGetChargeCategoryQuery,
+  chargeCategoryApi,
+  useGetChargeCategoriesQuery,
   usePutChargeCategoryMutation,
   usePostChargeCategoryMutation,
   useDeleteChargeCategoryMutation,
@@ -48,93 +48,52 @@ const FinanceChargeCategory = () => {
   const confirm = useBoolean();
 
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Get charge categories data
   const { data, isLoading, refetch } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChargeCategoryQuery,
-  });
-
-  // POST mutation for creating
-  const { postChargeCategory } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePostChargeCategoryMutation,
-  });
-
-  // PUT mutation for updating
-  const { putChargeCategory } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePutChargeCategoryMutation,
+    currentQueryAndMutation: useGetChargeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   // Delete mutation
-  const { deleteChargeCategory } = useQueryAndMutation({
+  const [deleteChargeCategory] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeCategoryMutation,
   });
 
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // Handle save operation (create/update)
-  const handleSave = async (values: any) => {
-    try {
-      // Transform form data to API format
-      const payload = {
-        name: values.chargeName,
-        isApprovalRequired: values.isRefundable,
-        description: values.description || '',
-      };
-
-      if (selectedItem?.id) {
-        // Update existing charge category
-        await putChargeCategory({
-          chargeCategoryId: selectedItem.id,
-          body: payload,
-        }).unwrap();
-
-        shikshaMitraToast.success({
-          message: `${values.chargeName} Charge Category Updated Successfully`,
-        });
-      } else {
-        // Create new charge category
-        await postChargeCategory(payload).unwrap();
-
-        shikshaMitraToast.success({
-          message: `${values.chargeName} Charge Category Added Successfully`,
-        });
-      }
-    } catch (error) {
-      console.error('Save operation failed:', error);
-      shikshaMitraToast.error({
-        message: `Failed to ${selectedItem ? 'update' : 'create'} charge category`,
-      });
-      throw error;
-    }
-  };
-
   // Handle delete operation
   const handleDelete = async () => {
-    if (!selectedItem?.id) return;
+    if (!selectedEntry?.id) return;
 
     confirmWithUndo({
-      item: selectedItem,
+      item: selectedEntry,
       onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
         dispatchFn(
-          ChargeCategoryApi.util.updateQueryData('getChargeCategory', undefined, (draft: any) => {
-            const index = draft.data?.items?.findIndex(
-              (b: any) => b.id === (selectedItem as any)?.id
-            );
-            setDeleteIndex(index);
-            if (index !== -1) {
-              draft.data.items.splice(index, 1);
+          chargeCategoryApi.util.updateQueryData(
+            'getChargeCategories',
+            { academicYearId: currentYear?.id },
+            (draft: any) => {
+              const index = draft.items?.findIndex((b: any) => b.id === (selectedEntry as any)?.id);
+              setDeleteIndex(index);
+              if (index !== -1) {
+                draft.items.splice(index, 1);
+              }
             }
-          })
+          )
         ),
       onUndoRestore: () => refetch(),
-      onCommit: () => deleteChargeCategory(selectedItem.id),
+      onCommit: () => deleteChargeCategory({ chargeCategoryId: selectedEntry.id }),
     });
     confirm.onFalse();
-    setSelectedItem(null);
+    setSelectedEntry(null);
   };
 
   // Handle edit action
@@ -145,7 +104,7 @@ const FinanceChargeCategory = () => {
 
   // Handle delete action
   const handleDeleteAction = (item: any) => {
-    setSelectedItem(item);
+    setSelectedEntry(item);
     confirm.onTrue();
   };
 
@@ -182,7 +141,7 @@ const FinanceChargeCategory = () => {
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'chargeName',
+        id: 'name',
         label: 'Name',
         minWidth: '200px',
         isSort: true,
@@ -190,8 +149,17 @@ const FinanceChargeCategory = () => {
         align: 'left',
       },
       {
-        id: 'isRefundable',
+        id: 'isApprovalRequired',
         label: 'Approval Required',
+        minWidth: '200px',
+        isSort: true,
+        isFilter: true,
+        align: 'left',
+        render: (value: boolean) => (value ? 'Yes' : 'No'),
+      },
+      {
+        id: 'description',
+        label: 'Description',
         minWidth: '200px',
         isSort: true,
         isFilter: true,
@@ -290,7 +258,6 @@ const FinanceChargeCategory = () => {
           open={addDialog.value || editDialog.value}
           onClose={handleDialogClose}
           editData={selectedItem}
-          onSave={handleSave}
         />
       </CustomDialog>
 
@@ -299,12 +266,12 @@ const FinanceChargeCategory = () => {
         open={confirm.value}
         onClose={() => {
           confirm.onFalse();
-          setSelectedItem(null);
+          setSelectedEntry(null);
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to delete charge category <b>{selectedItem?.chargeName}</b>?{' '}
+            Are you sure you want to delete charge category <b>{selectedEntry?.name}</b>?{' '}
           </>
         }
         action={
@@ -323,11 +290,20 @@ interface ChargeCategoryDialogProps {
   open: boolean;
   onClose: (e: any, isSubmit: boolean) => void;
   editData?: any | null;
-  onSave: (values: any) => Promise<void>;
 }
 
-const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategoryDialogProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // PUT mutation for updating
+  const [putChargeCategory, { isLoading: putLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePutChargeCategoryMutation,
+  });
+  // POST mutation for creating
+  const [postChargeCategory, { isLoading: postLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostChargeCategoryMutation,
+  });
 
   // Form validation schema using Yup
   const validationSchema = Yup.object().shape({
@@ -339,25 +315,43 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
   // Initialize formik form with initial values and submit handler
   const formik = useFormik({
     initialValues: {
-      chargeName: editData?.chargeName || '',
-      isRefundable: editData?.isRefundable === 'Yes' || false,
+      chargeName: editData?.name || '',
+      isRefundable: editData?.isApprovalRequired || false,
       description: editData?.description || '',
     },
     validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        setIsLoading(true);
-        const submitValues = {
-          ...values,
-          isRefundable: values.isRefundable ? 'Yes' : 'No',
+        const payload = {
+          name: values.chargeName,
+          isApprovalRequired: values.isRefundable,
+          description: values.description || '',
         };
-        await onSave(submitValues);
-        handleClose();
+
+        if (editData?.id) {
+          await putChargeCategory({
+            chargeCategoryId: editData.id,
+            body: payload,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.chargeName} Charge Category Updated Successfully`,
+          });
+        } else {
+          await postChargeCategory({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.chargeName} Charge Category Added Successfully`,
+          });
+        }
+        onClose(null, true);
       } catch (error) {
         console.error('Save failed:', error);
-      } finally {
-        setIsLoading(false);
+        shikshaMitraToast.error({
+          message: `Failed to ${editData ? 'update' : 'create'} charge category`,
+        });
       }
     },
   });
@@ -450,7 +444,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
           size="small"
           type="submit"
           variant="contained"
-          loading={isLoading}
+          loading={postLoading || putLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

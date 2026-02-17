@@ -16,11 +16,12 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  isLoading,
 }) => {
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'incomeCategoryName',
+        id: 'name',
         label: 'Name',
         align: 'left',
         render: (value) => (
@@ -36,7 +37,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
             {Array.isArray(value) && value.length > 0
-              ? value.map((tag) => `${tag}`).join(' ')
+              ? value.map((tag) => `${tag}`).join(', ')
               : '-'}
           </Typography>
         ),
@@ -117,6 +118,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       }
       columns={columns}
       data={data || []}
+      isLoading={isLoading}
     />
   );
 };

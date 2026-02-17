@@ -5,7 +5,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
     // Get fee category list
     getFeeCategories: builder.query({
       query: (params) => ({
-        url: '/v1/finance/fee-categories',
+        url: '/fee-categories',
         method: 'GET',
         params,
       }),
@@ -14,10 +14,13 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
 
     // Create fee category
     addFeeCategory: builder.mutation({
-      query: (body) => ({
-        url: '/v1/finance/fee-categories',
+      query: ({ academicYearId, body }) => ({
+        url: `/fee-categories`,
         method: 'POST',
         data: body,
+        params: {
+          academicYearId,
+        },
       }),
       invalidatesTags: ['FeeCategory'],
     }),
@@ -25,7 +28,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
     // Update fee category
     updateFeeCategory: builder.mutation({
       query: ({ feeCategoryId, body }) => ({
-        url: `/v1/finance/fee-categories/${feeCategoryId}`,
+        url: `/fee-categories/${feeCategoryId}`,
         method: 'PUT',
         data: body,
       }),
@@ -34,8 +37,8 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
 
     // Delete fee category
     deleteFeeCategory: builder.mutation({
-      query: (feeCategoryId) => ({
-        url: `/v1/finance/fee-categories/${feeCategoryId}`,
+      query: ({ id }) => ({
+        url: `/fee-categories/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['FeeCategory'],

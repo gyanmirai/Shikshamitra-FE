@@ -3,45 +3,48 @@ import { financeModuleApi } from './financeModuleApi';
 export const expenseCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getExpenseCategory: builder.query({
-      query: (academicYearId: string) => ({
-        url: `/finance/expense-categories/${academicYearId}`,
+      query: ({ academicYearId }: { academicYearId: string }) => ({
+        url: '/expense-categories',
         method: 'GET',
+        params: {
+          academicYearId,
+        },
       }),
       providesTags: ['expense-category'],
     }),
 
     postExpenseCategory: builder.mutation({
-      query: (body: any) => ({
-        url: '/finance/expense-categories',
+      query: ({ academicYearId, body }) => ({
+        url: '/expense-categories',
         method: 'POST',
-        body,
+        data: body,
+        params: {
+          academicYearId,
+        },
       }),
       invalidatesTags: ['expense-category'],
     }),
 
     putExpenseCategory: builder.mutation({
       query: ({ expenseCategoryId, body }) => ({
-        url: `/finance/expense-categories/${expenseCategoryId}`,
+        url: `/expense-categories/${expenseCategoryId}`,
         method: 'PUT',
-        body,
+        data: body,
       }),
       invalidatesTags: ['expense-category'],
     }),
 
     deleteExpenseCategory: builder.mutation({
       query: (expenseCategoryId: string) => ({
-        url: `/finance/expense-categories/${expenseCategoryId}`,
+        url: `/expense-categories/${expenseCategoryId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['expense-category'],
     }),
 
     getBudgetOptions: builder.query({
-      query: () => ({
-        url: '/budgetOptions',
-        method: 'GET',
-      }),
-      providesTags: ['budget-options'],
+      query: () => ({ url: '/expenseOptions', method: 'GET' }),
+      providesTags: ['expense-category'],
     }),
   }),
   overrideExisting: false,

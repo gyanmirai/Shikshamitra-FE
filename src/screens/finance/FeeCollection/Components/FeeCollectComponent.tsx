@@ -91,7 +91,7 @@ const FeeCollectComponent = ({
     initialValues: buildInitialValues(),
     validationSchema: buildValidationSchema(currentYear),
     enableReinitialize: true,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const payload = {
         studentId: student?.id,
         academicYearId: currentYear?.id,

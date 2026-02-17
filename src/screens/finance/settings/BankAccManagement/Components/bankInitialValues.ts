@@ -1,13 +1,13 @@
-import type { IBankAccount } from './type';
+import { BankAccountType, type IBankAccount } from './type';
 
 export const getBankAccountInitialValues = (editData?: IBankAccount | null) => ({
   bankName: editData?.bankName || '',
   branchName: editData?.branchName || '',
   branchAddress: editData?.branchAddress || '',
-  accountName: editData?.accountName || '',
-  accountType: editData?.accountType || '',
+  accountHolderName: editData?.accountHolderName || '',
+  accountType: editData?.accountType ?? BankAccountType.Saving,
   accountNumber: editData?.accountNumber || '',
-  accountPurpose: editData?.accountPurpose || '',
+  purpose: editData?.purpose || '',
   ifscCode: editData?.ifscCode || '',
   upiId: editData?.upiId || '',
 });

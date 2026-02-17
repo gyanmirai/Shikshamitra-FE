@@ -27,7 +27,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
     if (editIndex !== null && editIndex !== undefined) {
       const existing = formik.values.feeStructureClasses[className][editIndex];
       if (existing) {
-        setFeeStructureName(existing.feeStructureName);
+        setFeeStructureName(existing.name);
       }
     }
   }, [editIndex, className, formik.values.feeStructureClasses]);
@@ -44,14 +44,14 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
       // Edit mode
       updated[editIndex] = {
         ...updated[editIndex],
-        feeStructureName,
+        name: feeStructureName,
       };
     } else {
       // Add mode
       updated.push({
-        feeStructureName: feeStructureName || `Fee Structure ${updated.length + 1}`,
+        name: feeStructureName || `Fee Structure ${updated.length + 1}`,
         status: FeeStructureClassStatusType.Current,
-        feeItems: [],
+        feeHeads: [],
       });
     }
 

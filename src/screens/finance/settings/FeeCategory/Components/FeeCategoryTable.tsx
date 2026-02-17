@@ -24,17 +24,23 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   setOpenDialog,
   setEditData,
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // Custom hook to fetch fee category data
-  const { data: feeCategoryData, refetch } = useQueryAndMutation({
+  const {
+    data: feeCategoryData,
+    refetch,
+    isLoading: isFeeCategoryLoading,
+    isFetching: isFeeCategoryFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCategoriesQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
-  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
   const [deleteFeeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteFeeCategoryMutation,
-    params: { academicYearId: currentAcademicYearId },
   });
 
   const deleteFeeCategoryDialog = useBoolean();
@@ -44,7 +50,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'feeCategoryName',
+        id: 'name',
         label: 'Name',
         align: 'left',
         render: (value) => (
@@ -108,6 +114,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
     <>
       <CustomizableTable
         tableId="fee-category-data-table"
+        isLoading={isFeeCategoryLoading || isFeeCategoryFetching}
         noDataText={
           <>
             Fee Category Data Not Found{' '}
@@ -131,7 +138,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           </>
         }
         columns={columns}
-        data={feeCategoryData?.data || []}
+        data={feeCategoryData?.items || []}
       />
       <ConfirmDialog
         open={deleteFeeCategoryDialog.value}
@@ -143,7 +150,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         content={
           <>
             Are you sure you want to delete fee category{' '}
-            <strong>{selectedFeeCategory?.feeCategoryName}</strong>?
+            <strong>{selectedFeeCategory?.name}</strong>?
           </>
         }
         action={
@@ -159,14 +166,14 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                   dispatchFn(
                     feeCategoryApi.util.updateQueryData(
                       'getFeeCategories',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
-                        const index = draft.data?.findIndex(
+                        const index = draft.items?.findIndex(
                           (b: any) => b.id === (selectedFeeCategory as any)?.id
                         );
                         setDeleteIndex(index);
                         if (index !== -1) {
-                          draft.data.splice(index, 1);
+                          draft.items.splice(index, 1);
                         }
                       }
                     )
@@ -174,7 +181,6 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 onUndoRestore: () => refetch(),
                 onCommit: () =>
                   deleteFeeCategory({
-                    academicYearId: currentAcademicYearId?.id,
                     id: (selectedFeeCategory as any).id,
                   }),
               });

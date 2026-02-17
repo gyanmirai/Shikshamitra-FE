@@ -16,6 +16,7 @@ import type { IFeeStructure, IFeeStructureTableProps } from '../type';
 
 const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   data,
+  isLoading,
   addFeeStructure,
   editData,
   setEditData,
@@ -29,6 +30,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   return (
     <CustomizableTable
       tableId="fee-structure-table"
+      isLoading={isLoading}
       noDataText={
         <>
           No Fee Structure data found
@@ -48,20 +50,18 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         </>
       }
       columns={[
-        { id: 'feeStructureName', label: 'Name', align: 'left' },
+        { id: 'name', label: 'Name', align: 'left' },
         {
-          id: 'board',
+          id: 'boardName',
           label: 'Board/Medium',
           align: 'left',
           render: (value, row) => (
             <Typography variant="caption" fontSize="13px">
-              {value}/{row.medium}
+              {value}/{row.mediumName}
             </Typography>
           ),
         },
-        { id: 'receiptBook', label: 'Receipt Book', align: 'left' },
-        // { id: 'paymentTerm', label: 'Payment Term', align: 'left' },
-        { id: 'totalClass', label: 'Total Class', align: 'left' },
+        { id: 'receiptBookName', label: 'Receipt Book', align: 'left' },
         {
           id: 'status',
           label: 'Status',

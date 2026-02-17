@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
@@ -14,8 +15,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
-  useGetFinanceFeeStructureQuery,
-  usePatchFeeStructureStatusMutation,
+  useGetFeeStructuresQuery,
+  useUpdateFeeStructureStatusMutation,
 } from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureTable from './Components/FeeStructureTable';
@@ -31,16 +32,22 @@ const FeeStructure = () => {
   const addFeeStructureDialog = useBoolean();
   const confirmDialog = useBoolean();
   const viewFeeStructureDialog = useBoolean();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const { data: feeStructure } = useQueryAndMutation({
+  const {
+    data: feeStructure,
+    isLoading: isFeeStructureLoading,
+    isFetching: isFeeStructureFetching,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetFinanceFeeStructureQuery,
+    currentQueryAndMutation: useGetFeeStructuresQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
   // PATCH mutation for status change
-  const { patchFeeStructureStatus } = useQueryAndMutation({
+  const [patchFeeStructureStatus, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: usePatchFeeStructureStatusMutation,
+    currentQueryAndMutation: useUpdateFeeStructureStatusMutation,
   });
 
   // Redux state and dispatch
@@ -67,7 +74,7 @@ const FeeStructure = () => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addFeeStructureDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedFeeStructure ? 'Edit Fee Structure' : 'Add Fee Structure'}
+          heading={selectedFeeStructure ? 'Update Fee Structure' : 'Add Fee Structure'}
           description={
             selectedFeeStructure
               ? 'Modify the selected fee structure by updating categories, amounts, schedules, and student groups. Your changes will affect how fees are calculated and collected.'
@@ -96,7 +103,7 @@ const FeeStructure = () => {
               },
             },
             {
-              name: selectedFeeStructure ? 'Edit Fee Structure' : 'Add Fee Structure',
+              name: selectedFeeStructure ? 'Update Fee Structure' : 'Add Fee Structure',
             },
           ]}
         />
@@ -158,7 +165,7 @@ const FeeStructure = () => {
         />
       )}
       <>
-        {/* Subject form card for creating/editing subjects */}
+        {/* Fee Structure form card for creating/editing subjects */}
         {addFeeStructureDialog.value ? (
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
             <FeeStructureFormStepper
@@ -169,7 +176,8 @@ const FeeStructure = () => {
           </Card>
         ) : !viewFeeStructureDialog.value ? (
           <FeeStructureTable
-            data={feeStructure}
+            data={feeStructure?.items}
+            isLoading={isFeeStructureLoading || isFeeStructureFetching}
             addFeeStructure={addFeeStructureDialog}
             editData={selectedFeeStructure}
             setEditData={setSelectedFeeStructure}
@@ -190,7 +198,7 @@ const FeeStructure = () => {
       </>
 
       {viewFeeStructureDialog.value && (
-        <Card sx={{ height: '100%', boxShadow: 'none' }}>
+        <Box sx={{ height: '100%' }}>
           <ViewFeeStructure
             open={viewFeeStructureDialog}
             onClose={() => {
@@ -201,7 +209,7 @@ const FeeStructure = () => {
             }}
             data={selectedFeeStructure}
           />
-        </Card>
+        </Box>
       )}
 
       <ConfirmDialog
@@ -215,10 +223,10 @@ const FeeStructure = () => {
         }}
         title={selectedFeeStructure?.status === 0 ? 'Lock' : 'Unlock'}
         content={
-          selectedFeeStructure && Array.isArray(selectedFeeStructure.feeStructureName) ? (
+          selectedFeeStructure && Array.isArray(selectedFeeStructure.name) ? (
             <>
-              Are you sure you want move <strong>{selectedFeeStructure.feeStructureName}</strong>{' '}
-              Fee Structure to {selectedFeeStructure.status === 0 ? 'lock' : 'unlock'} ?
+              Are you sure you want move <strong>{selectedFeeStructure.name}</strong> Fee Structure
+              to {selectedFeeStructure.status === 0 ? 'lock' : 'unlock'} ?
               {selectedFeeStructure.status === 1 && (
                 <div style={{ marginTop: '8px', color: '#d32f2f' }}>
                   Note: Please take approval from admin before unlocking the fee structure.
@@ -227,8 +235,8 @@ const FeeStructure = () => {
             </>
           ) : (
             <>
-              Are you sure you want move <strong>{selectedFeeStructure?.feeStructureName}</strong>{' '}
-              Fee Structure to {selectedFeeStructure?.status === 0 ? 'lock' : 'unlock'} ?
+              Are you sure you want move <strong>{selectedFeeStructure?.name}</strong> Fee Structure
+              to {selectedFeeStructure?.status === 0 ? 'lock' : 'unlock'} ?
               {selectedFeeStructure?.status === 1 && (
                 <div style={{ marginTop: '8px', color: '#d32f2f' }}>
                   Note: Please take approval from admin before unlocking the fee structure.
@@ -238,9 +246,10 @@ const FeeStructure = () => {
           )
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             size="small"
+            loading={isUpdating}
             startIcon={
               <Iconify
                 icon={
@@ -260,8 +269,8 @@ const FeeStructure = () => {
                 shikshaMitraToast.success({
                   message: (
                     <>
-                      Fee Structure: <strong>{selectedFeeStructure?.feeStructureName}</strong> moved
-                      to {statusLabel} successfully
+                      Fee Structure: <strong>{selectedFeeStructure?.name}</strong> moved to{' '}
+                      {statusLabel} successfully
                     </>
                   ),
                 });
@@ -278,7 +287,7 @@ const FeeStructure = () => {
             }}
           >
             {selectedFeeStructure?.status === 0 ? 'Lock' : 'Unlock'}
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

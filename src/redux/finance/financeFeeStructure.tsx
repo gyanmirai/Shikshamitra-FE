@@ -1,65 +1,79 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { financeModuleApi } from './financeModuleApi';
 
-import feeStructureData from '../../../financeData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const FinanceFeeStructureApi = createApi({
-  reducerPath: 'FinanceFeeStructureApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/feeStructure') {
-          return { data: feeStructureData.feeStructure };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['Finance-Fee-Structure'],
+export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getFinanceFeeStructure: builder.query({
-      query: () => ({
-        url: '/finance/fee-structures',
+    getFeeStructures: builder.query({
+      query: (params) => ({
+        url: '/fee-structures',
         method: 'GET',
+        params,
       }),
-      providesTags: ['Finance-Fee-Structure'],
+      providesTags: ['FeeStructure'],
     }),
+
     createFeeStructure: builder.mutation({
-      query: (body) => ({
-        url: '/v1/finance/fee-structures',
+      query: ({ academicYearId, body }) => ({
+        url: '/fee-structures',
         method: 'POST',
-        body,
+        data: body,
+        params: {
+          academicYearId,
+        },
       }),
-      invalidatesTags: ['Finance-Fee-Structure'],
+      invalidatesTags: ['FeeStructure'],
     }),
     updateFeeStructure: builder.mutation({
       query: ({ feeStructureId, body }) => ({
-        url: `/v1/finance/fee-structures/${feeStructureId}`,
+        url: `/fee-structures/${feeStructureId}`,
         method: 'PUT',
-        body,
+        data: body,
       }),
-      invalidatesTags: ['Finance-Fee-Structure'],
+      invalidatesTags: ['FeeStructure'],
     }),
-    patchFeeStructureStatus: builder.mutation({
-      query: ({ feeStructureId, body }) => ({
-        url: `/v1/finance/fee-structures/${feeStructureId}/status`,
-        method: 'PATCH',
-        body,
+
+    getFeeStructureDetails: builder.query({
+      query: (feeStructureId) => ({
+        url: `/fee-structures/${feeStructureId}`,
+        method: 'GET',
       }),
-      invalidatesTags: ['Finance-Fee-Structure'],
+      providesTags: ['FeeStructure'],
+    }),
+
+    updateFeeStructureStatus: builder.mutation({
+      query: ({ feeStructureId, body }) => ({
+        url: `/fee-structures/${feeStructureId}/status`,
+        method: 'PATCH',
+        data: body,
+      }),
+      invalidatesTags: ['FeeStructure'],
+    }),
+
+    saveStandardFeeStructures: builder.mutation({
+      query: ({ feeStructureId, body }) => ({
+        url: `/fee-structures/${feeStructureId}/standard-fee-structures`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['FeeStructure'],
+    }),
+
+    getStandardFeeStructure: builder.query({
+      query: ({ standardId }) => ({
+        url: `/fee-structures/standards/${standardId}`,
+        method: 'GET',
+      }),
+      providesTags: ['FeeStructure'],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const {
-  useGetFinanceFeeStructureQuery,
+  useGetFeeStructuresQuery,
   useCreateFeeStructureMutation,
   useUpdateFeeStructureMutation,
-  usePatchFeeStructureStatusMutation,
-} = FinanceFeeStructureApi;
+  useGetFeeStructureDetailsQuery,
+  useUpdateFeeStructureStatusMutation,
+  useSaveStandardFeeStructuresMutation,
+  useGetStandardFeeStructureQuery,
+} = financeFeeStructureApi;

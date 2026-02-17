@@ -5,7 +5,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -13,23 +13,18 @@ import type { IFeeHead, IFeeHeadTableProps } from './type';
 
 const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   data,
+  isLoading,
   onAddFeeHead,
-  editData,
-  open,
-  setOpenDialog,
   setEditData,
   onEdit,
-  // New props for toggle functionality
-  activeDialog,
-  selectedEntry,
-  setSelectedEntry,
+  onDelete,
+  onToggle,
 }) => {
   const theme = useTheme();
-
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'feeHeadName',
+        id: 'name',
         label: 'Name',
         align: 'left',
         render: (value) => (
@@ -39,7 +34,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         ),
       },
       {
-        id: 'feeCategoryId',
+        id: 'feeCategoryName',
         label: 'Fee Category',
         align: 'left',
       },
@@ -63,7 +58,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         ),
       },
       {
-        id: 'toggle',
+        id: 'isActive',
         label: 'Active',
         isFilter: false,
         isSort: false,
@@ -88,8 +83,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             >
               <IconButton
                 onClick={() => {
-                  activeDialog.onTrue();
-                  setSelectedEntry(row as IFeeHead);
+                  onToggle(row as IFeeHead);
                 }}
                 sx={{
                   p: 0.6,
@@ -130,8 +124,12 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
               showThreeDots={false}
               placement="right-top"
               showEditIcon
+              showDeleteIcon
               handleEditClick={() => {
                 onEdit(row as IFeeHead);
+              }}
+              handleDeleteClick={() => {
+                onDelete(row as IFeeHead);
               }}
             />
           );
@@ -139,19 +137,19 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [onEdit]
   );
 
   return (
     <CustomizableTable
       tableId="fee-head-data-table"
+      isLoading={isLoading}
       noDataText={
         <>
           Fee Head Data Not Found{' '}
           <Box
             onClick={() => {
               onAddFeeHead.onTrue();
-              setOpenDialog(true);
               setEditData(null);
             }}
             color="primary.main"
