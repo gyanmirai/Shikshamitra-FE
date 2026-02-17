@@ -3,7 +3,7 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -13,8 +13,9 @@ import CancelButton from 'src/components/cancel-button';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
+import { useGetStandardFeeStructureQuery as useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
 import {
   Grid,
   Card,
@@ -25,15 +26,20 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useAssignFeeStructureMutation,
+  useGetStandardFeeStructureQuery as useGetAssignedFeeStructureQuery,
+} from 'src/redux/student/admission/admission-api';
 
 import type { IInquiryData } from '../Inquiry/type';
 
 interface FeeHeadItem {
-  feeHead: string;
+  feeHeadId: string;
+  feeHeadName: string;
   amount: number;
-  required: boolean;
   isOneTime: boolean;
-  feeCategory: string;
+  isOptional: boolean;
+  categoryName: string;
 }
 
 interface Props {
@@ -41,125 +47,76 @@ interface Props {
   handleClose: (e: any, isSubmit: boolean) => void;
 }
 
-const DUMMY_STRUCTURES = [
-  {
-    id: '1',
-    feeStructureName: 'Standard 1st - Annual (5,000)',
-    feeStructureClasses: {
-      'std-1': [
-        {
-          feeItems: [
-            {
-              feeHead: 'Admission Fee',
-              amount: 5000,
-              required: true,
-              isOneTime: true,
-              feeCategory: 'One-Time',
-            },
-            {
-              feeHead: 'Tuition Fee',
-              amount: 35000,
-              required: true,
-              isOneTime: false,
-              feeCategory: 'Academic',
-            },
-            {
-              feeHead: 'Library Fee',
-              amount: 1500,
-              required: true,
-              isOneTime: false,
-              feeCategory: 'Academic',
-            },
-            {
-              feeHead: 'Sports & Arts Fee',
-              amount: 2000,
-              required: false,
-              isOneTime: false,
-              feeCategory: 'Co-Curricular',
-            },
-            {
-              feeHead: 'Transport Fee',
-              amount: 12000,
-              required: false,
-              isOneTime: false,
-              feeCategory: 'Services',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    id: '2',
-    feeStructureName: 'Standard 2nd - Annual (5,000)',
-    feeStructureClasses: {
-      'std-2': [
-        {
-          feeItems: [
-            {
-              feeHead: 'Tuition Fee',
-              amount: 38000,
-              required: true,
-              isOneTime: false,
-              feeCategory: 'Academic',
-            },
-            {
-              feeHead: 'Exam Fee',
-              amount: 1000,
-              required: true,
-              isOneTime: false,
-              feeCategory: 'Academic',
-            },
-            {
-              feeHead: 'Lab Maintenance',
-              amount: 2500,
-              required: false,
-              isOneTime: false,
-              feeCategory: 'Academic',
-            },
-            {
-              feeHead: 'Lunch Service',
-              amount: 15000,
-              required: false,
-              isOneTime: false,
-              feeCategory: 'Services',
-            },
-          ],
-        },
-      ],
-    },
-  },
-];
-
 const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   const theme = useTheme();
-  const { data: structuresData, isLoading: structuresLoading } = useGetFinanceFeeStructureQuery({});
+  console.log('student0000', student?.standardId);
+  const [feeHeads, setFeeHeads] = useState([]);
+  // Get student's assigned structure
+  const {
+    data: assignedStructureData,
+    isFetching: assignedFetching,
+    isLoading: assignedLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignedFeeStructureQuery,
+    params: student?.id,
+    options: { skip: !student?.id },
+  });
+  // Get available fee structures for the standard
+  const {
+    data: financeFeeStructures,
+    isFetching: financeFetching,
+    isLoading: financeLoading,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFinanceFeeStructureQuery,
+    params: { standardId: student?.standardId },
+    options: { skip: !student?.standardId },
+  });
 
-  // Use simulated data if API doesn't provide it
-  const activeStructures = useMemo(() => {
-    if (structuresData && (structuresData as any).length > 0) return structuresData as any;
-    return DUMMY_STRUCTURES;
-  }, [structuresData]);
+  const [assignFeeStructure, { isLoading: isSubmitting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAssignFeeStructureMutation,
+  });
 
-  // const [assignFeeStructure, { isLoading: isSubmitting }] = useQueryAndMutation({
-  //     type: 'mutation',
-  //     currentQueryAndMutation: useAssignFeeStructureMutation,
-  // });
+  // Pre-populate if structure is already assigned
+  useEffect(() => {
+    if (assignedStructureData) {
+      const assignedId = assignedStructureData?.standardFeeStructureId;
+      if (assignedId) {
+        formik.setFieldValue('feeStructureId', assignedId);
+
+        const heads = assignedStructureData?.feeHeads || [];
+        setFeeHeads(heads);
+
+        // Filter only optional heads that are selected
+        const selectedOptionalHeads = heads
+          .filter((item: any) => item.isOptional && item.isSelected)
+          .map((item: any) => item.feeHeadId);
+
+        formik.setFieldValue('selectedFeeHeads', selectedOptionalHeads);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignedStructureData]);
 
   const formik = useFormik({
     initialValues: {
       feeStructureId: '',
-      selectedFeeHeads: [] as { feeHeadId: string; isSelected: boolean }[],
+      selectedFeeHeads: [] as string[],
     },
     validationSchema: Yup.object({
       feeStructureId: Yup.string().required('Fee Structure is required'),
     }),
     onSubmit: async (values) => {
       try {
-        // await assignFeeStructure({
-        //     studentId: student?.studentId,
-        //     ...values,
-        // }).unwrap();
+        const body = {
+          studentId: student?.id,
+          standardFeeStructureId: values.feeStructureId,
+          selectedOptionalFeeHeadIds: values.selectedFeeHeads,
+        };
+
+        await assignFeeStructure({ body }).unwrap();
         shikshaMitraToast.success({ message: 'Fee structure assigned successfully' });
         handleClose(null, true);
       } catch (error) {
@@ -168,40 +125,13 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     },
   });
 
-  const selectedStructure = useMemo(() => {
-    if (!formik.values.feeStructureId) return null;
-    return activeStructures.find((s: any) => s.id === formik.values.feeStructureId);
-  }, [formik.values.feeStructureId, activeStructures]);
-
-  const feeHeads = useMemo(() => {
-    if (!selectedStructure) return [];
-
-    // For dummy data, we simulate selection logic
-    // In real app, we'd use student?.standardId
-    const standardKey = selectedStructure.id === '1' ? 'std-1' : 'std-2';
-    const classStructures = selectedStructure.feeStructureClasses?.[standardKey] || [];
-
-    if (classStructures.length === 0) return [];
-    return classStructures[0].feeItems || [];
-  }, [selectedStructure]);
-
-  useEffect(() => {
-    if (feeHeads.length > 0) {
-      const initialSelected = feeHeads.map((item: FeeHeadItem) => ({
-        feeHeadId: item.feeHead,
-        isSelected: item.required,
-      }));
-      formik.setFieldValue('selectedFeeHeads', initialSelected);
-    } else {
-      formik.setFieldValue('selectedFeeHeads', []);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [feeHeads]);
+  console.log('formik----values----', formik.values);
 
   const handleToggleFeeHead = (feeHeadId: string) => {
-    const updated = formik.values.selectedFeeHeads.map((item) =>
-      item.feeHeadId === feeHeadId ? { ...item, isSelected: !item.isSelected } : item
-    );
+    const currentSelected = formik.values.selectedFeeHeads;
+    const updated = currentSelected.includes(feeHeadId)
+      ? currentSelected.filter((id) => id !== feeHeadId)
+      : [...currentSelected, feeHeadId];
     formik.setFieldValue('selectedFeeHeads', updated);
   };
 
@@ -213,12 +143,25 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
             <CustomSelect
               fullWidth
               label="Select Fee Structure *"
-              options={activeStructures}
+              options={
+                financeFeeStructures?.standardFeeStructures?.map((fs: any) => ({
+                  ...fs,
+                  name: `${fs.name}`,
+                })) || []
+              }
+              disabled={!!assignedStructureData?.standardFeeStructureId}
               value={formik.values.feeStructureId}
-              onChange={(value) => formik.setFieldValue('feeStructureId', value)}
-              labelKey="feeStructureName"
+              onChange={(value) => {
+                formik.setFieldValue('feeStructureId', value);
+                const selectedStructure = financeFeeStructures?.standardFeeStructures?.find(
+                  (fs: any) => fs.id === value
+                );
+                const heads = selectedStructure?.feeHeads || [];
+                setFeeHeads(heads);
+              }}
+              labelKey="name"
               valueKey="id"
-              isLoading={structuresLoading}
+              isLoading={financeLoading || financeFetching || assignedFetching || assignedLoading}
               error={formik.touched.feeStructureId && Boolean(formik.errors.feeStructureId)}
               helperText={
                 (formik.touched.feeStructureId && (formik.errors.feeStructureId as string)) || ''
@@ -226,19 +169,19 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
             />
           </Grid>
 
-          {formik.values.feeStructureId && (
+          {formik.values.feeStructureId && feeHeads?.length > 0 && (
             <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1" sx={{ mb: 2 }}>
                 Fee Heads
               </Typography>
               <Grid container spacing={2}>
-                {feeHeads.map((item: FeeHeadItem) => {
-                  const isSelected = formik.values.selectedFeeHeads.find(
-                    (f) => f.feeHeadId === item.feeHead
-                  )?.isSelected;
+                {feeHeads?.map((item: FeeHeadItem) => {
+                  const isSelected = item.isOptional
+                    ? formik.values.selectedFeeHeads.includes(item.feeHeadId)
+                    : true;
 
                   return (
-                    <Grid size={{ xs: 12, md: 6 }} key={item.feeHead}>
+                    <Grid size={{ xs: 12, md: 6 }} key={item.feeHeadId}>
                       <Card
                         variant="outlined"
                         sx={{
@@ -255,29 +198,18 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
                             alignItems="flex-start"
                           >
                             <Stack spacing={0.5}>
-                              <Typography variant="subtitle2">{item.feeHead}</Typography>
+                              <Typography variant="subtitle2">{item.feeHeadName}</Typography>
                               <Typography variant="h6">₹ {formatNumber(item.amount)}</Typography>
                               <Stack direction="row" spacing={1}>
                                 {item.isOneTime && <Label color="info">One-Time</Label>}
-                                <Label
-                                  color={
-                                    item.required ? 'error' : isSelected ? 'success' : 'default'
-                                  }
-                                >
-                                  {item.required
-                                    ? 'Mandatory'
-                                    : isSelected
-                                      ? 'Selected'
-                                      : 'Optional'}
-                                </Label>
                               </Stack>
                             </Stack>
                             <FormControlLabel
                               control={
                                 <Checkbox
                                   checked={!!isSelected}
-                                  disabled={item.required}
-                                  onChange={() => handleToggleFeeHead(item.feeHead)}
+                                  disabled={!item.isOptional}
+                                  onChange={() => handleToggleFeeHead(item.feeHeadId)}
                                 />
                               }
                               label=""
@@ -298,7 +230,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
       <DialogActions>
         <CancelButton onClick={() => handleClose(null, false)} />
         <LoadingButton
-          loading={false}
+          loading={isSubmitting}
           onClick={(e: any) => formik.handleSubmit(e)}
           disabled={!formik.values.feeStructureId}
           variant="contained"

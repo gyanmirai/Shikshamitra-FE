@@ -7,16 +7,15 @@ export const bankAccountValidationSchema = Yup.object().shape({
 
   branchAddress: Yup.string().trim().nullable(),
 
-  accountName: Yup.string().trim().required('Account Holder Name is required'),
-
-  accountType: Yup.string().trim().required('Account Type is required'),
+  accountHolderName: Yup.string().trim().required('Account Holder Name is required'),
+  accountType: Yup.number().required('Account Type is required'),
 
   accountNumber: Yup.string()
     .trim()
     .matches(/^[0-9]{6,18}$/, 'Account Number must be 6–18 digits')
     .required('Account Number is required'),
 
-  accountPurpose: Yup.string().trim().nullable(),
+  purpose: Yup.string().trim().nullable(),
 
   ifscCode: Yup.string()
     .trim()

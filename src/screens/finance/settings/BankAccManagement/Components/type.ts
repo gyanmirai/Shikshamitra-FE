@@ -1,12 +1,17 @@
+export enum BankAccountType {
+  Saving = 0,
+  Current = 1,
+}
+
 export interface IBankAccount {
   id: string;
   bankName: string;
   branchName: string;
   branchAddress?: string;
-  accountName: string;
-  accountType: string; // Savings | Current | Salary | Other
+  accountHolderName: string;
+  accountType: BankAccountType;
   accountNumber: string;
-  accountPurpose?: string;
+  purpose?: string;
   ifscCode: string;
   upiId?: string;
 }

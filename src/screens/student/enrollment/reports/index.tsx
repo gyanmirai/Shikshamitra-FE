@@ -56,22 +56,22 @@ const EnrollmentReportScreen = () => {
             {
               name: 'Student List',
               id: 'Student List',
-              icon: 'mdi:account-details',
+              icon: 'mdi:account-details-outline',
             },
             {
               name: 'Demographics',
               id: 'Demographics',
-              icon: 'mdi:chart-pie',
+              icon: 'mdi:chart-pie-outline',
             },
             {
               name: 'Admission',
               id: 'Admission',
-              icon: 'mdi:school',
+              icon: 'mdi:school-outline',
             },
             {
               name: 'Verification',
               id: 'Verification',
-              icon: 'mdi:check-decagram',
+              icon: 'mdi:check-decagram-outline',
             },
           ]}
           subCategories={[

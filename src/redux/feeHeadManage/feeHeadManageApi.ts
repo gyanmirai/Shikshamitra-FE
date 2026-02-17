@@ -4,40 +4,50 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get fee head list
     getFeeHeads: builder.query({
-      query: (academicYearId: string) => ({
-        url: `/v1/finance/fee-heads?academicYearId=${academicYearId}`,
+      query: (params) => ({
+        url: '/fee-heads',
         method: 'GET',
+        params,
       }),
       providesTags: ['FeeHead'],
     }),
+
+    // Add fee head
     addFeeHead: builder.mutation({
-      query: (body) => ({
-        url: `/v1/finance/fee-heads`,
+      query: ({ academicYearId, body }) => ({
+        url: `/fee-heads`,
         method: 'POST',
-        body,
+        data: body,
+        params: {
+          academicYearId,
+        },
       }),
       invalidatesTags: ['FeeHead'],
     }),
+
+    // Update fee head
     updateFeeHead: builder.mutation({
-      query: ({ feeHeadId, body }) => ({
-        url: `/v1/finance/fee-heads/${feeHeadId}`,
+      query: ({ id, body }) => ({
+        url: `/fee-heads/${id}`,
         method: 'PUT',
-        body,
+        data: body,
       }),
       invalidatesTags: ['FeeHead'],
     }),
+
+    // Delete fee head
     deleteFeeHead: builder.mutation({
-      query: (feeHeadId: string) => ({
-        url: `/v1/finance/fee-heads/${feeHeadId}`,
+      query: ({ id }) => ({
+        url: `/fee-heads/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['FeeHead'],
     }),
     patchFeeHead: builder.mutation({
       query: ({ feeHeadId, body }) => ({
-        url: `/v1/finance/fee-heads/${feeHeadId}/status`,
+        url: `/fee-heads/${feeHeadId}/status`,
         method: 'PATCH',
-        body,
+        data: body,
       }),
       invalidatesTags: ['FeeHead'],
     }),

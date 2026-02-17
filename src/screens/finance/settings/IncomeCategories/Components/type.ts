@@ -2,7 +2,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IIncomeCategory {
   id: string;
-  incomeCategoryName: string;
+  name: string;
   description?: string;
   tags: string[];
 }
@@ -16,6 +16,7 @@ export interface IIncomeCategoryTableProps {
   setEditData: (value: IIncomeCategory | null) => void;
   onDelete: (row: IIncomeCategory) => void;
   onEdit: (row: IIncomeCategory) => void;
+  isLoading?: boolean;
 }
 
 export interface IIncomeCategoryFormProps {

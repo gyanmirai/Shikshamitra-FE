@@ -3,22 +3,20 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IFeeHead {
   id: string;
   feeCategoryId: string;
-  feeHeadName: string;
+  name: string;
   description?: string;
-  toggle: boolean;
+  isActive: boolean;
 }
 
 export interface IFeeHeadTableProps {
   data: IFeeHead[];
+  isLoading: boolean;
   onAddFeeHead: any;
   editData: IFeeHead | null;
-  open: boolean;
-  setOpenDialog: (value: boolean) => void;
   setEditData: (value: IFeeHead | null) => void;
   onEdit: (row: IFeeHead) => void;
-  activeDialog: UseBooleanReturn;
-  selectedEntry: IFeeHead | null;
-  setSelectedEntry: (entry: IFeeHead | null) => void;
+  onDelete: (row: IFeeHead) => void;
+  onToggle: (row: IFeeHead) => void;
 }
 
 export interface IFeeHeadFormProps {

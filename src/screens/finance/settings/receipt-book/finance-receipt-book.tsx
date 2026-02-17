@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -15,13 +16,15 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
-import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
+// import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 import {
+  receiptBookApi,
   useGetReceiptBooksQuery,
   usePatchReceiptBookMutation,
   useDeleteReceiptBookMutation,
@@ -48,29 +51,35 @@ const FinanceReceiptBookSetting = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   // State to store all receipt book entries for the table
-  const [tableData] = useState(initialData);
+  // const [tableData] = useState(initialData);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
   // Dialog state for delete confirmation
-  const dialogForDeleteConfirmation = useBoolean();
+  const deleteDialog = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // DELETE mutation
-  const { deleteReceiptBook } = useQueryAndMutation({
+  const [deleteReceiptBook] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteReceiptBookMutation,
   });
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // GET receipt book
-  const academicYearId = useSelector((state: RootState) => state.academicYearId);
-  const { getReceiptBooks, isLoading } = useQueryAndMutation({
+  const {
+    data: receiptBookData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReceiptBooksQuery,
-    params: { academicYearId },
+    params: { academicYearId: currentYear?.id },
   });
 
   // PATCH mutation for status change
-  const { patchReceiptBook } = useQueryAndMutation({
+  const [patchReceiptBook, { isLoading: isPatchLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePatchReceiptBookMutation,
   });
@@ -95,9 +104,15 @@ const FinanceReceiptBookSetting = () => {
     }
   };
 
+  const { refetch } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReceiptBooksQuery,
+    params: { academicYearId: currentYear?.id },
+  });
+
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'receiptBookName', label: 'Name', align: 'left', sticky: true },
+      { id: 'name', label: 'Name', align: 'left', sticky: true },
       { id: 'prefix', label: 'Prefix', align: 'left' },
       { id: 'suffix', label: 'Suffix', align: 'left' },
       {
@@ -106,16 +121,16 @@ const FinanceReceiptBookSetting = () => {
         align: 'left',
         render: (value, row) => (
           <Typography variant="caption" fontSize="13px">
-            {value}/{row.medium}
+            {row.boardName}/{row.mediumName}
           </Typography>
         ),
       },
-      { id: 'organization', label: 'Organization', align: 'left' },
+      { id: 'mediumStageName', label: 'Organization', align: 'left' },
       { id: 'startingNumber', label: 'Starting No.', align: 'left', minWidth: 130 },
       { id: 'endingNumber', label: 'Ending No.', align: 'left', minWidth: 130 },
       { id: 'description', label: 'Description', align: 'left' },
       {
-        id: 'toggle',
+        id: 'isActive',
         label: 'Active',
         isFilter: false,
         isSort: false,
@@ -175,8 +190,8 @@ const FinanceReceiptBookSetting = () => {
             showThreeDots={false}
             showDeleteIcon
             handleDeleteClick={() => {
-              dialogForDeleteConfirmation.onTrue();
               setSelectedEntry(row);
+              deleteDialog.onTrue();
             }}
             showEditIcon
             handleEditClick={() => {
@@ -219,6 +234,7 @@ const FinanceReceiptBookSetting = () => {
       />
 
       <CustomizableTable
+        isLoading={isLoading || isFetching}
         noDataText={
           <>
             No Receipt Book Data Found{' '}
@@ -244,7 +260,7 @@ const FinanceReceiptBookSetting = () => {
         }
         tableId="finance-receipt-book-setting-table"
         columns={columns}
-        data={tableData}
+        data={receiptBookData?.items || []}
       />
 
       {receiptBookDialog.value && (
@@ -282,7 +298,7 @@ const FinanceReceiptBookSetting = () => {
             onClose={handleClose}
             data={selectedEntry}
             isEdit={isEdit}
-            allData={tableData}
+            allData={receiptBookData?.items || []}
           />
         </CustomDialog>
       )}
@@ -296,32 +312,35 @@ const FinanceReceiptBookSetting = () => {
           }, 200); // Adjust delay (in ms) as needed
           activeDialog.onFalse();
         }}
-        title={selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
+        title={selectedEntry?.isActive === true ? 'Inactive' : 'Active'}
         content={
-          selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
+          selectedEntry && Array.isArray(selectedEntry.name) ? (
             <>
-              Are you sure you want move <strong>{selectedEntry.receiptBookName}</strong> receipt
-              book to {selectedEntry.toggle === true ? 'Inactive' : 'Active'} ?
+              Are you sure you want move <strong>{selectedEntry.name}</strong> receipt book to{' '}
+              {selectedEntry.isActive === true ? 'Inactive' : 'Active'} ?
             </>
           ) : (
             <>
-              Are you sure you want move <strong>{selectedEntry?.receiptBookName}</strong> receipt
-              book to {selectedEntry?.toggle === true ? 'Inactive' : 'Active'} ?
+              Are you sure you want move <strong>{selectedEntry?.name}</strong> receipt book to{' '}
+              {selectedEntry?.isActive === true ? 'Inactive' : 'Active'} ?
             </>
           )
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             size="small"
+            loading={isPatchLoading}
             startIcon={
               <Iconify
-                icon={selectedEntry?.toggle === true ? GlobalIcons.draftIcon : GlobalIcons.publish}
+                icon={
+                  selectedEntry?.isActive === true ? GlobalIcons.draftIcon : GlobalIcons.publish
+                }
               />
             }
             onClick={async () => {
               try {
-                const newStatus = !selectedEntry?.toggle;
+                const newStatus = !selectedEntry?.isActive;
                 await patchReceiptBook({
                   receiptBookId: selectedEntry?.id,
                   body: { isActive: newStatus },
@@ -331,8 +350,8 @@ const FinanceReceiptBookSetting = () => {
                 shikshaMitraToast.success({
                   message: (
                     <>
-                      Receipt Book: <strong>{selectedEntry?.receiptBookName}</strong> moved to{' '}
-                      {status} successfully.
+                      Receipt Book: <strong>{selectedEntry?.name}</strong> moved to {status}{' '}
+                      successfully.
                     </>
                   ),
                 });
@@ -348,58 +367,61 @@ const FinanceReceiptBookSetting = () => {
               }
             }}
           >
-            {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
-          </Button>
+            {selectedEntry?.isActive === true ? 'Inactive' : 'Active'}
+          </LoadingButton>
         }
       />
 
       <ConfirmDialog
-        open={dialogForDeleteConfirmation.value}
+        open={deleteDialog.value}
         onClose={() => {
-          dialogForDeleteConfirmation.onFalse();
           setTimeout(() => {
             setSelectedEntry(null);
           }, 200);
+          deleteDialog.onFalse();
         }}
-        title="Delete Receipt Book"
+        title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{selectedEntry?.receiptBookName}</strong>{' '}
-            receipt book? This action cannot be undone.
+            Are you sure you want to delete receipt book <strong>{selectedEntry?.name}</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={async () => {
-              try {
-                await deleteReceiptBook(selectedEntry?.id).unwrap();
-
-                shikshaMitraToast.success({
-                  message: (
-                    <>
-                      Receipt Book: <strong>{selectedEntry?.receiptBookName}</strong> deleted
-                      successfully.
-                    </>
+              confirmWithUndo({
+                item: selectedEntry,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    receiptBookApi.util.updateQueryData(
+                      'getReceiptBooks',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === (selectedEntry as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
                   ),
-                });
-                dialogForDeleteConfirmation.onFalse();
-                setTimeout(() => {
-                  setSelectedEntry(null);
-                }, 200);
-              } catch (error) {
-                console.error('Failed to delete receipt book:', error);
-                shikshaMitraToast.error({
-                  message: 'Failed to delete receipt book',
-                });
-              }
+                onUndoRestore: () => refetch(),
+                onCommit: () =>
+                  deleteReceiptBook({
+                    id: (selectedEntry as any).id,
+                  }),
+              });
+              deleteDialog.onFalse();
+              setSelectedEntry(null);
             }}
           >
-            Delete
-          </Button>
+            Yes
+          </LoadingButton>
         }
       />
     </Box>

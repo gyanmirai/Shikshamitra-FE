@@ -71,8 +71,8 @@ export const SectionCard = ({
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 2, md: 2 },
-        mb: 2,
+        p: { xs: 1, md: 2 },
+        mb: 1,
         position: 'relative',
         borderRadius: 2,
         border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,

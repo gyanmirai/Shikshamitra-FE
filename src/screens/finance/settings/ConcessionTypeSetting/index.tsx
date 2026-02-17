@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,7 +19,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   concessionTypeApi,
   useGetConcessionTypesQuery,
-  useGetConcessionTypeByIdQuery,
   useDeleteConcessionTypeMutation,
 } from 'src/redux/finance/concessionType';
 
@@ -33,7 +33,6 @@ const ConcessionType = () => {
   const [selectedConcessionType, setSelectedConcessionType] = useState<IConcessionTypeForm | null>(
     null
   );
-
   // Custom hook to manage dialog open/close state
   const addConcessionTypeDialog = useBoolean();
   const deleteConcessionTypeDialog = useBoolean();
@@ -52,7 +51,6 @@ const ConcessionType = () => {
     params: {
       academicYearId: currentYear?.id,
     },
-    options: { skip: !currentYear?.id },
   });
 
   // Redux state and dispatch
@@ -60,25 +58,12 @@ const ConcessionType = () => {
   const dispatch = useDispatch();
 
   // Delete mutation
-  const { deleteConcessionType } = useQueryAndMutation({
+  const [deleteConcessionType, { isLoading: isLoadingDelete }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionTypeMutation,
   });
 
   const { confirmWithUndo } = useConfirmWithUndo();
-
-  // Fetch concession type details by ID for view dialog
-  const { data: concessionTypeDetails, isLoading: isLoadingDetails } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetConcessionTypeByIdQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      concessionTypeId: selectedConcessionType?.id,
-    },
-    options: {
-      skip: !currentYear?.id || !selectedConcessionType?.id || !viewConcessionTypeDialog.value,
-    },
-  });
 
   /**
    * Handles closing the concession type dialog
@@ -158,7 +143,7 @@ const ConcessionType = () => {
         </CustomDialog>
 
         <ConcessionTypeTable
-          data={concessionTypes}
+          data={concessionTypes?.items}
           isLoading={isLoading}
           addConcessionType={addConcessionTypeDialog}
           setEditData={setSelectedConcessionType}
@@ -189,14 +174,18 @@ const ConcessionType = () => {
           content={
             <>
               Are you sure you want to delete concession type{' '}
-              <strong>{selectedConcessionType?.concessionName}</strong>?
+              <strong>
+                {selectedConcessionType?.name || (selectedConcessionType as any)?.concessionName}
+              </strong>
+              ?
             </>
           }
           action={
-            <Button
+            <LoadingButton
               variant="contained"
               color="error"
               size="small"
+              loading={isLoadingDelete}
               onClick={() => {
                 confirmWithUndo({
                   item: selectedConcessionType,
@@ -204,14 +193,14 @@ const ConcessionType = () => {
                     dispatchFn(
                       concessionTypeApi.util.updateQueryData(
                         'getConcessionTypes',
-                        currentYear?.id,
+                        { academicYearId: currentYear?.id },
                         (draft: any) => {
-                          const index = draft.data?.findIndex(
+                          const index = draft.items?.findIndex(
                             (b: any) => b.id === (selectedConcessionType as any)?.id
                           );
                           setDeleteIndex(index);
                           if (index !== -1) {
-                            draft.data.splice(index, 1);
+                            draft.items.splice(index, 1);
                           }
                         }
                       )
@@ -219,7 +208,6 @@ const ConcessionType = () => {
                   onUndoRestore: () => refetch(),
                   onCommit: () =>
                     deleteConcessionType({
-                      academicYearId: currentYear?.id,
                       concessionTypeId: selectedConcessionType?.id,
                     }),
                 });
@@ -228,7 +216,7 @@ const ConcessionType = () => {
               }}
             >
               Yes
-            </Button>
+            </LoadingButton>
           }
         />
 
@@ -253,7 +241,7 @@ const ConcessionType = () => {
             </Box>
           }
         >
-          <ConcessionDocumentTable data={selectedConcessionType} isLoading={isLoadingDetails} />
+          <ConcessionDocumentTable data={selectedConcessionType} />
         </CustomDialog>
       </>
     </Box>

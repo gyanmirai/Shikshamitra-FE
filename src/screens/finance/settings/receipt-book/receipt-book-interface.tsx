@@ -1,16 +1,19 @@
 export interface IReceiptBook {
-  id: number;
-  receiptBookName: string; // From "Receipt Book Name"
+  id?: string;
+  name: string; // From "Receipt Book Name"
   prefix: string; // From "Prefix"
   suffix: string; // From "Suffix"
   startingNumber: number | string; // From "Starting Number"
   endingNumber: number | string; // From "Ending Number"
   description?: string; // From "Description"
-  toggle?: boolean; // Optional toggle
+  isActive?: boolean; // Optional toggle
   action?: string; // Optional action
-  medium: string;
-  board: string;
-  organization: string;
+  mediumId: string;
+  boardId: string;
+  mediumStageId: string;
+  mediumStageName?: string;
+  mediumName?: string;
+  boardName?: string;
 }
 
 export interface IProps {

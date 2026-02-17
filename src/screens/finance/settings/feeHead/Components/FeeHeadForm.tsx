@@ -2,8 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,6 +14,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useAddFeeHeadMutation,
@@ -27,16 +28,25 @@ import type { IFeeHeadFormProps } from './type';
 
 const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [isLoading, setIsLoading] = useState(false);
 
+  // Custom hook to fetch fee category data
+  const {
+    data: feeCategoryData,
+    isLoading: isFeeCategoryLoading,
+    isFetching: isFeeCategoryFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeCategoriesQuery,
+    params: { academicYearId: currentYear?.id },
+  });
   // POST mutation for creating
-  const { addFeeHead } = useQueryAndMutation({
+  const [addFeeHead, { isLoading: isAddFeeHeadLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddFeeHeadMutation,
   });
 
   // PUT mutation for updating
-  const { updateFeeHead } = useQueryAndMutation({
+  const [updateFeeHead, { isLoading: isUpdateFeeHeadLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFeeHeadMutation,
   });
@@ -46,32 +56,32 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     validationSchema: feeHeadValidationSchema,
     onSubmit: async (values) => {
       try {
-        setIsLoading(true);
-
         // Transform form data to API format
         const payload = {
-          academicYearId: currentYear?.id,
           feeCategoryId: values.feeCategoryId,
-          name: values.feeHeadName,
+          name: values.name,
           description: values.description || '',
         };
 
         if (editData?.id) {
           // Update existing fee head
           await updateFeeHead({
-            feeHeadId: editData.id,
+            id: editData.id,
             body: payload,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `${values.feeHeadName} Fee Head updated successfully`,
+            message: `${values.name} Fee Head updated successfully`,
           });
         } else {
           // Create new fee head
-          await addFeeHead(payload).unwrap();
+          await addFeeHead({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
-            message: `${values.feeHeadName} Fee Head added successfully`,
+            message: `${values.name} Fee Head added successfully`,
           });
         }
         onClose(null, true);
@@ -80,8 +90,6 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
         shikshaMitraToast.error({
           message: `Failed to ${editData ? 'update' : 'create'} fee head`,
         });
-      } finally {
-        setIsLoading(false);
       }
     },
   });
@@ -98,19 +106,11 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
               <CustomSelect
                 name="feeCategoryId"
                 label="Fee Category *"
-                options={[
-                  { id: 'Tuition Fee', name: 'Tuition Fee' },
-                  { id: 'Admission Fee', name: 'Admission Fee' },
-                  { id: 'Examination Fee', name: 'Examination Fee' },
-                  { id: 'Library Fee', name: 'Library Fee' },
-                  { id: 'Laboratory Fee', name: 'Laboratory Fee' },
-                  { id: 'Sports Fee', name: 'Sports Fee' },
-                  { id: 'Transportation Fee', name: 'Transportation Fee' },
-                  { id: 'Development Fee', name: 'Development Fee' },
-                ]}
+                options={feeCategoryData?.items || []}
                 value={formik.values.feeCategoryId || ''}
                 labelKey="name"
                 valueKey="id"
+                isLoading={isFeeCategoryLoading || isFeeCategoryFetching}
                 onChange={(value) => {
                   formik.setFieldValue('feeCategoryId', value);
                   formik.setFieldTouched('feeCategoryId', false);
@@ -124,15 +124,13 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
 
           {/* Fee Head Name */}
           <Grid size={{ xs: 12 }}>
-            <ShakingTextField
-              error={!!(formik.touched.feeHeadName && formik.errors.feeHeadName) || false}
-            >
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
                 label="Fee Head Name *"
-                name="feeHeadName"
+                name="name"
                 size="small"
-                value={formik.values.feeHeadName}
+                value={formik.values.name}
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-zA-Z\s]/g, '')
@@ -141,10 +139,10 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
                     )
                     .join(' ');
-                  formik.setFieldValue('feeHeadName', value);
+                  formik.setFieldValue('name', value);
                 }}
-                error={formik.touched.feeHeadName && Boolean(formik.errors.feeHeadName)}
-                helperText={formik.touched.feeHeadName && formik.errors.feeHeadName}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
               />
             </ShakingTextField>
           </Grid>
@@ -185,8 +183,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
           type="submit"
           variant="contained"
           size="small"
-          loading={isLoading}
-          disabled={isLoading}
+          loading={isUpdateFeeHeadLoading || isAddFeeHeadLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}

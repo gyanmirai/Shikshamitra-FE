@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -27,18 +28,21 @@ import IncomeCategoryTable from './Components/IncomeCategoryTable';
 import type { IIncomeCategory } from './Components/type';
 
 const FinanceIncomeCategoriesScreen = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Use custom hook to fetch income categories
   const {
     data: incomeCategoryData,
     isLoading: incomeCategoryLoading,
+    isFetching: incomeCategoryFetching,
     refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
   // DELETE mutation
-  const { deleteIncomeCategory, isLoading: isDeleting } = useQueryAndMutation({
+  const [deleteIncomeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteIncomeCategoryMutation,
   });
@@ -119,7 +123,8 @@ const FinanceIncomeCategoriesScreen = () => {
         setOpenDialog={setOpen}
         editData={selectedIncomeCategory}
         setEditData={setSelectedIncomeCategory}
-        data={incomeCategoryData || []}
+        data={incomeCategoryData?.items || []}
+        isLoading={incomeCategoryLoading || incomeCategoryFetching}
       />
 
       <CustomDialog
@@ -167,11 +172,11 @@ const FinanceIncomeCategoriesScreen = () => {
         content={
           <>
             Are you sure you want to delete income category{' '}
-            <strong>{selectedIncomeCategory?.incomeCategoryName}</strong>?
+            <strong>{selectedIncomeCategory?.name}</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
@@ -186,9 +191,9 @@ const FinanceIncomeCategoriesScreen = () => {
                   dispatchFn(
                     incomeCategoryApi.util.updateQueryData(
                       'getIncomeCategories',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
-                        const list = Array.isArray(draft) ? draft : draft?.data || [];
+                        const list = Array.isArray(draft) ? draft : draft?.items || [];
                         const index = list.findIndex(
                           (c: any) => c.id === (selectedIncomeCategory as any)?.id
                         );
@@ -207,7 +212,7 @@ const FinanceIncomeCategoriesScreen = () => {
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

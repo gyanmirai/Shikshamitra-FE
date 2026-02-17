@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -17,7 +18,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   bankAccountApi,
-  useGetBankAccountsQuery,
+  useGetBankAccountQuery,
   useDeleteBankAccountMutation,
 } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
@@ -27,18 +28,21 @@ import BankAccountTable from './Components/BankAccountTable';
 import type { IBankAccount } from './Components/type';
 
 const BankAccountManagement: React.FC = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Get bank accounts data
   const {
     data: bankAccountData,
     isLoading: bankAccountsLoading,
+    isFetching: bankAccountFetching,
     refetch,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBankAccountsQuery,
+    currentQueryAndMutation: useGetBankAccountQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
   // DELETE mutation
-  const { deleteBankAccount, isLoading: isDeleting } = useQueryAndMutation({
+  const [deleteBankAccount, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteBankAccountMutation,
   });
@@ -88,7 +92,7 @@ const BankAccountManagement: React.FC = () => {
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Settings', href: '/finance/setting' },
-          { name: 'Bank Accounts', href: '/finance/bank-accounts' },
+          { name: 'Bank Accounts', href: '/finance/settings/bank-accounts' },
         ]}
         action={
           <Button
@@ -98,7 +102,7 @@ const BankAccountManagement: React.FC = () => {
             variant="contained"
             sx={{ px: '32px' }}
           >
-            Add Bank Account
+            Bank Account
           </Button>
         }
         sx={{ px: 1 }}
@@ -118,8 +122,8 @@ const BankAccountManagement: React.FC = () => {
         setOpenDialog={setOpen}
         editData={selectedBankAccount}
         setEditData={setSelectedBankAccount}
-        data={bankAccountData || []}
-        isLoading={bankAccountsLoading}
+        data={bankAccountData?.items || []}
+        isLoading={bankAccountsLoading || bankAccountFetching}
       />
 
       <CustomDialog
@@ -171,7 +175,7 @@ const BankAccountManagement: React.FC = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
@@ -185,8 +189,8 @@ const BankAccountManagement: React.FC = () => {
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     bankAccountApi.util.updateQueryData(
-                      'getBankAccounts',
-                      undefined,
+                      'getBankAccount',
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
                         const list = Array.isArray(draft) ? draft : draft?.data || [];
                         const index = list.findIndex(
@@ -200,14 +204,14 @@ const BankAccountManagement: React.FC = () => {
                     )
                   ),
                 onUndoRestore: () => refetch(),
-                onCommit: () => deleteBankAccount({ bankAccountId: selectedBankAccount.id }),
+                onCommit: () => deleteBankAccount(selectedBankAccount.id),
               });
               deleteBankAccountDialog.onFalse();
               setSelectedBankAccount(null);
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

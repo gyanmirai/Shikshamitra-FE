@@ -4,17 +4,36 @@ export const getInitialFeeStructureData = (
   currentYear: any,
   editData?: Partial<IFeeStructure> | null
 ): IFeeStructure => ({
-  feeStructureName: editData?.feeStructureName || '',
-  academicYear: editData?.academicYear || currentYear.id,
+  name: editData?.name || '',
+  academicYearId: editData?.academicYearId || currentYear.id,
   academicYearName: editData?.academicYearName || currentYear.name,
-  board: editData?.board || '',
-  medium: editData?.medium || '',
-  receiptBook: editData?.receiptBook || '',
+  boardId: editData?.boardId || '',
+  boardName: editData?.boardName || '',
+  mediumId: editData?.mediumId || '',
+  mediumName: editData?.mediumName || '',
+  receiptBookId: editData?.receiptBookId || '',
+  receiptBookName: editData?.receiptBookName || '',
   // paymentTerm: editData?.paymentTerm || '',
   // paymentMethod: editData?.paymentMethod || [],
   totalFeeHead: editData?.totalFeeHead ?? 0,
   totalClass: editData?.totalClass ?? 0,
   feeStructureClasses: editData?.feeStructureClasses || {},
   status: 0,
-  id: undefined,
+  id: editData?.id || undefined,
+});
+
+export const standardFeeStructureInitialValues = (data: any) => ({
+  standardFeeStructures:
+    data?.standardFeeStructures?.map((fs: any) => ({
+      name: fs.name,
+      feeHeads:
+        fs.feeHeads?.map((fh: any) => ({
+          feeHeadId: fh.feeHeadId,
+          feeHeadName: fh.feeHeadName,
+          categoryName: fh.categoryName,
+          amount: fh.amount,
+          isOneTime: fh.isOneTime,
+          isOptional: fh.isOptional,
+        })) || [],
+    })) || [],
 });

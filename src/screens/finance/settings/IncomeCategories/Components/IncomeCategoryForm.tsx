@@ -1,8 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -22,17 +25,17 @@ import { incomeCategoryValidationSchema } from './IncomeCategoryValidationSchema
 import type { IIncomeCategoryFormProps } from './type';
 
 const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose, editData }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [tag, setTag] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   // POST mutation for creating
-  const { addIncomeCategory } = useQueryAndMutation({
+  const [addIncomeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostIncomeCategoryMutation,
   });
 
   // PUT mutation for updating
-  const { updateIncomeCategory } = useQueryAndMutation({
+  const [updateIncomeCategory, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePutIncomeCategoryMutation,
   });
@@ -42,11 +45,9 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
     validationSchema: incomeCategoryValidationSchema,
     onSubmit: async (values) => {
       try {
-        setIsLoading(true);
-
         // Transform form data to API format
         const payload = {
-          name: values.incomeCategoryName,
+          name: values.name,
           description: values.description || '',
           tags: values.tags || [],
         };
@@ -59,14 +60,17 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           }).unwrap();
 
           shikshaMitraToast.success({
-            message: `${values.incomeCategoryName} Income Category updated successfully`,
+            message: `${values.name} Income Category updated successfully`,
           });
         } else {
           // Create new income category
-          await addIncomeCategory(payload).unwrap();
+          await addIncomeCategory({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
-            message: `${values.incomeCategoryName} Income Category added successfully`,
+            message: `${values.name} Income Category added successfully`,
           });
         }
         onClose(null, true);
@@ -75,8 +79,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
         shikshaMitraToast.error({
           message: `Failed to ${editData ? 'update' : 'create'} income category`,
         });
-      } finally {
-        setIsLoading(false);
       }
     },
   });
@@ -104,17 +106,13 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
         <Grid container spacing={2}>
           {/* Income Category Name */}
           <Grid size={12}>
-            <ShakingTextField
-              error={
-                !!(formik.touched.incomeCategoryName && formik.errors.incomeCategoryName) || false
-              }
-            >
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
                 label="Income Category Name *"
-                name="incomeCategoryName"
+                name="name"
                 size="small"
-                value={formik.values.incomeCategoryName}
+                value={formik.values.name}
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-zA-Z\s]/g, '')
@@ -123,12 +121,10 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
                     )
                     .join(' ');
-                  formik.setFieldValue('incomeCategoryName', value);
+                  formik.setFieldValue('name', value);
                 }}
-                error={
-                  formik.touched.incomeCategoryName && Boolean(formik.errors.incomeCategoryName)
-                }
-                helperText={formik.touched.incomeCategoryName && formik.errors.incomeCategoryName}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
               />
             </ShakingTextField>
           </Grid>
@@ -222,8 +218,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           type="submit"
           variant="contained"
           size="small"
-          loading={isLoading}
-          disabled={isLoading}
+          loading={isAddLoading || isUpdateLoading}
+          disabled={isAddLoading || isUpdateLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}

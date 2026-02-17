@@ -2,43 +2,49 @@ import { financeModuleApi } from '../financeModuleApi';
 
 export const bankAccountApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getBankAccounts: builder.query({
-      query: (academicYearId) => ({
-        url: `/finance/bank-accounts?academicYearId=${academicYearId}`,
+    getBankAccount: builder.query({
+      query: ({ academicYearId }: { academicYearId: string }) => ({
+        url: '/bank-accounts',
         method: 'GET',
+        params: {
+          academicYearId,
+        },
       }),
-      providesTags: ['BankAccounts'],
+      providesTags: ['bank-account'],
     }),
-    addBankAccount: builder.mutation({
-      query: (body: any) => ({
-        url: `/finance/bank-accounts`,
+    postBankAccount: builder.mutation({
+      query: ({ academicYearId, body }) => ({
+        url: '/bank-accounts',
         method: 'POST',
-        body,
+        data: body,
+        params: {
+          academicYearId,
+        },
       }),
-      invalidatesTags: ['BankAccounts'],
+      invalidatesTags: ['bank-account'],
     }),
-    updateBankAccount: builder.mutation({
+    putBankAccount: builder.mutation({
       query: ({ bankAccountId, body }: { bankAccountId: string; body: any }) => ({
-        url: `/finance/bank-accounts/${bankAccountId}`,
+        url: `/bank-accounts/${bankAccountId}`,
         method: 'PUT',
-        body,
+        data: body,
       }),
-      invalidatesTags: ['BankAccounts'],
+      invalidatesTags: ['bank-account'],
     }),
     deleteBankAccount: builder.mutation({
-      query: ({ bankAccountId }: { bankAccountId: string }) => ({
-        url: `/finance/bank-accounts/${bankAccountId}`,
+      query: (bankAccountId: string) => ({
+        url: `/bank-accounts/${bankAccountId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['BankAccounts'],
+      invalidatesTags: ['bank-account'],
     }),
   }),
   overrideExisting: false,
 });
 
 export const {
-  useGetBankAccountsQuery,
-  useAddBankAccountMutation,
-  useUpdateBankAccountMutation,
+  useGetBankAccountQuery,
+  usePostBankAccountMutation,
+  usePutBankAccountMutation,
   useDeleteBankAccountMutation,
 } = bankAccountApi;

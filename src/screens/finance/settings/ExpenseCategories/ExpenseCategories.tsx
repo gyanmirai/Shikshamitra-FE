@@ -1,256 +1,107 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
+import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
+import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
+import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   expenseCategoryApi,
-  useGetBudgetOptionsQuery,
   useGetExpenseCategoryQuery,
-  usePutExpenseCategoryMutation,
-  usePostExpenseCategoryMutation,
   useDeleteExpenseCategoryMutation,
 } from 'src/redux/finance/expenseCategory';
 
-const FinanceExpenseCategory = () => {
-  const addDialog = useBoolean();
-  const editDialog = useBoolean();
-  const confirm = useBoolean();
-  const { confirmWithUndo } = useConfirmWithUndo();
+import ExpenseCategoryForm from './Components/ExpenseCategoryForm';
+import ExpenseCategoryTable from './Components/ExpenseCategoryTable';
 
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const { currentAcademicYearId: academicYearId } = useSelector(
-    (state: RootState) => state.globalState
-  );
+import type { IExpenseCategory } from './Components/type';
 
-  // Get expense categories data
-  const { data, isLoading, refetch } = useQueryAndMutation({
+const FinanceExpenseCategoriesScreen = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // Use custom hook to fetch expense categories
+  const {
+    data: expenseCategoryData,
+    isLoading: expenseCategoryLoading,
+    isFetching: expenseCategoryFetching,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
-    params: academicYearId?.id,
-  });
-
-  // POST mutation for creating
-  const { postExpenseCategory } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePostExpenseCategoryMutation,
-  });
-
-  // PUT mutation for updating
-  const { putExpenseCategory } = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePutExpenseCategoryMutation,
+    params: { academicYearId: currentYear?.id },
   });
 
   // DELETE mutation
-  const { deleteExpenseCategory } = useQueryAndMutation({
+  const [deleteExpenseCategory, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExpenseCategoryMutation,
   });
 
-  // Handle save operation (create/update)
-  const handleSave = async (values: any) => {
-    try {
-      // Transform form data to API format
-      const payload = {
-        name: values.expenseCategoryName,
-        description: values.description || '',
-        tags: values.tags || [],
-      };
+  // Dialog control states
+  const deleteExpenseCategoryDialog = useBoolean();
+  const addExpenseCategoryDialog = useBoolean();
+  const [open, setOpen] = useState(false);
 
-      if (selectedItem?.id) {
-        // Update existing expense category
-        await putExpenseCategory({
-          expenseCategoryId: selectedItem.id,
-          body: payload,
-        }).unwrap();
-
-        shikshaMitraToast.success({
-          message: `${values.expenseCategoryName} Expense Category Updated Successfully`,
-        });
-      } else {
-        // Create new expense category
-        await postExpenseCategory(payload).unwrap();
-
-        shikshaMitraToast.success({
-          message: `${values.expenseCategoryName} Expense Category Added Successfully`,
-        });
-      }
-    } catch (error) {
-      console.error('Save operation failed:', error);
-      shikshaMitraToast.error({
-        message: `Failed to ${selectedItem ? 'update' : 'create'} expense category`,
-      });
-      throw error;
-    }
-  };
-
-  // Handle delete operation
-  const handleDelete = () => {
-    if (!selectedItem?.id) return;
-
-    confirmWithUndo({
-      item: selectedItem,
-      onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-        dispatchFn(
-          expenseCategoryApi.util.updateQueryData(
-            'getExpenseCategory',
-            academicYearId,
-            (draft: any) => {
-              const list = Array.isArray(draft) ? draft : draft?.data || [];
-              const index = list.findIndex((b: any) => b.id === (selectedItem as any)?.id);
-              setDeleteIndex(index);
-              if (index !== -1) {
-                list.splice(index, 1);
-              }
-            }
-          )
-        ),
-      onUndoRestore: () => refetch(),
-      onCommit: () => deleteExpenseCategory(selectedItem.id),
-    });
-    confirm.onFalse();
-    setSelectedItem(null);
-  };
-
-  // Handle edit action
-  const handleEdit = (item: any) => {
-    setSelectedItem(item);
-    editDialog.onTrue();
-  };
-
-  // Handle delete action
-  const handleDeleteAction = (item: any) => {
-    setSelectedItem(item);
-    confirm.onTrue();
-  };
-
-  // Handle add new item
-  const handleAdd = () => {
-    setSelectedItem(null);
-    addDialog.onTrue();
-  };
-  // Redux state and dispatch
+  // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const [selectedExpenseCategory, setSelectedExpenseCategory] = useState<IExpenseCategory | null>(
+    null
+  );
+  const { confirmWithUndo } = useConfirmWithUndo();
   const dispatch = useDispatch();
 
   /**
-   * Handles closing the expense category dialog
+   * Handles closing of the expense category form dialog
    */
-  const handleDialogClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addDialog.onFalse();
-      editDialog.onFalse();
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
       setTimeout(() => {
-        setSelectedItem(null);
+        setSelectedExpenseCategory(null);
+        dispatch(setIsChanges(false));
       }, 200);
-      dispatch(setIsChanges(false));
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addExpenseCategoryDialog.onFalse();
+      resetState();
     } else if (!isChanges) {
-      addDialog.onFalse();
-      editDialog.onFalse();
+      addExpenseCategoryDialog.onFalse();
       setTimeout(() => {
-        setSelectedItem(null);
+        setSelectedExpenseCategory(null);
       }, 200);
     }
   };
 
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'expenseCategoryName',
-        label: 'Name',
-        minWidth: '220px',
-        isSort: true,
-        isFilter: true,
-        align: 'left',
-      },
-      {
-        id: 'tags',
-        label: 'Tags',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {Array.isArray(value) && value.length > 0
-              ? value.map((tag) => `${tag}`).join(' ')
-              : '-'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'description',
-        label: 'Description',
-        minWidth: '300px',
-        isSort: false,
-        isFilter: false,
-        align: 'left',
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        minWidth: '70px',
-        isSort: false,
-        isFilter: false,
-        align: 'left',
-        sticky: true,
-        render(value, row: any) {
-          return (
-            <ThreeDotsActions
-              showEditIcon
-              showDeleteIcon
-              showThreeDots={false}
-              placement="right-top"
-              handleDeleteClick={() => {
-                handleDeleteAction(row);
-              }}
-              handleEditClick={() => {
-                handleEdit(row);
-              }}
-            />
-          );
-        },
-      },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  if (expenseCategoryLoading) {
+    return <Box>Loading...</Box>;
+  }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Expense Category"
-        description="This screen displays all created expense categories and provides an option to create a new category."
+        description="This screen displays all the created expense categories with an option to create a new expense category."
         links={[
-          { name: 'Finance', href: '/finance' },
+          { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Settings', href: '/finance/setting' },
-          { name: 'Expense Category', href: '/finance/settings/expense-category' },
+          { name: 'Expense Category', href: '/finance/settings/expense-categories' },
         ]}
         action={
           <Button
-            variant="contained"
+            onClick={() => addExpenseCategoryDialog.onTrue()}
             size="small"
-            startIcon={<Iconify icon="eva:plus-fill" />}
-            onClick={handleAdd}
+            startIcon={<Add />}
+            variant="contained"
             sx={{ px: '32px' }}
           >
             Expense Category
@@ -258,303 +109,114 @@ const FinanceExpenseCategory = () => {
         }
       />
 
-      <CustomizableTable
-        tableId="expense-category-table"
-        noDataText={
-          <>
-            No Expense Category Data Found{' '}
-            <Box
-              onClick={handleAdd}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Expense Category
-            </Box>
-          </>
-        }
-        isLoading={isLoading}
-        columns={columns}
-        data={data || []}
+      <ExpenseCategoryTable
+        onDelete={(data) => {
+          setSelectedExpenseCategory(data);
+          deleteExpenseCategoryDialog.onTrue();
+        }}
+        onEdit={(data) => {
+          setSelectedExpenseCategory(data);
+          addExpenseCategoryDialog.onTrue();
+        }}
+        open={open}
+        onAddExpenseCategory={addExpenseCategoryDialog}
+        setOpenDialog={setOpen}
+        editData={selectedExpenseCategory}
+        setEditData={setSelectedExpenseCategory}
+        data={expenseCategoryData?.items || []}
+        isLoading={expenseCategoryLoading || expenseCategoryFetching}
       />
 
-      {/* Add/Edit Dialog */}
       <CustomDialog
-        open={addDialog.value || editDialog.value}
+        open={addExpenseCategoryDialog.value}
         handleClose={() => {
-          addDialog.onFalse();
-          editDialog.onFalse();
+          addExpenseCategoryDialog.onFalse();
           setTimeout(() => {
-            setSelectedItem(null);
+            setSelectedExpenseCategory(null);
           }, 200);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h6">
-              {selectedItem ? 'Update Expense Category' : 'Add Expense Category'}
+            <Typography variant="h5">
+              {selectedExpenseCategory ? 'Update Expense Category' : 'Add Expense Category'}
             </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="This modal allows the user to fill in all required fields to create a new expense category."
+              title={
+                selectedExpenseCategory
+                  ? 'This modal allows the user to update required details of a expense category.'
+                  : 'This modal allows the user to add all required details and create a new expense category.'
+              }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
       >
-        <ExpenseCategoryDialog
-          open={addDialog.value || editDialog.value}
-          onClose={handleDialogClose}
-          editData={selectedItem}
-          onSave={handleSave}
+        <ExpenseCategoryForm
+          open={addExpenseCategoryDialog}
+          onClose={handleClose}
+          editData={selectedExpenseCategory}
         />
       </CustomDialog>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        open={confirm.value}
+        open={deleteExpenseCategoryDialog.value}
         onClose={() => {
-          confirm.onFalse();
-          setSelectedItem(null);
+          setSelectedExpenseCategory(null);
+          deleteExpenseCategoryDialog.onFalse();
         }}
         title="Delete"
         content={
           <>
             Are you sure you want to delete expense category{' '}
-            <b>{selectedItem?.expenseCategoryName}</b>?{' '}
+            <strong>{selectedExpenseCategory?.name}</strong>?
           </>
         }
         action={
-          <Button variant="contained" color="error" size="small" onClick={handleDelete}>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            loading={isDeleting}
+            disabled={isDeleting}
+            onClick={() => {
+              if (!selectedExpenseCategory?.id) return;
+
+              confirmWithUndo({
+                item: selectedExpenseCategory,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    expenseCategoryApi.util.updateQueryData(
+                      'getExpenseCategory',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const list = Array.isArray(draft) ? draft : draft?.items || [];
+                        const index = list.findIndex(
+                          (c: any) => c.id === (selectedExpenseCategory as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          list.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () => deleteExpenseCategory(selectedExpenseCategory.id),
+              });
+              deleteExpenseCategoryDialog.onFalse();
+              setSelectedExpenseCategory(null);
+            }}
+          >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
   );
 };
 
-export default FinanceExpenseCategory;
-
-interface ExpenseCategoryDialogProps {
-  open: boolean;
-  onClose: (e: any, isSubmit: boolean) => void;
-  editData?: any | null;
-  onSave: (values: any) => Promise<void>;
-}
-
-const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCategoryDialogProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [tag, setTag] = useState('');
-
-  // Get budget options from API
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: budgetOptions = [] } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBudgetOptionsQuery,
-  });
-
-  // Form validation schema using Yup
-  const validationSchema = Yup.object().shape({
-    expenseCategoryName: Yup.string().required('Expense Category Name is required'),
-    description: Yup.string().optional(),
-    tags: Yup.array()
-      .of(Yup.string().required('Each tag must be a non-empty string'))
-      .min(1, 'At least one tag is required')
-      .required('Tags are required'),
-  });
-
-  // Initialize formik form with initial values and submit handler
-  const formik = useFormik({
-    initialValues: {
-      expenseCategoryName: editData?.expenseCategoryName || '',
-      description: editData?.description || '',
-      tags: editData?.tags || [],
-    },
-    validationSchema,
-    enableReinitialize: true,
-    onSubmit: async (values) => {
-      try {
-        setIsLoading(true);
-        await onSave(values);
-        handleClose();
-      } catch (error) {
-        console.error('Save failed:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-  });
-
-  // Handle dialog cancellation and form reset
-  const handleClose = () => {
-    formik.resetForm();
-    onClose(null, false);
-  };
-
-  const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const trimmed = tag.trim();
-      if (trimmed && !formik.values.tags.includes(trimmed)) {
-        formik.setFieldValue('tags', [...formik.values.tags, trimmed]);
-        setTag('');
-      }
-    }
-  };
-
-  const handleDelete = (deleteTag: any) => {
-    formik.setFieldValue(
-      'tags',
-      formik.values.tags.filter((t: string) => t !== deleteTag)
-    );
-  };
-  return (
-    <Box>
-      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <DialogScrollContent>
-          <Stack spacing={3} p={0}>
-            {/* Expense Category Name Field */}
-            <ShakingTextField
-              error={
-                !!(formik.touched.expenseCategoryName && formik.errors.expenseCategoryName) || false
-              }
-            >
-              <TextField
-                size="small"
-                value={formik.values.expenseCategoryName}
-                name="expenseCategoryName"
-                fullWidth
-                label="Expense Category Name *"
-                onChange={(e: any) => {
-                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                  const newName = onlyLetters
-                    .split(' ')
-                    .map(
-                      (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                    )
-                    .join(' ');
-                  formik.setFieldValue('expenseCategoryName', newName);
-                }}
-                error={
-                  formik.touched.expenseCategoryName && Boolean(formik.errors.expenseCategoryName)
-                }
-                helperText={
-                  formik.touched.expenseCategoryName &&
-                  typeof formik.errors.expenseCategoryName === 'string'
-                    ? formik.errors.expenseCategoryName
-                    : undefined
-                }
-              />
-            </ShakingTextField>
-
-            {/* Description Field */}
-            <ShakingTextField
-              error={!!(formik.touched.description && formik.errors.description) || false}
-            >
-              <TextField
-                multiline
-                rows={4}
-                size="small"
-                value={formik.values.description}
-                name="description"
-                fullWidth
-                label="Description"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-            </ShakingTextField>
-
-            <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Tags *"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                onKeyDown={handleKeyDown}
-                InputProps={{
-                  startAdornment: (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 0.5,
-                        alignItems: 'center',
-                        maxWidth: '100%',
-                      }}
-                    >
-                      {formik.values.tags.map((t: string, index: number) => (
-                        <Chip
-                          key={index}
-                          label={t}
-                          onDelete={() => handleDelete(t)}
-                          size="small"
-                          sx={{ mt: 1 }}
-                        />
-                      ))}
-                    </Box>
-                  ),
-                }}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    flexWrap: 'wrap',
-                    alignItems: 'flex-start',
-                    minHeight: 'auto',
-                  },
-                  '& .MuiInputBase-input': {
-                    flexGrow: 1,
-                    minWidth: '80px',
-                  },
-                }}
-                error={formik.touched.tags && Boolean(formik.errors.tags)}
-                helperText={
-                  formik.touched.tags && typeof formik.errors.tags === 'string'
-                    ? formik.errors.tags
-                    : undefined
-                }
-              />
-            </ShakingTextField>
-          </Stack>
-        </DialogScrollContent>
-      </BackPopUpChecked>
-
-      {/* Dialog action buttons */}
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          type="submit"
-          variant="contained"
-          loading={isLoading}
-          startIcon={
-            <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-              width={editData ? 16 : 20}
-              height={editData ? 16 : 20}
-            />
-          }
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
-        >
-          {editData ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
-    </Box>
-  );
-};
+export default FinanceExpenseCategoriesScreen;

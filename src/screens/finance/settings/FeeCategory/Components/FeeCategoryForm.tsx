@@ -25,7 +25,7 @@ import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 import type { IFeeCategoryFormProps } from './type';
 
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
-  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [addFeeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddFeeCategoryMutation,
@@ -41,20 +41,24 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       if (editData) {
         updateFeeCategory({
           feeCategoryId: editData.id,
-          name: values.feeCategoryName,
-          description: values.description,
+          body: {
+            name: values.name,
+            description: values.description,
+          },
         });
         shikshaMitraToast.success({
-          message: `${values.feeCategoryName} Fee Category updated successfully`,
+          message: `${values.name} Fee Category updated successfully`,
         });
       } else {
         addFeeCategory({
-          academicYearId: currentAcademicYearId,
-          name: values.feeCategoryName,
-          description: values.description,
+          academicYearId: currentYear?.id,
+          body: {
+            name: values.name,
+            description: values.description,
+          },
         });
         shikshaMitraToast.success({
-          message: `${values.feeCategoryName} Fee Category added successfully`,
+          message: `${values.name} Fee Category added successfully`,
         });
       }
       onClose(null, true);
@@ -67,15 +71,13 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         <Grid container spacing={2}>
           {/* Fee Category Name */}
           <Grid size={{ xs: 12 }}>
-            <ShakingTextField
-              error={!!(formik.touched.feeCategoryName && formik.errors.feeCategoryName) || false}
-            >
+            <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
                 label="Fee Category Name *"
-                name="feeCategoryName"
+                name="name"
                 size="small"
-                value={formik.values.feeCategoryName}
+                value={formik.values.name}
                 onChange={(e) => {
                   let value = e.target.value
                     .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
@@ -89,10 +91,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                     )
                     .join(' ');
 
-                  formik.setFieldValue('feeCategoryName', value);
+                  formik.setFieldValue('name', value);
                 }}
-                error={formik.touched.feeCategoryName && Boolean(formik.errors.feeCategoryName)}
-                helperText={formik.touched.feeCategoryName && formik.errors.feeCategoryName}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
               />
             </ShakingTextField>
           </Grid>

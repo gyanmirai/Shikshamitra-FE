@@ -33,11 +33,11 @@ import { getVehicleDocumentInitialValues } from './VehicleDocumentInitialValues'
 import type { IVehicleDocumentFormProps } from './type';
 
 const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClose, editData }) => {
-  const { addVehicleDocument, isLoading: isAdding } = useQueryAndMutation({
+  const [addVehicleDocument, { isLoading: isAdding }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddVehicleDocumentMutation,
   });
-  const { updateVehicleDocument, isLoading: isUpdating } = useQueryAndMutation({
+  const [updateVehicleDocument, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateVehicleDocumentMutation,
   });

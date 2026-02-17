@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IBankAccount, IBankAccountTableProps } from './type';
+import { BankAccountType, type IBankAccount, type IBankAccountTableProps } from './type';
 
 const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   data,
@@ -64,7 +64,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         ),
       },
       {
-        id: 'accountName',
+        id: 'accountHolderName',
         label: 'Account Holder Name',
         minWidth: 190,
         align: 'left',
@@ -81,7 +81,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         minWidth: 80,
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
-            {value}
+            {value === BankAccountType.Saving ? 'Saving' : 'Current'}
           </Typography>
         ),
       },
@@ -97,7 +97,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         ),
       },
       {
-        id: 'accountPurpose',
+        id: 'purpose',
         label: 'Purpose',
         align: 'left',
         minWidth: 100,
@@ -161,7 +161,6 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
 
   return (
     <CustomizableTable
-      isLoading={isLoading}
       tableId="bank-account-data-table"
       noDataText={
         <>
@@ -187,6 +186,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       }
       columns={columns}
       data={data || []}
+      isLoading={isLoading}
     />
   );
 };
