@@ -139,7 +139,7 @@ const ChargesList = () => {
         title="Remove Charge"
         content={
           <>
-            Are you sure you want to remove charge <strong>{deleteCharge?.category}</strong> for{' '}
+            Are you sure you want to remove charge <strong>{deleteCharge?.categoryName}</strong> for{' '}
             <strong>{selectedCharge?.studentName}</strong>?
           </>
         }
@@ -152,7 +152,7 @@ const ChargesList = () => {
               publish_modal.onFalse();
               setDeleteCharge(null);
               shikshaMitraToast.success({
-                message: `Charge : ${deleteCharge?.category} removed successfully.`,
+                message: `Charge : ${deleteCharge?.categoryName} removed successfully.`,
               });
             }}
             size="small"
