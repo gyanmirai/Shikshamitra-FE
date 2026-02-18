@@ -1,16 +1,39 @@
-import type { IReasonApprovalFormProps } from 'src/screens/finance/Concession/type';
-
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useRejectChargeMutation,
+  useApproveChargeMutation,
+} from 'src/redux/finance/ChargeManagement/chargeApi';
 
-const ChargeReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
+import type { IChargeData } from './type';
+
+export interface IReasonApprovalFormProps {
+  onClose: (e: any, isSubmit: boolean) => void;
+  mode: string;
+  selectedCharge?: IChargeData | null;
+}
+
+const ChargeReasonApprovalForm = ({ onClose, mode, selectedCharge }: IReasonApprovalFormProps) => {
+  const [approveCharge, { isLoading: approveChargeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveChargeMutation,
+  });
+  console.log(selectedCharge, 'selectedCharge');
+
+  const [rejectCharge, { isLoading: rejectChargeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectChargeMutation,
+  });
+
   const formik = useFormik({
     initialValues: {
       reason: '',
@@ -19,6 +42,11 @@ const ChargeReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) =
       reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
     }),
     onSubmit: (values) => {
+      if (mode === 'Approve') {
+        approveCharge({ id: selectedCharge?.chargeId, body: { approvalNotes: values.reason } });
+      } else {
+        rejectCharge({ id: selectedCharge?.chargeId, body: { rejectionReason: values.reason } });
+      }
       onClose(null, true);
     },
   });
@@ -61,7 +89,7 @@ const ChargeReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) =
           Cancel
         </Button>
 
-        <Button
+        <LoadingButton
           type="submit"
           variant="soft"
           color={mode === 'Reject' ? 'error' : 'success'}
@@ -70,9 +98,10 @@ const ChargeReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) =
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
+          loading={approveChargeLoading || rejectChargeLoading}
         >
           {mode}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

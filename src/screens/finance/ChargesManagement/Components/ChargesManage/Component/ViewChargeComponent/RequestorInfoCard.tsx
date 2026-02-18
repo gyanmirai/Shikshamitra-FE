@@ -9,15 +9,20 @@ interface RequestorInfoProps {
 }
 
 const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
-  const requestorName = charge?.requestorName || 'Rina Patel';
-  const department = charge?.department || 'Library';
-  const requestedOn = charge?.requestedOn || '10 Feb 2025';
+  const requestorName = charge?.requestor?.requestorName || 'N/A';
+  const requestorRole = charge?.requestor?.requestorRole || 'N/A';
+  const requestedOn = charge?.requestor?.requestedOn
+    ? new Date(charge.requestor.requestedOn).toLocaleDateString()
+    : 'N/A';
 
-  const initials = requestorName
-    .split(' ')
-    .map((n: any) => n[0])
-    .join('')
-    .toUpperCase();
+  const initials =
+    requestorName !== 'N/A'
+      ? requestorName
+          .split(' ')
+          .map((n: any) => n[0])
+          .join('')
+          .toUpperCase()
+      : 'NA';
 
   return (
     <Card
@@ -71,7 +76,7 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Person sx={{ fontSize: 16, color: 'text.secondary' }} />
                 <Label variant="soft" color="success">
-                  {department}
+                  {requestorRole}
                 </Label>
               </Box>
             </Box>
