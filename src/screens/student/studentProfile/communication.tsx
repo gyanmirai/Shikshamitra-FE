@@ -32,7 +32,7 @@ const AnnouncementCard = ({
   return (
     <Card
       sx={{
-        mb: 2,
+        ml: -1,
         boxShadow: 'none',
         border: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
         transition: 'all 0.3s ease',
@@ -239,9 +239,9 @@ const Communication = (props: StudentTabsComponentType) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
       <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
-        <Box sx={{ gap: 2, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ minWidth: 360, display: 'flex', flexDirection: 'column' }}>
           {/* Header */}
-          <Box sx={{ p: 3, pb: 2 }}>
+          <Box sx={{ p: 1, pb: 1 }}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography variant="h5" fontWeight={700}>
                 Announcements
@@ -260,8 +260,8 @@ const Communication = (props: StudentTabsComponentType) => {
           </Box>
 
           {/* Scrollable Content */}
-          <Box sx={{ px: 3, pb: 3 }}>
-            <Stack spacing={2.5}>
+          <Box sx={{ px: 1, pb: 1 }}>
+            <Stack spacing={1}>
               {announcements.length > 0 ? (
                 announcements.map((announcement, index) => (
                   <AnnouncementCard key={index} {...announcement} />

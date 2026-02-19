@@ -55,6 +55,8 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
         alignItems: 'center',
         position: 'relative',
         mx: -1,
+        mt: -2,
+        ml: -2,
       }}
     >
       {/* Left Arrow - Glassmorphism style */}

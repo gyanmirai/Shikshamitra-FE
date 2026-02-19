@@ -21,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { Box, Tab, Tabs, Paper, Avatar, Divider, MenuItem, Typography } from '@mui/material';
 
@@ -470,9 +471,14 @@ export function StudentProfile() {
 const StudentProfileView = () => {
   const tabs = useTabs('dashboard');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isBackClick, setIsBackClick] = useState(false);
 
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
+    [tabs.value]
+  );
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === tabs.value),
     [tabs.value]
   );
   const { getAllParams } = useCustomSearchParams();
@@ -567,8 +573,8 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.lastName || '-'} {currentStudent?.firstName || '-'}{' '}
-                {currentStudent?.middleName || '-'}
+                {currentStudent?.lastName || 'Patel'} {currentStudent?.firstName || 'Ananya'}{' '}
+                {currentStudent?.middleName || 'Kumar'}
               </Typography>
             </Box>
             <Divider
@@ -595,7 +601,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.grNoRecord || '-'}
+                {currentStudent?.grNoRecord || '2025000001'}
               </Typography>
             </Box>
             <Divider
@@ -622,7 +628,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.rollNo || '-'}
+                {currentStudent?.rollNo || '1'}
               </Typography>
             </Box>
             <Divider
@@ -649,7 +655,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.standard?.name}-{currentStudent?.division?.name}
+                {currentStudent?.standard?.name || '10'}-{currentStudent?.division?.name || 'A'}
               </Typography>
             </Box>
             <Divider
@@ -676,7 +682,7 @@ const StudentProfileView = () => {
                   transition: 'font-size 0.3s ease-in-out',
                 }}
               >
-                {currentStudent?.educationMedium?.name || '-'}
+                {currentStudent?.educationMedium?.name || 'English'}
               </Typography>
             </Box>
           </Box>
@@ -685,7 +691,15 @@ const StudentProfileView = () => {
       <Paper elevation={2} sx={{ px: 2, mb: 1 }}>
         <Tabs
           value={tabs.value}
-          onChange={tabs.onChange}
+          onChange={(...rest) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+            tabs.onChange(...rest);
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
           role="tablist"
         >
@@ -702,9 +716,22 @@ const StudentProfileView = () => {
         </Tabs>
       </Paper>
 
-      {currentActiveComponent?.component && (
-        <currentActiveComponent.component tabs={tabs} student={currentStudent} refetch={refetch} />
-      )}
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{ sx: { p: 0, minHeight: 0 } }}
+      >
+        <Box sx={{ height: '100%' }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component
+              tabs={tabs}
+              student={currentStudent}
+              refetch={refetch}
+            />
+          )}
+        </Box>
+      </FormSlider>
     </>
   );
 };
