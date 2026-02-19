@@ -776,7 +776,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               deleteDialog.onFalse();
               setSelectedItem(null);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>
@@ -823,7 +823,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
             docDialog.onFalse();
             setSelectedItem(null);
           }}
-          onRefresh={() => {}}
+          onRefresh={() => { }}
         />
       )}
     </Box>
