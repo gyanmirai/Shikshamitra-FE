@@ -2,24 +2,20 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
+import React, { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Card, Button, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  chargesApi,
-  useGetChargesQuery,
-  useDeleteChargeMutation,
-} from 'src/redux/finance/ChargeManagement/chargeApi';
+import { chargesApi, useDeleteChargeMutation } from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import ChargeForm from './Component/ChargeForm';
 import ChargesTable from './Component/ChargesTable';
@@ -35,16 +31,14 @@ const ChargesManagement = () => {
   const onConfirmDialg = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
 
+  // Ref to store the refetch function from ChargesTable
+  const chargeRefetchRef = useRef<(() => void) | null>(null);
+
   const [deleteCharge] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeMutation,
   });
 
-  // Fetch charge data using custom query hook
-  const { data: chargeData, refetch } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetChargesQuery,
-  });
   const [selectedMode, setSelectedMode] = useState('');
 
   // Boolean hooks to control dialog visibility
@@ -72,16 +66,16 @@ const ChargesManagement = () => {
     // Close dialog if form was submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       onConfirmDialg.onFalse();
+      viewChargeDetailsDialog.onFalse();
       setSelectedMode('');
       setSelectedChargeData(null);
       addChargeDialog.onFalse();
-      // viewChargeDetailsDialog.onFalse();
       resetState();
     } else if (!isChanges) {
       onConfirmDialg.onFalse();
+      viewChargeDetailsDialog.onFalse();
       setSelectedMode('');
       setSelectedChargeData(null);
-      // viewChargeDetailsDialog.onFalse();
       // Close dialog if there are no unsaved changes
       addChargeDialog.onFalse();
     }
@@ -203,7 +197,6 @@ const ChargesManagement = () => {
       )}
       {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (
         <ChargesTable
-          data={chargeData}
           onView={(data) => {
             viewChargeDetailsDialog.onTrue();
             setSelectedChargeData(data);
@@ -228,6 +221,10 @@ const ChargesManagement = () => {
           onRemove={(data) => {
             removeChargeDialog.onTrue();
             setSelectedChargeData(data);
+          }}
+          onRefetch={(refetchFn) => {
+            // Store refetch function in a ref so it can be called later
+            chargeRefetchRef.current = refetchFn;
           }}
         />
       )}
@@ -260,12 +257,12 @@ const ChargesManagement = () => {
             onApprove={() => {
               onConfirmDialg.onTrue();
               setSelectedMode('Approve');
-              // Handle approve logic
+              setSelectedChargeData(selectedChargeData);
             }}
             onReject={() => {
               onConfirmDialg.onTrue();
               setSelectedMode('Reject');
-              // Handle reject logic
+              setSelectedChargeData(selectedChargeData);
             }}
           />
         </Card>
@@ -295,7 +292,11 @@ const ChargesManagement = () => {
         }}
         maxWidth="xs"
       >
-        <ChargeReasonApprovalForm onClose={handleClose} mode={selectedMode} />
+        <ChargeReasonApprovalForm
+          onClose={handleClose}
+          mode={selectedMode}
+          selectedCharge={selectedChargeData}
+        />
       </CustomDialog>
       <ConfirmDialog
         open={removeChargeDialog.value}
@@ -306,7 +307,8 @@ const ChargesManagement = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete charge <strong>{selectedChargeData?.category}</strong>?
+            Are you sure you want to delete charge{' '}
+            <strong>{selectedChargeData?.categoryName}</strong>?
           </>
         }
         action={
@@ -323,7 +325,7 @@ const ChargesManagement = () => {
                     dispatchFn(
                       chargesApi.util.updateQueryData('getCharges', undefined, (draft) => {
                         const index = draft.findIndex(
-                          (item: any) => item.id === selectedChargeData.id
+                          (item: any) => item.chargeId === selectedChargeData.chargeId
                         );
                         if (index !== -1) {
                           setDeleteIndex(index);
@@ -333,8 +335,13 @@ const ChargesManagement = () => {
                     );
                     setSelectedChargeData(null);
                   },
-                  onUndoRestore: () => refetch(),
-                  onCommit: () => deleteCharge(selectedChargeData.id),
+                  onUndoRestore: () => {
+                    // Refetch table data when undo is clicked
+                    if (chargeRefetchRef.current) {
+                      chargeRefetchRef.current();
+                    }
+                  },
+                  onCommit: () => deleteCharge(selectedChargeData.chargeId),
                 });
               }
             }}

@@ -50,7 +50,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
 
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            {charge?.studentName || 'Student Name'}&apos;s Information
+            {charge?.student?.studentName || 'Student Name'}&apos;s Information
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
             View academic and personal details
@@ -72,12 +72,16 @@ const ChargeInformationAccordion = ({ charge }: any) => (
       <Grid container spacing={3}>
         {/* GR Number */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <InfoItem icon={<Numbers />} label="GR No." value={charge?.grNo || 'GR2025-69145'} />
+          <InfoItem icon={<Numbers />} label="GR No." value={charge?.student?.grNumber || 'N/A'} />
         </Grid>
 
         {/* Roll Number */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <InfoItem icon={<Numbers />} label="Roll No." value={charge?.rollNo || 'R2025-145'} />
+          <InfoItem
+            icon={<Numbers />}
+            label="Roll No."
+            value={charge?.student?.rollNumber || 'N/A'}
+          />
         </Grid>
 
         {/* Applied On */}
@@ -85,7 +89,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
           <InfoItem
             icon={<CalendarToday />}
             label="Applied On"
-            value={charge?.appliedOn || '20-12-2025'}
+            value={charge?.appliedOn ? new Date(charge.appliedOn).toLocaleDateString() : 'N/A'}
           />
         </Grid>
 
@@ -94,7 +98,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
           <InfoItem
             icon={<CalendarToday />}
             label="Due Date"
-            value={charge?.dueDate || '20 Aug 2025'}
+            value={charge?.dueDate ? new Date(charge.dueDate).toLocaleDateString() : 'N/A'}
           />
         </Grid>
 
@@ -108,7 +112,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
           <InfoItem
             icon={<School />}
             label="Class / Division"
-            value={`${charge?.class || '10'}-${charge?.division || 'A'}`}
+            value={`${charge?.student?.standardName || 'N/A'}-${charge?.student?.divisionName || 'N/A'}`}
           />
         </Grid>
 
@@ -117,7 +121,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
           <InfoItem
             icon={<LocalPhone />}
             label="Contact"
-            value={charge?.contact || '+91 98765 43210'}
+            value={charge?.student?.contactNumber || 'N/A'}
           />
         </Grid>
 
@@ -126,7 +130,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
           <InfoItem
             icon={<Email />}
             label="Email Address"
-            value={charge?.email || 'aarya.mehta@example.com'}
+            value={charge?.student?.emailAddress || 'N/A'}
           />
         </Grid>
       </Grid>

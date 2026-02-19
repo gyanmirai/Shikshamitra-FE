@@ -464,7 +464,6 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                                 {
                                   id: 'status',
                                   label: 'Status',
-
                                   align: 'left',
                                   isFilter: false,
                                   isSort: false,

@@ -1,6 +1,8 @@
 import { Scrollbar } from 'src/components/scrollbar';
 import React, { useState, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useGetGroupByIdQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import {
   Box,
   Tab,
@@ -164,6 +166,10 @@ const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, v
 
 const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose }) => {
   const [tab, setTab] = useState(0); // 0 = Rule Based, 1 = Name Based
+  const { data: groupData, isLoading: isGroupLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGroupByIdQuery,
+  });
   const [studentFilters] = useState<FilterRow[]>([
     { id: 'stu-filter-1', field: 'gender', value: 'Male', operator: 'equals' },
   ]);
