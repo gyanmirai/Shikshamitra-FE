@@ -1,232 +1,162 @@
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
 import React, { useState, useCallback } from 'react';
-import { Box, Grid, Card, CardHeader } from '@mui/material';
+import { Box, Card, Grid, CardHeader } from '@mui/material';
 import { Chart, useChart, ChartSelect } from 'src/components/chart';
 
-// Mock data for Weekly Circulation
-const mockWeeklyCirculation = {
+// ----------------------------------------------------------------------
+
+// Mock data for Monthly Circulation Trend (Last 12 Months)
+const mockMonthlyCirculation = {
   series: [
     {
-      name: 'Week 1',
+      name: '2023',
       data: [
-        { name: 'Issued', data: [45, 38, 52, 41, 48, 35, 42] },
-        { name: 'Returned', data: [38, 42, 45, 39, 44, 38, 40] },
+        {
+          name: 'Average',
+          data: [2100, 2400, 2200, 2600, 2800, 2500, 2700, 2900, 3100, 3000, 3200, 3450],
+        },
       ],
     },
     {
-      name: 'Week 2',
+      name: '2022',
       data: [
-        { name: 'Issued', data: [42, 40, 48, 45, 50, 38, 44] },
-        { name: 'Returned', data: [40, 38, 46, 42, 48, 36, 42] },
-      ],
-    },
-    {
-      name: 'Week 3',
-      data: [
-        { name: 'Issued', data: [50, 45, 55, 48, 52, 42, 48] },
-        { name: 'Returned', data: [48, 43, 52, 46, 50, 40, 46] },
+        {
+          name: 'Average',
+          data: [1800, 2000, 1900, 2100, 2300, 2200, 2400, 2500, 2600, 2700, 2800, 3000],
+        },
       ],
     },
   ],
-  categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 };
 
-// Mock data for Section-wise Books
-const mockSectionBooks = {
-  series: [
-    {
-      name: 'Section A',
-      data: [
-        { name: 'Shelf 1', data: [45] },
-        { name: 'Shelf 2', data: [52] },
-        { name: 'Shelf 3', data: [38] },
-        { name: 'Shelf 4', data: [48] },
-        { name: 'Shelf 5', data: [42] },
-      ],
-    },
-    {
-      name: 'Section B',
-      data: [
-        { name: 'Shelf 1', data: [38] },
-        { name: 'Shelf 2', data: [45] },
-        { name: 'Shelf 3', data: [42] },
-        { name: 'Shelf 4', data: [40] },
-        { name: 'Shelf 5', data: [35] },
-      ],
-    },
-    {
-      name: 'Section C',
-      data: [
-        { name: 'Shelf 1', data: [50] },
-        { name: 'Shelf 2', data: [48] },
-        { name: 'Shelf 3', data: [55] },
-        { name: 'Shelf 4', data: [52] },
-        { name: 'Shelf 5', data: [46] },
-      ],
-    },
-  ],
-};
+// Mock data for Category Distribution (Top 5)
+const mockCategoryData = [
+  { label: 'Fiction', value: 4500 },
+  { label: 'Academic', value: 3800 },
+  { label: 'Science', value: 2100 },
+  { label: 'History', value: 1200 },
+  { label: 'Reference', value: 850 },
+];
 
-// Weekly Circulation Chart
-export const WeeklyCirculationChart = () => {
+export default function PrincipalCharts() {
   const theme = useTheme();
-  const [selectedWeek, setSelectedWeek] = useState('Week 1');
+  const [selectedYear, setSelectedYear] = useState('2023');
 
-  const chartColors = [theme.palette.success.main, theme.palette.error.main];
+  const handleChangeYear = useCallback((newValue: string) => {
+    setSelectedYear(newValue);
+  }, []);
 
-  const currentWeekData = mockWeeklyCirculation.series.find((w) => w.name === selectedWeek);
+  const currentYearSeries =
+    mockMonthlyCirculation.series.find((s) => s.name === selectedYear)?.data[0].data || [];
 
   const chartOptions = useChart({
-    colors: chartColors,
+    colors: [theme.palette.primary.main, theme.palette.warning.main],
+    stroke: { width: 3, curve: 'smooth' },
     xaxis: {
-      categories: mockWeeklyCirculation.categories,
+      categories: mockMonthlyCirculation.categories,
       axisBorder: { show: false },
       axisTicks: { show: false },
-      labels: { style: { colors: theme.palette.text.secondary } },
-    },
-    stroke: { width: 2, curve: 'smooth' },
-    fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
-    tooltip: {
-      shared: true,
-      intersect: false,
-      y: {
-        formatter: (value: number) => fNumber(value),
-      },
     },
     grid: {
       borderColor: theme.palette.divider,
       strokeDashArray: 3,
+      xaxis: { lines: { show: false } }, // Clean grid like Admin
     },
-    yaxis: {
-      labels: { style: { colors: theme.palette.text.secondary } },
+    tooltip: {
+      y: {
+        formatter: (value: number) => fNumber(value),
+        title: { formatter: () => 'Books Issued: ' },
+      },
     },
   });
 
-  const handleChangeWeek = useCallback((newValue: string) => {
-    setSelectedWeek(newValue);
-  }, []);
-
-  return (
-    <Card
-      sx={{
-        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 2,
-      }}
-    >
-      <CardHeader
-        title="Weekly Issue/Return Circulation"
-        subheader="Last 7 days book circulation activity"
-        action={
-          <ChartSelect
-            options={mockWeeklyCirculation.series.map((item) => item.name)}
-            value={selectedWeek}
-            onChange={handleChangeWeek}
-          />
-        }
-      />
-      <Box sx={{ mt: 3, mx: 3 }} dir="ltr">
-        <Chart type="area" series={currentWeekData?.data} options={chartOptions} height={340} />
-      </Box>
-    </Card>
-  );
-};
-
-// Section-wise Book Count Chart
-export const SectionBooksChart = () => {
-  const theme = useTheme();
-  const [selectedSection, setSelectedSection] = useState('Section A');
-
-  const chartColors = [theme.palette.info.main];
-
-  const currentSectionData = mockSectionBooks.series.find((s) => s.name === selectedSection);
-
-  const categories = currentSectionData?.data.map((item) => item.name) || [];
-  const seriesData = currentSectionData?.data.map((item) => item.data[0]) || [];
-
-  const chartOptions = useChart({
-    colors: chartColors,
-    xaxis: {
-      categories,
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: { style: { colors: theme.palette.text.secondary, fontWeight: 500 } },
-    },
+  // Horizontal Bar Chart for Categories
+  const barChartOptions = useChart({
+    colors: [theme.palette.info.main],
     plotOptions: {
       bar: {
-        horizontal: false,
+        horizontal: true,
+        barHeight: '45%',
         borderRadius: 4,
-        columnWidth: '50%',
       },
     },
-    dataLabels: {
-      enabled: true,
-      style: { fontSize: '12px', fontWeight: 'bold' },
-      offsetY: -10,
+    xaxis: {
+      categories: mockCategoryData.map((c) => c.label),
     },
     tooltip: {
       y: {
-        formatter: (value: number) => fNumber(value),
+        formatter: (val: number) => `${fNumber(val)} books`,
+        title: { formatter: () => '' },
       },
     },
     grid: {
       borderColor: theme.palette.divider,
       strokeDashArray: 3,
-    },
-    yaxis: {
-      labels: { style: { colors: theme.palette.text.secondary } },
+      xaxis: { lines: { show: true } },
+      yaxis: { lines: { show: false } },
     },
   });
 
-  const handleChangeSection = useCallback((newValue: string) => {
-    setSelectedSection(newValue);
-  }, []);
-
   return (
-    <Card
-      sx={{
-        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 2,
-      }}
-    >
-      <CardHeader
-        title="Section-wise Book Count"
-        subheader="Books distribution across shelves"
-        action={
-          <ChartSelect
-            options={mockSectionBooks.series.map((item) => item.name)}
-            value={selectedSection}
-            onChange={handleChangeSection}
+    <Grid container spacing={1}>
+      {/* Monthly Circulation Trend */}
+      <Grid size={{ xs: 12, md: 8 }}>
+        <Card
+          sx={{
+            height: '100%',
+            boxShadow: 'none',
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 2,
+          }}
+        >
+          <CardHeader
+            title="Monthly Circulation Trend"
+            subheader="Comparison of books issued over the last 12 months"
+            action={
+              <ChartSelect
+                options={mockMonthlyCirculation.series.map((item) => item.name)}
+                value={selectedYear}
+                onChange={handleChangeYear}
+              />
+            }
+            sx={{ mb: 3 }}
           />
-        }
-      />
-      <Chart
-        type="bar"
-        series={[{ name: 'Books', data: seriesData }]}
-        options={chartOptions}
-        height={340}
-        loadingProps={{ sx: { p: 2.5 } }}
-        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
-      />
-    </Card>
+
+          <Box sx={{ pb: 3, px: 1 }} dir="ltr">
+            <Chart
+              type="line"
+              series={[{ name: 'Issued', data: currentYearSeries }]}
+              options={chartOptions}
+              height={320}
+            />
+          </Box>
+        </Card>
+      </Grid>
+
+      {/* Top 5 Categories */}
+      <Grid size={{ xs: 12, md: 4 }}>
+        <Card
+          sx={{
+            height: '100%',
+            boxShadow: 'none',
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 2,
+          }}
+        >
+          <CardHeader title="Top 5 Categories" subheader="By volume" sx={{ mb: 2 }} />
+
+          <Box sx={{ pb: 3, px: 1 }} dir="ltr">
+            <Chart
+              type="bar"
+              series={[{ name: 'Count', data: mockCategoryData.map((c) => c.value) }]}
+              options={barChartOptions}
+              height={320}
+            />
+          </Box>
+        </Card>
+      </Grid>
+    </Grid>
   );
-};
-
-// Main Principal Charts Component
-const PrincipalCharts = () => (
-  <Grid container spacing={3}>
-    {/* Weekly Circulation */}
-    <Grid size={{ xs: 12, md: 6 }}>
-      <WeeklyCirculationChart />
-    </Grid>
-
-    {/* Section-wise Book Count */}
-    <Grid size={{ xs: 12, md: 6 }}>
-      <SectionBooksChart />
-    </Grid>
-  </Grid>
-);
-
-export default PrincipalCharts;
+}

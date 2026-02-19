@@ -16,7 +16,7 @@ const LibraryDashboard = () => {
       {(role === 'Librarian' || role === 'Admin') && <AdminDashboard />}
       {role === 'Principal' && <PrincipalDashboard />}
       {/* Fallback to Principal dashboard if role not recognized */}
-      {!['Librarian', 'Admin', 'Principal'].includes(role) && <AdminDashboard />}
+      {!['Librarian', 'Admin', 'Principal'].includes(role) && <PrincipalDashboard />}
     </Box>
   );
 };
