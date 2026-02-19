@@ -2,599 +2,211 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import { formatNumber } from 'src/utils/formate_number';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 import {
-  useGetConcessionRequestByIdQuery,
-  useCreateConcessionRequestMutation,
-  useUpdateConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
-import {
-  Box,
-  Grid,
-  Chip,
-  Card,
-  Button,
-  Tooltip,
-  Checkbox,
-  TextField,
-  IconButton,
-  Typography,
-  CardContent,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
+  useUpdateValueEntryMutation,
+  useCreateBasicDetailsMutation,
+  useSaveConcessionTypesMutation,
+  useUpdateFeeHeadfeeHeadsDataMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
-import { concessionValidation } from './ConcessionValidation';
+import ValueEntryStep from './ConcessionSteps/ValueEntryStep';
+// Import new step components
+import BasicDetailsStep from './ConcessionSteps/BasicDetailsStep';
+import { concessionStepValidations } from './ConcessionValidation';
+import FeeHeadMappingStep from './ConcessionSteps/FeeHeadMappingStep';
+// Import helpers
 import { getInitialConcessionFormData } from './ConcessionInitialValues';
+import ConcessionTypeSelectionStep from './ConcessionSteps/ConcessionTypeSelectionStep';
 
-import type { IConcession, IConcessionFormProps } from '../type';
+import type { IConcessionFormProps } from '../type';
 
-// Icons for unchecked/checked states
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+const STEPS = ['Basic Details', 'Concession Types', 'Fee Heads', 'Value Entry'];
+
 const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
-  open,
   onClose,
+  open,
   student,
   editData,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // state
-  const [boards, setBoards] = useState<any[]>([]);
-  const [mediums, setMediums] = useState<any[]>([]);
-  const [allDivision, setAllDivision] = useState<any[]>([]);
-  // Fetch concession type data
-  const { data: concessionTypes } = useQueryAndMutation({
+  const [activeStep, setActiveStep] = useState(0);
+
+  // API Mutations
+  const [createBasicDetails] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateBasicDetailsMutation,
+  });
+  const [saveConcessionTypes] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveConcessionTypesMutation,
+  });
+  const [updateFeeHeadsData] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateFeeHeadfeeHeadsDataMutation,
+  });
+  const [updateValueEntry] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateValueEntryMutation,
+  });
+
+  // Fetch concession types once at top level
+  const { data: concessionTypes = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
+    params: { academicYearId: currentYear?.id },
+    options: { skip: !currentYear?.id },
   });
 
-  const [createConcessionRequest, { isLoading: isAddLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateConcessionRequestMutation,
-  });
-  const [updateConcessionRequest, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateConcessionRequestMutation,
-  });
-
-  // queries
-  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetClassByMediumQuery,
-  });
-  const [getStudents, { data: StudentsData, isLoading: studentLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: concessionData = [], isLoading: isLoadingConcessionData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetConcessionRequestByIdQuery,
-    params: {
-      id: editData?.id,
-    },
-  });
-  const formik = useFormik<IConcession>({
-    initialValues: getInitialConcessionFormData(editData),
-    validationSchema: concessionValidation,
-    onSubmit: (values) => {
-      if (editData) {
-        updateConcessionRequest({
-          academicYearId: currentYear?.id,
-          boardId: values.board,
-          mediumId: values.medium,
-          classId: values.className,
-          divisionId: values.division,
+  const handleNext = async (
+    isLastStep: boolean,
+    values: any,
+    _formik: any,
+    setIsLoading: (v: boolean) => void
+  ) => {
+    setIsLoading(true);
+    try {
+      if (activeStep === 0) {
+        // Step 1 – create basic details
+        const res: any = await createBasicDetails({
+          boardId: values.boardId,
+          educationMediumId: values.mediumId,
+          standardId: values.standardId,
+          divisionId: values.divisionId,
           studentId: values.studentId,
+        }).unwrap();
+        const reqId = res?.data?.concessionRequestId;
+        _formik.setFieldValue('id', reqId);
+
+        shikshaMitraToast.success({ message: 'Basic details saved' });
+        setActiveStep((s) => s + 1);
+      } else if (activeStep === 1) {
+        // Step 2 – save concession types
+        if (!values.id) throw new Error('Missing concession request ID');
+        await saveConcessionTypes({
+          concessionRequestId: values.id,
           concessionTypeIds: values.concessionTypeIds,
-          documents: values.documents,
-        });
-        shikshaMitraToast.success({
-          message: `Concession request updated successfully`,
-        });
-      } else {
-        createConcessionRequest({
-          academicYearId: currentYear?.id,
-          boardId: values.board,
-          mediumId: values.medium,
-          classId: values.className,
-          divisionId: values.division,
-          studentId: values.studentId,
-          concessionTypeIds: values.concessionTypeIds,
-          documents: values.documents,
-        });
-        shikshaMitraToast.success({
-          message: `Concession request added successfully`,
-        });
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Concession types saved' });
+        setActiveStep((s) => s + 1);
+      } else if (activeStep === 2) {
+        // Step 3 – save fee heads
+        if (!values.id) throw new Error('Missing concession request ID');
+        // Build feeHeadsData: array of { concessionTypeId, feeHeadIds }
+        const feeHeadsData = Object.entries(values.selectedFeeHeads).map(
+          ([concessionTypeId, feeHeadIds]) => ({ concessionTypeId, feeHeadIds })
+        );
+        await updateFeeHeadsData({
+          concessionRequestId: values.id,
+          feeHeadsData,
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Fee heads saved' });
+        setActiveStep((s) => s + 1);
+      } else if (isLastStep) {
+        // Step 4 – value entry + submit
+        if (!values.id) throw new Error('Missing concession request ID');
+        // Build concessionTypeValues
+        const concessionTypeValues = Object.entries(values.selectedFeeHeads).map(
+          ([concessionTypeId, feeHeadIds]: any) => ({
+            concessionTypeId,
+            feeHeadValues: (feeHeadIds as string[]).map((feeHeadId: string) => {
+              const entry = values.valueEntries?.[concessionTypeId]?.[feeHeadId] || {
+                basedOn: 0,
+                amount: 0,
+              };
+
+              return {
+                feeHeadId,
+                basedOn: entry.basedOn,
+                amount: entry.amount,
+              };
+            }),
+          })
+        );
+
+        await updateValueEntry({
+          concessionRequestId: values.id,
+          concessionTypeValues,
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Concession request submitted successfully' });
+        onClose(null, true);
       }
-      onClose(null, true);
-    },
-  });
-  // load boards on year change
-  useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear]);
-
-  // load mediums when board changes
-  useEffect(() => {
-    const selectedBoard = boards.find((b: any) => b.id === formik.values.board);
-    setMediums(selectedBoard?.educationMediums || []);
-    if (formik.values.medium) {
-      getClassByMedium(formik.values.medium);
+    } catch (err: any) {
+      console.error(err);
+      shikshaMitraToast.error({
+        message: err?.data?.message || err?.message || 'Something went wrong',
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [formik.values.board, formik.values.medium, boards, getClassByMedium]);
+  };
 
-  // load divisions when class changes
-  useEffect(() => {
-    setAllDivision(
-      classes?.find((cls: any) => cls.id === formik.values.className)?.divisions || []
-    );
-  }, [formik.values.className, classes]);
+  const handleBack = () => setActiveStep((s) => Math.max(0, s - 1));
 
-  // load students when class & division selected
-  useEffect(() => {
-    if (formik.values.className && formik.values.division) {
-      getStudents({ standardId: formik.values.className, divisionId: formik.values.division });
+  const renderItem = ({
+    formik,
+    activeStep: step,
+  }: {
+    formik: any;
+    activeStep: number;
+    isBackClick: boolean;
+  }) => {
+    switch (step) {
+      case 0:
+        return <BasicDetailsStep formik={formik} />;
+      case 1:
+        return (
+          <ConcessionTypeSelectionStep
+            formik={formik}
+            concessionTypes={concessionTypes?.items || []}
+          />
+        );
+      case 2:
+        return (
+          <FeeHeadMappingStep formik={formik} concessionTypes={concessionTypes?.items || []} />
+        );
+      case 3:
+        return <ValueEntryStep formik={formik} concessionTypes={concessionTypes?.items || []} />;
+      default:
+        return null;
     }
-  }, [formik.values.className, formik.values.division, getStudents]);
-
-  const tableData = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
+  };
 
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
-                <SectionCard
-                  title="Student Information"
-                  paperProps={{ sx: { ...cardStyle, mb: 0 } }}
-                >
-                  {/* Board */}
-                  <Grid size={6}>
-                    <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
-                      <CustomSelect
-                        label="Board *"
-                        options={boards}
-                        labelKey="name"
-                        valueKey="id"
-                        value={formik.values.board}
-                        onChange={(val) => {
-                          formik.setFieldValue('board', val);
-                          formik.setFieldTouched('board', false);
-                          formik.setFieldValue('medium', '');
-                          formik.setFieldValue('className', '');
-                          formik.setFieldValue('division', '');
-                        }}
-                        error={!!formik.errors.board && formik.touched.board}
-                        helperText={(formik.touched.board && formik.errors.board) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Cancel button row */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pt: 1 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => onClose(null, false)}
+        >
+          Cancel
+        </Button>
+      </Box>
 
-                  {/* Medium */}
-                  <Grid size={6}>
-                    <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
-                      <CustomSelect
-                        label="Medium *"
-                        disabled={!formik.values.board}
-                        options={mediums}
-                        labelKey="name"
-                        valueKey="id"
-                        value={formik.values.medium}
-                        onChange={(val) => {
-                          formik.setFieldValue('medium', val);
-                          formik.setFieldTouched('medium', false);
-                          formik.setFieldValue('className', '');
-                          formik.setFieldValue('division', '');
-                        }}
-                        error={!!formik.errors.medium && formik.touched.medium}
-                        helperText={(formik.touched.medium && formik.errors.medium) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Class */}
-                  <Grid size={6}>
-                    <ShakingTextField
-                      error={!!(formik.touched.className && formik.errors.className)}
-                    >
-                      <CustomSelect
-                        label="Class *"
-                        options={classes || []}
-                        labelKey="name"
-                        disabled={!formik.values.medium}
-                        valueKey="id"
-                        value={formik.values.className}
-                        onChange={(val) => {
-                          formik.setFieldValue('className', val);
-                          formik.setFieldTouched('className', false);
-                          formik.setFieldValue('division', '');
-                        }}
-                        error={!!formik.errors.className && formik.touched.className}
-                        helperText={(formik.touched.className && formik.errors.className) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Division */}
-                  <Grid size={6}>
-                    <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-                      <CustomSelect
-                        label="Division *"
-                        options={allDivision}
-                        labelKey="name"
-                        disabled={!formik.values.className}
-                        valueKey="id"
-                        value={formik.values.division}
-                        onChange={(val) => {
-                          formik.setFieldValue('division', val);
-                          formik.setFieldTouched('division', false);
-                        }}
-                        error={!!formik.errors.division && formik.touched.division}
-                        helperText={(formik.touched.division && formik.errors.division) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-
-                  {/* Student */}
-                  <Grid size={{ xs: 12, md: 12 }}>
-                    <ShakingTextField
-                      error={!!(formik.touched.studentName && formik.errors.studentName)}
-                    >
-                      <Autocomplete
-                        loading={studentLoading}
-                        noOptionsText="No Student Found"
-                        fullWidth
-                        disabled={!formik.values.division}
-                        options={tableData}
-                        value={formik.values.studentName}
-                        onChange={(e, value) => {
-                          formik.setFieldValue('studentName', value);
-                          formik.setFieldTouched('studentName', false);
-                        }}
-                        renderTags={(tagValue, getTagProps) =>
-                          tagValue.map((option, index) => (
-                            <Chip
-                              label={
-                                typeof option === 'string'
-                                  ? option
-                                  : (option as { name: string }).name
-                              }
-                              variant="soft"
-                              size="small"
-                              {...getTagProps({ index })}
-                            />
-                          ))
-                        }
-                        getOptionLabel={(option: any) => (option ? option.name : '')}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            size="small"
-                            label="Student *"
-                            fullWidth
-                            error={!!formik.errors.studentName && formik.touched.studentName}
-                            helperText={
-                              (formik.touched.studentName && formik.errors.studentName) as string
-                            }
-                            sx={(theme) => ({
-                              ...(!!(formik.touched.studentName && formik.errors.studentName) &&
-                                !formik.values.division && {
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: `${theme.palette.error.main} !important`,
-                                  },
-                                  '& .MuiInputLabel-root.Mui-disabled': {
-                                    color: `${theme.palette.error.main} !important`,
-                                  },
-                                }),
-                            })}
-                          />
-                        )}
-                        renderOption={(props, option) => (
-                          <li
-                            {...props}
-                            key={
-                              typeof option === 'string' ? option : (option as { id: string }).id
-                            }
-                          >
-                            {typeof option === 'string'
-                              ? option
-                              : (option as { name: string }).name}
-                          </li>
-                        )}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                </SectionCard>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <SectionCard title="Concession Details" paperProps={{ sx: { ...cardStyle } }}>
-                  <Grid size={{ xs: 12 }}>
-                    <ShakingTextField
-                      error={!!(formik.touched.concessions && formik.errors.concessions)}
-                    >
-                      <Autocomplete
-                        multiple
-                        disableCloseOnSelect
-                        options={concessionTypes || []}
-                        getOptionLabel={(option: any) => option.concessionName}
-                        value={concessionTypes?.filter((ct: any) =>
-                          formik.values.concessions.some(
-                            (c: any) => c.concessionType === ct.concessionName
-                          )
-                        )}
-                        onChange={(e, selectedOptions) => {
-                          const concessionsData = selectedOptions.map((opt) => ({
-                            concessionType: opt.concessionName,
-                            applicableFeeHeads: opt.applicableFeeHeads || [],
-                            amount: opt.amount || undefined,
-                            percentage: opt.percentage || undefined,
-                            documents: opt.documents || [],
-                          }));
-                          formik.setFieldValue('concessions', concessionsData);
-                        }}
-                        renderOption={(props, option, { selected }) => (
-                          <li {...props}>
-                            <Checkbox
-                              icon={icon}
-                              checkedIcon={checkedIcon}
-                              style={{ marginRight: 8 }}
-                              checked={selected}
-                            />
-                            {option.concessionName}
-                          </li>
-                        )}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip
-                              label={option.concessionName}
-                              size="small"
-                              {...getTagProps({ index })}
-                              variant="soft"
-                            />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Concession Type(s) *"
-                            size="small"
-                            fullWidth
-                            error={!!(formik.errors.concessions && formik.touched.concessions)}
-                            helperText={
-                              (formik.touched.concessions && formik.errors.concessions) as string
-                            }
-                          />
-                        )}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                </SectionCard>
-              </Grid>
-              {/* Concession Details and Documents per Type */}
-              {formik.values.concessions?.length > 0 && (
-                <>
-                  {formik.values.concessions.map((c, i) => (
-                    <Grid key={i} size={{ xs: 12 }}>
-                      <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Typography variant="h6" color="#00A76F" gutterBottom>
-                            {c.concessionType} Information
-                          </Typography>
-
-                          <Grid container spacing={2}>
-                            {/* Fee Heads */}
-                            <Grid size={{ xs: 12, md: 6 }}>
-                              <Typography variant="body2" color="text.secondary">
-                                Applicable Fee Heads
-                              </Typography>
-                              <Typography variant="body1">
-                                {c.applicableFeeHeads?.length
-                                  ? c.applicableFeeHeads.join(', ')
-                                  : '-'}
-                              </Typography>
-                            </Grid>
-
-                            {/* Amount */}
-                            {c.amount && (
-                              <Grid size={{ xs: 12, md: 6 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Amount
-                                </Typography>
-                                <Typography variant="body1">
-                                  {formatNumber(c.amount, 'INR')}
-                                </Typography>
-                              </Grid>
-                            )}
-
-                            {/* Percentage */}
-                            {c.percentage && (
-                              <Grid size={{ xs: 12, md: 6 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Percentage
-                                </Typography>
-                                <Typography variant="body1">{c.percentage}%</Typography>
-                              </Grid>
-                            )}
-                          </Grid>
-
-                          {/* Document Table for this Concession */}
-                          {c.documents?.length > 0 && (
-                            <CustomizableTable
-                              tableId={`documents-${i}`}
-                              columns={[
-                                { id: 'documentName', label: 'Name' },
-                                {
-                                  id: 'acceptedFormat',
-                                  label: 'Accepted Format',
-                                  align: 'left',
-                                  minWidth: 160,
-                                },
-                                {
-                                  id: 'status',
-                                  label: 'Status',
-
-                                  align: 'left',
-                                  isFilter: false,
-                                  isSort: false,
-                                  render: (value, row) => (
-                                    <Tooltip title={row.status}>
-                                      <Iconify
-                                        icon={
-                                          row.status === 'Uploaded'
-                                            ? 'mdi:approve'
-                                            : 'mage:file-cross-fill'
-                                        }
-                                        height={20}
-                                        width={20}
-                                        sx={{
-                                          color: (theme) =>
-                                            row.status === 'Uploaded'
-                                              ? 'success.main'
-                                              : theme.vars.palette.grey[500],
-                                        }}
-                                      />
-                                    </Tooltip>
-                                  ),
-                                },
-                                {
-                                  id: 'upload',
-                                  label: 'Upload',
-                                  isFilter: false,
-                                  isSort: false,
-                                  render: (value, row) => (
-                                    <IconButton component="label">
-                                      <input
-                                        type="file"
-                                        hidden
-                                        onChange={(e) => {
-                                          const file = e.currentTarget.files?.[0];
-                                          if (file) {
-                                            const updatedDocs = formik.values.concessions[
-                                              i
-                                            ].documents.map((d) =>
-                                              d.id === row.id
-                                                ? { ...d, file, status: 'Uploaded' }
-                                                : d
-                                            );
-                                            formik.setFieldValue(
-                                              `concessions[${i}].documents`,
-                                              updatedDocs
-                                            );
-                                          }
-                                        }}
-                                      />
-                                      <Iconify icon="ci:file-upload" />
-                                    </IconButton>
-                                  ),
-                                },
-                                {
-                                  id: 'view',
-                                  label: 'View',
-                                  isFilter: false,
-                                  isSort: false,
-                                  render: (value, row) => (
-                                    <IconButton
-                                      onClick={() =>
-                                        window.open(URL.createObjectURL(row.file), '_blank')
-                                      }
-                                      disabled={!row.file}
-                                    >
-                                      <Iconify icon="carbon:view-filled" />
-                                    </IconButton>
-                                  ),
-                                },
-                                {
-                                  id: 'download',
-                                  label: 'Download',
-                                  isFilter: false,
-                                  isSort: false,
-                                  render: (value, row) => (
-                                    <IconButton
-                                      onClick={() => {
-                                        const url = URL.createObjectURL(row.file);
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = row.documentName;
-                                        link.click();
-                                      }}
-                                      disabled={!row.file}
-                                    >
-                                      <Iconify
-                                        icon="material-symbols:download"
-                                        width={20}
-                                        height={20}
-                                      />
-                                    </IconButton>
-                                  ),
-                                },
-                              ]}
-                              data={c.documents}
-                            />
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </>
-              )}
-            </Grid>
-          </Scrollbar>
-
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              onClick={() => onClose(null, false)}
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              type="submit"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              variant="contained"
-              size="small"
-              loading={isAddLoading || isUpdateLoading}
-              onClick={(e: any) => formik.handleSubmit(e)}
-            >
-              Submit
-            </LoadingButton>
-          </DialogActions>
-        </Box>
-      </form>
-    </BackPopUpChecked>
+      <CustomStepperWithFormik
+        steps={STEPS}
+        activeStep={activeStep}
+        initialValues={getInitialConcessionFormData()}
+        validationSchema={concessionStepValidations[activeStep]}
+        handleNext={handleNext}
+        handleBack={handleBack}
+        renderItem={renderItem}
+        showSaveButton={false}
+        scrollbarHeight="calc(100vh - 280px)"
+      />
+    </Box>
   );
 };
 

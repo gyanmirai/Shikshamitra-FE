@@ -1,12 +1,8 @@
-import type { LabelColor } from 'src/components/label';
-
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Paper, Typography } from '@mui/material';
-import { Tag, Group, Phone, Email, Person, School, People, Language } from '@mui/icons-material';
-import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
+import { Tag, Person, School, People, Language } from '@mui/icons-material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 import type { IStudentInfo } from '../Concession/type';
@@ -53,15 +49,6 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
           Personal and Academic Details
         </Typography>
       </Box>
-
-      <Box sx={{ ml: 'auto' }}>
-        <Label
-          color={ConcessionStatusTypeColors[student?.status as ConcessionStatusType] as LabelColor}
-          variant="soft"
-        >
-          {student?.status ? ConcessionStatusType[student.status] : '-'}
-        </Label>
-      </Box>
     </Box>
 
     {/* Body */}
@@ -71,7 +58,7 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         <InfoItem
           icon={<Person sx={{ fontSize: 20, color: 'info.main' }} />}
           label="Student Name"
-          value={`${student?.studentName} ${student?.grNo ? `(${student.grNo})` : ''}` || '-'}
+          value={`${student?.name} ${student?.grNumber ? `(${student.grNumber})` : ''}` || '-'}
         />
       </Grid>
 
@@ -84,39 +71,14 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         />
       </Grid>
 
-      {/* Parent Name */}
-      <Grid size={{ xs: 12, md: 3 }}>
-        <InfoItem
-          icon={<Group sx={{ fontSize: 20, color: 'success.main' }} />}
-          label="Parent Name"
-          value={student?.parentName || '-'}
-        />
-      </Grid>
-
-      {/* Contact */}
-      <Grid size={{ xs: 12, md: 3 }}>
-        <InfoItem
-          icon={<Phone sx={{ fontSize: 20, color: 'error.main' }} />}
-          label="Contact No."
-          value={student?.contactNo || '-'}
-        />
-      </Grid>
-
-      {/* Email */}
-      <Grid size={{ xs: 12, md: 3 }}>
-        <InfoItem
-          icon={<Email sx={{ fontSize: 20, color: 'secondary.main' }} />}
-          label="Email"
-          value={student?.email || '-'}
-        />
-      </Grid>
-
       {/* Class / Division */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<School sx={{ fontSize: 20, color: 'primary.dark' }} />}
           label="Class/Div"
-          value={student?.classDivision || '-'}
+          value={(student?.standardName || '-').concat(
+            student?.divisionName ? `(${student.divisionName})` : ''
+          )}
         />
       </Grid>
 

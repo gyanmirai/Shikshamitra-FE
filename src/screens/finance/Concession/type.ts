@@ -1,5 +1,3 @@
-import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
-
 export interface IConcession {
   id?: string;
   board: string;
@@ -28,6 +26,10 @@ export interface IConcession {
 export interface IStudentInfo {
   id?: string;
   studentName: string;
+  name?: string;
+  standardName?: string;
+  divisionName?: string;
+  grNumber?: number;
   rollNo: string;
   sibling?: string;
   contactNo: string;
@@ -84,8 +86,8 @@ export interface IStudentTableProps {
 }
 
 export interface IStudentAdminTableProps {
-  data: IViewConcessionRequestProps[];
-  onViewConcession: (student: IViewConcessionRequestProps) => void;
+  data: IStudentInfo[];
+  onViewConcession: (student: IStudentInfo) => void;
 }
 
 export interface IReasonApprovalFormProps {

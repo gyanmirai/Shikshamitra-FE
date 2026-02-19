@@ -40,8 +40,8 @@ export const StudentAdmissionApi = createApi({
       providesTags: ['Student-Admission'],
     }),
     getStandardFeeStructure: builder.query({
-      query: (standardId) => ({
-        url: `/student-fee-structure/student/${standardId}`,
+      query: (studentId) => ({
+        url: `/student-fee-structure/student/${studentId}`,
         method: 'GET',
       }),
       providesTags: ['Student-Admission'],
