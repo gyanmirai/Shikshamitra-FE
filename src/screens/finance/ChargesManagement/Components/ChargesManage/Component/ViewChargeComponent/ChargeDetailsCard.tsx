@@ -65,10 +65,14 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
           <InfoItem
             icon={<CurrencyRupee />}
             label="Amount"
-            value={`₹ ${formatNumber(String(charge?.amount))}`}
+            value={`₹ ${formatNumber(String(charge?.amount || 0))}`}
           />
-          <InfoItem icon={<Description />} label="Category" value={charge?.category} />
-          <InfoItem icon={<Event />} label="Due Date" value={charge?.dueDate} />
+          <InfoItem icon={<Description />} label="Category" value={charge?.categoryName || 'N/A'} />
+          <InfoItem
+            icon={<Event />}
+            label="Due Date"
+            value={charge?.dueDate ? new Date(charge.dueDate).toLocaleDateString() : 'N/A'}
+          />
 
           {/* Divider */}
           <Grid size={{ xs: 12 }}>
@@ -102,7 +106,7 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
                   color="text.secondary"
                   sx={{ lineHeight: 1.6, mb: 1.5 }}
                 >
-                  {charge?.description || 'No description provided.'}
+                  {charge?.purposeDescription || 'No description provided.'}
                 </Typography>
 
                 {charge?.additionalNotes && (

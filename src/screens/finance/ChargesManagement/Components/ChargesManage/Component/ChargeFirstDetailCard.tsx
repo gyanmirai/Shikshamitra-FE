@@ -44,7 +44,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                     Category
                   </Typography>
                   <Typography variant="body1" fontWeight="medium">
-                    {charge?.category}
+                    {charge?.categoryName}
                   </Typography>
                 </Box>
 
@@ -107,7 +107,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                     }}
                   >
                     <Typography sx={{ fontWeight: 300, lineHeight: 1.6 }} variant="body1">
-                      {charge?.description ||
+                      {charge?.purposeDescription ||
                         'Annual tuition fee applicable for Class 10 students in divisions A and B.'}
                     </Typography>
                   </Box>

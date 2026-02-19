@@ -1,12 +1,15 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IChargeData {
-  id: string;
-  category: string;
-  class: string;
-  division: string;
+  chargeId: string;
+  chargeCategoryId: string;
+  chargeCategoryName?: string;
+  categoryName?: string;
+  standardId: string;
+  divisionId: string;
   grNo: number;
-  studentName: string; // total count
+  studentId: string; // total count
+  studentName?: string; // Student name for display in edit mode
   rollNo: number;
   studentList?: {
     id: string;
@@ -19,10 +22,10 @@ export interface IChargeData {
   priority: number;
   dueDate: string; // ISO or formatted string (e.g. "2025-08-31")
   status?: number; // number enum
-  description: string;
+  purposeDescription: string;
   academicYear: string;
-  board: string;
-  medium: string;
+  boardId: string;
+  educationMediumId: string;
   additionalNotes?: string;
   // Added missing properties for RequestorInfoCard
   requestorName?: string;

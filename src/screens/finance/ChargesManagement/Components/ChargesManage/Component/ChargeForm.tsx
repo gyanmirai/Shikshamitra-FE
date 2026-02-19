@@ -4,22 +4,29 @@ import type { Division } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  usePostChargeMutation,
+  useUpdateChargeMutation,
+} from 'src/redux/finance/ChargeManagement/chargeApi';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
 import type { IChargeFormProps } from './type';
@@ -33,7 +40,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   // Queries
-  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
+  const [getClassByMedium, { data: classes, isLoading: classesLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
@@ -42,37 +49,62 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+  // Get charge categories data
+  const {
+    data: chargeCategories,
+    isLoading: chargeCategoriesLoading,
+    refetch: chargeCategoriesRefetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+  });
+  const [postCharge, { isLoading: postChargeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostChargeMutation,
+  });
+  const [updateCharge, { isLoading: updateChargeLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateChargeMutation,
+  });
 
   // Memoize initial values
   const initialValues = useMemo(() => {
     if (isEdit && editData) {
       return {
-        chargeCategory: editData.category || '',
-        description: editData.description || '',
+        chargeCategoryId: editData.chargeCategoryId || '',
+        chargeCategoryName: editData.chargeCategoryName || '',
+        purposeDescription: editData.purposeDescription || '',
         amount: editData.amount || '',
         dueDate: editData.dueDate ? dayjs(editData.dueDate, 'DD-MM-YYYY') : null,
         priority: editData.priority?.toString() || '',
-        academicYear: editData.academicYear || '',
-        board: editData.board || '',
-        medium: editData.medium || '',
-        class: editData.class || '',
-        division: editData.division || '',
-        studentName: editData.studentName || '',
+        boardId: editData.boardId || '',
+        educationMediumId: editData.educationMediumId || '',
+        standardId: editData.standardId || '',
+        divisionId: editData.divisionId || '',
+        studentId: editData.studentId || null,
+        selectedStudent:
+          editData.studentId && editData.studentName
+            ? { id: editData.studentId, label: editData.studentName }
+            : null,
         additionalNotes: editData.additionalNotes || '',
       };
     }
     return {
-      chargeCategory: '',
-      description: '',
+      chargeCategoryId: '',
+      chargeCategoryName: '',
+      purposeDescription: '',
       amount: '',
       dueDate: null,
       priority: '',
-      academicYear: '',
-      board: '',
-      medium: '',
-      class: '',
-      division: '',
-      studentName: null,
+      boardId: '',
+      educationMediumId: '',
+      standardId: '',
+      divisionId: '',
+      studentId: null,
+      selectedStudent: null,
       additionalNotes: '',
     };
   }, [isEdit, editData]);
@@ -81,8 +113,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     initialValues,
     enableReinitialize: true,
     validationSchema: Yup.object({
-      chargeCategory: Yup.string().required('Charge Category is required'),
-      description: Yup.string().required('Purpose/Description is required'),
+      chargeCategoryId: Yup.string().required('Charge Category is required'),
+      purposeDescription: Yup.string().required('Purpose/Description is required'),
       amount: Yup.string()
         .required('Amount is required')
         .transform((value) => value.replace(/[^0-9.]/g, ''))
@@ -110,39 +142,74 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
           (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
         ),
       priority: Yup.string().required('Priority is required'),
-      board: Yup.string().required('Board is required'),
-      medium: Yup.string().required('Medium is required'),
-      class: Yup.string().required('Class is required'),
-      division: Yup.string().required('Division is required'),
-      studentName: Yup.object().nullable().required('Student is required'),
+      boardId: Yup.string().required('Board is required'),
+      educationMediumId: Yup.string().required('Medium is required'),
+      standardId: Yup.string().required('Class is required'),
+      divisionId: Yup.string().required('Division is required'),
+      selectedStudent: Yup.object().nullable().required('Student is required'),
+      studentId: Yup.string().nullable().required('Student is required'),
     }),
-    onSubmit: (values) => {
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          chargeCategoryId: values.chargeCategoryId,
+          purposeDescription: values.purposeDescription,
+          amount: parseFloat(String(values.amount)),
+          dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : null,
+          priority: parseInt(values.priority, 10),
+          additionalNotes: values.additionalNotes,
+        };
+
+        if (isEdit && editData) {
+          await updateCharge({ id: editData.chargeId, body: payload }).unwrap();
+          shikshaMitraToast.success({
+            message: `Charge updated successfully for ${values.chargeCategoryName}`,
+          });
+        } else {
+          const createPayload = {
+            ...payload,
+            boardId: values.boardId,
+            educationMediumId: values.educationMediumId,
+            standardId: values.standardId,
+            divisionId: values.divisionId,
+            studentId: values.studentId,
+          };
+          await postCharge({ academicYearId: currentYear?.id, body: createPayload }).unwrap();
+          shikshaMitraToast.success({
+            message: `Charge added successfully for ${values.chargeCategoryName}`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to submit charge:', error);
+      }
     },
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-
+  console.log('values000000', values);
+  console.log('erroes----', errors);
   // Load boards on year change
   useEffect(() => {
     setBoards(currentYear?.boards || []);
   }, [currentYear]);
 
   // Load mediums when board changes
+  // Load mediums when board changes
   useEffect(() => {
-    const selectedBoard = boards.find((b: any) => b.id === values.board);
+    const selectedBoard = boards.find((b: any) => b.id === values.boardId);
     setMediums(selectedBoard?.educationMediums || []);
 
     // Fetch classes if medium is already selected (e.g. edit mode) or re-selected
-    if (values.medium) {
-      getClassByMedium(values.medium);
+    if (values.educationMediumId) {
+      getClassByMedium(values.educationMediumId);
     }
-  }, [values.board, values.medium, boards, getClassByMedium]);
+  }, [values.boardId, values.educationMediumId, boards, getClassByMedium]);
 
   // Load divisions when class changes
   useEffect(() => {
-    setAllDivision(classes?.find((cls: any) => cls.id === values.class)?.divisions || []);
-  }, [values.class, classes]);
+    setAllDivision(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
+  }, [values.standardId, classes]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -154,41 +221,49 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 <SectionCard title="Charge Details" paperProps={{ sx: { ...cardStyle } }}>
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
-                      error={!!(touched.chargeCategory && errors.chargeCategory) || false}
+                      error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                     >
                       <CustomSelect
-                        name="chargeCategory"
+                        name="chargeCategoryId"
                         label="Charge Category *"
-                        options={[
-                          { id: 'Library Fine', name: 'Library Fine' },
-                          { id: 'Transport Damage', name: 'Transport Damage' },
-                          { id: 'Hostel Maintenance', name: 'Hostel Maintenance' },
-                        ]}
+                        isLoading={chargeCategoriesLoading}
+                        options={chargeCategories?.items || []}
                         labelKey="name"
                         valueKey="id"
-                        value={values.chargeCategory}
-                        onChange={(value) => setFieldValue('chargeCategory', value)}
-                        error={!!(touched.chargeCategory && errors.chargeCategory) || false}
-                        helperText={(touched.chargeCategory && errors.chargeCategory) || ''}
+                        value={values.chargeCategoryId}
+                        onChange={(value) => setFieldValue('chargeCategoryId', value)}
+                        error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
+                        helperText={(touched.chargeCategoryId && errors.chargeCategoryId) || ''}
                         formControlProps={{ fullWidth: true }}
                       />
                     </ShakingTextField>
+                    {values.chargeCategoryId && (
+                      <Typography variant="body2" color="text.secondary">
+                        {chargeCategories?.items?.find(
+                          (item: any) => item.id === values.chargeCategoryId
+                        )?.isApprovalRequired
+                          ? 'This charge need the approval from the authority'
+                          : 'This charge does not need the approval from the authority'}
+                      </Typography>
+                    )}
                   </Grid>
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
-                      error={!!(touched.description && errors.description) || false}
+                      error={!!(touched.purposeDescription && errors.purposeDescription) || false}
                     >
                       <TextField
-                        name="description"
+                        name="purposeDescription"
                         label="Purpose/Description *"
                         multiline
                         minRows={3}
                         fullWidth
-                        value={values.description}
+                        value={values.purposeDescription}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        error={!!(touched.description && errors.description)}
-                        helperText={(touched.description && errors.description) as string}
+                        error={!!(touched.purposeDescription && errors.purposeDescription)}
+                        helperText={
+                          (touched.purposeDescription && errors.purposeDescription) as string
+                        }
                       />
                     </ShakingTextField>
                   </Grid>
@@ -268,69 +343,78 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 <SectionCard title="Student Information" paperProps={{ sx: { ...cardStyle } }}>
                   {/* Board */}
                   <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.board && errors.board)}>
+                    <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
                       <CustomSelect
+                        disabled={isEdit}
                         label="Board *"
                         options={boards}
                         labelKey="name"
                         valueKey="id"
-                        value={values.board}
+                        value={values.boardId}
                         onChange={(val) => {
-                          setFieldValue('board', val);
-                          setFieldTouched('board', false);
-                          setFieldValue('medium', '');
-                          setFieldValue('class', '');
-                          setFieldValue('division', '');
-                          setFieldValue('studentName', null);
+                          setFieldValue('boardId', val);
+                          setFieldTouched('boardId', false);
+                          setFieldValue('educationMediumId', '');
+                          setFieldValue('standardId', '');
+                          setFieldValue('divisionId', '');
+                          setFieldValue('studentId', null);
+                          setFieldValue('selectedStudent', null);
                         }}
-                        error={!!errors.board && touched.board}
-                        helperText={(touched.board && errors.board) as string}
+                        error={!!errors.boardId && touched.boardId}
+                        helperText={(touched.boardId && errors.boardId) as string}
                       />
                     </ShakingTextField>
                   </Grid>
 
                   {/* Medium */}
                   <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.medium && errors.medium)}>
+                    <ShakingTextField
+                      error={!!(touched.educationMediumId && errors.educationMediumId)}
+                    >
                       <CustomSelect
                         label="Medium *"
-                        disabled={!values.board}
+                        disabled={!values.boardId || isEdit}
                         options={mediums}
                         labelKey="name"
                         valueKey="id"
-                        value={values.medium}
+                        value={values.educationMediumId}
                         onChange={(val) => {
-                          setFieldValue('medium', val);
-                          setFieldTouched('medium', false);
-                          setFieldValue('class', '');
-                          setFieldValue('division', '');
-                          setFieldValue('studentName', null);
+                          setFieldValue('educationMediumId', val);
+                          setFieldTouched('educationMediumId', false);
+                          setFieldValue('standardId', '');
+                          setFieldValue('divisionId', '');
+                          setFieldValue('studentId', null);
+                          setFieldValue('selectedStudent', null);
                         }}
-                        error={!!errors.medium && touched.medium}
-                        helperText={(touched.medium && errors.medium) as string}
+                        error={!!errors.educationMediumId && touched.educationMediumId}
+                        helperText={
+                          (touched.educationMediumId && errors.educationMediumId) as string
+                        }
                       />
                     </ShakingTextField>
                   </Grid>
 
                   {/* Class */}
                   <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.class && errors.class) || false}>
+                    <ShakingTextField error={!!(touched.standardId && errors.standardId) || false}>
                       <CustomSelect
-                        name="class"
+                        name="standardId"
                         label="Class *"
                         options={classes || []}
                         labelKey="name"
                         valueKey="id"
-                        value={values.class}
-                        disabled={!values.medium}
+                        isLoading={classesLoading}
+                        value={values.standardId}
+                        disabled={!values.educationMediumId || isEdit}
                         onChange={(value) => {
-                          setFieldValue('class', value);
-                          setFieldTouched('class', false);
-                          setFieldValue('division', '');
-                          setFieldValue('studentName', null);
+                          setFieldValue('standardId', value);
+                          setFieldTouched('standardId', false);
+                          setFieldValue('divisionId', '');
+                          setFieldValue('studentId', null);
+                          setFieldValue('selectedStudent', null);
                         }}
-                        error={!!(touched.class && errors.class) || false}
-                        helperText={(touched.class && errors.class) || ''}
+                        error={!!(touched.standardId && errors.standardId) || false}
+                        helperText={(touched.standardId && errors.standardId) || ''}
                         formControlProps={{ sx: { width: '100%' } }}
                         multiple={false}
                       />
@@ -339,44 +423,45 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
 
                   {/* Division */}
                   <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.division && errors.division) || false}>
+                    <ShakingTextField error={!!(touched.divisionId && errors.divisionId) || false}>
                       <CustomSelect
-                        name="division"
+                        name="divisionId"
                         label="Division *"
                         labelKey="name"
                         valueKey="id"
-                        disabled={!values.class}
+                        disabled={!values.standardId || isEdit}
                         options={allDivision}
-                        value={values.division}
+                        value={values.divisionId}
                         onChange={(value) => {
-                          setFieldValue('division', value);
-                          setFieldTouched('division', false);
-                          setFieldValue('studentName', null);
+                          setFieldValue('divisionId', value);
+                          setFieldTouched('divisionId', false);
+                          setFieldValue('studentId', null);
+                          setFieldValue('selectedStudent', null);
                         }}
                         formControlProps={{ sx: { width: '100%' } }}
-                        error={!!(touched.division && errors.division)}
-                        helperText={(touched.division && errors.division) as string}
+                        error={!!(touched.divisionId && errors.divisionId)}
+                        helperText={(touched.divisionId && errors.divisionId) as string}
                       />
                     </ShakingTextField>
                   </Grid>
 
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
-                      error={!!(touched.studentName && errors.studentName) || false}
+                      error={!!(touched.selectedStudent && errors.selectedStudent) || false}
                     >
                       <PaginatedSearchSelect
-                        key={`${values.class}-${values.division}`}
+                        key={`${values.standardId}-${values.divisionId}`}
                         label="Student *"
-                        disabled={!values.division}
+                        disabled={!values.divisionId || isEdit}
                         fetchOptions={async (query, page) => {
-                          if (!values.division) return { data: [], hasMore: false };
+                          if (!values.divisionId) return { data: [], hasMore: false };
 
                           const res = await getFilterStudents({
                             page,
                             pageSize: 10,
                             academicYearId: currentYear.id,
-                            standardId: values.class,
-                            divisionId: values.division,
+                            standardId: values.standardId,
+                            divisionId: values.divisionId,
                             search: query,
                           }).unwrap();
 
@@ -389,7 +474,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             hasMore,
                           };
                         }}
-                        value={values.studentName}
+                        value={values.selectedStudent}
                         renderOption={(prop, option: any) => (
                           <li {...prop} key={option.id}>
                             {option.label}
@@ -397,13 +482,16 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         )}
                         getOptionLabel={(option: any) => option?.label || ''}
                         minChars={2}
-                        onChange={(_, value) => setFieldValue('studentName', value)}
+                        onChange={(_, value) => {
+                          setFieldValue('selectedStudent', value);
+                          setFieldValue('studentId', value?.id || null);
+                        }}
                         debounceMs={400}
                         placeholder="Search by name"
                         sx={{ minWidth: 250 }}
                         size="small"
-                        error={!!(touched.studentName && errors.studentName) || false}
-                        helperText={(touched.studentName && errors.studentName) || ''}
+                        error={!!(touched.selectedStudent && errors.selectedStudent) || false}
+                        helperText={(touched.selectedStudent && errors.selectedStudent) || ''}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -436,17 +524,16 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               variant="contained"
               size="small"
-              onClick={(e: any) => {
-                formik.handleSubmit(e);
-              }}
+              disabled={postChargeLoading || updateChargeLoading}
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+              loading={postChargeLoading || updateChargeLoading}
             >
               {isEdit ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>
