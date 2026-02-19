@@ -16,6 +16,8 @@ export interface IBookCategoryTableProps {
   onDelete: (row: IBookCategory) => void;
   onEdit: (row: IBookCategory) => void;
   open: boolean;
+  onServerPagination?: (page: number, rowsPerPage: number) => void;
+  totalCount?: number;
 }
 
 export interface IBookCategoryFormProps {

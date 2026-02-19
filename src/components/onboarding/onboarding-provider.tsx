@@ -29,6 +29,7 @@ export default function OnboardingProvider({ children }: { children: React.React
       disableActiveInteraction: false,
       onDestroyed: () => {
         localStorage.setItem('onboarding_completed', 'true');
+        driverObj.current = null;
       },
       onHighlightStarted: (element: any) => {
         if (element?.getAttribute?.('data-onboarding') === 'academic-year') {
@@ -39,6 +40,33 @@ export default function OnboardingProvider({ children }: { children: React.React
       nextBtnText: 'Next &rarr;',
       prevBtnText: '&larr; Previous',
       doneBtnText: 'Finish',
+      onPopoverRender: (popover: any, opts: any) => {
+        // Find the footer
+        const footer = popover.wrapper.querySelector('.driver-popover-footer');
+        if (footer) {
+          const existingSkipBtn = footer.querySelector('.onboarding-skip-btn');
+          if (!existingSkipBtn) {
+            const skipBtn = document.createElement('button');
+            skipBtn.innerText = 'Skip';
+            skipBtn.className = 'onboarding-skip-btn';
+
+            skipBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Use opts.driver for a direct reference (avoids stale ref issues)
+              opts.driver.destroy();
+            });
+
+            // Insert at the beginning of the footer (left side)
+            footer.insertBefore(skipBtn, footer.firstChild);
+          }
+        }
+
+        // Handle Next button state for specific step
+        if (popover.node?.getAttribute?.('data-onboarding') === 'academic-year') {
+          setTimeout(() => !currentYear?.name && setDriverNextEnabled(false), 50);
+        }
+      },
     });
 
     // Start driver with a slight delay to ensure layout is stable
@@ -52,6 +80,7 @@ export default function OnboardingProvider({ children }: { children: React.React
     return () => {
       if (driverObj.current) {
         driverObj.current.destroy();
+        driverObj.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

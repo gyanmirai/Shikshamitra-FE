@@ -1,7 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -23,12 +27,14 @@ import type { IBookCategoryFormProps } from './type';
 // import initial values & validation schema (you’ll create these files similar to FeeHead)
 
 const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, editData }) => {
-  const { addBookCategory } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const [addBookCategory, { isLoading: isAdding }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddBookCategoryMutation,
   });
 
-  const { updateBookCategory } = useQueryAndMutation({
+  const [updateBookCategory, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateBookCategoryMutation,
   });
@@ -36,30 +42,38 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
   const formik = useFormik({
     initialValues: getBookCategoryInitialValues(editData),
     validationSchema: bookCategoryValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       // Construct payload matching API specification
       const payload = {
         categoryName: values.categoryName,
         description: values.description,
       };
-
-      if (editData) {
-        // Update existing category - PUT /library/settings/book-categories/{categoryId}
-        updateBookCategory({
-          categoryId: editData.id,
-          data: payload,
-        });
-        shikshaMitraToast.success({
-          message: `${values.categoryName} Book Category updated successfully`,
-        });
-      } else {
-        // Create new category - POST /library/settings/book-categories
-        addBookCategory(payload);
-        shikshaMitraToast.success({
-          message: `${values.categoryName} Book Category added successfully`,
-        });
+      try {
+        if (editData) {
+          // Update existing category
+          await updateBookCategory({
+            categoryId: editData.id,
+            data: payload,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.categoryName} Book Category updated successfully`,
+          });
+        } else {
+          // Create new category
+          await addBookCategory({
+            ...payload,
+            academicYearId: currentYear?.id,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.categoryName} Book Category added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        // Error handling is managed by useQueryAndMutation or global handler,
+        // but we catch here to prevent closing dialog on error if using .unwrap()
+        console.error('Failed to save book category:', error);
       }
-      onClose(null, true);
     },
   });
 
@@ -121,7 +135,8 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          loading={isAdding || isUpdating}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -135,7 +150,7 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

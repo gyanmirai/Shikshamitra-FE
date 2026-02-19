@@ -1,6 +1,10 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -31,11 +35,13 @@ import {
 } from '@mui/material';
 
 const LibraryTimingCreation = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // State for managing timing data
   const [timingData, setTimingData] = useState<any[]>([]);
+  const [sameAsSchoolApplied, setSameAsSchoolApplied] = useState(false);
   const [originalTimingData, setOriginalTimingData] = useState<any[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [sameAsSchoolApplied, setSameAsSchoolApplied] = useState(false);
 
   // Dialog control states
   const resetDialog = useBoolean();
@@ -46,20 +52,49 @@ const LibraryTimingCreation = () => {
   const { data: fetchedTimingData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibraryTimingQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
 
   // Add library timing mutation hook
-  const { addLibraryTiming } = useQueryAndMutation({
+  // Add library timing mutation hook
+  const [addLibraryTiming, { isLoading: isSaveLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddLibraryTimingMutation,
   });
 
   // Initialize data when fetched
   useEffect(() => {
-    if (fetchedTimingData && fetchedTimingData.length > 0) {
-      setTimingData(fetchedTimingData);
-      setOriginalTimingData(fetchedTimingData);
-    } else if (!isLoading && (!fetchedTimingData || fetchedTimingData.length === 0)) {
+    if (fetchedTimingData?.items && fetchedTimingData.items.length > 0) {
+      const daysOrder = {
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+        Sunday: 7,
+      };
+
+      const mappedData = fetchedTimingData.items
+        .map((item: any) => ({
+          ...item,
+          id: item.day,
+          status: item.status === 1 ? 'On' : 'Off',
+        }))
+        .sort(
+          (a: any, b: any) =>
+            (daysOrder[a.day as keyof typeof daysOrder] || 0) -
+            (daysOrder[b.day as keyof typeof daysOrder] || 0)
+        );
+
+      setTimingData(mappedData);
+      setOriginalTimingData(mappedData);
+    } else if (!isLoading && (!fetchedTimingData?.items || fetchedTimingData.items.length === 0)) {
       // Fallback: Initialize with default days if no data from API
       const daysOfWeek = [
         'Monday',
@@ -71,7 +106,7 @@ const LibraryTimingCreation = () => {
         'Sunday',
       ];
       const defaultData = daysOfWeek.map((day, index) => ({
-        id: `new-${index}`,
+        id: day, // Use day name as ID to verify uniqueness
         day,
         startTime: '',
         endTime: '',
@@ -163,7 +198,7 @@ const LibraryTimingCreation = () => {
   };
 
   // Handles saving timing settings
-  const handleSave = () => {
+  const handleSave = async () => {
     // Simple validation: End Time must be after Start Time if both are set and status is 'On'
     let hasError = false;
     const newErrors: { [key: string]: string } = {};
@@ -185,20 +220,30 @@ const LibraryTimingCreation = () => {
     const payload = {
       hours: timingData.map((row) => ({
         day: row.day,
-        startTime: row.startTime || '',
-        endTime: row.endTime || '',
-        status: row.status,
+        startTime: row.startTime || '12:00 AM', // Default to 12:00 AM if empty (for status=Off)
+        endTime: row.endTime || '12:00 AM', // Default to 12:00 AM if empty (for status=Off)
+        status: row.status === 'On' ? 1 : 0,
       })),
     };
 
-    // Call POST API - POST /library/settings/hours
-    addLibraryTiming(payload);
+    try {
+      // Call POST API
+      await addLibraryTiming({
+        ...payload,
+        academicYearId: currentYear?.id,
+      }).unwrap();
 
-    saveDialog.onFalse();
-    shikshaMitraToast.success({
-      message: 'Library timing settings have been saved successfully',
-    });
-    setOriginalTimingData(timingData);
+      saveDialog.onFalse();
+      shikshaMitraToast.success({
+        message: 'Library timing settings have been saved successfully',
+      });
+      setOriginalTimingData(timingData);
+    } catch (error: any) {
+      console.error('Error saving library timing:', error);
+      shikshaMitraToast.error({
+        message: error?.data?.message || 'Failed to save library timing settings',
+      });
+    }
   };
 
   // Handler for setting same hours as school
@@ -266,7 +311,7 @@ const LibraryTimingCreation = () => {
             justifyContent: 'space-between',
             borderBottom: '1px solid',
             borderColor: 'divider',
-            bgcolor: 'background.neutral',
+            bgcolor: 'background.paper',
           }}
         >
           <Typography variant="h6" sx={{ color: 'text.primary' }}>
@@ -293,7 +338,7 @@ const LibraryTimingCreation = () => {
                 </TableCell>
                 {timingData.map((row) => (
                   <TableCell
-                    key={row.id}
+                    key={row.day}
                     align="center"
                     sx={{
                       minWidth: 180,
@@ -353,7 +398,7 @@ const LibraryTimingCreation = () => {
                   Start Time
                 </TableCell>
                 {timingData.map((row) => (
-                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 3 }}>
+                  <TableCell key={row.day} align="center" sx={{ verticalAlign: 'top', pt: 3 }}>
                     <Box
                       sx={{ opacity: row.status === 'Off' ? 0.5 : 1, transition: 'opacity 0.3s' }}
                     >
@@ -422,7 +467,7 @@ const LibraryTimingCreation = () => {
                   End Time
                 </TableCell>
                 {timingData.map((row) => (
-                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 3 }}>
+                  <TableCell key={row.day} align="center" sx={{ verticalAlign: 'top', pt: 3 }}>
                     <Box
                       sx={{ opacity: row.status === 'Off' ? 0.5 : 1, transition: 'opacity 0.3s' }}
                     >
@@ -498,15 +543,16 @@ const LibraryTimingCreation = () => {
           >
             Reset
           </Button>
-          <Button
+          <LoadingButton
             startIcon={<Save />}
             variant="contained"
             onClick={saveDialog.onTrue}
             disabled={!hasChanges}
             size="small"
+            loading={isSaveLoading}
           >
             Save
-          </Button>
+          </LoadingButton>
         </Box>
       </Card>
 
@@ -533,14 +579,15 @@ const LibraryTimingCreation = () => {
         title="Save"
         content="Are you sure you want to save these library hours?"
         action={
-          <Button
+          <LoadingButton
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             variant="contained"
             size="small"
+            loading={isSaveLoading}
             onClick={handleSave}
           >
             Save
-          </Button>
+          </LoadingButton>
         }
       />
 

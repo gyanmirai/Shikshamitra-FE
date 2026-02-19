@@ -1,5 +1,5 @@
 export const getChargeTypeInitialValues = (editData?: any) => ({
-  chargeType: editData?.chargeType || '',
+  chargeType: editData?.chargeType || editData?.name || '',
   isFixed: editData?.isFixed ?? false, // <-- add this line
   amount: editData?.amount !== undefined ? String(editData.amount) : '',
   description: editData?.description || '',

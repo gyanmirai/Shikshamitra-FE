@@ -1,10 +1,11 @@
 export interface ISection {
   id: string;
   sectionName: string;
-  numberOfColumns: number;
+  numberOfShelf: number;
   createdBy?: string;
   createdOn?: string;
   shelfNames: string[];
+  shelfItems: string[];
 }
 
 export interface ISectionTableProps {
@@ -24,4 +25,15 @@ export interface ISectionFormProps {
   open: any;
   onClose: (e: any, isSubmit?: boolean) => void;
   editData: ISection | null;
+}
+
+export interface IShelfDetail {
+  shelfName: string;
+}
+
+export interface ISectionDetails {
+  id: string;
+  sectionName: string;
+  numberOfShelf: number;
+  shelfDetails: IShelfDetail[];
 }

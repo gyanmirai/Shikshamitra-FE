@@ -19,7 +19,7 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'chargeType',
+        id: 'name',
         label: 'Name',
         align: 'left',
         render: (value) => (
