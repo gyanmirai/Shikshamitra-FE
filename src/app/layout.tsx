@@ -16,6 +16,7 @@ import KeyboardShortcut from 'src/components/keyboard-shortcut';
 import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/components/settings';
 import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
+import { AppContent } from './app-content';
 import NextAuthSessionProvider from './providers';
 import ReduxProvider from '../redux/reduxProvider';
 
@@ -52,7 +53,7 @@ export default async function RootLayout({ children }: Props) {
                   <Snackbar />
                   <ProgressBar />
                   <SettingsDrawer />
-                  {children}
+                  <AppContent>{children}</AppContent>
                 </ThemeProvider>
               </SettingsProvider>
             </LocalizationProvider>

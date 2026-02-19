@@ -1,7 +1,6 @@
 import type { TimetableSlot } from 'src/screens/academic/timetable-schedule-management/timeTable/type';
 
-import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 import TimeTableView from 'src/screens/academic/timetable-schedule-management/timeTable/component/timeTableView';
 
 const studentTimetable: TimetableSlot[] = [
@@ -416,18 +415,21 @@ const studentTimetable: TimetableSlot[] = [
 
 const AcademicTimetable = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-    <Typography variant="h6" mb={2}>
-      Timetable
-    </Typography>
-    <TimeTableView
-      isClassVisible={false}
-      isDivisionVisible={false}
-      isDrag={false}
-      isRoomVisible
-      isTeacherVisible
-      timeTableData={studentTimetable}
-      showThreeDots={false}
-    />
+    <Card sx={{ p: 1.5 }}>
+      <Typography variant="h6" mb={2}>
+        Timetable
+      </Typography>
+
+      <TimeTableView
+        isClassVisible={false}
+        isDivisionVisible={false}
+        isDrag={false}
+        isRoomVisible
+        isTeacherVisible
+        timeTableData={studentTimetable}
+        showThreeDots={false}
+      />
+    </Card>
   </Box>
 );
 

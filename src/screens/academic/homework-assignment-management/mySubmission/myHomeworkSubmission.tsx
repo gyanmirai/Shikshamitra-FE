@@ -144,7 +144,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
 
   return (
     <Box>
-      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start" ml={1}>
+      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-start">
         <DatePicker
           label="Homework Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}

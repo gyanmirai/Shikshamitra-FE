@@ -62,7 +62,7 @@ const AttendanceTrend = () => {
   return (
     <Card
       sx={{
-        p: 3,
+        p: 1.5,
         height: '100%',
         boxShadow: 'none',
         border: '1px solid',
