@@ -59,7 +59,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
   // Initialize tab state, defaulting to 'issued-books'
   const tabs = useTabs('borrow-books');
   const theme = useTheme();
-  const { currentYear } = useSelector((state: RootState) => state.academicYear);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Find the currently selected tab's component to render
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
