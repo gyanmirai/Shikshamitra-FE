@@ -1,4 +1,4 @@
-import type { TreeNodeData } from './AcademicTreeView';
+import type { TreeNodeData } from './type';
 
 /**
  * Prunes a tree hierarchical structure to only include nodes whose IDs are in the selectedIds set,

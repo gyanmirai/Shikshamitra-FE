@@ -1,6 +1,4 @@
-import type { IGroup } from './type';
-
-export const getGroupInitialValues = (initialValues: any): IGroup & { [key: string]: any } => ({
+export const getGroupInitialValues = (initialValues: any): any => ({
   id: initialValues?.id || '',
   name: initialValues?.name || initialValues?.groupName || '',
   description: initialValues?.description || '',
