@@ -463,6 +463,8 @@ const RegisterForm = ({
             emergencyContactNo: values.emergencyContactNo,
             isSingleChild: values.singleChild,
             isSingleParentChild: values.singleParentChild,
+            isLibraryMember: values.libraryMember,
+            isTransportMember: values.transportMember,
           },
         }).unwrap();
       } catch (error) {
