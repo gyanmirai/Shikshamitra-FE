@@ -14,42 +14,6 @@ import {
 
 import type { IFeeStructure, IFeeStructureTableProps } from '../type';
 
-const DUMMY_DATA: IFeeStructure[] = [
-  {
-    id: '1',
-    feeStructureName: 'General Fee Structure 2024',
-    academicYear: '2024-25',
-    board: 'CBSE',
-    medium: 'English',
-    status: FeeStructureLockStatusType.Unlocked,
-    receiptBook: 'RB-001',
-    totalClass: 12,
-    feeStructureClasses: {},
-  },
-  {
-    id: '2',
-    feeStructureName: 'Sibling Discount Structure',
-    academicYear: '2024-25',
-    board: 'ICSE',
-    medium: 'English',
-    status: FeeStructureLockStatusType.Locked,
-    receiptBook: 'RB-002',
-    totalClass: 5,
-    feeStructureClasses: {},
-  },
-  {
-    id: '3',
-    feeStructureName: 'Special Concession Structure',
-    academicYear: '2024-25',
-    board: 'State Board',
-    medium: 'Hindi',
-    status: FeeStructureLockStatusType.Unlocked,
-    receiptBook: 'RB-003',
-    totalClass: 8,
-    feeStructureClasses: {},
-  },
-];
-
 const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   data,
   isLoading,
@@ -180,7 +144,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           ),
         },
       ]}
-      data={data?.length ? data : DUMMY_DATA}
+      data={data}
     />
   );
 };

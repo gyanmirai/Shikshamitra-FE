@@ -1,4 +1,4 @@
-import type { TreeNodeData } from './AcademicTreeView';
+import type { TreeNodeData } from './type';
 
 export const transformApiToTree = (items: any[]): TreeNodeData[] => {
   if (!items) return [];
