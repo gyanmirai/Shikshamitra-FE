@@ -26,6 +26,7 @@ import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -87,11 +88,22 @@ const AdmissionScreen = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Get the dispatch function from the Redux store
   const dispatch = useDispatch();
-  const { data: admissionData, isLoading } = useQueryAndMutation({
+  // Query state for pagination and sorting
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+  const {
+    data: admissionData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAdmissionQuery,
     params: {
       approvalStatus: tabs.value,
+      ...query,
     },
   });
   const counts = useMemo(
@@ -426,8 +438,22 @@ const AdmissionScreen = () => {
         showCheckbox={selectedStudents.length !== 0}
         tableId="student-enrollment-admission-table"
         noDataText={<>No Students Admission Data Found</>}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         columns={columns}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData || []}
       />
 

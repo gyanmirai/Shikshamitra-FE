@@ -16,6 +16,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -54,11 +55,18 @@ const EntranceExamSlots = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Redux dispatch
   const dispatch = useDispatch();
+
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   // Fetch entrance exam slots data
   const {
     data: slots,
     isLoading,
     refetch,
+    isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
@@ -66,6 +74,7 @@ const EntranceExamSlots = () => {
       academicYearId: currentYear?.id,
       startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
       endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+      ...query,
     },
     options: {
       skip: !(currentYear?.id && selectedDate),
@@ -240,7 +249,7 @@ const EntranceExamSlots = () => {
       </Box>
 
       <CustomizableTable
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         tableId="entrance-exam-slots"
         noDataText={
           <>
@@ -264,6 +273,20 @@ const EntranceExamSlots = () => {
           </>
         }
         columns={columns}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData || []}
       />
       <CustomDialog

@@ -7,11 +7,11 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Grid, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import React, { useMemo, useState, useEffect } from 'react';
-import { useSearchParam } from 'src/hooks/use-search-param';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams as useNextSearchParams } from 'next/navigation';
 
 import GroupManagement from './group-managemnet';
 import GrNoGenerationScreen from './gr-generation';
@@ -20,34 +20,43 @@ import RollNoGenerationScreen from './roll-generation';
 
 import type { IInquiryData } from '../enrollment/Inquiry/type';
 
+// Stable component references defined OUTSIDE the component to prevent
+// new function identities on every render (which causes remount + re-fetch loops)
+const GrGenerationTab = (props: { division: string }) => <GrNoGenerationScreen {...props} />;
+const RollGenerationTab = (props: { division: string }) => <RollNoGenerationScreen {...props} />;
+const ChangeDivisionTab = (props: { allDivision: Division[]; division: string }) => (
+  <ChangeDivisionScreen {...props} />
+);
+const GroupManagementTab = (props: {
+  tableData: IInquiryData[];
+  isLoading: boolean;
+  division: string;
+}) => <GroupManagement {...props} />;
+
 const TABS = [
   {
     value: 'grGeneration',
     label: 'GR. No. Generation',
     icon: <Iconify icon="cil:badge" width={20} />,
-    component: (props: { division: string }) => <GrNoGenerationScreen {...props} />,
+    component: GrGenerationTab,
   },
   {
     value: 'rollGeneration',
     label: ' Roll No. Generation',
     icon: <Iconify icon="token:scroll" width={20} />,
-    component: (props: { division: string }) => <RollNoGenerationScreen {...props} />,
+    component: RollGenerationTab,
   },
   {
     value: 'changeDivision',
     label: 'Change Division',
     icon: <Iconify icon="mage:exchange-a" width={20} />,
-    component: (props: { allDivision: Division[]; division: string }) => (
-      <ChangeDivisionScreen {...props} />
-    ),
+    component: ChangeDivisionTab,
   },
   {
     value: 'groupManageMent',
     label: 'House Management',
     icon: <Iconify icon="mdi:house" width={20} />,
-    component: (props: { tableData: IInquiryData[]; isLoading: boolean; division: string }) => (
-      <GroupManagement {...props} />
-    ),
+    component: GroupManagementTab,
   },
 ];
 
@@ -59,7 +68,20 @@ const StudentManagementScreen = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   const [division, setDivision] = useState<string>('');
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
+
+  // Read tab directly from the URL — stable, no hook loops
+  const nativeSearchParams = useNextSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const activeTab = nativeSearchParams.get('tab') || 'grGeneration';
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(nativeSearchParams.toString());
+      params.set('tab', tab);
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [nativeSearchParams, router, pathname]
+  );
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -80,23 +102,27 @@ const StudentManagementScreen = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  // const tabs = useTabs('grGeneration');
-
-  const CurrentComponent: any = TABS.find((tab) => tab.value === searchParams.tab)?.component;
-
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+
+  // Keep a stable ref to getStudents so the effect doesn't re-run
+  // every time the query hook returns a new function reference
+  const getStudentsRef = useRef(getStudents);
+  useEffect(() => {
+    getStudentsRef.current = getStudents;
+  });
+
   useEffect(() => {
     if (division && classes && organization) {
-      getStudents({
+      getStudentsRef.current({
         educationMediumStageId: organization,
         standardId: classes,
         divisionId: division,
       });
     }
-  }, [division, classes, organization, getStudents]);
+  }, [division, classes, organization]);
 
   const tableData = useMemo(
     () =>
@@ -107,11 +133,10 @@ const StudentManagementScreen = () => {
     [StudentsData?.items]
   );
 
-  // Memoize the current active component based on searchParams.tab
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
+  // Derive current tab — TABS is a module-level constant so no memoization needed
+  const currentActiveComponent = TABS.find((tab) => tab.value === activeTab);
+  // Must be capitalized so React treats it as a component (not a DOM element)
+  const TabComponent = currentActiveComponent?.component as React.ComponentType<any> | undefined;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -148,11 +173,11 @@ const StudentManagementScreen = () => {
               }}
             >
               {TABS.map((tab) => {
-                const isSelected = searchParams.tab === tab.value;
+                const isSelected = activeTab === tab.value;
                 return (
                   <Button
                     key={tab.value}
-                    onClick={() => setSearchParams({ tab: tab.value })}
+                    onClick={() => setActiveTab(tab.value)}
                     variant="text"
                     color="inherit"
                     startIcon={tab.icon}
@@ -243,8 +268,8 @@ const StudentManagementScreen = () => {
 
             {/* Component Render Section */}
             <Card sx={{ p: 1, flexGrow: 1 }}>
-              {currentActiveComponent?.component && (
-                <CurrentComponent
+              {TabComponent && (
+                <TabComponent
                   tableData={tableData}
                   isLoading={isLoading}
                   allDivision={allDivision}

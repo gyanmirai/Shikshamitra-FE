@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CommonReport from 'src/components/common-report';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
@@ -35,7 +36,11 @@ import StudentStrengthDivisionWiseSummary from './components/StudentStrengthDivi
 
 const StudentReportsScreen = () => {
   const openGenerateReport = useBoolean();
-
+  const [query, setQuery] = useState<any>({
+    skipCount: 0,
+    maxResultCount: 10,
+    sorting: '',
+  });
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -413,6 +418,20 @@ const StudentReportsScreen = () => {
               reportAction: 'View',
             },
           ]}
+          serverSide
+          onServerSort={(column, sortData) => {
+            setQuery((prev: any) => ({
+              ...prev,
+              sorting: sortQueryString(sortData),
+            }));
+          }}
+          onServerPagination={(page: number, rowsPerPage: number) => {
+            setQuery((prev: any) => ({
+              ...prev,
+              skipCount: page * rowsPerPage,
+              maxResultCount: rowsPerPage,
+            }));
+          }}
         />
       )}
     </Box>

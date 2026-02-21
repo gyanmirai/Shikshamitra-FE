@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -37,6 +38,11 @@ const RegistrationTable = ({
   const [moveId, setMoveId] = useState<string | null>(null);
   const { currentMedium } = useSelector((state: any) => state.globalState);
   const confirmMovePopup = useBoolean();
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
@@ -95,11 +101,16 @@ const RegistrationTable = ({
     [confirmMovePopup, dialog, followUpDialog, setEditData]
   );
 
-  const { data: registrationData, isLoading } = useQueryAndMutation({
+  const {
+    data: registrationData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentRegistrationQuery,
     params: {
       academicMediumId: currentMedium.id,
+      ...query,
     },
     options: {
       skip: !currentMedium.id,
@@ -311,8 +322,22 @@ const RegistrationTable = ({
             </Box>
           </>
         }
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         columns={columns}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData || []}
       />
       <ConfirmDialog

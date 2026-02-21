@@ -16,6 +16,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import sortQueryString from 'src/utils/sort-query-string';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -312,6 +313,12 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
+
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
 
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
@@ -1026,6 +1033,20 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
           },
         ]}
         data={data}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
       />{' '}
     </>
   );

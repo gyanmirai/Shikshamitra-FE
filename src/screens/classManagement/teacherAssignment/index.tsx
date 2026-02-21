@@ -36,6 +36,8 @@ import {
 
 // import { TeacherListPopover } from '../../subject/component/subjectCardComponent/teacherListPopover.';
 
+import sortQueryString from 'src/utils/sort-query-string';
+
 import { TeacherListPopover } from '../../academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/subjectCardComponent';
 
 import type { ITeacherOption } from '../../academic/curriculum-management/subjectAssignment/component/type';
@@ -117,6 +119,12 @@ const TeacherAssignment = ({
   //   }
   // }, [subjectsData]);
 
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   // Fetch Assignments
   const { data: assignmentsData, refetch } = useQueryAndMutation({
     type: 'query',
@@ -124,6 +132,7 @@ const TeacherAssignment = ({
     params: {
       academicMediumId: medium?.id,
       classId: classes,
+      ...query,
     },
   });
 
@@ -439,6 +448,20 @@ const TeacherAssignment = ({
           })),
         ]}
         data={tableData}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
       />
 
       <ConfirmDialog
