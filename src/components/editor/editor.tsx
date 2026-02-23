@@ -133,6 +133,16 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       ...other,
     });
 
+    useEffect(() => {
+      if (!editor) return;
+
+      if (content !== editor.getHTML()) {
+        editor.commands.setContent(content || '', {
+          emitUpdate: false,
+        });
+      }
+    }, [content, editor]);
+
     const cleanupAnchorSpan = () => {
       if (anchorSpanRef.current) {
         try {

@@ -4,13 +4,13 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getStudentRuleFields: builder.query({
       query: () => ({
-        url: '/calendar/rules/student-fields',
+        url: '/groups/rules/student-fields',
         method: 'GET',
       }),
     }),
     getEmployeeRuleFields: builder.query({
       query: () => ({
-        url: '/calendar/rules/employee-fields',
+        url: '/groups/rules/employee-fields',
         method: 'GET',
       }),
     }),

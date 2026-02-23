@@ -25,6 +25,7 @@ export interface PathNode {
 interface Props {
   data: PathNode[];
   isShowDelete?: boolean;
+  onRemove?: (nodes: PathNode[]) => void;
 }
 
 interface PathRow {
@@ -33,86 +34,10 @@ interface PathRow {
   selectedCount: number;
   totalCount: number;
   nodeIds: string[];
+  nodes: PathNode[];
 }
 
-const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
-  // Dummy hierarchical sample data (Board -> Department -> Divisions) with students and employees
-  const DUMMY_DATA: PathNode[] = React.useMemo(
-    () => [
-      {
-        id: 'board-1',
-        name: 'Science Board',
-        type: 'board',
-        parentId: null,
-        children: [
-          {
-            id: 'dept-phy',
-            name: 'Physics Dept',
-            type: 'department',
-            parentId: 'board-1',
-            children: [
-              { id: 'div-quantum', name: 'Quantum', type: 'divisions', parentId: 'dept-phy' },
-              { id: 'div-astro', name: 'Astrophysics', type: 'divisions', parentId: 'dept-phy' },
-            ],
-            students: [
-              { id: 'stu-1', name: 'Alice Newton', role: 'student', selected: true },
-              { id: 'stu-2', name: 'Bob Einstein', role: 'student' },
-            ],
-            employees: [
-              { id: 'emp-1', name: 'Dr. Maxwell', role: 'employee' },
-              { id: 'emp-2', name: 'Prof. Feynman', role: 'employee', selected: true },
-            ],
-          },
-          {
-            id: 'dept-chem',
-            name: 'Chemistry Dept',
-            type: 'department',
-            parentId: 'board-1',
-            children: [
-              { id: 'div-organic', name: 'Organic', type: 'divisions', parentId: 'dept-chem' },
-              { id: 'div-inorganic', name: 'Inorganic', type: 'divisions', parentId: 'dept-chem' },
-            ],
-            students: [
-              { id: 'stu-3', name: 'Charlie Curie', role: 'student' },
-              { id: 'stu-4', name: 'Daisy Dalton', role: 'student', selected: true },
-            ],
-            employees: [
-              { id: 'emp-3', name: 'Dr. Haber', role: 'employee' },
-              { id: 'emp-4', name: 'Prof. Avogadro', role: 'employee' },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'board-2',
-        name: 'Arts Board',
-        type: 'board',
-        parentId: null,
-        children: [
-          {
-            id: 'dept-lit',
-            name: 'Literature Dept',
-            type: 'department',
-            parentId: 'board-2',
-            children: [
-              { id: 'div-poetry', name: 'Poetry', type: 'divisions', parentId: 'dept-lit' },
-              { id: 'div-novel', name: 'Novel Writing', type: 'divisions', parentId: 'dept-lit' },
-            ],
-            students: [
-              { id: 'stu-5', name: 'Eve Eliot', role: 'student' },
-              { id: 'stu-6', name: 'Frank Frost', role: 'student' },
-            ],
-            employees: [
-              { id: 'emp-5', name: 'Dr. Shakespeare', role: 'employee', selected: true },
-              { id: 'emp-6', name: 'Prof. Austen', role: 'employee' },
-            ],
-          },
-        ],
-      },
-    ],
-    []
-  );
-
+const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true, onRemove }) => {
   const [paths, setPaths] = useState<PathRow[]>([]);
   const [viewIndex, setViewIndex] = useState<number | null>(null);
 
@@ -134,6 +59,7 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
         selectedCount: users.filter((u) => u.selected).length,
         totalCount: users.length,
         nodeIds: nodes.map((n) => n.id),
+        nodes,
       };
     },
     [collectUsers]
@@ -164,11 +90,15 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
 
   useEffect(() => {
     setPaths([]);
-    const source = Array.isArray(data) && data.length > 0 ? data : DUMMY_DATA;
+    const source = Array.isArray(data) && data.length > 0 ? data : [];
     source.forEach((root) => traverse(root));
-  }, [data, traverse, DUMMY_DATA]);
+  }, [data, traverse]);
 
   const handleRemovePath = (index: number) => {
+    const pathToRemove = paths[index];
+    if (onRemove && pathToRemove) {
+      onRemove(pathToRemove.nodes);
+    }
     setPaths((prev) => prev.filter((_, i) => i !== index));
     if (viewIndex === index) setViewIndex(null);
   };
@@ -188,37 +118,6 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
       })
     );
   };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const tableColumns = (kind: 'student' | 'employee') => [
-    {
-      id: 'name',
-      label: kind === 'student' ? 'Student Name' : 'Employee Name',
-      minWidth: 160,
-    },
-    // {
-    //   id: 'role',
-    //   label: 'Role',
-    //   minWidth: 100,
-    //   render: (_: any, row: any) => (
-    //     <Typography variant="body2">
-    //       {row.role.charAt(0).toUpperCase() + row.role.slice(1)}
-    //     </Typography>
-    //   ),
-    // },
-    {
-      id: 'action',
-      label: 'Remove',
-      minWidth: 80,
-      isFilter: false,
-      isSort: false,
-      render: (_: any, row: any) => (
-        <IconButton size="small" color="error" onClick={() => handleRemoveUser(row.id)}>
-          <Icon icon="mdi:close-circle-outline" />
-        </IconButton>
-      ),
-    },
-  ];
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const current = viewIndex != null ? paths[viewIndex] : null;
@@ -256,13 +155,13 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
 
   return (
     <>
-      <Stack spacing={1} sx={{ p: 2 }}>
+      <Stack spacing={1} sx={{ p: 1 }}>
         {paths.length ? (
           paths.map((p, i) => (
             <Paper
               key={i}
               sx={{
-                p: 1.25,
+                p: 1,
                 borderRadius: 2,
                 bgcolor: (t) => t.vars.palette.background.neutral,
                 fontFamily: 'monospace',

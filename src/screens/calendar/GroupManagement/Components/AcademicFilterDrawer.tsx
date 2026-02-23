@@ -5,7 +5,7 @@ import { Box, Drawer, Divider, IconButton, Typography } from '@mui/material';
 
 import AcademicTreeView from './AcademicTreeView';
 
-import type { TreeNodeData } from './AcademicTreeView';
+import type { TreeNodeData } from './type';
 
 export interface AcademicFilterDrawerProps {
   open: boolean;
@@ -45,6 +45,7 @@ export interface AcademicFilterDrawerProps {
     classes: string[];
     divisions: string[];
   } | null;
+  fullAcademicTree?: TreeNodeData[];
 }
 
 // Drawer that covers 40% of viewport width
@@ -56,6 +57,7 @@ const AcademicFilterDrawer: React.FC<AcademicFilterDrawerProps> = ({
   currentFilterName = '',
   initialSelectedNodes = [],
   academicRules,
+  fullAcademicTree = [],
 }) => (
   <Drawer
     anchor="right"
@@ -94,6 +96,7 @@ const AcademicFilterDrawer: React.FC<AcademicFilterDrawerProps> = ({
         onApply={(...rest) => onApply?.(...rest, currentFilterName)}
         initialSelectedNodes={initialSelectedNodes}
         academicRules={academicRules}
+        transformedData={fullAcademicTree}
       />
     </Scrollbar>
   </Drawer>

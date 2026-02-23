@@ -144,7 +144,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           ),
         },
       ]}
-      data={data || []}
+      data={data}
     />
   );
 };

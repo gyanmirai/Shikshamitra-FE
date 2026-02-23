@@ -1,14 +1,10 @@
 // MUI Components (alphabetical)
 /* eslint-disable import/order */ // Disabled due to conflicting auto-sort expectations; functional logic prioritized.
-import type { Board } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
 
 // MUI Material components
 import Box from '@mui/material/Box';
-import Loading from 'src/app/loading';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import { useSelector } from 'react-redux';
 import Checkbox from '@mui/material/Checkbox';
 import Collapse from '@mui/material/Collapse';
 import { GlobalIcons } from 'src/utils/icons';
@@ -18,23 +14,16 @@ import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 // MUI Icons
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
-import { transformApiToTree } from './TransformApiToTree';
 import { flattenTree, pruneTreeBySelectedIds } from './academicTreeUtils';
+
+import type { TreeNodeData } from './type';
+
 // Icons (moved to ordered block above)
 
 // ---- Types ----
-export interface TreeNodeData {
-  id: string;
-  name: string;
-  type: 'boards' | 'mediums' | 'organizations' | 'standards' | 'divisions' | string; // allow extension
-  parentId: string | null;
-  children?: TreeNodeData[]; // optional for leaf nodes
-}
 
 interface TreeNodeProps {
   node: TreeNodeData;
@@ -48,201 +37,198 @@ interface TreeNodeProps {
   toggleSubtree: (node: TreeNodeData) => void;
 }
 
-const TreeNode: React.FC<TreeNodeProps> = ({
-  node,
-  level = 0,
-  searchTerm,
-  selectedNodes,
-  isSubtreeFullySelected,
-  toggleSubtree,
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const hasChildren = !!(node.children && node.children.length > 0);
+const TreeNode = React.memo<TreeNodeProps>(
+  ({ node, level = 0, searchTerm, selectedNodes, isSubtreeFullySelected, toggleSubtree }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const hasChildren = !!(node.children && node.children.length > 0);
 
-  // Removed Tailwind color helper functions; styling handled inline via sx.
+    // Removed Tailwind color helper functions; styling handled inline via sx.
 
-  const paddingLeft = level * 32;
+    const paddingLeft = level * 32;
 
-  const highlightText = (text: string) => {
-    if (!searchTerm) return text;
-    const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
-    return parts.map((part, i) =>
-      part.toLowerCase() === searchTerm.toLowerCase() ? (
-        <span key={i} className="bg-yellow-200">
-          {part}
-        </span>
-      ) : (
-        part
-      )
-    );
-  };
+    const highlightText = (text: string) => {
+      if (!searchTerm) return text;
+      const parts = text.split(new RegExp(`(${searchTerm})`, 'gi'));
+      return parts.map((part, i) =>
+        part.toLowerCase() === searchTerm.toLowerCase() ? (
+          <span key={i} className="bg-yellow-200">
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      );
+    };
 
-  const matchesSearch = !searchTerm || node.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !searchTerm || node.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-  if (!matchesSearch && !hasChildren) return null;
+    if (!matchesSearch && !hasChildren) return null;
 
-  // A node is considered fully selected only if all nodes in its subtree are selected.
-  const subtreeSelected = isSubtreeFullySelected(node);
-  // Indeterminate when some but not all descendants are selected.
-  const isIndeterminate =
-    hasChildren &&
-    !subtreeSelected &&
-    (node.children?.some((child) => selectedNodes.has(child.id)) ?? false);
+    // A node is considered fully selected only if all nodes in its subtree are selected.
+    const subtreeSelected = isSubtreeFullySelected(node);
+    // Indeterminate when some but not all descendants are selected.
+    const isIndeterminate =
+      hasChildren &&
+      !subtreeSelected &&
+      (node.children?.some((child) => selectedNodes.has(child.id)) ?? false);
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-    toggleSubtree(node);
-  };
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      toggleSubtree(node);
+    };
 
-  return (
-    <Box sx={{ userSelect: 'none' }}>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          p: 0.8,
-          borderRadius: 1,
-          ml: `${paddingLeft}px`,
-          alignItems: 'center',
-          transition: 'background-color 0.15s',
-          cursor: 'default',
-          [`&:hover`]: {
-            backgroundColor: (theme) => {
-              switch (node.type) {
-                case 'boards':
-                  return 'rgba(107,33,168,0.08)';
-                case 'mediums':
-                  return 'rgba(29,78,216,0.08)';
-                case 'organizations':
-                  return 'rgba(16,185,129,0.08)';
-                case 'standards':
-                  return 'rgba(245,158,11,0.15)';
-                case 'divisions':
-                  return 'rgba(79,70,229,0.08)';
-                default:
-                  return 'rgba(107,114,128,0.08)';
-              }
-            },
-          },
-        }}
-      >
-        <IconButton
-          size="small"
-          aria-label={isExpanded ? 'Collapse node' : 'Expand node'}
-          onClick={() => hasChildren && setIsExpanded(!isExpanded)}
-          disabled={!hasChildren}
-          sx={{ width: 24, height: 24 }}
-        >
-          {hasChildren &&
-            (isExpanded ? (
-              <ExpandMoreIcon fontSize="inherit" sx={{ color: 'grey.500' }} />
-            ) : (
-              <ChevronRightIcon fontSize="inherit" sx={{ color: 'grey.500' }} />
-            ))}
-        </IconButton>
-
-        <Checkbox
-          size="small"
-          checked={subtreeSelected}
-          indeterminate={isIndeterminate}
-          onChange={handleCheckboxChange}
-          sx={{ p: 0.5 }}
-        />
-
-        <Box
-          onClick={() => hasChildren && setIsExpanded(!isExpanded)}
+    return (
+      <Box sx={{ userSelect: 'none' }}>
+        <Stack
+          direction="row"
+          spacing={1}
           sx={{
-            display: 'flex',
+            p: 0.8,
+            borderRadius: 1,
+            ml: `${paddingLeft}px`,
             alignItems: 'center',
-            gap: 1,
-            flex: 1,
-            minWidth: 0,
-            cursor: hasChildren ? 'pointer' : 'default',
-          }}
-        >
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 600,
-              color: (theme) => {
+            transition: 'background-color 0.15s',
+            cursor: 'default',
+            [`&:hover`]: {
+              backgroundColor: (theme) => {
                 switch (node.type) {
                   case 'boards':
-                    return '#6D28D9'; // purple-700
+                    return 'rgba(107,33,168,0.08)';
                   case 'mediums':
-                    return theme.palette.primary.main;
+                    return 'rgba(29,78,216,0.08)';
                   case 'organizations':
-                    return theme.palette.success.dark;
+                    return 'rgba(16,185,129,0.08)';
                   case 'standards':
-                    return theme.palette.warning.dark;
+                    return 'rgba(245,158,11,0.15)';
                   case 'divisions':
-                    return '#4F46E5'; // indigo-600
+                    return 'rgba(79,70,229,0.08)';
                   default:
-                    return theme.palette.text.primary;
+                    return 'rgba(107,114,128,0.08)';
                 }
               },
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+            },
+          }}
+        >
+          <IconButton
+            size="small"
+            aria-label={isExpanded ? 'Collapse node' : 'Expand node'}
+            onClick={() => hasChildren && setIsExpanded(!isExpanded)}
+            disabled={!hasChildren}
+            sx={{ width: 24, height: 24 }}
+          >
+            {hasChildren &&
+              (isExpanded ? (
+                <ExpandMoreIcon fontSize="inherit" sx={{ color: 'grey.500' }} />
+              ) : (
+                <ChevronRightIcon fontSize="inherit" sx={{ color: 'grey.500' }} />
+              ))}
+          </IconButton>
+
+          <Checkbox
+            size="small"
+            checked={subtreeSelected}
+            indeterminate={isIndeterminate}
+            onChange={handleCheckboxChange}
+            sx={{ p: 0.5 }}
+          />
+
+          <Box
+            onClick={() => hasChildren && setIsExpanded(!isExpanded)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flex: 1,
+              minWidth: 0,
+              cursor: hasChildren ? 'pointer' : 'default',
             }}
           >
-            {highlightText(node.name)}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 0.5 }}
-          >
-            {node.type}
-          </Typography>
-        </Box>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 600,
+                color: (theme) => {
+                  switch (node.type) {
+                    case 'boards':
+                      return '#6D28D9'; // purple-700
+                    case 'mediums':
+                      return theme.palette.primary.main;
+                    case 'organizations':
+                      return theme.palette.success.dark;
+                    case 'standards':
+                      return theme.palette.warning.dark;
+                    case 'divisions':
+                      return '#4F46E5'; // indigo-600
+                    default:
+                      return theme.palette.text.primary;
+                  }
+                },
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {highlightText(node.name)}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: 'text.disabled', textTransform: 'uppercase', letterSpacing: 0.5 }}
+            >
+              {node.type}
+            </Typography>
+          </Box>
+
+          {hasChildren && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              {node.children?.length ?? 0}
+            </Typography>
+          )}
+        </Stack>
 
         {hasChildren && (
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-            {node.children?.length ?? 0}
-          </Typography>
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit={false} appear={false}>
+            <Box sx={{ mt: 0.5, position: 'relative' }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  left: paddingLeft + 12,
+                  width: 2,
+                  bgcolor: 'grey.300',
+                }}
+              />
+              {node.children?.map((child) => (
+                <Box key={child.id} sx={{ position: 'relative' }}>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: paddingLeft + 12,
+                      top: 16,
+                      width: 16,
+                      height: 2,
+                      bgcolor: 'grey.300',
+                    }}
+                  />
+                  <TreeNode
+                    node={child}
+                    level={level + 1}
+                    searchTerm={searchTerm}
+                    selectedNodes={selectedNodes}
+                    isSubtreeFullySelected={isSubtreeFullySelected}
+                    toggleSubtree={toggleSubtree}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </Collapse>
         )}
-      </Stack>
+      </Box>
+    );
+  }
+);
 
-      {hasChildren && (
-        <Collapse in={isExpanded} timeout="auto" unmountOnExit={false} appear={false}>
-          <Box sx={{ mt: 0.5, position: 'relative' }}>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: paddingLeft + 12,
-                width: 2,
-                bgcolor: 'grey.300',
-              }}
-            />
-            {node.children?.map((child) => (
-              <Box key={child.id} sx={{ position: 'relative' }}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    left: paddingLeft + 12,
-                    top: 16,
-                    width: 16,
-                    height: 2,
-                    bgcolor: 'grey.300',
-                  }}
-                />
-                <TreeNode
-                  node={child}
-                  level={level + 1}
-                  searchTerm={searchTerm}
-                  selectedNodes={selectedNodes}
-                  isSubtreeFullySelected={isSubtreeFullySelected}
-                  toggleSubtree={toggleSubtree}
-                />
-              </Box>
-            ))}
-          </Box>
-        </Collapse>
-      )}
-    </Box>
-  );
-};
+TreeNode.displayName = 'TreeNode';
 
 interface AcademicTreeViewProps {
   /**
@@ -286,6 +272,7 @@ interface AcademicTreeViewProps {
     classes: string[];
     divisions: string[];
   } | null;
+  transformedData?: TreeNodeData[];
 }
 
 const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
@@ -295,21 +282,11 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
   onClose = () => {},
   initialSelectedNodes = [],
   academicRules,
+  transformedData: propsTransformedData = [],
 }) => {
-  // Get current academic year from global state
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // Query hook for fetching boards data
-  const { data: boards, isLoading: boardsLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBoardsQuery,
-  });
+  // Use props data
+  const transformedData = useMemo(() => propsTransformedData, [propsTransformedData]);
 
-  // Filter boards for current academic year
-  const allBoards = boards?.items?.filter(
-    (board: Board) => board.academicYearId === currentYear?.id
-  );
-
-  const transformedData = transformApiToTree(allBoards);
   // searchTerm reserved for future filtering UI; currently static
   const [searchTerm] = useState<string>('');
   /**
@@ -349,6 +326,18 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
     const idSet = new Set(allNodes.map((n) => n.id));
     return { aggregatedSelectedIds: idSet, aggregatedSelectedNodes: allNodes };
   }, [selectedByType]);
+
+  const idToNode = useMemo(() => {
+    const map = new Map<string, TreeNodeData>();
+    const walk = (nodes: TreeNodeData[]) => {
+      nodes.forEach((n) => {
+        map.set(n.id, n);
+        if (n.children?.length) walk(n.children);
+      });
+    };
+    walk(transformedData);
+    return map;
+  }, [transformedData]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getAllNodeIds = (nodes: TreeNodeData[]): string[] => {
@@ -404,9 +393,6 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
         divisions: new Map<string, TreeNodeData>(),
       };
 
-      const flatTreeNodes = flattenTree(transformedData);
-      const idToNode = new Map(flatTreeNodes.map((n) => [n.id, n]));
-
       academicRules.boards?.forEach((id) => {
         const node = idToNode.get(id);
         if (node) newSelection.boards.set(id, node);
@@ -431,7 +417,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
       setSelectedByType(newSelection);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSelectedNodes, academicRules, transformedData.length]); // Added dependencies to handle async data
+  }, [initialSelectedNodes, academicRules, transformedData.length, idToNode]); // Added dependencies to handle async data
 
   const getAllChildIds = (node: TreeNodeData): string[] => {
     let ids: string[] = [node.id];
@@ -464,15 +450,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
   const toggleSubtree = (node: TreeNodeData) => {
     const subtree = collectSubtreeNodes(node);
     const fullySelected = subtree.every((n) => aggregatedSelectedIds.has(n.id));
-    // Build a lookup map for parent traversal
-    const idToNode = new Map<string, TreeNodeData>();
-    const indexNodes = (nodes: TreeNodeData[]) => {
-      nodes.forEach((n) => {
-        idToNode.set(n.id, n);
-        if (n.children?.length) indexNodes(n.children);
-      });
-    };
-    indexNodes(transformedData);
+    // Build a lookup map for parent traversal (using the memoized idToNode)
 
     // Helper to collect ancestors (excluding root null parent) upward chain
     const collectAncestors = (n: TreeNodeData): TreeNodeData[] => {
@@ -641,11 +619,13 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
           bgcolor: (theme) => theme.vars.palette.background.paper,
         }}
       >
-        {boardsLoading ? (
+        {transformedData.length === 0 ? (
           <Box
             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
           >
-            <Loading />
+            <Typography variant="body2" color="text.secondary">
+              No academic data available.
+            </Typography>
           </Box>
         ) : (
           transformedData.map((node) => (
@@ -690,7 +670,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           size="small"
-          disabled={applying || aggregatedSelectedIds.size === 0}
+          disabled={applying}
           onClick={handleApply}
         >
           {applying ? 'Applying...' : applyLabel}
@@ -700,4 +680,4 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
   );
 };
 
-export default AcademicTreeView;
+export default React.memo(AcademicTreeView);
