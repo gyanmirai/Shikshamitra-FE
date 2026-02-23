@@ -45,7 +45,7 @@ const BorrowingReturnRules = () => {
   const [originalRulesData, setOriginalRulesData] = useState<any[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
 
-  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Dialog control states
   const resetDialog = useBoolean();
@@ -55,10 +55,16 @@ const BorrowingReturnRules = () => {
   const { data: fetchedRulesData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBorrowingReturnRulesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
 
   // Add borrowing return rules mutation hook
-  const { addBorrowingReturnRules } = useQueryAndMutation({
+  const [addBorrowingReturnRules] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddBorrowingReturnRulesMutation,
   });
@@ -67,7 +73,7 @@ const BorrowingReturnRules = () => {
   const getInitialValues = () => {
     const values: any = {};
     rulesData.forEach((rule: any) => {
-      values[`${rule.id}_maxBooksPerMonth`] = rule.maxBooksPerMonth || 0;
+      values[`${rule.id}_maxBooksAtTime`] = rule.maxBooksAtTime || 0;
       values[`${rule.id}_reservationLimit`] = rule.reservationLimit || 0;
     });
     return values;
@@ -78,7 +84,7 @@ const BorrowingReturnRules = () => {
     initialValues: getInitialValues(),
     validationSchema: Yup.object().shape(
       rulesData.reduce((schema: any, rule: any) => {
-        schema[`${rule.id}_maxBooksPerMonth`] = createFieldValidationSchema();
+        schema[`${rule.id}_maxBooksAtTime`] = createFieldValidationSchema();
         schema[`${rule.id}_reservationLimit`] = createFieldValidationSchema();
         return schema;
       }, {})
@@ -91,9 +97,13 @@ const BorrowingReturnRules = () => {
 
   // Initialize data when fetched
   useEffect(() => {
-    if (fetchedRulesData) {
-      setRulesData(fetchedRulesData);
-      setOriginalRulesData(fetchedRulesData);
+    if (fetchedRulesData?.items) {
+      // Filter only Student and Teacher roles
+      const filteredItems = fetchedRulesData.items.filter((item: any) =>
+        ['Student', 'Teacher'].includes(item.role)
+      );
+      setRulesData(filteredItems);
+      setOriginalRulesData(filteredItems);
     }
   }, [fetchedRulesData]);
 
@@ -149,18 +159,26 @@ const BorrowingReturnRules = () => {
     setSaveLoading(true);
 
     try {
+      // Role mapping: Student -> 0, Teacher -> 1
+      const roleMapping: { [key: string]: number } = {
+        Student: 0,
+        Teacher: 1,
+      };
+
       // Construct payload matching API specification
       const payload = {
-        rules: rulesData.map((rule: any) => ({
-          role: rule.role,
-          maxBooksPerMonth: rule.maxBooksPerMonth || 0,
-          reservationLimit: rule.reservationLimit || 0,
-        })),
+        rules: rulesData
+          .filter((rule: any) => ['Student', 'Teacher'].includes(rule.role))
+          .map((rule: any) => ({
+            role: roleMapping[rule.role],
+            maxBooksAtTime: rule.maxBooksAtTime || 0,
+            reservationLimit: rule.reservationLimit || 0,
+          })),
       };
 
       await addBorrowingReturnRules({
         data: payload,
-        academicYearId: currentAcademicYearId,
+        academicYearId: currentYear?.id,
       });
 
       saveDialog.onFalse();
@@ -237,7 +255,7 @@ const BorrowingReturnRules = () => {
             ),
           },
           {
-            id: 'maxBooksPerMonth',
+            id: 'maxBooksAtTime',
             label: '',
             renderColumn: (value: any): React.ReactNode => (
               <Stack direction="row" spacing={1} alignItems="center">
@@ -260,7 +278,7 @@ const BorrowingReturnRules = () => {
             isSort: false,
             isFilter: false,
             render: (value, row) => {
-              const fieldName = `${row.id}_maxBooksPerMonth`;
+              const fieldName = `${row.id}_maxBooksAtTime`;
 
               return (
                 <Box mb={2}>
@@ -275,7 +293,7 @@ const BorrowingReturnRules = () => {
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
                         if (val.length <= 2) {
-                          handleFieldChange(row.id, 'maxBooksPerMonth', val);
+                          handleFieldChange(row.id, 'maxBooksAtTime', val);
                         }
                       }}
                       onWheel={(e) => (e.target as HTMLElement).blur()}

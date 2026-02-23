@@ -18,7 +18,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   librarySettingsApi,
-  useGetLibrarySettingsQuery,
+  useGetBookCategoryQuery,
   useDeleteChargeCategoryMutation,
 } from 'src/redux/library/settingApi';
 
@@ -28,10 +28,17 @@ import ChargeTypeTable from './Components/ChargeTypeTable';
 import type { IChargeType } from './Components/type';
 
 const ChargeTypeCreation = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Custom hook to fetch charge type data
   const { data: chargeTypeData, refetch } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetLibrarySettingsQuery,
+    currentQueryAndMutation: useGetBookCategoryQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
 
   // Delete mutation hook
@@ -109,7 +116,7 @@ const ChargeTypeCreation = () => {
         onAddChargeType={addChargeTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedChargeType}
-        data={chargeTypeData}
+        data={chargeTypeData?.items || []}
       />
 
       <CustomDialog
@@ -172,13 +179,15 @@ const ChargeTypeCreation = () => {
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     librarySettingsApi.util.updateQueryData(
-                      'getLibrarySettings',
-                      undefined,
+                      'getBookCategory',
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
-                        const index = draft?.findIndex((b: any) => b.id === selectedChargeType?.id);
+                        const index = draft?.items?.findIndex(
+                          (b: any) => b.id === selectedChargeType?.id
+                        );
                         setDeleteIndex(index);
                         if (index !== -1) {
-                          draft.splice(index, 1);
+                          draft.items.splice(index, 1);
                         }
                       }
                     )

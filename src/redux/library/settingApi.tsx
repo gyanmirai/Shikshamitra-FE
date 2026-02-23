@@ -1,57 +1,47 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
-import settingsData from '../../../issueReturnData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
 export const librarySettingsApi = createApi({
   reducerPath: 'LibrarySettingsApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/librarySettingsData') {
-          return { data: settingsData.librarySettingsData };
-        }
-        if (url === '/libraryTimingData') {
-          return { data: settingsData.libraryTimingData };
-        }
-        if (url === '/borrowingReturnRulesData') {
-          return { data: settingsData.borrowingReturnRulesData };
-        }
-        if (url === '/sectionManagementData') {
-          return { data: settingsData.sectionManagementData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
+  baseQuery: axiosBaseQuery({
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}`,
+  }),
   tagTypes: ['LibrarySettings'],
   endpoints: (builder) => ({
     getLibrarySettings: builder.query({
-      query: () => ({
-        url: '/library/settings/charge-categories',
+      query: ({ academicYearId, ...params }) => ({
+        url: '/sections',
         method: 'GET',
+        params: { academicYearId, ...params },
+      }),
+      providesTags: ['LibrarySettings'],
+    }),
+
+    getBookCategory: builder.query({
+      query: ({ academicYearId, ...params }) => ({
+        url: '/api/library/charge-categories',
+        method: 'GET',
+        params: { academicYearId, ...params },
       }),
       providesTags: ['LibrarySettings'],
     }),
 
     addChargeCategory: builder.mutation({
-      query: (data) => ({
-        url: '/library/settings/charge-categories',
-        method: 'POST',
-        data,
-      }),
+      query: (data) => {
+        const { academicYearId, ...body } = data;
+        return {
+          url: '/api/library/charge-categories',
+          method: 'POST',
+          data: body,
+          params: { academicYearId },
+        };
+      },
       invalidatesTags: ['LibrarySettings'],
     }),
 
     updateChargeCategory: builder.mutation({
       query: ({ categoryId, data }) => ({
-        url: `/library/settings/charge-categories/${categoryId}`,
+        url: `/api/library/charge-categories/${categoryId}`,
         method: 'PUT',
         data,
       }),
@@ -60,77 +50,88 @@ export const librarySettingsApi = createApi({
 
     deleteChargeCategory: builder.mutation({
       query: ({ categoryId }) => ({
-        url: `/library/settings/charge-categories/${categoryId}`,
+        url: `/api/library/charge-categories/${categoryId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['LibrarySettings'],
     }),
 
     getLibraryTiming: builder.query({
-      query: () => ({
-        url: '/library/settings/hours',
+      query: (params) => ({
+        url: '/api/library-hours',
         method: 'GET',
+        params,
       }),
       providesTags: ['LibrarySettings'],
     }),
 
     addLibraryTiming: builder.mutation({
-      query: (data) => ({
-        url: '/library/settings/hours',
-        method: 'POST',
-        data,
-      }),
+      query: (data) => {
+        const { academicYearId, ...body } = data;
+        return {
+          url: '/api/library-hours',
+          method: 'POST',
+          data: body,
+          params: { academicYearId },
+        };
+      },
       invalidatesTags: ['LibrarySettings'],
     }),
 
     getBorrowingReturnRules: builder.query({
-      query: (academicYearId) => ({
-        url: `/library/settings/borrowing-rules${academicYearId}`,
+      query: (params) => ({
+        url: `/api/borrowing-rules`,
         method: 'GET',
+        params,
       }),
       providesTags: ['LibrarySettings'],
     }),
     addBorrowingReturnRules: builder.mutation({
       query: ({ data, academicYearId }) => ({
-        url: `/library/settings/borrowing-rules${academicYearId}`,
+        url: `/api/borrowing-rules`,
         method: 'POST',
         data,
+        params: { academicYearId },
       }),
       invalidatesTags: ['LibrarySettings'],
     }),
     getSectionManagement: builder.query({
-      query: (academicYearId) => ({
-        url: `/library/settings/sections${academicYearId}`,
+      query: ({ academicYearId, ...params }) => ({
+        url: `/api/sections`,
         method: 'GET',
+        params: { academicYearId, ...params },
       }),
       providesTags: ['LibrarySettings'],
     }),
     getSectionManagementById: builder.query({
-      query: (sectionId) => ({
-        url: `/library/settings/sections${sectionId}`,
+      query: ({ sectionId, academicYearId }) => ({
+        url: `/api/sections/${sectionId}`,
         method: 'GET',
+        params: { academicYearId },
       }),
       providesTags: ['LibrarySettings'],
     }),
     addSectionManagement: builder.mutation({
-      query: ({ data, academicYearId }) => ({
-        url: `/library/settings/sections${academicYearId}`,
+      query: ({ academicYearId, body }) => ({
+        url: `/api/sections`,
         method: 'POST',
-        data,
+        data: body,
+        params: { academicYearId },
       }),
       invalidatesTags: ['LibrarySettings'],
     }),
     updateSectionManagement: builder.mutation({
-      query: ({ data, sectionId }) => ({
-        url: `/library/settings/sections${sectionId}`,
+      query: ({ data, sectionId, academicYearId }) => ({
+        url: `/api/sections/${sectionId}`,
         method: 'PUT',
         data,
+        params: { academicYearId },
       }),
       invalidatesTags: ['LibrarySettings'],
     }),
     deleteSectionManagement: builder.mutation({
-      query: (sectionId) => ({
-        url: `/library/settings/sections${sectionId}`,
+      query: ({ sectionId }) => ({
+        url: `/library/sections/${sectionId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['LibrarySettings'],
@@ -140,6 +141,7 @@ export const librarySettingsApi = createApi({
 
 export const {
   useGetLibrarySettingsQuery,
+  useGetBookCategoryQuery,
   useAddChargeCategoryMutation,
   useUpdateChargeCategoryMutation,
   useDeleteChargeCategoryMutation,

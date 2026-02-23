@@ -134,6 +134,19 @@
   border-color: #1c252e !important;
 }
 
+/* Skip Button (Tertiary/Ghost) */
+.onboarding-skip-btn {
+  background-color: transparent !important;
+  color: #637381 !important;
+  border: 1px solid transparent !important;
+  margin-right: auto !important; /* Push to left */
+}
+
+.onboarding-skip-btn:hover {
+  background-color: rgba(145, 158, 171, 0.08) !important;
+  color: #1c252e !important;
+}
+
 /* Disabled State */
 .driver-popover-next-btn[style*='pointer-events: none'] {
   opacity: 0.48 !important;
