@@ -19,6 +19,7 @@ import { fileToBase64 } from 'src/utils/file-to-base64';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -44,7 +45,11 @@ import type { IGroup } from '../management/group-managemnet/type';
 
 const HouseSetting = () => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   const { data: groupData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
@@ -206,9 +211,22 @@ const HouseSetting = () => {
         //   };
         //   setQueryParams(newParams);
         // }}
-        onServerSort={async (column, sort) => {}}
         columns={columns}
         data={groupData?.data || []}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
       />{' '}
       <CustomDialog
         open={dialog.value}

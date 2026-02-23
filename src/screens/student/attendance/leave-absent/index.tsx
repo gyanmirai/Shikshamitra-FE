@@ -21,6 +21,7 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
 import { editorClasses } from 'src/components/editor/classes';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -89,10 +90,15 @@ const LeaveAndAbsentScreen = () => {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
-
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   const { data: leaveData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentLeaveQuery,
+    ...query,
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -347,6 +353,20 @@ const LeaveAndAbsentScreen = () => {
         }
         columns={columns}
         data={tableData || []}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         isLoading={isLoading}
       />{' '}
       <CustomDialog

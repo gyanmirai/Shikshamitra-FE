@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import React, { useState, useEffect, useCallback } from 'react';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -84,6 +85,11 @@ const CourseProgressComponent = ({
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [courses, setCourses] = useState<ICourse[]>(courseData || []);
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
 
   const { data: subjectData } = useQueryAndMutation({
     type: 'query',
@@ -326,6 +332,20 @@ const CourseProgressComponent = ({
                 },
               ]}
               data={selectedCourse.details}
+              serverSide
+              onServerSort={(column, sortData) => {
+                setQuery((prev) => ({
+                  ...prev,
+                  sorting: sortQueryString(sortData),
+                }));
+              }}
+              onServerPagination={(page: number, rowsPerPage: number) => {
+                setQuery((prev) => ({
+                  ...prev,
+                  skipCount: page * rowsPerPage,
+                  maxResultCount: rowsPerPage,
+                }));
+              }}
             />
           ) : (
             <CustomizableTable

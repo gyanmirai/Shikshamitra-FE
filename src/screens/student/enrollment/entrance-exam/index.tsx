@@ -18,6 +18,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
@@ -93,14 +94,25 @@ const EntranceExamScreen = () => {
   // State for controlling the visibility of the move confirmation popup
   const confirmMovePopup = useBoolean();
 
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   // Query hook for fetching entrance exam data
-  const { data: entranceExamData, isLoading } = useQueryAndMutation({
+  const {
+    data: entranceExamData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
     params: {
       startDate: dateConvertor(startDate?.format(dateFormat) || '', true),
       endDate: dateConvertor(endDate?.format(dateFormat) || '', true),
       educationMediumId: currentMedium.id,
+      ...query,
     },
     options: {
       skip: !currentMedium.id,
@@ -380,8 +392,22 @@ const EntranceExamScreen = () => {
         showCheckbox={selectedStudents.length !== 0}
         tableId="entrance-exam-table"
         noDataText={<>No Entrance Exam Data Found </>}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         columns={columns}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData || []}
       />{' '}
       <CustomDialog

@@ -14,25 +14,25 @@ import FirstTrialCertificate from './first-trial-certificate';
 const TABS = [
   {
     value: 'bonafiedCertificates',
-    label: 'Bonafide Certificates',
+    label: 'Bonafide',
     component: () => <BonofiedCertificate />,
     icon: <Iconify icon="tdesign:certificate" width={20} />,
   },
   {
     value: 'firstTrialCertificates',
-    label: 'First Trial Certificates',
+    label: 'First Trial',
     component: () => <FirstTrialCertificate />,
     icon: <Iconify icon="ph:certificate-light" width={20} />,
   },
   {
     value: 'leavingCertificates',
-    label: 'Leaving Certificates',
+    label: 'Leaving',
     component: () => <LeavingCertificate />,
     icon: <Iconify icon="streamline-cyber:wedding-certificate" width={20} />,
   },
   {
     value: 'characterCertificates',
-    label: 'Character Certificates',
+    label: 'Character',
     component: () => <CharacterCertificate />,
     icon: <Iconify icon="la:certificate" width={20} />,
   },

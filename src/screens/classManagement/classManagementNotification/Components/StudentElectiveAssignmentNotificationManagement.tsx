@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Box, Card, Switch } from '@mui/material';
+import sortQueryString from 'src/utils/sort-query-string';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import EditNotificationDialog from 'src/screens/student/studentNotification/editNotificationDialog';
@@ -97,7 +98,11 @@ export const studentElectiveNotificationsData = [
 const StudentElectiveAssignmentNotificationManagement = ({ dialog, setIsViewMode }: any) => {
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
-
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   return (
     // <Box sx={{ height: '100%' }}>
     <>
@@ -180,6 +185,20 @@ const StudentElectiveAssignmentNotificationManagement = ({ dialog, setIsViewMode
               },
             },
           ]}
+          serverSide
+          onServerSort={(column, sortData) => {
+            setQuery((prev) => ({
+              ...prev,
+              sorting: sortQueryString(sortData),
+            }));
+          }}
+          onServerPagination={(page: number, rowsPerPage: number) => {
+            setQuery((prev) => ({
+              ...prev,
+              skipCount: page * rowsPerPage,
+              maxResultCount: rowsPerPage,
+            }));
+          }}
         />
       )}
     </>

@@ -13,6 +13,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -47,11 +48,22 @@ const InquiryPreference = () => {
   const [editData, setEditData] = useState<null | IInquiryPreference>(null);
   const inquiryPreferenceDialog = useBoolean();
 
-  const { data: inquiryPreference, isLoading } = useQueryAndMutation({
+  const [query, setQuery] = useState({
+    skipCount: 0,
+    maxResultCount: 10,
+    sorting: '',
+  });
+
+  const {
+    data: inquiryPreference,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
     params: {
       academicYearId: currentYear?.id,
+      ...query,
     },
     options: {
       skip: !currentYear?.id,
@@ -185,7 +197,7 @@ const InquiryPreference = () => {
             </Box>
           </>
         }
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         columns={[
           { id: 'preferenceName', label: 'Preference Name' },
           {
@@ -214,6 +226,20 @@ const InquiryPreference = () => {
             },
           },
         ]}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={inquiryPreference?.items || []}
       />{' '}
       <CustomDialog
