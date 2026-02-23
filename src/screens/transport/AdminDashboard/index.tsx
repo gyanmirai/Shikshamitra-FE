@@ -1,55 +1,45 @@
 'use client';
 
-import React from 'react';
 import { Box, Grid } from '@mui/material';
 
-import QuickActions from './Components/QuickActions';
-import SummaryCards from './Components/SummaryCards';
-import DashboardAlerts from './Components/DashboardAlerts';
-import VehicleStatusChart from './Components/VehicleStatusChart';
-import LiveOperationsTable from './Components/LiveOperationsTable';
-import StudentsByRouteChart from './Components/StudentsByRouteChart';
-import PunctualityTrendChart from './Components/PunctualityTrendChart';
-import ApplicationStatusChart from './Components/ApplicationStatusChart';
+import AlertsPanel from './Components/AlertsPanel';
+import SmartKPICards from './Components/SmartKPICards';
+import RouteManagementTable from './Components/RouteManagementTable';
+import VehicleHealthSection from './Components/VehicleHealthSection';
+import PerformanceAnalytics from './Components/PerformanceAnalytics';
+import TransportFeeAnalytics from './Components/TransportFeeAnalytics';
 
 const TransportAdminDashboard = () => (
   <Box>
-    <Grid container spacing={2} sx={{ mb: 2 }}>
-      {/* 1. KPIs */}
+    <Grid container spacing={1}>
+      {/* 1. Smart KPI Cards */}
       <Grid size={{ xs: 12 }}>
-        <SummaryCards />
+        <SmartKPICards />
       </Grid>
 
-      {/* 2. Quick Actions */}
+      {/* 2. Alerts & Critical Notifications */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AlertsPanel />
+      </Grid>
+
+      {/* 3. Performance & Historical Data */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <PerformanceAnalytics />
+      </Grid>
+
+      {/* 4. Financial Analytics */}
       <Grid size={{ xs: 12 }}>
-        <QuickActions />
+        <TransportFeeAnalytics />
       </Grid>
 
-      {/* 3. Operational Focus (Table + Alerts) */}
-      <Grid size={{ xs: 12, md: 8 }}>
-        <LiveOperationsTable />
+      {/* 5. Vehicle Health & Compliance */}
+      <Grid size={{ xs: 12 }}>
+        <VehicleHealthSection />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
-        <DashboardAlerts />
-      </Grid>
-
-      {/* 4. Insights & Trends */}
-      <Grid size={{ xs: 12, md: 8 }}>
-        <PunctualityTrendChart />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 4 }}>
-        <VehicleStatusChart />
-      </Grid>
-
-      {/* 5. Secondary Charts */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ApplicationStatusChart />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 8 }}>
-        <StudentsByRouteChart />
+      {/* 6. Route Management Table */}
+      <Grid size={{ xs: 12 }}>
+        <RouteManagementTable />
       </Grid>
     </Grid>
   </Box>
