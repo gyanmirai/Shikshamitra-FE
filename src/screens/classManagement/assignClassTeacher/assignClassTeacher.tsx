@@ -12,6 +12,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -55,6 +56,12 @@ const ClassTeacherAssignment = () => {
     }
   }, [medium]);
 
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   const {
     data: assignmentsData,
     refetch: refetchAssignments,
@@ -64,6 +71,7 @@ const ClassTeacherAssignment = () => {
     currentQueryAndMutation: useGetClassTeacherAssignmentsQuery,
     params: {
       organizationId: organization,
+      ...query,
     },
   });
 
@@ -305,6 +313,20 @@ const ClassTeacherAssignment = () => {
             },
           },
         ]}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData}
       />
 

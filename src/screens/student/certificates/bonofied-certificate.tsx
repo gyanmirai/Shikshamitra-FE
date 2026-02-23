@@ -14,6 +14,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
@@ -38,6 +39,12 @@ const BonofiedCertificate = () => {
   const dialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -116,6 +123,20 @@ const BonofiedCertificate = () => {
         }
         columns={columns}
         data={[]}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
       />
       <CustomDialog
         maxWidth="md"

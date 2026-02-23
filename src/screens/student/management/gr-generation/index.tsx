@@ -10,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -36,6 +37,12 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // State to track which rows have been modified (for visual indicator)
   const [modifiedRowIds, setModifiedRowIds] = useState<Set<string>>(new Set());
 
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   const {
     data: getStudentData,
     isLoading: isStudentDataLoading,
@@ -43,7 +50,11 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllStudentGroupQuery,
-    params: division,
+    params: {
+      division,
+      ...query,
+    },
+
     options: {
       skip: !division,
     },
@@ -347,6 +358,20 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
             },
           },
         ]}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData || []}
       />
 

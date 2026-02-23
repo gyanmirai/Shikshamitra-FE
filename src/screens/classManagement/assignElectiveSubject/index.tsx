@@ -199,7 +199,7 @@ const AssignElectiveSubject = () => {
   // --------------------------------------------
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 3 }}>
+    <Box>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
         description="Assign elective subjects based on student preference."
@@ -215,7 +215,7 @@ const AssignElectiveSubject = () => {
           borderRadius: 2,
           bgcolor: 'background.paper',
           boxShadow: (theme) => theme.customShadows.card,
-          p: 3,
+          p: 1.5,
         }}
       >
         {/* FILTER & ACTIONS */}
@@ -225,14 +225,14 @@ const AssignElectiveSubject = () => {
             flexDirection: { xs: 'column', md: 'row' },
             justifyContent: 'space-between',
             alignItems: { xs: 'stretch', md: 'center' },
-            gap: 2,
-            mb: 3,
+            gap: 1,
+            mb: 1,
           }}
         >
           <Box
             sx={{
               display: 'flex',
-              gap: 2,
+              gap: 1,
               flexDirection: { xs: 'column', sm: 'row' },
               flexGrow: 1,
             }}

@@ -1,8 +1,9 @@
 import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { GenderOptions } from 'src/enums/gender';
+import sortQueryString from 'src/utils/sort-query-string';
 import { MenuItem, MenuList, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,6 +27,13 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
    * in the customizable table and prevents re-creation of render closures
    * unless the action handlers change.
    */
+
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -160,6 +168,20 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
       noDataText={<Typography variant="body2">No Registration Form Issued Data Found</Typography>}
       tableId="student-registration-form-table"
       columns={columns}
+      serverSide
+      onServerSort={(column, sortData) => {
+        setQuery((prev) => ({
+          ...prev,
+          sorting: sortQueryString(sortData),
+        }));
+      }}
+      onServerPagination={(page: number, rowsPerPage: number) => {
+        setQuery((prev) => ({
+          ...prev,
+          skipCount: page * rowsPerPage,
+          maxResultCount: rowsPerPage,
+        }));
+      }}
       data={data}
     />
   );

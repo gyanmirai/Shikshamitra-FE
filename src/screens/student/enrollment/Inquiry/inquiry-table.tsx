@@ -2,8 +2,9 @@
 
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import React from 'react';
 import { Box } from '@mui/material';
+import React, { useState } from 'react';
+import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { useInquiryTableData } from './hooks/useInquiryTableData';
@@ -45,6 +46,12 @@ const InquiryTable = ({
     setEditData,
   });
 
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
+
   const handleAddInquiry = () => {
     inquiryDialog.onTrue();
     setEditData(null);
@@ -78,6 +85,20 @@ const InquiryTable = ({
         tableId="inquiry-table"
         noDataText={noDataText}
         columns={columns}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
         data={tableData || []}
       />
     </Box>

@@ -13,6 +13,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -56,6 +57,11 @@ const AttendanceType = () => {
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
   // Fetch all attendance types
   const {
     data: attendanceTypes,
@@ -64,6 +70,7 @@ const AttendanceType = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
+    params: query,
   });
 
   // Mutation hook for deleting attendance type
@@ -196,6 +203,20 @@ const AttendanceType = () => {
         isLoading={isLoading}
         columns={columns}
         data={attendanceTypes?.items || []}
+        serverSide
+        onServerSort={(column, sortData) => {
+          setQuery((prev) => ({
+            ...prev,
+            sorting: sortQueryString(sortData),
+          }));
+        }}
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
+        }}
       />{' '}
       <ConfirmDialog
         open={confirm.value}
