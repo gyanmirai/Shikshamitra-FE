@@ -34,6 +34,8 @@ const SectionManagementScreen = () => {
   const viewShelfDialog = useBoolean();
   const [open, setOpen] = useState(false);
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
@@ -46,6 +48,7 @@ const SectionManagementScreen = () => {
     currentQueryAndMutation: useDeleteSectionManagementMutation,
   });
 
+  /* Get Section Management */
   const {
     data: sectionData,
     isLoading: sectionsLoading,
@@ -53,7 +56,15 @@ const SectionManagementScreen = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSectionManagementQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
+
+  console.log(sectionData, '<---->');
 
   // Undo functionality hook
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -125,7 +136,7 @@ const SectionManagementScreen = () => {
           viewShelfDialog.onTrue();
         }}
         isLoading={sectionsLoading}
-        data={sectionData}
+        data={sectionData?.items || []}
         open={open}
         onAddSection={addSectionDialog}
         setOpenDialog={setOpen}
@@ -217,18 +228,24 @@ const SectionManagementScreen = () => {
                   dispatchFn(
                     librarySettingsApi.util.updateQueryData(
                       'getSectionManagement',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
-                        const index = draft?.findIndex((s: any) => s.id === selectedSection?.id);
+                        const index = draft?.items?.findIndex(
+                          (s: any) => s.id === selectedSection?.id
+                        );
                         setDeleteIndex(index);
                         if (index !== -1) {
-                          draft.splice(index, 1);
+                          draft.items.splice(index, 1);
                         }
                       }
                     )
                   ),
                 onUndoRestore: () => refetch(),
-                onCommit: () => deleteSectionManagement(selectedSection?.id || ''),
+                onCommit: () =>
+                  deleteSectionManagement({
+                    sectionId: selectedSection?.id || '',
+                    academicYearId: currentYear?.id,
+                  }),
               });
               deleteSectionDialog.onFalse();
               setSelectedSection(null);

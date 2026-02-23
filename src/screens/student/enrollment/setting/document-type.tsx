@@ -193,8 +193,6 @@ const StudentDocumentType = () => {
                       { ...query },
                       (draft: any) => {
                         const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
-                        console.log('editData----', editData);
-                        console.log('index---', index);
                         setDeleteIndex(index);
                         if (index !== -1) {
                           draft.items.splice(index, 1);

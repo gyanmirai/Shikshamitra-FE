@@ -1,39 +1,53 @@
-import React, { useState } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
-import { DialogScrollContent } from 'src/components/customDialog';
+import type { RootState } from 'src/redux/store';
 
-import type { ISection } from './type';
+import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Grid, Typography, CircularProgress } from '@mui/material';
+import { useGetSectionManagementByIdQuery } from 'src/redux/library/settingApi';
+
+import type { ISection, ISectionDetails } from './type';
 
 interface IViewShelfDataProps {
   sectionData: ISection | null;
 }
 
 const ViewShelfData: React.FC<IViewShelfDataProps> = ({ sectionData }) => {
-  const [selectedShelfIndex, setSelectedShelfIndex] = useState<number>(0); // Default first shelf selected
+  const [selectedShelfIndex, setSelectedShelfIndex] = useState<number>(0);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  if (!sectionData) {
-    return (
-      <DialogScrollContent>
-        <Typography variant="body1" color="text.secondary" textAlign="center">
-          No section data available
-        </Typography>
-      </DialogScrollContent>
-    );
-  }
+  const { data: apiSectionDetails, isLoading } = useGetSectionManagementByIdQuery(
+    { sectionId: sectionData?.id, academicYearId: currentYear?.id },
+    { skip: !sectionData?.id || !currentYear?.id }
+  );
 
-  // Generate unique data for each shelf with different row counts
-  const shelves = Array.from({ length: sectionData.numberOfColumns }, (_, index) => ({
-    id: index + 1,
-    name: `Shelf ${index + 1}`,
-    booksCount: Math.floor(Math.random() * 50) + 10,
-    // Different number of rows for each shelf
-    rowsPerShelf: Math.floor(Math.random() * 4) + 4, // Random between 4-7 rows
-    // Each shelf has different book distribution data
-    bookDistribution: Array.from({ length: Math.floor(Math.random() * 4) + 4 }, (__, rowIndex) => ({
-      row: rowIndex + 1,
-      bookCount: Math.floor(Math.random() * 25) + 8 + index * 2, // Different base count per shelf
-    })),
-  }));
+  const sectionDetails: ISectionDetails | undefined = apiSectionDetails;
+
+  // Generate unique data for each shelf based on API data or fallback
+  const shelves = React.useMemo(() => {
+    if (!sectionDetails?.shelfDetails) return [];
+
+    return sectionDetails.shelfDetails.map((shelf, index) => ({
+      id: index + 1,
+      name: shelf.shelfName,
+      booksCount: Math.floor(Math.random() * 50) + 10, // Mock data
+      // Different number of rows for each shelf
+      rowsPerShelf: Math.floor(Math.random() * 4) + 4, // Random between 4-7 rows
+      // Each shelf has different book distribution data
+      bookDistribution: Array.from(
+        { length: Math.floor(Math.random() * 4) + 4 },
+        (__, rowIndex) => ({
+          row: rowIndex + 1,
+          bookCount: Math.floor(Math.random() * 25) + 8 + index * 2, // Different base count per shelf
+        })
+      ),
+    }));
+  }, [sectionDetails]);
+
+  // Reset selected shelf when data changes
+  useEffect(() => {
+    setSelectedShelfIndex(0);
+  }, [sectionData?.id]);
 
   const handleShelfClick = (index: number) => {
     setSelectedShelfIndex(index);
@@ -41,6 +55,8 @@ const ViewShelfData: React.FC<IViewShelfDataProps> = ({ sectionData }) => {
 
   const generateBookSquares = (shelfIndex: number) => {
     const selectedShelf = shelves[shelfIndex];
+    if (!selectedShelf) return null;
+
     const squares: any = [];
 
     selectedShelf.bookDistribution.forEach((rowData) => {
@@ -76,6 +92,36 @@ const ViewShelfData: React.FC<IViewShelfDataProps> = ({ sectionData }) => {
 
     return squares;
   };
+
+  if (!sectionData) {
+    return (
+      <DialogScrollContent>
+        <Typography variant="body1" color="text.secondary" textAlign="center">
+          No section data available
+        </Typography>
+      </DialogScrollContent>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <DialogScrollContent>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+          <CircularProgress />
+        </Box>
+      </DialogScrollContent>
+    );
+  }
+
+  if (!sectionDetails || shelves.length === 0) {
+    return (
+      <DialogScrollContent>
+        <Typography variant="body1" color="text.secondary" textAlign="center">
+          No details found for this section.
+        </Typography>
+      </DialogScrollContent>
+    );
+  }
 
   return (
     <DialogScrollContent>

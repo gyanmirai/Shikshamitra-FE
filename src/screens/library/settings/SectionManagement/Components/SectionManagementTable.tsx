@@ -30,7 +30,7 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
         ),
       },
       {
-        id: 'numberOfColumns',
+        id: 'numberOfShelf',
         label: 'No. of Shelf',
         align: 'left',
         render: (value) => (

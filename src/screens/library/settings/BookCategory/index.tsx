@@ -28,10 +28,18 @@ import BookCategoryTable from './Components/BookCategoryTable';
 import type { IBookCategory } from './Components/type';
 
 const BookCategoryCreation = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // Custom hook to fetch book category data
   const { data: bookCategoryData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBookCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
 
   // Delete mutation hook
@@ -110,7 +118,7 @@ const BookCategoryCreation = () => {
         setOpenDialog={setOpen}
         // editData={selectedBookCategory}
         setEditData={setSelectedBookCategory}
-        data={bookCategoryData}
+        data={bookCategoryData?.items || []}
       />
 
       <CustomDialog
@@ -174,14 +182,14 @@ const BookCategoryCreation = () => {
                   dispatchFn(
                     bookCategoryApi.util.updateQueryData(
                       'getBookCategories',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
-                        const index = draft?.findIndex(
+                        const index = draft?.items?.findIndex(
                           (b: any) => b.id === selectedBookCategory?.id
                         );
                         setDeleteIndex(index);
                         if (index !== -1) {
-                          draft.splice(index, 1);
+                          draft.items.splice(index, 1);
                         }
                       }
                     )

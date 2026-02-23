@@ -1,7 +1,9 @@
-'use client';
+import type { RootState } from 'src/redux/store';
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -22,12 +24,13 @@ import { chargeTypeValidationSchema } from './ChargeTypeValidationSchema';
 import type { IChargeTypeFormProps } from './type';
 
 const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editData }) => {
-  const { addChargeCategory } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [addChargeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddChargeCategoryMutation,
   });
 
-  const { updateChargeCategory } = useQueryAndMutation({
+  const [updateChargeCategory, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateChargeCategoryMutation,
   });
@@ -35,32 +38,43 @@ const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editDat
   const formik = useFormik({
     initialValues: getChargeTypeInitialValues(editData),
     validationSchema: chargeTypeValidationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       // Construct payload matching API specification
+      const numericAmount = values.amount
+        ? Number(String(values.amount).replace(/[^0-9.-]+/g, ''))
+        : 0;
+
       const payload = {
         chargeType: values.chargeType,
-        amount: values.amount ? Number(values.amount) : 0,
+        amount: values.isFixed ? numericAmount : 0,
         isFixed: values.isFixed,
         description: values.description,
       };
 
-      if (editData) {
-        // Update existing charge category - PUT /library/settings/charge-categories/{categoryId}
-        updateChargeCategory({
-          categoryId: editData.id,
-          data: payload,
-        });
-        shikshaMitraToast.success({
-          message: `${values.chargeType} Charge Category updated successfully`,
-        });
-      } else {
-        // Create new charge category - POST /library/settings/charge-categories
-        addChargeCategory(payload);
-        shikshaMitraToast.success({
-          message: `${values.chargeType} Charge Category added successfully`,
-        });
+      try {
+        if (editData) {
+          // Update existing charge category
+          await updateChargeCategory({
+            categoryId: editData.id,
+            data: payload,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.chargeType} Charge Category updated successfully`,
+          });
+        } else {
+          // Create new charge category - POST /library/settings/charge-categories
+          await addChargeCategory({
+            ...payload,
+            academicYearId: currentYear?.id,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `${values.chargeType} Charge Category added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save charge category:', error);
       }
-      onClose(null, true);
     },
   });
 
@@ -154,7 +168,7 @@ const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editDat
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -165,10 +179,11 @@ const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editDat
           type="submit"
           variant="contained"
           size="small"
+          loading={isAddLoading || isUpdateLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );
