@@ -25,6 +25,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   Box,
+  Card,
   Button,
   MenuItem,
   MenuList,
@@ -292,7 +293,16 @@ const LeaveHistory = (props: any) => {
   );
   return (
     <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ display: 'flex', gap: 2, mt: 2, pl: 1, mb: 1, justifyContent: 'space-between' }}>
+      <Card
+        sx={{
+          display: 'flex',
+          p: 2,
+          gap: 2,
+          mt: 1,
+          pl: 1,
+          justifyContent: 'space-between',
+        }}
+      >
         <DatePicker
           label="Month-Year"
           format="MMM-YYYY"
@@ -320,7 +330,7 @@ const LeaveHistory = (props: any) => {
         >
           Leave Request
         </Button>
-      </Box>
+      </Card>
       <CustomizableTable
         noDataText={
           <>

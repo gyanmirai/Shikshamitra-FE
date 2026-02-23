@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { isEqual } from 'lodash';
 import { DatePicker } from '@mui/x-date-pickers';
 import { ReligionType } from 'src/enums/religion';
+import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Slide, TextField } from '@mui/material';
@@ -824,7 +825,6 @@ const FormSlider = ({ step, formik, editData }: any) => {
           });
         };
         recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
-        console.log(data, 'data');
 
         formik.setValues((pre: any) => ({
           ...pre,
@@ -846,7 +846,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
   ]);
 
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1, height: '100%' }}>
+    <Box ref={containerRef} sx={{ overflowX: 'hidden', mt: 1, height: '100%' }}>
       {steps.map(
         (_, index) =>
           index === step && (
@@ -872,97 +872,100 @@ const FormSlider = ({ step, formik, editData }: any) => {
                     />
                   </Box>
                 )} */}
-                <Box
-                  p={2}
-                  display={step === 2 || step === 1 || step === 3 ? 'block' : 'flex'}
-                  flexWrap="wrap"
-                  gap={2}
-                  width="100%"
-                  height="100%"
-                >
-                  {basicDetailsLoading ||
-                  familyDetailsLoading ||
-                  additionalDetailsLoading ||
-                  workExperienceLoading ||
-                  bankDetailsLoading ||
-                  reportingManagerDetailsLoading ||
-                  accessControlLoading ? (
-                    <LoadingScreen />
-                  ) : (
-                    <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
-                      {' '}
-                      {allFields[step].map((field) => (
-                        <Grid
-                          size={{
-                            xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
-                            md: [1, 2, 3, 4].includes(step) ? 12 : 4,
-                          }}
-                          key={field.name}
-                          {...field.gridProps}
-                        >
-                          {field.renderComp ? (
-                            field.renderComp({
-                              formik,
-                              field,
-                              isMainForm: true,
-                            })
-                          ) : field.type === 'date' ? (
-                            <DatePicker
-                              label={field.label}
-                              name={field.name}
-                              value={formik.values[field.name]}
-                              format="DD-MM-YYYY"
-                              onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                              // sx={{ ...(field?.sx || {}) }}
-                              sx={{
-                                ...((field?.sx as any) || {}),
-                              }}
-                              slotProps={{
-                                textField: {
-                                  placeholder: field.placeholder,
-                                  fullWidth: true,
-                                  size: 'small',
-                                  helperText:
-                                    formik.touched[field.name] && formik.errors[field.name],
-                                  error:
-                                    formik.touched[field.name] &&
-                                    Boolean(formik.errors[field.name]),
-                                },
-                              }}
-                            />
-                          ) : (
-                            <ShakingTextField
-                              error={
-                                formik.touched[field.name] && Boolean(formik.errors[field.name])
-                              }
-                            >
-                              <TextField
-                                key={field.name}
-                                type={field.type}
-                                size="small"
+                <Scrollbar sx={{ height: '100%', width: '100%' }}>
+                  <Box
+                    p={2}
+                    display={step === 2 || step === 1 || step === 3 ? 'block' : 'flex'}
+                    flexWrap="wrap"
+                    gap={2}
+                    width="100%"
+                  >
+                    {basicDetailsLoading ||
+                    familyDetailsLoading ||
+                    additionalDetailsLoading ||
+                    workExperienceLoading ||
+                    bankDetailsLoading ||
+                    reportingManagerDetailsLoading ||
+                    accessControlLoading ? (
+                      <LoadingScreen />
+                    ) : (
+                      <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
+                        {' '}
+                        {allFields[step].map((field) => (
+                          <Grid
+                            size={{
+                              xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
+                              md: [1, 2, 3, 4].includes(step) ? 12 : 4,
+                            }}
+                            key={field.name}
+                            {...field.gridProps}
+                          >
+                            {field.renderComp ? (
+                              field.renderComp({
+                                formik,
+                                field,
+                                isMainForm: true,
+                              })
+                            ) : field.type === 'date' ? (
+                              <DatePicker
                                 label={field.label}
                                 name={field.name}
-                                placeholder={field.placeholder}
                                 value={formik.values[field.name]}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
+                                format="DD-MM-YYYY"
+                                onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                                // sx={{ ...(field?.sx || {}) }}
+                                sx={{
+                                  ...((field?.sx as any) || {}),
+                                }}
+                                slotProps={{
+                                  textField: {
+                                    placeholder: field.placeholder,
+                                    fullWidth: true,
+                                    size: 'small',
+                                    helperText:
+                                      formik.touched[field.name] && formik.errors[field.name],
+                                    error:
+                                      formik.touched[field.name] &&
+                                      Boolean(formik.errors[field.name]),
+                                  },
+                                }}
+                              />
+                            ) : (
+                              <ShakingTextField
                                 error={
                                   formik.touched[field.name] && Boolean(formik.errors[field.name])
                                 }
-                                helperText={formik.touched[field.name] && formik.errors[field.name]}
-                                fullWidth
-                                sx={{ ...(field?.sx || {}) }}
-                                {...((typeof field?.otherProps === 'function'
-                                  ? field?.otherProps({ formik })
-                                  : field?.otherProps) || {})}
-                              />
-                            </ShakingTextField>
-                          )}
-                        </Grid>
-                      ))}
-                    </Grid>
-                  )}
-                </Box>
+                              >
+                                <TextField
+                                  key={field.name}
+                                  type={field.type}
+                                  size="small"
+                                  label={field.label}
+                                  name={field.name}
+                                  placeholder={field.placeholder}
+                                  value={formik.values[field.name]}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
+                                  error={
+                                    formik.touched[field.name] && Boolean(formik.errors[field.name])
+                                  }
+                                  helperText={
+                                    formik.touched[field.name] && formik.errors[field.name]
+                                  }
+                                  fullWidth
+                                  sx={{ ...(field?.sx || {}) }}
+                                  {...((typeof field?.otherProps === 'function'
+                                    ? field?.otherProps({ formik })
+                                    : field?.otherProps) || {})}
+                                />
+                              </ShakingTextField>
+                            )}
+                          </Grid>
+                        ))}
+                      </Grid>
+                    )}
+                  </Box>
+                </Scrollbar>
               </Box>
             </Slide>
           )

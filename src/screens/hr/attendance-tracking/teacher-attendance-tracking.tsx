@@ -49,13 +49,6 @@ const TeacherAttendanceTracking = ({
     }
   }, [searchParams?.employeeId, getAttendance, startDate]);
 
-  useEffect(
-    () => () => {
-      setSearchParams({ date: '', startDate: '', endDate: '', employeeId: '' });
-    },
-    [setSearchParams]
-  );
-
   return (
     <>
       <DatePicker

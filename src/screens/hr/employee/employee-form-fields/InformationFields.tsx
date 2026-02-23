@@ -282,6 +282,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   size="small"
                   label="First Name *"
                   {...formik.getFieldProps('firstName')}
+                  value={formik.values.firstName || ''}
                   onChange={(e) => {
                     const newName = capitalize(e.target.value);
                     if (/^[A-Za-z ]*$/.test(newName)) {
@@ -303,6 +304,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   size="small"
                   label="Middle Name"
                   {...formik.getFieldProps('middleName')}
+                  value={formik.values.middleName || ''}
                   name="middleName"
                   onChange={(e) => {
                     const newName = capitalize(e.target.value);
@@ -324,6 +326,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   size="small"
                   label="Last Name *"
                   {...formik.getFieldProps('lastName')}
+                  value={formik.values.lastName || ''}
                   onChange={(e) => {
                     const newName = capitalize(e.target.value);
                     if (/^[A-Za-z ]*$/.test(newName)) {
@@ -345,6 +348,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   size="small"
                   label="Short Name"
                   {...formik.getFieldProps('shortName')}
+                  value={formik.values.shortName || ''}
                   onChange={(e) => {
                     const newName = capitalize(e.target.value);
                     formik.setFieldValue('shortName', newName);
@@ -381,52 +385,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
-                <FormControl
-                  disabled={!isBasicDetailsEditable.value}
-                  fullWidth
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center', // ✅ vertical alignment
-                    gap: 3,
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      minWidth: 70, // ✅ keeps radios aligned
-                      color: (theme) =>
-                        formik.touched.gender && formik.errors.gender
-                          ? theme.palette.error.main
-                          : theme.palette.text.primary,
-                    }}
-                  >
-                    Gender *
-                  </Typography>
 
-                  <RadioGroup
-                    row
-                    name="gender"
-                    value={formik.values.gender}
-                    onChange={formik.handleChange}
-                    sx={{
-                      alignItems: 'center', // ✅ aligns radio + label text
-                    }}
-                  >
-                    <FormControlLabel
-                      value={0}
-                      control={<Radio size="small" />}
-                      label="Male"
-                      sx={{ mr: 2 }}
-                    />
-                    <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
-                  </RadioGroup>
-                </FormControl>
-              </ShakingTextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 4, sm: 6, lg: 4, xl: 4 }}>
               <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
                 <FormControl
                   fullWidth
@@ -573,6 +533,51 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {formik.touched.bloodGroup && formik.errors.bloodGroup && (
                     <FormHelperText>{formik.errors.bloodGroup}</FormHelperText>
                   )}
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
+                <FormControl
+                  disabled={!isBasicDetailsEditable.value}
+                  fullWidth
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center', // ✅ vertical alignment
+                    gap: 3,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      minWidth: 70, // ✅ keeps radios aligned
+                      color: (theme) =>
+                        formik.touched.gender && formik.errors.gender
+                          ? theme.palette.error.main
+                          : theme.palette.text.secondary,
+                    }}
+                  >
+                    Gender *
+                  </Typography>
+
+                  <RadioGroup
+                    row
+                    name="gender"
+                    value={formik.values.gender}
+                    onChange={formik.handleChange}
+                    sx={{
+                      alignItems: 'center', // ✅ aligns radio + label text
+                    }}
+                  >
+                    <FormControlLabel
+                      value={1}
+                      control={<Radio size="small" />}
+                      label="Male"
+                      sx={{ mr: 2 }}
+                    />
+                    <FormControlLabel value={2} control={<Radio size="small" />} label="Female" />
+                  </RadioGroup>
                 </FormControl>
               </ShakingTextField>
             </Grid>

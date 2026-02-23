@@ -109,7 +109,7 @@ const RunPayroll = () => {
       {
         id: 'totalDeduction',
         label: 'Total Deduction',
-        minWidth: '150px',
+        minWidth: '180px',
         align: 'left',
         filterType: 'number',
         render(value, row) {
@@ -123,6 +123,7 @@ const RunPayroll = () => {
                   deductionDialog.onTrue();
                 }}
                 size="small"
+                sx={{ zIndex: 0 }}
               >
                 <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
               </IconButton>
