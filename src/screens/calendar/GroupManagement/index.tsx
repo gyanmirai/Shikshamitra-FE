@@ -3,12 +3,20 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Box, Card, Button } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
+import {
+  useGetGroupsQuery,
+  groupManagementApi,
+  useDeleteGroupMutation,
+} from 'src/redux/calendar/GroupManagement/groupManagementApi';
 
 import GroupForm from './Components/GroupForm';
 import GroupTable from './Components/GroupTable';
@@ -24,14 +32,24 @@ const GroupManagement = () => {
     data: groupData,
     isLoading: isLoadingGroups,
     isFetching: isFetchingGroups,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetGroupsQuery,
     params: { AcademicYearId: currentYear?.id },
   });
+
+  const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteGroupMutation,
+  });
+
   const [open, setOpen] = useState(false); // controls form (add/edit) visibility
   const [editingGroup, setEditingGroup] = useState<IGroup | null>(null);
   const [viewingGroup, setViewingGroup] = useState<IGroup | null>(null); // controls view dialog
+  const [selectedGroup, setSelectedGroup] = useState<IGroup | null>(null);
+  const confirm_dialog = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   const handleCloseDialog = () => {
     setOpen(false);
@@ -126,7 +144,8 @@ const GroupManagement = () => {
             setOpen(true);
           }}
           onDelete={(row) => {
-            /* TODO: implement delete logic */
+            setSelectedGroup(row as IGroup);
+            confirm_dialog.onTrue();
           }}
           onView={(row) => {
             setViewingGroup(row as IGroup);
@@ -134,6 +153,57 @@ const GroupManagement = () => {
           setOpen={setOpen}
         />
       )}
+
+      <ConfirmDialog
+        open={confirm_dialog.value}
+        onClose={() => {
+          setSelectedGroup(null);
+          confirm_dialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete <strong>&apos;{selectedGroup?.name}&apos;</strong>{' '}
+            Group?
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isDeleteLoading}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedGroup,
+                message: `Group: ${selectedGroup?.name} deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    groupManagementApi.util.updateQueryData(
+                      'getGroups',
+                      { AcademicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const index = draft?.items?.findIndex(
+                          (item: any) => item.id === selectedGroup?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1 && draft) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
+                onCommit: () => deleteGroup(selectedGroup?.id || ''),
+              });
+              confirm_dialog.onFalse();
+              setSelectedGroup(null);
+            }}
+          >
+            Yes
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };

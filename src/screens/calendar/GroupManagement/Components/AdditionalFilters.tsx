@@ -1,8 +1,12 @@
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
-import { RuleOperator } from 'src/enums/rule-operator';
-import { StudentFilterField, EmployeeFilterField } from 'src/enums/filter-fields';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+// Removed specific enums as we are using dynamic fields
+import {
+  useGetStudentRuleFieldsQuery,
+  useGetEmployeeRuleFieldsQuery,
+} from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import {
   Box,
   Grid,
@@ -17,141 +21,108 @@ import {
   FormControl,
 } from '@mui/material';
 
-export interface FieldOption {
+// --- Interface Definitions based on API Response ---
+interface ApiEnumValueOption {
   value: string;
   label: string;
+  intValue: number;
+}
+
+interface ApiOperator {
+  name: string;
+  value: number;
+}
+
+interface ApiFilterField {
+  field: string;
+  fieldValue: number;
+  name: string;
+  type: 'Enum' | 'String' | 'Number' | 'Date' | 'Boolean';
+  operators: ApiOperator[];
+  options: ApiEnumValueOption[] | null;
+}
+
+// Extended FieldOption to include API data
+export interface FieldOption {
+  value: number;
+  label: string;
   type: 'text' | 'select';
-  values?: string[]; // for select type
+  apiData?: ApiFilterField;
 }
 
 export interface FilterRow {
   id?: string;
-  field?: string;
-  operator?: string;
+  field?: number;
+  operator?: number;
   value?: string;
 }
 
-const studentFieldOptions: FieldOption[] = [
-  {
-    value: StudentFilterField.Class.toString(),
-    label: 'Class',
-    type: 'select',
-    values: ['1', '2', '3', '4', '5'],
-  },
-  {
-    value: StudentFilterField.Section.toString(),
-    label: 'Section',
-    type: 'select',
-    values: ['A', 'B', 'C'],
-  },
-  {
-    value: StudentFilterField.Gender.toString(),
-    label: 'Gender',
-    type: 'select',
-    values: ['Male', 'Female', 'Other'],
-  },
-  {
-    value: StudentFilterField.AdmissionStatus.toString(),
-    label: 'Admission Status',
-    type: 'select',
-    values: ['Active', 'Inactive', 'Pending'],
-  },
-  { value: StudentFilterField.Name.toString(), label: 'Name', type: 'text' },
-];
-
-const employeeFieldOptions: FieldOption[] = [
-  {
-    value: EmployeeFilterField.Department.toString(),
-    label: 'Department',
-    type: 'select',
-    values: ['Admin', 'Teaching', 'Finance', 'HR'],
-  },
-  {
-    value: EmployeeFilterField.Role.toString(),
-    label: 'Role',
-    type: 'select',
-    values: ['Teacher', 'Principal', 'Accountant', 'Clerk'],
-  },
-  {
-    value: EmployeeFilterField.EmploymentType.toString(),
-    label: 'Employment Type',
-    type: 'select',
-    values: ['Full-time', 'Part-time', 'Contract'],
-  },
-  { value: EmployeeFilterField.Name.toString(), label: 'Name', type: 'text' },
-];
-
 export interface OperatorOption {
-  value: string;
+  value: number;
   label: string;
   icon: string | React.ReactNode;
 }
 
-const operatorOptions: OperatorOption[] = [
-  {
-    value: RuleOperator.Equals.toString(),
-    label: 'Equals',
-    icon: 'solar:check-circle-bold-duotone',
-  },
-  {
-    value: RuleOperator.NotEquals.toString(),
-    label: 'Not Equals',
-    icon: 'solar:forbidden-circle-bold-duotone',
-  },
-  {
-    value: RuleOperator.Contains.toString(),
-    label: 'Contains',
-    icon: 'solar:magnifer-bold-duotone',
-  },
-  {
-    value: RuleOperator.StartsWith.toString(),
-    label: 'Starts With',
-    icon: 'solar:forward-2-bold-duotone',
-  },
-  {
-    value: RuleOperator.EndsWith.toString(),
-    label: 'Ends With',
-    icon: 'solar:back-2-bold-duotone',
-  },
-  {
-    value: RuleOperator.GreaterThan.toString(),
-    label: 'Greater Than',
-    icon: 'solar:arrow-up-bold-duotone',
-  },
-  {
-    value: RuleOperator.LessThan.toString(),
-    label: 'Less Than',
-    icon: 'solar:arrow-down-bold-duotone',
-  },
-  {
-    value: RuleOperator.GreaterOrEqual.toString(),
-    label: 'Greater Or Equal',
-    icon: 'solar:double-alt-arrow-up-bold-duotone',
-  },
-  {
-    value: RuleOperator.LessOrEqual.toString(),
-    label: 'Less Or Equal',
-    icon: 'solar:double-alt-arrow-down-bold-duotone',
-  },
-  { value: RuleOperator.In.toString(), label: 'In', icon: 'solar:list-bold-duotone' },
-];
+const operatorIcons: Record<string, string> = {
+  Equals: 'solar:check-circle-bold-duotone',
+  NotEquals: 'solar:forbidden-circle-bold-duotone',
+  Contains: 'solar:magnifer-bold-duotone',
+  StartsWith: 'solar:forward-2-bold-duotone',
+  EndsWith: 'solar:back-2-bold-duotone',
+  GreaterThan: 'solar:arrow-up-bold-duotone',
+  LessThan: 'solar:arrow-down-bold-duotone',
+  GreaterOrEqual: 'solar:double-alt-arrow-up-bold-duotone',
+  LessOrEqual: 'solar:double-alt-arrow-down-bold-duotone',
+  In: 'solar:list-bold-duotone',
+};
 
 const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameBased' }> = ({
   formik,
   basePath = 'ruleBased',
 }) => {
+  const { data: studentFieldsData, isLoading: isStudentFieldsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentRuleFieldsQuery,
+  });
+
+  const { data: employeeFieldsData, isLoading: isEmployeeFieldsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeRuleFieldsQuery,
+  });
+
+  // Transform API data into FieldOptions
+  const studentFieldOptions: FieldOption[] = useMemo(() => {
+    if (!studentFieldsData) return [];
+    return (studentFieldsData as ApiFilterField[]).map((field) => ({
+      value: field.fieldValue,
+      label: field.name,
+      type: field.type === 'Enum' ? 'select' : 'text',
+      apiData: field,
+    }));
+  }, [studentFieldsData]);
+
+  const employeeFieldOptions: FieldOption[] = useMemo(() => {
+    if (!employeeFieldsData) return [];
+    return (employeeFieldsData as ApiFilterField[]).map((field) => ({
+      value: field.fieldValue,
+      label: field.name,
+      type: field.type === 'Enum' ? 'select' : 'text',
+      apiData: field,
+    }));
+  }, [employeeFieldsData]);
+
   const getFieldMeta = useCallback(
-    (fieldValue: string | undefined, isStudent: boolean): FieldOption | undefined => {
+    (fieldValue: number | undefined, isStudent: boolean): FieldOption | undefined => {
       const source = isStudent ? studentFieldOptions : employeeFieldOptions;
       return source.find((f) => f.value === fieldValue);
     },
-    []
+    [studentFieldOptions, employeeFieldOptions]
   );
 
   const handleAddFilter = (isStudent: boolean) => {
     const newFilter: FilterRow = {
-      field: '',
-      operator: '',
+      field: undefined,
+      operator: undefined,
       value: '',
     };
 
@@ -183,20 +154,40 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
   );
 
   const handleChange = useCallback(
-    (index: number, key: 'field' | 'operator' | 'value', value: string, isStudent: boolean) => {
+    (index: number, key: 'field' | 'operator' | 'value', value: any, isStudent: boolean) => {
       const targetSubField = isStudent ? 'studentFilters' : 'employeeFilters';
       const currentPath = `${basePath}.${targetSubField}`;
 
       const section = formik.values[basePath] || {};
       const currentFilters = section[targetSubField] || [];
 
-      const updatedFilters = currentFilters.map((f: any, i: number) =>
-        i === index ? { ...f, [key]: value, ...(key === 'field' ? { value: '' } : {}) } : f
-      );
+      const updatedFilters = currentFilters.map((f: any, i: number) => {
+        if (i !== index) return f;
+
+        // If it's a field change, reset operator and value
+        if (key === 'field') {
+          return { ...f, field: value, operator: undefined, value: '' };
+        }
+
+        return { ...f, [key]: value };
+      });
 
       formik.setFieldValue(currentPath, updatedFilters);
     },
     [formik, basePath]
+  );
+
+  const getOperatorOptionsForField = useCallback(
+    (fieldMeta: FieldOption | undefined): OperatorOption[] => {
+      if (!fieldMeta?.apiData?.operators) return [];
+
+      return fieldMeta.apiData.operators.map((op) => ({
+        value: op.value,
+        label: op.name.replace(/([A-Z])/g, ' $1').trim(), // Add spaces before capital letters
+        icon: operatorIcons[op.name] || 'solar:question-circle-bold-duotone',
+      }));
+    },
+    []
   );
 
   const renderFilterRows = useCallback(
@@ -204,6 +195,8 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
       <Stack spacing={2} mt={2}>
         {filters.map((f, index) => {
           const meta = getFieldMeta(f.field, isStudent);
+          const allowedOperators = getOperatorOptionsForField(meta);
+
           return (
             <Grid
               container
@@ -228,7 +221,7 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
                   <InputLabel sx={{ typography: 'caption', fontWeight: 700 }}>Field</InputLabel>
                   <Select
                     label="Field"
-                    value={f.field || ''}
+                    value={f.field ?? ''}
                     onChange={(e) => handleChange(index, 'field', e.target.value, isStudent)}
                     sx={{ typography: 'body2' }}
                   >
@@ -246,28 +239,27 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
                   <InputLabel sx={{ typography: 'caption', fontWeight: 700 }}>Operator</InputLabel>
                   <Select
                     label="Operator"
-                    value={f.operator || ''}
+                    value={f.operator ?? ''}
                     onChange={(e) => handleChange(index, 'operator', e.target.value, isStudent)}
+                    disabled={f.field === undefined}
                     renderValue={(selected) => {
-                      const op = operatorOptions.find((o) => o.value === selected);
-                      return op?.label || '';
+                      // Find label from allowed operators
+                      const op = allowedOperators.find((o) => o.value === selected);
+                      if (op) return op.label;
+                      return '';
                     }}
                     sx={{ typography: 'body2' }}
                   >
-                    {operatorOptions.map((op) => (
+                    {allowedOperators.map((op) => (
                       <MenuItem
                         key={op.value}
                         value={op.value}
                         sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
                       >
-                        {typeof op.icon === 'string' ? (
-                          <Iconify
-                            icon={op.icon}
-                            sx={{ color: 'text.secondary', mr: 1, width: 20, height: 20 }}
-                          />
-                        ) : (
-                          <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>{op.icon}</Box>
-                        )}
+                        <Iconify
+                          icon={typeof op.icon === 'string' ? op.icon : ''}
+                          sx={{ color: 'text.secondary', mr: 1, width: 20, height: 20 }}
+                        />
                         <Typography variant="body2">{op.label}</Typography>
                       </MenuItem>
                     ))}
@@ -281,14 +273,14 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
                     <InputLabel sx={{ typography: 'caption', fontWeight: 700 }}>Value</InputLabel>
                     <Select
                       label="Value"
-                      value={f.value || ''}
+                      value={f.value ?? ''}
                       onChange={(e) => handleChange(index, 'value', e.target.value, isStudent)}
-                      disabled={!f.field}
+                      disabled={f.field === undefined}
                       sx={{ typography: 'body2' }}
                     >
-                      {meta.values?.map((v) => (
-                        <MenuItem key={v} value={v}>
-                          {v}
+                      {meta.apiData?.options?.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.label}
                         </MenuItem>
                       ))}
                     </Select>
@@ -299,7 +291,7 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
                     size="small"
                     fullWidth
                     value={f.value || ''}
-                    disabled={!f.field}
+                    disabled={f.field === undefined}
                     onChange={(e) => handleChange(index, 'value', e.target.value, isStudent)}
                     InputLabelProps={{ sx: { typography: 'caption', fontWeight: 700 } }}
                     sx={{ '& .MuiInputBase-input': { typography: 'body2' } }}
@@ -327,10 +319,25 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
         })}
       </Stack>
     ),
-    [getFieldMeta, handleChange, handleRemoveFilter]
+    [
+      getFieldMeta,
+      handleChange,
+      handleRemoveFilter,
+      getOperatorOptionsForField,
+      studentFieldOptions,
+      employeeFieldOptions,
+    ]
   );
 
   const studentFilterContent = useMemo(() => {
+    if (isStudentFieldsLoading) {
+      return (
+        <Typography variant="caption" sx={{ p: 2 }}>
+          Loading student fields...
+        </Typography>
+      );
+    }
+
     const filters = formik.values[basePath]?.studentFilters || [];
     return filters.length === 0 ? (
       <Box
@@ -355,10 +362,17 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
     ) : (
       renderFilterRows(filters, true)
     );
-  }, [formik.values, basePath, renderFilterRows]);
-  // Dependency: formik.values[basePath]?.studentFilters
+  }, [formik.values, basePath, renderFilterRows, isStudentFieldsLoading]);
 
   const employeeFilterContent = useMemo(() => {
+    if (isEmployeeFieldsLoading) {
+      return (
+        <Typography variant="caption" sx={{ p: 2 }}>
+          Loading employee fields...
+        </Typography>
+      );
+    }
+
     const filters = formik.values[basePath]?.employeeFilters || [];
     return filters.length === 0 ? (
       <Box
@@ -383,8 +397,7 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
     ) : (
       renderFilterRows(filters, false)
     );
-  }, [formik.values, basePath, renderFilterRows]);
-  // Dependency: formik.values[basePath]?.employeeFilters
+  }, [formik.values, basePath, renderFilterRows, isEmployeeFieldsLoading]);
 
   return (
     <Grid container spacing={4}>
@@ -426,6 +439,7 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={() => handleAddFilter(true)}
             sx={{ borderRadius: 1 }}
+            disabled={isStudentFieldsLoading}
           >
             Add Rule
           </Button>
@@ -453,6 +467,7 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
             startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={() => handleAddFilter(false)}
             sx={{ borderRadius: 1 }}
+            disabled={isEmployeeFieldsLoading}
           >
             Add Rule
           </Button>
