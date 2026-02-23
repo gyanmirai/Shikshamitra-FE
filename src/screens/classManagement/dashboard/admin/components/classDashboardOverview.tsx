@@ -55,9 +55,9 @@ const ClassManagementDashboardOverview = () => {
   ]);
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={1}>
       {cards.map((card) => (
-        <Grid size={{ xs: 12, md: 4 }} key={card.id}>
+        <Grid size={{ xs: 12, md: 3 }} key={card.id}>
           <DashboardCard
             icon={card.icon}
             title={card.title}

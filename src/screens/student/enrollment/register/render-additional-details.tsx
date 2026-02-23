@@ -1,9 +1,9 @@
 import { YesNoArray } from 'src/enums/yes-no';
-import { Grid, TextField } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import CustomSelect from 'src/components/custom-select';
 import { CategoryArray } from 'src/enums/studnet-category';
+import { Grid, Switch, TextField, FormControlLabel } from '@mui/material';
 import {
   CardActions,
   SectionCard,
@@ -183,6 +183,34 @@ const RenderAdditionalDetails = (props: any) => {
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
           error={formik.touched.singleChild && Boolean(formik.errors.singleChild)}
           helperText={formik.touched.singleChild && formik.errors.singleChild}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              disabled={!isAdditionalDetailsEditable.value}
+              checked={formik.values.libraryMember}
+              onChange={(e, val) => formik.setFieldValue('libraryMember', val)}
+              name="libraryMember"
+            />
+          }
+          label="Library Member?"
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              disabled={!isAdditionalDetailsEditable.value}
+              checked={formik.values.transportMember}
+              onChange={(e, val) => formik.setFieldValue('transportMember', val)}
+              name="transportMember"
+            />
+          }
+          label="Transport Member?"
         />
       </Grid>
     </SectionCard>

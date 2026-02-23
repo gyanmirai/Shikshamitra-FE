@@ -1,38 +1,57 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import { Box, Grid } from '@mui/material';
 
-import ElectiveSubjectPopularity from './components/electiveSubjectPopularity';
-import ClassManagementDashboardOverview from './components/classDashboardOverview';
-import ClassTeacherAssignment from './components/classManagementClassTeacherAssignment';
-import ClassManagementSubjectProgress from './components/classManagementSubjectProgress';
-import ClassManagementTeacherAssignment from './components/classManagementTeacherAssignment';
+import KPIOverview from './components/KPIOverview';
+import AlertsPanel from './components/AlertsPanel';
+import ManagementCharts from './components/ManagementCharts';
+import ClassDetailDrawer from './components/ClassDetailDrawer';
+import ClassOverviewTable from './components/ClassOverviewTable';
 
-const AdminClassManagementDashboard = () => (
-  <Box>
-    <Grid container spacing={2} sx={{ mb: 2 }}>
-      <Grid size={{ xs: 12 }}>
-        <ClassManagementDashboardOverview />
+const AdminClassManagementDashboard = () => {
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+
+  const handleRowClick = (row: any) => {
+    setSelectedClass(row);
+    setOpenDrawer(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setOpenDrawer(false);
+    setSelectedClass(null);
+  };
+
+  return (
+    <Box sx={{ position: 'relative' }}>
+      <Grid container spacing={1}>
+        <Grid size={{ xs: 12 }}>
+          <KPIOverview />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <ManagementCharts />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <AlertsPanel />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <ClassOverviewTable onRowClick={handleRowClick} />
+        </Grid>
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ElectiveSubjectPopularity />
-      </Grid>
+      <ClassDetailDrawer
+        open={openDrawer}
+        onClose={handleCloseDrawer}
+        className={selectedClass?.className}
+      />
 
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ClassManagementTeacherAssignment />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 5 }}>
-        <ClassTeacherAssignment />
-      </Grid>
-
-      <Grid size={{ xs: 12, md: 7 }}>
-        <ClassManagementSubjectProgress />
-      </Grid>
-    </Grid>
-  </Box>
-);
+      {/* <QuickActions /> */}
+    </Box>
+  );
+};
 
 export default AdminClassManagementDashboard;
