@@ -19,7 +19,7 @@ import type { FieldsType } from './types';
 const AdditionalDetailsAllFields = ({ formik }: any) => (
   <Box>
     <SectionCard title="Additional Details">
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <ShakingTextField error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}>
           <TextField
             fullWidth
@@ -31,7 +31,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
           />
         </ShakingTextField>
       </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.personWithDisability && Boolean(formik.errors.personWithDisability)}
         >
@@ -56,7 +56,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
           </FormControl>
         </ShakingTextField>
       </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.secondLanguage && Boolean(formik.errors.secondLanguage)}
         >
@@ -70,7 +70,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
           />
         </ShakingTextField>
       </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <FormControlLabel
           control={
             <Switch
@@ -82,7 +82,7 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
           label="Library Member?"
         />
       </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
         <FormControlLabel
           control={
             <Switch
