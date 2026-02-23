@@ -279,6 +279,8 @@ export interface IAdditionalInformationResponse {
   emergencyContactNo: string;
   isSingleChild: boolean;
   isSingleParentChild: boolean;
+  isLibraryMember: boolean;
+  isTransportMember: boolean;
 }
 
 export interface IMedicalInformationResponse {

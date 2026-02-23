@@ -310,6 +310,8 @@ export const additionalDetailsInitialValues = (
   relation: editData?.emergencyRelation || '',
   singleParentChild: editData?.isSingleParentChild || false,
   singleChild: editData?.isSingleChild || false,
+  libraryMember: editData?.isLibraryMember || false,
+  transportMember: editData?.isTransportMember || false,
 });
 
 export const medicalFieldsInitialValues = (editData?: IMedicalInformationResponse | null) => ({

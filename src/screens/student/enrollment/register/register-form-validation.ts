@@ -259,6 +259,8 @@ export const additionalDetailsValidations = Yup.object({
   relation: Yup.string(),
   singleParentChild: Yup.boolean(),
   singleChild: Yup.boolean(),
+  libraryMember: Yup.boolean(),
+  transportMember: Yup.boolean(),
   sponsorName: Yup.string(),
 });
 export const medicalDetailsValidations = Yup.object({
