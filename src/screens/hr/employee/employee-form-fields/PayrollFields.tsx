@@ -201,10 +201,9 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           <Paper
             variant="outlined"
             sx={{
-              p: 3,
+              p: 1,
               textAlign: 'center',
               borderStyle: 'dashed',
-              bgcolor: (theme) => theme.palette.background.neutral,
             }}
           >
             <Typography variant="body2" color="text.secondary">

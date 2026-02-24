@@ -1,14 +1,18 @@
 'use client';
 
-import React from 'react';
-import { Box, Slide } from '@mui/material';
+import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { Box, Tooltip, IconButton } from '@mui/material';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 
+import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
-import { useSettingsContext } from '../settings';
 import { NavSectionVertical } from '../nav-section';
+import { navSectionClasses } from '../nav-section/classes';
+
+// ----------------------------------------------------------------------
 
 const SubLayout = ({ children }: any) => {
   const session: any = useSession();
@@ -20,56 +24,203 @@ const SubLayout = ({ children }: any) => {
     `/${currentModule}` as keyof typeof navSubData
   ];
 
-  const settings = useSettingsContext();
-  const isNavMini = settings.navLayout === 'mini';
+  const [isPinned, setIsPinned] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const leaveTimeout = useRef<any>(null);
+
+  const handleMouseEnter = useCallback(() => {
+    if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    leaveTimeout.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 200);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (leaveTimeout.current) clearTimeout(leaveTimeout.current);
+    },
+    []
+  );
+
+  const handleTogglePin = useCallback(() => {
+    setIsPinned((prev) => !prev);
+  }, []);
+
+  const isCollapsed = !isPinned && !isHovered;
+
+  const NAV_WIDTH = 280;
+  const NAV_MINI_WIDTH = 80;
 
   return (
     <Box
       display="flex"
       height="100%"
-      // gap={1}
       sx={{ backgroundColor: (theme) => theme.vars.palette.background.neutral }}
     >
       {currentData?.length > 0 && (
-        <Slide direction="right" in={isNavMini} mountOnEnter unmountOnExit>
+        <motion.div
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          layout
+          initial={false}
+          animate={{
+            width: isCollapsed ? NAV_MINI_WIDTH : NAV_WIDTH,
+          }}
+          transition={{
+            type: 'tween',
+            ease: 'easeOut',
+            duration: 0.3,
+          }}
+          style={{
+            height: '100%',
+            backgroundColor: 'var(--palette-background-paper)',
+            borderRight: '1px solid var(--palette-divider)',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {/* -- Pin Button -- */}
+          <Box
+            sx={{
+              p: 1,
+              display: 'flex',
+              justifyContent: isCollapsed ? 'center' : 'flex-end',
+              borderBottom: (theme) =>
+                isCollapsed ? 'none' : `1px solid ${theme.vars.palette.divider}`,
+            }}
+          >
+            <Tooltip title={isPinned ? 'Unpin' : 'Pin'} placement="right">
+              <IconButton onClick={handleTogglePin} size="small">
+                <Iconify
+                  icon={isPinned ? 'solar:pin-bold' : 'solar:pin-linear'}
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    transition: 'transform 0.2s',
+                    ...(!isPinned && { transform: 'rotate(-45deg)' }),
+                    color: isPinned ? 'primary.main' : 'text.disabled',
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
           <Scrollbar
             fillContent
             sx={{
-              height: '100%',
-              width: '320px',
-              // boxShadow: 'var(--shadows-3)',
-              // bgcolor: (theme) => theme.vars.palette.background.paper,
-              backgroundColor: (theme) => theme.vars.palette.background.paper,
-              borderRight: (theme) => `1px solid ${theme.vars.palette.divider}`,
-              // borderTop: (theme) => `1px solid ${theme.vars.palette.divider}`,
-              borderRadius: 0,
+              flexGrow: 1,
+              overflowX: 'hidden',
+              '& .simplebar-content-wrapper': {
+                overflowX: 'hidden',
+              },
             }}
           >
             <NavSectionVertical
               data={currentData}
-              sx={{ p: 1, flex: '1 1 auto', width: '100%' }}
               isSubLayout
+              sx={{
+                p: isCollapsed ? 0 : 1,
+                flex: '1 1 auto',
+                width: '100%',
+                transition: (theme) =>
+                  theme.transitions.create(['padding'], {
+                    easing: theme.transitions.easing.easeInOut,
+                    duration: theme.transitions.duration.standard,
+                  }),
+                ...(isCollapsed && {
+                  '--nav-item-gap': '5px !important',
+                  [`& .${navSectionClasses.ul}`]: {
+                    gap: '5px !important',
+                  },
+                  [`& .${navSectionClasses.item.root}`]: {
+                    width: 'calc(100% - 10px) !important',
+                    px: '4px !important',
+                    py: '8px !important',
+                    margin: '0 5px !important',
+                    display: 'flex',
+                    textAlign: 'center',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    minHeight: '56px !important',
+                    overflow: 'hidden',
+                  },
+                  [`& .${navSectionClasses.item.icon}`]: {
+                    margin: '0 0 4px 0 !important',
+                    width: '24px !important',
+                    height: '24px !important',
+                  },
+                  [`& .${navSectionClasses.item.texts}`]: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    opacity: 1,
+                    visibility: 'visible',
+                    width: '100%',
+                    overflow: 'hidden',
+                    transition: (theme) =>
+                      theme.transitions.create(['opacity'], {
+                        duration: theme.transitions.duration.shorter,
+                      }),
+                  },
+                  [`& .${navSectionClasses.item.title}`]: {
+                    fontSize: '10px !important',
+                    lineHeight: '1.2 !important',
+                    fontWeight: '600 !important',
+                    width: '100%',
+                    maxWidth: '100%',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    textAlign: 'center',
+                    textTransform: 'capitalize',
+                  },
+                  [`& .${navSectionClasses.item.caption}`]: {
+                    display: 'none',
+                  },
+                  [`& .${navSectionClasses.item.arrow}`]: {
+                    display: 'none',
+                  },
+                  [`& .${navSectionClasses.item.info}`]: {
+                    display: 'none',
+                  },
+                  [`& .${navSectionClasses.subheader}`]: {
+                    display: 'none',
+                  },
+                  [`& .MuiCollapse-root`]: {
+                    display: 'none !important',
+                  },
+                }),
+                ...(!isCollapsed && {
+                  [`& .${navSectionClasses.item.texts}`]: {
+                    opacity: 1,
+                    visibility: 'visible',
+                    transition: (theme) =>
+                      theme.transitions.create(['opacity', 'visibility'], {
+                        duration: theme.transitions.duration.standard,
+                      }),
+                  },
+                }),
+              }}
             />
           </Scrollbar>
-        </Slide>
+        </motion.div>
       )}
       <Box
         sx={{
-          width: '100%',
-
+          flexGrow: 1,
           height: '100%',
           overflow: 'hidden',
-
-          // boxShadow: 'var(--shadows-3)',
           '& .simplebar-content': { height: '100%' },
-
-          bgcolor: (theme) => 'transparent',
-          // border: (theme) =>
-          //   currentData?.length ? `4px solid ${theme.vars.palette.background.paper}` : 'none',
+          bgcolor: 'transparent',
           borderRadius: 0,
           borderBottom: 'none',
           borderRight: 'none',
-          transition: 'all 0.3s ease-in-out',
         }}
       >
         <Scrollbar

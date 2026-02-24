@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useResponsive } from 'src/hooks/use-responsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
 import { Box, Step, Button, Stepper, StepLabel, StepConnector } from '@mui/material';
 
@@ -118,27 +119,6 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
     ...theme.applyStyles('dark', { borderColor: theme.vars.palette.grey[800] }),
   },
 }));
-function CustomStepIcon(props: StepIconProps) {
-  const { active, completed, icon } = props;
-  return (
-    <Box
-      sx={{
-        width: 24,
-        height: 24,
-        borderRadius: '50%',
-        backgroundColor: (theme) =>
-          active || completed ? theme.palette.primary.main : theme.vars.palette.grey[400],
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold',
-      }}
-    >
-      {icon}
-    </Box>
-  );
-}
 
 const ModernStepIcon = (props: StepIconProps) => {
   const { active, completed, icon } = props;
@@ -150,8 +130,8 @@ const ModernStepIcon = (props: StepIconProps) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 32,
-        height: 32,
+        width: 24,
+        height: 24,
       }}
     >
       <AnimatePresence>
@@ -217,7 +197,7 @@ const ModernStepIcon = (props: StepIconProps) => {
 
 const ModernConnector = styled(StepConnector)(({ theme }) => ({
   [`&.${stepConnectorClasses.vertical}`]: {
-    marginLeft: 16, // EXACT center of 32px icon
+    marginLeft: 14, // EXACT center of 32px icon
   },
 
   [`& .${stepConnectorClasses.line}`]: {
@@ -259,6 +239,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   saveAndNextButtonProps = {},
   viewMode = 'horizontal', // Default to horizontal
 }) => {
+  const isMobile = useResponsive('down', 'lg');
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isSaveLoading = useBoolean();
@@ -274,7 +255,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     validateOnChange,
   });
 
-  const isVertical = viewMode === 'vertical';
+  const isVertical = viewMode === 'vertical' && !isMobile;
 
   const renderStepper = () => (
     <Stepper
@@ -285,8 +266,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
       sx={
         isVertical
           ? {
-              minWidth: '280px', // Slightly wider for modern look
-              p: 3,
+              minWidth: '250px', // Slightly wider for modern look
+              p: 1,
               overflowY: 'auto',
               overflowX: 'hidden',
               borderRight: (theme) => `1px dashed ${theme.palette.divider}`,
@@ -335,7 +316,12 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
                 },
               },
             }
-          : {}
+          : {
+              p: isMobile ? 1 : 0,
+              '& .MuiStepLabel-label': {
+                display: isMobile ? 'none' : 'block',
+              },
+            }
       }
     >
       {/* <Scrollbar
@@ -361,7 +347,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             }}
             // @ts-ignore
             isdisabledlabel={`${isDisabledLabel}`}
-            StepIconComponent={CustomStepIcon}
+            StepIconComponent={ModernStepIcon}
           >
             {label}
           </CustomStepLabel>
@@ -378,6 +364,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
+        minWidth: 0,
         minHeight: 0,
         position: 'relative',
         height: '100%',

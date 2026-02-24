@@ -1,5 +1,6 @@
 import type { MutableRefObject } from 'react';
 
+import { useTheme } from '@mui/material/styles';
 import { useState, useCallback, useLayoutEffect } from 'react';
 
 import type { IColumn } from '../types';
@@ -15,6 +16,7 @@ export const useStickyColumns = ({
   columnVisibility,
   headerRefs,
 }: UseStickyColumnsProps) => {
+  const theme = useTheme();
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
     right: Record<string, number>;
@@ -68,7 +70,7 @@ export const useStickyColumns = ({
     (col: IColumn, isHeader: boolean = false): React.CSSProperties => {
       const base: React.CSSProperties = {
         position: col.sticky ? 'sticky' : 'static',
-        zIndex: col.sticky ? (isHeader ? 999 : 11) : isHeader ? 100 : 0, // Ensure headers sit above Body rows
+        zIndex: col.sticky ? (isHeader ? 999 : 11) : 0, // Ensure sticky columns are above normal ones
       };
 
       const colId = col.id as string;
