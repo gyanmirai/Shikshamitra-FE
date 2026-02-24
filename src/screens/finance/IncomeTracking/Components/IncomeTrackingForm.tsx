@@ -10,11 +10,16 @@ import { useIncomeForm } from '../hooks/useIncomeForm';
 import type { IIncomeTrackingFormProps } from '../types';
 
 const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose, editData }) => {
-  const { formik, isLoading, incomeCategoryOptions, paymentMethodOptions, currentYear } =
-    useIncomeForm(onClose, editData);
+  const {
+    formik,
+    incomeCategoryOptions,
+    paymentMethodOptions,
+    currentYear,
+    addLoading,
+    updateLoading,
+    incomeOptionsLoading,
+  } = useIncomeForm(onClose, editData);
 
-  // If dialog is not open, render nothing or lightweight placeholder
-  // But usually it's controlled by parent.
   if (!open.value) return null;
 
   return (
@@ -24,13 +29,18 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <IncomeFormFields
               formik={formik}
-              incomeCategoryOptions={incomeCategoryOptions}
+              incomeCategoryOptions={incomeCategoryOptions?.items || []}
               paymentMethodOptions={paymentMethodOptions}
               currentYear={currentYear}
+              incomeOptionsLoading={incomeOptionsLoading}
             />
           </Scrollbar>
 
-          <IncomeFormActions onClose={onClose} isLoading={isLoading} isEdit={!!editData} />
+          <IncomeFormActions
+            onClose={onClose}
+            isLoading={addLoading || updateLoading}
+            isEdit={!!editData}
+          />
         </Box>
       </form>
     </BackPopUpChecked>

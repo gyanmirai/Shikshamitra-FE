@@ -1,23 +1,26 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-import paymentMethodsConfigData from './IncomeTrackingForm';
-
 export const getIncomeFormSchema = (currentYear: any) =>
   Yup.object().shape({
-    incomeCategory: Yup.string().required('Income category is required'),
-    incomeName: Yup.string().required('Income name is required'),
-    incomeCategoryTags: Yup.array()
+    categoryId: Yup.string().required('Income category is required'),
+    name: Yup.string()
+      .min(1, 'Income name must be at least 1 character')
+      .max(255, 'Income name cannot exceed 255 characters')
+      .required('Income name is required'),
+    categoryTags: Yup.array()
       .of(Yup.string())
       .min(1, 'At least one income category tag is required')
       .required('Income category tags are required'),
     amount: Yup.number()
       .required('Amount is required')
       .typeError('Amount must be a number')
-      .positive('Amount must be greater than zero'),
-    paymentMethod: Yup.string().required('Payment Via is required'),
-    date: Yup.mixed()
-      .required('Date is required')
+      .min(0.01, 'Amount must be at least 0.01'),
+    paymentMethod: Yup.number()
+      .required('Payment method is required')
+      .typeError('Payment method is required'),
+    paymentDate: Yup.mixed()
+      .required('Payment date is required')
       .test(
         'is-valid-dayjs',
         'Date must be a valid date',
@@ -32,44 +35,6 @@ export const getIncomeFormSchema = (currentYear: any) =>
         'max-date',
         (value) => `Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-      )
-      .test(
-        'no-future-date',
-        'Date cannot be in the future',
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(), 'day')
       ),
-    notes: Yup.string().max(500, 'Notes cannot exceed 500 characters'),
-
-    // Dynamic validation for each payment method following reference pattern
-    ...Object.fromEntries(
-      Object.entries(paymentMethodsConfigData).map(([method, fields]) => [
-        method,
-        Yup.object(
-          Object.fromEntries(
-            fields.map((field: { name: any; required: any; type: string; label: string }) => [
-              field.name,
-              field.required
-                ? field.type === 'date'
-                  ? Yup.mixed()
-                      .required(`${field.label.replace(' *', '')} is required`)
-                      .test(
-                        'is-valid-dayjs',
-                        `${field.label.replace(' *', '')} must be a valid date`,
-                        (value) => value && dayjs(value as any).isValid()
-                      )
-                  : Yup.string().required(`${field.label.replace(' *', '')} is required`)
-                : field.type === 'date'
-                  ? Yup.mixed()
-                      .nullable()
-                      .test(
-                        'is-valid-dayjs',
-                        `${field.label.replace(' *', '')} must be a valid date`,
-                        (value) => !value || dayjs(value as any).isValid()
-                      )
-                  : Yup.string(),
-            ])
-          )
-        ),
-      ])
-    ),
+    notes: Yup.string().nullable().max(1000, 'Notes cannot exceed 1000 characters'),
   });

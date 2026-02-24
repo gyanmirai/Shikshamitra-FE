@@ -6,36 +6,51 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { incomeApi, useGetIncomesQuery } from 'src/redux/incomeApi/incomeApi';
 import {
+  incomeTrackingApi,
   useGetIncomeTrackingQuery,
+  useGetIncomeTrackingByIdQuery,
   useDeleteIncomeTrackingMutation,
 } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
-import type { IIncomeFormValues } from '../types';
+import type { IIncomeRecord } from '../types';
 
 export const useIncomeTrackingScreen = () => {
   // State for selected income record
-  const [selectedIncome, setSelectedIncome] = useState<IIncomeFormValues | null>(null);
+  const [selectedIncome, setSelectedIncome] = useState<IIncomeRecord | null>(null);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Custom hooks for dialogs
   const addIncomeDialog = useBoolean();
   const deleteIncomeDialog = useBoolean();
-  const viewIncomeDialog = useBoolean();
+  // const viewIncomeDialog = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  const { data: incomeData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIncomesQuery,
-  });
-
-  const { data: incomeDetailedData, refetch } = useQueryAndMutation({
+  const {
+    data: incomeData,
+    isLoading: loadingIncomeData,
+    isFetching: fetchingIncomeData,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeTrackingQuery,
+    params: { academicYearId: currentYear.id },
+    options: {
+      skip: !currentYear.id,
+    },
+  });
+
+  const { data: incomeDetailedData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIncomeTrackingByIdQuery,
+    params: selectedIncome?.id,
+    options: {
+      skip: !selectedIncome?.id,
+    },
   });
 
   // DELETE mutation
-  const { deleteIncomeCategory } = useQueryAndMutation({
+  const [deleteIncomeCategory] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteIncomeTrackingMutation,
   });
@@ -63,15 +78,16 @@ export const useIncomeTrackingScreen = () => {
     [isChanges, addIncomeDialog, dispatch]
   );
 
-  const handleViewDialogClose = useCallback(() => {
-    setSelectedIncome(null);
-    viewIncomeDialog.onFalse();
-  }, [viewIncomeDialog]);
+  // const handleViewDialogClose = useCallback(() => {
+  //   setSelectedIncome(null);
+  //   viewIncomeDialog.onFalse();
+  // }, [viewIncomeDialog]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (selectedIncome) {
       deleteIncomeDialog.onFalse();
-      const currentData = incomeData && incomeData.length > 0 ? incomeData : [];
+      const currentData =
+        incomeData?.items && incomeData?.items.length > 0 ? incomeData?.items : [];
       confirmWithUndo({
         item: selectedIncome,
         onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
@@ -79,14 +95,17 @@ export const useIncomeTrackingScreen = () => {
           if (index !== -1) {
             setDeleteIndex(index);
             dispatchFn(
-              incomeApi.util.updateQueryData('getIncomes', undefined, (draft: any) => {
-                if (draft) {
-                  const paramsIndex = draft.findIndex((item: any) => item.id === selectedIncome.id);
+              incomeTrackingApi.util.updateQueryData(
+                'getIncomeTracking',
+                { academicYearId: currentYear.id },
+                (draft: any) => {
+                  const list = Array.isArray(draft) ? draft : draft?.items || [];
+                  const paramsIndex = list.findIndex((item: any) => item.id === selectedIncome.id);
                   if (paramsIndex !== -1) {
-                    draft.splice(paramsIndex, 1);
+                    list.splice(paramsIndex, 1);
                   }
                 }
-              })
+              )
             );
           }
         },
@@ -108,6 +127,7 @@ export const useIncomeTrackingScreen = () => {
     confirmWithUndo,
     refetch,
     deleteIncomeCategory,
+    currentYear.id,
   ]);
 
   return {
@@ -115,11 +135,13 @@ export const useIncomeTrackingScreen = () => {
     setSelectedIncome,
     addIncomeDialog,
     deleteIncomeDialog,
-    viewIncomeDialog,
+    // viewIncomeDialog,
     incomeData,
+    fetchingIncomeData,
+    loadingIncomeData,
     incomeDetailedData,
     handleClose,
-    handleViewDialogClose,
+    // handleViewDialogClose,
     handleDeleteConfirm,
   };
 };

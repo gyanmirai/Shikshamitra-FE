@@ -3,19 +3,24 @@ import * as Yup from 'yup';
 
 export const getExpenseFormSchema = (currentYear: any) =>
   Yup.object().shape({
-    expenseCategory: Yup.string().required('Expense Category is required'),
-    expenseCategoryTags: Yup.array()
+    categoryId: Yup.string().required('Expense Category is required'),
+    categoryTags: Yup.array()
       .of(Yup.string())
       .min(1, 'At least one expense category tag is required')
       .required('Expense category tags are required'),
-    expenseName: Yup.string().required('Expense Name is required'),
+    name: Yup.string()
+      .min(1, 'Expense name must be at least 1 character')
+      .max(255, 'Expense name cannot exceed 255 characters')
+      .required('Expense Name is required'),
     amount: Yup.number()
       .required('Amount is required')
       .typeError('Amount must be a number')
-      .positive('Amount must be greater than zero'),
-    paymentMethod: Yup.string().required('Payment Method is required'),
-    date: Yup.mixed()
-      .required('Date is required')
+      .min(0.01, 'Amount must be at least 0.01'),
+    paymentMethod: Yup.number()
+      .required('Payment Method is required')
+      .typeError('Payment Method is required'),
+    paymentDate: Yup.mixed()
+      .required('Payment date is required')
       .test(
         'is-valid-dayjs',
         'Date must be a valid date',
@@ -30,11 +35,6 @@ export const getExpenseFormSchema = (currentYear: any) =>
         'max-date',
         (value) => `Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-      )
-      .test(
-        'no-future-date',
-        'Date cannot be in the future',
-        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(), 'day')
       ),
-    notes: Yup.string().max(500, 'Notes cannot exceed 500 characters'),
+    notes: Yup.string().nullable().max(1000, 'Notes cannot exceed 1000 characters'),
   });

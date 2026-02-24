@@ -14,11 +14,12 @@ import type { IExpenseFormProps } from './type';
 const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editData }) => {
   const {
     formik,
-    isSubmitting,
+    addLoading,
+    updateLoading,
     categoryOptions,
-    paymentMethodsConfig,
     paymentMethodOptions,
     currentYear,
+    categoryOptionsLoading,
   } = useExpenseForm({ onClose, editData });
 
   return (
@@ -28,10 +29,10 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <ExpenseFormFields
               formik={formik}
-              categoryOptions={categoryOptions}
+              categoryOptions={categoryOptions?.items || []}
               currentYear={currentYear}
-              paymentMethodsConfig={paymentMethodsConfig}
               paymentMethodOptions={paymentMethodOptions}
+              categoryOptionsLoading={categoryOptionsLoading}
             />
           </Scrollbar>
 
@@ -55,8 +56,8 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
               type="submit"
               size="small"
               variant="contained"
-              loading={isSubmitting}
-              disabled={isSubmitting}
+              loading={addLoading || updateLoading}
+              disabled={addLoading || updateLoading}
             >
               {editData ? 'Update' : 'Submit'}
             </LoadingButton>
