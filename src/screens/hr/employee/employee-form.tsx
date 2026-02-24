@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { isEqual } from 'lodash';
 import { DatePicker } from '@mui/x-date-pickers';
 import { ReligionType } from 'src/enums/religion';
 import { useDispatch, useSelector } from 'react-redux';
@@ -48,135 +47,155 @@ import type {
 export const personalInformationInitialValues = (
   editData?: Partial<IPersonalInformationResponse>
 ) => ({
-  // photo: editData
-  //   ? editData.profilePicture
-  //     ? convertBase64Format(editData.profilePicture)
-  //     : ''
-  //   : '',
   photo: '',
-  // code: editData ? editData.code : '',
-  lastName: editData ? editData.lastName : '',
-  firstName: editData ? editData.firstName : '',
-  middleName: editData ? editData.middleName : '',
-  shortName: editData ? editData.shortName : '',
-  // employeeStatusType: editData ? editData?.employeeStatusType : EmployeeStatusType.Active,
-  // subject: editData ? editData.subject || [] : [],
-  dob: editData ? dayjs(editData.dob, 'YYYY-MM-DD') : null,
-  familyCast: editData ? editData.familyCaste : '',
-  castType: editData ? editData.casteType : '',
-  gender: editData?.gender ?? '',
-  religion: editData ? ReligionType[editData.religion as keyof typeof ReligionType] : '',
-  maritalStatus: editData ? editData.maritalStatus : '',
-  bloodGroup: editData ? editData.bloodGroup : '',
-  mobileNo: editData ? editData.mobileNo : '',
-  secondaryMobileNo: editData ? editData?.secondaryMobileNo : null,
-  email: editData ? editData.email : '',
-  department: editData ? editData.department : '',
-  // designation: editData ? editData.designation : '',
-  dateOfJoining: editData ? dayjs(editData.doj, 'YYYY-MM-DD') : dayjs(),
-  employeeGroup: editData ? (editData.isTeaching ? 0 : 1) : '',
-  // qualification: editData ? editData. : '',
-  role: editData ? editData?.roleId : '',
-  // identificationMark1: editData ? editData.identificationMark1 : '',
-  addressLine1: editData ? editData.address1 : '',
-  addressLine2: editData ? editData.address2 : '',
-  addressLine3: editData ? editData.address3 : '',
+
+  // Always string
+  lastName: editData?.lastName ?? '',
+  firstName: editData?.firstName ?? '',
+  middleName: editData?.middleName ?? '',
+  shortName: editData?.shortName ?? '',
+
+  // Dates
+  dob: editData?.dob ? dayjs(editData.dob) : null,
+
+  familyCast: editData?.familyCaste ?? '',
+
+  // 🔥 Convert numeric selects to string
+  castType: editData?.casteType != null ? String(editData.casteType) : '',
+  gender: editData?.gender != null ? String(editData.gender) : '',
+  maritalStatus: editData?.maritalStatus != null ? String(editData.maritalStatus) : '',
+  bloodGroup: editData?.bloodGroup != null ? String(editData.bloodGroup) : '',
+
+  // Strings only
+  mobileNo: editData?.mobileNo ?? '',
+  secondaryMobileNo: editData?.secondaryMobileNo ?? '',
+  email: editData?.email ?? '',
+  department: editData?.department ?? '',
+
+  dateOfJoining: editData?.doj ? dayjs(editData.doj) : null,
+
+  // 🔥 Convert boolean to string (since select usually string)
+  employeeGroup: editData?.isTeaching != null ? (editData.isTeaching ? '0' : '1') : '',
+
+  role: editData?.roleId ?? '',
+
+  addressLine1: editData?.address1 ?? '',
+  addressLine2: editData?.address2 ?? '',
+  addressLine3: editData?.address3 ?? '',
+
   country: editData?.country?.name
-    ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
+    ? { name: editData.country.name, isoCode: editData.country.isoCode }
     : { name: 'India', isoCode: 'IN' },
+
   state: editData?.state?.name
-    ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+    ? { name: editData.state.name, isoCode: editData.state.isoCode }
     : { name: '', isoCode: '' },
-  city: editData?.city ? { name: editData?.city } : { name: '' },
-  pincode: editData ? editData?.pinCode : '',
-  employeeId: editData ? editData.id : '',
-  // organization: editData ? editData?.educationMediumStageId : '',
-  shift: editData ? editData?.shiftId : '',
+
+  city: editData?.city ? { name: editData.city } : { name: '' },
+
+  pincode: editData?.pinCode ?? '',
+
+  employeeId: editData?.id ?? '',
+
+  shift: editData?.shiftId ?? '',
 });
 
 export const familyInformationInitialValues = (editData?: IFamilyInformationResponse) => ({
   sameAsFatherAddressForMother: false,
   sameAsFatherAddressForSpouse: false,
   sameAsEmployeeAddressForFather: false,
-  fatherName: editData ? editData?.fatherDetails?.name : '',
-  fatherOccupation: editData ? editData?.fatherDetails?.occupation : '',
-  fatherContactNo: editData ? editData?.fatherDetails?.mobileNo : '',
-  fatherAddress1: editData ? editData?.fatherDetails?.address1 : '',
-  fatherAddress2: editData ? editData?.fatherDetails?.address2 : '',
-  fatherAddress3: editData ? editData?.fatherDetails?.address3 : '',
+
+  // ================= FATHER =================
+  fatherName: editData?.fatherDetails?.name ?? '',
+  fatherOccupation: editData?.fatherDetails?.occupation ?? '',
+  fatherContactNo: editData?.fatherDetails?.mobileNo ?? '',
+  fatherAddress1: editData?.fatherDetails?.address1 ?? '',
+  fatherAddress2: editData?.fatherDetails?.address2 ?? '',
+  fatherAddress3: editData?.fatherDetails?.address3 ?? '',
 
   fatherCountry: editData?.fatherDetails?.country
     ? {
-        name: editData?.fatherDetails?.country.name,
-        isoCode: editData?.fatherDetails?.country.isoCode,
+        name: editData.fatherDetails.country.name ?? '',
+        isoCode: editData.fatherDetails.country.isoCode ?? '',
       }
     : { name: 'India', isoCode: 'IN' },
+
   fatherState: editData?.fatherDetails?.state
     ? {
-        name: editData?.fatherDetails?.state.name,
-        isoCode: editData?.fatherDetails?.state.isoCode,
+        name: editData.fatherDetails.state.name ?? '',
+        isoCode: editData.fatherDetails.state.isoCode ?? '',
       }
     : { name: '', isoCode: '' },
-  fatherCity: editData ? { name: editData?.fatherDetails?.city } : { name: '' },
 
-  fatherPinCode: editData ? editData?.fatherDetails?.pincode : '',
-  motherName: editData ? editData?.motherDetails?.name : '',
-  motherOccupation: editData ? editData?.motherDetails?.occupation : '',
-  motherContactNo: editData ? editData?.motherDetails?.mobileNo : '',
-  motherAddress1: editData ? editData?.motherDetails?.address1 : '',
-  motherAddress2: editData ? editData?.motherDetails?.address2 : '',
-  motherAddress3: editData ? editData?.motherDetails?.address3 : '',
+  fatherCity: editData?.fatherDetails?.city ? { name: editData.fatherDetails.city } : { name: '' },
+
+  fatherPinCode: editData?.fatherDetails?.pincode ?? '',
+
+  // ================= MOTHER =================
+  motherName: editData?.motherDetails?.name ?? '',
+  motherOccupation: editData?.motherDetails?.occupation ?? '',
+  motherContactNo: editData?.motherDetails?.mobileNo ?? '',
+  motherAddress1: editData?.motherDetails?.address1 ?? '',
+  motherAddress2: editData?.motherDetails?.address2 ?? '',
+  motherAddress3: editData?.motherDetails?.address3 ?? '',
 
   motherCountry: editData?.motherDetails?.country
     ? {
-        name: editData?.motherDetails?.country.name,
-        isoCode: editData?.motherDetails?.country.isoCode,
+        name: editData.motherDetails.country.name ?? '',
+        isoCode: editData.motherDetails.country.isoCode ?? '',
       }
     : { name: 'India', isoCode: 'IN' },
+
   motherState: editData?.motherDetails?.state
     ? {
-        name: editData?.motherDetails?.state.name,
-        isoCode: editData?.motherDetails?.state.isoCode,
+        name: editData.motherDetails.state.name ?? '',
+        isoCode: editData.motherDetails.state.isoCode ?? '',
       }
     : { name: '', isoCode: '' },
-  motherCity: editData?.motherDetails?.city
-    ? { name: editData?.motherDetails?.city }
-    : { name: '' },
 
-  motherPinCode: editData ? editData?.motherDetails?.pincode : '',
-  spouseName: editData ? editData?.spouseDetails?.name : '',
-  spouseOccupation: editData ? editData?.spouseDetails?.occupation : '',
-  spouseContactNo: editData ? editData?.spouseDetails?.mobileNo : '',
+  motherCity: editData?.motherDetails?.city ? { name: editData.motherDetails.city } : { name: '' },
 
-  spouseAddress1: editData ? editData?.spouseDetails?.address1 : '',
-  spouseAddress2: editData ? editData?.spouseDetails?.address2 : '',
-  spouseAddress3: editData ? editData?.spouseDetails?.address3 : '',
+  motherPinCode: editData?.motherDetails?.pincode ?? '',
+
+  // ================= SPOUSE =================
+  spouseName: editData?.spouseDetails?.name ?? '',
+  spouseOccupation: editData?.spouseDetails?.occupation ?? '',
+  spouseContactNo: editData?.spouseDetails?.mobileNo ?? '',
+  spouseAddress1: editData?.spouseDetails?.address1 ?? '',
+  spouseAddress2: editData?.spouseDetails?.address2 ?? '',
+  spouseAddress3: editData?.spouseDetails?.address3 ?? '',
 
   spouseCountry: editData?.spouseDetails?.country
     ? {
-        name: editData?.spouseDetails?.country.name,
-        isoCode: editData?.spouseDetails?.country.isoCode,
+        name: editData.spouseDetails.country.name ?? '',
+        isoCode: editData.spouseDetails.country.isoCode ?? '',
       }
     : { name: 'India', isoCode: 'IN' },
+
   spouseState: editData?.spouseDetails?.state
     ? {
-        name: editData?.spouseDetails?.state.name,
-        isoCode: editData?.spouseDetails?.state.isoCode,
+        name: editData.spouseDetails.state.name ?? '',
+        isoCode: editData.spouseDetails.state.isoCode ?? '',
       }
     : { name: '', isoCode: '' },
-  spouseCity: editData?.spouseDetails?.city
-    ? { name: editData?.spouseDetails?.city }
-    : { name: '' },
 
-  spousePinCode: editData ? editData?.spouseDetails?.pincode : '',
+  spouseCity: editData?.spouseDetails?.city ? { name: editData.spouseDetails.city } : { name: '' },
+
+  spousePinCode: editData?.spouseDetails?.pincode ?? '',
 });
 
 export const additionalDetailsInitialValues = (editData?: IAdditionalInformationResponse) => ({
-  bplCardNo: editData ? editData.bplCardNo : '',
-  personWithDisability: editData ? (editData.personWithDisability ? 'Yes' : 'No') : '',
-  secondLanguage: editData ? editData.secondLanguage : '',
-  libraryMember: editData ? editData.isLibraryMember : false,
-  transportMember: editData ? editData.isTransportMember : false,
+  // Text fields → always string
+  bplCardNo: editData?.bplCardNo ?? '',
+  // Boolean from BE → convert to string for select
+  personWithDisability:
+    editData?.personWithDisability != null ? (editData.personWithDisability ? 'Yes' : 'No') : 'No',
+
+  secondLanguage: editData?.secondLanguage ?? '',
+
+  // Checkboxes → keep boolean
+  libraryMember: editData?.isLibraryMember ?? false,
+  transportMember: editData?.isTransportMember ?? false,
 });
 
 export const documentsInitialValues = () => ({ documents: new FormData() });
@@ -192,18 +211,29 @@ export const workExperienceInitialValues = (editData?: IWorkExperienceResponse[]
 });
 
 export const payrollInitialValues = (editData?: IPayrollInformation) => ({
-  bankName: editData ? editData?.bankDetails?.bankName : '',
-  branchName: editData ? editData?.bankDetails?.branchName : '',
-  accountHolderName: editData ? editData?.bankDetails?.accountHolderName : '',
-  accountNumber: editData ? editData?.bankDetails?.accountNumber : '',
-  ifscCode: editData ? editData?.bankDetails?.ifscCode : '',
-  pfRule: editData ? editData?.salaryDetails?.pfRuleId : '',
-  epfNumber: editData ? editData?.salaryDetails?.epfNumber : '',
-  uanNumber: editData ? editData?.salaryDetails?.uanNumber : '',
-  totalWorkingHourPerMonth: editData ? editData?.salaryDetails?.totalWorkingHourPerMonth : '',
-  punchId: editData ? editData?.salaryDetails?.punchId : '',
-  earningComponents: editData ? editData?.earningComponents || [] : [],
-  deductionComponents: editData ? editData?.deductionComponents || [] : [],
+  // ================= BANK =================
+  bankName: editData?.bankDetails?.bankName ?? '',
+  branchName: editData?.bankDetails?.branchName ?? '',
+  accountHolderName: editData?.bankDetails?.accountHolderName ?? '',
+  accountNumber: editData?.bankDetails?.accountNumber ?? '',
+  ifscCode: editData?.bankDetails?.ifscCode ?? '',
+
+  // ================= SALARY =================
+  pfRule: editData?.salaryDetails?.pfRuleId != null ? String(editData.salaryDetails.pfRuleId) : '',
+
+  epfNumber: editData?.salaryDetails?.epfNumber ?? '',
+  uanNumber: editData?.salaryDetails?.uanNumber ?? '',
+
+  totalWorkingHourPerMonth:
+    editData?.salaryDetails?.totalWorkingHourPerMonth != null
+      ? String(editData.salaryDetails.totalWorkingHourPerMonth)
+      : '',
+
+  punchId: editData?.salaryDetails?.punchId ?? '',
+
+  // ================= COMPONENTS =================
+  earningComponents: editData?.earningComponents ?? [],
+  deductionComponents: editData?.deductionComponents ?? [],
 });
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
@@ -240,6 +270,7 @@ const steps = [
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [activeStep, setActiveStep] = useState(0);
 
   const [addEmployee] = useQueryAndMutation({
@@ -292,9 +323,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const initialValues = useMemo(
     () => ({
-      ...personalInformationInitialValues({
-        id: editData?.id,
-      }),
+      ...personalInformationInitialValues(),
+      employeeId: editData?.id,
       ...familyInformationInitialValues(),
       ...additionalDetailsInitialValues(),
       ...documentsInitialValues(),
@@ -627,6 +657,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       initialValues={initialValues}
       steps={steps}
       viewMode="vertical"
+      showSaveButton={isChanges}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
@@ -652,9 +683,10 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         setIsLoading: (val: boolean) => void
       ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
       renderItem={({ activeStep: step, formik }: any) => (
-        <FormikDetectChanges values={formik.values} initialValues={initialValues}>
+        <>
+          <SyncReduxDirty formik={formik} />
           <FormSlider step={step} formik={formik} editData={editData} />
-        </FormikDetectChanges>
+        </>
       )}
     />
   );
@@ -728,40 +760,58 @@ const FormSlider = ({ step, formik, editData }: any) => {
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (basicDetails && step === 0) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...personalInformationInitialValues(basicDetails),
-      }));
+      const updatedFields = personalInformationInitialValues(basicDetails);
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (familyDetails && step === 1) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...familyInformationInitialValues(familyDetails),
-      }));
+      const updatedFields = familyInformationInitialValues(familyDetails);
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (additionalDetails && step === 2) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...additionalDetailsInitialValues(additionalDetails),
-      }));
+      const updatedFields = additionalDetailsInitialValues(additionalDetails);
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (workExperience && step === 4) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...workExperienceInitialValues(workExperience),
-      }));
+      const updatedFields = workExperienceInitialValues(workExperience);
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (bankDetails && step === 5) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...payrollInitialValues(bankDetails),
-      }));
+      const updatedFields = payrollInitialValues(bankDetails);
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (reportingManagerDetails && step === 6) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...assignReportingManagerInitialValues(reportingManagerDetails),
-      }));
+      const updatedFields = assignReportingManagerInitialValues(reportingManagerDetails);
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (accessControl && step === 7) {
       if (accessControl?.accessibleHierarchy) {
@@ -826,10 +876,13 @@ const FormSlider = ({ step, formik, editData }: any) => {
         recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
         console.log(data, 'data');
 
-        formik.setValues((pre: any) => ({
-          ...pre,
-          ...academicPermissionInitialValues(data),
-        }));
+        const updatedFields = academicPermissionInitialValues(data);
+        formik.resetForm({
+          values: {
+            ...formik.values,
+            ...updatedFields,
+          },
+        });
         initializedStepsRef.current[step] = true;
       }
     }
@@ -846,7 +899,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
   ]);
 
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1, height: '100%' }}>
+    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', height: '100%' }}>
       {steps.map(
         (_, index) =>
           index === step && (
@@ -873,7 +926,6 @@ const FormSlider = ({ step, formik, editData }: any) => {
                   </Box>
                 )} */}
                 <Box
-                  p={2}
                   display={step === 2 || step === 1 || step === 3 ? 'block' : 'flex'}
                   flexWrap="wrap"
                   gap={2}
@@ -892,14 +944,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
                     <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
                       {' '}
                       {allFields[step].map((field) => (
-                        <Grid
-                          size={{
-                            xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
-                            md: [1, 2, 3, 4].includes(step) ? 12 : 4,
-                          }}
-                          key={field.name}
-                          {...field.gridProps}
-                        >
+                        <Grid size={{ xs: 12 }} key={field.name} {...field.gridProps}>
                           {field.renderComp ? (
                             field.renderComp({
                               formik,
@@ -971,24 +1016,50 @@ const FormSlider = ({ step, formik, editData }: any) => {
   );
 };
 
-const FormikDetectChanges = ({
-  values,
-  children,
-  initialValues,
-}: {
-  values: any;
-  children: any;
-  initialValues: any;
-}) => {
+const SyncReduxDirty = ({ formik }: { formik: any }) => {
   const dispatch = useDispatch();
-  const isChanged = isEqual(values, initialValues);
   useEffect(() => {
-    if (!isChanged) {
-      dispatch(setIsChanges(true));
-    } else {
-      dispatch(setIsChanges(false));
-    }
-  }, [dispatch, isChanged]);
+    let isReallyDirty = false;
 
-  return children;
+    if (formik.dirty) {
+      isReallyDirty = Object.keys(formik.values).some((key) => {
+        const val1 = formik.values[key];
+        const val2 = formik.initialValues[key];
+
+        if (val1 === val2) return false;
+
+        if (val1 instanceof FormData || val2 instanceof FormData) return false;
+
+        if (dayjs.isDayjs(val1) || dayjs.isDayjs(val2)) {
+          if (dayjs.isDayjs(val1) && dayjs.isDayjs(val2)) {
+            return val1.format('YYYY-MM-DD') !== val2.format('YYYY-MM-DD');
+          }
+          return val1 !== val2;
+        }
+
+        if (key === 'mobileNo' || key === 'secondaryMobileNo') {
+          const clean1 = (val1 || '').replace(/[^0-9]/g, '');
+          const clean2 = (val2 || '').replace(/[^0-9]/g, '');
+
+          if (clean1 !== clean2) {
+            if (!clean2 && clean1.length <= 2) return false; // Default country code
+            return true;
+          }
+          return false;
+        }
+
+        if (Array.isArray(val1) && Array.isArray(val2)) {
+          return JSON.stringify(val1) !== JSON.stringify(val2);
+        }
+
+        if (val1 && val2 && typeof val1 === 'object' && typeof val2 === 'object') {
+          return JSON.stringify(val1) !== JSON.stringify(val2);
+        }
+        return val1 !== val2;
+      });
+    }
+    dispatch(setIsChanges(isReallyDirty));
+  }, [dispatch, formik.dirty, formik.values, formik.initialValues]);
+
+  return null;
 };
