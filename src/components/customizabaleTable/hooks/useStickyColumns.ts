@@ -70,7 +70,7 @@ export const useStickyColumns = ({
     (col: IColumn, isHeader: boolean = false): React.CSSProperties => {
       const base: React.CSSProperties = {
         position: col.sticky ? 'sticky' : 'static',
-        zIndex: col.sticky ? (isHeader ? 999 : 11) : 0, // Ensure sticky columns are above normal ones
+        zIndex: col.sticky ? (isHeader ? 999 : 11) : 1, // Ensure sticky columns are above normal ones
       };
 
       const colId = col.id as string;
