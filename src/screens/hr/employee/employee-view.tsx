@@ -127,11 +127,11 @@ export function EmployeeCard({ employee }: any) {
     <>
       <Paper
         sx={{
-          mb: 2,
+          mb: 1,
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0,
           boxShadow: 'var(--shadows-4)',
-          mt: 2,
+          mt: 1,
         }}
       >
         <Paper
@@ -190,7 +190,7 @@ export function EmployeeCard({ employee }: any) {
           </Box>
         </Paper>
       </Paper>
-      <Paper elevation={2} sx={{ mb: 2, p: 1 }}>
+      <Paper elevation={2} sx={{ mb: 1 }}>
         <Tabs
           value={tabs.value}
           onChange={(...rest) => {

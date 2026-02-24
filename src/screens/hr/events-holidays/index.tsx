@@ -32,6 +32,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import {
   Box,
   Grid,
+  Card,
   Switch,
   Button,
   TextField,
@@ -143,7 +144,7 @@ const HrEventsAndHolidaysScreen = () => {
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Events & Holidays' }]}
         description="On the Create Event and Holiday screen, you can add new events and holidays to the calendar. The screen also allows you to view and manage the list of existing events and holidays."
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 3, pl: 1, my: 2 }}>
+      <Card sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5 }}>
         <DatePicker
           format="MMM-YYYY"
           views={['year', 'month']}
@@ -157,7 +158,7 @@ const HrEventsAndHolidaysScreen = () => {
         <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">
           Event & Holiday
         </Button>
-      </Box>
+      </Card>
       {view === 'list' ? (
         <CustomizableTable
           noDataText={

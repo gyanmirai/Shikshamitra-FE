@@ -26,7 +26,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useGetAttendanceEmployeeQuery,
   useAddAttendanceEmployeeMutation,
@@ -247,15 +247,14 @@ const BiometricIntegrationScreen = () => {
         ]}
       />
 
-      <Box
+      <Card
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 2,
+          p: 2,
           pl: 1,
-          mb: 1,
-          mt: 2,
           flexWrap: 'wrap',
         }}
       >
@@ -310,7 +309,7 @@ const BiometricIntegrationScreen = () => {
             Upload File
           </LoadingButton>
         </Box>
-      </Box>
+      </Card>
 
       <CustomizableTable
         isLoading={isLoading}

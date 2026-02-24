@@ -82,7 +82,7 @@ const activities = [
 
 const EmployeeProfileDashboard = ({ editData }: { editData: any }) => (
   <Box sx={{ pb: 3 }}>
-    <Grid container spacing={3} sx={{ mb: 3 }}>
+    <Grid container spacing={1} sx={{ mb: 1 }}>
       <Grid size={12}>
         <EmployeeProfileOverview />
       </Grid>
