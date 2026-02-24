@@ -168,7 +168,7 @@ const PayrollConfiguration = () => {
                           sx={{
                             p: 2,
                             mt: 2,
-                            bgcolor: alpha(theme.palette.common.white, 0.6),
+                            bgcolor: 'transparent',
                             borderStyle: 'dashed',
                             borderColor: 'divider',
                           }}

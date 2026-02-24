@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -230,6 +231,13 @@ const EarningComponent = () => {
             align: 'right',
             minWidth: '10vw',
             filterType: 'number',
+            render(value, row) {
+              return (
+                <Typography variant="body2" color="primary.secondary" fontWeight="bold">
+                  {formatNumber(value, 'INR')}
+                </Typography>
+              );
+            },
           },
           {
             id: 'showOnPayslip',

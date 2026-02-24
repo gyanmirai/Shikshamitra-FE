@@ -76,13 +76,15 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
 
         {title && (
           <Box component="span" className={navSectionClasses.item.texts}>
-            <Box
-              component="span"
-              className={navSectionClasses.item.title}
-              // sx={{ fontSize: '12px' }}
-            >
-              {title}
-            </Box>
+            <Tooltip title={title} placement="right">
+              <Box
+                component="span"
+                className={navSectionClasses.item.title}
+                // sx={{ fontSize: '12px' }}
+              >
+                {title}
+              </Box>
+            </Tooltip>
 
             {caption && (
               <Tooltip title={caption} placement="top-start">

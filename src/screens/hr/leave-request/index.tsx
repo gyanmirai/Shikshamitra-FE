@@ -1,12 +1,10 @@
 'use client';
 
-import type { useSearchParamReturnType } from 'src/hooks/use-search-param';
-
 import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -15,8 +13,8 @@ import LeaveHistory from './leave-history';
 import LeaveCalender from './leave-calender';
 
 export interface TabComponentType {
-  searchParams?: useSearchParamReturnType[0];
-  setSearchParams?: useSearchParamReturnType[1];
+  searchParams?: Record<string, any>;
+  setSearchParams?: (obj: any) => void;
   modal?: UseBooleanReturn;
 }
 
@@ -36,17 +34,15 @@ const TABS = [
 ];
 
 const LeaveRequest = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'leaveCalender' });
+  const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
+  const activeTab = searchParams?.tab || 'leaveCalender';
   const modal = useBoolean();
   // Memoize the current active component based on searchParams.tab
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
+    () => TABS.find((tab) => tab.value === activeTab),
+    [activeTab]
   );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
+  const currentIndex = useMemo(() => TABS.findIndex((tab) => tab.value === activeTab), [activeTab]);
   const [isBackClick, setIsBackClick] = useState(false);
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -73,7 +69,7 @@ const LeaveRequest = () => {
         }}
       >
         <CustomTabs
-          value={searchParams.tab}
+          value={activeTab}
           onChange={(e, value) => {
             const newIndex = TABS.findIndex((tab) => tab.value === value);
             if (currentIndex > newIndex) {
