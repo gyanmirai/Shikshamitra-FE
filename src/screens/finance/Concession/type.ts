@@ -24,12 +24,17 @@ export interface IConcession {
 }
 
 export interface IStudentInfo {
+  concessionRequestId?: string;
+  studentConcessionTypeRequestId?: string;
   id?: string;
+  studentId?: string;
   studentName: string;
   name?: string;
   standardName?: string;
   divisionName?: string;
   grNumber?: number;
+  boardName?: string;
+  educationMediumName?: string;
   rollNo: string;
   sibling?: string;
   contactNo: string;

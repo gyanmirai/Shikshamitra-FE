@@ -2,9 +2,9 @@ import { financeModuleApi } from '../financeModuleApi';
 
 export const concessionManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    createBasicDetails: builder.mutation({
+    createConcessionRequest: builder.mutation({
       query: (body) => ({
-        url: '/concession-request/basic-details',
+        url: '/concession-request',
         method: 'POST',
         data: body,
       }),
@@ -19,6 +19,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       providesTags: ['ConcessionRequest'],
     }),
 
+    // kept for backward compatibility if needed, otherwise can be removed
     saveConcessionTypes: builder.mutation({
       query: ({ concessionRequestId, concessionTypeIds }) => ({
         url: `/concession-request/${concessionRequestId}/concession-types`,
@@ -30,7 +31,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     updateFeeHeadfeeHeadsData: builder.mutation({
       query: ({ concessionRequestId, feeHeadsData }) => ({
-        url: `/concession-requests/${concessionRequestId}/feeHeadsData`,
+        url: `/concession-request/${concessionRequestId}/fee-heads`,
         method: 'PUT',
         data: { feeHeadsData },
       }),
@@ -39,16 +40,25 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     updateValueEntry: builder.mutation({
       query: ({ concessionRequestId, concessionTypeValues }) => ({
-        url: `/concession-requests/${concessionRequestId}/value-entry`,
+        url: `/concession-request/${concessionRequestId}/value-entry`,
         method: 'PUT',
         data: { concessionTypeValues },
       }),
       invalidatesTags: ['ConcessionRequest'],
     }),
 
+    uploadDocuments: builder.mutation({
+      query: ({ concessionRequestId, concessionTypeDocuments }) => ({
+        url: `/concession-request/${concessionRequestId}/document-upload`,
+        method: 'PUT',
+        data: { concessionTypeDocuments },
+      }),
+      invalidatesTags: ['ConcessionRequest'],
+    }),
+
     getStudentConcessionRequests: builder.query({
       query: ({ studentId, ...params }) => ({
-        url: `/concession-requests/${studentId}`,
+        url: `/concession-request/students/${studentId}`,
         method: 'GET',
         params,
       }),
@@ -57,7 +67,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     getStudentConcessionDetails: builder.query({
       query: ({ studentId, ...params }) => ({
-        url: `/concession-requests/${studentId}`,
+        url: `/concession-request/students/${studentId}`,
         method: 'GET',
         params,
       }),
@@ -66,7 +76,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     approveConcessionRequest: builder.mutation({
       query: ({ studentConcessionTypeRequestId, body }) => ({
-        url: `/concession-requests/${studentConcessionTypeRequestId}/approve`,
+        url: `/concession-request/${studentConcessionTypeRequestId}/approve`,
         method: 'POST',
         data: body,
       }),
@@ -75,7 +85,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     rejectConcessionRequest: builder.mutation({
       query: ({ studentConcessionTypeRequestId, body }) => ({
-        url: `/concession-requests/${studentConcessionTypeRequestId}/reject`,
+        url: `/concession-request/${studentConcessionTypeRequestId}/reject`,
         method: 'POST',
         data: body,
       }),
@@ -84,7 +94,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     getConcessionApplications: builder.query({
       query: (params) => ({
-        url: '/concession-applications',
+        url: '/concession-request/applications',
         method: 'GET',
         params,
       }),
@@ -93,7 +103,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     deleteConcessionApplication: builder.mutation({
       query: (studentConcessionTypeRequestId) => ({
-        url: `/concession-requests/delete-concession/${studentConcessionTypeRequestId}`,
+        url: `/concession-request/${studentConcessionTypeRequestId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ConcessionRequest'],
@@ -103,11 +113,12 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
-  useCreateBasicDetailsMutation,
+  useCreateConcessionRequestMutation,
   useGetBasicDetailsQuery,
   useSaveConcessionTypesMutation,
   useUpdateFeeHeadfeeHeadsDataMutation,
   useUpdateValueEntryMutation,
+  useUploadDocumentsMutation,
   useGetStudentConcessionRequestsQuery,
   useGetStudentConcessionDetailsQuery,
   useApproveConcessionRequestMutation,

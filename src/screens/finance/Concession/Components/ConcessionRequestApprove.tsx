@@ -38,13 +38,13 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
       try {
         if (mode === 'Reject') {
           await rejectConcessionRequest({
-            studentConcessionTypeRequestId: selectedConcession?.id,
+            studentConcessionTypeRequestId: selectedConcession?.studentConcessionTypeRequestId,
             body: { message: values.reason },
           }).unwrap();
           shikshaMitraToast.success({ message: 'Concession request rejected successfully' });
         } else {
           await approveConcessionRequest({
-            studentConcessionTypeRequestId: selectedConcession?.id,
+            studentConcessionTypeRequestId: selectedConcession?.studentConcessionTypeRequestId,
             body: { message: values.reason },
           }).unwrap();
           shikshaMitraToast.success({ message: 'Concession request approved successfully' });

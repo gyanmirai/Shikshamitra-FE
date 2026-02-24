@@ -35,7 +35,7 @@ const ConcessionTypeSelectionStep: React.FC<Props> = ({ formik, concessionTypes 
   );
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 1 }}>
       {/* Error Message if any */}
       {touched.concessionTypeIds && errors.concessionTypeIds && (
         <Typography color="error" variant="body2" sx={{ mb: 2 }}>

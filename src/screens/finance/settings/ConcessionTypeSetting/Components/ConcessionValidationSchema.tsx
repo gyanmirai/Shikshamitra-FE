@@ -3,30 +3,6 @@ import * as Yup from 'yup';
 export const concessionTypeValidationSchema = Yup.object().shape({
   name: Yup.string().trim().required('Concession Name is required'),
 
-  concessionType: Yup.string()
-    .oneOf(['fixed', 'percentage'], 'Invalid concession type')
-    .required('Concession Type is required'),
-
-  amount: Yup.number().when('concessionType', {
-    is: 'fixed',
-    then: (schema) => schema.required('Amount is required'),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-
-  percentage: Yup.number().when('concessionType', {
-    is: 'percentage',
-    then: (schema) =>
-      schema
-        .required('Percentage is required')
-        .min(0, 'Percentage cannot be less than 0')
-        .max(100, 'Percentage cannot exceed 100'),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-
-  applicableFeeHeads: Yup.array()
-    .of(Yup.string().trim())
-    .min(1, 'At least one fee head must be selected'),
-
   documentRequired: Yup.boolean(),
 
   documents: Yup.array().when('documentRequired', {

@@ -13,12 +13,14 @@ export interface IConcessionFeeHead {
 export interface IConcessionSubmittedDocument {
   documentId: string;
   documentName: string;
-  documentUrl: string;
+  url: string;
   uploadedAt: string;
+  status?: number;
 }
 
 export interface IConcessionRequestItem {
   studentConcessionTypeRequestId: string;
+  concessionTypeId: string;
   concessionTypeName: string;
   status: number; // 0 = Pending, 1 = Approved, 2 = Rejected
   totalAmount: number;
@@ -28,6 +30,7 @@ export interface IConcessionRequestItem {
   updatedAt: string;
   message: string;
   approvedAt: string;
+  isDocumentUploaded?: boolean;
 }
 
 export interface IConcessionBasicDetail {

@@ -31,14 +31,33 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   );
 
   const setEntry = useCallback(
-    (concessionTypeId: string, feeHeadId: string, field: 'basedOn' | 'amount', value: any) => {
+    (
+      concessionTypeId: string,
+      feeHeadId: string | 'BATCH_UPDATE',
+      field: 'basedOn' | 'amount',
+      value: any,
+      netAmount?: number
+    ) => {
+      if (feeHeadId === 'BATCH_UPDATE') {
+        const updates = value;
+        const currentEntries = values.valueEntries[concessionTypeId] || {};
+        setFieldValue('valueEntries', {
+          ...values.valueEntries,
+          [concessionTypeId]: {
+            ...currentEntries,
+            ...updates,
+          },
+        });
+        return;
+      }
+
       const prev = values.valueEntries[concessionTypeId]?.[feeHeadId] || {
         basedOn: 0, // 0 for Amount, 1 for Percentage
         amount: 0,
+        netAmount: 0,
       };
 
       // If switching basedOn, reset amount to 0 specifically
-      // Or keep it? Usually resetting is safer to avoid confusion (e.g. 5000% is invalid)
       let newAmount = prev.amount;
       if (field === 'basedOn') {
         newAmount = 0;
@@ -46,15 +65,22 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
         newAmount = value; // field is 'amount' here
       }
 
+      const updatedEntry = {
+        ...prev,
+        [field]: value,
+        amount: field === 'basedOn' ? 0 : value,
+        newAmount, // keep track of the actual amount entered for display calculations
+      };
+
+      if (netAmount !== undefined) {
+        updatedEntry.netAmount = netAmount;
+      }
+
       setFieldValue('valueEntries', {
         ...values.valueEntries,
         [concessionTypeId]: {
           ...values.valueEntries[concessionTypeId],
-          [feeHeadId]: {
-            ...prev,
-            [field]: value,
-            amount: field === 'basedOn' ? 0 : value,
-          },
+          [feeHeadId]: updatedEntry,
         },
       });
     },
@@ -86,10 +112,53 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
   const selectedFeeHeadIds: string[] = values.selectedFeeHeads[concessionType.id] || [];
 
   // We need to match IDs to names and amounts
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const selectedFeeHeads =
     assignedStructureData?.feeHeads?.filter((fh: any) =>
       selectedFeeHeadIds.includes(fh.feeHeadId)
     ) || [];
+
+  // Initialize missing values with defaults (0 discount, full net amount)
+  React.useEffect(() => {
+    if (selectedFeeHeads.length > 0) {
+      const updates: any = {};
+      let hasUpdates = false;
+
+      selectedFeeHeads.forEach((fh: any) => {
+        const fhId = fh.feeHeadId;
+        const existingEntry = values.valueEntries[concessionType.id]?.[fhId];
+
+        // If entry is missing OR netAmount is missing (for existing entries from prev steps that might be incomplete)
+        if (!existingEntry || existingEntry.netAmount === undefined) {
+          const baseAmount = fh.amount || 0;
+          // Default: 0 discount, so netAmount = baseAmount
+          // If existing entry has amount, calculate net based on it (though usually it's 0 if uninitialized)
+          const currentAmount = existingEntry?.amount || 0;
+          const isPercentage = existingEntry?.basedOn === 1;
+
+          let discount = 0;
+          if (isPercentage) {
+            discount = (baseAmount * currentAmount) / 100;
+          } else {
+            discount = currentAmount;
+          }
+          const netAmount = baseAmount - discount;
+
+          updates[fhId] = {
+            basedOn: existingEntry?.basedOn ?? 0,
+            amount: existingEntry?.amount ?? 0,
+            netAmount: Number(netAmount.toFixed(2)),
+          };
+          hasUpdates = true;
+        }
+      });
+
+      if (hasUpdates) {
+        setEntry(concessionType.id, 'BATCH_UPDATE', 'amount', updates);
+      }
+    }
+  }, [selectedFeeHeads, concessionType.id, values.valueEntries, setEntry]); // heavily dependent on values, might cause loops if not careful.
+  // Better to check if update is needed inside to avoid loop. The check `!existingEntry || existingEntry.netAmount === undefined` protects against loop if we set it correctly.
 
   if (selectedFeeHeads.length === 0) return null;
 
@@ -170,11 +239,27 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                       value={entry.amount || ''} // Handle 0 well
                       onChange={(e) => {
                         const val = e.target.value;
+                        if (val === '') {
+                          setEntry(concessionType.id, fhId, 'amount', 0, baseAmount);
+                          return;
+                        }
+                        const numVal = parseFloat(val);
                         // Prevent negative
-                        if (parseFloat(val) < 0) return;
+                        if (numVal < 0) return;
                         // If percentage, limit to 100?
-                        if (isPercentage && parseFloat(val) > 100) return;
-                        setEntry(concessionType.id, fhId, 'amount', Number(val));
+                        if (isPercentage && numVal > 100) return;
+
+                        // Calculate netAmount for update
+                        let newDiscount = 0;
+                        if (isPercentage) {
+                          newDiscount = (baseAmount * numVal) / 100;
+                        } else {
+                          newDiscount = numVal;
+                        }
+
+                        const newNet = baseAmount - newDiscount;
+
+                        setEntry(concessionType.id, fhId, 'amount', numVal, newNet);
                       }}
                       InputProps={{
                         startAdornment: (
@@ -187,7 +272,13 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                               <IconButton
                                 size="small"
                                 onClick={() =>
-                                  setEntry(concessionType.id, fhId, 'basedOn', isPercentage ? 0 : 1)
+                                  setEntry(
+                                    concessionType.id,
+                                    fhId,
+                                    'basedOn',
+                                    isPercentage ? 0 : 1,
+                                    baseAmount // Net becomes entry full amount on switch since input resets to 0
+                                  )
                                 }
                               >
                                 {isPercentage ? (

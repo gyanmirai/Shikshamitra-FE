@@ -96,18 +96,9 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   const concessionCounts = useMemo(
     () => ({
-      pending:
-        (allConcessionData?.items as any[])?.filter(
-          (i: any) => i?.status === ConcessionStatusType.Pending
-        )?.length || 0,
-      approved:
-        (allConcessionData?.items as any[])?.filter(
-          (i: any) => i?.status === ConcessionStatusType.Approved
-        )?.length || 0,
-      rejected:
-        (allConcessionData?.items as any[])?.filter(
-          (i: any) => i?.status === ConcessionStatusType.Rejected
-        )?.length || 0,
+      pending: allConcessionData?.pendingCount || 0,
+      approved: allConcessionData?.approvedCount || 0,
+      rejected: allConcessionData?.rejectedCount || 0,
     }),
     [allConcessionData]
   );

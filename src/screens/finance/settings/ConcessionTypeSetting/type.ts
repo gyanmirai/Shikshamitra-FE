@@ -33,10 +33,6 @@ export interface IConcessionDocument {
 export interface IConcessionTypeForm {
   id?: string; // for editing
   name: string;
-  concessionType: 'fixed' | 'percentage' | string;
-  amount?: number; // required if type = "fixed"
-  percentage?: number; // required if type = "percentage"
-  applicableFeeHeads: string[]; // selected fee heads
   documentRequired: boolean;
   documents?: IConcessionDocument[]; // only if documentRequired = true
   description?: string;

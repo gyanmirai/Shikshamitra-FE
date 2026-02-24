@@ -75,11 +75,18 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
             value={values.boardId}
             onChange={(val) => {
               setFieldValue('boardId', val);
+              const board = boards.find((b) => b.id === val);
+              setFieldValue('boardName', board?.name || '');
+
               setFieldValue('mediumId', '');
+              setFieldValue('mediumName', '');
               setFieldValue('standardId', '');
+              setFieldValue('standardName', '');
               setFieldValue('divisionId', '');
+              setFieldValue('divisionName', '');
               setFieldValue('studentId', '');
               setFieldValue('studentName', '');
+              setFieldValue('selectedStudent', null);
             }}
             error={!!errors.boardId && touched.boardId}
             helperText={(touched.boardId && errors.boardId) as string}
@@ -99,10 +106,16 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
             value={values.mediumId}
             onChange={(val) => {
               setFieldValue('mediumId', val);
+              const medium = mediums.find((m) => m.id === val);
+              setFieldValue('mediumName', medium?.name || '');
+
               setFieldValue('standardId', '');
+              setFieldValue('standardName', '');
               setFieldValue('divisionId', '');
+              setFieldValue('divisionName', '');
               setFieldValue('studentId', '');
               setFieldValue('studentName', '');
+              setFieldValue('selectedStudent', null);
             }}
             error={!!errors.mediumId && touched.mediumId}
             helperText={(touched.mediumId && errors.mediumId) as string}
@@ -123,9 +136,14 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
             value={values.standardId}
             onChange={(val) => {
               setFieldValue('standardId', val);
+              const standard = classes?.find((c: any) => c.id === val);
+              setFieldValue('standardName', standard?.name || '');
+
               setFieldValue('divisionId', '');
+              setFieldValue('divisionName', '');
               setFieldValue('studentId', '');
               setFieldValue('studentName', '');
+              setFieldValue('selectedStudent', null);
             }}
             error={!!errors.standardId && touched.standardId}
             helperText={(touched.standardId && errors.standardId) as string}
@@ -145,8 +163,12 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
             value={values.divisionId}
             onChange={(val) => {
               setFieldValue('divisionId', val);
+              const division = allDivisions.find((d) => d.id === val);
+              setFieldValue('divisionName', division?.name || '');
+
               setFieldValue('studentId', '');
               setFieldValue('studentName', '');
+              setFieldValue('selectedStudent', null);
             }}
             error={!!errors.divisionId && touched.divisionId}
             helperText={(touched.divisionId && errors.divisionId) as string}
@@ -167,6 +189,7 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
             onChange={(_e, value: any) => {
               setFieldValue('studentId', value?.studentId || '');
               setFieldValue('studentName', value?.name || '');
+              setFieldValue('selectedStudent', value || null);
             }}
             getOptionLabel={(option: any) => option.name || ''}
             renderOption={(props, option: any) => (

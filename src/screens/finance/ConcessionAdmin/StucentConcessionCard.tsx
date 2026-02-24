@@ -16,8 +16,8 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
     elevation={0}
     sx={{
       borderRadius: 2,
-      p: 2,
-      mb: 2,
+      p: 1,
+      mb: 1,
       border: (theme) => `1px solid ${theme.palette.divider}`,
       boxShadow: (theme) =>
         theme.customShadows?.card ||
@@ -25,7 +25,7 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
     }}
   >
     {/* Header */}
-    <Box display="flex" alignItems="center" mb={3} gap={1.5}>
+    <Box display="flex" alignItems="center" mb={1} gap={1.5}>
       <Box
         sx={{
           width: 40,
@@ -42,17 +42,14 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
       </Box>
 
       <Box>
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
           Student Information
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-          Personal and Academic Details
         </Typography>
       </Box>
     </Box>
 
     {/* Body */}
-    <Grid container spacing={3}>
+    <Grid container spacing={2}>
       {/* Student Name */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
