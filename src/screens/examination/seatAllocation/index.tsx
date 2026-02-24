@@ -9,10 +9,10 @@ import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
@@ -114,26 +114,83 @@ const SeatAllocation = () => {
             }}
           >
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <CustomSelect
-                options={examDivisionsData?.data?.divisions || []}
+              <PaginatedSearchSelect
                 label="Division"
-                value={division}
+                fetchOptions={async (query) => {
+                  const items = examDivisionsData?.data?.divisions || [];
+                  const filtered = items.filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: filtered.map((item: any) => ({
+                      label: item.name,
+                      id: item.name,
+                    })),
+                    hasMore: false,
+                  };
+                }}
+                value={
+                  division
+                    ? {
+                        label:
+                          (examDivisionsData?.data?.divisions || []).find(
+                            (d: any) => d.name === division
+                          )?.name || division,
+                        id: division,
+                      }
+                    : null
+                }
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
                 isLoading={isLoading || isFetching}
-                onChange={(val) => setDivision(val as string)}
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+                onChange={(_, value: any) => setDivision(value?.id || '')}
+                sx={{ minWidth: '250px', width: '100%' }}
+                size="small"
                 disabled={!classes}
               />
-              <CustomSelect
-                options={examRoomsData?.data?.rooms || []}
+              <PaginatedSearchSelect
                 label="Room"
-                value={room}
+                fetchOptions={async (query) => {
+                  const items = examRoomsData?.data?.rooms || [];
+                  const filtered = items.filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: filtered.map((item: any) => ({
+                      label: item.name,
+                      id: item.id,
+                    })),
+                    hasMore: false,
+                  };
+                }}
+                value={
+                  room
+                    ? {
+                        label:
+                          (examRoomsData?.data?.rooms || []).find((r: any) => r.id === room)
+                            ?.name || room,
+                        id: room,
+                      }
+                    : null
+                }
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
                 isLoading={examRoomsLoading || examRoomsFetching}
-                onChange={(val) => setRoom(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+                onChange={(_, value: any) => setRoom(value?.id || '')}
+                sx={{ minWidth: '250px', width: '100%' }}
+                size="small"
                 disabled={!division}
               />
               <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
@@ -174,14 +231,40 @@ const SeatAllocation = () => {
       ) : (
         <>
           <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
-            <CustomSelect
-              options={allClass}
+            <PaginatedSearchSelect
               label="Class"
-              value={classes}
-              onChange={(val) => setClasses(val as string)}
-              labelKey="name"
-              valueKey="name"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%', pb: 1 } }}
+              fetchOptions={async (query) => {
+                const items = allClass || [];
+                const filtered = items.filter((item: any) =>
+                  item?.name?.toLowerCase().includes(query.toLowerCase())
+                );
+                return {
+                  data: filtered.map((item: any) => ({
+                    label: item.name,
+                    id: item.name,
+                  })),
+                  hasMore: false,
+                };
+              }}
+              value={
+                classes
+                  ? {
+                      label: allClass.find((c: any) => c.name === classes)?.name || classes,
+                      id: classes,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option, value) => option.id === value?.id}
+              getOptionLabel={(option: any) => option?.label || ''}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              minChars={0}
+              onChange={(_, value: any) => setClasses(value?.id || '')}
+              sx={{ maxWidth: '250px', width: '100%', pb: 1 }}
+              size="small"
             />
           </Card>
           <SeatAllocationTable

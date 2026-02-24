@@ -12,13 +12,13 @@ import { Box, Card, Button } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import {
   subjectAssignmentsApi,
@@ -201,19 +201,46 @@ const Subject = () => {
                   mb: 1,
                 }}
               >
-                <CustomSelect
+                <PaginatedSearchSelect
                   label="Class"
-                  name="class"
-                  options={allClass}
-                  valueKey="id"
-                  labelKey="name"
-                  formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
-                  value={classId}
-                  onChange={(value) => {
-                    setClassId(value as string);
-                    const standard = allClass.find((c) => c.id === value);
+                  fetchOptions={async (query) => {
+                    const items = allClass || [];
+                    const filtered = items.filter((item: any) =>
+                      item?.name?.toLowerCase().includes(query.toLowerCase())
+                    );
+                    return {
+                      data: filtered.map((item: any) => ({
+                        label: item.name,
+                        id: item.id,
+                      })),
+                      hasMore: false,
+                    };
+                  }}
+                  value={
+                    classId
+                      ? {
+                          label: allClass.find((c: any) => c.id === classId)?.name || '',
+                          id: classId,
+                        }
+                      : null
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  renderOption={(prop, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
+                  minChars={0}
+                  onChange={(_, value: any) => {
+                    const val = value?.id || '';
+                    setClassId(val);
+                    const standard = allClass.find((c) => c.id === val);
                     setClasses(standard?.name || '');
                   }}
+                  fullWidth
+                  sx={{ maxWidth: '247px' }}
+                  size="small"
                 />
                 <Button
                   size="small"

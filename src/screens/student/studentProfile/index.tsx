@@ -12,7 +12,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -21,9 +20,20 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import { Box, Tab, Tabs, Paper, Avatar, Divider, MenuItem, Typography } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Tabs,
+  Paper,
+  Avatar,
+  Divider,
+  MenuItem,
+  MenuList,
+  Typography,
+} from '@mui/material';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -298,35 +308,124 @@ export function StudentProfile() {
               // mb: 1,
             }}
           >
-            <CustomSelect
-              options={allOrganization}
+            <PaginatedSearchSelect
               label="Organization"
-              value={organization}
-              onChange={(val) => setOrganization(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               disabled={!medium}
+              fetchOptions={async (query) => {
+                const items = allOrganization || [];
+                const filtered = items.filter((item: any) =>
+                  item?.name?.toLowerCase().includes(query.toLowerCase())
+                );
+                return {
+                  data: filtered.map((item: any) => ({
+                    label: item.name,
+                    id: item.id,
+                  })),
+                  hasMore: false,
+                };
+              }}
+              value={
+                organization
+                  ? {
+                      label: allOrganization.find((o: any) => o.id === organization)?.name || '',
+                      id: organization,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option, value) => option.id === value?.id}
+              getOptionLabel={(option: any) => option?.label || ''}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              minChars={0}
+              onChange={(_, value: any) => {
+                setOrganization(value?.id || '');
+              }}
+              fullWidth
+              sx={{ maxWidth: '250px' }}
+              size="small"
             />
-            <CustomSelect
-              options={allClass}
+
+            <PaginatedSearchSelect
               label="Class"
-              value={classes}
-              onChange={(val) => setClass(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               disabled={!organization}
+              fetchOptions={async (query) => {
+                const items = allClass || [];
+                const filtered = items.filter((item: any) =>
+                  item?.name?.toLowerCase().includes(query.toLowerCase())
+                );
+                return {
+                  data: filtered.map((item: any) => ({
+                    label: item.name,
+                    id: item.id,
+                  })),
+                  hasMore: false,
+                };
+              }}
+              value={
+                classes
+                  ? {
+                      label: allClass.find((c: any) => c.id === classes)?.name || '',
+                      id: classes,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option, value) => option.id === value?.id}
+              getOptionLabel={(option: any) => option?.label || ''}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              minChars={0}
+              onChange={(_, value: any) => {
+                setClass(value?.id || '');
+              }}
+              fullWidth
+              sx={{ maxWidth: '250px' }}
+              size="small"
             />
-            <CustomSelect
-              options={allDivision}
+
+            <PaginatedSearchSelect
               label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               disabled={!classes}
+              fetchOptions={async (query) => {
+                const items = allDivision || [];
+                const filtered = items.filter((item: any) =>
+                  item?.name?.toLowerCase().includes(query.toLowerCase())
+                );
+                return {
+                  data: filtered.map((item: any) => ({
+                    label: item.name,
+                    id: item.id,
+                  })),
+                  hasMore: false,
+                };
+              }}
+              value={
+                division
+                  ? {
+                      label: allDivision.find((d: any) => d.id === division)?.name || '',
+                      id: division,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option, value) => option.id === value?.id}
+              getOptionLabel={(option: any) => option?.label || ''}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              minChars={0}
+              onChange={(_, value: any) => {
+                setDivision(value?.id || '');
+              }}
+              fullWidth
+              sx={{ maxWidth: '250px' }}
+              size="small"
             />
           </Paper>
 
@@ -420,25 +519,28 @@ export function StudentProfile() {
                 align: 'left',
                 render: (value, row) => (
                   <ThreeDotsActions
+                    placement="right-top"
                     showViewIcon
                     showThreeDots
                     handleViewClick={() => {
                       setSearchParams('student', row.studentId);
                     }}
                     actions={({ popover: pop }) => (
-                      <MenuItem
-                        onClick={() => {
-                          pop.onClose();
-                          setSelectedStudentForStatus(row);
-                          statusDialog.onTrue();
-                        }}
-                      >
-                        <Iconify
-                          icon="mdi:form-dropdown"
-                          sx={{ height: '16px', width: '16px', mr: 1 }}
-                        />
-                        Change Status
-                      </MenuItem>
+                      <MenuList>
+                        <MenuItem
+                          onClick={() => {
+                            pop.onClose();
+                            statusDialog.onTrue();
+                            setSelectedStudentForStatus(row);
+                          }}
+                        >
+                          <Iconify
+                            icon="mdi:form-dropdown"
+                            sx={{ height: '16px', width: '16px', mr: 1 }}
+                          />
+                          Change Status
+                        </MenuItem>
+                      </MenuList>
                     )}
                   />
                 ),

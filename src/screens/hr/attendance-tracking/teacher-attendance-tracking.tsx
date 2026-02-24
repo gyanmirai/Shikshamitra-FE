@@ -20,7 +20,7 @@ const TeacherAttendanceTracking = ({
   setSearchParams,
 }: {
   searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
+  setSearchParams: (key: string, value: string) => void;
 }) => {
   const startDate = useMemo(
     () =>
@@ -56,7 +56,7 @@ const TeacherAttendanceTracking = ({
         label="Start Date"
         value={startDate}
         onChange={(value) => {
-          setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
+          setSearchParams('startDate', value?.format('DD-MM-YYYY') || '');
           // setDate(value);
         }}
         sx={{ mb: 2 }}
@@ -68,7 +68,7 @@ const TeacherAttendanceTracking = ({
         label="End Date"
         value={endDate}
         onChange={(value) => {
-          setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
+          setSearchParams('endDate', value?.format('DD-MM-YYYY') || '');
           // setDate(value);
         }}
         sx={{ mb: 2 }}

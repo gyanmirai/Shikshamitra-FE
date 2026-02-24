@@ -1,35 +1,41 @@
 'use client';
 
-import type { TabComponentType } from 'src/screens/hr/leave-request';
-
 import { Tab, Box, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import HomeworkMarksAndFeedback from './homeworkMarksFeedback';
 import AssignmentMarksAndFeedback from './assignmentMarksFeedback';
 
+export interface MarksFeedbackTabProps {
+  searchParams?: Record<string, string>;
+  setSearchParams?: (key: string, value: string) => void;
+}
+
 const TABS = [
   {
     icon: <Iconify icon="streamline-plump:file-check-alternate" width={20} />,
     value: 'homeworkMarks',
     label: 'Homework',
-    component: (props: TabComponentType) => <HomeworkMarksAndFeedback {...props} />,
+    component: (props: MarksFeedbackTabProps) => <HomeworkMarksAndFeedback {...props} />,
   },
   {
     icon: <Iconify icon="uil:file-check-alt" width={20} />,
     value: 'assignmentMarks',
     label: 'Assignment',
-    component: (props: TabComponentType) => <AssignmentMarksAndFeedback {...props} />,
+    component: (props: MarksFeedbackTabProps) => <AssignmentMarksAndFeedback {...props} />,
   },
 ];
 const MarksFeedbackHomeworkAssignment = () => {
   // Initialize search params with default tab 'subjectSetting'
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkMarks' });
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
+    tab: 'homeworkMarks',
+  });
+  const searchParams = getAllParams();
 
   // Find and memoize the currently active tab component based on search params
   const currentActiveComponent = useMemo(
@@ -71,7 +77,7 @@ const MarksFeedbackHomeworkAssignment = () => {
               setIsBackClick(false);
             }
 
-            setSearchParams({ tab: value });
+            setSearchParams('tab', value);
           }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
           role="tablist"

@@ -1,14 +1,13 @@
 import type { FormikProps } from 'formik';
-import type { Board } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 import { DatePicker } from '@mui/x-date-pickers';
 // Utils
 import calculateAge from 'src/utils/calculate-age';
-import CustomSelect from 'src/components/custom-select';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
   Box,
   Card,
@@ -98,23 +97,50 @@ export const BasicStudentDetails = ({
           {/* Academic Year */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ShakingTextField error={!!(touched.academicYear && errors.academicYear)}>
-              <CustomSelect
-                name="academicYear"
+              <PaginatedSearchSelect
                 label="Academic Year *"
-                isLoading={yearLoading}
-                options={academicYear?.items || []}
-                value={values.academicYear}
-                labelKey="name"
-                valueKey="id"
-                onChange={(value) => {
+                fetchOptions={async (query) => {
+                  const items = (academicYear?.items || []).filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: items.map((item: any) => ({
+                      label: item.name,
+                      id: item.id,
+                    })),
+                    hasMore: false,
+                  };
+                }}
+                value={
+                  values.academicYear
+                    ? {
+                        label:
+                          academicYear?.items?.find((y: any) => y.id === values.academicYear)
+                            ?.name || '',
+                        id: values.academicYear,
+                      }
+                    : null
+                }
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
+                onChange={(_, value: any) => {
                   setFieldValue('board', '');
                   setFieldValue('medium', '');
                   setFieldValue('class', '');
-                  setFieldValue('academicYear', value);
+                  setFieldValue('academicYear', value?.id || '');
                 }}
+                placeholder="Search Academic Year"
                 error={!!(touched.academicYear && errors.academicYear)}
                 helperText={(touched.academicYear && errors.academicYear) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                fullWidth
+                sx={{ maxWidth: 'unset' }}
+                size="small"
               />
             </ShakingTextField>
           </Grid>
@@ -122,23 +148,49 @@ export const BasicStudentDetails = ({
           {/* Board */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ShakingTextField error={!!(touched.board && errors.board)}>
-              <CustomSelect
-                name="board"
+              <PaginatedSearchSelect
                 label="Board *"
-                isLoading={boardLoading}
-                options={boards || []}
-                labelKey="name"
-                valueKey="id"
-                value={values.board}
-                onChange={(value) => {
+                fetchOptions={async (query) => {
+                  const items = boards || [];
+                  const filtered = items.filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: filtered.map((item: any) => ({
+                      label: item.name,
+                      id: item.id,
+                    })),
+                    hasMore: false,
+                  };
+                }}
+                value={
+                  values.board
+                    ? {
+                        label: boards?.find((b: any) => b.id === values.board)?.name || '',
+                        id: values.board,
+                      }
+                    : null
+                }
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
+                onChange={(_, value: any) => {
                   setFieldValue('medium', '');
                   setFieldValue('class', '');
-                  setFieldValue('board', value);
+                  setFieldValue('board', value?.id || '');
                 }}
+                disabled={!values.academicYear}
+                placeholder="Search Board"
                 error={!!(touched.board && errors.board)}
                 helperText={(touched.board && errors.board) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                disabled={!values.academicYear}
+                fullWidth
+                sx={{ maxWidth: 'unset' }}
+                size="small"
               />
             </ShakingTextField>
           </Grid>
@@ -146,26 +198,58 @@ export const BasicStudentDetails = ({
           {/* Medium */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ShakingTextField error={!!(touched.medium && errors.medium)}>
-              <CustomSelect
-                name="medium"
+              <PaginatedSearchSelect
                 label="Medium *"
                 disabled={!values.board}
-                options={
-                  board?.items?.find((item: Board) => item.id === values.board)?.educationMediums ||
-                  []
+                fetchOptions={async (query) => {
+                  const items =
+                    board?.items?.find((item: any) => item.id === values.board)?.educationMediums ||
+                    [];
+                  const filtered = items.filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: filtered.map((item: any) => ({
+                      label: item.name,
+                      id: item.id,
+                    })),
+                    hasMore: false,
+                  };
+                }}
+                value={
+                  values.medium
+                    ? {
+                        label:
+                          board?.items
+                            ?.find((item: any) => item.id === values.board)
+                            ?.educationMediums?.find((m: any) => m.id === values.medium)?.name ||
+                          '',
+                        id: values.medium,
+                      }
+                    : null
                 }
-                value={values.medium}
-                labelKey="name"
-                valueKey="id"
-                onChange={async (value) => {
-                  setFieldValue('medium', value);
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
+                onChange={async (_, value: any) => {
+                  setFieldValue('medium', value?.id || '');
                   setFieldValue('class', '');
                   setFieldTouched('medium', false);
-                  await actions.getClassByMedium(value as string);
+                  if (value?.id) {
+                    await actions.getClassByMedium(value.id);
+                  }
                 }}
+                placeholder="Search Medium"
                 error={!!(touched.medium && errors.medium)}
                 helperText={(touched.medium && errors.medium) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                fullWidth
+                sx={{ maxWidth: 'unset' }}
+                size="small"
               />
             </ShakingTextField>
           </Grid>
@@ -173,21 +257,47 @@ export const BasicStudentDetails = ({
           {/* Class */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ShakingTextField error={!!(touched.class && errors.class)}>
-              <CustomSelect
-                name="class"
+              <PaginatedSearchSelect
                 label="Class *"
                 disabled={!values.medium}
-                isLoading={classLoading}
-                labelKey="name"
-                valueKey="id"
-                options={classes || []}
-                value={values.class}
-                onChange={(value) => {
-                  setFieldValue('class', value);
+                fetchOptions={async (query) => {
+                  const items = classes || [];
+                  const filtered = items.filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: filtered.map((item: any) => ({
+                      label: item.name,
+                      id: item.id,
+                    })),
+                    hasMore: false,
+                  };
                 }}
+                value={
+                  values.class
+                    ? {
+                        label: classes?.find((c: any) => c.id === values.class)?.name || '',
+                        id: values.class,
+                      }
+                    : null
+                }
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
+                onChange={(_, value: any) => {
+                  setFieldValue('class', value?.id || '');
+                }}
+                placeholder="Search Class"
                 error={!!(touched.class && errors.class)}
                 helperText={(touched.class && errors.class) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                fullWidth
+                sx={{ maxWidth: 'unset' }}
+                size="small"
               />
             </ShakingTextField>
           </Grid>

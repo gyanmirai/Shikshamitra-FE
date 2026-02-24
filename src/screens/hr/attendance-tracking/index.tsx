@@ -16,9 +16,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useSearchParam } from 'src/hooks/use-search-param';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -48,7 +48,14 @@ import {
 import TeacherAttendanceTracking from './teacher-attendance-tracking';
 
 const AttendanceTrackingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
+  const {
+    getAllParams,
+    setParam: setSearchParams,
+    setMultipleParams,
+  } = useCustomSearchParams({
+    tab: 'dateWise',
+  });
+  const searchParams = getAllParams();
   const { employee } = useSelector((store: any) => store.auth);
   const MAIN_TABS = [
     {
@@ -87,7 +94,7 @@ const AttendanceTrackingScreen = () => {
               onChange={(e, value) => {
                 const findNewIndex = MAIN_TABS.findIndex((i) => i.value === value);
                 setIsBackClick(currentIndex > findNewIndex);
-                setSearchParams({ tab: value });
+                setSearchParams('tab', value);
               }}
               // variant="fullWidth"
               role="tablist"
@@ -114,7 +121,11 @@ const AttendanceTrackingScreen = () => {
               {searchParams.tab === 'dateWise' ? (
                 <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
               ) : (
-                <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
+                <EmployeeWise
+                  searchParams={searchParams}
+                  setSearchParams={setSearchParams}
+                  setMultipleParams={setMultipleParams}
+                />
               )}
             </Box>
           </FormSlider>
@@ -131,7 +142,7 @@ const DateWise = ({
   setSearchParams,
 }: {
   searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
+  setSearchParams: (key: string, value: string) => void;
 }) => {
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
@@ -179,12 +190,7 @@ const DateWise = ({
     }
   }, [getDateWiseAttendance, searchParams.date]);
 
-  useEffect(
-    () => () => {
-      setSearchParams({ date: '' });
-    },
-    [setSearchParams]
-  );
+  // cleanup removed to avoid infinite re-render loop
 
   const counts = useMemo(
     () => ({
@@ -399,7 +405,7 @@ const DateWise = ({
           label="Date"
           value={dateValue}
           onChange={(value) => {
-            setSearchParams({ date: value?.format('DD-MM-YYYY') });
+            setSearchParams('date', value?.format('DD-MM-YYYY') || '');
             // setDate(value);
           }}
           views={['year', 'month', 'day']}
@@ -463,9 +469,11 @@ const DateWise = ({
 const EmployeeWise = ({
   searchParams,
   setSearchParams,
+  setMultipleParams,
 }: {
   searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
+  setSearchParams: (key: string, value: string) => void;
+  setMultipleParams: (params: Record<string, string>) => void;
 }) => {
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
@@ -550,12 +558,7 @@ const EmployeeWise = ({
     }
   }, [searchParams.employeeId, getEmployeeWiseAttendance, startDate, endDate, tabs.value]);
 
-  useEffect(
-    () => () => {
-      setSearchParams({ date: '', startDate: '', endDate: '', employeeId: '' });
-    },
-    [setSearchParams]
-  );
+  // cleanup removed to avoid infinite re-render loop
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -816,13 +819,13 @@ const EmployeeWise = ({
               value={employeeValue}
               onChange={(e, value) => {
                 if (value) {
-                  setSearchParams({
+                  setMultipleParams({
                     employeeId: value?.id as string,
                     employeeIdentifier: value?.employeeIdentifier as string,
                   });
                 } else {
                   // Clear employee selection
-                  setSearchParams({
+                  setMultipleParams({
                     employeeId: '',
                     employeeIdentifier: '',
                   });
@@ -838,7 +841,7 @@ const EmployeeWise = ({
           label="Start Date"
           value={startDate}
           onChange={(value) => {
-            setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
+            setSearchParams('startDate', value?.format('DD-MM-YYYY') || '');
             // setDate(value);
           }}
           views={['year', 'month', 'day']}
@@ -858,7 +861,7 @@ const EmployeeWise = ({
           disableFuture
           value={endDate}
           onChange={(value) => {
-            setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
+            setSearchParams('endDate', value?.format('DD-MM-YYYY') || '');
             // setDate(value);
           }}
           views={['year', 'month', 'day']}

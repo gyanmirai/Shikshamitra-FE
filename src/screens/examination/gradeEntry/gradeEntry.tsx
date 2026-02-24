@@ -9,23 +9,15 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { usePublishExamMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
-import {
-  Box,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  Autocomplete,
-} from '@mui/material';
 
 import AssignGrade from './components/assignGradeForm';
 import GradeEntryTable from './components/GradeEntryTable';
@@ -298,92 +290,203 @@ const GradeEntry = (props: TabComponentType) => {
         }}
       >
         {' '}
-        <CustomSelect
-          options={allClass}
+        <PaginatedSearchSelect
           label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = allClass || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            classes
+              ? {
+                  label: allClass.find((c: any) => c.id === classes)?.name || '',
+                  id: classes,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(prop, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            setClass(value?.id || '');
+          }}
+          sx={{ maxWidth: '248px', width: '100%' }}
+          size="small"
         />
-        <CustomSelect
-          options={allDivision}
+        <PaginatedSearchSelect
           label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = allDivision || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            division
+              ? {
+                  label: allDivision.find((d: any) => d.id === division)?.name || division,
+                  id: division,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(prop, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            setDivision(value?.id || '');
+          }}
+          sx={{ maxWidth: '248px', width: '100%' }}
+          size="small"
           disabled={!classes}
         />
-        <CustomSelect
+        <PaginatedSearchSelect
           label="Subject"
-          disabled={!division}
-          options={[
-            { value: 'math', label: 'Mathematics' },
-            { value: 'science', label: 'Science' },
-            { value: 'english', label: 'English' },
-          ]}
-          onChange={(val) => {
-            setSubject(val as string);
+          fetchOptions={async (query) => {
+            const items = [
+              { value: 'math', label: 'Mathematics' },
+              { value: 'science', label: 'Science' },
+              { value: 'english', label: 'English' },
+            ];
+            const filtered = items.filter((item: any) =>
+              item?.label?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.label,
+                id: item.value,
+              })),
+              hasMore: false,
+            };
           }}
-          value={subject}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          value={
+            subject
+              ? {
+                  label:
+                    [
+                      { value: 'math', label: 'Mathematics' },
+                      { value: 'science', label: 'Science' },
+                      { value: 'english', label: 'English' },
+                    ].find((s) => s.value === subject)?.label || '',
+                  id: subject,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(prop, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            setSubject(value?.id || '');
+          }}
+          sx={{ maxWidth: '248px', width: '100%' }}
+          size="small"
+          disabled={!division}
         />
         <CustomTooltip placement="top" title={examId && `${examId}`}>
-          <Autocomplete
+          <PaginatedSearchSelect
+            label="Exam Title"
             disabled={!subject}
-            options={[
-              // Unit Test titles
-              { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
-              { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
-              // Mid Term titles
-              { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
-              { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
-              // Final Term titles
-              { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
-              { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
-              // Practical titles
-              { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
-              { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
-              // Project titles
-              { value: 'project_1', label: 'Project Work 1', type: 'project' },
-              { value: 'project_2', label: 'Project Work 2', type: 'project' },
-              // Assignment titles
-              { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
-              { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-            ].filter((option) => !assignmentType || option.type === assignmentType)}
-            getOptionLabel={(option: any) => option.label || ''}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
-            value={
-              [
+            fetchOptions={async (query) => {
+              const items = [
+                // Unit Test titles
                 { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
                 { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
+                // Mid Term titles
                 { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
                 { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
+                // Final Term titles
                 { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
                 { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
+                // Practical titles
                 { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
                 { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
+                // Project titles
                 { value: 'project_1', label: 'Project Work 1', type: 'project' },
                 { value: 'project_2', label: 'Project Work 2', type: 'project' },
+                // Assignment titles
                 { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
                 { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-              ].find((opt) => opt.value === examId) || null
-            }
-            onChange={(event, newValue) => {
-              setExamId(newValue?.value || '');
+              ].filter((option) => !assignmentType || option.type === assignmentType);
+              const filtered = items.filter((item: any) =>
+                item?.label?.toLowerCase().includes(query.toLowerCase())
+              );
+              return {
+                data: filtered.map((item: any) => ({
+                  label: item.label,
+                  id: item.value,
+                })),
+                hasMore: false,
+              };
             }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Exam Title"
-                size="small"
-                fullWidth
-                sx={{ minWidth: '248px', width: '100%' }}
-              />
+            value={
+              examId
+                ? {
+                    label:
+                      [
+                        { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
+                        { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
+                        { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
+                        { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
+                        {
+                          value: 'final_term_theory',
+                          label: 'Final Term Theory',
+                          type: 'final_term',
+                        },
+                        { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
+                        { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
+                        { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
+                        { value: 'project_1', label: 'Project Work 1', type: 'project' },
+                        { value: 'project_2', label: 'Project Work 2', type: 'project' },
+                        { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
+                        { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
+                      ].find((opt) => opt.value === examId)?.label || '',
+                    id: examId,
+                  }
+                : null
+            }
+            isOptionEqualToValue={(option, value) => option.id === value?.id}
+            getOptionLabel={(option: any) => option?.label || ''}
+            renderOption={(prop, option: any) => (
+              <li {...prop} key={option.id}>
+                {option.label}
+              </li>
             )}
+            minChars={0}
+            onChange={(_, value: any) => {
+              setExamId(value?.id || '');
+            }}
+            sx={{ minWidth: '248px', width: '100%' }}
+            size="small"
           />
         </CustomTooltip>
       </Box>
