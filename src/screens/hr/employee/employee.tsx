@@ -15,9 +15,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useSearchParam } from 'src/hooks/use-search-param';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
+import { useNewSearchParam } from 'src/hooks/use-search-param';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -59,7 +59,7 @@ const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const statusDialog = useBoolean();
-  const [searchParams, setSearchParams] = useSearchParam();
+  const [searchParams, setSearchParams] = useNewSearchParam<{ employee?: string }>();
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 

@@ -15,7 +15,6 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 import {
   useGetEmployeeLeaveQuery,
   useGetEmployeeLeaveByIdQuery,
@@ -24,6 +23,16 @@ import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  Box,
+  Card,
+  Grid,
+  TableRow,
+  MenuList,
+  MenuItem,
+  TableCell,
+  Typography,
+} from '@mui/material';
 
 import type { TabComponentType } from '.';
 
@@ -78,16 +87,18 @@ const LeaveCalender = (props: TabComponentType) => {
   }, []);
   return (
     <>
-      <CustomSelect
-        options={allOrganization}
-        label="Organization"
-        value={organization}
-        onChange={(val) => setOrganization(val as string)}
-        labelKey="name"
-        valueKey="id"
-        formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 2, mb: 2 } }}
-        disabled={!mediumStageId}
-      />
+      <Card sx={{ mb: 1, mt: 1 }}>
+        <CustomSelect
+          options={allOrganization}
+          label="Organization"
+          value={organization}
+          onChange={(val) => setOrganization(val as string)}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 2, mb: 2 } }}
+          disabled={!mediumStageId}
+        />
+      </Card>
 
       <CommonCalender
         data={calendarData}
