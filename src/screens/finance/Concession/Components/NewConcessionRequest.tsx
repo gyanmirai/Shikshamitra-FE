@@ -105,13 +105,28 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         const reqId = res?.data?.concessionRequestId;
         _formik.setFieldValue('id', reqId);
 
+        // Store selectedConcessionTypes from API response (contains ConcessionRequestConcessionTypeId)
+        const selectedConcessionTypes = res?.data?.selectedConcessionTypes || [];
+        _formik.setFieldValue('selectedConcessionTypes', selectedConcessionTypes);
+
         shikshaMitraToast.success({ message: 'Concession request created successfully' });
         setActiveStep((s) => s + 1);
       } else if (activeStep === 2) {
         // Step 3 – Fee Heads
         if (!values.id) throw new Error('Missing concession request ID');
+
+        // Build a lookup: concessionTypeId -> ConcessionRequestConcessionTypeId
+        const concessionTypeIdMap: Record<string, string> = {};
+        (values.selectedConcessionTypes || []).forEach((ct: any) => {
+          concessionTypeIdMap[ct.concessionTypeId] = ct.ConcessionRequestConcessionTypeId;
+        });
+
         const feeHeadsData = Object.entries(values.selectedFeeHeads).map(
-          ([concessionTypeId, feeHeadIds]) => ({ concessionTypeId, feeHeadIds })
+          ([concessionTypeId, feeHeadIds]) => ({
+            concessionTypeId,
+            concessionRequestConcessionTypeId: concessionTypeIdMap[concessionTypeId] || '',
+            feeHeadIds,
+          })
         );
         await updateFeeHeadsData({
           concessionRequestId: values.id,
@@ -123,9 +138,16 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         // Step 4 – Value Entry
         if (!values.id) throw new Error('Missing concession request ID');
 
+        // Build a lookup: concessionTypeId -> ConcessionRequestConcessionTypeId
+        const concessionTypeIdMap: Record<string, string> = {};
+        (values.selectedConcessionTypes || []).forEach((ct: any) => {
+          concessionTypeIdMap[ct.concessionTypeId] = ct.ConcessionRequestConcessionTypeId;
+        });
+
         const concessionTypeValues = Object.entries(values.selectedFeeHeads).map(
           ([concessionTypeId, feeHeadIds]: any) => ({
             concessionTypeId,
+            concessionRequestConcessionTypeId: concessionTypeIdMap[concessionTypeId] || '',
             feeHeadValues: (feeHeadIds as string[]).map((feeHeadId: string) => {
               const entry = values.valueEntries?.[concessionTypeId]?.[feeHeadId] || {
                 basedOn: 0,
@@ -153,9 +175,26 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         // Step 5 – Document Upload
         if (!values.id) throw new Error('Missing concession request ID');
 
+        // Build a lookup: concessionTypeId -> ConcessionRequestConcessionTypeId
+        const concessionTypeIdMapDocs: Record<string, string> = {};
+        (values.selectedConcessionTypes || []).forEach((ct: any) => {
+          concessionTypeIdMapDocs[ct.concessionTypeId] = ct.ConcessionRequestConcessionTypeId;
+        });
+
+        // Attach concessionRequestConcessionTypeId to each document group
+        const concessionTypeDocuments = (values.concessionTypeDocuments || []).map(
+          (docGroup: any) => ({
+            ...docGroup,
+            concessionRequestConcessionTypeId:
+              concessionTypeIdMapDocs[docGroup.concessionTypeId] ||
+              docGroup.concessionRequestConcessionTypeId ||
+              '',
+          })
+        );
+
         await uploadDocuments({
           concessionRequestId: values.id,
-          concessionTypeDocuments: values.concessionTypeDocuments || [],
+          concessionTypeDocuments,
         }).unwrap();
 
         shikshaMitraToast.success({ message: 'Documents saved successfully' });

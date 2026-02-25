@@ -236,12 +236,12 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
           sx={{ py: 5, mb: 2 }}
           action={
             <Button
-              variant="contained"
+              variant="outlined"
               size="small"
               startIcon={<Iconify icon="lucide:plus" />}
               onClick={() => addFeeHeadDialog.onTrue()}
             >
-              Add Fee Head
+              Fee Head
             </Button>
           }
         />

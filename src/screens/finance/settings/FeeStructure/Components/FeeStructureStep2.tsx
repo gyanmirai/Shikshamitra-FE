@@ -235,7 +235,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
 
                                   <Box display="flex" alignItems="center" gap={1}>
                                     <Button
-                                      variant="contained"
+                                      variant="outlined"
                                       size="small"
                                       startIcon={<Iconify icon="lucide:plus" />}
                                       onClick={(e) => {
