@@ -34,7 +34,7 @@ const SubjectPerformance = () => {
   return (
     <Box>
       {/* <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} /> */}
-      <CourseProgressComponent courseData={courses} isAction={false} />
+      <CourseProgressComponent courseData={courses} isAction={false} layout="vertical" />
     </Box>
   );
 };

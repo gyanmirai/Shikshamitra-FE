@@ -13,7 +13,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { sliderClasses } from '@mui/material/Slider';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import React, { useState, useEffect, useCallback } from 'react';
@@ -23,6 +22,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 import {
@@ -150,24 +150,82 @@ const CourseProgress = (props: TabComponentType) => {
       />
       {/* Class and Division selection filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
-        <CustomSelect
-          options={allClass}
+        <PaginatedSearchSelect
           label="Class"
-          value={classes}
-          onChange={(val) => setClasses(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = allClass || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            classes
+              ? {
+                  label: allClass.find((c: any) => c.id === classes)?.name || '',
+                  id: classes,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(optionProps, option: any) => (
+            <li {...optionProps} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            const val = value?.id || '';
+            setClasses(val);
+          }}
+          sx={{ maxWidth: '250px', width: '100%' }}
+          size="small"
         />
-        <CustomSelect
-          options={allDivision}
+        <PaginatedSearchSelect
           label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = allDivision || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            division
+              ? {
+                  label: allDivision.find((d: any) => d.id === division)?.name || '',
+                  id: division,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(optionProps, option: any) => (
+            <li {...optionProps} key={option.id}>
+              {option.label}
+            </li>
+          )}
           disabled={!classes}
+          minChars={0}
+          onChange={(_, value: any) => {
+            const val = value?.id || '';
+            setDivision(val);
+          }}
+          sx={{ maxWidth: '250px', width: '100%' }}
+          size="small"
         />
       </Box>
       {/* Grid of course cards showing progress */}

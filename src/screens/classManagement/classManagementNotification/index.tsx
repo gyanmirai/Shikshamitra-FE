@@ -5,7 +5,7 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
@@ -42,7 +42,10 @@ const TABS = [
 ];
 
 const ClassManagementNotificationScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'studentElectiveAssignment' });
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
+    tab: 'studentElectiveAssignment',
+  });
+  const searchParams = getAllParams();
   const dialog = useBoolean(false);
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === searchParams?.tab),
@@ -105,7 +108,7 @@ const ClassManagementNotificationScreen = () => {
               } else {
                 setIsBackClick(false);
               }
-              setSearchParams({ tab: value });
+              setSearchParams('tab', value);
             }}
             sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
             role="tablist"

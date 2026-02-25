@@ -2,8 +2,9 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Button, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetEarningComponentsQuery,
@@ -60,32 +61,50 @@ export default function PayrollComponentDialog({
       maxWidth="sm"
     >
       <DialogScrollContent>
-        <Autocomplete
+        <PaginatedSearchSelect
           multiple
           fullWidth
-          loading={isLoading}
+          noOptionsText="No results found"
+          isLoading={isLoading}
           size="small"
-          options={components?.items || []}
-          getOptionLabel={(option: any) => option?.componentName || option?.name}
+          label="Select Components"
+          placeholder="Choose components"
           slotProps={{
             chip: {
               size: 'small',
               variant: 'soft',
             },
           }}
+          fetchOptions={async (searchQuery) => {
+            const items = components?.items || [];
+            const filtered = items.filter((item: any) =>
+              (item?.componentName || item?.name)?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            return {
+              data: filtered.map((option: any) => ({
+                label: option?.componentName || option?.name || '',
+                id: option.id,
+                ...option,
+              })),
+              hasMore: false,
+            };
+          }}
           value={formik.values.selectedComponents || []}
-          onChange={(e, newValue) => formik.setFieldValue('selectedComponents', newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select Components"
-              placeholder="Choose components"
-              error={formik.touched.selectedComponents && Boolean(formik.errors.selectedComponents)}
-              helperText={
-                formik.touched.selectedComponents && (formik.errors.selectedComponents as string)
-              }
-            />
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) =>
+            option?.label || option?.componentName || option?.name || ''
+          }
+          renderOption={(props, option: any) => (
+            <li {...props} key={option.id}>
+              {option.label}
+            </li>
           )}
+          minChars={0}
+          onChange={(_, newValue: any) => formik.setFieldValue('selectedComponents', newValue)}
+          error={formik.touched.selectedComponents && Boolean(formik.errors.selectedComponents)}
+          helperText={
+            formik.touched.selectedComponents && (formik.errors.selectedComponents as string)
+          }
         />
       </DialogScrollContent>
 

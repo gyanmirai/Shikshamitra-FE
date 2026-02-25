@@ -69,7 +69,9 @@ export function PaginatedSearchSelect<
       }}
       //   Ensure we don't show "No options" when we are just waiting for the user to type
       noOptionsText={
-        inputValue.length < minChars ? (
+        props.noOptionsText !== undefined ? (
+          props.noOptionsText
+        ) : inputValue.length < minChars ? (
           <Box p={2} textAlign="center">
             <Typography variant="body2" color="text.secondary">
               Type at least {minChars} {minChars === 1 ? 'character' : 'characters'} to search...
