@@ -2,15 +2,11 @@
 
 import React from 'react';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import IncomeTable from './Components/IncomeTable';
-import ViewIncomeData from './Components/ViewIncomeData';
 import IncomeTrackingForm from './Components/IncomeTrackingForm';
 import { useIncomeTrackingScreen } from './hooks/useIncomeTrackingScreen';
 
@@ -20,11 +16,13 @@ const IncomeTracking = () => {
     setSelectedIncome,
     addIncomeDialog,
     deleteIncomeDialog,
-    viewIncomeDialog,
+    // viewIncomeDialog,
     incomeData,
-    incomeDetailedData,
+    fetchingIncomeData,
+    loadingIncomeData,
+    // incomeDetailedData,
     handleClose,
-    handleViewDialogClose,
+    // handleViewDialogClose,
     handleDeleteConfirm,
   } = useIncomeTrackingScreen();
 
@@ -87,8 +85,9 @@ const IncomeTracking = () => {
           </Card>
         ) : (
           <IncomeTable
-            data={incomeData || []}
+            data={incomeData?.items || []}
             addIncome={addIncomeDialog}
+            isLoading={fetchingIncomeData || loadingIncomeData}
             setEditData={setSelectedIncome}
             onEdit={(data) => {
               addIncomeDialog.onTrue();
@@ -98,10 +97,10 @@ const IncomeTracking = () => {
               deleteIncomeDialog.onTrue();
               setSelectedIncome(data);
             }}
-            onView={(data) => {
-              viewIncomeDialog.onTrue();
-              setSelectedIncome(data);
-            }}
+            // onView={(data) => {
+            //   viewIncomeDialog.onTrue();
+            //   setSelectedIncome(data);
+            // }}
           />
         )}
       </>
@@ -117,7 +116,7 @@ const IncomeTracking = () => {
         content={
           <>
             Are you sure you want to delete the income record{' '}
-            <strong>&quot;{selectedIncome?.incomeName}&quot;</strong>?
+            <strong>&quot;{selectedIncome?.name}&quot;</strong>?
           </>
         }
         action={
@@ -126,32 +125,6 @@ const IncomeTracking = () => {
           </Button>
         }
       />
-
-      <CustomDialog
-        open={viewIncomeDialog.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Incomes</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal displays all income entries under a particular income category, allowing users to view detailed records."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        handleClose={handleViewDialogClose}
-        maxWidth="md"
-      >
-        <ViewIncomeData
-          viewIncomeDialog={viewIncomeDialog}
-          incomeData={selectedIncome}
-          incomeDetailedData={incomeDetailedData}
-          onClose={handleViewDialogClose}
-        />
-      </CustomDialog>
     </Box>
   );
 };

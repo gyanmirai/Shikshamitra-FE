@@ -3,38 +3,41 @@ import { financeModuleApi } from '../financeModuleApi';
 export const expenseTrackingApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getExpenseDetails: builder.query({
-      query: () => ({
-        url: '/finance/expenses',
+      query: (params) => ({
+        url: '/expenses',
         method: 'GET',
+        params,
       }),
       providesTags: ['ExpenseDetails'],
     }),
     getExpenseById: builder.query({
       query: (expenseId: string) => ({
-        url: `/finance/expenses/${expenseId}`,
+        url: `/expenses/${expenseId}`,
         method: 'GET',
       }),
       providesTags: ['ExpenseDetails'],
     }),
     postExpenseDetails: builder.mutation({
-      query: (body) => ({
-        url: '/finance/expenses',
+      query: ({ academicYearId, body }) => ({
+        url: '/expenses',
         method: 'POST',
-        body,
+        data: body,
+        params: { academicYearId },
       }),
       invalidatesTags: ['ExpenseDetails'],
     }),
     putExpenseDetails: builder.mutation({
-      query: ({ expenseId, body }) => ({
-        url: `/finance/expenses/${expenseId}`,
+      query: ({ expenseId, academicYearId, body }) => ({
+        url: `/expenses/${expenseId}`,
         method: 'PUT',
-        body,
+        data: body,
+        params: { academicYearId },
       }),
       invalidatesTags: ['ExpenseDetails'],
     }),
     deleteExpenseDetails: builder.mutation({
       query: (expenseId: string) => ({
-        url: `/finance/expenses/${expenseId}`,
+        url: `/expenses/${expenseId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ExpenseDetails'],

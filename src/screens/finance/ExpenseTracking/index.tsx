@@ -1,16 +1,11 @@
 'use client';
 
 import React from 'react';
-import Loading from 'src/app/loading';
 import { Add } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Button, Typography, CircularProgress } from '@mui/material';
 
-import ViewExpenseData from './component/ViewExpenseData';
 import ExpenseCategoryForm from './component/ExpenseCategoryForm';
 import ExpenseCategoryTable from './component/ExpenseCategoryTable';
 import { useExpenseManagement } from './hooks/useExpenseManagement';
@@ -21,17 +16,12 @@ const FinanceExpenseTracking = () => {
     setSelectedExpense,
     addExpenseDialog,
     deleteExpenseDialog,
-    viewExpenseDialog,
-    expenseLoading,
     expenseDetailedData,
-    isLoading,
-    expenseById,
     isLoadingDetails,
+    isFetchingDetails,
     handleClose,
-    handleViewDialogClose,
     handleEdit,
     handleDeleteClick,
-    handleViewClick,
     handleConfirmDelete,
   } = useExpenseManagement();
 
@@ -95,26 +85,15 @@ const FinanceExpenseTracking = () => {
               editData={selectedExpense}
             />
           </Card>
-        ) : expenseLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="400px"
-            flexDirection="column"
-            gap={2}
-          >
-            <Loading />
-          </Box>
         ) : (
           <ExpenseCategoryTable
-            data={expenseDetailedData || []}
+            data={expenseDetailedData?.items || []}
             addExpenseCategory={addExpenseDialog}
             setEditData={setSelectedExpense}
-            isLoading={isLoading}
+            isLoading={isFetchingDetails || isLoadingDetails}
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
-            onView={handleViewClick}
+            // onView={handleViewClick}
           />
         )}
       </>
@@ -129,8 +108,7 @@ const FinanceExpenseTracking = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete expense record{' '}
-            <strong>{selectedExpense?.expenseName}</strong>?
+            Are you sure you want to delete expense record <strong>{selectedExpense?.name}</strong>?
           </>
         }
         action={
@@ -140,7 +118,7 @@ const FinanceExpenseTracking = () => {
         }
       />
 
-      <CustomDialog
+      {/* <CustomDialog
         open={viewExpenseDialog.value}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center" minWidth={400}>
@@ -165,12 +143,12 @@ const FinanceExpenseTracking = () => {
         ) : (
           <ViewExpenseData
             viewExpenseDialog={viewExpenseDialog}
-            expenseData={expenseById || selectedExpense}
+            expenseData={selectedExpense}
             expenseDetailedData={expenseDetailedData}
             onClose={handleViewDialogClose}
           />
         )}
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };

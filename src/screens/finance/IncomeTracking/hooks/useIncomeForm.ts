@@ -1,13 +1,13 @@
 import type { RootState } from 'src/redux/store';
 
+import { useMemo } from 'react';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetPaymentMethodsConfigQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
+import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import {
-  useGetIncomeTrackingQuery,
   useAddIncomeTrackingMutation,
   useUpdateIncomeTrackingMutation,
 } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
@@ -15,45 +15,39 @@ import {
 import { getInitialIncomeData } from '../Components/IncomeInitialValues';
 import { getIncomeFormSchema } from '../Components/IncomeValidationSchema';
 
-import type { IIncomeFormValues } from '../types';
+import type { IIncomeRecord } from '../types';
+
+// Payment method options derived directly from the enum
+export const paymentMethodOptions = Object.entries(PaymentMethodLabels).map(([value, label]) => ({
+  value: Number(value),
+  label,
+}));
 
 export const useIncomeForm = (
   onClose: (e: any, isSubmit?: boolean) => void,
-  editData: IIncomeFormValues | null
+  editData: IIncomeRecord | null
 ) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch income options
-  const { data: incomeOptionsData } = useQueryAndMutation({
+  // Fetch income category options
+  const { data: incomeOptionsData, isLoading: incomeOptionsLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIncomeTrackingQuery,
+    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   // Mutations
-  const { addIncomeTracking } = useQueryAndMutation({
+  const [addIncomeTracking, { isLoading: addLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddIncomeTrackingMutation,
   });
 
-  const { updateIncomeTracking } = useQueryAndMutation({
+  const [updateIncomeTracking, { isLoading: updateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateIncomeTrackingMutation,
   });
-
-  const { data: paymentMethodsConfigData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPaymentMethodsConfigQuery,
-  });
-  const paymentMethodOptions = useMemo(
-    () =>
-      incomeOptionsData?.paymentMethodOptions ||
-      Object.keys(paymentMethodsConfigData || {}).map((method) => ({
-        value: method,
-        label: method,
-      })),
-    [incomeOptionsData?.paymentMethodOptions, paymentMethodsConfigData]
-  );
 
   const initialValues = useMemo(() => getInitialIncomeData(editData), [editData]);
   const validationSchema = useMemo(() => getIncomeFormSchema(currentYear), [currentYear]);
@@ -64,31 +58,33 @@ export const useIncomeForm = (
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        setIsLoading(true);
-
+        // Payload matches the API contract exactly
         const payload = {
-          academicYearId: currentYear?.id,
-          categoryId: values.incomeCategory,
-          name: values.incomeName,
-          categoryTags: values.incomeCategoryTags || [],
+          categoryId: values.categoryId,
+          name: values.name,
+          categoryTags: values.categoryTags || [],
           amount: values.amount,
-          paymentMethod: values.paymentMethod,
-          paymentDate: values.date?.toISOString(),
-          notes: values.notes || '',
+          paymentMethod: values.paymentMethod, // integer enum
+          paymentDate: values.paymentDate?.toISOString(),
+          notes: values.notes || null,
         };
 
         if (editData?.id) {
           await updateIncomeTracking({
             incomeId: editData.id,
+            academicYearId: currentYear?.id,
             body: payload,
           }).unwrap();
           shikshaMitraToast.success({
-            message: `Income Tracking "${values.incomeName}" updated successfully!`,
+            message: `Income Tracking "${values.name}" updated successfully!`,
           });
         } else {
-          await addIncomeTracking(payload).unwrap();
+          await addIncomeTracking({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
           shikshaMitraToast.success({
-            message: `Income Tracking "${values.incomeName}" added successfully!`,
+            message: `Income Tracking "${values.name}" added successfully!`,
           });
         }
         onClose(null, true);
@@ -97,8 +93,6 @@ export const useIncomeForm = (
         shikshaMitraToast.error({
           message: `Failed to ${editData ? 'update' : 'create'} income tracking`,
         });
-      } finally {
-        setIsLoading(false);
       }
     },
   });
@@ -111,9 +105,11 @@ export const useIncomeForm = (
 
   return {
     formik,
-    isLoading,
     incomeCategoryOptions,
     paymentMethodOptions,
     currentYear,
+    addLoading,
+    updateLoading,
+    incomeOptionsLoading,
   };
 };
