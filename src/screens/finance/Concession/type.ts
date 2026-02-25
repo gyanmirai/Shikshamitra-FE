@@ -4,6 +4,12 @@ export interface IConcession {
   medium: string;
   className: string;
   division: string;
+  concessionRequestId?: string;
+  standardName?: string;
+  divisionName?: string;
+  boardName?: string;
+  mediumName?: string;
+  educationMediumName?: string;
   studentName: string;
   studentId: string;
   concessionName?: string;

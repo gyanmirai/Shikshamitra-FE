@@ -1,8 +1,9 @@
 import { styled } from '@mui/material/styles';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetStandardFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import { Box, Card, Grid, Chip, Stack, Checkbox, Typography, CardContent } from '@mui/material';
+import { useGetConcessionRequestFeeHeadsQuery } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 // --- Interfaces based on provided JSON ---
 interface IFeeHead {
@@ -40,6 +41,31 @@ const SelectionCard = styled(Card)(({ theme }) => ({
 
 const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   const { values, setFieldValue } = formik;
+
+  const { data: requestDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionRequestFeeHeadsQuery,
+    params: values.id,
+    options: {
+      skip: !values.id,
+      refetchOnMountOrArgChange: true,
+    },
+  }) as { data: any };
+
+  useEffect(() => {
+    if (requestDetails?.data?.concessionTypes) {
+      const hydratedFeeHeads: Record<string, string[]> = {};
+      requestDetails.data.concessionTypes.forEach((ct: any) => {
+        if (ct.feeHeadIds && ct.feeHeadIds.length > 0) {
+          hydratedFeeHeads[ct.concessionTypeId] = ct.feeHeadIds;
+        }
+      });
+      const currentKeys = Object.keys(values.selectedFeeHeads || {});
+      if (currentKeys.length === 0 && Object.keys(hydratedFeeHeads).length > 0) {
+        setFieldValue('selectedFeeHeads', hydratedFeeHeads);
+      }
+    }
+  }, [requestDetails, setFieldValue, values.selectedFeeHeads]);
 
   // Ideally, this query fetches data relevant to all concession types if the API supports it,
   // or it fetches the structure for the student which is then applied across types.

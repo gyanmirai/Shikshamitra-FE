@@ -16,7 +16,6 @@ import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -39,7 +38,6 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  concessionManagementApi,
   useRejectConcessionRequestMutation,
   useApproveConcessionRequestMutation,
   useGetStudentConcessionDetailsQuery,
@@ -505,8 +503,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     deleteDialog.onTrue();
   };
 
-  const { confirmWithUndo } = useConfirmWithUndo();
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Scrollbar sx={{ flex: 1, p: 1 }}>
@@ -588,6 +584,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
                   value: 'all',
                   count: allItems.length,
                   color: 'default' as LabelColor,
+                },
+                {
+                  label: 'Draft',
+                  value: ConcessionStatusType.Draft,
+                  count: allItems.filter((i) => i.status === ConcessionStatusType.Draft).length,
+                  color: 'info' as LabelColor,
                 },
                 {
                   label: 'Pending',
@@ -739,44 +741,11 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
             color="error"
             size="small"
             onClick={async () => {
-              confirmWithUndo({
-                item: selectedItem,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    concessionManagementApi.util.updateQueryData(
-                      'getStudentConcessionDetails',
-                      undefined,
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (b: any) =>
-                            b.studentConcessionTypeRequestId ===
-                            selectedItem?.studentConcessionTypeRequestId
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    concessionManagementApi.util.updateQueryData(
-                      'getStudentConcessionDetails',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, selectedItem?.studentConcessionTypeRequestId);
-                      }
-                    )
-                  ),
-                onCommit: () =>
-                  deleteConcessionApplication(selectedItem?.studentConcessionTypeRequestId || ''),
-              });
+              await deleteConcessionApplication(selectedItem?.studentConcessionTypeRequestId || '');
               deleteDialog.onFalse();
               setSelectedItem(null);
             }}
-          // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>
@@ -823,7 +792,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
             docDialog.onFalse();
             setSelectedItem(null);
           }}
-          onRefresh={() => { }}
+          onRefresh={() => {}}
         />
       )}
     </Box>

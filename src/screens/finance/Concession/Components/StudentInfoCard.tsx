@@ -1,6 +1,9 @@
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { Card, Grid, CardContent } from '@mui/material';
+import { School, Person, CalendarToday } from '@mui/icons-material';
+import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 interface StudentInfoCardProps {
   studentName?: string;
@@ -22,47 +25,23 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
       <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box>
-              <Typography variant="caption" color="text.secondary" display="block">
-                STUDENT NAME
-              </Typography>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {studentName}
-              </Typography>
-            </Box>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <Box>
-              <Typography variant="caption" color="text.secondary" display="block">
-                CLASS / DIV
-              </Typography>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {classDiv}
-              </Typography>
-            </Box>
+            <InfoItem icon={<Person />} label="Student Name" value={studentName} />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Box>
-              <Typography variant="caption" color="text.secondary" display="block">
-                BOARD • MEDIUM
-              </Typography>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {boardMedium}
-              </Typography>
-            </Box>
+            <InfoItem icon={<School />} label="Class / Div" value={classDiv} />
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <Box>
-              <Typography variant="caption" color="text.secondary" display="block">
-                ACADEMIC YEAR
-              </Typography>
-              <Typography variant="subtitle1" fontWeight="bold">
-                {academicYear}
-              </Typography>
-            </Box>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <InfoItem
+              icon={<Iconify icon="solar:book-bookmark-bold-duotone" />}
+              label="Board • Medium"
+              value={boardMedium}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <InfoItem icon={<CalendarToday />} label="Academic Year" value={academicYear} />
           </Grid>
         </Grid>
       </CardContent>

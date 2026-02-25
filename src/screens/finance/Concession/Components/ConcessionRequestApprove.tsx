@@ -59,7 +59,7 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid container spacing={2}>
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
@@ -82,7 +82,7 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
         </Grid>
       </DialogScrollContent>
 
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions>
         <Button
           onClick={() => {
             onClose(null, false);

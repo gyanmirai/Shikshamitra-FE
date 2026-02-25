@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { Box } from '@mui/material';
-import React, { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -12,7 +12,9 @@ import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import {
   useUploadDocumentsMutation,
   useUpdateValueEntryMutation,
+  useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
+  useUpdateConcessionRequestMutation,
   useUpdateFeeHeadfeeHeadsDataMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
@@ -54,6 +56,11 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     currentQueryAndMutation: useCreateConcessionRequestMutation,
   });
 
+  const [updateConcessionRequest] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateConcessionRequestMutation,
+  });
+
   const [updateFeeHeadsData] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFeeHeadfeeHeadsDataMutation,
@@ -76,6 +83,45 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     options: { skip: !currentYear?.id },
   });
 
+  // Fetch edit data
+  const { data: requestDetails, isLoading: isDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionRequestByIdQuery,
+    params: editData?.concessionRequestId,
+    options: {
+      skip: !editData?.concessionRequestId,
+      refetchOnMountOrArgChange: true,
+    },
+  });
+
+  const initialValues = useMemo(() => {
+    if (editData?.concessionRequestId && requestDetails?.data) {
+      const d = requestDetails.data;
+      return {
+        ...getInitialConcessionFormData(),
+        id: d.concessionRequestId,
+        boardId: d.boardId,
+        mediumId: d.educationMediumId,
+        standardId: d.standardId,
+        divisionId: d.divisionId,
+        studentId: d.studentId,
+        // Pre-fill Step 2: Selected Concession Types
+        concessionTypeIds: (d.selectedConcessionTypes || []).map((ct: any) => ct.concessionTypeId),
+        selectedConcessionTypes: d.selectedConcessionTypes || [],
+        // If names are needed for display (like studentName), we might need to rely on 'editData' (IStudentInfo)
+        // or fetch them separately if not provided in 'requestDetails'.
+        // Assuming editData has basic info for Step 1 display if needed.
+        studentName: editData.studentName,
+        standardName: editData.standardName,
+        divisionName: editData.divisionName,
+        boardName: editData.boardName,
+        mediumName: editData.educationMediumName,
+        // Add other fields from editData if necessary for display
+      };
+    }
+    return getInitialConcessionFormData();
+  }, [editData, requestDetails]);
+
   const handleNext = async (
     isLastStep: boolean,
     values: any,
@@ -92,15 +138,32 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       }
 
       if (activeStep === 1) {
-        // Step 2 – Create concession request
-        const res: any = await createConcessionRequest({
-          boardId: values.boardId,
-          educationMediumId: values.mediumId,
-          standardId: values.standardId,
-          divisionId: values.divisionId,
-          studentId: values.studentId,
-          concessionTypeIds: values.concessionTypeIds,
-        }).unwrap();
+        // Step 2 – Create or Update concession request
+        let res: any;
+        if (values.id) {
+          // Update existing request
+          res = await updateConcessionRequest({
+            concessionRequestId: values.id,
+            boardId: values.boardId,
+            educationMediumId: values.mediumId,
+            standardId: values.standardId,
+            divisionId: values.divisionId,
+            studentId: values.studentId,
+            concessionTypeIds: values.concessionTypeIds,
+          }).unwrap();
+          shikshaMitraToast.success({ message: 'Concession request updated successfully' });
+        } else {
+          // Create new request
+          res = await createConcessionRequest({
+            boardId: values.boardId,
+            educationMediumId: values.mediumId,
+            standardId: values.standardId,
+            divisionId: values.divisionId,
+            studentId: values.studentId,
+            concessionTypeIds: values.concessionTypeIds,
+          }).unwrap();
+          shikshaMitraToast.success({ message: 'Concession request created successfully' });
+        }
 
         const reqId = res?.data?.concessionRequestId;
         _formik.setFieldValue('id', reqId);
@@ -109,7 +172,6 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         const selectedConcessionTypes = res?.data?.selectedConcessionTypes || [];
         _formik.setFieldValue('selectedConcessionTypes', selectedConcessionTypes);
 
-        shikshaMitraToast.success({ message: 'Concession request created successfully' });
         setActiveStep((s) => s + 1);
       } else if (activeStep === 2) {
         // Step 3 – Fee Heads
@@ -118,7 +180,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         // Build a lookup: concessionTypeId -> ConcessionRequestConcessionTypeId
         const concessionTypeIdMap: Record<string, string> = {};
         (values.selectedConcessionTypes || []).forEach((ct: any) => {
-          concessionTypeIdMap[ct.concessionTypeId] = ct.ConcessionRequestConcessionTypeId;
+          concessionTypeIdMap[ct.concessionTypeId] = ct.concessionRequestConcessionTypeId;
         });
 
         const feeHeadsData = Object.entries(values.selectedFeeHeads).map(
@@ -141,7 +203,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         // Build a lookup: concessionTypeId -> ConcessionRequestConcessionTypeId
         const concessionTypeIdMap: Record<string, string> = {};
         (values.selectedConcessionTypes || []).forEach((ct: any) => {
-          concessionTypeIdMap[ct.concessionTypeId] = ct.ConcessionRequestConcessionTypeId;
+          concessionTypeIdMap[ct.concessionTypeId] = ct.concessionRequestConcessionTypeId;
         });
 
         const concessionTypeValues = Object.entries(values.selectedFeeHeads).map(
@@ -178,7 +240,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         // Build a lookup: concessionTypeId -> ConcessionRequestConcessionTypeId
         const concessionTypeIdMapDocs: Record<string, string> = {};
         (values.selectedConcessionTypes || []).forEach((ct: any) => {
-          concessionTypeIdMapDocs[ct.concessionTypeId] = ct.ConcessionRequestConcessionTypeId;
+          concessionTypeIdMapDocs[ct.concessionTypeId] = ct.concessionRequestConcessionTypeId;
         });
 
         // Attach concessionRequestConcessionTypeId to each document group
@@ -302,17 +364,21 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CustomStepperWithFormik
-        steps={STEPS}
-        activeStep={activeStep}
-        initialValues={getInitialConcessionFormData()}
-        validationSchema={concessionStepValidations[activeStep]} // Ensure valid schemas for new steps
-        handleNext={handleNext}
-        handleBack={handleBack}
-        renderItem={renderItem}
-        showSaveButton={false}
-        scrollbarHeight="calc(100vh - 350px)" // Adjusted height
-      />
+      {isDetailsLoading ? (
+        <Box sx={{ p: 3, textAlign: 'center' }}>Loading Request Details...</Box>
+      ) : (
+        <CustomStepperWithFormik
+          steps={STEPS}
+          activeStep={activeStep}
+          initialValues={initialValues}
+          validationSchema={concessionStepValidations[activeStep]} // Ensure valid schemas for new steps
+          handleNext={handleNext}
+          handleBack={handleBack}
+          renderItem={renderItem}
+          showSaveButton={false}
+          scrollbarHeight="calc(100vh - 350px)" // Adjusted height
+        />
+      )}
     </Box>
   );
 };

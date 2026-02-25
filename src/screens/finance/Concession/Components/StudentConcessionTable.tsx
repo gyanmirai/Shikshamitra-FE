@@ -34,6 +34,7 @@ interface ICombinedProps {
   // eslint-disable-next-line react/no-unused-prop-types
   onRemove?: (data: IStudentInfo) => void;
   onViewConcession?: (student: IStudentInfo) => void;
+  onEditConcession?: (student: IStudentInfo) => void;
   onViewAllConcession?: (student: IStudentInfo) => void;
   selectedBoard: string;
   selectedMedium: string;
@@ -47,13 +48,14 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onAddConcession,
   onRequestConcession,
   onViewConcession,
+  onEditConcession,
   onViewAllConcession,
   selectedBoard,
   selectedMedium,
   onBoardChange,
   onMediumChange,
 }) => {
-  const tabs = useTabs(ConcessionStatusType.Pending);
+  const tabs = useTabs(ConcessionStatusType.Draft);
   const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
   const removeConcessionDialog = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -96,6 +98,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   const concessionCounts = useMemo(
     () => ({
+      draft: allConcessionData?.draftCount || 0,
       pending: allConcessionData?.pendingCount || 0,
       approved: allConcessionData?.approvedCount || 0,
       rejected: allConcessionData?.rejectedCount || 0,
@@ -105,6 +108,12 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   const TABS = useMemo(
     () => [
+      {
+        label: 'Draft',
+        value: ConcessionStatusType.Draft,
+        count: concessionCounts.draft,
+        color: 'warning',
+      },
       {
         label: 'Pending',
         value: ConcessionStatusType.Pending,
@@ -124,7 +133,12 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
         color: 'error',
       },
     ],
-    [concessionCounts.approved, concessionCounts.pending, concessionCounts.rejected]
+    [
+      concessionCounts.approved,
+      concessionCounts.draft,
+      concessionCounts.pending,
+      concessionCounts.rejected,
+    ]
   );
 
   const actions = useCallback(
@@ -257,12 +271,13 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
               <ThreeDotsActions
                 placement="right-top"
                 showViewIcon
-                showDeleteIcon={tabs.value === ConcessionStatusType.Pending}
+                showEditIcon={tabs.value === ConcessionStatusType.Draft}
                 handleDeleteClick={() => {
                   setSelectedConcession(row as IStudentInfo);
                   removeConcessionDialog.onTrue();
                 }}
                 showThreeDots={false}
+                handleEditClick={() => onEditConcession?.(row as IStudentInfo)}
                 handleViewClick={() => onViewConcession?.(row as IStudentInfo)}
               />
             ),

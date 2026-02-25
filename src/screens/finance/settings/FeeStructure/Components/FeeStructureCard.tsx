@@ -78,17 +78,6 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                       Number(val)
                     );
                   }}
-                  InputProps={{
-                    startAdornment: (
-                      <Typography
-                        variant="caption"
-                        sx={{ mr: 0.5, color: 'text.secondary', fontWeight: 'bold' }}
-                      >
-                        ₹
-                      </Typography>
-                    ),
-                    style: { fontSize: '0.875rem', fontWeight: 600 },
-                  }}
                   sx={{
                     '& .MuiInputBase-root': {
                       height: 36, // Force compact height

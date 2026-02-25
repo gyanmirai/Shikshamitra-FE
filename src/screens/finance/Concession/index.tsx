@@ -153,6 +153,11 @@ const Concession = () => {
             setSelectedConcession(data);
           }}
           onAddConcession={() => {
+            setSelectedConcession(null);
+            addConcessionRequest.onTrue();
+          }}
+          onEditConcession={(data) => {
+            setSelectedConcession(data);
             addConcessionRequest.onTrue();
           }}
           selectedBoard={selectedBoard}
@@ -172,6 +177,7 @@ const Concession = () => {
             open={addConcessionRequest.value}
             onClose={handleClose}
             student={selectedConcession as IStudentInfo}
+            editData={selectedConcession as any}
           />
         </Card>
       )}

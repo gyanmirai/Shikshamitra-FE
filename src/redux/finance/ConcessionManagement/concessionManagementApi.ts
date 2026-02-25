@@ -11,9 +11,42 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       invalidatesTags: ['ConcessionRequest'],
     }),
 
+    updateConcessionRequest: builder.mutation({
+      query: ({ concessionRequestId, ...body }) => ({
+        url: `/concession-request/${concessionRequestId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['ConcessionRequest'],
+    }),
+
     getBasicDetails: builder.query({
       query: (concessionRequestId) => ({
         url: `/concession-request/basic-details/${concessionRequestId}`,
+        method: 'GET',
+      }),
+      providesTags: ['ConcessionRequest'],
+    }),
+
+    getConcessionRequestById: builder.query({
+      query: (concessionRequestId) => ({
+        url: `/concession-request/${concessionRequestId}`,
+        method: 'GET',
+      }),
+      providesTags: ['ConcessionRequest'],
+    }),
+
+    getConcessionRequestValueEntries: builder.query({
+      query: (concessionRequestId) => ({
+        url: `/concession-request/${concessionRequestId}/value-entries`,
+        method: 'GET',
+      }),
+      providesTags: ['ConcessionRequest'],
+    }),
+
+    getConcessionRequestFeeHeads: builder.query({
+      query: (concessionRequestId) => ({
+        url: `/concession-request/${concessionRequestId}/fee-heads`,
         method: 'GET',
       }),
       providesTags: ['ConcessionRequest'],
@@ -114,6 +147,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
 export const {
   useCreateConcessionRequestMutation,
+  useUpdateConcessionRequestMutation,
   useGetBasicDetailsQuery,
   useSaveConcessionTypesMutation,
   useUpdateFeeHeadfeeHeadsDataMutation,
@@ -125,4 +159,7 @@ export const {
   useRejectConcessionRequestMutation,
   useGetConcessionApplicationsQuery,
   useDeleteConcessionApplicationMutation,
+  useGetConcessionRequestByIdQuery,
+  useGetConcessionRequestValueEntriesQuery,
+  useGetConcessionRequestFeeHeadsQuery,
 } = concessionManagementApi;

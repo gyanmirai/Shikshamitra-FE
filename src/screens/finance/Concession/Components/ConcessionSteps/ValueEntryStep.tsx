@@ -1,8 +1,10 @@
-import React, { useMemo, useCallback } from 'react';
 import PercentIcon from '@mui/icons-material/Percent';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useGetStandardFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import { useGetConcessionRequestValueEntriesQuery } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
   Card,
@@ -24,6 +26,62 @@ interface Props {
 
 const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   const { values, setFieldValue } = formik;
+  const { concessionRequestId } = values;
+
+  // New API call to fetch saved value entries
+  const { data: valueEntriesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionRequestValueEntriesQuery,
+    params: concessionRequestId,
+    options: {
+      skip: !concessionRequestId,
+      refetchOnMountOrArgChange: true,
+    },
+  });
+
+  // Hydrate Formik with fetched data
+  useEffect(() => {
+    if (valueEntriesData?.data?.concessionTypeValues) {
+      const hydratedValueEntries: Record<
+        string,
+        Record<
+          string,
+          {
+            basedOn: 0 | 1;
+            amount: number;
+            netAmount: number;
+          }
+        >
+      > = {};
+
+      valueEntriesData.data.concessionTypeValues.forEach((ct: any) => {
+        hydratedValueEntries[ct.concessionTypeId] = {};
+        if (ct.feeHeadValues) {
+          ct.feeHeadValues.forEach((fh: any) => {
+            hydratedValueEntries[ct.concessionTypeId][fh.feeHeadId] = {
+              basedOn: fh.basedOn,
+              amount: fh.amount,
+              netAmount: fh.netAmount,
+            };
+          });
+        }
+      });
+
+      // Merge with existing logic or just set it
+      // Since this is hydration on load/edit, we should probably check if keys exist in formik first?
+      // Or if formik is empty for these keys?
+      // The requirement says "run once on mount in edit mode".
+      // We can check if `values.valueEntries` is empty or if we want to overwrite.
+      // Usually, if we are fetching data, we want to set it.
+      // However, to avoid overwriting user changes if they started editing before fetch completes (unlikely but possible),
+      // we might want to be careful. But typically hydration overwrites initial empty state.
+
+      // Only set if we have keys to set.
+      if (Object.keys(hydratedValueEntries).length > 0) {
+        setFieldValue('valueEntries', hydratedValueEntries);
+      }
+    }
+  }, [valueEntriesData, setFieldValue]);
 
   const selectedTypes = useMemo(
     () => (concessionTypes as any[]).filter((ct: any) => values.concessionTypeIds.includes(ct.id)),
@@ -171,12 +229,12 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
 
   return (
     <Card
-      sx={{ mb: 3, borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
+      sx={{ mb: 1, borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
       variant="outlined"
     >
       <Box
         sx={{
-          p: 2,
+          p: 1,
           borderBottom: '1px solid',
           borderColor: 'divider',
           display: 'flex',
@@ -190,7 +248,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
         </Typography>
       </Box>
 
-      <CardContent sx={{ p: 2 }}>
+      <CardContent sx={{ p: 1 }}>
         {selectedFeeHeads.map((fh: any, index: number) => {
           const fhId = fh.feeHeadId;
           const entry = values.valueEntries[concessionType.id]?.[fhId] || {
@@ -232,67 +290,85 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
 
                   {/* Input Section */}
                   <Grid size={{ xs: 12, sm: 4 }}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      type="number"
-                      value={entry.amount || ''} // Handle 0 well
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === '') {
-                          setEntry(concessionType.id, fhId, 'amount', 0, baseAmount);
-                          return;
-                        }
-                        const numVal = parseFloat(val);
-                        // Prevent negative
-                        if (numVal < 0) return;
-                        // If percentage, limit to 100?
-                        if (isPercentage && numVal > 100) return;
-
-                        // Calculate netAmount for update
-                        let newDiscount = 0;
-                        if (isPercentage) {
-                          newDiscount = (baseAmount * numVal) / 100;
-                        } else {
-                          newDiscount = numVal;
-                        }
-
-                        const newNet = baseAmount - newDiscount;
-
-                        setEntry(concessionType.id, fhId, 'amount', numVal, newNet);
-                      }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Tooltip
-                              title={
-                                isPercentage ? 'Switch to Amount (₹)' : 'Switch to Percentage (%)'
-                              }
-                            >
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  setEntry(
-                                    concessionType.id,
-                                    fhId,
-                                    'basedOn',
-                                    isPercentage ? 0 : 1,
-                                    baseAmount // Net becomes entry full amount on switch since input resets to 0
-                                  )
-                                }
-                              >
-                                {isPercentage ? (
+                    {isPercentage ? (
+                      /* ---- Percentage mode: plain number 0-100 ---- */
+                      <TextField
+                        size="small"
+                        fullWidth
+                        type="number"
+                        value={entry.amount === 0 ? '' : entry.amount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setEntry(concessionType.id, fhId, 'amount', 0, baseAmount);
+                            return;
+                          }
+                          const numVal = parseFloat(val);
+                          if (numVal < 0 || numVal > 100) return;
+                          const newDiscount = (baseAmount * numVal) / 100;
+                          setEntry(
+                            concessionType.id,
+                            fhId,
+                            'amount',
+                            numVal,
+                            baseAmount - newDiscount
+                          );
+                        }}
+                        inputProps={{ min: 0, max: 100, step: 'any' }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Tooltip title="Switch to Amount (₹)">
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    setEntry(concessionType.id, fhId, 'basedOn', 0, baseAmount)
+                                  }
+                                >
                                   <PercentIcon fontSize="small" />
-                                ) : (
+                                </IconButton>
+                              </Tooltip>
+                            </InputAdornment>
+                          ),
+                        }}
+                        placeholder="0"
+                      />
+                    ) : (
+                      /* ---- Rupee mode: formatted with ₹ and commas ---- */
+                      <NumericFormatCustom
+                        size="small"
+                        fullWidth
+                        placeholder="0"
+                        value={entry.amount === 0 ? '' : entry.amount}
+                        isAllowed={(vals) => {
+                          const { floatValue } = vals;
+                          return floatValue === undefined || floatValue <= baseAmount;
+                        }}
+                        onValueChange={(vals) => {
+                          const numVal = vals.floatValue ?? 0;
+                          setEntry(concessionType.id, fhId, 'amount', numVal, baseAmount - numVal);
+                        }}
+                        // suppress the default onChange so NumericFormat doesn't fight with onValueChange
+                        onChange={undefined}
+                        prefix=""
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Tooltip title="Switch to Percentage (%)">
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    setEntry(concessionType.id, fhId, 'basedOn', 1, baseAmount)
+                                  }
+                                >
                                   <CurrencyRupeeIcon fontSize="small" />
-                                )}
-                              </IconButton>
-                            </Tooltip>
-                          </InputAdornment>
-                        ),
-                      }}
-                      placeholder="0"
-                    />
+                                </IconButton>
+                              </Tooltip>
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
                   </Grid>
 
                   {/* Calculation Result */}
