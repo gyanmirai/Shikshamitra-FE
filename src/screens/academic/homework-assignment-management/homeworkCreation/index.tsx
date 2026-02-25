@@ -6,7 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Tab, Box, Paper, Button } from '@mui/material';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
@@ -29,7 +29,10 @@ const TABS = [
 ];
 
 const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'homeworkCreation' });
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
+    tab: 'homeworkCreation',
+  });
+  const searchParams = getAllParams();
 
   // Dialog state for each tab
   const addHomeworkDialog = useBoolean(false);
@@ -108,7 +111,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
               setIsBackClick(false);
             }
 
-            setSearchParams({ tab: value });
+            setSearchParams('tab', value);
           }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
           role="tablist"

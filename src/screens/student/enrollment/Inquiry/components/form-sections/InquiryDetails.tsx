@@ -1,10 +1,10 @@
 import type { FormikProps } from 'formik';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import CustomSelect from 'src/components/custom-select';
 import { Card, Grid, Divider, Typography } from '@mui/material';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 
 import type { IInquiryFormValues } from '../../type';
 
@@ -80,7 +80,7 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <CustomSelect
+          {/* <CustomSelect
             label="Inquiry Preference"
             name="inquiryPreferences"
             isLoading={inquiryPrefrenceLoading}
@@ -94,6 +94,48 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
             }}
             formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
             addOtherItemOnClick={actions.dialog.onTrue}
+          /> */}
+          <PaginatedSearchSelect
+            label="Inquiry Preference"
+            fetchOptions={async (query) => {
+              const items = inquiryPreference?.items || [];
+              const filtered = items.filter((item: any) =>
+                item?.preferenceName?.toLowerCase().includes(query.toLowerCase())
+              );
+              return {
+                data: filtered.map((item: any) => ({
+                  label: item.preferenceName,
+                  id: item.id,
+                })),
+                hasMore: false,
+              };
+            }}
+            value={
+              values.inquiryPreferences
+                ? {
+                    label:
+                      inquiryPreference?.items?.find((b: any) => b.id === values.inquiryPreferences)
+                        ?.preferenceName || '',
+                    id: values.inquiryPreferences,
+                  }
+                : null
+            }
+            isOptionEqualToValue={(option, value) => option.id === value?.id}
+            getOptionLabel={(option: any) => option?.label || ''}
+            renderOption={(prop, option: any) => (
+              <li {...prop} key={option.id}>
+                {option.label}
+              </li>
+            )}
+            minChars={0}
+            onChange={(_, value: any) => {
+              setFieldValue('inquiryPreferences', value?.id || '');
+            }}
+            error={!!(touched.inquiryPreferences && errors.inquiryPreferences)}
+            helperText={(touched.inquiryPreferences && errors.inquiryPreferences) || ''}
+            fullWidth
+            sx={{ maxWidth: 'unset' }}
+            size="small"
           />
         </Grid>
       </Grid>

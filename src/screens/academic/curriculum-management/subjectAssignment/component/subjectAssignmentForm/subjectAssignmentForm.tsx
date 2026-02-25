@@ -12,13 +12,13 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, Chip, Button, DialogActions } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import {
   useAddSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
@@ -315,20 +315,48 @@ const SubjectAssignmentForm = ({
               {/* Class selection */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-                  <CustomSelect
-                    options={allClass}
+                  <PaginatedSearchSelect
                     label="Class *"
-                    value={formik.values.classId}
-                    labelKey="name"
-                    valueKey="id"
-                    onChange={(val) => {
+                    fetchOptions={async (query) => {
+                      const items = allClass || [];
+                      const filtered = items.filter((item: any) =>
+                        item?.name?.toLowerCase().includes(query.toLowerCase())
+                      );
+                      return {
+                        data: filtered.map((item: any) => ({
+                          label: item.name,
+                          id: item.id,
+                        })),
+                        hasMore: false,
+                      };
+                    }}
+                    value={
+                      formik.values.classId
+                        ? {
+                            label: formik.values.className || '',
+                            id: formik.values.classId,
+                          }
+                        : null
+                    }
+                    isOptionEqualToValue={(option, value) => option.id === value?.id}
+                    getOptionLabel={(option: any) => option?.label || ''}
+                    renderOption={(prop, option: any) => (
+                      <li {...prop} key={option.id}>
+                        {option.label}
+                      </li>
+                    )}
+                    minChars={0}
+                    onChange={(_, value: any) => {
+                      const val = value?.id || '';
                       formik.setFieldValue('classId', val);
                       const standard = allClass.find((c) => c.id === val);
-                      formik.setFieldValue('className', standard?.name);
+                      formik.setFieldValue('className', standard?.name || '');
                     }}
-                    formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
+                    fullWidth
+                    sx={{ minWidth: 180, width: '100%' }}
+                    size="small"
                     error={Boolean(formik.touched.className && formik.errors.className)}
-                    helperText={(formik.touched.className && formik.errors.className) || ''}
+                    helperText={(formik.touched.className && formik.errors.className) as string}
                   />
                 </ShakingTextField>
               </Grid>
@@ -338,29 +366,33 @@ const SubjectAssignmentForm = ({
                 <ShakingTextField
                   error={!!(formik.touched.subjectName && formik.errors.subjectName)}
                 >
-                  <Autocomplete
+                  <PaginatedSearchSelect
                     multiple
-                    fullWidth
-                    size="small"
+                    label="Subjects *"
                     disabled={isPublished}
-                    options={
-                      subjectOptionsData?.data?.map((item: any) => ({
-                        label: item.name,
-                        value: item.id,
-                        type: item.subjectType,
-                        color: item.color,
-                        subjects: item.subjects,
-                      })) || []
-                    }
-                    loading={isSubjectOptionsLoading}
-                    getOptionLabel={(option) => option.label}
-                    value={selectedOption}
-                    onChange={(_, newValue) => handleSubjectChange(newValue)}
-                    ListboxProps={{
-                      style: { maxHeight: 200, overflow: 'auto' },
+                    fetchOptions={async (query) => {
+                      const items = subjectOptionsData?.data || [];
+                      const filtered = items.filter((item: any) =>
+                        item?.name?.toLowerCase().includes(query.toLowerCase())
+                      );
+                      return {
+                        data: filtered.map((item: any) => ({
+                          label: item.name,
+                          value: item.id,
+                          type: item.subjectType,
+                          color: item.color,
+                          subjects: item.subjects,
+                        })),
+                        hasMore: false,
+                      };
                     }}
-                    renderOption={(props, option) => {
-                      const { key, ...restProps } = props;
+                    value={selectedOption}
+                    isOptionEqualToValue={(option: any, value: any) =>
+                      option?.value === value?.value
+                    }
+                    getOptionLabel={(option: any) => option?.label || ''}
+                    renderOption={(props, option: any) => {
+                      const { key, ...restProps } = props as any;
 
                       return (
                         <li key={key} {...restProps}>
@@ -378,19 +410,12 @@ const SubjectAssignmentForm = ({
                         </li>
                       );
                     }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Subjects *"
-                        name="subjectName"
-                        error={Boolean(formik.touched.subjectName && formik.errors.subjectName)}
-                        helperText={formik.touched.subjectName && formik.errors.subjectName}
-                        inputProps={{
-                          ...params.inputProps,
-                          readOnly: true,
-                        }}
-                      />
-                    )}
+                    minChars={0}
+                    onChange={(_, newValue: any) => handleSubjectChange(newValue)}
+                    fullWidth
+                    size="small"
+                    error={Boolean(formik.touched.subjectName && formik.errors.subjectName)}
+                    helperText={(formik.touched.subjectName && formik.errors.subjectName) as string}
                   />
                 </ShakingTextField>
 

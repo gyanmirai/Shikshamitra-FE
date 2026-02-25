@@ -14,7 +14,6 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -22,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import { MOCK_SUBJECTS, DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
@@ -545,17 +545,43 @@ const TimeTableGrid = () => {
                 mb: 1,
               }}
             >
-              <CustomSelect
+              <PaginatedSearchSelect
                 label="Class"
-                name="class"
-                options={allClass}
-                valueKey="name"
-                labelKey="name"
-                formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-                value={classes}
-                onChange={(value) => {
-                  setClasses(value as string);
+                fetchOptions={async (query) => {
+                  const items = allClass || [];
+                  const filtered = items.filter((item: any) =>
+                    item?.name?.toLowerCase().includes(query.toLowerCase())
+                  );
+                  return {
+                    data: filtered.map((item: any) => ({
+                      label: item.name,
+                      id: item.name,
+                    })),
+                    hasMore: false,
+                  };
                 }}
+                value={
+                  classes
+                    ? {
+                        label: classes,
+                        id: classes,
+                      }
+                    : null
+                }
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
+                  </li>
+                )}
+                minChars={0}
+                onChange={(_, value: any) => {
+                  setClasses(value?.id || '');
+                }}
+                fullWidth
+                sx={{ maxWidth: '248px', width: '100%' }}
+                size="small"
               />
             </Box>
           </Card>

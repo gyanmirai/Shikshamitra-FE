@@ -1,17 +1,18 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
+
+import type { MarksFeedbackTabProps } from './index';
 
 const ASSIGNMENT_OPTIONS = [
   { value: 'Periodic Assessment 1', label: 'Periodic Assessment 1' },
@@ -26,7 +27,7 @@ const ASSIGNMENT_OPTIONS = [
   { value: 'Practical Skills Evaluation', label: 'Practical Skills Evaluation' },
 ];
 
-const AssignmentMarksAndFeedback = (props: TabComponentType) => {
+const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // State to store selected assignment data
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   // Dialog state for modal/popup control
@@ -79,42 +80,136 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
         }}
       >
         {' '}
-        <CustomSelect
-          options={allClass}
+        <PaginatedSearchSelect
           label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = allClass || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            classes
+              ? {
+                  label: allClass.find((c: any) => c.id === classes)?.name || '',
+                  id: classes,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(prop, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            setClass(value?.id || '');
+          }}
+          sx={{ maxWidth: '248px', width: '100%' }}
+          size="small"
         />
-        <CustomSelect
-          options={allDivision}
+        <PaginatedSearchSelect
           label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = allDivision || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            division
+              ? {
+                  label: allDivision.find((d: any) => d.id === division)?.name || division,
+                  id: division,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(prop, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            setDivision(value?.id || '');
+          }}
+          sx={{ maxWidth: '248px', width: '100%' }}
+          size="small"
           disabled={!classes}
         />
-        <CustomSelect
-          options={[
-            { id: '1', name: 'Mathematics' },
-            { id: '2', name: 'Science' },
-            { id: '3', name: 'English' },
-            { id: '4', name: 'History' },
-            { id: '5', name: 'Geography' },
-            { id: '6', name: 'Physics' },
-            { id: '7', name: 'Chemistry' },
-            { id: '8', name: 'Biology' },
-          ]}
+        <PaginatedSearchSelect
           label="Subject"
-          value={subject}
-          onChange={(val) => setSubject(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          fetchOptions={async (query) => {
+            const items = [
+              { id: '1', name: 'Mathematics' },
+              { id: '2', name: 'Science' },
+              { id: '3', name: 'English' },
+              { id: '4', name: 'History' },
+              { id: '5', name: 'Geography' },
+              { id: '6', name: 'Physics' },
+              { id: '7', name: 'Chemistry' },
+              { id: '8', name: 'Biology' },
+            ];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(query.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
+          }}
+          value={
+            subject
+              ? {
+                  label:
+                    [
+                      { id: '1', name: 'Mathematics' },
+                      { id: '2', name: 'Science' },
+                      { id: '3', name: 'English' },
+                      { id: '4', name: 'History' },
+                      { id: '5', name: 'Geography' },
+                      { id: '6', name: 'Physics' },
+                      { id: '7', name: 'Chemistry' },
+                      { id: '8', name: 'Biology' },
+                    ].find((s) => s.id === subject)?.name || '',
+                  id: subject,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(prop, option: any) => (
+            <li {...prop} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            setSubject(value?.id || '');
+          }}
+          sx={{ maxWidth: '248px', width: '100%' }}
+          size="small"
           disabled={!division}
         />
         <CustomTooltip
