@@ -114,7 +114,7 @@ const studentEnrollment = [
     id: 1,
     name: 'Aarav Kumar',
     class: 'Class 5',
-    section: 'Section A',
+    section: 'Division A',
     enrollmentDate: '06-06-2025',
     status: 'Documents Pending',
     avatarUrl: '/assets/images/avatars/avatar_1.jpg',
@@ -123,7 +123,7 @@ const studentEnrollment = [
     id: 2,
     name: 'Ananya Sharma',
     class: 'Class 3',
-    section: 'Section B',
+    section: 'Division B',
     enrollmentDate: '05-06-2025',
     status: 'Enrolled',
     avatarUrl: '/assets/images/avatars/avatar_2.jpg',
@@ -132,7 +132,7 @@ const studentEnrollment = [
     id: 3,
     name: 'Rohan Patel',
     class: 'Class 4',
-    section: 'Section A',
+    section: 'Division A',
     enrollmentDate: '04-06-2025',
     status: 'In Progress',
     avatarUrl: '/assets/images/avatars/avatar_3.jpg',
@@ -141,7 +141,7 @@ const studentEnrollment = [
     id: 4,
     name: 'Ishaan Gupta',
     class: 'Class 2',
-    section: 'Section C',
+    section: 'Division C',
     enrollmentDate: '03-06-2025',
     status: 'Rejected',
     avatarUrl: '/assets/images/avatars/avatar_4.jpg',
@@ -389,13 +389,13 @@ const AdminLists = () => {
             </Stack>
           </Stack>
 
-          <Scrollbar sx={{ p: 1, pt: 0, flexGrow: 1 }}>
-            <Stack spacing={2} sx={{ p: 1 }}>
+          <Scrollbar sx={{ pt: 0, flexGrow: 1 }}>
+            <Stack spacing={1} sx={{ p: 1 }}>
               {filteredEnrollments.map((student) => (
                 <Box
                   key={student.id}
                   sx={{
-                    p: 2,
+                    p: 1.5,
                     borderRadius: 1.5,
                     border: (theme) => `1px solid ${theme.palette.divider}`,
                     display: 'flex',
