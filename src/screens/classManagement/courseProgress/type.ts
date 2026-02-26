@@ -44,6 +44,7 @@ export interface ICourse {
 export interface ICourseCardsGridProps {
   courses: ICourse[];
   handleCardDetails: (course: ICourse) => void;
+  layout?: 'horizontal' | 'vertical';
 }
 
 export interface IAppWidgetProps {

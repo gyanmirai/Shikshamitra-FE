@@ -8,16 +8,16 @@ import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Button, TextField, Autocomplete } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   useGetClassTeacherAssignmentsQuery,
@@ -195,25 +195,52 @@ const ClassTeacherAssignment = () => {
         ]}
         description="Assign teachers to specific classes and divisions, manage class teacher allocations."
       />
-      <Box
+      <Card
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 2,
-          ml: 1,
+          p: 1.5,
         }}
       >
-        <CustomSelect
-          options={allOrganization}
+        <PaginatedSearchSelect
           label="Organization *"
-          value={organization}
-          onChange={(val) => {
-            setOrganization(val as any);
+          fetchOptions={async (searchQuery) => {
+            const items = allOrganization || [];
+            const filtered = items.filter((item: any) =>
+              item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            return {
+              data: filtered.map((item: any) => ({
+                label: item.name,
+                id: item.id,
+              })),
+              hasMore: false,
+            };
           }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          value={
+            organization
+              ? {
+                  label: allOrganization.find((org: any) => org.id === organization)?.name || '',
+                  id: organization,
+                }
+              : null
+          }
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+          getOptionLabel={(option: any) => option?.label || ''}
+          renderOption={(optionProps, option: any) => (
+            <li {...optionProps} key={option.id}>
+              {option.label}
+            </li>
+          )}
+          minChars={0}
+          onChange={(_, value: any) => {
+            const val = value?.id || '';
+            setOrganization(val);
+          }}
+          sx={{ maxWidth: '250px', width: '100%' }}
+          noOptionsText="No results found"
+          size="small"
         />
         <Box display="flex" gap={2} justifyContent="flex-end">
           <Button
@@ -238,7 +265,7 @@ const ClassTeacherAssignment = () => {
             Save
           </LoadingButton>
         </Box>
-      </Box>
+      </Card>
 
       <CustomizableTable
         onSendNotification={handlerSendNotification}
@@ -265,42 +292,57 @@ const ClassTeacherAssignment = () => {
                 teacherOptions.find((t) => t.value === row.classTeacher) || null;
 
               return (
-                <Autocomplete
-                  options={getAvailableTeachers(row)}
-                  value={activeTeacher}
-                  getOptionLabel={(option) => option.name}
-                  isOptionEqualToValue={(option, val) => option.value === val.value}
-                  onChange={(event, newValue) =>
-                    handleTeacherChange(newValue?.value || null, tableData.indexOf(row))
+                <PaginatedSearchSelect
+                  label="Class Teacher"
+                  fetchOptions={async (searchQuery) => {
+                    const available = getAvailableTeachers(row);
+                    const filtered = available.filter((t) =>
+                      t.name.toLowerCase().includes(searchQuery.toLowerCase())
+                    );
+                    return {
+                      data: filtered.map((t) => ({
+                        label: t.name,
+                        id: t.value,
+                      })),
+                      hasMore: false,
+                    };
+                  }}
+                  value={
+                    activeTeacher ? { label: activeTeacher.name, id: activeTeacher.value } : null
                   }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Class Teacher"
-                      fullWidth
-                      sx={{
-                        maxWidth: '280px',
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: focusedCells.includes(tableData.indexOf(row))
-                              ? 'primary.main'
-                              : 'rgba(0,0,0,0.23)',
-                            borderWidth: focusedCells.includes(tableData.indexOf(row)) ? 2 : 1,
-                          },
-                          '&:hover fieldset': {
-                            borderColor: focusedCells.includes(tableData.indexOf(row))
-                              ? 'primary.main'
-                              : undefined,
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: focusedCells.includes(tableData.indexOf(row))
-                              ? 'primary.main'
-                              : undefined,
-                          },
-                        },
-                      }}
-                    />
+                  isOptionEqualToValue={(option, val) => option.id === val?.id}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  renderOption={(optionProps, option: any) => (
+                    <li {...optionProps} key={option.id}>
+                      {option.label}
+                    </li>
                   )}
+                  minChars={0}
+                  noOptionsText="No results found"
+                  onChange={(_, newValue: any) => {
+                    handleTeacherChange(newValue?.id || null, tableData.indexOf(row));
+                  }}
+                  sx={{
+                    maxWidth: '280px',
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: focusedCells.includes(tableData.indexOf(row))
+                          ? 'primary.main'
+                          : 'rgba(0,0,0,0.23)',
+                        borderWidth: focusedCells.includes(tableData.indexOf(row)) ? 2 : 1,
+                      },
+                      '&:hover fieldset': {
+                        borderColor: focusedCells.includes(tableData.indexOf(row))
+                          ? 'primary.main'
+                          : undefined,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: focusedCells.includes(tableData.indexOf(row))
+                          ? 'primary.main'
+                          : undefined,
+                      },
+                    },
+                  }}
                   size="small"
                   ListboxProps={{
                     style: {

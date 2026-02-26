@@ -48,6 +48,7 @@ import {
 import {
   Box,
   Tab,
+  Card,
   Tabs,
   Grid,
   Stack,
@@ -147,6 +148,17 @@ const AdmissionScreen = () => {
     } else if (!isChanges) {
       dialogForAssignFeeStructure.onFalse();
       setEditData(null);
+    }
+  };
+
+  const handleFormClose = (_e?: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      setEditData(null);
+      setOpen(false);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      setEditData(null);
+      setOpen(false);
     }
   };
 
@@ -381,81 +393,105 @@ const AdmissionScreen = () => {
     [dialogForAssignFeeStructure, divisionDialog, followUpDialog, selectedStudents, tableData]
   );
 
+  const links = open
+    ? [
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
+        { name: 'Admission' },
+        { name: 'Update Details' },
+      ]
+    : [
+        { name: 'Student', href: '/student/enrollment/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
+        { name: 'Admission' },
+      ];
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Admission"
-        links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
-          { name: 'Admission' },
-        ]}
-        description="Manage students admissions, review applications and approve or reject them as needed."
+        links={links}
+        isBack={open}
+        onBack={handleFormClose}
+        description={
+          open
+            ? 'Update admission, personal, and contact details of the selected student across multiple tabs.'
+            : 'Manage students admissions, review applications and approve or reject them as needed.'
+        }
       />
-      <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2 },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}{' '}
-                  <Label
-                    // variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
-                    color={(tab?.color as LabelColor) || 'default'}
-                  >
-                    {tab.count}
-                  </Label>
-                </Box>
-              }
-              // icon={tab.icon}
-              value={tab.value}
-            />
-          ))}
-        </Tabs>
 
-        <Button
-          variant="contained"
-          size="small"
-          disabled={!selectedStudents.length}
-          onClick={statusDialog.onTrue}
-          startIcon={<Iconify icon="mdi:exchange" />}
-          sx={{ px: '32px' }}
-        >
-          Change Status
-        </Button>
-      </Paper>
-      <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
-        tableId="student-enrollment-admission-table"
-        noDataText={<>No Students Admission Data Found</>}
-        isLoading={isLoading || isFetching}
-        columns={columns}
-        serverSide
-        onServerSort={(column, sortData) => {
-          setQuery((prev) => ({
-            ...prev,
-            sorting: sortQueryString(sortData),
-          }));
-        }}
-        onServerPagination={(page: number, rowsPerPage: number) => {
-          setQuery((prev) => ({
-            ...prev,
-            skipCount: page * rowsPerPage,
-            maxResultCount: rowsPerPage,
-          }));
-        }}
-        data={tableData || []}
-      />
+      {open ? (
+        <Card sx={{ height: '100%', mt: 1 }}>
+          <RegisterForm editData={editData as any} handleClose={handleFormClose} />
+        </Card>
+      ) : (
+        <>
+          <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1 }}>
+            <Tabs
+              value={tabs.value}
+              onChange={handleTabChange}
+              sx={{
+                '& .MuiTabs-flexContainer': { gap: 2 },
+                flexGrow: 1,
+              }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  sx={{ fontSize: '12px' }}
+                  key={tab.value}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}{' '}
+                      <Label
+                        // variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
+                        color={(tab?.color as LabelColor) || 'default'}
+                      >
+                        {tab.count}
+                      </Label>
+                    </Box>
+                  }
+                  // icon={tab.icon}
+                  value={tab.value}
+                />
+              ))}
+            </Tabs>
+
+            <Button
+              variant="contained"
+              size="small"
+              disabled={!selectedStudents.length}
+              onClick={statusDialog.onTrue}
+              startIcon={<Iconify icon="mdi:exchange" />}
+              sx={{ px: '32px' }}
+            >
+              Change Status
+            </Button>
+          </Paper>
+          <CustomizableTable
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
+            tableId="student-enrollment-admission-table"
+            noDataText={<>No Students Admission Data Found</>}
+            isLoading={isLoading || isFetching}
+            columns={columns}
+            serverSide
+            onServerSort={(column, sortData) => {
+              setQuery((prev) => ({
+                ...prev,
+                sorting: sortQueryString(sortData),
+              }));
+            }}
+            onServerPagination={(page: number, rowsPerPage: number) => {
+              setQuery((prev) => ({
+                ...prev,
+                skipCount: page * rowsPerPage,
+                maxResultCount: rowsPerPage,
+              }));
+            }}
+            data={tableData || []}
+          />
+        </>
+      )}
 
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -473,35 +509,7 @@ const AdmissionScreen = () => {
       >
         <FeeStructureAssignmentForm student={editData} handleClose={handleClose} />
       </CustomDialog>
-      <CustomDialog
-        maxWidth="xl"
-        open={open}
-        handleClose={() => {
-          setEditData(null);
-          setOpen(false);
-        }}
-        // title="Edit Details"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Update Details</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Edit a student’s admission, personal, and contact details across multiple tabs."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <RegisterForm
-          editData={editData as any}
-          handleClose={() => {
-            setEditData(null);
-            setOpen(false);
-          }}
-        />
-      </CustomDialog>
+
       <CustomDialog
         open={divisionDialog.value}
         handleClose={() => {
