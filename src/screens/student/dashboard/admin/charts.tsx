@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { Chart, useChart } from 'src/components/chart';
@@ -11,6 +12,7 @@ import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Grid, Card, Stack, CardHeader, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 const AdminCharts = () => {
+  const theme = useTheme();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -102,12 +104,15 @@ const AdminCharts = () => {
   const examStatusOptions = useChart({
     labels: ['Passed', 'Failed', 'Awaiting Result'],
     stroke: {
-      colors: ['#fff'],
+      colors: [theme.palette.background.paper],
     },
     legend: {
       show: true,
       position: 'bottom',
       horizontalAlign: 'center',
+      labels: {
+        colors: theme.vars.palette.text.primary,
+      },
       formatter(val, opts) {
         return `${val} - ${opts.w.globals.series[opts.seriesIndex]}`;
       },
@@ -155,6 +160,9 @@ const AdminCharts = () => {
   // 3. Class-wise Participation (Enhanced)
   // ------------------------------------
   const classParticipationOptions = useChart({
+    chart: {
+      stacked: true,
+    },
     plotOptions: {
       bar: {
         columnWidth: '45%',

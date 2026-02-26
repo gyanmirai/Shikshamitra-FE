@@ -1,5 +1,6 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -115,6 +116,9 @@ const Birthdays = () => {
             </Stack>
           }
           subheader="Upcoming Birthdays"
+          subheaderTypographyProps={{
+            sx: { color: (theme: any) => theme.vars?.palette?.text?.secondary || 'text.secondary' },
+          }}
           action={
             <Button
               size="small"
@@ -151,7 +155,13 @@ const Birthdays = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            bgcolor: 'primary.lighter',
+                            bgcolor: (theme: any) =>
+                              varAlpha(
+                                theme.vars?.palette?.primary?.mainChannel ||
+                                  theme.palette.primary.mainChannel ||
+                                  '',
+                                0.16
+                              ),
                             transition: 'all 0.2s',
                             '&:hover': {
                               borderColor: 'transparent',
