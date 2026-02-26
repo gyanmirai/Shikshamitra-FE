@@ -1,11 +1,44 @@
-import React, { useState } from 'react';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Chart, useChart } from 'src/components/chart';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Grid, Card, Stack, CardHeader, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 const AdminCharts = () => {
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
   // ------------------------------------
   // 1. Enrollment Trend (Enhanced)
   // ------------------------------------
@@ -132,15 +165,7 @@ const AdminCharts = () => {
       },
     },
     dataLabels: {
-      enabled: true,
-      formatter(val) {
-        return fNumber(Number(val));
-      },
-      offsetY: -20,
-      style: {
-        fontSize: '12px',
-        colors: ['#304758'],
-      },
+      enabled: false,
     },
     xaxis: {
       categories: [
@@ -160,18 +185,19 @@ const AdminCharts = () => {
     },
     tooltip: {
       y: {
-        formatter: (val, { dataPointIndex }) => {
-          const rank = dataPointIndex === 3 ? '1st' : dataPointIndex === 1 ? '2nd' : '3rd'; // Mock ranking logic
-          return `${val} (${rank})`;
-        },
+        formatter: (val: number) => `${val} Students`,
       },
     },
   });
 
   const classParticipationSeries = [
     {
-      name: 'Students',
-      data: [44, 55, 41, 67, 22, 12, 34, 56, 78, 90, 12, 34],
+      name: 'Boys',
+      data: [24, 30, 21, 35, 12, 6, 18, 30, 40, 45, 7, 18],
+    },
+    {
+      name: 'Girls',
+      data: [20, 25, 20, 32, 10, 6, 16, 26, 38, 45, 5, 16],
     },
   ];
 
@@ -286,6 +312,20 @@ const AdminCharts = () => {
               'Class-wise Participation',
               'Student participation metrics across different classes.'
             )}
+            action={
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <CustomSelect
+                  options={allDivision}
+                  label="Division"
+                  value={division}
+                  onChange={(val) => setDivision(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+                  disabled={!classes}
+                />
+              </Box>
+            }
           />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart
