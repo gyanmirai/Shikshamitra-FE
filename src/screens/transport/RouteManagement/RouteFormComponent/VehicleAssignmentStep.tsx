@@ -1,9 +1,9 @@
 import type { FormikProps } from 'formik';
 
 import React from 'react';
-import CustomSelect from 'src/components/custom-select';
+import { Grid } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, TextField, Autocomplete } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import RouteDetailsView from './RouteBasicView';
@@ -112,39 +112,50 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               )
             }
           >
-            <Autocomplete
+            <PaginatedSearchSelect
+              key={formik.values.vehicleAssignment?.vehicleId || 'vehicle-empty'}
               fullWidth
-              options={availableVehicles || []}
-              getOptionLabel={(option) => option?.label || ''}
+              label="Vehicle"
+              noOptionsText="No Vehicle Found"
+              minChars={0}
+              size="small"
+              fetchOptions={async (query: string, page: number) => {
+                const items = (availableVehicles || []) as any[];
+                const filtered = items.filter((o: any) =>
+                  (o.label || '').toLowerCase().includes(query.toLowerCase())
+                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                return {
+                  data: filtered.slice(start, start + pageSize),
+                  hasMore: start + pageSize < filtered.length,
+                };
+              }}
+              getOptionLabel={(option: any) => option?.label || ''}
               value={
                 availableVehicles?.find(
-                  (vehicle: any) => vehicle.vehicleId === formik.values.vehicleAssignment?.vehicleId
+                  (v: any) => v.vehicleId === formik.values.vehicleAssignment?.vehicleId
                 ) || null
               }
-              onChange={(event, newValue) => {
+              onChange={(_, newValue: any) => {
                 handleVehicleSelect(newValue ? newValue.value : null);
               }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Vehicle"
-                  size="small"
-                  error={
-                    !!(
-                      typeof formik.touched.vehicleAssignment === 'object' &&
-                      !Array.isArray(formik.touched.vehicleAssignment) &&
-                      formik.touched.vehicleAssignment?.vehicleId &&
-                      (formik.errors.vehicleAssignment as any)?.vehicleId
-                    )
-                  }
-                  helperText={
-                    typeof formik.touched.vehicleAssignment === 'object' &&
-                    !Array.isArray(formik.touched.vehicleAssignment) &&
-                    formik.touched.vehicleAssignment?.vehicleId &&
-                    (formik.errors.vehicleAssignment as any)?.vehicleId
-                  }
-                />
-              )}
+              isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
+              error={
+                !!(
+                  typeof formik.touched.vehicleAssignment === 'object' &&
+                  !Array.isArray(formik.touched.vehicleAssignment) &&
+                  formik.touched.vehicleAssignment?.vehicleId &&
+                  (formik.errors.vehicleAssignment as any)?.vehicleId
+                )
+              }
+              helperText={
+                typeof formik.touched.vehicleAssignment === 'object' &&
+                !Array.isArray(formik.touched.vehicleAssignment) &&
+                formik.touched.vehicleAssignment?.vehicleId
+                  ? ((formik.errors.vehicleAssignment as any)?.vehicleId as string)
+                  : undefined
+              }
             />
           </ShakingTextField>
         </Grid>
@@ -156,21 +167,37 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               !!getNestedError(formik.errors, 'vehicleAssignment.driverId')
             }
           >
-            <CustomSelect
-              label="Driver"
-              name="vehicleAssignment.driverId"
+            <PaginatedSearchSelect
+              key={formik.values.vehicleAssignment?.driverId || 'driver-empty'}
               fullWidth
-              options={availableDrivers}
-              value={formik.values.vehicleAssignment.driverId}
-              labelKey="name"
-              onChange={(value) => {
-                const selectedDriver = availableDrivers.find(
-                  (driver: any) => driver.value === value
+              label="Driver"
+              noOptionsText="No Driver Found"
+              minChars={0}
+              size="small"
+              fetchOptions={async (query: string, page: number) => {
+                const items = (availableDrivers || []) as any[];
+                const filtered = items.filter((o: any) =>
+                  (o.label || '').toLowerCase().includes(query.toLowerCase())
                 );
-                formik.setFieldValue('vehicleAssignment.driverId', selectedDriver?.value || '');
-                formik.setFieldValue('vehicleAssignment.driverName', selectedDriver?.label || '');
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                return {
+                  data: filtered.slice(start, start + pageSize),
+                  hasMore: start + pageSize < filtered.length,
+                };
+              }}
+              getOptionLabel={(option: any) => option?.label || ''}
+              value={
+                availableDrivers.find(
+                  (d: any) => d.value === formik.values.vehicleAssignment.driverId
+                ) || null
+              }
+              onChange={(_, newValue: any) => {
+                formik.setFieldValue('vehicleAssignment.driverId', newValue?.value || '');
+                formik.setFieldValue('vehicleAssignment.driverName', newValue?.label || '');
                 formik.setFieldTouched('vehicleAssignment.driverId', false);
               }}
+              isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
               error={
                 getNestedTouched(formik.touched, 'vehicleAssignment.driverId') &&
                 !!getNestedError(formik.errors, 'vehicleAssignment.driverId')
@@ -180,18 +207,6 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                   ? getNestedError(formik.errors, 'vehicleAssignment.driverId')
                   : undefined
               }
-              formControlProps={{ fullWidth: true }}
-              size="small"
-              renderValue={(selected) => {
-                const driver = availableDrivers.find((d: any) => d.value === selected);
-                return driver ? (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {driver.label}
-                  </Box>
-                ) : (
-                  ''
-                );
-              }}
             />
           </ShakingTextField>
         </Grid>
@@ -204,21 +219,36 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               !!getNestedError(formik.errors, 'vehicleAssignment.conductorId')
             }
           >
-            <CustomSelect
+            <PaginatedSearchSelect
+              key={formik.values.vehicleAssignment?.conductorId || 'conductor-empty'}
+              fullWidth
               label="Conductor"
-              name="vehicleAssignment.conductorId"
-              options={availableConductors}
-              value={formik.values.vehicleAssignment.conductorId}
-              onChange={(value) => {
-                const selectedConductor = availableConductors.find(
-                  (conductor: any) => conductor.value === value
+              noOptionsText="No Conductor Found"
+              minChars={0}
+              size="small"
+              fetchOptions={async (query: string, page: number) => {
+                const items = (availableConductors || []) as any[];
+                const filtered = items.filter((o: any) =>
+                  (o.label || '').toLowerCase().includes(query.toLowerCase())
                 );
-                formik.setFieldValue('vehicleAssignment.conductorId', value);
-                formik.setFieldValue(
-                  'vehicleAssignment.conductorName',
-                  selectedConductor?.label || ''
-                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                return {
+                  data: filtered.slice(start, start + pageSize),
+                  hasMore: start + pageSize < filtered.length,
+                };
               }}
+              getOptionLabel={(option: any) => option?.label || ''}
+              value={
+                availableConductors.find(
+                  (c: any) => c.value === formik.values.vehicleAssignment.conductorId
+                ) || null
+              }
+              onChange={(_, newValue: any) => {
+                formik.setFieldValue('vehicleAssignment.conductorId', newValue?.value || '');
+                formik.setFieldValue('vehicleAssignment.conductorName', newValue?.label || '');
+              }}
+              isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
               error={
                 getNestedTouched(formik.touched, 'vehicleAssignment.conductorId') &&
                 !!getNestedError(formik.errors, 'vehicleAssignment.conductorId')
@@ -228,18 +258,6 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                   ? getNestedError(formik.errors, 'vehicleAssignment.conductorId')
                   : undefined
               }
-              formControlProps={{ fullWidth: true }}
-              size="small"
-              renderValue={(selected) => {
-                const conductor = availableConductors.find((c: any) => c.value === selected);
-                return conductor ? (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {conductor.label}
-                  </Box>
-                ) : (
-                  ''
-                );
-              }}
             />
           </ShakingTextField>
         </Grid>

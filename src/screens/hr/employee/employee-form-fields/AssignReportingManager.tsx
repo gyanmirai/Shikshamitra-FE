@@ -76,7 +76,9 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
                       label: employeeValue.fullName,
                       id: employeeValue.id,
                     }
-                  : null
+                  : values.reportingManager && values.reportingManagerName
+                    ? { label: values.reportingManagerName, id: values.reportingManager }
+                    : null
               }
               isOptionEqualToValue={(option, value) => option.id === value?.id}
               getOptionLabel={(option: any) => option?.label || ''}

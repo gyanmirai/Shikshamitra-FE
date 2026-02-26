@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Card, Grid, TextField, Typography, CardContent, InputAdornment } from '@mui/material';
 
 import type { IStopData } from '../Components/type';
@@ -85,22 +85,45 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
           {/* Zone */}
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.zone && formik.errors.zone)}>
-              <CustomSelect
+              <PaginatedSearchSelect
+                key={formik.values.zone || 'zone-empty'}
+                fullWidth
                 label="Zone *"
-                options={[
-                  { value: 'North', label: 'North' },
-                  { value: 'South', label: 'South' },
-                  { value: 'East', label: 'East' },
-                  { value: 'West', label: 'West' },
-                  { value: 'Central', label: 'Central' },
-                ]}
-                onChange={(val) => {
-                  formik.setFieldValue('zone', val);
+                noOptionsText="No Zone Found"
+                minChars={0}
+                size="small"
+                fetchOptions={async (query: string, page: number) => {
+                  const zoneOptions = [
+                    { value: 'North', label: 'North' },
+                    { value: 'South', label: 'South' },
+                    { value: 'East', label: 'East' },
+                    { value: 'West', label: 'West' },
+                    { value: 'Central', label: 'Central' },
+                  ];
+                  const filtered = zoneOptions.filter((o) =>
+                    o.label.toLowerCase().includes(query.toLowerCase())
+                  );
+                  const pageSize = 10;
+                  const start = (page - 1) * pageSize;
+                  return {
+                    data: filtered.slice(start, start + pageSize),
+                    hasMore: start + pageSize < filtered.length,
+                  };
                 }}
-                value={formik.values.zone}
-                formControlProps={{
-                  sx: { width: '100%' },
+                getOptionLabel={(option: any) => option?.label || ''}
+                value={
+                  [
+                    { value: 'North', label: 'North' },
+                    { value: 'South', label: 'South' },
+                    { value: 'East', label: 'East' },
+                    { value: 'West', label: 'West' },
+                    { value: 'Central', label: 'Central' },
+                  ].find((opt) => opt.value === formik.values.zone) || null
+                }
+                onChange={(_, newValue: any) => {
+                  formik.setFieldValue('zone', newValue ? newValue.value : '');
                 }}
+                isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
                 error={!!(formik.touched.zone && formik.errors.zone)}
                 helperText={(formik.touched.zone && formik.errors.zone) as string}
               />

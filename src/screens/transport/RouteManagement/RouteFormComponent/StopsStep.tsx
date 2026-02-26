@@ -8,12 +8,12 @@ import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { DragIndicator } from '@mui/icons-material';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import { EmptyContent } from 'src/components/empty-content';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Grid, TextField, Typography, IconButton } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetZoneAreaOptionsQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import RouteDetailsView from './RouteBasicView';
@@ -288,22 +288,40 @@ const StopsStep = ({ formik }: StopsStepProps) => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Grid container spacing={2} size={{ xs: 12 }} mb={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <CustomSelect
+            <PaginatedSearchSelect
+              key={formik.values.zone || 'zone-empty'}
+              fullWidth
               label="Zone"
-              name="zone"
-              options={zoneAreaData || []}
-              labelKey="zoneName"
-              valueKey="zoneName"
-              value={formik.values.zone}
-              onChange={(value) => {
-                formik.setFieldValue('zone', value, false);
+              noOptionsText="No Zone Found"
+              minChars={0}
+              size="small"
+              fetchOptions={async (query: string, page: number) => {
+                const items = (zoneAreaData || []) as any[];
+                const filtered = items.filter((o: any) =>
+                  (o.zoneName || '').toLowerCase().includes(query.toLowerCase())
+                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                return {
+                  data: filtered.slice(start, start + pageSize).map((item: any) => ({
+                    label: item.zoneName,
+                    value: item.zoneName,
+                  })),
+                  hasMore: start + pageSize < filtered.length,
+                };
+              }}
+              getOptionLabel={(option: any) => option?.label || ''}
+              value={
+                formik.values.zone ? { label: formik.values.zone, value: formik.values.zone } : null
+              }
+              onChange={(_, newValue: any) => {
+                formik.setFieldValue('zone', newValue ? newValue.value : '', false);
                 formik.setFieldValue('stops', []); // clear stops
                 formik.setFieldTouched('stops', false);
               }}
+              isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
               error={!!(formik.touched.zone && formik.errors.zone)}
-              helperText={formik.touched.zone ? formik.errors.zone : undefined}
-              formControlProps={{ fullWidth: true }}
-              size="small"
+              helperText={formik.touched.zone ? (formik.errors.zone as string) : undefined}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>

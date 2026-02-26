@@ -219,8 +219,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
-  console.log('formik values-----', formik.values);
-  console.log('formik initialvalues-----', formik.initialValues);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     await formik?.submitForm?.();

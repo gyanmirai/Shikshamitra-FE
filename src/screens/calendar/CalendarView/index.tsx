@@ -469,6 +469,7 @@ const CalendarView = () => {
       <CommonCalender
         data={calendarData}
         showCalendarToolbar
+        initialView="timeGridWeek"
         onDateClick={(e) => {
           handleEventClick(e);
         }}

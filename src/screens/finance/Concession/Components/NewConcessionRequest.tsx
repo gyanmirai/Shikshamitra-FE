@@ -7,27 +7,22 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
-import {
-  useGetConcessionRequestByIdQuery,
-  useCreateConcessionRequestMutation,
-  useUpdateConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
   Box,
   Grid,
@@ -36,13 +31,17 @@ import {
   Button,
   Tooltip,
   Checkbox,
-  TextField,
+  Skeleton,
   IconButton,
   Typography,
   CardContent,
-  Autocomplete,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetConcessionRequestByIdQuery,
+  useCreateConcessionRequestMutation,
+  useUpdateConcessionRequestMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 
 import { concessionValidation } from './ConcessionValidation';
 import { getInitialConcessionFormData } from './ConcessionInitialValues';
@@ -64,7 +63,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<any[]>([]);
   // Fetch concession type data
-  const { data: concessionTypes } = useQueryAndMutation({
+  const { data: concessionTypes, isLoading: isLoadingConcessionTypes } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
   });
@@ -79,11 +78,11 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   });
 
   // queries
-  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
+  const [getClassByMedium, { data: classes, isLoading: classesLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
-  const [getStudents, { data: StudentsData, isLoading: studentLoading }] = useQueryAndMutation({
+  const [getStudents] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
@@ -160,15 +159,6 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     }
   }, [formik.values.className, formik.values.division, getStudents]);
 
-  const tableData = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -183,44 +173,125 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   {/* Board */}
                   <Grid size={6}>
                     <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
-                      <CustomSelect
-                        label="Board *"
-                        options={boards}
-                        labelKey="name"
-                        valueKey="id"
-                        value={formik.values.board}
-                        onChange={(val) => {
-                          formik.setFieldValue('board', val);
-                          formik.setFieldTouched('board', false);
-                          formik.setFieldValue('medium', '');
-                          formik.setFieldValue('className', '');
-                          formik.setFieldValue('division', '');
-                        }}
-                        error={!!formik.errors.board && formik.touched.board}
-                        helperText={(formik.touched.board && formik.errors.board) as string}
-                      />
+                      {!currentYear ? (
+                        <Skeleton variant="rounded" height={40} />
+                      ) : (
+                        <PaginatedSearchSelect
+                          key={boards?.length ? 'boards-loaded' : 'boards-empty'}
+                          label="Board *"
+                          noOptionsText="No Board Found"
+                          disabled={!!editData}
+                          fetchOptions={async (query: string, page: number) => {
+                            const filtered = (boards || []).filter((b: any) =>
+                              b?.name?.toLowerCase().includes(query.toLowerCase())
+                            );
+                            const pageSize = 10;
+                            const start = (page - 1) * pageSize;
+                            const end = start + pageSize;
+                            return {
+                              data: filtered.slice(start, end).map((item: any) => ({
+                                label: item.name,
+                                id: item.id,
+                              })),
+                              hasMore: end < filtered.length,
+                            };
+                          }}
+                          value={
+                            boards?.find((b: any) => b.id === formik.values.board)
+                              ? {
+                                  label: boards.find((b: any) => b.id === formik.values.board)
+                                    ?.name,
+                                  id: formik.values.board,
+                                }
+                              : null
+                          }
+                          isOptionEqualToValue={(option: any, value: any) =>
+                            option?.id === value?.id
+                          }
+                          renderOption={(prop, option: any) => (
+                            <li {...prop} key={option.id}>
+                              {option.label}
+                            </li>
+                          )}
+                          getOptionLabel={(option: any) => option?.label || ''}
+                          minChars={0}
+                          onChange={(_, val: any) => {
+                            formik.setFieldValue('board', val?.id || '');
+                            formik.setFieldTouched('board', false);
+                            formik.setFieldValue('medium', '');
+                            formik.setFieldValue('className', '');
+                            formik.setFieldValue('division', '');
+                            formik.setFieldValue('studentName', null);
+                            formik.setFieldValue('studentId', '');
+                          }}
+                          size="small"
+                          sx={{ width: '100%' }}
+                          error={!!formik.errors.board && formik.touched.board}
+                          helperText={(formik.touched.board && formik.errors.board) as string}
+                        />
+                      )}
                     </ShakingTextField>
                   </Grid>
 
                   {/* Medium */}
                   <Grid size={6}>
                     <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
-                      <CustomSelect
-                        label="Medium *"
-                        disabled={!formik.values.board}
-                        options={mediums}
-                        labelKey="name"
-                        valueKey="id"
-                        value={formik.values.medium}
-                        onChange={(val) => {
-                          formik.setFieldValue('medium', val);
-                          formik.setFieldTouched('medium', false);
-                          formik.setFieldValue('className', '');
-                          formik.setFieldValue('division', '');
-                        }}
-                        error={!!formik.errors.medium && formik.touched.medium}
-                        helperText={(formik.touched.medium && formik.errors.medium) as string}
-                      />
+                      {!currentYear ? (
+                        <Skeleton variant="rounded" height={40} />
+                      ) : (
+                        <PaginatedSearchSelect
+                          key={mediums?.length ? 'mediums-loaded' : 'mediums-empty'}
+                          label="Medium *"
+                          noOptionsText="No Medium Found"
+                          disabled={!formik.values.board || !!editData}
+                          fetchOptions={async (query: string, page: number) => {
+                            const filtered = (mediums || []).filter((m: any) =>
+                              m?.name?.toLowerCase().includes(query.toLowerCase())
+                            );
+                            const pageSize = 10;
+                            const start = (page - 1) * pageSize;
+                            const end = start + pageSize;
+                            return {
+                              data: filtered.slice(start, end).map((item: any) => ({
+                                label: item.name,
+                                id: item.id,
+                              })),
+                              hasMore: end < filtered.length,
+                            };
+                          }}
+                          value={
+                            mediums?.find((m: any) => m.id === formik.values.medium)
+                              ? {
+                                  label: mediums.find((m: any) => m.id === formik.values.medium)
+                                    ?.name,
+                                  id: formik.values.medium,
+                                }
+                              : null
+                          }
+                          isOptionEqualToValue={(option: any, value: any) =>
+                            option?.id === value?.id
+                          }
+                          renderOption={(prop, option: any) => (
+                            <li {...prop} key={option.id}>
+                              {option.label}
+                            </li>
+                          )}
+                          getOptionLabel={(option: any) => option?.label || ''}
+                          minChars={0}
+                          onChange={(_, val: any) => {
+                            formik.setFieldValue('medium', val?.id || '');
+                            formik.setFieldTouched('medium', false);
+                            formik.setFieldValue('className', '');
+                            formik.setFieldValue('division', '');
+                            formik.setFieldValue('studentName', null);
+                            formik.setFieldValue('studentId', '');
+                          }}
+                          size="small"
+                          sx={{ width: '100%' }}
+                          error={!!formik.errors.medium && formik.touched.medium}
+                          helperText={(formik.touched.medium && formik.errors.medium) as string}
+                        />
+                      )}
                     </ShakingTextField>
                   </Grid>
 
@@ -229,41 +300,124 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     <ShakingTextField
                       error={!!(formik.touched.className && formik.errors.className)}
                     >
-                      <CustomSelect
-                        label="Class *"
-                        options={classes || []}
-                        labelKey="name"
-                        disabled={!formik.values.medium}
-                        valueKey="id"
-                        value={formik.values.className}
-                        onChange={(val) => {
-                          formik.setFieldValue('className', val);
-                          formik.setFieldTouched('className', false);
-                          formik.setFieldValue('division', '');
-                        }}
-                        error={!!formik.errors.className && formik.touched.className}
-                        helperText={(formik.touched.className && formik.errors.className) as string}
-                      />
+                      {!currentYear ? (
+                        <Skeleton variant="rounded" height={40} />
+                      ) : (
+                        <PaginatedSearchSelect
+                          key={classes?.length ? 'classes-loaded' : 'classes-empty'}
+                          label="Class *"
+                          noOptionsText="No Class Found"
+                          disabled={!formik.values.medium || !!editData}
+                          fetchOptions={async (query: string, page: number) => {
+                            const filtered = (classes || []).filter((c: any) =>
+                              c?.name?.toLowerCase().includes(query.toLowerCase())
+                            );
+                            const pageSize = 10;
+                            const start = (page - 1) * pageSize;
+                            const end = start + pageSize;
+                            return {
+                              data: filtered.slice(start, end).map((item: any) => ({
+                                label: item.name,
+                                id: item.id,
+                              })),
+                              hasMore: end < filtered.length,
+                            };
+                          }}
+                          value={
+                            classes?.find((c: any) => c.id === formik.values.className)
+                              ? {
+                                  label: classes.find((c: any) => c.id === formik.values.className)
+                                    ?.name,
+                                  id: formik.values.className,
+                                }
+                              : null
+                          }
+                          isOptionEqualToValue={(option: any, value: any) =>
+                            option?.id === value?.id
+                          }
+                          renderOption={(prop, option: any) => (
+                            <li {...prop} key={option.id}>
+                              {option.label}
+                            </li>
+                          )}
+                          getOptionLabel={(option: any) => option?.label || ''}
+                          minChars={0}
+                          onChange={(_, val: any) => {
+                            formik.setFieldValue('className', val?.id || '');
+                            formik.setFieldTouched('className', false);
+                            formik.setFieldValue('division', '');
+                            formik.setFieldValue('studentName', null);
+                            formik.setFieldValue('studentId', '');
+                          }}
+                          size="small"
+                          sx={{ width: '100%' }}
+                          error={!!formik.errors.className && formik.touched.className}
+                          helperText={
+                            (formik.touched.className && formik.errors.className) as string
+                          }
+                        />
+                      )}
                     </ShakingTextField>
                   </Grid>
 
                   {/* Division */}
                   <Grid size={6}>
                     <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-                      <CustomSelect
-                        label="Division *"
-                        options={allDivision}
-                        labelKey="name"
-                        disabled={!formik.values.className}
-                        valueKey="id"
-                        value={formik.values.division}
-                        onChange={(val) => {
-                          formik.setFieldValue('division', val);
-                          formik.setFieldTouched('division', false);
-                        }}
-                        error={!!formik.errors.division && formik.touched.division}
-                        helperText={(formik.touched.division && formik.errors.division) as string}
-                      />
+                      {!currentYear ? (
+                        <Skeleton variant="rounded" height={40} />
+                      ) : (
+                        <PaginatedSearchSelect
+                          key={allDivision?.length ? 'divisions-loaded' : 'divisions-empty'}
+                          label="Division *"
+                          noOptionsText="No Division Found"
+                          disabled={!formik.values.className || !!editData}
+                          fetchOptions={async (query: string, page: number) => {
+                            const filtered = (allDivision || []).filter((d: any) =>
+                              d?.name?.toLowerCase().includes(query.toLowerCase())
+                            );
+                            const pageSize = 10;
+                            const start = (page - 1) * pageSize;
+                            const end = start + pageSize;
+                            return {
+                              data: filtered.slice(start, end).map((item: any) => ({
+                                label: item.name,
+                                id: item.id,
+                              })),
+                              hasMore: end < filtered.length,
+                            };
+                          }}
+                          value={
+                            allDivision?.find((d: any) => d.id === formik.values.division)
+                              ? {
+                                  label: allDivision.find(
+                                    (d: any) => d.id === formik.values.division
+                                  )?.name,
+                                  id: formik.values.division,
+                                }
+                              : null
+                          }
+                          isOptionEqualToValue={(option: any, value: any) =>
+                            option?.id === value?.id
+                          }
+                          renderOption={(prop, option: any) => (
+                            <li {...prop} key={option.id}>
+                              {option.label}
+                            </li>
+                          )}
+                          getOptionLabel={(option: any) => option?.label || ''}
+                          minChars={0}
+                          onChange={(_, val: any) => {
+                            formik.setFieldValue('division', val?.id || '');
+                            formik.setFieldTouched('division', false);
+                            formik.setFieldValue('studentName', null);
+                            formik.setFieldValue('studentId', '');
+                          }}
+                          size="small"
+                          sx={{ width: '100%' }}
+                          error={!!formik.errors.division && formik.touched.division}
+                          helperText={(formik.touched.division && formik.errors.division) as string}
+                        />
+                      )}
                     </ShakingTextField>
                   </Grid>
 
@@ -272,136 +426,179 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     <ShakingTextField
                       error={!!(formik.touched.studentName && formik.errors.studentName)}
                     >
-                      <Autocomplete
-                        loading={studentLoading}
-                        noOptionsText="No Student Found"
-                        fullWidth
-                        disabled={!formik.values.division}
-                        options={tableData}
-                        value={formik.values.studentName}
-                        onChange={(e, value) => {
-                          formik.setFieldValue('studentName', value);
-                          formik.setFieldTouched('studentName', false);
-                        }}
-                        renderTags={(tagValue, getTagProps) =>
-                          tagValue.map((option, index) => (
-                            <Chip
-                              label={
-                                typeof option === 'string'
-                                  ? option
-                                  : (option as { name: string }).name
-                              }
-                              variant="soft"
-                              size="small"
-                              {...getTagProps({ index })}
-                            />
-                          ))
-                        }
-                        getOptionLabel={(option: any) => (option ? option.name : '')}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            size="small"
-                            label="Student *"
-                            fullWidth
-                            error={!!formik.errors.studentName && formik.touched.studentName}
-                            helperText={
-                              (formik.touched.studentName && formik.errors.studentName) as string
+                      {!currentYear ? (
+                        <Skeleton variant="rounded" height={40} />
+                      ) : (
+                        <PaginatedSearchSelect
+                          key={`${formik.values.className}-${formik.values.division}`}
+                          label="Student *"
+                          noOptionsText="No Student Found"
+                          disabled={!formik.values.division || !!editData}
+                          fetchOptions={async (query: string, page: number) => {
+                            if (!formik.values.division) return { data: [], hasMore: false };
+                            try {
+                              const res = await getStudents({
+                                page,
+                                pageSize: 10,
+                                academicYearId: currentYear.id,
+                                standardId: formik.values.className,
+                                divisionId: formik.values.division,
+                                search: query,
+                              }).unwrap();
+                              const hasMore = res.currentPage !== res.totalPages;
+                              return {
+                                data: res?.items?.map((item: any) => ({
+                                  label: `${item.firstName} ${item.lastName} ${item.middleName}`,
+                                  id: item.studentId,
+                                  item,
+                                })),
+                                hasMore,
+                              };
+                            } catch {
+                              return { data: [], hasMore: false };
                             }
-                            sx={(theme) => ({
-                              ...(!!(formik.touched.studentName && formik.errors.studentName) &&
-                                !formik.values.division && {
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: `${theme.palette.error.main} !important`,
-                                  },
-                                  '& .MuiInputLabel-root.Mui-disabled': {
-                                    color: `${theme.palette.error.main} !important`,
-                                  },
-                                }),
-                            })}
-                          />
-                        )}
-                        renderOption={(props, option) => (
-                          <li
-                            {...props}
-                            key={
-                              typeof option === 'string' ? option : (option as { id: string }).id
-                            }
-                          >
-                            {typeof option === 'string'
-                              ? option
-                              : (option as { name: string }).name}
-                          </li>
-                        )}
-                      />
+                          }}
+                          value={
+                            formik.values.studentId && formik.values.studentName
+                              ? {
+                                  label:
+                                    (formik.values.studentName as any).name ||
+                                    (typeof formik.values.studentName === 'object' &&
+                                    formik.values.studentName !== null
+                                      ? `${(formik.values.studentName as any).firstName || ''} ${(formik.values.studentName as any).lastName || ''} ${(formik.values.studentName as any).middleName || ''}`
+                                      : ''),
+                                  id: formik.values.studentId,
+                                }
+                              : null
+                          }
+                          isOptionEqualToValue={(option: any, value: any) =>
+                            option?.id === value?.id
+                          }
+                          renderOption={(prop, option: any) => (
+                            <li {...prop} key={option.id}>
+                              {option.label}
+                            </li>
+                          )}
+                          getOptionLabel={(option: any) => option?.label || ''}
+                          minChars={2}
+                          onChange={(_, val: any) => {
+                            formik.setFieldValue('studentId', val?.id || '');
+                            formik.setFieldValue('studentName', val?.item || null);
+                            formik.setFieldTouched('studentName', false);
+                          }}
+                          debounceMs={400}
+                          placeholder="Search by name"
+                          size="small"
+                          sx={{ width: '100%' }}
+                          error={!!(formik.touched.studentName && formik.errors.studentName)}
+                          helperText={
+                            (formik.touched.studentName && formik.errors.studentName) as string
+                          }
+                        />
+                      )}
                     </ShakingTextField>
                   </Grid>
                 </SectionCard>
               </Grid>
+
+              {/* Concession Details */}
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Concession Details" paperProps={{ sx: { ...cardStyle } }}>
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
                       error={!!(formik.touched.concessions && formik.errors.concessions)}
                     >
-                      <Autocomplete
-                        multiple
-                        disableCloseOnSelect
-                        options={concessionTypes || []}
-                        getOptionLabel={(option: any) => option.concessionName}
-                        value={concessionTypes?.filter((ct: any) =>
-                          formik.values.concessions.some(
-                            (c: any) => c.concessionType === ct.concessionName
-                          )
-                        )}
-                        onChange={(e, selectedOptions) => {
-                          const concessionsData = selectedOptions.map((opt) => ({
-                            concessionType: opt.concessionName,
-                            applicableFeeHeads: opt.applicableFeeHeads || [],
-                            amount: opt.amount || undefined,
-                            percentage: opt.percentage || undefined,
-                            documents: opt.documents || [],
-                          }));
-                          formik.setFieldValue('concessions', concessionsData);
-                        }}
-                        renderOption={(props, option, { selected }) => (
-                          <li {...props}>
-                            <Checkbox
-                              icon={icon}
-                              checkedIcon={checkedIcon}
-                              style={{ marginRight: 8 }}
-                              checked={selected}
-                            />
-                            {option.concessionName}
-                          </li>
-                        )}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip
-                              label={option.concessionName}
-                              size="small"
-                              {...getTagProps({ index })}
-                              variant="soft"
-                            />
-                          ))
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Concession Type(s) *"
-                            size="small"
-                            fullWidth
-                            error={!!(formik.errors.concessions && formik.touched.concessions)}
-                            helperText={
-                              (formik.touched.concessions && formik.errors.concessions) as string
-                            }
-                          />
-                        )}
-                      />
+                      {isLoadingConcessionTypes ? (
+                        <Skeleton variant="rounded" height={40} />
+                      ) : (
+                        <PaginatedSearchSelect
+                          key={
+                            concessionTypes?.length
+                              ? 'concession-types-loaded'
+                              : 'concession-types-empty'
+                          }
+                          label="Concession Type(s) *"
+                          noOptionsText="No Concession Type Found"
+                          multiple
+                          minChars={0}
+                          fetchOptions={async (query: string, page: number) => {
+                            const filtered = (concessionTypes || []).filter((ct: any) =>
+                              ct?.concessionName?.toLowerCase().includes(query.toLowerCase())
+                            );
+                            const pageSize = 20;
+                            const start = (page - 1) * pageSize;
+                            const end = start + pageSize;
+                            return {
+                              data: filtered.slice(start, end).map((item: any) => ({
+                                label: item.concessionName,
+                                id: item.id ?? item.concessionName,
+                                item,
+                              })),
+                              hasMore: end < filtered.length,
+                            };
+                          }}
+                          value={(concessionTypes || [])
+                            .filter((ct: any) =>
+                              formik.values.concessions?.some(
+                                (c: any) => c.concessionType === ct.concessionName
+                              )
+                            )
+                            .map((ct: any) => ({
+                              label: ct.concessionName,
+                              id: ct.id ?? ct.concessionName,
+                              item: ct,
+                            }))}
+                          isOptionEqualToValue={(option: any, val: any) => option?.id === val?.id}
+                          renderOption={(prop, option: any, { selected }: any) => (
+                            <li {...prop} key={option.id}>
+                              <Checkbox
+                                icon={icon}
+                                checkedIcon={checkedIcon}
+                                style={{ marginRight: 8 }}
+                                checked={selected}
+                              />
+                              {option.label}
+                            </li>
+                          )}
+                          renderTags={(value: readonly any[], getTagProps) =>
+                            value.map((option: any, index: number) => {
+                              const { key, onDelete, ...otherProps } = getTagProps({ index });
+                              return (
+                                <Chip
+                                  key={key}
+                                  label={option.label}
+                                  size="small"
+                                  onDelete={onDelete}
+                                  {...otherProps}
+                                  variant="soft"
+                                />
+                              );
+                            })
+                          }
+                          getOptionLabel={(option: any) => option?.label || ''}
+                          onChange={(_, selectedOptions: any) => {
+                            const concessionsData = (selectedOptions as any[]).map((opt) => ({
+                              concessionType: opt.item?.concessionName,
+                              applicableFeeHeads: opt.item?.applicableFeeHeads || [],
+                              amount: opt.item?.amount || undefined,
+                              percentage: opt.item?.percentage || undefined,
+                              documents: opt.item?.documents || [],
+                            }));
+                            formik.setFieldValue('concessions', concessionsData);
+                          }}
+                          size="small"
+                          sx={{ width: '100%' }}
+                          error={!!(formik.errors.concessions && formik.touched.concessions)}
+                          helperText={
+                            (formik.touched.concessions && formik.errors.concessions) as string
+                          }
+                        />
+                      )}
                     </ShakingTextField>
                   </Grid>
                 </SectionCard>
               </Grid>
+
               {/* Concession Details and Documents per Type */}
               {formik.values.concessions?.length > 0 && (
                 <>
