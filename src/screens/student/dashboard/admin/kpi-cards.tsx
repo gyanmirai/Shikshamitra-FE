@@ -41,6 +41,31 @@ const kpiData = [
     value: '3,500',
     percent: 5.1,
     chart: { data: [15, 35, 50, 40, 60, 45, 80, 70, 90, 100] },
+    fullChart: {
+      type: 'bar',
+      series: [
+        { name: 'Boys', data: [1800] },
+        { name: 'Girls', data: [1700] },
+      ],
+      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
+      options: {
+        tooltip: {
+          x: { show: false },
+          y: { formatter: (val: number) => `${val} Students` },
+        },
+        xaxis: {
+          categories: ['Total'],
+          labels: { show: false },
+        },
+        plotOptions: {
+          bar: {
+            columnWidth: '40%',
+            borderRadius: 2,
+            distributed: false,
+          },
+        },
+      },
+    },
     icon: 'mdi:school-outline',
     status: 'primary' as const,
     path: studentPaths.records.studentList,
@@ -82,6 +107,7 @@ const AdminKPICards = () => (
           path={kpi.path}
           tooltip={kpi.tooltip}
           status={kpi.status}
+          chart={(kpi as any).fullChart}
         />
       </Grid>
     ))}

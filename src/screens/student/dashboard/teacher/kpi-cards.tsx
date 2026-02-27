@@ -10,6 +10,12 @@ interface KPIItem {
   value: string;
   percent: number;
   chart: { data: number[] };
+  fullChart?: {
+    type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
+    series?: any[];
+    colors?: string[];
+    options?: any;
+  };
   icon: string;
   status: 'info' | 'success' | 'warning' | 'primary';
   path?: string;
@@ -22,6 +28,31 @@ const kpiData: KPIItem[] = [
     value: '45',
     percent: 0, // No change usually
     chart: { data: [45, 45, 45, 45, 45, 45, 45, 45, 45, 45] },
+    fullChart: {
+      type: 'bar',
+      series: [
+        { name: 'Boys', data: [20] },
+        { name: 'Girls', data: [25] },
+      ],
+      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
+      options: {
+        tooltip: {
+          x: { show: false },
+          y: { formatter: (val: number) => `${val} Students` },
+        },
+        xaxis: {
+          categories: ['Strength'],
+          labels: { show: false },
+        },
+        plotOptions: {
+          bar: {
+            columnWidth: '40%',
+            borderRadius: 2,
+            distributed: false,
+          },
+        },
+      },
+    },
     icon: 'mdi:account-group-outline',
     status: 'info' as const,
     path: studentPaths.records.studentList,
@@ -58,6 +89,18 @@ const kpiData: KPIItem[] = [
   },
 ];
 
+const getComparisonLabel = (title: string) => {
+  switch (title) {
+    case 'Present Today':
+    case 'Pending Assignments':
+      return 'vs Yesterday';
+    case 'Class Strength':
+    case 'Class Performance':
+    default:
+      return 'vs last year';
+  }
+};
+
 const TeacherKPICards = () => (
   <Grid container spacing={1}>
     {kpiData.map((kpi) => (
@@ -70,6 +113,8 @@ const TeacherKPICards = () => (
           trendData={kpi.chart.data}
           status={kpi.status}
           path={kpi.path}
+          comparisonLabel={getComparisonLabel(kpi.title)}
+          chart={kpi.fullChart}
         />
       </Grid>
     ))}
