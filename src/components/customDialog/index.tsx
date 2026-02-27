@@ -117,13 +117,27 @@ export default CustomDialog;
 export const DialogScrollContent = ({
   children,
   scrollBarProps = {},
+  onSubmit,
   ...props
-}: { children: React.ReactNode; scrollBarProps?: ScrollbarProps } & DialogContentProps) => {
+}: {
+  children: React.ReactNode;
+  scrollBarProps?: ScrollbarProps;
+  onSubmit?: () => void;
+} & DialogContentProps) => {
   const ref = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onSubmit && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      onSubmit();
+    }
+  };
+
   return (
     <Scrollbar ref={ref} {...scrollBarProps}>
       <DialogContent
         ref={ref}
+        onKeyDown={handleKeyDown}
         sx={{
           p: 2, // Increased content padding for better readability
           ...props.sx,

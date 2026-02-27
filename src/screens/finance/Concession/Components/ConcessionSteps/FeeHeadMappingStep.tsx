@@ -40,7 +40,7 @@ const SelectionCard = styled(Card)(({ theme }) => ({
 }));
 
 const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
-  const { values, setFieldValue } = formik;
+  const { values, setFieldValue, errors, touched } = formik;
 
   const { data: requestDetails } = useQueryAndMutation({
     type: 'query',
@@ -95,10 +95,14 @@ const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
         updatedSelected = [...currentSelected, feeHeadId];
       }
 
-      setFieldValue('selectedFeeHeads', {
-        ...values.selectedFeeHeads,
-        [concessionTypeId]: updatedSelected,
-      });
+      setFieldValue(
+        'selectedFeeHeads',
+        {
+          ...values.selectedFeeHeads,
+          [concessionTypeId]: updatedSelected,
+        },
+        true
+      ); // Enable validation to clear error
     },
     [values.selectedFeeHeads, setFieldValue]
   );
@@ -136,16 +140,26 @@ const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
         selectedConcessionTypes.map((ct: any) => {
           const selectedHeadsForType: string[] = values.selectedFeeHeads[ct.id] || [];
           const selectedCount = selectedHeadsForType.length;
+          const hasError =
+            touched.selectedFeeHeads &&
+            errors.selectedFeeHeads &&
+            typeof errors.selectedFeeHeads === 'object' &&
+            (errors.selectedFeeHeads as Record<string, string>)[ct.id];
 
           return (
-            <SelectionCard key={ct.id}>
+            <SelectionCard
+              key={ct.id}
+              sx={{
+                borderColor: hasError ? 'error.main' : 'divider',
+              }}
+            >
               {/* Header Section */}
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: 2,
+                  p: 1,
                   borderBottom: '1px solid',
                   borderColor: 'divider',
                   bgcolor: 'background.default', // or a light fill like in the image
@@ -158,7 +172,7 @@ const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
                   <Chip
                     label={`${selectedCount} selected`}
                     size="small"
-                    color="primary"
+                    color={hasError ? 'error' : 'primary'}
                     sx={{
                       fontWeight: 'bold',
                       height: 24,
@@ -167,18 +181,15 @@ const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
                     }}
                   />
                 </Stack>
-                {/* Placeholder for "PERCENTAGE" or other status if needed */}
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ textTransform: 'uppercase', letterSpacing: 1 }}
-                >
-                  PERCENTAGE
-                </Typography>
+                {hasError && (
+                  <Typography variant="caption" color="error">
+                    {(errors.selectedFeeHeads as Record<string, string>)[ct.id]}
+                  </Typography>
+                )}
               </Box>
 
               {/* Body Section */}
-              <CardContent sx={{ p: 2 }}>
+              <CardContent sx={{ p: 1 }}>
                 {!assignedStructureData?.feeHeads?.length ? (
                   <Typography variant="body2" color="text.secondary">
                     No fee heads available.

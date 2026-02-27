@@ -23,8 +23,23 @@ export const concessionStepValidations = [
         const { concessionTypeIds } = this.parent as any;
         if (!concessionTypeIds || concessionTypeIds.length === 0) return true; // Let step 1 validation handle this
 
-        // Check if every selected concession type has at least one fee head
-        return concessionTypeIds.every((id: string) => value && value[id] && value[id].length > 0);
+        // Find concession types without fee heads selected
+        const missingTypes = concessionTypeIds.filter(
+          (id: string) => !value || !value[id] || value[id].length === 0
+        );
+
+        if (missingTypes.length === 0) return true;
+
+        // Create an error object with individual errors for each missing concession type
+        const errors: Record<string, string> = {};
+        missingTypes.forEach((id: string) => {
+          errors[id] = 'Select at least one fee head';
+        });
+
+        return this.createError({
+          message: errors as any,
+          path: this.path,
+        });
       }
     ),
   }),

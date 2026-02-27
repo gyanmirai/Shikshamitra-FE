@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetConcessionTypeByIdQuery } from 'src/redux/finance/concessionType';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Card,
@@ -17,7 +18,6 @@ import {
   CardContent,
   CircularProgress,
 } from '@mui/material';
-import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { IConcessionSubmittedDocument } from './DocumentDialog';
 

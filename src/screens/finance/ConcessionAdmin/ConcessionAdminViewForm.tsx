@@ -14,6 +14,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -72,7 +73,11 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
   const formik = useFormik({
     initialValues: { reason: '' },
     validationSchema: Yup.object({
-      reason: isReject ? Yup.string().required('Reason is required') : Yup.string(),
+      reason: isReject
+        ? Yup.string()
+            .required('Reason is required')
+            .min(10, 'Reason must be at least 10 characters')
+        : Yup.string(),
     }),
     enableReinitialize: true,
     onSubmit: async (values, helpers) => {
@@ -94,23 +99,25 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
   });
 
   return (
-    <DialogScrollContent>
-      <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          size="small"
-          label={`Reason${isReject ? ' *' : ' (optional)'}`}
-          name="reason"
-          value={formik.values.reason}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={formik.touched.reason && Boolean(formik.errors.reason)}
-          helperText={formik.touched.reason && formik.errors.reason}
-        />
-      </ShakingTextField>
-      <DialogActions>
+    <>
+      <DialogScrollContent>
+        <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            size="small"
+            label={`Reason${isReject ? ' *' : ' (optional)'}`}
+            name="reason"
+            value={formik.values.reason}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.reason && Boolean(formik.errors.reason)}
+            helperText={formik.touched.reason && formik.errors.reason}
+          />
+        </ShakingTextField>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           variant="outlined"
           size="small"
@@ -131,7 +138,7 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
           {mode}
         </LoadingButton>
       </DialogActions>
-    </DialogScrollContent>
+    </>
   );
 };
 
@@ -218,7 +225,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         borderColor: isApproved ? 'success.light' : isRejected ? 'error.light' : 'divider',
       }}
     >
-      <CardContent sx={{ p: 1, pb: '12px !important', flex: 1 }}>
+      <CardContent sx={{ p: 1, flex: 1 }}>
         {/* Header */}
         <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2}>
           <Box display="flex" alignItems="center" gap={1.5}>
@@ -341,7 +348,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(doc.url, '_blank');
+                        window.open(`${process.env.NEXT_PUBLIC_API_URL}${doc.url}`, '_blank');
                       }}
                     >
                       <Visibility sx={{ fontSize: 18 }} />
@@ -420,9 +427,10 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
       <Box
         sx={{
           px: 2,
-          pb: 2,
+          pb: 1,
           display: 'flex',
           gap: 1,
+          alignItems: 'flex-start',
         }}
       >
         <LoadingButton
@@ -447,10 +455,18 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         >
           {isRejected ? 'Rejected' : 'Reject'}
         </LoadingButton>
-        <IconButton onClick={() => onDelete(item)} color="error">
+        <IconButton onClick={() => onDelete(item)} color="error" sx={{ mt: -0.5 }}>
           <Iconify icon={GlobalIcons.delete} />
         </IconButton>
       </Box>
+      {!item.isDocumentUploaded && (
+        <Box sx={{ px: 2, pb: 2 }}>
+          <Typography variant="caption" color="warning">
+            Note: You can only approve or reject the concession request if the documents are
+            uploaded.
+          </Typography>
+        </Box>
+      )}
     </Card>
   );
 };
@@ -468,12 +484,16 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionApplicationMutation,
   });
-  const { data, isLoading } = useQueryAndMutation({
+  const {
+    data,
+    isLoading: isLoadingConcessionData,
+    isFetching: isFetchingConcessionData,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentConcessionDetailsQuery,
     params: { studentId: student?.studentId },
     options: { skip: !student?.studentId },
-  }) as { data: any; isLoading: boolean };
+  }) as { data: any; isLoading: boolean; isFetching: boolean };
 
   const stats = data?.concessionBasicDetail;
   const allItems: IConcessionRequestItem[] = data?.items || [];
@@ -507,7 +527,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Scrollbar sx={{ flex: 1, p: 1 }}>
         {/* ── Stats Row ─────────────────────────────────────────────── */}
-        {isLoading ? (
+        {isFetchingConcessionData || isLoadingConcessionData ? (
           <Paper
             elevation={0}
             sx={{
@@ -536,7 +556,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
           <StudentInformationAccordion student={data?.studentDetails} />
         )}
 
-        {isLoading ? (
+        {isFetchingConcessionData || isLoadingConcessionData ? (
           <Box display="flex" gap={2} mb={3}>
             {[...Array(4)].map((_, i) => (
               <Skeleton
@@ -557,7 +577,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
 
         {/* ── Filter Tabs ───────────────────────────────────────────── */}
         <Box mb={1}>
-          {isLoading ? (
+          {isFetchingConcessionData || isLoadingConcessionData ? (
             <Stack direction="row" spacing={2} sx={{ py: 1 }}>
               {[...Array(4)].map((_, i) => (
                 <Skeleton
@@ -627,7 +647,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         </Box>
 
         {/* ── Cards Grid ────────────────────────────────────────────── */}
-        {isLoading ? (
+        {isFetchingConcessionData || isLoadingConcessionData ? (
           <Grid container spacing={2}>
             {[...Array(3)].map((_, i) => (
               <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
@@ -691,7 +711,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
             </Typography>
           </Box>
         ) : (
-          <Grid container spacing={2}>
+          <Grid container spacing={2} pb={1}>
             {filteredItems.map((item) => (
               <Grid key={item.studentConcessionTypeRequestId} size={{ xs: 12, sm: 6, md: 4 }}>
                 <ConcessionItemCard
@@ -730,7 +750,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         title="Delete"
         content={
           <>
-            Are you sure you want to delete book{' '}
+            Are you sure you want to delete concession{' '}
             <strong>&quot;{selectedItem?.concessionTypeName}&quot;</strong>?
           </>
         }
@@ -757,15 +777,22 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         handleClose={onClose}
         maxWidth="xs"
         title={
-          <Box display="flex" alignItems="center" gap={1}>
-            {dialogMode === 'Reject' ? (
-              <Cancel sx={{ color: 'error.main' }} />
-            ) : (
-              <CheckCircle sx={{ color: 'success.main' }} />
-            )}
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h6">
               {dialogMode === 'Reject' ? 'Reject Concession' : 'Approve Concession'}
             </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                dialogMode === 'Reject'
+                  ? 'Reject the concession application'
+                  : 'Approve the concession application'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
           </Box>
         }
       >

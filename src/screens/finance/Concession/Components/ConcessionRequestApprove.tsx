@@ -58,7 +58,7 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <DialogScrollContent>
+      <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Grid container spacing={2}>
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
@@ -95,15 +95,13 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
         </Button>
 
         <LoadingButton
-          type="submit"
+          type="button"
           variant="soft"
           color={mode === 'Reject' ? 'error' : 'success'}
           size="small"
           loading={isRejectLoading || isApproveLoading}
           startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
+          onClick={() => formik.handleSubmit()}
         >
           {mode}
         </LoadingButton>

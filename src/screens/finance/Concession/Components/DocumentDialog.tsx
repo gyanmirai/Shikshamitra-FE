@@ -237,7 +237,10 @@ const DocumentDialog: React.FC<IDocumentDialogProps> = ({
                           }}
                           disabled={!submitted?.url}
                           onClick={() => {
-                            window.open(submitted.url, '_blank');
+                            window.open(
+                              `${process.env.NEXT_PUBLIC_API_URL}${submitted.url}`,
+                              '_blank'
+                            );
                           }}
                         >
                           <Iconify icon="carbon:view-filled" />

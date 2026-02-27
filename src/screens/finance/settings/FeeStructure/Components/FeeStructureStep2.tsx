@@ -28,6 +28,7 @@ import {
 
 import FeeStructureCard from './FeeStructureCard';
 import FeeGeneralInfoCard from './GeneralFeeInfoCard';
+import AddFeeHeadDialogContent from './AddFeeHeadForm';
 import AddFeeStructureDialog from './FeeStructureDialog';
 import { standardFeeStructureInitialValues } from './FeeStructureInitialValues';
 
@@ -42,6 +43,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
   const [selectedClassId, setSelectedClassId] = useState('');
   const [, setCurrentClickableClass] = useState<string | null>(null);
   const addFeeHeadDialog = useBoolean();
+  const [selectedFeeStructureIndex, setSelectedFeeStructureIndex] = useState<number | null>(null);
 
   const initializedClassesRef = useRef<Record<string, boolean>>({});
 
@@ -93,7 +95,6 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [standardFeeStructure, selectedClassId, isFetching]);
-  console.log('formik values----', formik.values);
 
   return (
     <>
@@ -239,8 +240,9 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                                       size="small"
                                       startIcon={<Iconify icon="lucide:plus" />}
                                       onClick={(e) => {
-                                        addFeeHeadDialog.onTrue();
                                         e.stopPropagation();
+                                        setSelectedFeeStructureIndex(idx);
+                                        addFeeHeadDialog.onTrue();
                                       }}
                                     >
                                       Fee Head
@@ -287,7 +289,10 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                                     feeItems={structure.feeHeads || []}
                                     structureIndex={idx}
                                     formik={formik}
-                                    addFeeHeadDialog={addFeeHeadDialog}
+                                    onAddFeeHead={() => {
+                                      setSelectedFeeStructureIndex(idx);
+                                      addFeeHeadDialog.onTrue();
+                                    }}
                                   />
                                 </Box>
                               </Card>
@@ -416,6 +421,40 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
           </Button>
         }
       />
+
+      {/* Add Fee Head Dialog */}
+      <CustomDialog
+        open={addFeeHeadDialog.value}
+        handleClose={() => {
+          addFeeHeadDialog.onFalse();
+          setSelectedFeeStructureIndex(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Fee Head</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Add fee heads to this class's fee structure. You can specify the amount, and whether it's a one-time or optional fee."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        {selectedFeeStructureIndex !== null && (
+          <AddFeeHeadDialogContent
+            formik={formik}
+            className={selectedClassId}
+            feeStructureIndex={selectedFeeStructureIndex}
+            onClose={() => {
+              addFeeHeadDialog.onFalse();
+              setSelectedFeeStructureIndex(null);
+            }}
+          />
+        )}
+      </CustomDialog>
     </>
   );
 };

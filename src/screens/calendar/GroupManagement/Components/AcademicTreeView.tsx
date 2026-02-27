@@ -4,6 +4,7 @@
 // MUI Material components
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { LoadingButton } from '@mui/lab';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Collapse from '@mui/material/Collapse';
@@ -666,7 +667,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           size="small"
@@ -674,7 +675,7 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
           onClick={handleApply}
         >
           {applying ? 'Applying...' : applyLabel}
-        </Button>
+        </LoadingButton>
       </Box>
     </Box>
   );

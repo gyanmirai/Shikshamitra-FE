@@ -70,8 +70,14 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   useEffect(() => {
     if (currentYear?.boards) {
       setBoards(currentYear.boards);
+      // Only set initial values if not already selected
+      if (!selectedBoard) {
+        onBoardChange(currentYear.boards[0].id);
+        onMediumChange(currentYear.boards[0].educationMediums[0].id);
+      }
     }
-  }, [currentYear?.boards]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear.boards]);
 
   useEffect(() => {
     const board = currentYear?.boards?.find((item: any) => item.id === selectedBoard);
@@ -112,7 +118,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
         label: 'Draft',
         value: ConcessionStatusType.Draft,
         count: concessionCounts.draft,
-        color: 'warning',
+        color: 'info',
       },
       {
         label: 'Pending',

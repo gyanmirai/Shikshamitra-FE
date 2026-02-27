@@ -23,7 +23,7 @@ const ConcessionTypeSelectionStep: React.FC<Props> = ({ formik, concessionTypes 
     } else {
       newIds = [...selectedTypeIds, id];
     }
-    setFieldValue('concessionTypeIds', newIds);
+    setFieldValue('concessionTypeIds', newIds, true); // Enable validation to clear error
     // Reset downstream steps
     setFieldValue('selectedFeeHeads', {});
     setFieldValue('valueEntries', {});
@@ -38,7 +38,7 @@ const ConcessionTypeSelectionStep: React.FC<Props> = ({ formik, concessionTypes 
     <Box sx={{ p: 1 }}>
       {/* Error Message if any */}
       {touched.concessionTypeIds && errors.concessionTypeIds && (
-        <Typography color="error" variant="body2" sx={{ mb: 2 }}>
+        <Typography color="error" variant="caption" sx={{ mb: 2 }}>
           {errors.concessionTypeIds}
         </Typography>
       )}
@@ -143,7 +143,7 @@ const ConcessionTypeSelectionStep: React.FC<Props> = ({ formik, concessionTypes 
           </Typography>
           <Box
             sx={{
-              p: 2,
+              p: 1,
               bgcolor: alpha(theme.palette.primary.main, 0.08),
               borderRadius: 1,
               display: 'flex',
@@ -156,7 +156,7 @@ const ConcessionTypeSelectionStep: React.FC<Props> = ({ formik, concessionTypes 
                 key={concession.id}
                 label={concession.concessionName || concession.name}
                 color="primary"
-                variant="filled"
+                variant="outlined"
                 onDelete={() => handleToggle(concession.id)}
                 deleteIcon={<Iconify icon={GlobalIcons.cancel} />}
                 sx={{ fontWeight: 600 }}

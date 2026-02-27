@@ -21,8 +21,8 @@ const StudentInfoCard: React.FC<StudentInfoCardProps> = ({
   const theme = useTheme();
 
   return (
-    <Card sx={{ mb: 1, bgcolor: theme.palette.grey[100] }}>
-      <CardContent sx={{ py: 2, '&:last-child': { pb: 2 } }}>
+    <Card sx={{ mt: 1, bgcolor: theme.palette.grey[100] }}>
+      <CardContent sx={{ '&:last-child': { pb: 2 } }}>
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <InfoItem icon={<Person />} label="Student Name" value={studentName} />
