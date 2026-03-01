@@ -62,38 +62,51 @@ export function AnalyticsWebsiteVisits({
     stroke: { width: 2, colors: ['transparent'] },
     // Set up x-axis configuration with categories
     xaxis: { categories: chart.categories },
-    // Enable legend display
-    legend: { show: true },
+    // Enable legend display at the bottom
+    legend: { show: true, position: 'bottom', horizontalAlign: 'center' },
     // Configure tooltip formatting
     tooltip: { y: { formatter: (value: number) => `${value}` } },
     // Spread additional custom options from chart.options
     ...chart.options,
   });
+  const hasHeader = !!(
+    title ||
+    subheader ||
+    (firstDropdownOptions.length > 0 && firstDropdownOnChange) ||
+    (secondDropdownOptions.length > 0 && secondDropdownOnChange)
+  );
+
   return (
     <Box>
-      <Box display="flex" alignItems="center" justifyContent="space-between" pr="20px">
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <CardHeader title={title} subheader={subheader} mb={3} />
-        </Box>
-        {firstDropdownOptions.length > 0 && firstDropdownOnChange && (
-          <CustomSelect
-            label={firstDropdownLabel}
-            options={firstDropdownOptions}
-            onChange={(e) => firstDropdownOnChange(e as string)}
-            value={firstDropdownValue ?? ''}
-            formControlProps={{ sx: { width: '100%', maxWidth: '120px' } }}
-          />
-        )}
-        {secondDropdownOptions.length > 0 && secondDropdownOnChange && (
-          <CustomSelect
-            label={secondDropdownLabel}
-            options={secondDropdownOptions}
-            onChange={(e) => secondDropdownOnChange(e as string)}
-            value={secondDropdownValue ?? ''}
-            formControlProps={{ sx: { width: '100%', maxWidth: '120px' } }}
-          />
-        )}
-      </Box>
+      {hasHeader && (
+        <CardHeader
+          title={title}
+          subheader={subheader}
+          action={
+            <Box display="flex" alignItems="center" gap={1}>
+              {firstDropdownOptions.length > 0 && firstDropdownOnChange && (
+                <CustomSelect
+                  label={firstDropdownLabel}
+                  options={firstDropdownOptions}
+                  onChange={(e) => firstDropdownOnChange(e as string)}
+                  value={firstDropdownValue ?? ''}
+                  formControlProps={{ sx: { width: '100%', minWidth: '120px' } }}
+                />
+              )}
+              {secondDropdownOptions.length > 0 && secondDropdownOnChange && (
+                <CustomSelect
+                  label={secondDropdownLabel}
+                  options={secondDropdownOptions}
+                  onChange={(e) => secondDropdownOnChange(e as string)}
+                  value={secondDropdownValue ?? ''}
+                  formControlProps={{ sx: { width: '100%', minWidth: '120px' } }}
+                />
+              )}
+            </Box>
+          }
+          sx={{ p: 0 }}
+        />
+      )}
 
       <Chart
         type="bar"
@@ -101,7 +114,7 @@ export function AnalyticsWebsiteVisits({
         options={chartOptions}
         height={364}
         loadingProps={{ sx: { p: 2.5 } }}
-        sx={{ py: 2.5, pl: 1, pr: 2.5 }}
+        sx={{ pl: 1, pr: 2.5 }}
       />
     </Box>
   );

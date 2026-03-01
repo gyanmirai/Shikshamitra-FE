@@ -22,8 +22,8 @@ export default function CompactKPICard({
   title,
   value,
   icon,
-  percentChange = 0,
-  trendData = [5, 10, 5, 15, 10, 20, 15, 25],
+  percentChange,
+  trendData,
   status = 'info',
   path,
   tooltip,
@@ -75,7 +75,7 @@ export default function CompactKPICard({
     plotOptions: { bar: { columnWidth: '80%', borderRadius: 2 } },
   });
 
-  const isPositive = percentChange >= 0;
+  const isPositive = percentChange !== undefined && percentChange >= 0;
 
   return (
     <Card
@@ -139,38 +139,42 @@ export default function CompactKPICard({
           {value}
         </Typography>
 
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Iconify
-            icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
-            sx={{
-              color: isPositive ? 'success.main' : 'error.main',
-              width: 18,
-              height: 18,
-            }}
-          />
-          <Typography
-            variant="subtitle2"
-            component="span"
-            sx={{ color: isPositive ? 'success.main' : 'error.main' }}
-          >
-            {Math.abs(percentChange)}%
-          </Typography>
-          <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-            vs last year
-          </Typography>
-        </Stack>
+        {percentChange && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Iconify
+              icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
+              sx={{
+                color: isPositive ? 'success.main' : 'error.main',
+                width: 18,
+                height: 18,
+              }}
+            />
+            <Typography
+              variant="subtitle2"
+              component="span"
+              sx={{ color: isPositive ? 'success.main' : 'error.main' }}
+            >
+              {Math.abs(percentChange)}%
+            </Typography>
+            <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
+              vs last year
+            </Typography>
+          </Stack>
+        )}
       </Box>
 
-      <Box sx={{ width: 80, height: 40 }}>
-        <Chart
-          type="line"
-          series={[{ data: trendData }]}
-          options={chartOptions}
-          width={80}
-          height={40}
-          dir="ltr"
-        />
-      </Box>
+      {trendData && (
+        <Box sx={{ width: 80, height: 40 }}>
+          <Chart
+            type="line"
+            series={[{ data: trendData }]}
+            options={chartOptions}
+            width={80}
+            height={40}
+            dir="ltr"
+          />
+        </Box>
+      )}
     </Card>
   );
 }
