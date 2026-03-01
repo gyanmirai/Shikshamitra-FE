@@ -59,8 +59,8 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
   });
 
   return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+    <Card {...other} sx={{ height: '100%' }}>
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
       <Chart
         type="donut"
@@ -68,7 +68,7 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
         options={chartOptions}
         width={{ xs: 240, xl: 260 }}
         height={{ xs: 240, xl: 260 }}
-        sx={{ my: 6, mx: 'auto' }}
+        sx={{ my: 2, mx: 'auto' }}
       />
 
       <Divider sx={{ borderStyle: 'dashed' }} />

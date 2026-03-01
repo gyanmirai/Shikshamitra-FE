@@ -609,47 +609,82 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
             </Grid>
 
             {/* Included Roles Section */}
-            {(groupData?.ruleBased?.roleIds?.length > 0 ||
-              groupData?.nameBased?.roleIds?.length > 0) && (
-              <Box>
-                <Card variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-                  <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+            {(groupData?.ruleBased?.roles?.length > 0 ||
+              groupData?.nameBased?.roles?.length > 0) && (
+              <Card
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                  height: '100%',
+                }}
+              >
+                {/* Section header */}
+                <Box
+                  sx={{
+                    px: 2.5,
+                    py: 1.25,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.neutral',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Iconify
+                    icon="solar:shield-user-bold-duotone"
+                    width={16}
+                    sx={{ color: 'primary.main' }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.8,
+                      color: 'text.secondary',
+                      fontSize: '0.68rem',
+                    }}
+                  >
                     Included Roles
                   </Typography>
-                  <Stack spacing={0.5}>
-                    {[
-                      ...(groupData?.ruleBased?.roleIds || []),
-                      ...(groupData?.nameBased?.roleIds || []),
-                    ]
-                      .filter((value, index, self) => self.indexOf(value) === index) // Unique roles
-                      .map((roleId: string) => {
-                        const roleName = rolesData?.items?.find((r: any) => r.id === roleId)?.name;
-                        if (!roleName) return null;
+                </Box>
 
-                        return (
-                          <Box
-                            key={roleId}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              p: 0.5,
-                              borderRadius: 1,
-                              '&:hover': { bgcolor: 'action.hover' },
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:shield-user-bold-duotone"
-                              width={16}
-                              sx={{ color: 'primary.main' }}
-                            />
-                            <Typography variant="body2">{roleName}</Typography>
-                          </Box>
-                        );
-                      })}
-                  </Stack>
-                </Card>
-              </Box>
+                <Stack spacing={0} sx={{ px: 1, py: 0.75 }}>
+                  {[...(groupData?.ruleBased?.roles || []), ...(groupData?.nameBased?.roles || [])]
+                    .filter((value, index, self) => self.indexOf(value) === index)
+                    .map((role: any) => (
+                      <Box
+                        key={role.id}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          px: 1.5,
+                          py: 0.75,
+                          borderRadius: 1.5,
+                          transition: 'background-color 0.15s',
+                          '&:hover': { bgcolor: 'action.hover' },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: '50%',
+                            bgcolor: 'primary.main',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {role.name}
+                        </Typography>
+                      </Box>
+                    ))}
+                </Stack>
+              </Card>
             )}
           </Stack>
         </Stack>
