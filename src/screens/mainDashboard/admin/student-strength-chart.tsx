@@ -19,8 +19,8 @@ type Series = {
   data: { name: string; data: number[] }[];
 };
 
-type Props = CardProps & {
-  title?: string;
+type Props = Omit<CardProps, 'title'> & {
+  title?: React.ReactNode;
   subheader?: string;
   chart: {
     colors?: string[];

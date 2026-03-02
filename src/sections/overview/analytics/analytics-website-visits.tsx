@@ -77,7 +77,7 @@ export function AnalyticsWebsiteVisits({
   );
 
   return (
-    <Box>
+    <Box sx={{ height: '100%' }}>
       {hasHeader && (
         <CardHeader
           title={title}

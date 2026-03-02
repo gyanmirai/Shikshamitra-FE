@@ -7,7 +7,7 @@ import { Card, Divider, CardHeader, CardContent } from '@mui/material';
 // ----------------------------------------------------------------------
 
 type Props = {
-  title?: string;
+  title?: React.ReactNode;
   subheader?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
@@ -27,6 +27,7 @@ export function DashboardWidgetWrapper({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
+      style={{ height: '100%' }}
     >
       <Card
         sx={{
