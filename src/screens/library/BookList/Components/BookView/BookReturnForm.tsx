@@ -14,7 +14,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -24,6 +23,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { staticChargeCategories } from 'src/screens/library/ChargesManagement/Components/AssignChargesForm';
 import {
@@ -681,23 +681,50 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                 <ShakingTextField
                   error={!!(formik.touched.chargeCategory && formik.errors.chargeCategory)}
                 >
-                  <CustomSelect
+                  <PaginatedSearchSelect
+                    key={formik.values.chargeCategory || 'charge-cat-empty'}
+                    fullWidth
                     label="Charge Category"
-                    options={staticChargeCategories || []}
-                    value={formik.values.chargeCategory}
-                    onChange={(val) => {
-                      formik.setFieldValue('chargeCategory', val);
-                      // Find selected charge category and set its amount
-                      const selectedCategory = (staticChargeCategories || []).find(
-                        (cat: any) => cat.id === val
+                    noOptionsText="No Charge Category Found"
+                    minChars={0}
+                    size="small"
+                    fetchOptions={async (query: string, page: number) => {
+                      const filtered = (staticChargeCategories || []).filter((o: any) =>
+                        o.name.toLowerCase().includes(query.toLowerCase())
                       );
-                      if (selectedCategory && selectedCategory.amount !== undefined) {
-                        formik.setFieldValue('amount', selectedCategory.amount);
+                      const pageSize = 10;
+                      const start = (page - 1) * pageSize;
+                      return {
+                        data: filtered.slice(start, start + pageSize).map((item: any) => ({
+                          label: item.name,
+                          id: item.id,
+                          amount: item.amount,
+                          isFixed: item.isFixed,
+                        })),
+                        hasMore: start + pageSize < filtered.length,
+                      };
+                    }}
+                    getOptionLabel={(option: any) => option?.label || ''}
+                    value={(() => {
+                      const found = (staticChargeCategories || []).find(
+                        (cat: any) => cat.id === formik.values.chargeCategory
+                      );
+                      return found
+                        ? {
+                            label: found.name,
+                            id: found.id,
+                            amount: found.amount,
+                            isFixed: found.isFixed,
+                          }
+                        : null;
+                    })()}
+                    onChange={(_, newValue: any) => {
+                      formik.setFieldValue('chargeCategory', newValue?.id || '');
+                      if (newValue && newValue.amount !== undefined) {
+                        formik.setFieldValue('amount', newValue.amount);
                       }
                     }}
-                    labelKey="name"
-                    valueKey="id"
-                    formControlProps={{ fullWidth: true }}
+                    isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
                     error={!!(formik.touched.chargeCategory && formik.errors.chargeCategory)}
                     helperText={
                       (formik.touched.chargeCategory && formik.errors.chargeCategory) as string

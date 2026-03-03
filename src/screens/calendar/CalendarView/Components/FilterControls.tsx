@@ -1,7 +1,8 @@
 import type { AutocompleteChangeReason, AutocompleteChangeDetails } from '@mui/material';
 
-import React, { useState } from 'react';
-import { Box, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
+import React from 'react';
+import { Box, Checkbox, Typography } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 
 import type { Filters } from './FilterDialog';
 
@@ -31,18 +32,11 @@ interface FilterControlsProps {
 }
 
 /**
- * Inline filter controls using MUI Autocomplete (multiple + searchable).
+ * Inline filter controls using PaginatedSearchSelect (multiple + searchable).
  * Replaces the previous drawer-based filter dialog.
  */
 const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) => {
-  // Derived counts for resetting / UX (optional future use)
-
   // Normalize selection with simpler ALL toggle logic:
-  // Behavior:
-  // 1. Clicking ALL alone selects all options (returns full array including ALL).
-  // 2. When ALL is part of a multi-selection and the user toggles ALL off, we remove ALL but keep others.
-  // 3. Selecting all individual items except ALL no longer auto-adds ALL (allows unchecking ALL cleanly).
-  // 4. We don't auto-promote subsets to ALL; ALL only appears if explicitly chosen or via rule #1.
   const normalize = (
     selected: string[],
     options: string[],
@@ -66,26 +60,27 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
     return selected;
   };
 
-  // No fixed width; let the parent grid/flex handle sizing.
-  // const DROPDOWN_WIDTH = 300;
-
-  // Track search input text separately so we can show counts when not searching
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [search, setSearch] = useState({ eventType: '', holidayType: '', status: '' });
-
   const makeDisplayValue = (selected: string[], options: string[]) => {
     const fullSelected = selected.includes('ALL') && selected.length === options.length;
     const count = countSelected(selected, options);
-    if (search.eventType || search.holidayType || search.status) return undefined; // per-field handled below
     if (fullSelected) return 'All selected';
     return count ? `(${count}) selected` : '';
   };
 
-  // Compute display counts (exclude 'ALL' meta).
   const countSelected = (arr: string[], options: string[]) => {
     const fullSelected = arr.includes('ALL') && arr.length === options.length;
-    if (fullSelected) return options.length - 1; // exclude ALL from count
+    if (fullSelected) return options.length - 1;
     return arr.filter((v) => v !== 'ALL').length;
+  };
+
+  const makeFetchOptions = (allOptions: string[]) => async (query: string, page: number) => {
+    const filtered = allOptions.filter((o) => o.toLowerCase().includes(query.toLowerCase()));
+    const pageSize = 10;
+    const start = (page - 1) * pageSize;
+    return {
+      data: filtered.slice(start, start + pageSize),
+      hasMore: start + pageSize < filtered.length,
+    };
   };
 
   return (
@@ -98,37 +93,28 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         alignItems: 'center',
       }}
     >
-      <Autocomplete
+      <PaginatedSearchSelect
         multiple
         size="small"
         disableCloseOnSelect
-        options={eventTypesOptions}
+        label="Event Type"
+        noOptionsText="No Event Type Found"
+        minChars={0}
+        fetchOptions={makeFetchOptions(eventTypesOptions)}
         value={filters.eventType}
-        // inputValue={
-        //   search.eventType || makeDisplayValue(filters.eventType, eventTypesOptions) || ''
-        // }
-        onChange={(_, value, reason, details) =>
+        onChange={(_, value: any, reason: any, details: any) =>
           onChange({
             ...filters,
             eventType: normalize(value, eventTypesOptions, reason, details),
           })
         }
-        // onInputChange={(_, value, reason) => {
-        //   if (reason === 'input') setSearch((prev) => ({ ...prev, eventType: value }));
-        //   if (reason === 'clear') setSearch((prev) => ({ ...prev, eventType: '' }));
-        // }}
-        renderOption={(props, option, { selected }) => (
-          <li {...props}>
+        getOptionLabel={(option: any) => option || ''}
+        isOptionEqualToValue={(option: any, value: any) => option === value}
+        renderOption={(props: any, option: any, { selected }: any) => (
+          <li {...props} key={option}>
             <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
             {option}
           </li>
-        )}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Event Type"
-            placeholder={search.eventType ? 'Search…' : ''}
-          />
         )}
         renderTags={() => (
           <Typography ml={1} variant="body2">
@@ -138,37 +124,28 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         sx={{ width: '100%' }}
       />
 
-      <Autocomplete
+      <PaginatedSearchSelect
         multiple
         size="small"
         disableCloseOnSelect
-        options={holidayTypesOptions}
+        label="Holiday Type"
+        noOptionsText="No Holiday Type Found"
+        minChars={0}
+        fetchOptions={makeFetchOptions(holidayTypesOptions)}
         value={filters.holidayType}
-        // inputValue={
-        //   search.holidayType || makeDisplayValue(filters.holidayType, holidayTypesOptions) || ''
-        // }
-        onChange={(_, value, reason, details) =>
+        onChange={(_, value: any, reason: any, details: any) =>
           onChange({
             ...filters,
             holidayType: normalize(value, holidayTypesOptions, reason, details),
           })
         }
-        // onInputChange={(_, value, reason) => {
-        //   if (reason === 'input') setSearch((prev) => ({ ...prev, holidayType: value }));
-        //   if (reason === 'clear') setSearch((prev) => ({ ...prev, holidayType: '' }));
-        // }}
-        renderOption={(props, option, { selected }) => (
-          <li {...props}>
+        getOptionLabel={(option: any) => option || ''}
+        isOptionEqualToValue={(option: any, value: any) => option === value}
+        renderOption={(props: any, option: any, { selected }: any) => (
+          <li {...props} key={option}>
             <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
             {option}
           </li>
-        )}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Holiday Type"
-            placeholder={search.holidayType ? 'Search…' : ''}
-          />
         )}
         renderTags={() => (
           <Typography variant="body2">
@@ -178,31 +155,28 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         sx={{ width: '100%' }}
       />
 
-      <Autocomplete
+      <PaginatedSearchSelect
         multiple
         size="small"
         disableCloseOnSelect
-        options={statusOptions}
+        label="Status"
+        noOptionsText="No Status Found"
+        minChars={0}
+        fetchOptions={makeFetchOptions(statusOptions)}
         value={filters.status}
-        // inputValue={search.status || makeDisplayValue(filters.status, statusOptions) || ''}
-        onChange={(_, value, reason, details) =>
+        onChange={(_, value: any, reason: any, details: any) =>
           onChange({
             ...filters,
             status: normalize(value, statusOptions, reason, details),
           })
         }
-        // onInputChange={(_, value, reason) => {
-        //   if (reason === 'input') setSearch((prev) => ({ ...prev, status: value }));
-        //   if (reason === 'clear') setSearch((prev) => ({ ...prev, status: '' }));
-        // }}
-        renderOption={(props, option, { selected }) => (
-          <li {...props}>
+        getOptionLabel={(option: any) => option || ''}
+        isOptionEqualToValue={(option: any, value: any) => option === value}
+        renderOption={(props: any, option: any, { selected }: any) => (
+          <li {...props} key={option}>
             <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
             {option}
           </li>
-        )}
-        renderInput={(params) => (
-          <TextField {...params} label="Status" placeholder={search.status ? 'Search…' : ''} />
         )}
         renderTags={() => (
           <Typography variant="body2">

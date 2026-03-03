@@ -10,6 +10,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
@@ -324,24 +325,49 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
-              <CustomSelect
+              <PaginatedSearchSelect
+                key={formik.values.category || 'cat-empty'}
+                fullWidth
                 label="Category"
-                name="category"
-                options={[
-                  { value: 'Fiction', label: 'Fiction' },
-                  { value: 'Non-Fiction', label: 'Non-Fiction' },
-                  { value: 'Reference', label: 'Reference' },
-                  { value: 'Textbook', label: 'Textbook' },
-                  { value: 'Children', label: 'Children' },
-                  { value: 'Biography', label: 'Biography' },
-                ]}
-                value={formik.values.category}
-                onChange={(value) => {
-                  formik.setFieldValue('category', value);
+                noOptionsText="No Category Found"
+                minChars={0}
+                size="small"
+                fetchOptions={async (query: string, page: number) => {
+                  const categoryOptions = [
+                    { value: 'Fiction', label: 'Fiction' },
+                    { value: 'Non-Fiction', label: 'Non-Fiction' },
+                    { value: 'Reference', label: 'Reference' },
+                    { value: 'Textbook', label: 'Textbook' },
+                    { value: 'Children', label: 'Children' },
+                    { value: 'Biography', label: 'Biography' },
+                  ];
+                  const filtered = categoryOptions.filter((o) =>
+                    o.label.toLowerCase().includes(query.toLowerCase())
+                  );
+                  const pageSize = 10;
+                  const start = (page - 1) * pageSize;
+                  return {
+                    data: filtered.slice(start, start + pageSize),
+                    hasMore: start + pageSize < filtered.length,
+                  };
                 }}
+                getOptionLabel={(option: any) => option?.label || ''}
+                value={
+                  [
+                    { value: 'Fiction', label: 'Fiction' },
+                    { value: 'Non-Fiction', label: 'Non-Fiction' },
+                    { value: 'Reference', label: 'Reference' },
+                    { value: 'Textbook', label: 'Textbook' },
+                    { value: 'Children', label: 'Children' },
+                    { value: 'Biography', label: 'Biography' },
+                  ].find((opt) => opt.value === formik.values.category) || null
+                }
+                onChange={(_, newValue: any) => {
+                  formik.setFieldValue('category', newValue ? newValue.value : '');
+                }}
+                isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
                 error={!!(formik.touched.category && formik.errors.category)}
                 helperText={(formik.touched.category && formik.errors.category) as string}
-                formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
           )}
@@ -374,25 +400,34 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
-              <Autocomplete
+              <PaginatedSearchSelect
+                key={formik.values.language || 'lang-empty'}
                 fullWidth
-                options={languageOptions}
-                getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
+                label="Language"
+                noOptionsText="No Language Found"
+                minChars={0}
+                size="small"
+                fetchOptions={async (query: string, page: number) => {
+                  const filtered = languageOptions.filter((o) =>
+                    o.label.toLowerCase().includes(query.toLowerCase())
+                  );
+                  const pageSize = 10;
+                  const start = (page - 1) * pageSize;
+                  return {
+                    data: filtered.slice(start, start + pageSize),
+                    hasMore: start + pageSize < filtered.length,
+                  };
+                }}
+                getOptionLabel={(option: any) =>
+                  typeof option === 'string' ? option : option?.label || ''
+                }
                 value={languageOptions.find((opt) => opt.value === formik.values.language) || null}
-                onChange={(_, newValue) => {
+                onChange={(_, newValue: any) => {
                   formik.setFieldValue('language', newValue ? newValue.value : '');
                 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Language"
-                    size="small"
-                    error={!!(formik.touched.language && formik.errors.language)}
-                    helperText={formik.touched.language && formik.errors.language}
-                    fullWidth
-                  />
-                )}
-                isOptionEqualToValue={(option, value) => option.value === value.value}
+                isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
+                error={!!(formik.touched.language && formik.errors.language)}
+                helperText={formik.touched.language && formik.errors.language}
               />
             </ShakingTextField>
           )}

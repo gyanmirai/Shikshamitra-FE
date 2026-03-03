@@ -30,7 +30,7 @@ const BookFormStepper = ({
   onClose: (e: any, isSubmit: boolean) => void;
   editData?: (IBookPayload & { id?: string }) | null;
 }) => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
 
   const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = (currentAcademicYear as any)?.id;

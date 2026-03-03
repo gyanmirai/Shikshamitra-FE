@@ -6,11 +6,11 @@ import React, { useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Card, Grid, Divider, MenuItem, TextField, Typography } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { Box, Card, Grid, Chip, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
 import FeeTermsComponent from './FeeTermsComponent';
 import { paymentMethodsConfig } from './paymentConfigMethods';
@@ -294,16 +294,51 @@ export default function PaymentDetailsForm({
                   <ShakingTextField
                     error={formik.touched.payments && Boolean(formik.errors.payments)}
                   >
-                    <CustomSelect
-                      options={Object.keys(paymentMethodsConfig).map((method) => ({
-                        value: method,
-                        label: method.charAt(0).toUpperCase() + method.slice(1),
-                      }))}
+                    <PaginatedSearchSelect
+                      minChars={0}
+                      noOptionsText="No Payment Method Found"
+                      fetchOptions={async (query: string, page: number) => {
+                        const methods = Object.keys(paymentMethodsConfig).map((method) => ({
+                          id: method,
+                          label: method.charAt(0).toUpperCase() + method.slice(1),
+                        }));
+                        const filtered = methods.filter((m) =>
+                          m.label.toLowerCase().includes(query.toLowerCase())
+                        );
+                        return { data: filtered, hasMore: false };
+                      }}
                       disabled={!formik.values.totalPayableAmount}
                       label="Payment Methods *"
-                      value={formik.values.payments?.map((p) => p.paymentMethod) || []}
-                      onChange={(selectedMethods: string[] | number[]) => {
-                        const methods = selectedMethods as string[];
+                      value={
+                        formik.values.payments?.map((p) => ({
+                          id: p.paymentMethod,
+                          label: p.paymentMethod.charAt(0).toUpperCase() + p.paymentMethod.slice(1),
+                        })) || []
+                      }
+                      isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+                      renderTags={(value: readonly any[], getTagProps) =>
+                        value.map((option: any, index: number) => {
+                          const { key, onDelete, ...otherProps } = getTagProps({ index });
+                          return (
+                            <Chip
+                              key={key}
+                              variant="soft"
+                              label={option.label}
+                              size="small"
+                              onDelete={onDelete}
+                              {...otherProps}
+                            />
+                          );
+                        })
+                      }
+                      renderOption={(prop, option: any) => (
+                        <li {...prop} key={option.id}>
+                          {option.label}
+                        </li>
+                      )}
+                      getOptionLabel={(option: any) => option?.label || ''}
+                      onChange={(_, selectedOptions: any) => {
+                        const methods = (selectedOptions as any[]).map((o) => o.id);
                         const currentPayments = [...(formik.values.payments || [])];
 
                         // Add new methods
@@ -340,8 +375,8 @@ export default function PaymentDetailsForm({
                           : '') as string
                       }
                       multiple
-                      formControlProps={{ sx: { width: '100%' } }}
-                      name="payments"
+                      sx={{ width: '100%' }}
+                      size="small"
                     />
                   </ShakingTextField>
                 </Grid>

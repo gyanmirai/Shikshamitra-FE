@@ -9,15 +9,15 @@ import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomSelect from 'src/components/custom-select';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   concessionRequestApi,
@@ -151,28 +151,88 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     <>
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
         <Box display="flex" justifyContent="space-between">
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <CustomSelect
+          <Box sx={{ display: 'flex', gap: 2, pb: { xs: 1, md: 0 } }}>
+            <PaginatedSearchSelect
+              key={boards?.length ? 'boards-loaded' : 'boards-empty'}
               label="Board"
-              options={boards || []}
-              labelKey="name"
-              valueKey="id"
-              value={selectedBoard}
-              onChange={(value) => {
-                setSelectedBoard(value as string);
+              noOptionsText="No Boards Found"
+              fetchOptions={async (query: string, page: number) => {
+                const filtered = (boards || []).filter((b: any) =>
+                  b?.name?.toLowerCase().includes(query.toLowerCase())
+                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                const end = start + pageSize;
+                return {
+                  data: filtered.slice(start, end).map((item: any) => ({
+                    label: item.name,
+                    id: item.id,
+                  })),
+                  hasMore: end < filtered.length,
+                };
+              }}
+              value={
+                boards?.find((b: any) => b.id === selectedBoard)
+                  ? {
+                      label: (boards.find((b: any) => b.id === selectedBoard) as any)?.name,
+                      id: selectedBoard,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              getOptionLabel={(option: any) => option?.label || ''}
+              minChars={0}
+              onChange={(_, value: any) => {
+                setSelectedBoard(value?.id || '');
                 setSelectedMedium('');
               }}
-              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+              size="small"
+              sx={{ width: '248px' }}
             />
-            <CustomSelect
+            <PaginatedSearchSelect
+              key={mediums?.length ? 'mediums-loaded' : 'mediums-empty'}
               label="Medium"
-              options={mediums || []}
-              labelKey="name"
               disabled={!selectedBoard}
-              valueKey="id"
-              value={selectedMedium}
-              onChange={(value) => setSelectedMedium(value as string)}
-              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+              fetchOptions={async (query: string, page: number) => {
+                const filtered = (mediums || []).filter((m: any) =>
+                  m?.name?.toLowerCase().includes(query.toLowerCase())
+                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                const end = start + pageSize;
+                return {
+                  data: filtered.slice(start, end).map((item: any) => ({
+                    label: item.name,
+                    id: item.id,
+                  })),
+                  hasMore: end < filtered.length,
+                };
+              }}
+              value={
+                mediums?.find((m: any) => m.id === selectedMedium)
+                  ? {
+                      label: (mediums.find((m: any) => m.id === selectedMedium) as any)?.name,
+                      id: selectedMedium,
+                    }
+                  : null
+              }
+              isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              getOptionLabel={(option: any) => option?.label || ''}
+              minChars={0}
+              noOptionsText="No Mediums Found"
+              onChange={(_, value: any) => setSelectedMedium(value?.id || '')}
+              size="small"
+              sx={{ width: '248px' }}
             />
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>

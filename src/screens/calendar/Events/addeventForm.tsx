@@ -22,6 +22,7 @@ import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
@@ -39,8 +40,8 @@ import {
   Button,
   Switch,
   Checkbox,
+  Skeleton,
   TextField,
-  Autocomplete,
   DialogActions,
   FormHelperText,
   FormControlLabel,
@@ -118,16 +119,16 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
       const recurrenceJson = values.isRecurring
         ? JSON.stringify({
-          repeatFrequency: values.repeatFrequency,
-          customInterval: values.customInterval,
-          customIntervalCount: values.customIntervalCount,
-          customDays: values.customDays,
-          monthlyOption: values.monthlyOption,
-          onDay: values.onDay,
-          onTheWeek: values.onTheWeek,
-          onTheDay: values.onTheDay,
-          repeatUntil: values.repeatUntil,
-        })
+            repeatFrequency: values.repeatFrequency,
+            customInterval: values.customInterval,
+            customIntervalCount: values.customIntervalCount,
+            customDays: values.customDays,
+            monthlyOption: values.monthlyOption,
+            onDay: values.onDay,
+            onTheWeek: values.onTheWeek,
+            onTheDay: values.onTheDay,
+            repeatUntil: values.repeatUntil,
+          })
         : '';
 
       // ----------------------------
@@ -281,57 +282,75 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6, sm: 3 }}>
-                  <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
-                    <Autocomplete
-                      multiple
-                      loading={isRoleDataLoading}
-                      disableCloseOnSelect
-                      options={roleData?.items || []}
-                      getOptionLabel={(option) => option?.name || ''}
-                      value={formik.values.audience
-                        .map((val: any) => roleData?.items.find((opt: any) => opt.id === val))
-                        .filter(Boolean)}
-                      onChange={(_, newValue) =>
-                        formik.setFieldValue(
-                          'audience',
-                          newValue.map((opt) => opt?.id)
-                        )
-                      }
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            {...getTagProps({ index })}
-                            key={option?.id}
-                            label={option?.name}
-                            size="small"
-                            color="default"
-                            variant="soft"
-                            sx={{ height: 22 }}
-                          />
-                        ))
-                      }
-                      renderOption={(props, option, { selected }) => (
-                        <li {...props} key={option?.id}>
-                          <Checkbox
-                            icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                            checkedIcon={<CheckBoxIcon fontSize="small" />}
-                            checked={selected}
-                          />
-                          {option?.name}
-                        </li>
-                      )}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Audience *"
-                          fullWidth
-                          size="small"
-                          error={formik.touched.audience && Boolean(formik.errors.audience)}
-                          helperText={formik.touched.audience && formik.errors.audience}
-                        />
-                      )}
-                      sx={{ minWidth: 300 }}
-                    />
+                  <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
+                    {isRoleDataLoading ? (
+                      <Skeleton variant="rounded" height={40} sx={{ width: '100%' }} />
+                    ) : (
+                      <PaginatedSearchSelect
+                        key={roleData?.items?.length ? 'roles-loaded' : 'roles-empty'}
+                        multiple
+                        disableCloseOnSelect
+                        label="Audience *"
+                        noOptionsText="No Audience Found"
+                        minChars={0}
+                        size="small"
+                        fetchOptions={async (query: string, page: number) => {
+                          const allItems = roleData?.items || [];
+                          const filtered = allItems.filter((o: any) =>
+                            o?.name?.toLowerCase().includes(query.toLowerCase())
+                          );
+                          const pageSize = 10;
+                          const start = (page - 1) * pageSize;
+                          return {
+                            data: filtered.slice(start, start + pageSize).map((item: any) => ({
+                              label: item.name,
+                              id: item.id,
+                            })),
+                            hasMore: start + pageSize < filtered.length,
+                          };
+                        }}
+                        value={formik.values.audience
+                          .map((val: any) => {
+                            const role = (roleData?.items || []).find((opt: any) => opt.id === val);
+                            return role ? { label: role.name, id: role.id } : null;
+                          })
+                          .filter(Boolean)}
+                        onChange={(_, newValue: any) =>
+                          formik.setFieldValue(
+                            'audience',
+                            newValue.map((opt: any) => opt?.id)
+                          )
+                        }
+                        isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+                        getOptionLabel={(option: any) => option?.label || ''}
+                        renderTags={(value: any[], getTagProps: any) =>
+                          value.map((option: any, index: number) => (
+                            <Chip
+                              {...getTagProps({ index })}
+                              key={option?.id}
+                              label={option?.label}
+                              size="small"
+                              color="default"
+                              variant="soft"
+                              sx={{ height: 22 }}
+                            />
+                          ))
+                        }
+                        renderOption={(props: any, option: any, { selected }: any) => (
+                          <li {...props} key={option?.id}>
+                            <Checkbox
+                              icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                              checkedIcon={<CheckBoxIcon fontSize="small" />}
+                              checked={selected}
+                            />
+                            {option?.label}
+                          </li>
+                        )}
+                        error={formik.touched.audience && Boolean(formik.errors.audience)}
+                        helperText={formik.touched.audience && (formik.errors.audience as string)}
+                        sx={{ minWidth: 300, width: '100%' }}
+                      />
+                    )}
                   </ShakingTextField>
                 </Grid>
 
@@ -351,8 +370,8 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         '&:hover': { borderColor: theme.vars.palette.text.primary },
                         ...(!!formik.touched.description &&
                           !!formik.errors.description && {
-                          borderColor: theme.palette.error.main,
-                        }),
+                            borderColor: theme.palette.error.main,
+                          }),
                         '&:focus-within': {
                           borderColor: theme.vars.palette.text.primary,
                           borderWidth: 2,
@@ -438,7 +457,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                                 !!(formik.touched.startDate && formik.errors.startDate) || false,
                               helperText:
                                 formik.touched.startDate &&
-                                  typeof formik.errors.startDate === 'string'
+                                typeof formik.errors.startDate === 'string'
                                   ? formik.errors.startDate
                                   : undefined,
                             },
@@ -519,7 +538,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                           }
                           helperText={
                             formik.touched.repeatFrequency &&
-                              typeof formik.errors.repeatFrequency === 'string'
+                            typeof formik.errors.repeatFrequency === 'string'
                               ? formik.errors.repeatFrequency
                               : undefined
                           }
@@ -568,7 +587,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                                 formik.touched.meetingDate && Boolean(formik.errors.meetingDate),
                               helperText:
                                 formik.touched.meetingDate &&
-                                  typeof formik.errors.meetingDate === 'string'
+                                typeof formik.errors.meetingDate === 'string'
                                   ? formik.errors.meetingDate
                                   : undefined,
                             },
@@ -595,7 +614,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                               error: formik.touched.startTime && Boolean(formik.errors.startTime),
                               helperText:
                                 formik.touched.startTime &&
-                                  typeof formik.errors.startTime === 'string'
+                                typeof formik.errors.startTime === 'string'
                                   ? formik.errors.startTime
                                   : undefined,
                             },
