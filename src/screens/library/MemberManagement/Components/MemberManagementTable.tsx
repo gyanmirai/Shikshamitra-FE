@@ -91,7 +91,7 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({ data, onView }) =>
       tableId="member-table"
       noDataText="No Members Data Found"
       columns={columns}
-      data={data || []}
+      data={membersData || []}
     />
   );
 };

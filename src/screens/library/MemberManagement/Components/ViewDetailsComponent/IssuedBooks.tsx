@@ -41,7 +41,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
         noDataText="No Borrowed Books Data Found"
         isLoading={mockIssuedLoading}
         columns={columns}
-        data={[]}
+        data={membersData || []}
       />
     </Box>
   );

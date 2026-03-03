@@ -1,6 +1,7 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
+import React from 'react';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
@@ -10,8 +11,8 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
 
-type Props = CardProps & {
-  title?: string;
+type Props = Omit<CardProps, 'title'> & {
+  title?: React.ReactNode;
   subheader?: string;
   chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };

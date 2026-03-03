@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Grid } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { Box, Grid, Stack } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
@@ -46,6 +48,19 @@ const ATTENDANCE_BY_MONTH: Record<string, { student: number[]; staff: number[] }
   mar: { student: [91, 93, 92, 94], staff: [95, 96, 94, 97] },
 };
 
+const renderTitleWithTooltip = (title: string, tooltip: string) => (
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Box component="span">{title}</Box>
+    <CustomTooltip title={tooltip} arrow placement="top">
+      <Iconify
+        icon="eva:info-outline"
+        width={18}
+        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+      />
+    </CustomTooltip>
+  </Stack>
+);
+
 const AdminCharts = () => {
   const theme = useTheme();
   const [attendanceMonth, setAttendanceMonth] = useState('feb');
@@ -55,7 +70,10 @@ const AdminCharts = () => {
       {/* Bar Chart – Student Strength by Class */}
       <Grid size={{ xs: 12, md: 8 }}>
         <StudentStrengthChart
-          title="Student Strength by Class"
+          title={renderTitleWithTooltip(
+            'Student Strength by Class',
+            'Class-wise breakdown of enrolled students by gender.'
+          )}
           subheader="Class-wise student count (Boys vs Girls)"
           chart={{
             series: [
@@ -83,7 +101,10 @@ const AdminCharts = () => {
       {/* Donut – Fee Collection Status */}
       <Grid size={{ xs: 12, md: 4 }}>
         <AppCurrentDownload
-          title="Fee Collection Status"
+          title={renderTitleWithTooltip(
+            'Fee Collection Status',
+            'Distribution of fee payments — paid, pending, and overdue amounts.'
+          )}
           subheader="Paid vs Pending vs Overdue"
           chart={{
             series: [
@@ -128,7 +149,10 @@ const AdminCharts = () => {
       {/* Line Chart – Attendance Trend */}
       <Grid size={{ xs: 12, md: 6 }}>
         <DashboardWidgetWrapper
-          title="Attendance Trend"
+          title={renderTitleWithTooltip(
+            'Attendance Trend',
+            'Weekly attendance percentage for students and staff across the selected month.'
+          )}
           subheader="Weekly student & staff attendance %"
           action={
             <CustomSelect
