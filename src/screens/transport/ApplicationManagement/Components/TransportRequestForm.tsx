@@ -121,6 +121,11 @@ const TransportApplicationStepper = ({
       steps={steps}
       activeStep={activeStep}
       validateOnChange={false}
+      onStepClick={(step) => {
+        if (selectedApplication) {
+          setActiveStep(step);
+        }
+      }}
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={
         transportValidationSchema[activeStep as keyof typeof transportValidationSchema]

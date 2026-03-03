@@ -3,7 +3,7 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
-import { fNumber } from 'src/utils/format-number';
+import { fCurrency } from 'src/utils/format-number';
 import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
 
@@ -42,9 +42,14 @@ export default function FinanceConcessionCategoryChart({
     xaxis: {
       categories: chart.labels,
     },
+    yaxis: {
+      labels: {
+        formatter: (value: number) => `₹${value.toLocaleString('en-IN')}`,
+      },
+    },
     tooltip: {
       y: {
-        formatter: (value: number) => fNumber(value),
+        formatter: (value: number) => fCurrency(value),
       },
     },
     ...chart.options,

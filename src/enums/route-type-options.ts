@@ -1,7 +1,7 @@
 export enum RouteType {
-  'pickup',
-  'drop',
-  'both',
+  pickup = 'pickup',
+  drop = 'drop',
+  both = 'both',
 }
 
 export const routeTypeOptions = [

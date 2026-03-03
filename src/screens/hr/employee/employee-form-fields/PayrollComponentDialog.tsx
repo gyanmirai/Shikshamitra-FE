@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Button, DialogActions } from '@mui/material';
+import { Button, Skeleton, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -61,51 +61,56 @@ export default function PayrollComponentDialog({
       maxWidth="sm"
     >
       <DialogScrollContent>
-        <PaginatedSearchSelect
-          multiple
-          fullWidth
-          noOptionsText="No results found"
-          isLoading={isLoading}
-          size="small"
-          label="Select Components"
-          placeholder="Choose components"
-          slotProps={{
-            chip: {
-              size: 'small',
-              variant: 'soft',
-            },
-          }}
-          fetchOptions={async (searchQuery) => {
-            const items = components?.items || [];
-            const filtered = items.filter((item: any) =>
-              (item?.componentName || item?.name)?.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            return {
-              data: filtered.map((option: any) => ({
-                label: option?.componentName || option?.name || '',
-                id: option.id,
-                ...option,
-              })),
-              hasMore: false,
-            };
-          }}
-          value={formik.values.selectedComponents || []}
-          isOptionEqualToValue={(option, value) => option.id === value?.id}
-          getOptionLabel={(option: any) =>
-            option?.label || option?.componentName || option?.name || ''
-          }
-          renderOption={(props, option: any) => (
-            <li {...props} key={option.id}>
-              {option.label}
-            </li>
-          )}
-          minChars={0}
-          onChange={(_, newValue: any) => formik.setFieldValue('selectedComponents', newValue)}
-          error={formik.touched.selectedComponents && Boolean(formik.errors.selectedComponents)}
-          helperText={
-            formik.touched.selectedComponents && (formik.errors.selectedComponents as string)
-          }
-        />
+        {isLoading ? (
+          <Skeleton variant="rounded" height={40} width="100%" />
+        ) : (
+          <PaginatedSearchSelect
+            multiple
+            fullWidth
+            noOptionsText="No results found"
+            size="small"
+            label="Select Components"
+            placeholder="Choose components"
+            slotProps={{
+              chip: {
+                size: 'small',
+                variant: 'soft',
+              },
+            }}
+            fetchOptions={async (searchQuery) => {
+              const items = components?.items || [];
+              const filtered = items.filter((item: any) =>
+                (item?.componentName || item?.name)
+                  ?.toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+              );
+              return {
+                data: filtered.map((option: any) => ({
+                  label: option?.componentName || option?.name || '',
+                  id: option.id,
+                  ...option,
+                })),
+                hasMore: false,
+              };
+            }}
+            value={formik.values.selectedComponents || []}
+            isOptionEqualToValue={(option, value) => option.id === value?.id}
+            getOptionLabel={(option: any) =>
+              option?.label || option?.componentName || option?.name || ''
+            }
+            renderOption={(props, option: any) => (
+              <li {...props} key={option.id}>
+                {option.label}
+              </li>
+            )}
+            minChars={0}
+            onChange={(_, newValue: any) => formik.setFieldValue('selectedComponents', newValue)}
+            error={formik.touched.selectedComponents && Boolean(formik.errors.selectedComponents)}
+            helperText={
+              formik.touched.selectedComponents && (formik.errors.selectedComponents as string)
+            }
+          />
+        )}
       </DialogScrollContent>
 
       <DialogActions>

@@ -1,6 +1,7 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
+import React from 'react';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
@@ -10,8 +11,8 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
 
-type Props = CardProps & {
-  title?: string;
+type Props = Omit<CardProps, 'title'> & {
+  title?: React.ReactNode;
   subheader?: string;
   chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
@@ -59,8 +60,8 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
   });
 
   return (
-    <Card {...other}>
-      <CardHeader title={title} subheader={subheader} />
+    <Card {...other} sx={{ height: '100%' }}>
+      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
       <Chart
         type="donut"
@@ -68,7 +69,7 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
         options={chartOptions}
         width={{ xs: 240, xl: 260 }}
         height={{ xs: 240, xl: 260 }}
-        sx={{ my: 6, mx: 'auto' }}
+        sx={{ my: 2, mx: 'auto' }}
       />
 
       <Divider sx={{ borderStyle: 'dashed' }} />

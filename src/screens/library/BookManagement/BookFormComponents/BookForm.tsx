@@ -30,7 +30,7 @@ const BookFormStepper = ({
   onClose: (e: any, isSubmit: boolean) => void;
   editData?: (IBookPayload & { id?: string }) | null;
 }) => {
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(1);
 
   const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = (currentAcademicYear as any)?.id;
@@ -147,6 +147,12 @@ const BookFormStepper = ({
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={bookValidationSchema[activeStep as keyof typeof bookValidationSchema]}
       validateOnChange={false}
+      isDisabledLabel={!editData}
+      onStepClick={(step) => {
+        if (editData) {
+          setActiveStep(step);
+        }
+      }}
       handleNext={(
         isLastStep: boolean,
         value: any,

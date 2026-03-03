@@ -13,7 +13,6 @@ function RenderAcademicPermissionFields(props: any) {
     formik.setFieldValue('academicPermissionSelectedData', value);
   };
 
-  console.log(formik?.values);
   return (
     <BoardScreenStep
       checkedItem={

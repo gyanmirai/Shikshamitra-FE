@@ -1,9 +1,9 @@
 import type { FormikProps } from 'formik';
 
-import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   useGetfuelTypeOptionsQuery,
@@ -75,16 +75,44 @@ const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
         {/* Vehicle Type */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.vehicleType && formik.errors.vehicleType)}>
-            <CustomSelect
+            <PaginatedSearchSelect
+              key={formik.values.vehicleType || 'vehicle-type-empty'}
+              fullWidth
               label="Vehicle Type *"
-              name="vehicleType"
-              options={vehicleTypeOptions || []}
-              value={formik.values.vehicleType}
-              onChange={(value) => formik.setFieldValue('vehicleType', value)}
-              error={!!(formik.touched.vehicleType && formik.errors.vehicleType)}
-              helperText={formik.touched.vehicleType ? formik.errors.vehicleType : undefined}
-              formControlProps={{ fullWidth: true }}
+              noOptionsText="No Vehicle Type Found"
+              minChars={0}
               size="small"
+              fetchOptions={async (query: string, page: number) => {
+                const items = (vehicleTypeOptions || []) as any[];
+                const filtered = items.filter((o: any) =>
+                  (o.label || o.name || '').toLowerCase().includes(query.toLowerCase())
+                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                return {
+                  data: filtered.slice(start, start + pageSize),
+                  hasMore: start + pageSize < filtered.length,
+                };
+              }}
+              getOptionLabel={(option: any) => option?.label || option?.name || ''}
+              value={
+                (vehicleTypeOptions || []).find(
+                  (o: any) => (o.value ?? o.id) === formik.values.vehicleType
+                ) || null
+              }
+              onChange={(_, newValue: any) => {
+                formik.setFieldValue(
+                  'vehicleType',
+                  newValue ? (newValue.value ?? newValue.id) : ''
+                );
+              }}
+              isOptionEqualToValue={(option: any, val: any) =>
+                (option.value ?? option.id) === (val.value ?? val.id)
+              }
+              error={!!(formik.touched.vehicleType && formik.errors.vehicleType)}
+              helperText={
+                formik.touched.vehicleType ? (formik.errors.vehicleType as string) : undefined
+              }
             />
           </ShakingTextField>
         </Grid>
@@ -242,16 +270,39 @@ const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
         {/* Fuel Type */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.fuelType && formik.errors.fuelType)}>
-            <CustomSelect
+            <PaginatedSearchSelect
+              key={formik.values.fuelType || 'fuel-type-empty'}
+              fullWidth
               label="Fuel Type *"
-              name="fuelType"
-              options={fuelTypeOptions || []}
-              value={formik.values.fuelType}
-              onChange={(value) => formik.setFieldValue('fuelType', value)}
-              error={!!(formik.touched.fuelType && formik.errors.fuelType)}
-              helperText={formik.touched.fuelType ? formik.errors.fuelType : undefined}
-              formControlProps={{ fullWidth: true }}
+              noOptionsText="No Fuel Type Found"
+              minChars={0}
               size="small"
+              fetchOptions={async (query: string, page: number) => {
+                const items = (fuelTypeOptions || []) as any[];
+                const filtered = items.filter((o: any) =>
+                  (o.label || o.name || '').toLowerCase().includes(query.toLowerCase())
+                );
+                const pageSize = 10;
+                const start = (page - 1) * pageSize;
+                return {
+                  data: filtered.slice(start, start + pageSize),
+                  hasMore: start + pageSize < filtered.length,
+                };
+              }}
+              getOptionLabel={(option: any) => option?.label || option?.name || ''}
+              value={
+                (fuelTypeOptions || []).find(
+                  (o: any) => (o.value ?? o.id) === formik.values.fuelType
+                ) || null
+              }
+              onChange={(_, newValue: any) => {
+                formik.setFieldValue('fuelType', newValue ? (newValue.value ?? newValue.id) : '');
+              }}
+              isOptionEqualToValue={(option: any, val: any) =>
+                (option.value ?? option.id) === (val.value ?? val.id)
+              }
+              error={!!(formik.touched.fuelType && formik.errors.fuelType)}
+              helperText={formik.touched.fuelType ? (formik.errors.fuelType as string) : undefined}
             />
           </ShakingTextField>
         </Grid>

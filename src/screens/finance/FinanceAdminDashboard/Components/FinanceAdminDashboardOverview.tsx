@@ -1,73 +1,55 @@
-import React, { useState } from 'react';
+import { Grid } from '@mui/material';
 import { financePaths } from 'src/constants/finance-menu';
 import { fNumber, fCurrency } from 'src/utils/format-number';
-import CustomizableView from 'src/components/customizable-view';
-
-import { SummaryCard } from '../../dashboard/Components/FinanceDashboardOverview';
+import CompactKPICard from 'src/screens/student/dashboard/principal/kpi-card-item';
 
 // ----------------------------------------------------------------------
 
-interface ICardItem {
-  id: string;
-  icon: string;
-  title: string;
-  count: string;
-  color: string;
-  bgColor: string;
-  href?: string;
-  labels?: {
-    name: string;
-    color: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'default';
-  }[];
-  width?: number;
-}
+const kpiData = [
+  {
+    id: 'CARD_PENDING_CONCESSION',
+    icon: 'hugeicons:discount',
+    title: 'Pending Concession Requests',
+    value: fNumber(8),
+    status: 'info' as const,
+    path: financePaths.concession,
+    trendData: [3, 5, 4, 8, 6, 7, 5, 8, 9, 8],
+  },
+  {
+    id: 'CARD_TOTAL_COLLECTION',
+    icon: 'hugeicons:money-bag-02',
+    title: 'Total Collection (YTD)',
+    value: fCurrency(12500000),
+    status: 'success' as const,
+    path: financePaths.feeCollection,
+    trendData: [40, 60, 55, 80, 72, 90, 85, 100, 110, 125],
+  },
+  {
+    id: 'CARD_TOTAL_EXPENSE',
+    icon: 'hugeicons:wallet-02',
+    title: 'Total Expenses (YTD)',
+    value: fCurrency(8500000),
+    status: 'error' as const,
+    path: financePaths.expenseTracking,
+    trendData: [30, 45, 40, 60, 55, 70, 65, 80, 78, 85],
+  },
+];
 
-const FinanceAdminDashboardOverview = () => {
-  const [cards, setCards] = useState<ICardItem[]>([
-    {
-      id: 'CARD_PENDING_CONCESSION',
-      icon: 'hugeicons:discount',
-      title: 'Pending Concession Requests',
-      count: fNumber(8),
-      color: 'info.main',
-      bgColor: 'info',
-      href: financePaths.concession,
-      width: 4,
-    },
-    {
-      id: 'CARD_TOTAL_COLLECTION',
-      icon: 'hugeicons:money-bag-02',
-      title: 'Total Collection (YTD)',
-      count: fCurrency(12500000),
-      color: 'success.main',
-      bgColor: 'success',
-      href: financePaths.feeCollection,
-      width: 4,
-    },
-    {
-      id: 'CARD_TOTAL_EXPENSE',
-      icon: 'hugeicons:wallet-02',
-      title: 'Total Expenses (YTD)',
-      count: fCurrency(8500000),
-      color: 'error.main',
-      bgColor: 'error',
-      href: financePaths.expenseTracking,
-      width: 4,
-    },
-  ]);
-
-  const dashBoardSections = cards.reduce((acc: { [key: string]: React.JSX.Element }, card) => {
-    acc[card.id] = <SummaryCard {...card} />;
-    return acc;
-  }, {});
-
-  return (
-    <CustomizableView
-      sections={cards}
-      setSections={setCards}
-      dashBoardSections={dashBoardSections}
-    />
-  );
-};
+const FinanceAdminDashboardOverview = () => (
+  <Grid container spacing={2}>
+    {kpiData.map((kpi) => (
+      <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
+        <CompactKPICard
+          title={kpi.title}
+          value={kpi.value}
+          icon={kpi.icon}
+          status={kpi.status}
+          path={kpi.path}
+          trendData={kpi.trendData}
+        />
+      </Grid>
+    ))}
+  </Grid>
+);
 
 export default FinanceAdminDashboardOverview;

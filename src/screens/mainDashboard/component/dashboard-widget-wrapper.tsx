@@ -2,13 +2,12 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Iconify } from 'src/components/iconify';
-import { Card, Divider, Tooltip, CardHeader, IconButton, CardContent } from '@mui/material';
+import { Card, Divider, CardHeader, CardContent } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  title?: string;
+  title?: React.ReactNode;
   subheader?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
@@ -28,6 +27,7 @@ export function DashboardWidgetWrapper({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
+      style={{ height: '100%' }}
     >
       <Card
         sx={{
@@ -45,22 +45,7 @@ export function DashboardWidgetWrapper({
         {...other}
       >
         {title && (
-          <CardHeader
-            title={title}
-            subheader={subheader}
-            action={
-              action || (
-                <Tooltip title="Refresh">
-                  <IconButton size="small">
-                    <Iconify icon="eva:refresh-fill" />
-                  </IconButton>
-                </Tooltip>
-              )
-            }
-            titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
-            subheaderTypographyProps={{ variant: 'caption', sx: { mt: 0.5 } }}
-            sx={{ pb: 2 }}
-          />
+          <CardHeader title={title} subheader={subheader} action={action || null} sx={{ p: 2 }} />
         )}
 
         {title && <Divider sx={{ borderStyle: 'dashed' }} />}
