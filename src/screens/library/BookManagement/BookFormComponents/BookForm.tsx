@@ -107,12 +107,12 @@ const BookFormStepper = ({
       setIsLoading(true);
       try {
         if (activeStep === 0) {
-          await handleGeneralInfo(values, formik);
+          // await handleGeneralInfo(values, formik);
           shikshaMitraToast.success({
             message: `Book "${values.title}" general information saved successfully`,
           });
         } else if (activeStep === 1) {
-          await handleManageCopies(values, formik);
+          // await handleManageCopies(values, formik);
           shikshaMitraToast.success({
             message: `Book "${values.title}" added successfully`,
           });
@@ -135,7 +135,7 @@ const BookFormStepper = ({
         setIsLoading(false);
       }
     },
-    [activeStep, handleGeneralInfo, handleManageCopies, onClose]
+    [activeStep, onClose]
   );
 
   return (
