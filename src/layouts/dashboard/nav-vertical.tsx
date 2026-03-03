@@ -107,39 +107,31 @@ export function NavVertical({
       />
       {isNavMini ? renderNavMini : renderNavVertical}
       {/* <NavList depth={1} data={settingMenu} cssVars={cssVars} /> */}
-      <NavSectionMini
-        data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
-        sx={{
-          pb: 2,
-          px: 0.5,
-          ...hideScrollY,
-          flex: '1 1 auto',
-          overflowY: 'hidden',
-          borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
-          '& ul': {
-            justifyContent: 'end',
-          },
-        }}
-        // {...other}
-      />
-      {/* {isNavMini ? (
+      {isNavMini ? (
         <NavSectionMini
-          data={[{ items: [settingMenu] }]}
+          data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
           sx={{
             pb: 2,
             px: 0.5,
             ...hideScrollY,
             flex: '1 1 auto',
-            overflowY: 'auto',
+            overflowY: 'hidden',
+            borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
             '& ul': {
               justifyContent: 'end',
             },
           }}
-          // {...other}
         />
       ) : (
-        <NavSectionVertical data={[{ items: [settingMenu] }]} sx={{ px: 2, flex: '1 1 auto' }} />
-      )} */}
+        <NavSectionVertical
+          data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
+          sx={{
+            px: 2,
+            borderTop: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
+          }}
+          {...other}
+        />
+      )}
     </Box>
   );
 }
