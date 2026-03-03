@@ -147,6 +147,12 @@ const BookFormStepper = ({
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={bookValidationSchema[activeStep as keyof typeof bookValidationSchema]}
       validateOnChange={false}
+      isDisabledLabel={!editData}
+      onStepClick={(step) => {
+        if (editData) {
+          setActiveStep(step);
+        }
+      }}
       handleNext={(
         isLastStep: boolean,
         value: any,

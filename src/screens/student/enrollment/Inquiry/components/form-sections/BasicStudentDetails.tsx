@@ -14,6 +14,7 @@ import {
   Grid,
   Radio,
   Divider,
+  Skeleton,
   TextField,
   RadioGroup,
   Typography,
@@ -99,6 +100,7 @@ export const BasicStudentDetails = ({
             <ShakingTextField error={!!(touched.academicYear && errors.academicYear)}>
               <PaginatedSearchSelect
                 label="Academic Year *"
+                noOptionsText="No Academic Year Found"
                 fetchOptions={async (query) => {
                   const items = (academicYear?.items || []).filter((item: any) =>
                     item?.name?.toLowerCase().includes(query.toLowerCase())
@@ -135,7 +137,6 @@ export const BasicStudentDetails = ({
                   setFieldValue('class', '');
                   setFieldValue('academicYear', value?.id || '');
                 }}
-                placeholder="Search Academic Year"
                 error={!!(touched.academicYear && errors.academicYear)}
                 helperText={(touched.academicYear && errors.academicYear) || ''}
                 fullWidth
@@ -147,159 +148,174 @@ export const BasicStudentDetails = ({
 
           {/* Board */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ShakingTextField error={!!(touched.board && errors.board)}>
-              <PaginatedSearchSelect
-                label="Board *"
-                fetchOptions={async (query) => {
-                  const items = boards || [];
-                  const filtered = items.filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  values.board
-                    ? {
-                        label: boards?.find((b: any) => b.id === values.board)?.name || '',
-                        id: values.board,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  setFieldValue('medium', '');
-                  setFieldValue('class', '');
-                  setFieldValue('board', value?.id || '');
-                }}
-                disabled={!values.academicYear}
-                placeholder="Search Board"
-                error={!!(touched.board && errors.board)}
-                helperText={(touched.board && errors.board) || ''}
-                fullWidth
-                sx={{ maxWidth: 'unset' }}
-                size="small"
-              />
-            </ShakingTextField>
+            {boardLoading ? (
+              <Skeleton variant="rounded" height={40} width="100%" />
+            ) : (
+              <ShakingTextField error={!!(touched.board && errors.board)}>
+                <PaginatedSearchSelect
+                  label="Board *"
+                  noOptionsText="No Board Found"
+                  isLoading={boardLoading}
+                  fetchOptions={async (query) => {
+                    const items = boards || [];
+                    const filtered = items.filter((item: any) =>
+                      item?.name?.toLowerCase().includes(query.toLowerCase())
+                    );
+                    return {
+                      data: filtered.map((item: any) => ({
+                        label: item.name,
+                        id: item.id,
+                      })),
+                      hasMore: false,
+                    };
+                  }}
+                  value={
+                    values.board
+                      ? {
+                          label: boards?.find((b: any) => b.id === values.board)?.name || '',
+                          id: values.board,
+                        }
+                      : null
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  renderOption={(prop, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
+                  minChars={0}
+                  onChange={(_, value: any) => {
+                    setFieldValue('medium', '');
+                    setFieldValue('class', '');
+                    setFieldValue('board', value?.id || '');
+                  }}
+                  disabled={!values.academicYear}
+                  error={!!(touched.board && errors.board)}
+                  helperText={(touched.board && errors.board) || ''}
+                  fullWidth
+                  sx={{ maxWidth: 'unset' }}
+                  size="small"
+                />
+              </ShakingTextField>
+            )}
           </Grid>
 
           {/* Medium */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ShakingTextField error={!!(touched.medium && errors.medium)}>
-              <PaginatedSearchSelect
-                label="Medium *"
-                disabled={!values.board}
-                fetchOptions={async (query) => {
-                  const items =
-                    board?.items?.find((item: any) => item.id === values.board)?.educationMediums ||
-                    [];
-                  const filtered = items.filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  values.medium
-                    ? {
-                        label:
-                          board?.items
-                            ?.find((item: any) => item.id === values.board)
-                            ?.educationMediums?.find((m: any) => m.id === values.medium)?.name ||
-                          '',
-                        id: values.medium,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={async (_, value: any) => {
-                  setFieldValue('medium', value?.id || '');
-                  setFieldValue('class', '');
-                  setFieldTouched('medium', false);
-                  if (value?.id) {
-                    await actions.getClassByMedium(value.id);
+            {boardLoading ? (
+              <Skeleton variant="rounded" height={40} width="100%" />
+            ) : (
+              <ShakingTextField error={!!(touched.medium && errors.medium)}>
+                <PaginatedSearchSelect
+                  label="Medium *"
+                  noOptionsText="No Medium Found"
+                  disabled={!values.board}
+                  isLoading={boardLoading}
+                  fetchOptions={async (query) => {
+                    const items =
+                      board?.items?.find((item: any) => item.id === values.board)
+                        ?.educationMediums || [];
+                    const filtered = items.filter((item: any) =>
+                      item?.name?.toLowerCase().includes(query.toLowerCase())
+                    );
+                    return {
+                      data: filtered.map((item: any) => ({
+                        label: item.name,
+                        id: item.id,
+                      })),
+                      hasMore: false,
+                    };
+                  }}
+                  value={
+                    values.medium
+                      ? {
+                          label:
+                            board?.items
+                              ?.find((item: any) => item.id === values.board)
+                              ?.educationMediums?.find((m: any) => m.id === values.medium)?.name ||
+                            '',
+                          id: values.medium,
+                        }
+                      : null
                   }
-                }}
-                placeholder="Search Medium"
-                error={!!(touched.medium && errors.medium)}
-                helperText={(touched.medium && errors.medium) || ''}
-                fullWidth
-                sx={{ maxWidth: 'unset' }}
-                size="small"
-              />
-            </ShakingTextField>
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  renderOption={(prop, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
+                  minChars={0}
+                  onChange={async (_, value: any) => {
+                    setFieldValue('medium', value?.id || '');
+                    setFieldValue('class', '');
+                    setFieldTouched('medium', false);
+                    if (value?.id) {
+                      await actions.getClassByMedium(value.id);
+                    }
+                  }}
+                  error={!!(touched.medium && errors.medium)}
+                  helperText={(touched.medium && errors.medium) || ''}
+                  fullWidth
+                  sx={{ maxWidth: 'unset' }}
+                  size="small"
+                />
+              </ShakingTextField>
+            )}
           </Grid>
 
           {/* Class */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ShakingTextField error={!!(touched.class && errors.class)}>
-              <PaginatedSearchSelect
-                label="Class *"
-                disabled={!values.medium}
-                fetchOptions={async (query) => {
-                  const items = classes || [];
-                  const filtered = items.filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  values.class
-                    ? {
-                        label: classes?.find((c: any) => c.id === values.class)?.name || '',
-                        id: values.class,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  setFieldValue('class', value?.id || '');
-                }}
-                placeholder="Search Class"
-                error={!!(touched.class && errors.class)}
-                helperText={(touched.class && errors.class) || ''}
-                fullWidth
-                sx={{ maxWidth: 'unset' }}
-                size="small"
-              />
-            </ShakingTextField>
+            {classLoading ? (
+              <Skeleton variant="rounded" height={40} width="100%" />
+            ) : (
+              <ShakingTextField error={!!(touched.class && errors.class)}>
+                <PaginatedSearchSelect
+                  label="Class *"
+                  noOptionsText="No Class Found"
+                  disabled={!values.medium}
+                  isLoading={classLoading}
+                  fetchOptions={async (query) => {
+                    const items = classes || [];
+                    const filtered = items.filter((item: any) =>
+                      item?.name?.toLowerCase().includes(query.toLowerCase())
+                    );
+                    return {
+                      data: filtered.map((item: any) => ({
+                        label: item.name,
+                        id: item.id,
+                      })),
+                      hasMore: false,
+                    };
+                  }}
+                  value={
+                    values.class
+                      ? {
+                          label: classes?.find((c: any) => c.id === values.class)?.name || '',
+                          id: values.class,
+                        }
+                      : null
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  renderOption={(prop, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
+                  minChars={0}
+                  onChange={(_, value: any) => {
+                    setFieldValue('class', value?.id || '');
+                  }}
+                  error={!!(touched.class && errors.class)}
+                  helperText={(touched.class && errors.class) || ''}
+                  fullWidth
+                  sx={{ maxWidth: 'unset' }}
+                  size="small"
+                />
+              </ShakingTextField>
+            )}
           </Grid>
 
           {/* previous school */}
