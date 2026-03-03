@@ -11,6 +11,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import BoardMediumDropdown from 'src/components/boardMediumDropdown';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
+import AllInfoCalendar from '../admin/Components/AllInfoCalendar';
 import { DashboardWidgetWrapper } from '../component/dashboard-widget-wrapper';
 
 // ----------------------------------------------------------------------
@@ -181,7 +182,7 @@ const PrincipalCharts = () => {
       {/* ── Row 1: Academic Insights ─────────────────────────── */}
 
       {/* Line – Academic Progress Over Time */}
-      <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12 }}>
         <DashboardWidgetWrapper
           title={renderTitleWithTooltip(
             'Academic Progress Over Time',
@@ -217,7 +218,7 @@ const PrincipalCharts = () => {
       {/* ── Row 2: Subject Marks + Teacher Workload ──────────── */}
 
       {/* Grouped Bar – Subject-wise Average Marks */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <DashboardWidgetWrapper
           title={renderTitleWithTooltip(
             'Subject-wise Average Marks',
@@ -276,8 +277,6 @@ const PrincipalCharts = () => {
         </DashboardWidgetWrapper>
       </Grid>
 
-      {/* ── Row 4: School Health ─────────────────────────────── */}
-
       {/* Line – Student Strength Trend */}
       <Grid size={{ xs: 12, md: 6 }}>
         <DashboardWidgetWrapper
@@ -303,6 +302,9 @@ const PrincipalCharts = () => {
             sx={{ boxShadow: 'none' }}
           />
         </DashboardWidgetWrapper>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AllInfoCalendar />
       </Grid>
     </Grid>
   );
