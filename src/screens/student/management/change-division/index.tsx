@@ -56,7 +56,7 @@ const ChangeDivisionScreen = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllStudentGroupQuery,
-    params: division,
+    params: { division },
     options: {
       skip: !division,
     },

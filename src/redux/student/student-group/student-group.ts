@@ -52,9 +52,20 @@ export const studentGroupApi = createApi({
       invalidatesTags: ['studentGroup'],
     }),
     getAllStudentGroup: builder.query({
-      query: (divisionId) => ({
-        url: `/students/records/${divisionId}`,
+      query: ({
+        division,
+        sorting,
+        skipCount,
+        maxResultCount,
+      }: {
+        division: string;
+        sorting?: string;
+        skipCount?: number;
+        maxResultCount?: number;
+      }) => ({
+        url: `/students/records/${division}`,
         method: 'GET',
+        params: { sorting, skipCount, maxResultCount },
       }),
       providesTags: ['studentGroup'],
     }),

@@ -134,6 +134,39 @@ const IdentificationSection: React.FC<SectionProps> = ({
 
     <Grid size={{ xs: 12, md: 3 }}>
       <ShakingTextField
+        error={(formik.touched as any).pennNo && Boolean((formik.errors as any).pennNo)}
+      >
+        <TextField
+          key="pennNo"
+          size="small"
+          type="number"
+          label="PENN No."
+          name="pennNo"
+          value={(formik.values as any).pennNo}
+          onBlur={formik.handleBlur}
+          error={(formik.touched as any).pennNo && Boolean((formik.errors as any).pennNo)}
+          helperText={(formik.touched as any).pennNo && (formik.errors as any).pennNo}
+          fullWidth
+          onChange={(e) => {
+            formik.setFieldValue('pennNo', toNumericWithMax(e.target.value, 11));
+          }}
+          inputProps={{
+            maxLength: 11,
+            pattern: '[0-9]*',
+          }}
+          disabled={!isEdit.value}
+          onKeyDown={(e) => {
+            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
+        />
+      </ShakingTextField>
+    </Grid>
+
+    <Grid size={{ xs: 12, md: 3 }}>
+      <ShakingTextField
         error={
           (formik.touched as any).inquiryPreference &&
           Boolean((formik.errors as any).inquiryPreference)

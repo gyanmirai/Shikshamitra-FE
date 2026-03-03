@@ -40,6 +40,7 @@ export interface IGeneralInformationResponse {
   adharNo: string;
   apparId: 'string';
   panNo: 'string';
+  pennNo: 'string';
   religion: 0;
   familyCast: 'string';
   castCategory: 0;

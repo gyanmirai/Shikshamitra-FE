@@ -63,6 +63,7 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   inquiryPreference: editData?.inquiryPreferenceId || null,
   apparId: editData?.apparId || '',
   panNo: editData?.panNo || '',
+  pennNo: editData?.pennNo || '',
   lastClassPassed: editData?.lastClassPassed || '',
 });
 export const documentFieldsInitialValues = () => ({
