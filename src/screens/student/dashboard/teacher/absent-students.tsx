@@ -8,7 +8,6 @@ import {
   Box,
   Card,
   Stack,
-  Button,
   Avatar,
   Tooltip,
   CardHeader,
@@ -136,15 +135,6 @@ const AbsentStudents = () => {
         sx={{ ml: -1, mt: -1 }}
         title="Absent Students Today"
         subheader="3 Students Absent"
-        action={
-          <Button
-            size="small"
-            color="inherit"
-            endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
-          >
-            View All
-          </Button>
-        }
       />
       <Box sx={{ p: 1 }}>
         <CustomizableTable

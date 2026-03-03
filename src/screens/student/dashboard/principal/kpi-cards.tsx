@@ -1,5 +1,5 @@
-import React from 'react';
-import { Grid } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Grid } from '@mui/material';
 // Paths
 import { hrPaths } from 'src/constants/hr-menus';
 import { studentPaths } from 'src/constants/student-menu';
@@ -20,6 +20,31 @@ const KPI_DATA = [
     icon: 'mdi:account-school-outline',
     status: 'info' as const,
     trendData: [2400, 2410, 2405, 2425, 2430, 2450],
+    fullChart: {
+      type: 'bar',
+      series: [
+        { name: 'Boys', data: [1300] },
+        { name: 'Girls', data: [1150] },
+      ],
+      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
+      options: {
+        tooltip: {
+          x: { show: false },
+          y: { formatter: (val: number) => `${val} Students` },
+        },
+        xaxis: {
+          categories: ['Total'],
+          labels: { show: false },
+        },
+        plotOptions: {
+          bar: {
+            columnWidth: '40%',
+            borderRadius: 2,
+            distributed: false,
+          },
+        },
+      },
+    },
     path: studentPaths.records.studentList,
   },
   {
@@ -95,23 +120,70 @@ const KPI_DATA = [
   },
 ];
 
-const PrincipalKPICards = () => (
-  <Grid container spacing={1}>
-    {KPI_DATA.map((item) => (
-      <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.id}>
-        <CompactKPICard
-          title={item.title}
-          value={item.value}
-          percentChange={item.percentChange}
-          icon={item.icon}
-          status={item.status}
-          trendData={item.trendData}
-          path={item.path}
-          tooltip={item.tooltip}
-        />
+const PrincipalKPICards = () => {
+  const [timeFilter] = useState('Today');
+
+  const strategicMetrics = ['Total Students', 'Academic Avg', 'Avg Attendance', 'Pending Fees'];
+
+  const getComparisonLabel = (title: string, filter: string) => {
+    if (strategicMetrics.includes(title)) {
+      return 'vs last year';
+    }
+
+    switch (filter) {
+      case 'Today':
+        return 'vs Yesterday';
+      case 'This Week':
+        return 'vs Last Week';
+      case 'This Month':
+        return 'vs Last Month';
+      case 'Academic Year':
+        return 'vs Last Academic Year';
+      default:
+        return 'vs last year';
+    }
+  };
+
+  const getDynamicPercentChange = (baseChange: number, title: string, filter: string) => {
+    if (strategicMetrics.includes(title)) return baseChange;
+
+    // Specific handling for 'Events / Alerts' which has 0%
+    if (title === 'Events / Alerts' && baseChange === 0) {
+      if (filter === 'Today') return 0;
+      if (filter === 'This Week') return 5;
+      if (filter === 'This Month') return 12;
+      if (filter === 'Academic Year') return 25;
+    }
+
+    if (filter === 'Today') return baseChange;
+    if (filter === 'This Week') return Number((baseChange * 1.2).toFixed(1));
+    if (filter === 'This Month') return Number((baseChange * 1.5).toFixed(1));
+    if (filter === 'Academic Year') return Number((baseChange * 2.1).toFixed(1));
+    return baseChange;
+  };
+
+  return (
+    <Box>
+      <Grid container spacing={1}>
+        {KPI_DATA.map((item) => (
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.id}>
+            <CompactKPICard
+              title={item.title}
+              value={item.value}
+              percentChange={getDynamicPercentChange(item.percentChange, item.title, timeFilter)}
+              comparisonLabel={getComparisonLabel(item.title, timeFilter)}
+              icon={item.icon}
+              status={item.status}
+              trendData={item.trendData}
+              path={item.path}
+              tooltip={item.tooltip}
+              chart={(item as any).fullChart}
+            />
+          </Grid>
+        ))}
       </Grid>
-    ))}
-  </Grid>
-);
+    </Box>
+  );
+};
 
 export default PrincipalKPICards;

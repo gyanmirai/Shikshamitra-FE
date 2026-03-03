@@ -1,7 +1,7 @@
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { studentPaths } from 'src/constants/student-menu';
@@ -20,7 +20,6 @@ import {
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
-
 // ----------------------------------------------------------------------
 
 const upcomingExams = [
@@ -67,45 +66,6 @@ const upcomingExams = [
 ];
 
 // Countdown Helper
-const useCountdown = (targetDate: string) => {
-  const countDownDate = new Date(targetDate).getTime();
-  const [countDown, setCountDown] = useState(countDownDate - new Date().getTime());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCountDown(countDownDate - new Date().getTime());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [countDownDate]);
-
-  return getReturnValues(countDown);
-};
-
-const getReturnValues = (countDown: number) => {
-  const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (countDown < 0) return { days: 0, hours: 0, minutes: 0, expired: true };
-  return { days, hours, minutes, expired: false };
-};
-
-const CountdownTimer = ({ date }: { date: string }) => {
-  const { days, hours, minutes, expired } = useCountdown(date);
-
-  if (expired) return <Label color="default">Completed</Label>;
-
-  return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
-      <Iconify icon="mdi:timer-outline" width={16} sx={{ color: 'warning.main' }} />
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main' }}>
-        {days > 0 ? `${days}d ` : ''}
-        {hours}h {minutes}m left
-      </Typography>
-    </Stack>
-  );
-};
 
 // ----------------------------------------------------------------------
 
@@ -148,19 +108,39 @@ const studentEnrollment = [
   },
 ];
 
+export enum EntranceExamStatusType {
+  Scheduled = 'Scheduled',
+  Completed = 'Completed',
+}
+
+export const EntranceExamStatusOptions = [
+  {
+    label: 'Scheduled',
+    value: EntranceExamStatusType.Scheduled,
+  },
+  {
+    label: 'Completed',
+    value: EntranceExamStatusType.Completed,
+  },
+];
+
+export const EntranceExamStatusTypeColors = {
+  [EntranceExamStatusType.Scheduled]: 'warning',
+  [EntranceExamStatusType.Completed]: 'success',
+};
+
 const AdminLists = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [openViewAll, setOpenViewAll] = useState(false);
-
   const router = useRouter();
 
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
   const examColumns: any[] = [
     { id: 'details', label: 'Exam Name', align: 'left' },
-    { id: 'displayDate', label: 'Date', align: 'left' },
-    { id: 'time', label: 'Time', align: 'left' },
+    { id: 'displayDate', label: 'Date', align: 'left', type: 'date', filterType: 'date' },
+    { id: 'time', label: 'Time', align: 'left', filterType: 'time' },
     {
       id: 'type',
       label: 'Type',
@@ -176,6 +156,8 @@ const AdminLists = () => {
       id: 'status',
       label: 'Status',
       align: 'left',
+      filterType: 'enum',
+      enumOptions: EntranceExamStatusOptions,
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
           {value}
@@ -258,7 +240,8 @@ const AdminLists = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        bgcolor: (t) => t.vars.palette.background.paper,
+                        opacity: 0.8,
                         backdropFilter: 'blur(2px)',
                         borderRadius: 1.5,
                       }}
@@ -485,7 +468,7 @@ const AdminLists = () => {
           data={upcomingExams}
           tableId="upcoming-exams-table"
           isSearch={false}
-          isFilter={false}
+          isFilter
           isPagination={false}
           wrapperProps={{ sx: { height: '60vh' }, padding: 1 }}
         />

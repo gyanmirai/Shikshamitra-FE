@@ -8,7 +8,6 @@ import {
   Box,
   Card,
   Stack,
-  Button,
   Avatar,
   Tooltip,
   CardHeader,
@@ -158,15 +157,6 @@ const StudentsNeedingAttention = () => {
             <Iconify icon="mdi:alert-decagram" sx={{ color: 'error.main' }} />
             <Typography variant="h6">Students Needing Attention</Typography>
           </Stack>
-        }
-        action={
-          <Button
-            size="small"
-            color="inherit"
-            endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
-          >
-            View All
-          </Button>
         }
         sx={{ pb: 0, ml: -1, mt: -1 }}
       />

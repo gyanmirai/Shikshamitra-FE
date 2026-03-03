@@ -103,6 +103,11 @@ const StudentExamsList = () => {
       id: 'status',
       label: 'Status',
       align: 'left',
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Scheduled', value: 'Scheduled' },
+        { label: 'Completed', value: 'Completed' },
+      ],
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
           {value}
@@ -267,7 +272,7 @@ const StudentExamsList = () => {
           data={upcomingExams} // Use correct data source
           tableId="upcoming-exams-table"
           isSearch={false}
-          isFilter={false}
+          isFilter
           isPagination={false}
           wrapperProps={{ sx: { height: '60vh' }, padding: 1 }}
         />

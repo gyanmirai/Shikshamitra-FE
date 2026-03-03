@@ -65,7 +65,11 @@ export const AttendanceTrend = () => {
     legend: {
       show: false,
     },
-    colors: [theme.palette.success.main, theme.palette.warning.main, theme.palette.error.main],
+    colors: [
+      theme.vars.palette.success.main,
+      theme.vars.palette.warning.main,
+      theme.vars.palette.error.main,
+    ],
     grid: {
       strokeDashArray: 3,
     },
@@ -112,7 +116,8 @@ export const AttendanceTrend = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            bgcolor: (t) => t.vars.palette.background.paper,
+            opacity: 0.8,
             backdropFilter: 'blur(2px)',
             borderRadius: 2,
           }}
@@ -181,12 +186,12 @@ export const SubjectPerformance = () => {
       categories: ['Math', 'Sci', 'Eng', 'Hist', 'Geog', 'Arts'],
     },
     colors: [
-      theme.palette.primary.main,
-      theme.palette.error.main,
-      theme.palette.primary.main,
-      theme.palette.primary.main,
-      theme.palette.primary.main,
-      theme.palette.primary.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.error.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.primary.main,
     ],
     legend: {
       show: false,
@@ -234,7 +239,8 @@ export const SubjectPerformance = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            bgcolor: (t) => t.vars.palette.background.paper,
+            opacity: 0.8,
             backdropFilter: 'blur(2px)',
             borderRadius: 2,
           }}
@@ -291,12 +297,16 @@ export const HomeworkStatus = () => {
   const homeworkOptions = useChart({
     labels: ['Submitted', 'Pending', 'Overdue'],
     stroke: {
-      colors: [theme.palette.background.paper],
+      colors: [theme.vars.palette.background.paper],
     },
     legend: {
       show: false,
     },
-    colors: [theme.palette.success.main, theme.palette.warning.main, theme.palette.error.main],
+    colors: [
+      theme.vars.palette.success.main,
+      theme.vars.palette.warning.main,
+      theme.vars.palette.error.main,
+    ],
     dataLabels: {
       enabled: true,
       dropShadow: { enabled: false },
@@ -309,9 +319,16 @@ export const HomeworkStatus = () => {
         donut: {
           labels: {
             show: true,
+            name: {
+              color: theme.vars.palette.text.secondary,
+            },
+            value: {
+              color: theme.vars.palette.text.primary,
+            },
             total: {
               show: true,
               label: 'Total',
+              color: theme.vars.palette.text.primary,
               formatter: () => '45',
             },
           },
@@ -348,7 +365,8 @@ export const HomeworkStatus = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            bgcolor: (t) => t.vars.palette.background.paper,
+            opacity: 0.8,
             backdropFilter: 'blur(2px)',
             borderRadius: 2,
           }}

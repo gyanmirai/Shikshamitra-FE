@@ -16,6 +16,13 @@ interface CompactKPICardProps {
   sx?: any;
   path?: string;
   tooltip?: string;
+  comparisonLabel?: string;
+  chart?: {
+    type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
+    series?: any[];
+    colors?: string[];
+    options?: any;
+  };
 }
 
 export default function CompactKPICard({
@@ -27,6 +34,8 @@ export default function CompactKPICard({
   status = 'info',
   path,
   tooltip,
+  comparisonLabel,
+  chart,
   sx,
 }: CompactKPICardProps) {
   const theme = useTheme();
@@ -47,16 +56,19 @@ export default function CompactKPICard({
   const lightColor = theme.palette[status].light;
 
   const chartOptions = useChart({
-    colors: [mainColor],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        colorStops: [
-          { offset: 0, color: lightColor, opacity: 1 },
-          { offset: 100, color: mainColor, opacity: 1 },
-        ],
-      },
-    },
+    colors: chart?.colors || [mainColor],
+    fill:
+      chart?.type === 'bar'
+        ? { type: 'solid' }
+        : {
+            type: 'gradient',
+            gradient: {
+              colorStops: [
+                { offset: 0, color: lightColor, opacity: 1 },
+                { offset: 100, color: mainColor, opacity: 1 },
+              ],
+            },
+          },
     chart: {
       animations: { enabled: false },
       sparkline: { enabled: true },
@@ -71,8 +83,16 @@ export default function CompactKPICard({
       },
       marker: { show: false },
     },
-    stroke: { width: 2, curve: 'smooth' },
-    plotOptions: { bar: { columnWidth: '80%', borderRadius: 2 } },
+    stroke: {
+      show: true,
+      width: chart?.type === 'bar' ? 4 : 2,
+      colors: chart?.type === 'bar' ? ['transparent'] : undefined,
+      curve: 'smooth',
+    },
+    plotOptions: {
+      bar: { columnWidth: '60%', borderRadius: 2, distributed: chart?.type === 'bar' },
+    },
+    ...chart?.options,
   });
 
   const isPositive = percentChange !== undefined && percentChange >= 0;
@@ -109,7 +129,8 @@ export default function CompactKPICard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            bgcolor: (t) => t.vars.palette.background.paper,
+            opacity: 0.8,
             backdropFilter: 'blur(2px)',
             borderRadius: 2,
           }}

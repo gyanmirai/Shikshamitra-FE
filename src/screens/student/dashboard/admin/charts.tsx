@@ -104,7 +104,7 @@ const AdminCharts = () => {
   const examStatusOptions = useChart({
     labels: ['Passed', 'Failed', 'Awaiting Result'],
     stroke: {
-      colors: [theme.palette.background.paper],
+      colors: [theme.vars.palette.background.paper],
     },
     legend: {
       show: true,
@@ -140,9 +140,16 @@ const AdminCharts = () => {
         donut: {
           labels: {
             show: true,
+            name: {
+              color: theme.vars.palette.text.secondary,
+            },
+            value: {
+              color: theme.vars.palette.text.primary,
+            },
             total: {
               show: true,
               label: 'Total',
+              color: theme.vars.palette.text.primary,
               formatter: (w) => {
                 const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
                 return fNumber(total);

@@ -4,9 +4,9 @@ import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { CalendarView } from 'src/sections/calendar/view';
 import { Box, Card, Chip, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 
 const birthdays = [
@@ -115,7 +115,6 @@ const Birthdays = () => {
               <Typography variant="h6">Birthdays</Typography>
             </Stack>
           }
-          subheader="Upcoming Birthdays"
           subheaderTypographyProps={{
             sx: { color: (theme: any) => theme.vars?.palette?.text?.secondary || 'text.secondary' },
           }}
@@ -307,7 +306,7 @@ const Birthdays = () => {
           </Box>
         }
       >
-        <CalendarView />
+        <CommonCalender data={undefined} />
       </CustomDialog>
     </>
   );
