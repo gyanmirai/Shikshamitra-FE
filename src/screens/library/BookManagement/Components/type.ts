@@ -1,3 +1,4 @@
+import type { BookLanguage } from 'src/enums/book-language';
 import type { LibraryBookStatus } from 'src/enums/library-book-status';
 
 export interface IBookTableProps {
@@ -62,16 +63,17 @@ export interface IBook {
 
 export interface IBookPayload {
   id?: string;
-  applicableAge: string[];
+  applicableAge: string;
   title: string;
   isbn: string;
   author: string;
   publisher: string;
   createdOn?: string;
   subject: string;
-  category: string;
+  categoryId: string;
+  category?: string;
   edition: string;
-  language: string;
+  language: BookLanguage | number | null;
   price: number | null;
   numberOfCopies: number;
   bookCoverImages: string; // URLs or file references

@@ -15,7 +15,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
+import { useGetAllBooksQuery } from 'src/redux/library/bookList/bookList-api';
 
 import BookDetails from './Components/BookDetails';
 import BookFormStepper from './BookFormComponents/BookForm';
@@ -23,10 +23,13 @@ import BookManagementTable from './Components/BookManagementTable';
 
 const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control book form visibility
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const [open, setOpen] = useState(false);
   const { data: bookData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBooksQuery,
+    currentQueryAndMutation: useGetAllBooksQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
   // State to store currently selected book for editing
@@ -125,7 +128,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             setSelectedBook(data);
             deleteDialog.onTrue();
           }}
-          data={bookData}
+          data={bookData?.items}
           onView={(data) => {
             viewDialog.onTrue();
             setSelectedBook(data);

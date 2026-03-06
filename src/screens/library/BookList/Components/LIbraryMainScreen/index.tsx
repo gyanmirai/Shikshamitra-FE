@@ -1,15 +1,18 @@
+import type { RootState } from 'src/redux/store';
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
+import { useSelector } from 'react-redux';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Card, Grid, Button, TextField, CircularProgress } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetAllBooksQuery } from 'src/redux/library/bookList/bookList-api';
+import { Box, Card, Grid, Button, Skeleton, TextField, CircularProgress } from '@mui/material';
 
 import ListView from './ListView';
 import CoverView from './CoverView';
 import SummaryView from './SummaryView';
-import libraryDummyData from '../../../../../../libraryData.json';
 
 const alphabet = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), 'ALL'];
 
@@ -28,10 +31,16 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
   onReserveBook,
   onViewAllReservationBook,
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: bookData, isLoading: bookLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllBooksQuery,
+    params: { academicYearId: currentYear?.id },
+  });
   const [searchInput, setSearchInput] = useState('');
   const [selectedLetter, setSelectedLetter] = useState('ALL');
   const [selectedViewMode, setSelectedViewMode] = useState('list');
-  const [books] = useState(libraryDummyData.books);
+  const books = useMemo(() => bookData?.items || [], [bookData?.items]);
   const [page, setPage] = useState(1);
   const [limit] = useState(5);
   const [displayedBooks, setDisplayedBooks] = useState<IBook[]>([]);
@@ -60,7 +69,7 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
     if (debouncedSearch.trim()) {
       const query = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
-        (b) =>
+        (b: IBook) =>
           b.title.toLowerCase().includes(query) ||
           b.author.toLowerCase().includes(query) ||
           b.isbn.includes(query)
@@ -68,7 +77,7 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
     }
     // Alphabet filter
     if (selectedLetter !== 'ALL') {
-      filtered = filtered.filter((b) => b.title.charAt(0).toUpperCase() === selectedLetter);
+      filtered = filtered.filter((b: IBook) => b.title.charAt(0).toUpperCase() === selectedLetter);
     }
     return filtered;
   }, [books, debouncedSearch, selectedLetter]);
@@ -220,7 +229,24 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
       {/* View Rendering inside Scrollbar */}
       <Scrollbar sx={{ flexGrow: 1 }}>
         <Box sx={{ pb: 5 }}>
-          {displayedBooks.length === 0 ? (
+          {bookLoading ? (
+            <Box sx={{ p: 2 }}>
+              <Grid container spacing={2}>
+                {[...Array(6)].map((_, index) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                    <Skeleton
+                      variant="rectangular"
+                      width="100%"
+                      height={160}
+                      sx={{ borderRadius: 2 }}
+                    />
+                    <Skeleton variant="text" sx={{ mt: 1, height: 24, width: '80%' }} />
+                    <Skeleton variant="text" sx={{ height: 20, width: '50%' }} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          ) : displayedBooks.length === 0 ? (
             <Box
               sx={{
                 display: 'flex',
