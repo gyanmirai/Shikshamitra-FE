@@ -58,6 +58,10 @@ const kpiData: KpiItem[] = [
     icon: 'clarity:employee-group-solid',
     status: 'info',
     path: hrPaths.attendance.attendanceTracking,
+    bars: [
+      { label: 'Present', value: 91, color: '#22C55E' },
+      { label: 'Absent', value: 92, color: '#EF4444' },
+    ],
   },
   {
     id: 'CURRICULUM_COMPLETION',
@@ -66,6 +70,10 @@ const kpiData: KpiItem[] = [
     icon: 'solar:book-bold',
     status: 'warning',
     path: classManagementPaths.chapters,
+    bars: [
+      { label: 'Completed', value: 68, color: '#22C55E' },
+      { label: 'Pending', value: 32, color: '#EF4444' },
+    ],
   },
   {
     id: 'UPCOMING_EXAMS',

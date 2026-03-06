@@ -22,11 +22,18 @@ const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', '
 // ── 1. Academic Progress Over Time (Line) ─────────────────────────────
 
 const ACADEMIC_PROGRESS_DATA: Record<string, number[]> = {
+  'Class 1': [25, 32, 40, 47, 54, 60, 65, 70, 74, 78, 82, 87],
+  'Class 2': [22, 30, 38, 45, 52, 57, 62, 67, 71, 76, 80, 85],
+  'Class 3': [20, 28, 36, 43, 50, 56, 61, 66, 70, 75, 79, 84],
+  'Class 4': [18, 26, 34, 41, 48, 54, 59, 64, 69, 74, 78, 83],
+  'Class 5': [17, 25, 33, 40, 47, 53, 58, 63, 68, 73, 77, 82],
   'Class 6': [20, 28, 35, 42, 50, 55, 60, 65, 70, 75, 80, 85],
   'Class 7': [18, 25, 33, 40, 48, 54, 59, 63, 68, 73, 78, 83],
   'Class 8': [22, 30, 38, 45, 52, 58, 62, 67, 72, 77, 82, 87],
   'Class 9': [15, 22, 30, 37, 44, 51, 57, 62, 68, 74, 79, 84],
   'Class 10': [10, 18, 26, 34, 42, 49, 55, 61, 67, 73, 78, 83],
+  'Class 11': [12, 20, 28, 36, 44, 51, 57, 63, 69, 75, 80, 85],
+  'Class 12': [8, 16, 24, 32, 40, 47, 53, 59, 65, 71, 77, 82],
 };
 
 // ── 2. Subject-wise Average Marks (Grouped Bar) ───────────────────────
@@ -35,11 +42,18 @@ const SUBJECTS = ['Maths', 'Science', 'English', 'Social', 'Hindi'];
 
 const SUBJECT_MARKS_BY_CLASS: Record<string, number[]> = {
   all: [76, 80, 74, 78, 85],
+  '1': [88, 92, 85, 90, 94],
+  '2': [86, 90, 83, 88, 92],
+  '3': [84, 89, 81, 86, 91],
+  '4': [83, 87, 80, 85, 90],
+  '5': [82, 86, 79, 84, 89],
   '6': [82, 88, 76, 84, 90],
   '7': [78, 83, 80, 79, 86],
   '8': [85, 80, 74, 81, 88],
   '9': [74, 77, 82, 76, 84],
   '10': [80, 75, 79, 73, 82],
+  '11': [72, 76, 80, 70, 78],
+  '12': [69, 73, 77, 68, 75],
 };
 
 // ── 3. Teacher Workload (Horizontal Bar) ──────────────────────────────
@@ -93,6 +107,14 @@ const PrincipalCharts = () => {
 
   // Subject-wise Marks filter
   const [selectedClass, setSelectedClass] = useState('all');
+
+  // Subject-wise Marks board/medium filter
+  const [selectedSubjectBoardMedium, setSelectedSubjectBoardMedium] = useState<
+    BoardMediumOption | undefined
+  >(undefined);
+  const handleSubjectBoardMediumChange = useCallback((val: BoardMediumOption) => {
+    setSelectedSubjectBoardMedium(val);
+  }, []);
 
   // ── Workload chart ────────────────────────────────────────────────
   const sortedWorkload = [...WORKLOAD_DATA].sort((a, b) => b.periods - a.periods);
@@ -225,6 +247,12 @@ const PrincipalCharts = () => {
             'Average percentage scored per subject across the selected class.'
           )}
           subheader="Average score % per subject"
+          action={
+            <BoardMediumDropdown
+              value={selectedSubjectBoardMedium}
+              onChange={handleSubjectBoardMediumChange}
+            />
+          }
         >
           <Chart
             type="bar"
