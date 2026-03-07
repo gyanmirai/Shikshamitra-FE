@@ -22,8 +22,13 @@ interface CompactKPICardProps {
     series?: any[];
     colors?: string[];
     options?: any;
+    width?: number;
+    height?: number;
+    labels?: string[];
   };
 }
+
+const RADIAL_TYPES = ['donut', 'pie', 'radialBar'];
 
 export default function CompactKPICard({
   title,
@@ -54,8 +59,11 @@ export default function CompactKPICard({
 
   const mainColor = theme.palette[status].main;
   const lightColor = theme.palette[status].light;
+  const lighterColor = theme.palette[status].lighter;
 
-  const chartOptions = useChart({
+  const isRadialChart = RADIAL_TYPES.includes(chart?.type || '');
+
+  const sparklineOptions = useChart({
     colors: chart?.colors || [mainColor],
     fill:
       chart?.type === 'bar'
@@ -78,10 +86,11 @@ export default function CompactKPICard({
       y: {
         formatter: (val: number) => `${val}`,
         title: {
-          formatter: () => '',
+          formatter: (_s: string, opts?: any) =>
+            chart?.labels?.[opts?.dataPointIndex] ? `${chart.labels[opts.dataPointIndex]}: ` : '',
         },
       },
-      marker: { show: false },
+      marker: { show: true },
     },
     stroke: {
       show: true,
@@ -92,8 +101,53 @@ export default function CompactKPICard({
     plotOptions: {
       bar: { columnWidth: '60%', borderRadius: 2, distributed: chart?.type === 'bar' },
     },
-    ...chart?.options,
+    xaxis: {
+      categories: chart?.labels || [],
+    },
+    ...(!isRadialChart ? chart?.options : {}),
   });
+
+  const donutOptions = useChart({
+    colors: chart?.colors || [mainColor, lighterColor],
+    labels: chart?.labels || [],
+    chart: {
+      animations: { enabled: false },
+      sparkline: { enabled: true },
+    },
+    legend: { show: false },
+    dataLabels: { enabled: false },
+    tooltip: {
+      enabled: true,
+      fillSeriesColor: false,
+      style: { fontSize: '11px' },
+      y: {
+        formatter: (val: number) => `${val}`,
+        title: { formatter: (name: string) => `${name}: ` },
+      },
+      marker: { show: true },
+    },
+    stroke: { width: 0 },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '60%',
+          labels: {
+            show: false,
+            total: { show: false },
+          },
+        },
+      },
+      radialBar: {
+        hollow: { size: '40%' },
+        dataLabels: { show: false },
+        track: { background: lighterColor },
+      },
+    },
+    ...(isRadialChart ? chart?.options : {}),
+  });
+
+  // Keep backward-compat alias
+  const chartOptions = sparklineOptions;
 
   const isPositive = percentChange !== undefined && percentChange >= 0;
 
@@ -184,8 +238,62 @@ export default function CompactKPICard({
         )}
       </Box>
 
-      {trendData && (
-        <Box sx={{ width: 80, height: 40 }}>
+      {chart?.series &&
+        isRadialChart &&
+        (() => {
+          const w = chart.width ?? 64;
+          const h = chart.height ?? 64;
+          return (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+                flexShrink: 0,
+              }}
+            >
+              <Chart
+                type={chart.type as any}
+                series={chart.series}
+                options={donutOptions}
+                width={w}
+                height={h}
+                dir="ltr"
+              />
+            </Box>
+          );
+        })()}
+
+      {chart?.series &&
+        !isRadialChart &&
+        (() => {
+          const w = chart.width ?? 80;
+          const h = chart.height ?? 40;
+          return (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+                flexShrink: 0,
+              }}
+            >
+              <Chart
+                type={(chart.type || 'line') as any}
+                series={[{ data: chart.series as number[] }]}
+                options={sparklineOptions}
+                width={w}
+                height={h}
+                dir="ltr"
+              />
+            </Box>
+          );
+        })()}
+
+      {!chart?.series && trendData && (
+        <Box sx={{ width: 80, height: 40, flexShrink: 0 }}>
           <Chart
             type="line"
             series={[{ data: trendData }]}

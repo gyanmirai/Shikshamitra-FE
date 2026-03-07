@@ -1,6 +1,5 @@
-import React from 'react';
-import MainDashboardPrincipal from 'src/screens/mainDashboard/principal/main-dashboard-principal';
+import MainDashboardAdmin from 'src/screens/mainDashboard/admin/main-dashboard-admin';
 
-const Dashboard = () => <MainDashboardPrincipal />;
+const Dashboard = () => <MainDashboardAdmin />;
 
 export default Dashboard;

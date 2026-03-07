@@ -31,6 +31,8 @@ export interface Subject {
   roomId?: string;
   roomName?: string;
   totalSubjects?: number;
+  className?: string;
+  division?: string;
 }
 
 // --- New API Response Types ---
@@ -65,6 +67,8 @@ export interface SlotSubject {
   teacherName?: string;
   roomId?: string;
   roomName?: string;
+  className?: string;
+  division?: string;
 }
 
 export interface TimeSlot {
