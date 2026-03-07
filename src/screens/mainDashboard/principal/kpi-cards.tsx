@@ -178,7 +178,7 @@ const PrincipalKpiCards = () => (
             <Box
               sx={{
                 position: 'absolute',
-                right: 16,
+                right: 20,
                 top: '50%',
                 transform: 'translateY(-50%)',
               }}

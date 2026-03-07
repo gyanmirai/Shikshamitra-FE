@@ -22,6 +22,7 @@ interface TimetableSlotProps {
   onRemoveSubject?: (slotId: string, subject: Subject) => void;
   onAssignTeacher?: (slotId: string, subject: Subject) => void;
   onAssignRoom?: (slotId: string, subject: Subject) => void;
+  readOnly?: boolean;
 }
 
 const TimetableSlot: React.FC<TimetableSlotProps> = ({
@@ -31,8 +32,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   onRemoveSubject,
   onAssignTeacher,
   onAssignRoom,
+  readOnly = false,
 }) => {
-  console.log('attachedSubject---', attachedSubject);
   const deleteDialog = useBoolean();
 
   const handleConfirmRemove = (e: React.MouseEvent) => {
@@ -250,16 +251,46 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             }}
           >
             {!isCompactSlot ? (
-              <Typography variant="body2" fontWeight="bold">
-                {isBreak ? `${slot.breakType} BREAK` : subjectNames.join(' | ')}
-              </Typography>
+              <Box>
+                <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
+                  {isBreak ? `${slot.breakType} BREAK` : subjectNames.join(' | ')}
+                </Typography>
+                {!isBreak && displaySubjects[0]?.className && (
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ color: 'text.secondary', lineHeight: 1.2, mt: 0.25 }}
+                  >
+                    Class {displaySubjects[0].className}
+                    {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
+                  </Typography>
+                )}
+                {!isBreak && displaySubjects[0]?.roomName && (
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                  >
+                    {displaySubjects[0].roomName}
+                  </Typography>
+                )}
+              </Box>
             ) : (
               <Tooltip title={fullText}>
                 <Box>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
                     {isBreak ? slot.breakType : firstSubject}
                   </Typography>
-
+                  {!isBreak && displaySubjects[0]?.className && (
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                    >
+                      {displaySubjects[0].className}
+                      {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
+                    </Typography>
+                  )}
                   {!isBreak && extraCount > 0 && (
                     <Typography variant="caption">+{extraCount}</Typography>
                   )}
@@ -270,7 +301,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         </Box>
       </CustomTooltip>
 
-      {isFilled && !isBreak && (
+      {isFilled && !isBreak && !readOnly && (
         <Box
           sx={{
             position: 'absolute',

@@ -444,6 +444,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 onRemoveSubject={handleRemoveSubject}
                 onAssignTeacher={handleAssignTeacher}
                 onAssignRoom={handleAssignRoom}
+                readOnly={readOnly}
               />
             ))}
           </Box>
