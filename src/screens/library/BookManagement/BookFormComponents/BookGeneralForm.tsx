@@ -1,17 +1,21 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
+import type { BookLanguage } from 'src/enums/book-language';
 import type { Standards, Organization } from 'src/types/school';
 import type { FileWithPreview } from 'src/components/custom-upload/custom-upload';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { BOOK_LANGUAGE_OPTIONS } from 'src/enums/book-language';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
+import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { fetchBookDetails } from './getBookDetails';
@@ -31,7 +35,22 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
   const [fieldsEnabled, setFieldsEnabled] = useState(false);
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: bookCategoryData, isLoading: bookCategoryLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBookCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
+  });
 
+  const categoryOptions = (bookCategoryData?.items ?? []).map((item: any) => ({
+    label: item.categoryName,
+    value: item.id,
+  }));
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedInputValue(inputValue);
@@ -71,20 +90,13 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const languageOptions = [
-    { label: 'Gujarati (ગુજરાતી)', value: 'Gujarati' },
-    { label: 'Hindi (हिंदी)', value: 'Hindi' },
-    { label: 'English', value: 'English' },
-    { label: 'Marathi (मराठी)', value: 'Marathi' },
-    { label: 'Sanskrit (संस्कृत)', value: 'Sanskrit' },
-  ];
+  const languageOptions = BOOK_LANGUAGE_OPTIONS;
 
   const applicableAgeOptions = [
-    { id: 'all', name: 'All' },
     { id: '6-8', name: '6–8 years' },
     { id: '9-12', name: '9–12 years' },
     { id: '13-15', name: '13–15 years' },
-    { id: '15plus', name: '15 plus' },
+    { id: '15plus', name: '15+ years' },
   ];
 
   return (
@@ -324,24 +336,16 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
-            <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
+            <ShakingTextField error={!!(formik.touched.categoryId && formik.errors.categoryId)}>
               <PaginatedSearchSelect
-                key={formik.values.category || 'cat-empty'}
+                key={formik.values.categoryId || 'cat-empty'}
                 fullWidth
                 label="Category"
                 noOptionsText="No Category Found"
                 minChars={0}
                 size="small"
                 fetchOptions={async (query: string, page: number) => {
-                  const categoryOptions = [
-                    { value: 'Fiction', label: 'Fiction' },
-                    { value: 'Non-Fiction', label: 'Non-Fiction' },
-                    { value: 'Reference', label: 'Reference' },
-                    { value: 'Textbook', label: 'Textbook' },
-                    { value: 'Children', label: 'Children' },
-                    { value: 'Biography', label: 'Biography' },
-                  ];
-                  const filtered = categoryOptions.filter((o) =>
+                  const filtered = categoryOptions.filter((o: any) =>
                     o.label.toLowerCase().includes(query.toLowerCase())
                   );
                   const pageSize = 10;
@@ -353,21 +357,15 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 }}
                 getOptionLabel={(option: any) => option?.label || ''}
                 value={
-                  [
-                    { value: 'Fiction', label: 'Fiction' },
-                    { value: 'Non-Fiction', label: 'Non-Fiction' },
-                    { value: 'Reference', label: 'Reference' },
-                    { value: 'Textbook', label: 'Textbook' },
-                    { value: 'Children', label: 'Children' },
-                    { value: 'Biography', label: 'Biography' },
-                  ].find((opt) => opt.value === formik.values.category) || null
+                  categoryOptions.find((opt: any) => opt.value === formik.values.categoryId) || null
                 }
                 onChange={(_, newValue: any) => {
-                  formik.setFieldValue('category', newValue ? newValue.value : '');
+                  formik.setFieldValue('categoryId', newValue ? newValue.value : '');
                 }}
+                isLoading={bookCategoryLoading}
                 isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
-                error={!!(formik.touched.category && formik.errors.category)}
-                helperText={(formik.touched.category && formik.errors.category) as string}
+                error={!!(formik.touched.categoryId && formik.errors.categoryId)}
+                helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
               />
             </ShakingTextField>
           )}
@@ -400,34 +398,19 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
-              <PaginatedSearchSelect
-                key={formik.values.language || 'lang-empty'}
-                fullWidth
+              <CustomSelect
+                options={languageOptions}
                 label="Language"
-                noOptionsText="No Language Found"
-                minChars={0}
-                size="small"
-                fetchOptions={async (query: string, page: number) => {
-                  const filtered = languageOptions.filter((o) =>
-                    o.label.toLowerCase().includes(query.toLowerCase())
-                  );
-                  const pageSize = 10;
-                  const start = (page - 1) * pageSize;
-                  return {
-                    data: filtered.slice(start, start + pageSize),
-                    hasMore: start + pageSize < filtered.length,
-                  };
+                value={formik.values.language ?? ''}
+                onChange={(val) => {
+                  formik.setFieldValue('language', val as BookLanguage);
                 }}
-                getOptionLabel={(option: any) =>
-                  typeof option === 'string' ? option : option?.label || ''
-                }
-                value={languageOptions.find((opt) => opt.value === formik.values.language) || null}
-                onChange={(_, newValue: any) => {
-                  formik.setFieldValue('language', newValue ? newValue.value : '');
-                }}
-                isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
-                error={!!(formik.touched.language && formik.errors.language)}
-                helperText={formik.touched.language && formik.errors.language}
+                onBlur={() => formik.setFieldTouched('language', true)}
+                error={formik.touched.language && Boolean(formik.errors.language)}
+                helperText={(formik.touched.language && formik.errors.language) as string}
+                labelKey="label"
+                valueKey="value"
+                formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
               />
             </ShakingTextField>
           )}
@@ -513,40 +496,9 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
               <CustomSelect
                 options={applicableAgeOptions}
                 label="Applicable Age"
-                multiple
-                value={formik.values.applicableAge || []}
+                value={formik.values.applicableAge || ''}
                 onChange={(val) => {
-                  const value = val as string[];
-
-                  // All available age IDs (excluding "All")
-                  const allAgeIds = applicableAgeOptions
-                    .filter((opt) => opt.id !== 'all')
-                    .map((opt) => opt.id);
-
-                  const isAllClicked = value.includes('all');
-                  const wasAllPreviouslySelected = (
-                    formik.values.applicableAge as string[]
-                  ).includes('all');
-
-                  if (isAllClicked && !wasAllPreviouslySelected) {
-                    formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
-                  } else if (!isAllClicked && wasAllPreviouslySelected) {
-                    formik.setFieldValue('applicableAge', []);
-                  } else if (isAllClicked && wasAllPreviouslySelected) {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allAgeIds.length) {
-                      formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
-                    } else {
-                      formik.setFieldValue('applicableAge', selectedWithoutAll);
-                    }
-                  } else {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allAgeIds.length) {
-                      formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
-                    } else {
-                      formik.setFieldValue('applicableAge', selectedWithoutAll);
-                    }
-                  }
+                  formik.setFieldValue('applicableAge', val as string);
                 }}
                 onBlur={() => formik.setFieldTouched('applicableAge', true)}
                 error={formik.touched.applicableAge && Boolean(formik.errors.applicableAge)}

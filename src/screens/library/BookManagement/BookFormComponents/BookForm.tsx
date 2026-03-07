@@ -30,7 +30,7 @@ const BookFormStepper = ({
   onClose: (e: any, isSubmit: boolean) => void;
   editData?: (IBookPayload & { id?: string }) | null;
 }) => {
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
 
   const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   const academicYearId = (currentAcademicYear as any)?.id;
@@ -55,11 +55,24 @@ const BookFormStepper = ({
 
   const handleGeneralInfo = useCallback(
     async (values: IBookPayload & { id?: string }, formik: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { copies, ...bookBody } = values;
+      const body = {
+        title: values.title,
+        isbn: values.isbn,
+        author: values.author,
+        publisher: values.publisher,
+        edition: values.edition,
+        subject: values.subject,
+        categoryId: values.categoryId,
+        language: values.language,
+        applicableAge: values.applicableAge,
+        price: values.price,
+        pages: values.numberOfPages,
+        numberOfCopies: values.numberOfCopies,
+      };
+
       const payload = {
         academicYearId,
-        body: bookBody,
+        body,
       };
 
       if (editData?.id || values.id) {
@@ -83,9 +96,10 @@ const BookFormStepper = ({
         academicYearId,
         body: {
           copies: values.copies.map((copy: IBookCopy) => ({
-            accessionNo: copy.accessionNo,
-            section: copy.section,
-            shelf: copy.shelf,
+            copyNumber: copy.copyNo,
+            accessionNumber: copy.accessionNo,
+            sectionId: copy.section,
+            shelfId: copy.shelf,
           })),
         },
       };
@@ -107,12 +121,12 @@ const BookFormStepper = ({
       setIsLoading(true);
       try {
         if (activeStep === 0) {
-          // await handleGeneralInfo(values, formik);
+          await handleGeneralInfo(values, formik);
           shikshaMitraToast.success({
             message: `Book "${values.title}" general information saved successfully`,
           });
         } else if (activeStep === 1) {
-          // await handleManageCopies(values, formik);
+          await handleManageCopies(values, formik);
           shikshaMitraToast.success({
             message: `Book "${values.title}" added successfully`,
           });
@@ -135,7 +149,7 @@ const BookFormStepper = ({
         setIsLoading(false);
       }
     },
-    [activeStep, onClose]
+    [activeStep, handleGeneralInfo, handleManageCopies, onClose]
   );
 
   return (
@@ -203,10 +217,26 @@ const BookStepForm = ({ activeStep: step, formik, editData, allSteps, academicYe
         ...pre,
         ...bookDetails,
         id: bookId,
+        // Normalize API response fields
+        categoryId: bookDetails.categoryId || bookDetails.category || pre.categoryId || '',
+        applicableAge: Array.isArray(bookDetails.applicableAge)
+          ? bookDetails.applicableAge[0] || ''
+          : bookDetails.applicableAge || '',
+        numberOfPages: bookDetails.numberOfPages ?? bookDetails.pages ?? pre.numberOfPages ?? 0,
       }));
       initializedStepsRef.current[step] = true;
     } else if (copiesDetails && step === 1) {
-      formik.setFieldValue('copies', copiesDetails.docs || []);
+      const fetchedCopies = copiesDetails.docs || copiesDetails || [];
+      const mappedCopies = Array.isArray(fetchedCopies)
+        ? fetchedCopies.map((copy: any) => ({
+            ...copy,
+            copyNo: copy.copyNumber ?? copy.copyNo,
+            accessionNo: copy.accessionNumber ?? copy.accessionNo,
+            section: copy.sectionId ?? copy.section,
+            shelf: copy.shelfId ?? copy.shelf,
+          }))
+        : [];
+      formik.setFieldValue('copies', mappedCopies);
       initializedStepsRef.current[step] = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
