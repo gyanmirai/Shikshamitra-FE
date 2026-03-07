@@ -1,4 +1,4 @@
-import MainDashboardAdmin from 'src/screens/mainDashboard/admin/main-dashboard-admin';
+import MainDashboardPrincipal from 'src/screens/mainDashboard/principal/main-dashboard-principal';
 
 const Dashboard = () => <MainDashboardAdmin />;
 

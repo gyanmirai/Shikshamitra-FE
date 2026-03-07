@@ -50,7 +50,7 @@ export function DashboardWidgetWrapper({
 
         {title && <Divider sx={{ borderStyle: 'dashed' }} />}
 
-        <CardContent sx={{ flexGrow: 1, position: 'relative', p: 3 }}>{children}</CardContent>
+        <CardContent sx={{ flexGrow: 1, position: 'relative', p: 2 }}>{children}</CardContent>
       </Card>
     </motion.div>
   );
