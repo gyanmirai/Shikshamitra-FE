@@ -8,15 +8,15 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import CustomSelect from 'src/components/custom-select';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
-import { Box, Tab, Tabs, Card, MenuItem, MenuList, Skeleton, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Card, MenuItem, MenuList, Typography } from '@mui/material';
 
 import type { IChargeData } from './type';
 
@@ -67,13 +67,12 @@ const ChargesTable = ({
   // State to store the selected student concession data
   // null when no student is selected
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear?.boards]);
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
 
-  useEffect(() => {
-    const board = (currentYear?.boards || []).find((item: any) => item.id === selectedBoard);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
     setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [currentYear?.boards, selectedBoard]);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   // Expose refetch function to parent component
   useEffect(() => {
@@ -177,100 +176,32 @@ const ChargesTable = ({
   return (
     <>
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
-        <Box display="flex" justifyContent="space-between" flexWrap="wrap">
-          <Box sx={{ display: 'flex', gap: 2, pb: { xs: 1, md: 0 } }}>
-            {!currentYear ? (
-              <Skeleton variant="rounded" height={40} sx={{ minWidth: '248px', width: '100%' }} />
-            ) : (
-              <PaginatedSearchSelect
-                key={boards?.length ? 'boards-loaded' : 'boards-empty'}
-                label="Board"
-                noOptionsText="No Board Found"
-                fetchOptions={async (query: string, page: number) => {
-                  const filtered = (boards || []).filter((b: any) =>
-                    b?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  const pageSize = 10;
-                  const start = (page - 1) * pageSize;
-                  const end = start + pageSize;
-                  return {
-                    data: filtered.slice(start, end).map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: end < filtered.length,
-                  };
-                }}
-                value={
-                  boards?.find((b: any) => b.id === selectedBoard)
-                    ? {
-                        label: (boards.find((b: any) => b.id === selectedBoard) as any)?.name,
-                        id: selectedBoard,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                getOptionLabel={(option: any) => option?.label || ''}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  setSelectedBoard(value?.id || '');
-                  setSelectedMedium('');
-                }}
-                size="small"
-                sx={{ minWidth: '248px', width: '100%' }}
-              />
-            )}
-            {!currentYear ? (
-              <Skeleton variant="rounded" height={40} sx={{ minWidth: '248px', width: '100%' }} />
-            ) : (
-              <PaginatedSearchSelect
-                key={`medium-${selectedBoard || 'empty'}`}
-                label="Medium"
-                noOptionsText="No Medium Found"
-                disabled={!selectedBoard}
-                fetchOptions={async (query: string, page: number) => {
-                  const filtered = (mediums || []).filter((m: any) =>
-                    m?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  const pageSize = 10;
-                  const start = (page - 1) * pageSize;
-                  const end = start + pageSize;
-                  return {
-                    data: filtered.slice(start, end).map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: end < filtered.length,
-                  };
-                }}
-                value={
-                  mediums?.find((m: any) => m.id === selectedMedium)
-                    ? {
-                        label: (mediums.find((m: any) => m.id === selectedMedium) as any)?.name,
-                        id: selectedMedium,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                getOptionLabel={(option: any) => option?.label || ''}
-                minChars={0}
-                onChange={(_, value: any) => setSelectedMedium(value?.id || '')}
-                size="small"
-                sx={{ minWidth: '248px', width: '100%' }}
-              />
-            )}
+        <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              label="Board"
+              options={boards || []}
+              labelKey="name"
+              valueKey="id"
+              value={selectedBoard}
+              onChange={(value) => {
+                setSelectedBoard(value as string);
+                setSelectedMedium('');
+              }}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+            <CustomSelect
+              label="Medium"
+              options={mediums || []}
+              labelKey="name"
+              disabled={!selectedBoard}
+              valueKey="id"
+              value={selectedMedium}
+              onChange={(value) => setSelectedMedium(value as string)}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
             <Tabs
               value={tabs.value}
               onChange={tabs.onChange}

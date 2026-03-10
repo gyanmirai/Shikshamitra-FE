@@ -2,9 +2,12 @@ import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { GenderOptions } from 'src/enums/gender';
+import Typography from '@mui/material/Typography';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   FollowUpStatusType,
   FollowUpStatusTypeColors,
@@ -87,6 +90,28 @@ export const useInquiryTableColumns = ({
         minWidth: '200px',
         align: 'left',
         filterType: 'string',
+        render: (value: unknown) => {
+          const addressText = value as string;
+          if (!addressText) return '-';
+
+          return (
+            <CustomTooltip title={addressText} placement="top" arrow>
+              <Typography
+                variant="body2"
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'normal',
+                }}
+              >
+                {addressText}
+              </Typography>
+            </CustomTooltip>
+          );
+        },
       },
       {
         id: 'primaryContactNo',
@@ -125,9 +150,14 @@ export const useInquiryTableColumns = ({
         minWidth: '180px',
         align: 'left',
         filterType: 'date',
+        render: (value: unknown) => {
+          if (!value) return '-';
+          const validDate = dayjs(value as string);
+          return validDate.isValid() ? validDate.format('DD-MM-YYYY') : '-';
+        },
       },
       {
-        id: 'followUpStatusType',
+        id: 'progress',
         label: 'Status',
         filterType: 'enum',
         enumOptions: FollowUpStatusTypeOptions,

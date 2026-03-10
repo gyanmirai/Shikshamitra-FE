@@ -8,12 +8,12 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
@@ -167,51 +167,21 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               const helperText = (formik.touched[field] && formik.errors[field]) as string;
               return (
                 <ShakingTextField error={error}>
-                  <PaginatedSearchSelect
-                    key={boards?.length ? 'boards-loaded' : 'boards-empty'}
+                  <CustomSelect
                     label="Board *"
-                    noOptionsText="No Board Found"
-                    fetchOptions={async (query: string, page: number) => {
-                      const filtered = (boards || []).filter((b: any) =>
-                        b?.name?.toLowerCase().includes(query.toLowerCase())
-                      );
-                      const pageSize = 10;
-                      const start = (page - 1) * pageSize;
-                      const end = start + pageSize;
-                      return {
-                        data: filtered.slice(start, end).map((item: any) => ({
-                          label: item.name,
-                          id: item.id,
-                        })),
-                        hasMore: end < filtered.length,
-                      };
-                    }}
-                    value={
-                      boards?.find((b: any) => b.id === formik.values.boardId)
-                        ? {
-                            label: boards.find((b: any) => b.id === formik.values.boardId)?.name,
-                            id: formik.values.boardId,
-                          }
-                        : null
-                    }
-                    isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                    renderOption={(prop, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.label}
-                      </li>
-                    )}
-                    getOptionLabel={(option: any) => option?.label || ''}
-                    minChars={0}
-                    onChange={(_, val: any) => {
-                      formik.setFieldValue('boardId', val?.id || '');
+                    options={boards || []}
+                    labelKey="name"
+                    valueKey="id"
+                    value={formik.values.boardId}
+                    onChange={(value) => {
+                      formik.setFieldValue('boardId', value as string);
                       formik.setFieldTouched('boardId', false);
-                      const selectedBoard = boards.find((b) => b.id === val?.id);
+                      const selectedBoard = boards.find((b) => b.id === value);
                       setMediums(selectedBoard?.educationMediums || []);
                       formik.setFieldValue('mediumId', '');
                       formik.setFieldValue('mediumStageId', '');
                     }}
-                    size="small"
-                    sx={{ width: '100%', maxWidth: '248px' }}
+                    formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
                     error={error}
                     helperText={helperText}
                   />
@@ -227,51 +197,21 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               const helperText = (formik.touched[field] && formik.errors[field]) as string;
               return (
                 <ShakingTextField error={error}>
-                  <PaginatedSearchSelect
-                    key={mediums?.length ? 'mediums-loaded' : 'mediums-empty'}
+                  <CustomSelect
                     label="Medium *"
-                    noOptionsText="No Medium Found"
+                    options={mediums || []}
+                    labelKey="name"
                     disabled={!formik.values.boardId}
-                    fetchOptions={async (query: string, page: number) => {
-                      const filtered = (mediums || []).filter((m: any) =>
-                        m?.name?.toLowerCase().includes(query.toLowerCase())
-                      );
-                      const pageSize = 10;
-                      const start = (page - 1) * pageSize;
-                      const end = start + pageSize;
-                      return {
-                        data: filtered.slice(start, end).map((item: any) => ({
-                          label: item.name,
-                          id: item.id,
-                        })),
-                        hasMore: end < filtered.length,
-                      };
-                    }}
-                    value={
-                      mediums?.find((m: any) => m.id === formik.values.mediumId)
-                        ? {
-                            label: mediums.find((m: any) => m.id === formik.values.mediumId)?.name,
-                            id: formik.values.mediumId,
-                          }
-                        : null
-                    }
-                    isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                    renderOption={(prop, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.label}
-                      </li>
-                    )}
-                    getOptionLabel={(option: any) => option?.label || ''}
-                    minChars={0}
-                    onChange={(_, val: any) => {
-                      formik.setFieldValue('mediumId', val?.id || '');
+                    valueKey="id"
+                    value={formik.values.mediumId}
+                    onChange={(value) => {
+                      formik.setFieldValue('mediumId', value as string);
                       formik.setFieldTouched('mediumId', false);
-                      const selectedMedium = mediums.find((m) => m.id === val?.id);
+                      const selectedMedium = mediums.find((m) => m.id === value);
                       setAllOrganization(selectedMedium?.educationMediumStages || []);
-                      formik.setFieldValue('mediumStageId', '');
+                      formik.setFieldValue('organization', '');
                     }}
-                    size="small"
-                    sx={{ width: '100%', maxWidth: '248px' }}
+                    formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
                     error={error}
                     helperText={helperText}
                   />
@@ -288,49 +228,17 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               const helperText = (formik.touched[field] && formik.errors[field]) as string;
               return (
                 <ShakingTextField error={error}>
-                  <PaginatedSearchSelect
-                    key={allOrganization?.length ? 'orgs-loaded' : 'orgs-empty'}
+                  <CustomSelect
+                    options={allOrganization}
                     label="Organization *"
-                    noOptionsText="No Organization Found"
+                    value={formik.values.mediumStageId}
                     disabled={!formik.values.mediumId}
-                    fetchOptions={async (query: string, page: number) => {
-                      const filtered = (allOrganization || []).filter((o: any) =>
-                        o?.name?.toLowerCase().includes(query.toLowerCase())
-                      );
-                      const pageSize = 10;
-                      const start = (page - 1) * pageSize;
-                      const end = start + pageSize;
-                      return {
-                        data: filtered.slice(start, end).map((item: any) => ({
-                          label: item.name,
-                          id: item.id,
-                        })),
-                        hasMore: end < filtered.length,
-                      };
+                    onChange={(val) => {
+                      formik.setFieldValue('mediumStageId', val as any);
                     }}
-                    value={
-                      allOrganization?.find((o: any) => o.id === formik.values.mediumStageId)
-                        ? {
-                            label: allOrganization.find(
-                              (o: any) => o.id === formik.values.mediumStageId
-                            )?.name,
-                            id: formik.values.mediumStageId,
-                          }
-                        : null
-                    }
-                    isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                    renderOption={(prop, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.label}
-                      </li>
-                    )}
-                    getOptionLabel={(option: any) => option?.label || ''}
-                    minChars={0}
-                    onChange={(_, val: any) => {
-                      formik.setFieldValue('mediumStageId', val?.id || '');
-                    }}
-                    size="small"
-                    sx={{ width: '100%', maxWidth: '250px' }}
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
                     error={error}
                     helperText={helperText}
                   />

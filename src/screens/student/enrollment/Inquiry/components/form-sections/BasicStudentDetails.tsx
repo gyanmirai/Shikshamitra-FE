@@ -1,20 +1,20 @@
 import type { FormikProps } from 'formik';
+import type { Board } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 import { DatePicker } from '@mui/x-date-pickers';
 // Utils
 import calculateAge from 'src/utils/calculate-age';
+import CustomSelect from 'src/components/custom-select';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
   Box,
   Card,
   Grid,
   Radio,
   Divider,
-  Skeleton,
   TextField,
   RadioGroup,
   Typography,
@@ -53,7 +53,7 @@ export const BasicStudentDetails = ({
 }: BasicStudentDetailsProps) => {
   const { values, touched, errors, setFieldValue, setFieldTouched, handleChange } = formik;
   const { academicYear, boards, board, classes } = data;
-  const { yearLoading, boardLoading, classLoading, isGetLoading } = loading;
+  const { boardLoading, classLoading, isGetLoading } = loading;
 
   if (isGetLoading) {
     return (
@@ -98,224 +98,97 @@ export const BasicStudentDetails = ({
           {/* Academic Year */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ShakingTextField error={!!(touched.academicYear && errors.academicYear)}>
-              <PaginatedSearchSelect
+              <CustomSelect
+                name="academicYear"
                 label="Academic Year *"
-                noOptionsText="No Academic Year Found"
-                fetchOptions={async (query) => {
-                  const items = (academicYear?.items || []).filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: items.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  values.academicYear
-                    ? {
-                        label:
-                          academicYear?.items?.find((y: any) => y.id === values.academicYear)
-                            ?.name || '',
-                        id: values.academicYear,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
+                options={academicYear?.items || []}
+                value={values.academicYear}
+                labelKey="name"
+                valueKey="id"
+                onChange={(value) => {
                   setFieldValue('board', '');
                   setFieldValue('medium', '');
                   setFieldValue('class', '');
-                  setFieldValue('academicYear', value?.id || '');
+                  setFieldValue('academicYear', value);
                 }}
                 error={!!(touched.academicYear && errors.academicYear)}
                 helperText={(touched.academicYear && errors.academicYear) || ''}
-                fullWidth
-                sx={{ maxWidth: 'unset' }}
-                size="small"
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </ShakingTextField>
           </Grid>
 
           {/* Board */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {boardLoading ? (
-              <Skeleton variant="rounded" height={40} width="100%" />
-            ) : (
-              <ShakingTextField error={!!(touched.board && errors.board)}>
-                <PaginatedSearchSelect
-                  label="Board *"
-                  noOptionsText="No Board Found"
-                  isLoading={boardLoading}
-                  fetchOptions={async (query) => {
-                    const items = boards || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    values.board
-                      ? {
-                          label: boards?.find((b: any) => b.id === values.board)?.name || '',
-                          id: values.board,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    setFieldValue('medium', '');
-                    setFieldValue('class', '');
-                    setFieldValue('board', value?.id || '');
-                  }}
-                  disabled={!values.academicYear}
-                  error={!!(touched.board && errors.board)}
-                  helperText={(touched.board && errors.board) || ''}
-                  fullWidth
-                  sx={{ maxWidth: 'unset' }}
-                  size="small"
-                />
-              </ShakingTextField>
-            )}
+            <ShakingTextField error={!!(touched.board && errors.board)}>
+              <CustomSelect
+                name="board"
+                label="Board *"
+                isLoading={boardLoading}
+                options={boards || []}
+                labelKey="name"
+                valueKey="id"
+                value={values.board}
+                onChange={(value) => {
+                  setFieldValue('medium', '');
+                  setFieldValue('class', '');
+                  setFieldValue('board', value);
+                }}
+                error={!!(touched.board && errors.board)}
+                helperText={(touched.board && errors.board) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                disabled={!values.academicYear}
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* Medium */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {boardLoading ? (
-              <Skeleton variant="rounded" height={40} width="100%" />
-            ) : (
-              <ShakingTextField error={!!(touched.medium && errors.medium)}>
-                <PaginatedSearchSelect
-                  label="Medium *"
-                  noOptionsText="No Medium Found"
-                  disabled={!values.board}
-                  isLoading={boardLoading}
-                  fetchOptions={async (query) => {
-                    const items =
-                      board?.items?.find((item: any) => item.id === values.board)
-                        ?.educationMediums || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    values.medium
-                      ? {
-                          label:
-                            board?.items
-                              ?.find((item: any) => item.id === values.board)
-                              ?.educationMediums?.find((m: any) => m.id === values.medium)?.name ||
-                            '',
-                          id: values.medium,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={async (_, value: any) => {
-                    setFieldValue('medium', value?.id || '');
-                    setFieldValue('class', '');
-                    setFieldTouched('medium', false);
-                    if (value?.id) {
-                      await actions.getClassByMedium(value.id);
-                    }
-                  }}
-                  error={!!(touched.medium && errors.medium)}
-                  helperText={(touched.medium && errors.medium) || ''}
-                  fullWidth
-                  sx={{ maxWidth: 'unset' }}
-                  size="small"
-                />
-              </ShakingTextField>
-            )}
+            <ShakingTextField error={!!(touched.medium && errors.medium)}>
+              <CustomSelect
+                name="medium"
+                label="Medium *"
+                disabled={!values.board}
+                options={
+                  board?.items?.find((item: Board) => item.id === values.board)?.educationMediums ||
+                  []
+                }
+                value={values.medium}
+                labelKey="name"
+                valueKey="id"
+                onChange={async (value) => {
+                  setFieldValue('medium', value);
+                  setFieldValue('class', '');
+                  setFieldTouched('medium', false);
+                  await actions.getClassByMedium(value as string);
+                }}
+                error={!!(touched.medium && errors.medium)}
+                helperText={(touched.medium && errors.medium) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* Class */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            {classLoading ? (
-              <Skeleton variant="rounded" height={40} width="100%" />
-            ) : (
-              <ShakingTextField error={!!(touched.class && errors.class)}>
-                <PaginatedSearchSelect
-                  label="Class *"
-                  noOptionsText="No Class Found"
-                  disabled={!values.medium}
-                  isLoading={classLoading}
-                  fetchOptions={async (query) => {
-                    const items = classes || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    values.class
-                      ? {
-                          label: classes?.find((c: any) => c.id === values.class)?.name || '',
-                          id: values.class,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    setFieldValue('class', value?.id || '');
-                  }}
-                  error={!!(touched.class && errors.class)}
-                  helperText={(touched.class && errors.class) || ''}
-                  fullWidth
-                  sx={{ maxWidth: 'unset' }}
-                  size="small"
-                />
-              </ShakingTextField>
-            )}
+            <ShakingTextField error={!!(touched.class && errors.class)}>
+              <CustomSelect
+                name="class"
+                label="Class *"
+                disabled={!values.medium}
+                isLoading={classLoading}
+                labelKey="name"
+                valueKey="id"
+                options={classes || []}
+                value={values.class}
+                onChange={(value) => {
+                  setFieldValue('class', value);
+                }}
+                error={!!(touched.class && errors.class)}
+                helperText={(touched.class && errors.class) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* previous school */}

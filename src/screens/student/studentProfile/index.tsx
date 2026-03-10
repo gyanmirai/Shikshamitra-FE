@@ -12,6 +12,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -20,7 +21,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import {
@@ -30,8 +30,8 @@ import {
   Paper,
   Avatar,
   Divider,
-  MenuItem,
   MenuList,
+  MenuItem,
   Typography,
 } from '@mui/material';
 
@@ -308,124 +308,35 @@ export function StudentProfile() {
               // mb: 1,
             }}
           >
-            <PaginatedSearchSelect
+            <CustomSelect
+              options={allOrganization}
               label="Organization"
+              value={organization}
+              onChange={(val) => setOrganization(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               disabled={!medium}
-              fetchOptions={async (query) => {
-                const items = allOrganization || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                organization
-                  ? {
-                      label: allOrganization.find((o: any) => o.id === organization)?.name || '',
-                      id: organization,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setOrganization(value?.id || '');
-              }}
-              fullWidth
-              sx={{ maxWidth: '250px' }}
-              size="small"
             />
-
-            <PaginatedSearchSelect
+            <CustomSelect
+              options={allClass}
               label="Class"
+              value={classes}
+              onChange={(val) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               disabled={!organization}
-              fetchOptions={async (query) => {
-                const items = allClass || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                classes
-                  ? {
-                      label: allClass.find((c: any) => c.id === classes)?.name || '',
-                      id: classes,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setClass(value?.id || '');
-              }}
-              fullWidth
-              sx={{ maxWidth: '250px' }}
-              size="small"
             />
-
-            <PaginatedSearchSelect
+            <CustomSelect
+              options={allDivision}
               label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
               disabled={!classes}
-              fetchOptions={async (query) => {
-                const items = allDivision || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                division
-                  ? {
-                      label: allDivision.find((d: any) => d.id === division)?.name || '',
-                      id: division,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setDivision(value?.id || '');
-              }}
-              fullWidth
-              sx={{ maxWidth: '250px' }}
-              size="small"
             />
           </Paper>
 

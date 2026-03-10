@@ -12,6 +12,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -21,7 +22,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
@@ -229,49 +229,20 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
-                <PaginatedSearchSelect
+                <CustomSelect
                   isLoading={isLeavePolicyLoading}
+                  options={leavePolicyData?.items || []}
                   label="Leave Type *"
+                  value={values.leaveTypeId}
+                  name="leaveTypeId"
+                  valueKey="id"
                   disabled={!!editData || isLeavePolicyLoading}
-                  noOptionsText="No results found"
-                  fetchOptions={async (searchQuery) => {
-                    const items = leavePolicyData?.items || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.leaveType?.toLowerCase().includes(searchQuery.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((option: any) => ({
-                        label: option.leaveType,
-                        id: option.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    values.leaveTypeId
-                      ? {
-                          label:
-                            leavePolicyData?.items?.find(
-                              (item: any) => item.id === values.leaveTypeId
-                            )?.leaveType || '',
-                          id: values.leaveTypeId,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(optionProps: any, option: any) => (
-                    <li {...optionProps} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    setFieldValue('leaveTypeId', value?.id || '');
-                  }}
+                  labelKey="leaveType"
                   error={!!touched.leaveTypeId && !!errors.leaveTypeId}
-                  helperText={(touched.leaveTypeId && (errors.leaveTypeId as string)) || ''}
-                  size="small"
+                  helperText={(touched.leaveTypeId && errors.leaveTypeId) || ''}
+                  onChange={(value) => {
+                    setFieldValue('leaveTypeId', value);
+                  }}
                 />
               </ShakingTextField>
             </Grid>

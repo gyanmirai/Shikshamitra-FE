@@ -11,18 +11,17 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
   Box,
   Chip,
-  Card,
   Button,
   Avatar,
   Checkbox,
@@ -256,54 +255,19 @@ const TeacherAssignment = ({
           { name: 'Teachers Assignment' },
         ]}
       />
-
-      <Card
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          p: 1.5,
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <PaginatedSearchSelect
+          <CustomSelect
             label="Class"
-            noOptionsText="No results found"
-            fetchOptions={async (searchQuery) => {
-              const items = allClass || [];
-              const filtered = items.filter((item: any) =>
-                item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-              );
-              return {
-                data: filtered.map((item: any) => ({
-                  label: item.name,
-                  id: item.id,
-                })),
-                hasMore: false,
-              };
+            name="class"
+            options={allClass}
+            valueKey="id"
+            labelKey="name"
+            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            value={classes}
+            onChange={(value) => {
+              setClasses(value as string);
             }}
-            value={
-              classes
-                ? {
-                    label: allClass.find((c: any) => c.id === classes)?.name || '',
-                    id: classes,
-                  }
-                : null
-            }
-            isOptionEqualToValue={(option, value) => option.id === value?.id}
-            getOptionLabel={(option: any) => option?.label || ''}
-            renderOption={(optionProps, option: any) => (
-              <li {...optionProps} key={option.id}>
-                {option.label}
-              </li>
-            )}
-            minChars={0}
-            onChange={(_, value: any) => {
-              const val = value?.id || '';
-              setClasses(val);
-            }}
-            sx={{ minWidth: '250px', width: '100%' }}
-            size="small"
           />
         </Box>
         <Box display="flex" gap={2} justifyContent="flex-end">
@@ -333,7 +297,7 @@ const TeacherAssignment = ({
             Save
           </LoadingButton>
         </Box>
-      </Card>
+      </Box>
 
       <CustomizableTable
         tableId="teacher-table"

@@ -19,10 +19,18 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Grid, Button, Checkbox, TextField, DialogActions } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  Box,
+  Chip,
+  Grid,
+  Button,
+  Checkbox,
+  TextField,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 import {
   useAddHolidayMutation,
   useGetHolidayTypeQuery,
@@ -297,39 +305,22 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
               <SectionCard title="Audience Selection" paperProps={{ sx: { mb: 0 } }}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
-                    <PaginatedSearchSelect
+                    <Autocomplete
                       multiple
                       disableCloseOnSelect
-                      label="Audience *"
-                      noOptionsText="No Audience Found"
-                      minChars={0}
-                      size="small"
-                      fetchOptions={async (query: string, page: number) => {
-                        const filtered = options.filter((o) =>
-                          o.label.toLowerCase().includes(query.toLowerCase())
-                        );
-                        const pageSize = 10;
-                        const start = (page - 1) * pageSize;
-                        return {
-                          data: filtered.slice(start, start + pageSize),
-                          hasMore: start + pageSize < filtered.length,
-                        };
-                      }}
-                      getOptionLabel={(option: any) => option?.label || ''}
+                      options={options}
+                      getOptionLabel={(option) => option?.label || ''}
                       value={formik.values.audience
                         .map((val) => options.find((opt) => opt.value === val))
                         .filter(Boolean)}
-                      onChange={(_, newValue: any) =>
+                      onChange={(_, newValue) =>
                         formik.setFieldValue(
                           'audience',
-                          newValue.map((opt: any) => opt?.value)
+                          newValue.map((opt) => opt?.value)
                         )
                       }
-                      isOptionEqualToValue={(option: any, value: any) =>
-                        option.value === value.value
-                      }
-                      renderTags={(value: any[], getTagProps: any) =>
-                        value.map((option: any, index: number) => (
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
                           <Chip
                             {...getTagProps({ index })}
                             key={option?.value}
@@ -341,7 +332,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                           />
                         ))
                       }
-                      renderOption={(props: any, option: any, { selected }: any) => (
+                      renderOption={(props, option, { selected }) => (
                         <li {...props} key={option?.value}>
                           <Checkbox
                             icon={<CheckBoxOutlineBlank fontSize="small" />}
@@ -351,13 +342,17 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                           {option?.label}
                         </li>
                       )}
-                      error={formik.touched.audience && Boolean(formik.errors.audience)}
-                      helperText={
-                        formik.touched.audience && typeof formik.errors.audience === 'string'
-                          ? formik.errors.audience
-                          : undefined
-                      }
-                      sx={{ minWidth: 300, width: '100%' }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Audience *"
+                          fullWidth
+                          size="small"
+                          error={formik.touched.audience && Boolean(formik.errors.audience)}
+                          helperText={formik.touched.audience && formik.errors.audience}
+                        />
+                      )}
+                      sx={{ minWidth: 300 }}
                     />
                   </ShakingTextField>
                 </Grid>

@@ -18,6 +18,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import FileUploader from 'src/components/custom-upload';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
@@ -456,22 +457,11 @@ const LeaveRequestForm = ({
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  // Returns getStudents function, StudentsData response and loading state
-  const [getStudents, { data: StudentsData, isLoading: isStudentsLoading }] = useQueryAndMutation({
+  // Returns getStudents function and loading state
+  const [getStudents, { isLoading: isStudentsLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
-
-  // Effect to fetch students when division, class and organization are selected
-  useEffect(() => {
-    if (division && classes && organization) {
-      getStudents({
-        educationMediumStageId: organization,
-        standardId: classes,
-        divisionId: division,
-      });
-    }
-  }, [division, classes, organization, getStudents]);
 
   // Fetch all attendance types
   const { data: attendanceTypes } = useQueryAndMutation({
@@ -583,128 +573,50 @@ const LeaveRequestForm = ({
       <DialogScrollContent>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Organization"
               disabled={!medium}
-              fetchOptions={async (query) => {
-                const items = allOrganization || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
+              options={allOrganization || []}
+              value={organization}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value: any) => {
+                setOrganization(value || '');
+                setStudent(null);
               }}
-              value={
-                organization
-                  ? {
-                      label: allOrganization.find((o: any) => o.id === organization)?.name || '',
-                      id: organization,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setOrganization(value?.id || '');
-              }}
-              fullWidth
-              sx={{ width: '100%' }}
-              size="small"
+              formControlProps={{ sx: { width: '100%' } }}
             />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Class"
               disabled={!organization}
-              fetchOptions={async (query) => {
-                const items = allClass || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
+              options={allClass || []}
+              value={classes}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value: any) => {
+                setClass(value || '');
+                setStudent(null);
               }}
-              value={
-                classes
-                  ? {
-                      label: allClass.find((c: any) => c.id === classes)?.name || '',
-                      id: classes,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setClass(value?.id || '');
-              }}
-              fullWidth
-              sx={{ width: '100%' }}
-              size="small"
+              formControlProps={{ sx: { width: '100%' } }}
             />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Division"
               disabled={!classes}
-              fetchOptions={async (query) => {
-                const items = allDivision || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
+              options={allDivision || []}
+              value={division}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value: any) => {
+                setDivision(value || '');
+                setStudent(null);
               }}
-              value={
-                division
-                  ? {
-                      label: allDivision.find((d: any) => d.id === division)?.name || '',
-                      id: division,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setDivision(value?.id || '');
-              }}
-              fullWidth
-              sx={{ width: '100%' }}
-              size="small"
+              formControlProps={{ sx: { width: '100%' } }}
             />
           </Grid>
 
@@ -718,24 +630,34 @@ const LeaveRequestForm = ({
               }
             >
               <PaginatedSearchSelect
+                key={`${organization}-${classes}-${division}`}
                 label="Student"
-                // loading={isStudentsLoading}
+                isLoading={isStudentsLoading}
+                noOptionsText="No Student Found"
                 disabled={!division}
-                fetchOptions={async (query) => {
-                  const items = StudentsData?.items || [];
-                  const filtered = items.filter((item: any) =>
-                    `${item?.firstName || ''} ${item?.lastName || ''}`
-                      ?.toLowerCase()
-                      .includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: `${item?.firstName || ''} ${item?.lastName || ''}`,
-                      id: item.studentId,
-                      originalData: item,
-                    })),
-                    hasMore: false,
-                  };
+                fetchOptions={async (query: string, page: number) => {
+                  if (!division) return { data: [], hasMore: false };
+                  try {
+                    const res = await getStudents({
+                      page,
+                      pageSize: 10,
+                      educationMediumStageId: organization,
+                      standardId: classes,
+                      divisionId: division,
+                      search: query,
+                    }).unwrap();
+                    const hasMore = res.currentPage !== res.totalPages;
+                    return {
+                      data: res?.items?.map((item: any) => ({
+                        label: `${item?.firstName || ''} ${item?.lastName || ''}`,
+                        id: item.studentId,
+                        originalData: item,
+                      })),
+                      hasMore,
+                    };
+                  } catch {
+                    return { data: [], hasMore: false };
+                  }
                 }}
                 value={
                   student
@@ -770,47 +692,18 @@ const LeaveRequestForm = ({
               {/* Row 1: Leave Type and Half Day Button */}
               <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                 <ShakingTextField error={!!(touched.leaveType && errors.leaveType)}>
-                  <PaginatedSearchSelect
+                  <CustomSelect
                     label="Leave Type *"
-                    fetchOptions={async (query) => {
-                      const items = attendanceTypes?.items || [];
-                      const filtered = items.filter((item: any) =>
-                        item?.leaveTypeName?.toLowerCase().includes(query.toLowerCase())
-                      );
-                      return {
-                        data: filtered.map((item: any) => ({
-                          label: item.leaveTypeName,
-                          id: item.id,
-                        })),
-                        hasMore: false,
-                      };
-                    }}
-                    value={
-                      values.leaveType
-                        ? {
-                            label:
-                              attendanceTypes?.items?.find((t: any) => t.id === values.leaveType)
-                                ?.leaveTypeName || '',
-                            id: values.leaveType,
-                          }
-                        : null
-                    }
-                    isOptionEqualToValue={(option, value) => option.id === value?.id}
-                    getOptionLabel={(option: any) => option?.label || ''}
-                    renderOption={(prop, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.label}
-                      </li>
-                    )}
-                    minChars={0}
-                    onChange={(_, value: any) => {
-                      setFieldValue('leaveType', value?.id || '');
+                    options={attendanceTypes?.items || []}
+                    value={values.leaveType}
+                    labelKey="leaveTypeName"
+                    valueKey="id"
+                    onChange={(value: any) => {
+                      setFieldValue('leaveType', value || '');
                     }}
                     error={!!(touched.leaveType && errors.leaveType)}
-                    helperText={(touched.leaveType && errors.leaveType) || ''}
-                    fullWidth
-                    sx={{ width: '100%' }}
-                    size="small"
+                    helperText={(touched.leaveType && errors.leaveType) as string}
+                    formControlProps={{ sx: { width: '100%' } }}
                   />
                 </ShakingTextField>
 

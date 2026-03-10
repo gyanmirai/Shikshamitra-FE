@@ -16,14 +16,18 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useAddHomeworkMutation,
+  useUpdateHomeworkMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import {
   Box,
   Grid,
@@ -34,11 +38,8 @@ import {
   TextField,
   Typography,
   FormControl,
+  Autocomplete,
 } from '@mui/material';
-import {
-  useAddHomeworkMutation,
-  useUpdateHomeworkMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
@@ -211,90 +212,35 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               >
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
-                    <PaginatedSearchSelect
+                    <CustomSelect
                       label="Class *"
-                      fetchOptions={async (query) => {
-                        const items = allClass || [];
-                        const filtered = items.filter((item: any) =>
-                          item?.name?.toLowerCase().includes(query.toLowerCase())
-                        );
-                        return {
-                          data: filtered.map((item: any) => ({
-                            label: item.name,
-                            id: item.name,
-                          })),
-                          hasMore: false,
-                        };
-                      }}
-                      value={
-                        formik.values.class || classes
-                          ? {
-                              label: formik.values.class || classes,
-                              id: formik.values.class || classes,
-                            }
-                          : null
-                      }
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      getOptionLabel={(option: any) => option?.label || ''}
-                      renderOption={(prop, option: any) => (
-                        <li {...prop} key={option.id}>
-                          {option.label}
-                        </li>
-                      )}
-                      minChars={0}
-                      onChange={(_, value: any) => formik.setFieldValue('class', value?.id || '')}
-                      sx={{ width: '100%' }}
-                      size="small"
+                      options={allClass}
+                      value={formik.values.class || classes}
+                      labelKey="name"
+                      valueKey="name"
+                      onChange={(val) => formik.setFieldValue('class', val)}
+                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                       error={!!(formik.touched.class && formik.errors.class)}
-                      helperText={
-                        (formik.touched.class && typeof formik.errors.class === 'string'
-                          ? formik.errors.class
-                          : '') || ''
-                      }
+                      helperText={(formik.touched.class && formik.errors.class) || ''}
                     />
                   </ShakingTextField>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
-                    <PaginatedSearchSelect
-                      multiple
+                    <CustomSelect
                       label="Division *"
-                      fetchOptions={async (query) => {
-                        const items = allDivision || [];
-                        const filtered = items.filter((item: any) =>
-                          item?.name?.toLowerCase().includes(query.toLowerCase())
-                        );
-                        return {
-                          data: filtered.map((item: any) => ({
-                            label: item.name,
-                            id: item.name,
-                          })),
-                          hasMore: false,
-                        };
-                      }}
-                      value={
-                        formik.values.divisions
-                          ? formik.values.divisions.map((d: any) => ({
-                              label: d.divisionId,
-                              id: d.divisionId,
-                            }))
-                          : []
-                      }
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      getOptionLabel={(option: any) => option?.label || ''}
-                      renderOption={(prop, option: any) => (
-                        <li {...prop} key={option.id}>
-                          {option.label}
-                        </li>
-                      )}
-                      minChars={0}
-                      onChange={(_, val: any) => {
-                        const selectedDivs = (val as any[]).map((v) => v.id);
+                      labelKey="name"
+                      valueKey="name"
+                      multiple
+                      options={allDivision}
+                      value={formik.values.divisions.map((d) => d.divisionId)}
+                      onChange={(val) => {
+                        const selectedDivs = val as string[];
                         const existingDivs = formik.values.divisions || [];
 
                         const newDivisions = selectedDivs.map((divId) => {
-                          const existing = existingDivs.find((d: any) => d.divisionId === divId);
+                          const existing = existingDivs.find((d) => d.divisionId === divId);
                           return (
                             existing || {
                               divisionId: divId,
@@ -307,8 +253,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
                         formik.setFieldValue('divisions', newDivisions);
                       }}
-                      sx={{ width: '100%' }}
-                      size="small"
+                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                       error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                       helperText={
                         formik.touched.divisions &&
@@ -328,111 +273,61 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
-                    <PaginatedSearchSelect
+                    <CustomSelect
                       label="Subject *"
                       disabled={!formik.values.divisions || formik.values.divisions.length === 0}
-                      fetchOptions={async (query) => {
-                        const items = [
-                          { value: 'Mathematics', label: 'Mathematics' },
-                          { value: 'Science', label: 'Science' },
-                          { value: 'History', label: 'History' },
-                          { value: 'English', label: 'English' },
-                        ];
-                        const filtered = items.filter((item: any) =>
-                          item?.label?.toLowerCase().includes(query.toLowerCase())
-                        );
-                        return {
-                          data: filtered.map((item: any) => ({
-                            label: item.label,
-                            id: item.value,
-                          })),
-                          hasMore: false,
-                        };
-                      }}
-                      value={
-                        formik.values.subject
-                          ? {
-                              label: formik.values.subject,
-                              id: formik.values.subject,
-                            }
-                          : null
-                      }
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      getOptionLabel={(option: any) => option?.label || ''}
-                      renderOption={(prop, option: any) => (
-                        <li {...prop} key={option.id}>
-                          {option.label}
-                        </li>
-                      )}
-                      minChars={0}
-                      onChange={(_, value: any) => formik.setFieldValue('subject', value?.id || '')}
-                      sx={{ width: '100%' }}
-                      size="small"
+                      options={[
+                        { value: 'Mathematics', label: 'Mathematics' },
+                        { value: 'Science', label: 'Science' },
+                        { value: 'History', label: 'History' },
+                        { value: 'English', label: 'English' },
+                      ]}
+                      value={formik.values.subject}
+                      onChange={(val) => formik.setFieldValue('subject', val)}
+                      formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.subject && formik.errors.subject)}
-                      helperText={
-                        (formik.touched.subject && typeof formik.errors.subject === 'string'
-                          ? formik.errors.subject
-                          : '') || ''
-                      }
+                      helperText={(formik.touched.subject && formik.errors.subject) || ''}
                     />
                   </ShakingTextField>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter)}>
-                    <PaginatedSearchSelect
-                      label="Chapter"
+                    <Autocomplete
+                      options={[
+                        { id: 'n1', name: '1. Numbers and Number Systems' },
+                        { id: 'a1', name: '2. Algebra' },
+                        { id: 'g1', name: '3. Geometry' },
+                        { id: 'm1', name: '4. Mensuration' },
+                        { id: 'r1', name: '5. Ratio and Proportion' },
+                        { id: 'p1', name: '6. Profit and Loss' },
+                        { id: 'i1', name: '7. Interest' },
+                        { id: 'f1', name: '8. Fractions and Decimals' },
+                        { id: 'e1', name: '9. Equations' },
+                        { id: 's1', name: '10. Sets' },
+                        { id: 't1', name: '11. Time and Work' },
+                        { id: 'd1', name: '12. Data Handling' },
+                      ]}
                       disabled={!formik.values.subject}
-                      fetchOptions={async (query) => {
-                        const items = [
-                          { id: 'n1', name: '1. Numbers and Number Systems' },
-                          { id: 'a1', name: '2. Algebra' },
-                          { id: 'g1', name: '3. Geometry' },
-                          { id: 'm1', name: '4. Mensuration' },
-                          { id: 'r1', name: '5. Ratio and Proportion' },
-                          { id: 'p1', name: '6. Profit and Loss' },
-                          { id: 'i1', name: '7. Interest' },
-                          { id: 'f1', name: '8. Fractions and Decimals' },
-                          { id: 'e1', name: '9. Equations' },
-                          { id: 's1', name: '10. Sets' },
-                          { id: 't1', name: '11. Time and Work' },
-                          { id: 'd1', name: '12. Data Handling' },
-                        ];
-                        const filtered = items.filter((item: any) =>
-                          item?.name?.toLowerCase().includes(query.toLowerCase())
-                        );
-                        return {
-                          data: filtered.map((item: any) => ({
-                            label: item.name,
-                            id: item.name,
-                          })),
-                          hasMore: false,
-                        };
-                      }}
                       value={
                         formik.values.chapter
-                          ? { label: formik.values.chapter, id: formik.values.chapter }
+                          ? { id: formik.values.chapter, name: formik.values.chapter }
                           : null
                       }
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      getOptionLabel={(option: any) => option?.label || ''}
-                      renderOption={(prop, option: any) => (
-                        <li {...prop} key={option.id}>
-                          {option.label}
-                        </li>
-                      )}
-                      minChars={0}
-                      onChange={(_, value: any) => {
-                        formik.setFieldValue('chapter', value?.id || '');
+                      onChange={(event, newValue) => {
+                        formik.setFieldValue('chapter', newValue?.name || '');
                       }}
-                      sx={{ width: '100%' }}
-                      size="small"
-                      error={formik.touched.chapter && Boolean(formik.errors.chapter)}
-                      helperText={
-                        (formik.touched.chapter && typeof formik.errors.chapter === 'string'
-                          ? formik.errors.chapter
-                          : '') as string
-                      }
+                      getOptionLabel={(option) => option.name}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Chapter"
+                          error={formik.touched.chapter && Boolean(formik.errors.chapter)}
+                          helperText={(formik.touched.chapter && formik.errors.chapter) as string}
+                          size="small"
+                          fullWidth
+                        />
+                      )}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -456,83 +351,30 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <ShakingTextField
                     error={!!(formik.touched.homeworkTypeId && formik.errors.homeworkTypeId)}
                   >
-                    <PaginatedSearchSelect
+                    <CustomSelect
                       label="Homework Type *"
-                      fetchOptions={async (query) => {
-                        const items = [
-                          { label: 'Regular', value: 'Regular' },
-                          { label: 'Worksheet', value: 'Worksheet' },
-                          { label: 'Activity', value: 'Activity' },
-                          { label: 'Practice', value: 'Practice' },
-                          { label: 'Written Assignment', value: 'written_assignment' },
-                          { label: 'Reading Comprehension', value: 'reading_comprehension' },
-                          { label: 'Worksheet Practice', value: 'worksheet_practice' },
-                          { label: 'Problem Solving', value: 'problem_solving' },
-                          { label: 'Essay Writing', value: 'essay_writing' },
-                          { label: 'Project Work', value: 'project_work' },
-                          { label: 'Research Assignment', value: 'research_assignment' },
-                          { label: 'Lab Report', value: 'lab_report' },
-                          { label: 'Creative Writing', value: 'creative_writing' },
-                          { label: 'Revision Task', value: 'revision_task' },
-                        ];
-                        const filtered = items.filter((item: any) =>
-                          item?.label?.toLowerCase().includes(query.toLowerCase())
-                        );
-                        return {
-                          data: filtered.map((item: any) => ({
-                            label: item.label,
-                            id: item.value,
-                          })),
-                          hasMore: false,
-                        };
-                      }}
-                      value={
-                        formik.values.homeworkTypeId
-                          ? {
-                              label:
-                                [
-                                  { label: 'Regular', value: 'Regular' },
-                                  { label: 'Worksheet', value: 'Worksheet' },
-                                  { label: 'Activity', value: 'Activity' },
-                                  { label: 'Practice', value: 'Practice' },
-                                  { label: 'Written Assignment', value: 'written_assignment' },
-                                  {
-                                    label: 'Reading Comprehension',
-                                    value: 'reading_comprehension',
-                                  },
-                                  { label: 'Worksheet Practice', value: 'worksheet_practice' },
-                                  { label: 'Problem Solving', value: 'problem_solving' },
-                                  { label: 'Essay Writing', value: 'essay_writing' },
-                                  { label: 'Project Work', value: 'project_work' },
-                                  { label: 'Research Assignment', value: 'research_assignment' },
-                                  { label: 'Lab Report', value: 'lab_report' },
-                                  { label: 'Creative Writing', value: 'creative_writing' },
-                                  { label: 'Revision Task', value: 'revision_task' },
-                                ].find((x) => x.value === formik.values.homeworkTypeId)?.label ||
-                                '',
-                              id: formik.values.homeworkTypeId,
-                            }
-                          : null
-                      }
-                      isOptionEqualToValue={(option, value) => option.id === value?.id}
-                      getOptionLabel={(option: any) => option?.label || ''}
-                      renderOption={(prop, option: any) => (
-                        <li {...prop} key={option.id}>
-                          {option.label}
-                        </li>
-                      )}
-                      minChars={0}
-                      onChange={(_, value: any) =>
-                        formik.setFieldValue('homeworkTypeId', value?.id || '')
-                      }
-                      sx={{ width: '100%' }}
-                      size="small"
+                      options={[
+                        { label: 'Regular', value: 'Regular' },
+                        { label: 'Worksheet', value: 'Worksheet' },
+                        { label: 'Activity', value: 'Activity' },
+                        { label: 'Practice', value: 'Practice' },
+                        { label: 'Written Assignment', value: 'written_assignment' },
+                        { label: 'Reading Comprehension', value: 'reading_comprehension' },
+                        { label: 'Worksheet Practice', value: 'worksheet_practice' },
+                        { label: 'Problem Solving', value: 'problem_solving' },
+                        { label: 'Essay Writing', value: 'essay_writing' },
+                        { label: 'Project Work', value: 'project_work' },
+                        { label: 'Research Assignment', value: 'research_assignment' },
+                        { label: 'Lab Report', value: 'lab_report' },
+                        { label: 'Creative Writing', value: 'creative_writing' },
+                        { label: 'Revision Task', value: 'revision_task' },
+                      ]}
+                      value={formik.values.homeworkTypeId || ''}
+                      onChange={(val) => formik.setFieldValue('homeworkTypeId', val)}
+                      formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.homeworkTypeId && formik.errors.homeworkTypeId)}
                       helperText={
-                        (formik.touched.homeworkTypeId &&
-                        typeof formik.errors.homeworkTypeId === 'string'
-                          ? formik.errors.homeworkTypeId
-                          : '') || ''
+                        (formik.touched.homeworkTypeId && formik.errors.homeworkTypeId) || ''
                       }
                     />
                   </ShakingTextField>

@@ -1,12 +1,12 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
+import { Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
+import CustomSelect from 'src/components/custom-select';
 import React, { memo, useState, useEffect } from 'react';
-import { Grid, Skeleton, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 
 import type { IExpenseFormValues } from './type';
 
@@ -26,6 +26,7 @@ const ExpenseFormFields = ({
   categoryOptionsLoading,
 }: ExpenseFormFieldsProps) => {
   const [tags, setTags] = useState<{ name: string; id: string }[]>([]);
+  console.log('tags0000', tags);
   // Update tags when categoryId changes or initially if editData is present
   useEffect(() => {
     if (formik.values.categoryId) {
@@ -46,102 +47,46 @@ const ExpenseFormFields = ({
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
         <ShakingTextField error={!!(formik.touched.categoryId && formik.errors.categoryId)}>
-          {categoryOptionsLoading ? (
-            <Skeleton variant="rounded" height={40} />
-          ) : (
-            <PaginatedSearchSelect
-              key={categoryOptions?.length ? 'category-loaded' : 'category-empty'}
-              label="Expense Category *"
-              noOptionsText="No Expense Category Found"
-              fetchOptions={async (query: string, page: number) => {
-                const filtered = (categoryOptions || []).filter((c: any) =>
-                  c?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                const pageSize = 10;
-                const start = (page - 1) * pageSize;
-                const end = start + pageSize;
-                return {
-                  data: filtered.slice(start, end).map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: end < filtered.length,
-                };
-              }}
-              value={
-                categoryOptions?.find((c: any) => c.id === formik.values.categoryId)
-                  ? {
-                      label: categoryOptions.find((c: any) => c.id === formik.values.categoryId)
-                        ?.name,
-                      id: formik.values.categoryId,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              getOptionLabel={(option: any) => option?.label || ''}
-              minChars={0}
-              onChange={(_, val: any) => {
-                formik.setFieldValue('categoryId', val?.id || '');
-                formik.setFieldValue('categoryTags', []);
-                formik.setFieldTouched('categoryId', false);
-              }}
-              size="small"
-              sx={{ width: '100%' }}
-              error={!!(formik.touched.categoryId && formik.errors.categoryId)}
-              helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
-            />
-          )}
+          <CustomSelect
+            label="Expense Category *"
+            options={categoryOptions}
+            value={formik.values.categoryId}
+            isLoading={categoryOptionsLoading}
+            labelKey="name"
+            valueKey="id"
+            onChange={(val: any) => {
+              formik.setFieldValue('categoryId', val);
+              formik.setFieldValue('categoryTags', []); // Reset tags on category change
+              formik.setFieldTouched('categoryId', false);
+              const selectedItems = categoryOptions?.filter((item: any) => val.includes(item.id));
+
+              const formatted = selectedItems?.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+              }));
+              setTags(formatted || []);
+            }}
+            error={!!(formik.touched.categoryId && formik.errors.categoryId)}
+            helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
+            formControlProps={{ fullWidth: true }}
+          />
         </ShakingTextField>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ShakingTextField error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}>
-          <PaginatedSearchSelect
-            key={tags?.length ? 'tags-loaded' : 'tags-empty'}
-            multiple
-            noOptionsText="No Expense Category Tags Found"
+          <CustomSelect
             label="Expense Category Tags *"
+            options={tags}
+            labelKey="name"
+            valueKey="id"
+            value={formik.values.categoryTags || []}
+            onChange={(val: any) => formik.setFieldValue('categoryTags', val)}
             disabled={!formik.values.categoryId}
-            fetchOptions={async (query: string, page: number) => {
-              const filtered = (tags || []).filter((t: any) =>
-                t?.name?.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              const end = start + pageSize;
-              return {
-                data: filtered.slice(start, end).map((item: any) => ({
-                  label: item.name,
-                  id: item.id,
-                })),
-                hasMore: end < filtered.length,
-              };
-            }}
-            value={(formik.values.categoryTags || []).map((tagId: string) => {
-              const tag = tags?.find((t: any) => t.id === tagId);
-              return tag ? { label: tag.name, id: tag.id } : { label: tagId, id: tagId };
-            })}
-            isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-            renderOption={(prop, option: any) => (
-              <li {...prop} key={option.id}>
-                {option.label}
-              </li>
-            )}
-            getOptionLabel={(option: any) => option?.label || ''}
-            minChars={0}
-            onChange={(_, val: any) => {
-              const newTags = Array.isArray(val) ? val.map((v: any) => v.id) : [];
-              formik.setFieldValue('categoryTags', newTags);
-            }}
-            size="small"
-            sx={{ width: '100%' }}
             error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}
             helperText={(formik.touched.categoryTags && formik.errors.categoryTags) as string}
+            formControlProps={{ fullWidth: true }}
+            multiple
           />
         </ShakingTextField>
       </Grid>
@@ -217,51 +162,19 @@ const ExpenseFormFields = ({
 
       <Grid size={{ xs: 12, md: 6 }}>
         <ShakingTextField error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}>
-          <PaginatedSearchSelect
-            key={paymentMethodOptions?.length ? 'payment-loaded' : 'payment-empty'}
+          <CustomSelect
             label="Payment Method *"
-            noOptionsText="No Payment Method Found"
-            fetchOptions={async (query: string, page: number) => {
-              const filtered = (paymentMethodOptions || []).filter((p: any) =>
-                p?.label?.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              const end = start + pageSize;
-              return {
-                data: filtered.slice(start, end).map((item: any) => ({
-                  label: item.label,
-                  id: item.value,
-                })),
-                hasMore: end < filtered.length,
-              };
-            }}
-            value={
-              paymentMethodOptions?.find((p: any) => p.value === formik.values.paymentMethod)
-                ? {
-                    label: paymentMethodOptions.find(
-                      (p: any) => p.value === formik.values.paymentMethod
-                    )?.label,
-                    id: formik.values.paymentMethod,
-                  }
-                : null
-            }
-            isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-            renderOption={(prop, option: any) => (
-              <li {...prop} key={option.id}>
-                {option.label}
-              </li>
-            )}
-            getOptionLabel={(option: any) => option?.label || ''}
-            minChars={0}
-            onChange={(_, val: any) => {
-              formik.setFieldValue('paymentMethod', val?.id || '');
+            options={paymentMethodOptions}
+            value={formik.values.paymentMethod}
+            onChange={(val) => {
+              formik.setFieldValue('paymentMethod', val);
               formik.setFieldTouched('paymentMethod', false);
             }}
-            size="small"
-            sx={{ width: '100%' }}
+            labelKey="label"
+            valueKey="value"
             error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
             helperText={(formik.touched.paymentMethod && formik.errors.paymentMethod) as string}
+            formControlProps={{ fullWidth: true }}
           />
         </ShakingTextField>
       </Grid>

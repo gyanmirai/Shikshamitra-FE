@@ -1,10 +1,10 @@
 import type { FormikProps } from 'formik';
 
 import { Iconify } from 'src/components/iconify';
-import { Grid, TextField, InputAdornment } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
 import { routeTypeOptions } from 'src/enums/route-type-options';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { Grid, TextField, Autocomplete, InputAdornment } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import TransportMemberProfile from './TransportMemberProfile';
@@ -43,67 +43,63 @@ const TransportApplicationForm = ({
       {/* <Grid container spacing={2}> */}
       <Grid size={{ xs: 12, md: 8, sm: 8 }}>
         <ShakingTextField error={!!(formik.touched.searchStop && formik.errors.searchStop)}>
-          <PaginatedSearchSelect
-            key={formik.values.searchStop || 'stop-empty'}
-            fullWidth
-            label="Stop *"
-            noOptionsText="No Stop Found"
-            minChars={0}
-            size="small"
-            fetchOptions={async (query: string, page: number) => {
-              const filtered = options.filter((o) =>
-                o.label.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              return {
-                data: filtered.slice(start, start + pageSize),
-                hasMore: start + pageSize < filtered.length,
-              };
-            }}
-            getOptionLabel={(option: any) => option?.label || ''}
+          <Autocomplete
+            clearOnEscape
+            disableClearable={false}
+            options={options}
+            groupBy={(option) => option.group}
+            getOptionLabel={(option) => option.label}
             value={options.find((opt) => opt.value === formik.values.searchStop) || null}
-            onChange={(_, newValue: any) =>
+            onChange={(_, newValue) =>
               formik.setFieldValue('searchStop', newValue ? newValue.value : '')
             }
-            isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
-            error={formik.touched.searchStop && Boolean(formik.errors.searchStop)}
-            helperText={
-              formik.touched.searchStop && formik.errors.searchStop ? formik.errors.searchStop : ''
-            }
+            renderOption={(props, option) => (
+              <li
+                {...props}
+                key={option.value}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                {/* <RoomIcon fontSize="small" color="action" /> */}
+                {option.label}
+              </li>
+            )}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Stop *"
+                fullWidth
+                size="small"
+                error={formik.touched.searchStop && Boolean(formik.errors.searchStop)}
+                helperText={
+                  formik.touched.searchStop && formik.errors.searchStop
+                    ? formik.errors.searchStop
+                    : ''
+                }
+              />
+            )}
+            sx={{
+              minWidth: 300,
+              '& .MuiAutocomplete-groupLabel': {
+                fontWeight: 600,
+                backgroundColor: 'rgba(0,0,0,0.05)',
+                borderRadius: '4px',
+              },
+            }}
           />
         </ShakingTextField>
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik.touched.pickupType && formik.errors.pickupType)}>
-          <PaginatedSearchSelect
-            key={String(formik.values.pickupType ?? '') || 'pickup-type-empty'}
-            fullWidth
+          <CustomSelect
             label="Pickup Type *"
-            noOptionsText="No Pickup Type Found"
-            minChars={0}
-            size="small"
-            fetchOptions={async (query: string, page: number) => {
-              const filtered = routeTypeOptions.filter((o) =>
-                o.label.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              return {
-                data: filtered.slice(start, start + pageSize),
-                hasMore: start + pageSize < filtered.length,
-              };
-            }}
-            getOptionLabel={(option: any) => option?.label || ''}
-            value={routeTypeOptions.find((o) => o.value === formik.values.pickupType) || null}
-            onChange={(_, newValue: any) =>
-              formik.setFieldValue('pickupType', newValue ? newValue.value : '')
-            }
-            isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
+            name="pickupType"
+            options={routeTypeOptions}
+            value={formik.values.pickupType}
+            onChange={(value) => formik.setFieldValue('pickupType', value)}
             error={!!(formik.touched.pickupType && formik.errors.pickupType)}
-            helperText={
-              formik.touched.pickupType ? (formik.errors.pickupType as string) : undefined
-            }
+            helperText={formik.touched.pickupType ? formik.errors.pickupType : undefined}
+            formControlProps={{ fullWidth: true }}
+            size="small"
           />
         </ShakingTextField>
       </Grid>
