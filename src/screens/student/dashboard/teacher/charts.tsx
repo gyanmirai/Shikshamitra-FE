@@ -40,6 +40,8 @@ export const AttendanceTrend = () => {
     router.push(studentPaths.attendance.markAttendance);
   };
 
+  const isLight = theme.palette.mode === 'light';
+
   const attendanceOptions = useChart({
     xaxis: {
       categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -66,9 +68,9 @@ export const AttendanceTrend = () => {
       show: false,
     },
     colors: [
-      theme.vars.palette.success.main,
-      theme.vars.palette.warning.main,
-      theme.vars.palette.error.main,
+      isLight ? theme.palette.primary.main : theme.vars.palette.success.main,
+      isLight ? theme.palette.warning.main : theme.vars.palette.warning.main,
+      isLight ? theme.palette.error.main : theme.vars.palette.error.main,
     ],
     grid: {
       strokeDashArray: 3,
@@ -142,19 +144,40 @@ export const AttendanceTrend = () => {
 
       <Stack direction="row" alignItems="center" justifyContent="center" spacing={3} sx={{ p: 2 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'success.main' }} />
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: isLight ? 'primary.main' : 'success.main',
+            }}
+          />
           <Typography variant="subtitle2" component="span">
             Present
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'warning.main' }} />
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: isLight ? 'warning.main' : 'warning.main',
+            }}
+          />
           <Typography variant="subtitle2" component="span">
             Leave
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'error.main' }} />
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: isLight ? 'error.main' : 'error.main',
+            }}
+          />
           <Typography variant="subtitle2" component="span">
             Absent
           </Typography>

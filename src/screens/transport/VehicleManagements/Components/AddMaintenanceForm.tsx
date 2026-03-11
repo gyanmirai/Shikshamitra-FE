@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -13,7 +14,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useAddMaintenanceRecordMutation } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
@@ -107,46 +107,20 @@ const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, 
 
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.serviceType && formik.errors.serviceType)}>
-              <PaginatedSearchSelect
-                fullWidth
-                multiple
+              <CustomSelect
                 label="Service Type *"
-                noOptionsText="No Service Type Found"
-                minChars={0}
-                size="small"
-                fetchOptions={async (query: string, page: number) => {
-                  const serviceTypeOptions = [
-                    { value: 'Regular', label: 'Regular' },
-                    { value: 'Major', label: 'Major' },
-                    { value: 'Minor', label: 'Minor' },
-                    { value: 'Emergency', label: 'Emergency' },
-                    { value: 'Body Work', label: 'Body Work' },
-                  ];
-                  const filtered = serviceTypeOptions.filter((o) =>
-                    o.label.toLowerCase().includes(query.toLowerCase())
-                  );
-                  const pageSize = 10;
-                  const start = (page - 1) * pageSize;
-                  return {
-                    data: filtered.slice(start, start + pageSize),
-                    hasMore: start + pageSize < filtered.length,
-                  };
-                }}
-                getOptionLabel={(option: any) => option?.label || ''}
-                value={[
+                multiple
+                options={[
                   { value: 'Regular', label: 'Regular' },
                   { value: 'Major', label: 'Major' },
                   { value: 'Minor', label: 'Minor' },
                   { value: 'Emergency', label: 'Emergency' },
                   { value: 'Body Work', label: 'Body Work' },
-                ].filter((opt) => formik.values.serviceType.includes(opt.value))}
-                onChange={(_, newValue: any) => {
-                  formik.setFieldValue(
-                    'serviceType',
-                    Array.isArray(newValue) ? newValue.map((v: any) => v.value) : []
-                  );
-                }}
-                isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
+                ]}
+                name="serviceType"
+                value={formik.values.serviceType}
+                onChange={(val) => formik.setFieldValue('serviceType', val)}
+                formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
                 error={!!(formik.touched.serviceType && formik.errors.serviceType)}
                 helperText={
                   ((formik.touched.serviceType && formik.errors.serviceType) as string) || ''

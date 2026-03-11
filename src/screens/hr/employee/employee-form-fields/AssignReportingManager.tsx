@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
-import { Box, Skeleton } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 
 import { CardActions } from './InformationFields';
 
@@ -51,53 +50,30 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
           <Skeleton height={40} width="100%" />
         </Box>
       ) : (
-        <CustomTooltip placement="top" title={employeeValue && employeeValue?.fullName}>
-          <Box sx={{ minWidth: 300, maxWidth: 300 }}>
-            <PaginatedSearchSelect
-              label="Reporting Manager *"
-              disabled={!isEditable.value}
-              noOptionsText="No results found"
-              fetchOptions={async (searchQuery) => {
-                const items = employees?.items || [];
-                const filtered = items.filter((item: any) =>
-                  item?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
-                );
-                return {
-                  data: filtered.map((option: any) => ({
-                    label: option.fullName,
-                    id: option.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                employeeValue
-                  ? {
-                      label: employeeValue.fullName,
-                      id: employeeValue.id,
-                    }
-                  : values.reportingManager && values.reportingManagerName
-                    ? { label: values.reportingManagerName, id: values.reportingManager }
-                    : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(props, option: any) => (
-                <li {...props} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                setFieldValue('reportingManager', value?.id || null);
-              }}
-              error={!!touched.reportingManager && !!errors.reportingManager}
-              helperText={touched.reportingManager && (errors.reportingManager as string)}
-              size="small"
-              sx={{ width: '100%', maxWidth: 268 }}
-            />
-          </Box>
-        </CustomTooltip>
+        <Autocomplete
+          options={employees?.items || []}
+          getOptionLabel={(option: any) => option?.fullName}
+          disabled={!isEditable.value}
+          renderInput={(params) => (
+            <CustomTooltip placement="top" title={employeeValue && employeeValue?.fullName}>
+              <TextField
+                {...params}
+                label="Reporting Manager *"
+                size="small"
+                error={!!touched.reportingManager && !!errors.reportingManager}
+                helperText={touched.reportingManager && errors.reportingManager}
+                disabled={!isEditable.value}
+                sx={{ maxWidth: 268 }}
+              />
+            </CustomTooltip>
+          )}
+          sx={{ minWidth: 300 }}
+          value={employeeValue}
+          onChange={(e, value) => {
+            setFieldValue('reportingManager', value?.id);
+            // formik.setFieldValue('examType', value?.id);
+          }}
+        />
       )}
     </>
   );

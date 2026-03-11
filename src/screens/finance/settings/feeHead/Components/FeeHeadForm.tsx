@@ -8,13 +8,13 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
-import { Grid, Button, Skeleton, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useAddFeeHeadMutation,
@@ -103,58 +103,22 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
             <ShakingTextField
               error={!!(formik.touched.feeCategoryId && formik.errors.feeCategoryId) || false}
             >
-              {isFeeCategoryLoading || isFeeCategoryFetching ? (
-                <Skeleton variant="rounded" height={40} />
-              ) : (
-                <PaginatedSearchSelect
-                  key={feeCategoryData?.items?.length ? 'category-loaded' : 'category-empty'}
-                  label="Fee Category *"
-                  noOptionsText="No Fee Category Found"
-                  fetchOptions={async (query: string, page: number) => {
-                    const filtered = (feeCategoryData?.items || []).filter((c: any) =>
-                      c?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    const pageSize = 10;
-                    const start = (page - 1) * pageSize;
-                    const end = start + pageSize;
-                    return {
-                      data: filtered.slice(start, end).map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: end < filtered.length,
-                    };
-                  }}
-                  value={
-                    feeCategoryData?.items?.find((c: any) => c.id === formik.values.feeCategoryId)
-                      ? {
-                          label: feeCategoryData.items.find(
-                            (c: any) => c.id === formik.values.feeCategoryId
-                          )?.name,
-                          id: formik.values.feeCategoryId,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  minChars={0}
-                  onChange={(_, val: any) => {
-                    formik.setFieldValue('feeCategoryId', val?.id || '');
-                    formik.setFieldTouched('feeCategoryId', false);
-                  }}
-                  size="small"
-                  sx={{ width: '100%' }}
-                  error={!!(formik.touched.feeCategoryId && formik.errors.feeCategoryId)}
-                  helperText={
-                    (formik.touched.feeCategoryId && formik.errors.feeCategoryId) as string
-                  }
-                />
-              )}
+              <CustomSelect
+                name="feeCategoryId"
+                label="Fee Category *"
+                options={feeCategoryData?.items || []}
+                value={formik.values.feeCategoryId || ''}
+                labelKey="name"
+                valueKey="id"
+                isLoading={isFeeCategoryLoading || isFeeCategoryFetching}
+                onChange={(value) => {
+                  formik.setFieldValue('feeCategoryId', value);
+                  formik.setFieldTouched('feeCategoryId', false);
+                }}
+                error={!!(formik.touched.feeCategoryId && formik.errors.feeCategoryId) || false}
+                helperText={(formik.touched.feeCategoryId && formik.errors.feeCategoryId) || ''}
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+              />
             </ShakingTextField>
           </Grid>
 

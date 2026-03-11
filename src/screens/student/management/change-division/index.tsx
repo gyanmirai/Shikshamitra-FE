@@ -11,12 +11,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
 import { Box, Chip, Button, Typography, DialogActions } from '@mui/material';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
@@ -388,47 +388,15 @@ const TableDivisionDropDown = ({
   division,
   currentDivision,
   onChange,
-}: TableDivisionDropDownProps) => {
-  const options = allDivision?.filter((d) => d.id !== currentDivision) || [];
-
-  return (
-    <PaginatedSearchSelect
-      label=""
-      fetchOptions={async (query) => {
-        const filtered = options.filter((item: any) =>
-          item?.name?.toLowerCase().includes(query.toLowerCase())
-        );
-        return {
-          data: filtered.map((item: any) => ({
-            label: item.name,
-            id: item.id,
-          })),
-          hasMore: false,
-        };
-      }}
-      value={
-        division
-          ? {
-              label: options.find((d: any) => d.id === division)?.name || '',
-              id: division,
-            }
-          : null
-      }
-      isOptionEqualToValue={(option, value) => option.id === value?.id}
-      getOptionLabel={(option: any) => option?.label || ''}
-      renderOption={(prop, option: any) => (
-        <li {...prop} key={option.id}>
-          {option.label}
-        </li>
-      )}
-      minChars={0}
-      onChange={(_, value: any) => {
-        onChange(value?.id || '');
-      }}
-      fullWidth
-      sx={{ width: '100%', textAlign: 'left' }}
-      size="small"
-      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-    />
-  );
-};
+}: TableDivisionDropDownProps) => (
+  <CustomSelect
+    options={allDivision?.filter((d) => d.id !== currentDivision) || []}
+    label=""
+    value={division}
+    onChange={onChange}
+    labelKey="name"
+    valueKey="id"
+    formControlProps={{ sx: { width: '100%', textAlign: 'left' } }}
+    onClick={(e) => e.stopPropagation()}
+  />
+);

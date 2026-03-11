@@ -16,6 +16,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 // Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -26,7 +27,6 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
@@ -237,94 +237,39 @@ const Subjects = () => {
               }}
             >
               <Box sx={{ display: 'flex', gap: 2 }}>
-                <PaginatedSearchSelect
+                <CustomSelect
                   label="Class"
-                  fetchOptions={async (query) => {
-                    const items = allClass || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    classId
-                      ? {
-                          label: allClass.find((c: any) => c.id === classId)?.name || '',
-                          id: classId,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    const val = value?.id || '';
-                    const standard = allClass.find((std) => std.id === val);
+                  name="class"
+                  options={allClass}
+                  valueKey="id"
+                  labelKey="name"
+                  formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+                  value={classId}
+                  onChange={(value) => {
+                    const standard = allClass.find((std) => std.id === value);
                     setClasses(standard?.name || '');
-                    setClassId(val);
+                    setClassId(value as string);
                   }}
-                  fullWidth
-                  sx={{ minWidth: '248px', width: '100%' }}
-                  size="small"
                 />
-                <PaginatedSearchSelect
-                  label="Subject"
+                <CustomSelect
+                  options={[
+                    { value: 'Mathematics', label: 'Mathematics' },
+                    { value: 'Science', label: 'Science' },
+                    { value: 'English', label: 'English' },
+                    { value: 'History', label: 'History' },
+                    { value: 'Geography', label: 'Geography' },
+                  ]}
+                  value={subject}
                   disabled={!classes}
-                  // loading={isLoading}
-                  fetchOptions={async (query) => {
-                    const items = [
-                      { value: 'Mathematics', label: 'Mathematics' },
-                      { value: 'Science', label: 'Science' },
-                      { value: 'English', label: 'English' },
-                      { value: 'History', label: 'History' },
-                      { value: 'Geography', label: 'Geography' },
-                    ];
-                    const filtered = items.filter((item: any) =>
-                      item?.label?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.label,
-                        id: item.value,
-                      })),
-                      hasMore: false,
-                    };
+                  onChange={(val) => {
+                    setSubject(val as string);
+                    setSubjectId(val as string);
                   }}
-                  value={
-                    subject
-                      ? {
-                          label: subject,
-                          id: subject,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    const val = value?.id || '';
-                    setSubject(val);
-                    setSubjectId(val);
-                  }}
-                  fullWidth
-                  sx={{ minWidth: '248px', width: '100%' }}
-                  size="small"
+                  label="Subject"
+                  valueKey="value"
+                  labelKey="label"
+                  isLoading={isLoading}
+                  formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
                 />
               </Box>
               <Button

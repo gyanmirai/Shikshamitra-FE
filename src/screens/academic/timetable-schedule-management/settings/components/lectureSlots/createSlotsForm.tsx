@@ -20,7 +20,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
@@ -287,45 +286,14 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-                <PaginatedSearchSelect
+                <CustomSelect
+                  options={allClass}
+                  value={formik.values.className}
+                  onChange={(val) => formik.setFieldValue('className', val as string)}
                   label="Class *"
-                  fetchOptions={async (query) => {
-                    const items = allClass || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    formik.values.className
-                      ? {
-                          label:
-                            allClass.find((c: any) => c.id === formik.values.className)?.name || '',
-                          id: formik.values.className,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    const val = value?.id || '';
-                    formik.setFieldValue('className', val);
-                  }}
-                  fullWidth
-                  sx={{ minWidth: '200px' }}
-                  size="small"
+                  labelKey="name"
+                  valueKey="name"
+                  formControlProps={{ fullWidth: true }}
                   error={formik.touched.className && Boolean(formik.errors.className)}
                   helperText={
                     formik.touched.className && typeof formik.errors.className === 'string'
@@ -355,46 +323,14 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               <ShakingTextField
                 error={!!(formik.touched.previousClassSlots && formik.errors.previousClassSlots)}
               >
-                <PaginatedSearchSelect
+                <CustomSelect
+                  options={allClass}
+                  value={formik.values.previousClassSlots}
+                  onChange={(val) => formik.setFieldValue('previousClassSlots', val as string)}
                   label="Slots From Other Class"
-                  fetchOptions={async (query) => {
-                    const items = allClass || [];
-                    const filtered = items.filter((item: any) =>
-                      item?.name?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.name,
-                        id: item.id,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    formik.values.previousClassSlots
-                      ? {
-                          label:
-                            allClass.find((c: any) => c.id === formik.values.previousClassSlots)
-                              ?.name || '',
-                          id: formik.values.previousClassSlots,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    const val = value?.id || '';
-                    formik.setFieldValue('previousClassSlots', val);
-                  }}
-                  fullWidth
-                  sx={{ minWidth: '200px' }}
-                  size="small"
+                  labelKey="name"
+                  valueKey="name"
+                  formControlProps={{ fullWidth: true }}
                   error={
                     formik.touched.previousClassSlots && Boolean(formik.errors.previousClassSlots)
                   }

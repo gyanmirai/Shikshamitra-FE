@@ -5,10 +5,9 @@ import { useTheme } from '@mui/material/styles';
 import FileUploader from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { Box, Grid, Chip, Checkbox, TextField, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Box, Grid, Chip, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 
 import type { ISchoolWiseAnnouncementFormValues } from '../../type';
 
@@ -56,46 +55,31 @@ const BasicInformationSection = () => {
       {/* Announcement Type */}
       <Grid size={{ xs: 12, md: 6, sm: 3 }}>
         <ShakingTextField error={!!(touched.type && errors.type)}>
-          <PaginatedSearchSelect
+          <Autocomplete
             fullWidth
             multiple
             filterSelectedOptions
-            label="Announcement Type *"
-            noOptionsText="No Announcement Type Found"
-            minChars={0}
-            size="small"
-            fetchOptions={async (query: string, page: number) => {
-              const allOptions = [
-                { announcementType: 'Academic', description: 'Academic', color: '#d219b3ff' },
-                {
-                  announcementType: 'Administrative',
-                  description: 'Administrative',
-                  color: '#FF9800',
-                },
-                {
-                  announcementType: 'Extracurricular',
-                  description: 'Extracurricular',
-                  color: '#4CAF50',
-                },
-              ];
-              const filtered = allOptions.filter((o) =>
-                o.announcementType.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              return {
-                data: filtered.slice(start, start + pageSize),
-                hasMore: start + pageSize < filtered.length,
-              };
-            }}
-            isOptionEqualToValue={(option: any, value: any) =>
+            options={[
+              { announcementType: 'Academic', description: 'Academic', color: '#d219b3ff' },
+              {
+                announcementType: 'Administrative',
+                description: 'Administrative',
+                color: '#FF9800',
+              },
+              {
+                announcementType: 'Extracurricular',
+                description: 'Extracurricular',
+                color: '#4CAF50',
+              },
+            ]}
+            isOptionEqualToValue={(option, value) =>
               option.announcementType === value.announcementType
             }
             value={values.type}
-            onChange={(_, newValue: any) => setFieldValue('type', newValue)}
-            getOptionLabel={(option: any) => option.announcementType || ''}
-            renderTags={(value: any[], getTagProps: any) =>
-              value.map((option: any, index: number) => (
+            onChange={(_, newValue) => setFieldValue('type', newValue)}
+            getOptionLabel={(option) => option.announcementType}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
                 <Chip
                   {...getTagProps({ index })}
                   key={option.announcementType}
@@ -106,8 +90,8 @@ const BasicInformationSection = () => {
                 />
               ))
             }
-            renderOption={(props: any, option: any) => (
-              <Box component="li" {...props} key={option.announcementType}>
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <SubjectColorIndicator color={option.color} />
                   <Typography variant="caption" fontSize="13px">
@@ -116,12 +100,19 @@ const BasicInformationSection = () => {
                 </Box>
               </Box>
             )}
-            error={touched.type && Boolean(errors.type)}
-            helperText={
-              Array.isArray(errors.type)
-                ? errors.type.join(', ')
-                : (touched.type && errors.type) || undefined
-            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Announcement Type *"
+                size="small"
+                error={touched.type && Boolean(errors.type)}
+                helperText={
+                  Array.isArray(errors.type)
+                    ? errors.type.join(', ')
+                    : (touched.type && errors.type) || undefined
+                }
+              />
+            )}
           />
         </ShakingTextField>
       </Grid>
@@ -129,31 +120,16 @@ const BasicInformationSection = () => {
       {/* Audience */}
       <Grid size={{ xs: 12, md: 6, sm: 3 }}>
         <ShakingTextField error={!!(touched.audience && errors.audience)}>
-          <PaginatedSearchSelect
+          <Autocomplete
             multiple
             disableCloseOnSelect
-            fullWidth
-            label="Audience *"
-            noOptionsText="No Audience Found"
-            minChars={0}
-            size="small"
-            fetchOptions={async (query: string, page: number) => {
-              const filtered = options.filter((o) =>
-                o.label.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              return {
-                data: filtered.slice(start, start + pageSize),
-                hasMore: start + pageSize < filtered.length,
-              };
-            }}
-            getOptionLabel={(option: any) => option?.label || ''}
+            options={options}
+            getOptionLabel={(option) => option?.label || ''}
             value={values.audience}
-            onChange={(_, newValue: any) => setFieldValue('audience', newValue)}
-            isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
-            renderTags={(value: any[], getTagProps: any) =>
-              value.map((option: any, index: number) => (
+            onChange={(_, newValue) => setFieldValue('audience', newValue)}
+            isOptionEqualToValue={(option, value) => option.value === value.value}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
                 <Chip
                   {...getTagProps({ index })}
                   key={option?.value}
@@ -165,7 +141,7 @@ const BasicInformationSection = () => {
                 />
               ))
             }
-            renderOption={(props: any, option: any, { selected }: any) => (
+            renderOption={(props, option, { selected }) => (
               <li {...props} key={option?.value}>
                 <Checkbox
                   icon={<CheckBoxOutlineBlank fontSize="small" />}
@@ -175,12 +151,20 @@ const BasicInformationSection = () => {
                 {option?.label}
               </li>
             )}
-            error={touched.audience && Boolean(errors.audience)}
-            helperText={
-              Array.isArray(errors.audience)
-                ? errors.audience.join(', ')
-                : (touched.audience && errors.audience) || undefined
-            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Audience *"
+                fullWidth
+                size="small"
+                error={touched.audience && Boolean(errors.audience)}
+                helperText={
+                  Array.isArray(errors.audience)
+                    ? errors.audience.join(', ')
+                    : (touched.audience && errors.audience) || undefined
+                }
+              />
+            )}
             sx={{ minWidth: 300 }}
           />
         </ShakingTextField>
@@ -189,28 +173,13 @@ const BasicInformationSection = () => {
       {/* Importance Level */}
       <Grid size={{ xs: 12, md: 6, sm: 3 }}>
         <ShakingTextField error={!!(touched.importance_level && errors.importance_level)}>
-          <PaginatedSearchSelect
+          <Autocomplete
             fullWidth
-            label="Importance Level"
-            noOptionsText="No Importance Level Found"
-            minChars={0}
-            size="small"
-            fetchOptions={async (query: string, page: number) => {
-              const allOptions = [
-                { levelName: 'normal', description: 'Normal', color: '#1976d2' },
-                { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
-                { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
-              ];
-              const filtered = allOptions.filter((o) =>
-                o.description.toLowerCase().includes(query.toLowerCase())
-              );
-              const pageSize = 10;
-              const start = (page - 1) * pageSize;
-              return {
-                data: filtered.slice(start, start + pageSize),
-                hasMore: start + pageSize < filtered.length,
-              };
-            }}
+            options={[
+              { levelName: 'normal', description: 'Normal', color: '#1976d2' },
+              { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
+              { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
+            ]}
             value={
               [
                 { levelName: 'normal', description: 'Normal', color: '#1976d2' },
@@ -218,16 +187,15 @@ const BasicInformationSection = () => {
                 { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
               ].find((opt) => opt.levelName === values?.importance_level?.levelName) || null
             }
-            onChange={(_, newValue: any) =>
+            onChange={(_, newValue) =>
               setFieldValue(
                 'importance_level',
                 newValue || { levelName: '', description: '', color: '' }
               )
             }
-            isOptionEqualToValue={(option: any, value: any) => option.levelName === value.levelName}
-            getOptionLabel={(option: any) => option?.description || ''}
-            renderOption={(props: any, option: any) => (
-              <Box component="li" {...props} key={option.levelName}>
+            getOptionLabel={(option) => option.description}
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <SubjectColorIndicator color={option.color} />
                   <Typography variant="caption" fontSize="13px">
@@ -236,12 +204,19 @@ const BasicInformationSection = () => {
                 </Box>
               </Box>
             )}
-            error={touched.importance_level && Boolean(errors.importance_level)}
-            helperText={
-              touched.importance_level && errors.importance_level
-                ? (errors.importance_level as string)
-                : undefined
-            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Importance Level"
+                size="small"
+                error={touched.importance_level && Boolean(errors.importance_level)}
+                helperText={
+                  touched.importance_level && errors.importance_level
+                    ? (errors.importance_level as string)
+                    : undefined
+                }
+              />
+            )}
           />
         </ShakingTextField>
       </Grid>

@@ -11,12 +11,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import {
   useGetStudentElectiveAssignmentsQuery,
@@ -237,126 +237,36 @@ const AssignElectiveSubject = () => {
               flexGrow: 1,
             }}
           >
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Class"
-              noOptionsText="No results found"
-              fetchOptions={async (query) => {
-                const items = allClass || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                classes
-                  ? {
-                      label: allClass.find((c: any) => c.id === classes)?.name || '',
-                      id: classes,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(props, option: any) => (
-                <li {...props} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                const val = value?.id || '';
-                setClasses(val);
-              }}
-              sx={{ minWidth: '200px' }}
-              size="small"
+              options={allClass}
+              value={classes}
+              labelKey="name"
+              valueKey="id"
+              onChange={(v) => setClasses(v as string)}
+              formControlProps={{ sx: { minWidth: '200px' } }}
             />
 
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Division"
-              fetchOptions={async (query) => {
-                const items = allDivision || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                division
-                  ? {
-                      label: allDivision.find((d: any) => d.id === division)?.name || '',
-                      id: division,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(props, option: any) => (
-                <li {...props} key={option.id}>
-                  {option.label}
-                </li>
-              )}
+              options={allDivision}
+              value={division}
+              labelKey="name"
+              valueKey="id"
               disabled={!classes}
-              minChars={0}
-              onChange={(_, value: any) => {
-                const val = value?.id || '';
-                setDivision(val);
-              }}
-              sx={{ minWidth: '200px' }}
-              noOptionsText="No results found"
-              size="small"
+              onChange={(v) => setDivision(v as string)}
+              formControlProps={{ sx: { minWidth: '200px' } }}
             />
 
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Elective Group"
-              fetchOptions={async (query) => {
-                const items = electiveGroups || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                electiveGroupId
-                  ? {
-                      label: electiveGroups.find((e: any) => e.id === electiveGroupId)?.name || '',
-                      id: electiveGroupId,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(props, option: any) => (
-                <li {...props} key={option.id}>
-                  {option.label}
-                </li>
-              )}
+              value={electiveGroupId}
+              onChange={(v) => setElectiveGroupId(v as string)}
+              labelKey="name"
+              valueKey="id"
+              options={electiveGroups}
               disabled={!division}
-              minChars={0}
-              onChange={(_, value: any) => {
-                const val = value?.id || '';
-                setElectiveGroupId(val);
-              }}
-              sx={{ minWidth: '200px' }}
-              noOptionsText="No results found"
-              size="small"
+              formControlProps={{ sx: { minWidth: '200px' } }}
             />
           </Box>
 

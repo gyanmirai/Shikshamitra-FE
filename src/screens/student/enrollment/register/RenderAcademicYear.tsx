@@ -1,7 +1,7 @@
+import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 
 const RenderAcademicYear = (props: any) => {
   // Destructure formik and isEdit from props
@@ -15,49 +15,25 @@ const RenderAcademicYear = (props: any) => {
   });
   return (
     <ShakingTextField error={!!(touched.academicYear && errors.academicYear) || false}>
-      <PaginatedSearchSelect
+      <CustomSelect
+        name="academicYear"
         label="Academic Year *"
-        // disabled={isEdit}
-        fetchOptions={async (query) => {
-          const items = (academicYear?.items || []).filter((item: any) =>
-            item?.name?.toLowerCase().includes(query.toLowerCase())
-          );
-          return {
-            data: items.map((item: any) => ({
-              label: item.name,
-              id: item.id,
-            })),
-            hasMore: false,
-          };
+        isLoading={yearLoading}
+        options={academicYear?.items || []}
+        value={values.academicYear}
+        labelKey="name"
+        valueKey="id"
+        disabled={!isEdit}
+        onBlur={formik.handleBlur}
+        onChange={(value) => {
+          setFieldValue('academicYear', value);
+          setFieldValue('board', null);
+          setFieldValue('medium', null);
+          setFieldValue('class', null);
         }}
-        value={
-          values.academicYear
-            ? {
-                label:
-                  academicYear?.items?.find((y: any) => y.id === values.academicYear)?.name || '',
-                id: values.academicYear,
-              }
-            : null
-        }
-        isOptionEqualToValue={(option, value) => option.id === value?.id}
-        getOptionLabel={(option: any) => option?.label || ''}
-        renderOption={(prop, option: any) => (
-          <li {...prop} key={option.id}>
-            {option.label}
-          </li>
-        )}
-        minChars={0}
-        onChange={(_, value: any) => {
-          setFieldValue('board', '');
-          setFieldValue('medium', '');
-          setFieldValue('class', '');
-          setFieldValue('academicYear', value?.id || '');
-        }}
-        error={!!(touched.academicYear && errors.academicYear)}
+        error={!!(touched.academicYear && errors.academicYear) || false}
         helperText={(touched.academicYear && errors.academicYear) || ''}
-        fullWidth
-        sx={{ maxWidth: 'unset' }}
-        size="small"
+        formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
       />
     </ShakingTextField>
   );

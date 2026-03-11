@@ -13,7 +13,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -337,35 +336,24 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.categoryId && formik.errors.categoryId)}>
-              <PaginatedSearchSelect
-                key={formik.values.categoryId || 'cat-empty'}
-                fullWidth
+              <CustomSelect
                 label="Category"
-                noOptionsText="No Category Found"
-                minChars={0}
-                size="small"
-                fetchOptions={async (query: string, page: number) => {
-                  const filtered = categoryOptions.filter((o: any) =>
-                    o.label.toLowerCase().includes(query.toLowerCase())
-                  );
-                  const pageSize = 10;
-                  const start = (page - 1) * pageSize;
-                  return {
-                    data: filtered.slice(start, start + pageSize),
-                    hasMore: start + pageSize < filtered.length,
-                  };
+                name="category"
+                options={[
+                  { value: 'Fiction', label: 'Fiction' },
+                  { value: 'Non-Fiction', label: 'Non-Fiction' },
+                  { value: 'Reference', label: 'Reference' },
+                  { value: 'Textbook', label: 'Textbook' },
+                  { value: 'Children', label: 'Children' },
+                  { value: 'Biography', label: 'Biography' },
+                ]}
+                value={formik.values.category || ''}
+                onChange={(value) => {
+                  formik.setFieldValue('category', value);
                 }}
-                getOptionLabel={(option: any) => option?.label || ''}
-                value={
-                  categoryOptions.find((opt: any) => opt.value === formik.values.categoryId) || null
-                }
-                onChange={(_, newValue: any) => {
-                  formik.setFieldValue('categoryId', newValue ? newValue.value : '');
-                }}
-                isLoading={bookCategoryLoading}
-                isOptionEqualToValue={(option: any, value: any) => option.value === value.value}
-                error={!!(formik.touched.categoryId && formik.errors.categoryId)}
-                helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
+                error={!!(formik.touched.category && formik.errors.category)}
+                helperText={(formik.touched.category && formik.errors.category) as string}
+                formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
           )}

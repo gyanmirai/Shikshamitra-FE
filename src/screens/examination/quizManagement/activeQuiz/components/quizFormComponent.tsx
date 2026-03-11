@@ -12,6 +12,7 @@ import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -24,7 +25,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Draggable, Droppable, DragDropContext } from '@hello-pangea/dnd';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetSubjectsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { useGetChaptersQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
@@ -161,141 +161,54 @@ const QuizInformation = ({ formik }: any) => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType)}>
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Quiz Taken Type *"
-              fetchOptions={async (query) => {
-                const items = [
-                  { value: 'online', label: 'Online' },
-                  { value: 'offline', label: 'Offline' },
-                ];
-                const filtered = items.filter((item: any) =>
-                  item?.label?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.label,
-                    id: item.value,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                formik.values.quizTakenType
-                  ? {
-                      label: formik.values.quizTakenType === 'online' ? 'Online' : 'Offline',
-                      id: formik.values.quizTakenType,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => formik.setFieldValue('quizTakenType', value?.id || '')}
-              sx={{ width: '100%', minWidth: '200px' }}
-              size="small"
+              options={[
+                { value: 'online', label: 'Online' },
+                { value: 'offline', label: 'Offline' },
+              ]}
+              name="quizTakenType"
+              value={formik.values.quizTakenType}
+              onChange={(val) => formik.setFieldValue('quizTakenType', val as string)}
               error={!!(formik.touched.quizTakenType && formik.errors.quizTakenType)}
-              helperText={
-                (formik.touched.quizTakenType && typeof formik.errors.quizTakenType === 'string'
-                  ? formik.errors.quizTakenType
-                  : '') || ''
-              }
+              helperText={formik.touched.quizTakenType && formik.errors.quizTakenType}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             />
           </ShakingTextField>
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-            <PaginatedSearchSelect
+            <CustomSelect
+              options={allClass || []}
+              value={formik.values.className}
+              onChange={(val) => formik.setFieldValue('className', val)}
               label="Class *"
-              fetchOptions={async (query) => {
-                const items = allClass || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                formik.values.className
-                  ? {
-                      label:
-                        allClass?.find((i: Standards) => i.id === formik.values.className)?.name ||
-                        formik.values.className,
-                      id: formik.values.className,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => formik.setFieldValue('className', value?.id || '')}
-              sx={{ width: '100%', minWidth: '200px' }}
-              size="small"
+              labelKey="name"
+              valueKey="id"
               error={!!(formik.touched.className && formik.errors.className)}
-              helperText={
-                (formik.touched.className && typeof formik.errors.className === 'string'
-                  ? formik.errors.className
-                  : '') || ''
-              }
+              helperText={formik.touched.className && formik.errors.className}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             />
           </ShakingTextField>
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-            <PaginatedSearchSelect
-              multiple
+            <CustomSelect
               label="Division *"
+              labelKey="name"
+              valueKey="id"
+              multiple
               disabled={!formik.values.className}
-              fetchOptions={async (query) => {
-                const divisionOptions =
-                  allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
-                  [];
-                const items = [{ id: 'all', name: 'All' }, ...divisionOptions];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={(formik.values.division || []).map((divId: string) => {
-                const divisionOptions =
-                  allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
-                  [];
-                const items = [{ id: 'all', name: 'All' }, ...divisionOptions];
-                const div = items.find((i: any) => i.id === divId);
-                return div ? { label: div.name, id: div.id } : { label: divId, id: divId };
-              })}
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, val: any) => {
-                const value = (val as any[]).map((v) => v.id);
+              options={[
+                { id: 'all', name: 'All' },
+                ...(allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
+                  []),
+              ]}
+              value={formik.values.division || []}
+              onChange={(val) => {
+                const value = val as string[];
                 const divisionOptions =
                   allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
                   [];
@@ -323,8 +236,7 @@ const QuizInformation = ({ formik }: any) => {
                   }
                 }
               }}
-              sx={{ width: '100%', minWidth: '200px' }}
-              size="small"
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={!!(formik.touched.division && formik.errors.division)}
               helperText={
                 formik.touched.division
@@ -339,52 +251,21 @@ const QuizInformation = ({ formik }: any) => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
-            <PaginatedSearchSelect
+            <CustomSelect
               label="Subject *"
+              options={subjectsData || []}
+              labelKey="name"
+              valueKey="id"
               disabled={!(formik.values.division && formik.values.division.length > 0)}
-              fetchOptions={async (query) => {
-                const items = subjectsData || [];
-                const filtered = items.filter((item: any) =>
-                  item?.name?.toLowerCase().includes(query.toLowerCase())
-                );
-                return {
-                  data: filtered.map((item: any) => ({
-                    label: item.name,
-                    id: item.id,
-                  })),
-                  hasMore: false,
-                };
-              }}
-              value={
-                formik.values.subject
-                  ? {
-                      label:
-                        subjectsData?.find((s: any) => s.id === formik.values.subject)?.name ||
-                        formik.values.subject,
-                      id: formik.values.subject,
-                    }
-                  : null
-              }
-              isOptionEqualToValue={(option, value) => option.id === value?.id}
-              getOptionLabel={(option: any) => option?.label || ''}
-              renderOption={(prop, option: any) => (
-                <li {...prop} key={option.id}>
-                  {option.label}
-                </li>
-              )}
-              minChars={0}
-              onChange={(_, value: any) => {
-                formik.setFieldValue('subject', value?.id || '');
+              name="subject"
+              value={formik.values.subject}
+              onChange={(val) => {
+                formik.setFieldValue('subject', val as string);
                 formik.setFieldValue('chapter', []);
               }}
-              sx={{ width: '100%', minWidth: '200px' }}
-              size="small"
               error={!!(formik.touched.subject && formik.errors.subject)}
-              helperText={
-                (formik.touched.subject && typeof formik.errors.subject === 'string'
-                  ? formik.errors.subject
-                  : '') || ''
-              }
+              helperText={formik.touched.subject && formik.errors.subject}
+              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
             />
           </ShakingTextField>
         </Grid>
@@ -806,85 +687,27 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
     switch (questionType) {
       case 'Multiple Choice':
         return (
-          <PaginatedSearchSelect
+          <CustomSelect
             label="Correct Answer *"
-            fetchOptions={async (query) => {
-              const items = options.map((o: any) => ({ label: o, value: o }));
-              const filtered = items.filter((item: any) =>
-                item?.label?.toLowerCase().includes(query.toLowerCase())
-              );
-              return {
-                data: filtered.map((item: any) => ({
-                  label: item.label,
-                  id: item.value,
-                })),
-                hasMore: false,
-              };
-            }}
-            value={
-              correctAnswer
-                ? {
-                    label: correctAnswer,
-                    id: correctAnswer,
-                  }
-                : null
-            }
-            isOptionEqualToValue={(option, value) => option.id === value?.id}
-            getOptionLabel={(option: any) => option?.label || ''}
-            renderOption={(prop, option: any) => (
-              <li {...prop} key={option.id}>
-                {option.label}
-              </li>
-            )}
-            minChars={0}
-            onChange={(_, value: any) => handleChange('correctAnswer', value?.id || '')}
-            sx={{ width: '100%' }}
-            size="small"
+            options={options.map((o: any) => ({ label: o, value: o }))}
+            value={correctAnswer}
+            onChange={(val) => handleChange('correctAnswer', val)}
             error={!!errors.correctAnswer}
-            helperText={errors.correctAnswer || ''}
+            formControlProps={{ fullWidth: true }}
           />
         );
       case 'True / False':
         return (
-          <PaginatedSearchSelect
+          <CustomSelect
             label="Correct Answer *"
-            fetchOptions={async (query) => {
-              const items = [
-                { label: 'True', value: 'true' },
-                { label: 'False', value: 'false' },
-              ];
-              const filtered = items.filter((item: any) =>
-                item?.label?.toLowerCase().includes(query.toLowerCase())
-              );
-              return {
-                data: filtered.map((item: any) => ({
-                  label: item.label,
-                  id: item.value,
-                })),
-                hasMore: false,
-              };
-            }}
-            value={
-              correctAnswer
-                ? {
-                    label: correctAnswer === 'true' ? 'True' : 'False',
-                    id: correctAnswer,
-                  }
-                : null
-            }
-            isOptionEqualToValue={(option, value) => option.id === value?.id}
-            getOptionLabel={(option: any) => option?.label || ''}
-            renderOption={(prop, option: any) => (
-              <li {...prop} key={option.id}>
-                {option.label}
-              </li>
-            )}
-            minChars={0}
-            onChange={(_, value: any) => handleChange('correctAnswer', value?.id || '')}
-            sx={{ width: '100%' }}
-            size="small"
+            options={[
+              { label: 'True', value: 'true' },
+              { label: 'False', value: 'false' },
+            ]}
+            value={correctAnswer}
+            onChange={(val) => handleChange('correctAnswer', val)}
             error={!!errors.correctAnswer}
-            helperText={errors.correctAnswer || ''}
+            formControlProps={{ fullWidth: true }}
           />
         );
       case 'Short Answer':
@@ -911,51 +734,22 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={!!errors.questionType}>
-                <PaginatedSearchSelect
+                <CustomSelect
                   label="Question Type *"
-                  fetchOptions={async (query) => {
-                    const items = [
-                      { label: 'Multiple Choice', value: 'Multiple Choice' },
-                      { label: 'True / False', value: 'True / False' },
-                      { label: 'Short Answer', value: 'Short Answer' },
-                    ];
-                    const filtered = items.filter((item: any) =>
-                      item?.label?.toLowerCase().includes(query.toLowerCase())
-                    );
-                    return {
-                      data: filtered.map((item: any) => ({
-                        label: item.label,
-                        id: item.value,
-                      })),
-                      hasMore: false,
-                    };
-                  }}
-                  value={
-                    formState.questionType
-                      ? {
-                          label: formState.questionType,
-                          id: formState.questionType,
-                        }
-                      : null
-                  }
-                  isOptionEqualToValue={(option, value) => option.id === value?.id}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  minChars={0}
-                  onChange={(_, value: any) => {
-                    const val = value?.id || '';
+                  options={[
+                    { label: 'Multiple Choice', value: 'Multiple Choice' },
+                    { label: 'True / False', value: 'True / False' },
+                    { label: 'Short Answer', value: 'Short Answer' },
+                  ]}
+                  value={formState.questionType}
+                  onChange={(val) => {
                     handleChange('questionType', val);
                     handleChange('correctAnswer', '');
                     handleChange('options', val === 'multiple-choice' ? [''] : []);
                   }}
-                  sx={{ width: '100%' }}
-                  size="small"
                   error={!!errors.questionType}
-                  helperText={errors.questionType || ''}
+                  helperText={errors.questionType}
+                  formControlProps={{ fullWidth: true }}
                 />
               </ShakingTextField>
             </Grid>

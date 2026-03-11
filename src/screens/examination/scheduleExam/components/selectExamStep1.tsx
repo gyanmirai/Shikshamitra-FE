@@ -6,9 +6,10 @@ import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { Grid, TextField, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
 
@@ -92,58 +93,21 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         >
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={formik.touched.examType && Boolean(formik.errors.examType)}>
-              <PaginatedSearchSelect
-                label="Exam Type *"
-                fetchOptions={async (query) => {
-                  const items = [
-                    { value: 'Mid', label: 'Mid' },
-                    { value: 'Practical', label: 'Practical' },
-                    { value: 'Final', label: 'Final' },
-                  ];
-                  const filtered = items.filter((item) =>
-                    item.label.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item) => ({
-                      label: item.label,
-                      id: item.value,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  formik.values.examType
-                    ? {
-                        label:
-                          [
-                            { value: 'Mid', label: 'Mid' },
-                            { value: 'Practical', label: 'Practical' },
-                            { value: 'Final', label: 'Final' },
-                          ].find((x) => x.value === formik.values.examType)?.label || '',
-                        id: formik.values.examType,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  formik.setFieldValue('examType', value?.id || '');
+              <CustomSelect
+                options={[
+                  { value: 'Mid', label: 'Mid' },
+                  { value: 'Practical', label: 'Practical' },
+                  { value: 'Final', label: 'Final' },
+                ]}
+                value={formik.values.examType}
+                onChange={(val) => {
+                  formik.setFieldValue('examType', val);
                   formik.setFieldTouched(`examType`, false);
                 }}
-                sx={{ width: '100%' }}
-                size="small"
+                label="Exam Type *"
+                formControlProps={{ fullWidth: true }}
                 error={formik.touched.examType && Boolean(formik.errors.examType)}
-                helperText={
-                  formik.touched.examType && typeof formik.errors.examType === 'string'
-                    ? formik.errors.examType
-                    : undefined
-                }
+                helperText={formik.touched.examType ? formik.errors.examType : undefined}
               />
             </ShakingTextField>
 
@@ -163,47 +127,20 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-              <PaginatedSearchSelect
-                label="Class *"
-                fetchOptions={async (query) => {
-                  const items = allClass || [];
-                  const filtered = items.filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  formik.values.className
-                    ? {
-                        label:
-                          allClass.find((c: any) => c.id === formik.values.className)?.name || '',
-                        id: formik.values.className,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  formik.setFieldValue('className', value?.id || '');
+              <CustomSelect
+                options={allClass}
+                onChange={(val) => {
+                  formik.setFieldValue('className', val as string);
                   formik.setFieldTouched(`className`, false);
                 }}
-                sx={{ width: '100%' }}
-                size="small"
+                label="Class *"
+                labelKey="name"
+                valueKey="id"
+                value={formik.values.className}
+                formControlProps={{ fullWidth: true }}
                 error={!!(formik.touched.className && formik.errors.className)}
                 helperText={
-                  formik.touched.className && typeof formik.errors.className === 'string'
+                  formik.touched.className && formik.errors.className
                     ? formik.errors.className
                     : undefined
                 }
@@ -213,51 +150,20 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
-              <PaginatedSearchSelect
+              <CustomSelect
                 label="Division *"
+                labelKey="name"
+                valueKey="id"
                 multiple
                 disabled={!formik.values.className}
-                fetchOptions={async (query) => {
-                  const items = [
-                    { id: 'all', name: 'All' },
-                    ...(allClass?.find((i: Standards) => i.id === formik.values.className)
-                      ?.divisions || []),
-                  ];
-                  const filtered = items.filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  formik.values.divisions
-                    ? formik.values.divisions.map((d: any) => {
-                        const divisionOptions = [
-                          { id: 'all', name: 'All' },
-                          ...(allClass?.find((i: Standards) => i.id === formik.values.className)
-                            ?.divisions || []),
-                        ];
-                        const divLabel =
-                          divisionOptions.find((opt: any) => opt.id === d)?.name || d;
-                        return { label: divLabel, id: d };
-                      })
-                    : []
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, val: any) => {
-                  const value = (val as any[]).map((v) => v.id);
+                options={[
+                  { id: 'all', name: 'All' },
+                  ...(allClass?.find((i: Standards) => i.id === formik.values.className)
+                    ?.divisions || []),
+                ]}
+                value={formik.values.divisions}
+                onChange={(val) => {
+                  const value = val as string[];
                   const divisionOptions =
                     allClass?.find((i: Standards) => i.id === formik.values.className)?.divisions ||
                     [];
@@ -315,8 +221,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   });
                   formik.setFieldValue('roomDetails', updatedRoomDetails);
                 }}
-                sx={{ width: '100%' }}
-                size="small"
+                formControlProps={{ fullWidth: true }}
                 error={!!(formik.touched.divisions && formik.errors.divisions)}
                 helperText={
                   formik.touched.divisions
@@ -333,59 +238,22 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
             <ShakingTextField
               error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
             >
-              <PaginatedSearchSelect
+              <ResponsiveMultiSelect
                 label="Subjects *"
-                multiple
                 disabled={formik.values.divisions.length === 0}
-                fetchOptions={async (query) => {
-                  const items = [
-                    {
-                      subjectName: 'All',
-                      subjectCode: 'all',
-                      subjectColor: '#000000',
-                      type: 'All',
-                    },
-                    ...subjectOptions,
-                  ];
-                  const filtered = items.filter((item: any) =>
-                    item?.subjectName?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.subjectName,
-                      id: item.subjectCode,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  formik.values.selectedSubjects
-                    ? formik.values.selectedSubjects.map((s: any) => {
-                        const items = [
-                          {
-                            subjectName: 'All',
-                            subjectCode: 'all',
-                            subjectColor: '#000000',
-                            type: 'All',
-                          },
-                          ...subjectOptions,
-                        ];
-                        const subjLabel =
-                          items.find((opt) => opt.subjectCode === s)?.subjectName || s;
-                        return { label: subjLabel, id: s };
-                      })
-                    : []
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, val: any) => {
-                  const selectedCodes = (val as any[]).map((v) => v.id);
+                options={[
+                  {
+                    subjectName: 'All',
+                    subjectCode: 'all',
+                    subjectColor: '#000000',
+                    type: 'All',
+                  },
+                  ...subjectOptions,
+                ]}
+                value={formik.values.selectedSubjects}
+                getOptionLabel={(opt) => opt?.subjectName}
+                getOptionValue={(opt) => opt?.subjectCode}
+                onChange={(selectedCodes: string[]) => {
                   const isAllSelected = selectedCodes.includes('all');
                   const wasAllPreviouslySelected = formik.values.selectedSubjects.includes('all');
 
@@ -447,8 +315,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   );
                   formik.setFieldValue('roomDetails', updatedRoomDetails);
                 }}
-                sx={{ width: '100%' }}
-                size="small"
                 error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
                 helperText={
                   formik.touched.selectedSubjects &&

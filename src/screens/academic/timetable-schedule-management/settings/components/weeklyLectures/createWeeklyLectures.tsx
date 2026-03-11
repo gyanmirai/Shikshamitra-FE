@@ -8,13 +8,13 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -204,41 +204,11 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
         <Grid container spacing={1}>
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-              <PaginatedSearchSelect
-                label="Class *"
-                fetchOptions={async (query) => {
-                  const items = allClass || [];
-                  const filtered = items.filter((item: any) =>
-                    item?.name?.toLowerCase().includes(query.toLowerCase())
-                  );
-                  return {
-                    data: filtered.map((item: any) => ({
-                      label: item.name,
-                      id: item.id,
-                    })),
-                    hasMore: false,
-                  };
-                }}
-                value={
-                  formik.values.className
-                    ? {
-                        label:
-                          allClass.find((c: any) => c.id === formik.values.className)?.name || '',
-                        id: formik.values.className,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  const val = value?.id || '';
-                  formik.setFieldValue('className', val);
+              <CustomSelect
+                options={allClass}
+                value={formik.values.className}
+                onChange={(val) => {
+                  formik.setFieldValue('className', val as string);
 
                   const dummySubjects = generateDummySubjects().map((subj, index) => ({
                     id: `subject-${index}`,
@@ -250,12 +220,17 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                   formik.setFieldValue('subjects', dummySubjects);
                   formik.setFieldValue('totalLectures', 0);
                 }}
-                fullWidth
-                sx={{ minWidth: '200px' }}
-                size="small"
-                disabled={disabled || (isEdit && !!editData)}
+                label="Class *"
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
                 error={formik.touched.className && Boolean(formik.errors.className)}
-                helperText={(formik.touched.className && formik.errors.className) as string}
+                helperText={
+                  formik.touched.className && typeof formik.errors.className === 'string'
+                    ? formik.errors.className
+                    : undefined
+                }
+                disabled={disabled || (isEdit && !!editData)}
               />
             </ShakingTextField>
           </Grid>

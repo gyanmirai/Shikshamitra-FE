@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -20,8 +21,8 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { Box, Grid, Button, Skeleton, TextField, Typography, DialogActions } from '@mui/material';
 import {
   usePostChargeMutation,
   useUpdateChargeMutation,
@@ -186,7 +187,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-
+  console.log('values000000', values);
+  console.log('erroes----', errors);
   // Load boards on year change
   useEffect(() => {
     setBoards(currentYear?.boards || []);
@@ -221,65 +223,19 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     <ShakingTextField
                       error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
                     >
-                      {chargeCategoriesLoading ? (
-                        <Skeleton variant="rounded" height={40} />
-                      ) : (
-                        <PaginatedSearchSelect
-                          key={
-                            chargeCategories?.items?.length
-                              ? 'categories-loaded'
-                              : 'categories-empty'
-                          }
-                          label="Charge Category *"
-                          noOptionsText="No Charge Category Found"
-                          fetchOptions={async (query: string, page: number) => {
-                            const filtered = (chargeCategories?.items || []).filter((c: any) =>
-                              c?.name?.toLowerCase().includes(query.toLowerCase())
-                            );
-                            const pageSize = 10;
-                            const start = (page - 1) * pageSize;
-                            const end = start + pageSize;
-                            return {
-                              data: filtered.slice(start, end).map((item: any) => ({
-                                label: item.name,
-                                id: item.id,
-                              })),
-                              hasMore: end < filtered.length,
-                            };
-                          }}
-                          value={
-                            chargeCategories?.items?.find(
-                              (c: any) => c.id === values.chargeCategoryId
-                            )
-                              ? {
-                                  label: chargeCategories.items.find(
-                                    (c: any) => c.id === values.chargeCategoryId
-                                  )?.name,
-                                  id: values.chargeCategoryId,
-                                }
-                              : null
-                          }
-                          isOptionEqualToValue={(option: any, val: any) => option?.id === val?.id}
-                          renderOption={(prop, option: any) => (
-                            <li {...prop} key={option.id}>
-                              {option.label}
-                            </li>
-                          )}
-                          getOptionLabel={(option: any) => option?.label || ''}
-                          minChars={0}
-                          onChange={(_, val: any) => {
-                            setFieldValue('chargeCategoryId', val?.id || '');
-                            setFieldValue('chargeCategoryName', val?.label || '');
-                            setFieldTouched('chargeCategoryId', false);
-                          }}
-                          size="small"
-                          sx={{ width: '100%' }}
-                          error={!!(touched.chargeCategoryId && errors.chargeCategoryId)}
-                          helperText={
-                            (touched.chargeCategoryId && errors.chargeCategoryId) as string
-                          }
-                        />
-                      )}
+                      <CustomSelect
+                        name="chargeCategoryId"
+                        label="Charge Category *"
+                        isLoading={chargeCategoriesLoading}
+                        options={chargeCategories?.items || []}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.chargeCategoryId}
+                        onChange={(value) => setFieldValue('chargeCategoryId', value)}
+                        error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
+                        helperText={(touched.chargeCategoryId && errors.chargeCategoryId) || ''}
+                        formControlProps={{ fullWidth: true }}
+                      />
                     </ShakingTextField>
                     {values.chargeCategoryId && (
                       <Typography variant="body2" color="text.secondary">
@@ -363,45 +319,21 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
 
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-                      <PaginatedSearchSelect
-                        key="priority-static"
+                      <CustomSelect
+                        name="priority"
                         label="Priority *"
-                        noOptionsText="No Priority Found"
-                        fetchOptions={async (query: string, page: number) => {
-                          const options = [
-                            { id: '0', label: 'Low' },
-                            { id: '1', label: 'Medium' },
-                            { id: '2', label: 'High' },
-                          ];
-                          const filtered = options.filter((o) =>
-                            o.label.toLowerCase().includes(query.toLowerCase())
-                          );
-                          return { data: filtered, hasMore: false };
-                        }}
-                        value={
-                          values.priority !== ''
-                            ? {
-                                id: values.priority,
-                                label: ['Low', 'Medium', 'High'][Number(values.priority)] || '',
-                              }
-                            : null
-                        }
-                        isOptionEqualToValue={(option: any, val: any) => option?.id === val?.id}
-                        renderOption={(prop, option: any) => (
-                          <li {...prop} key={option.id}>
-                            {option.label}
-                          </li>
-                        )}
-                        getOptionLabel={(option: any) => option?.label || ''}
-                        minChars={0}
-                        onChange={(_, val: any) => {
-                          setFieldValue('priority', val?.id ?? '');
-                          setFieldTouched('priority', false);
-                        }}
-                        size="small"
-                        sx={{ width: '100%' }}
-                        error={!!(touched.priority && errors.priority)}
-                        helperText={(touched.priority && errors.priority) as string}
+                        options={[
+                          { id: '0', name: 'Low' },
+                          { id: '1', name: 'Medium' },
+                          { id: '2', name: 'High' },
+                        ]}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.priority}
+                        onChange={(value) => setFieldValue('priority', value)}
+                        error={!!(touched.priority && errors.priority) || false}
+                        helperText={(touched.priority && errors.priority) || ''}
+                        formControlProps={{ fullWidth: true }}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -412,43 +344,15 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                   {/* Board */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
-                      <PaginatedSearchSelect
-                        key={boards?.length ? 'boards-loaded' : 'boards-empty'}
+                      <CustomSelect
                         disabled={isEdit}
                         label="Board *"
-                        fetchOptions={async (query: string, page: number) => {
-                          const filtered = (boards || []).filter((b: any) =>
-                            b?.name?.toLowerCase().includes(query.toLowerCase())
-                          );
-                          const pageSize = 10;
-                          const start = (page - 1) * pageSize;
-                          const end = start + pageSize;
-                          return {
-                            data: filtered.slice(start, end).map((item: any) => ({
-                              label: item.name,
-                              id: item.id,
-                            })),
-                            hasMore: end < filtered.length,
-                          };
-                        }}
-                        value={
-                          boards?.find((b: any) => b.id === values.boardId)
-                            ? {
-                                label: boards.find((b: any) => b.id === values.boardId)?.name,
-                                id: values.boardId,
-                              }
-                            : null
-                        }
-                        isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                        renderOption={(prop, option: any) => (
-                          <li {...prop} key={option.id}>
-                            {option.label}
-                          </li>
-                        )}
-                        getOptionLabel={(option: any) => option?.label || ''}
-                        minChars={0}
-                        onChange={(_, val: any) => {
-                          setFieldValue('boardId', val?.id || '');
+                        options={boards}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.boardId}
+                        onChange={(val) => {
+                          setFieldValue('boardId', val);
                           setFieldTouched('boardId', false);
                           setFieldValue('educationMediumId', '');
                           setFieldValue('standardId', '');
@@ -456,8 +360,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                           setFieldValue('studentId', null);
                           setFieldValue('selectedStudent', null);
                         }}
-                        size="small"
-                        sx={{ width: '100%' }}
                         error={!!errors.boardId && touched.boardId}
                         helperText={(touched.boardId && errors.boardId) as string}
                       />
@@ -469,52 +371,21 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     <ShakingTextField
                       error={!!(touched.educationMediumId && errors.educationMediumId)}
                     >
-                      <PaginatedSearchSelect
-                        key={mediums?.length ? 'mediums-loaded' : 'mediums-empty'}
+                      <CustomSelect
                         label="Medium *"
                         disabled={!values.boardId || isEdit}
-                        fetchOptions={async (query: string, page: number) => {
-                          const filtered = (mediums || []).filter((m: any) =>
-                            m?.name?.toLowerCase().includes(query.toLowerCase())
-                          );
-                          const pageSize = 10;
-                          const start = (page - 1) * pageSize;
-                          const end = start + pageSize;
-                          return {
-                            data: filtered.slice(start, end).map((item: any) => ({
-                              label: item.name,
-                              id: item.id,
-                            })),
-                            hasMore: end < filtered.length,
-                          };
-                        }}
-                        value={
-                          mediums?.find((m: any) => m.id === values.educationMediumId)
-                            ? {
-                                label: mediums.find((m: any) => m.id === values.educationMediumId)
-                                  ?.name,
-                                id: values.educationMediumId,
-                              }
-                            : null
-                        }
-                        isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                        renderOption={(prop, option: any) => (
-                          <li {...prop} key={option.id}>
-                            {option.label}
-                          </li>
-                        )}
-                        getOptionLabel={(option: any) => option?.label || ''}
-                        minChars={0}
-                        onChange={(_, val: any) => {
-                          setFieldValue('educationMediumId', val?.id || '');
+                        options={mediums}
+                        labelKey="name"
+                        valueKey="id"
+                        value={values.educationMediumId}
+                        onChange={(val) => {
+                          setFieldValue('educationMediumId', val);
                           setFieldTouched('educationMediumId', false);
                           setFieldValue('standardId', '');
                           setFieldValue('divisionId', '');
                           setFieldValue('studentId', null);
                           setFieldValue('selectedStudent', null);
                         }}
-                        size="small"
-                        sx={{ width: '100%' }}
                         error={!!errors.educationMediumId && touched.educationMediumId}
                         helperText={
                           (touched.educationMediumId && errors.educationMediumId) as string
@@ -526,55 +397,26 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                   {/* Class */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.standardId && errors.standardId) || false}>
-                      <PaginatedSearchSelect
-                        key={classes?.length ? 'classes-loaded' : 'classes-empty'}
+                      <CustomSelect
+                        name="standardId"
                         label="Class *"
+                        options={classes || []}
+                        labelKey="name"
+                        valueKey="id"
                         isLoading={classesLoading}
+                        value={values.standardId}
                         disabled={!values.educationMediumId || isEdit}
-                        fetchOptions={async (query: string, page: number) => {
-                          const allClasses = classes || [];
-                          const filtered = allClasses.filter((c: any) =>
-                            c?.name?.toLowerCase().includes(query.toLowerCase())
-                          );
-                          const pageSize = 10;
-                          const start = (page - 1) * pageSize;
-                          const end = start + pageSize;
-                          return {
-                            data: filtered.slice(start, end).map((item: any) => ({
-                              label: item.name,
-                              id: item.id,
-                            })),
-                            hasMore: end < filtered.length,
-                          };
-                        }}
-                        value={
-                          (classes || []).find((c: any) => c.id === values.standardId)
-                            ? {
-                                label: (classes || []).find((c: any) => c.id === values.standardId)
-                                  ?.name,
-                                id: values.standardId,
-                              }
-                            : null
-                        }
-                        isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                        renderOption={(prop, option: any) => (
-                          <li {...prop} key={option.id}>
-                            {option.label}
-                          </li>
-                        )}
-                        getOptionLabel={(option: any) => option?.label || ''}
-                        minChars={0}
-                        onChange={(_, val: any) => {
-                          setFieldValue('standardId', val?.id || '');
+                        onChange={(value) => {
+                          setFieldValue('standardId', value);
                           setFieldTouched('standardId', false);
                           setFieldValue('divisionId', '');
                           setFieldValue('studentId', null);
                           setFieldValue('selectedStudent', null);
                         }}
-                        size="small"
-                        sx={{ width: '100%' }}
                         error={!!(touched.standardId && errors.standardId) || false}
-                        helperText={((touched.standardId && errors.standardId) as string) || ''}
+                        helperText={(touched.standardId && errors.standardId) || ''}
+                        formControlProps={{ sx: { width: '100%' } }}
+                        multiple={false}
                       />
                     </ShakingTextField>
                   </Grid>
@@ -582,51 +424,21 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                   {/* Division */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.divisionId && errors.divisionId) || false}>
-                      <PaginatedSearchSelect
-                        key={allDivision?.length ? 'divisions-loaded' : 'divisions-empty'}
+                      <CustomSelect
+                        name="divisionId"
                         label="Division *"
+                        labelKey="name"
+                        valueKey="id"
                         disabled={!values.standardId || isEdit}
-                        fetchOptions={async (query: string, page: number) => {
-                          const filtered = (allDivision || []).filter((d: any) =>
-                            d?.name?.toLowerCase().includes(query.toLowerCase())
-                          );
-                          const pageSize = 10;
-                          const start = (page - 1) * pageSize;
-                          const end = start + pageSize;
-                          return {
-                            data: filtered.slice(start, end).map((item: any) => ({
-                              label: item.name,
-                              id: item.id,
-                            })),
-                            hasMore: end < filtered.length,
-                          };
-                        }}
-                        value={
-                          (allDivision || []).find((d: any) => d.id === values.divisionId)
-                            ? {
-                                label: (allDivision || []).find(
-                                  (d: any) => d.id === values.divisionId
-                                )?.name,
-                                id: values.divisionId,
-                              }
-                            : null
-                        }
-                        isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
-                        renderOption={(prop, option: any) => (
-                          <li {...prop} key={option.id}>
-                            {option.label}
-                          </li>
-                        )}
-                        getOptionLabel={(option: any) => option?.label || ''}
-                        minChars={0}
-                        onChange={(_, val: any) => {
-                          setFieldValue('divisionId', val?.id || '');
+                        options={allDivision}
+                        value={values.divisionId}
+                        onChange={(value) => {
+                          setFieldValue('divisionId', value);
                           setFieldTouched('divisionId', false);
                           setFieldValue('studentId', null);
                           setFieldValue('selectedStudent', null);
                         }}
-                        size="small"
-                        sx={{ width: '100%' }}
+                        formControlProps={{ sx: { width: '100%' } }}
                         error={!!(touched.divisionId && errors.divisionId)}
                         helperText={(touched.divisionId && errors.divisionId) as string}
                       />

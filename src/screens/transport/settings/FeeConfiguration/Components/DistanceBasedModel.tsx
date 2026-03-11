@@ -1,9 +1,9 @@
 import React from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetFrequencyOptionsQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 interface DistanceBasedModelProps {
@@ -16,14 +16,7 @@ const DistanceBasedModel: React.FC<DistanceBasedModelProps> = ({ formik }) => {
     currentQueryAndMutation: useGetFrequencyOptionsQuery,
   });
 
-  const frequencyOptions = [
-    { value: 'Monthly', label: 'Monthly' },
-    { value: 'Quarterly', label: 'Quarterly' },
-    { value: 'Half-Yearly', label: 'Half-Yearly' },
-    { value: 'Yearly', label: 'Yearly' },
-  ];
-
-  // const frequencyOptions = data || [];
+  const frequencyOptions = data || [];
 
   // Example distance and calculated fee preview
   const exampleDistance = 8;
@@ -64,36 +57,16 @@ const DistanceBasedModel: React.FC<DistanceBasedModelProps> = ({ formik }) => {
         {/* Fee Frequency */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.feeFrequency && formik.errors.feeFrequency)}>
-            <PaginatedSearchSelect
-              key={formik.values.feeFrequency || 'fee-frequency-empty'}
-              fullWidth
+            <CustomSelect
               label="Fee Frequency *"
-              noOptionsText="No Frequency Found"
-              minChars={0}
-              size="small"
-              fetchOptions={async (query: string, page: number) => {
-                const filtered = frequencyOptions.filter((o: any) =>
-                  o.label.toLowerCase().includes(query.toLowerCase())
-                );
-                const pageSize = 10;
-                const start = (page - 1) * pageSize;
-                return {
-                  data: filtered.slice(start, start + pageSize),
-                  hasMore: start + pageSize < filtered.length,
-                };
+              options={frequencyOptions}
+              value={formik.values.feeFrequency}
+              onChange={(val) => {
+                formik.setFieldValue('feeFrequency', val);
               }}
-              getOptionLabel={(option: any) => option?.label || ''}
-              value={
-                frequencyOptions.find((o: any) => o.value === formik.values.feeFrequency) || null
-              }
-              onChange={(_, newValue: any) =>
-                formik.setFieldValue('feeFrequency', newValue ? newValue.value : '')
-              }
-              isOptionEqualToValue={(option: any, val: any) => option.value === val.value}
               error={!!(formik.touched.feeFrequency && formik.errors.feeFrequency)}
-              helperText={
-                formik.touched.feeFrequency ? (formik.errors.feeFrequency as string) : undefined
-              }
+              helperText={(formik.touched.feeFrequency && formik.errors.feeFrequency) as string}
+              formControlProps={{ fullWidth: true }}
             />
           </ShakingTextField>
         </Grid>
