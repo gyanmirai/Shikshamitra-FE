@@ -1,10 +1,8 @@
-import type { RootState } from 'src/redux/store';
 import type { IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -31,7 +29,6 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
     type: 'mutation',
     currentQueryAndMutation: useUpdateBookCopyStatusMutation,
   });
-  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
 
   const options = allowedStatuses.map((status) => ({
     label: LibraryBookStatus[status],
@@ -43,7 +40,7 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
           ? 'Book is currently under maintenance'
           : 'Book has been reported as lost',
   }));
-
+  console.log('editData0000', editData);
   const formik = useFormik({
     initialValues: {
       status: editData?.status || 0,
@@ -53,9 +50,8 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
       if (!editData) return;
 
       await updateBookCopyStatus({
-        bookId: editData.bookId,
-        accessionNo: editData.accessionNo,
-        academicYearId: currentAcademicYear.id,
+        bookId: editData.book.id,
+        accessionNumber: editData.accessionNo,
         body: values,
       });
       shikshaMitraToast.success({
@@ -74,7 +70,7 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
           <Grid size={{ xs: 12 }}>
             <Autocomplete
               options={options}
-              value={options.find((o) => o.value === formik.values.status) ?? undefined}
+              value={options.find((o) => o.value === formik.values.status)}
               onChange={(_, newValue) => formik.setFieldValue('status', newValue?.value)}
               size="small"
               disableClearable

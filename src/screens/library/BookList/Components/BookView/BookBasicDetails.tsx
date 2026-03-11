@@ -34,15 +34,28 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
       {
         label: 'Added On',
         icon: 'mdi:calendar-month',
-        value: book?.createdOn ? new Date(book.createdOn).toLocaleDateString() : '—',
+        value: (book as any)?.addedOn
+          ? new Date((book as any).addedOn).toLocaleDateString()
+          : book?.createdOn
+            ? new Date(book.createdOn).toLocaleDateString()
+            : '—',
       },
       { label: 'Language', icon: 'mdi:translate', value: book?.language || '—' },
       { label: 'Edition', icon: 'mdi:book-edit-outline', value: book?.edition || '—' },
-      { label: 'Category', icon: 'mdi:tag-multiple', value: book?.category || '—' },
+      {
+        label: 'Category',
+        icon: 'mdi:tag-multiple',
+        value: (book?.category as any)?.name || book?.category || '—',
+      },
       {
         label: 'No. of Pages',
         icon: 'mdi:file-document-multiple-outline',
-        value: book?.numberOfPages || '—',
+        value:
+          typeof (book as any)?.pages === 'number'
+            ? (book as any).pages
+            : typeof book?.numberOfPages === 'number'
+              ? book.numberOfPages
+              : '—',
       },
       {
         label: 'Price',
@@ -54,8 +67,16 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
         icon: 'mdi:calendar-check',
         value: book?.publishDate ? new Date(book.publishDate).toLocaleDateString() : '—',
       },
-      { label: 'Section', icon: 'uit:web-section', value: book?.section || '—' },
-      { label: 'Shelf', icon: 'mdi:bookshelf', value: book?.shelf || '—' },
+      {
+        label: 'Section',
+        icon: 'uit:web-section',
+        value: (book?.section as any)?.name || book?.section || '—',
+      },
+      {
+        label: 'Shelf',
+        icon: 'mdi:bookshelf',
+        value: (book?.shelf as any)?.name || book?.shelf || '—',
+      },
       {
         label: 'Description',
         icon: 'mdi:file-document-outline',
