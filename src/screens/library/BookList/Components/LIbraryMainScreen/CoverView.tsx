@@ -4,10 +4,8 @@ import Image from 'next/image';
 import { useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, Card, Grid, MenuList, MenuItem, Typography } from '@mui/material';
-import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
 
 import noCover from '../../../../../assets/icons/no-cover.png';
 
@@ -27,22 +25,12 @@ const CoverView = ({
   onReserveBook,
   onViewAllReservationBook,
 }: { books: IBook[] } & LibrarySearchProps) => {
-  const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
-          onClick={async () => {
-            const book = row as IBook;
-            try {
-              const copies = await fetchCopies(book.id).unwrap();
-              onView?.({ ...book, copies });
-            } catch (error) {
-              console.error('Failed to fetch copies:', error);
-              shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
-              onView?.({ ...book, copies: [] });
-            }
+          onClick={() => {
+            onView?.(row);
             pop.onClose();
           }}
         >
@@ -99,7 +87,7 @@ const CoverView = ({
         </MenuItem>
       </MenuList>
     ),
-    [fetchCopies, onDelete, onEdit, onReserveBook, onView, onViewAllReservationBook]
+    [onDelete, onEdit, onReserveBook, onView, onViewAllReservationBook]
   );
 
   return (
@@ -146,15 +134,8 @@ const CoverView = ({
                 bgcolor: 'grey.100',
                 boxShadow: (theme) => theme.customShadows?.z8 || '0 8px 16px rgba(0,0,0,0.1)', // Frame shadow
               }}
-              onClick={async () => {
-                try {
-                  const copies = await fetchCopies(book.id).unwrap();
-                  onView?.({ ...book, copies });
-                } catch (error) {
-                  console.error('Failed to fetch copies:', error);
-                  shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
-                  onView?.({ ...book, copies: [] });
-                }
+              onClick={() => {
+                onView?.(book);
               }}
             >
               <Image

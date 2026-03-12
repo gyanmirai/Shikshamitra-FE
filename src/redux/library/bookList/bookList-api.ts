@@ -22,39 +22,35 @@ export const booksApi = libraryModuleApi.injectEndpoints({
     }),
 
     updateBookCopyStatus: builder.mutation({
-      query: ({ bookId, accessionNo, academicYearId, body }) => ({
-        url: `/library/books/${bookId}/copies/${accessionNo}/status`,
+      query: ({ bookId, accessionNumber, body }) => ({
+        url: `/library/books/${bookId}/copies/${accessionNumber}/status`,
         method: 'PUT',
-        params: { academicYearId },
         data: body,
       }),
       invalidatesTags: ['Copies'],
     }),
 
     getBookById: builder.query({
-      query: ({ bookId, academicYearId }) => ({
+      query: ({ bookId }) => ({
         url: `/library/books/${bookId}`,
         method: 'GET',
-        params: { academicYearId },
       }),
       providesTags: (result, error, { bookId }) => [{ type: 'Books', id: bookId }],
     }),
 
     updateBook: builder.mutation({
-      query: ({ bookId, academicYearId, body }) => ({
+      query: ({ bookId, body }) => ({
         url: `/library/books/${bookId}`,
         method: 'PUT',
-        params: { academicYearId },
         data: body,
       }),
       invalidatesTags: (result, error, { bookId }) => ['Books', { type: 'Books', id: bookId }],
     }),
 
     deleteBook: builder.mutation({
-      query: ({ bookId, academicYearId }) => ({
+      query: ({ bookId }) => ({
         url: `/library/books/${bookId}`,
         method: 'DELETE',
-        params: { academicYearId },
       }),
       invalidatesTags: ['Books'],
     }),
@@ -103,10 +99,9 @@ export const booksApi = libraryModuleApi.injectEndpoints({
     }),
 
     viewBookDetails: builder.query({
-      query: ({ bookId, academicYearId }) => ({
-        url: `/library/books/${bookId}/view`,
+      query: ({ bookId }) => ({
+        url: `/library/books/${bookId}`,
         method: 'GET',
-        params: { academicYearId },
       }),
     }),
 

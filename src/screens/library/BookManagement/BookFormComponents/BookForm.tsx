@@ -12,7 +12,6 @@ import {
   useAddBookMutation,
   useGetBookByIdQuery,
   useUpdateBookMutation,
-  useGetBookCopiesQuery,
   useUpdateBookCopiesMutation,
 } from 'src/redux/library/bookList/bookList-api';
 
@@ -32,8 +31,8 @@ const BookFormStepper = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
 
-  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
-  const academicYearId = (currentAcademicYear as any)?.id;
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const academicYearId = (currentYear as any)?.id;
 
   // Mutations
   const [addBook] = useQueryAndMutation({
@@ -199,14 +198,7 @@ const BookStepForm = ({ activeStep: step, formik, editData, allSteps, academicYe
     type: 'query',
     currentQueryAndMutation: useGetBookByIdQuery,
     params: { bookId, academicYearId },
-    options: { skip: !bookId || step !== 0 },
-  });
-
-  const { data: copiesDetails, isLoading: copiesLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBookCopiesQuery,
-    params: { bookId, academicYearId },
-    options: { skip: !bookId || step !== 1 },
+    options: { skip: !bookId },
   });
 
   useEffect(() => {
@@ -218,31 +210,36 @@ const BookStepForm = ({ activeStep: step, formik, editData, allSteps, academicYe
         ...bookDetails,
         id: bookId,
         // Normalize API response fields
-        categoryId: bookDetails.categoryId || bookDetails.category || pre.categoryId || '',
+        categoryId:
+          bookDetails.categoryId ||
+          bookDetails.category?.id ||
+          bookDetails.category ||
+          pre.categoryId ||
+          '',
         applicableAge: Array.isArray(bookDetails.applicableAge)
           ? bookDetails.applicableAge[0] || ''
           : bookDetails.applicableAge || '',
         numberOfPages: bookDetails.numberOfPages ?? bookDetails.pages ?? pre.numberOfPages ?? 0,
       }));
       initializedStepsRef.current[step] = true;
-    } else if (copiesDetails && step === 1) {
-      const fetchedCopies = copiesDetails.docs || copiesDetails || [];
+    } else if (bookDetails?.copies && step === 1) {
+      const fetchedCopies = bookDetails.copies || [];
       const mappedCopies = Array.isArray(fetchedCopies)
-        ? fetchedCopies.map((copy: any) => ({
+        ? fetchedCopies.map((copy: any, index: number) => ({
             ...copy,
-            copyNo: copy.copyNumber ?? copy.copyNo,
-            accessionNo: copy.accessionNumber ?? copy.accessionNo,
-            section: copy.sectionId ?? copy.section,
-            shelf: copy.shelfId ?? copy.shelf,
+            copyNo: index + 1,
+            accessionNo: copy.accessionNo,
+            section: copy.section?.id,
+            shelf: copy.shelf?.id,
           }))
         : [];
       formik.setFieldValue('copies', mappedCopies);
       initializedStepsRef.current[step] = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookDetails, copiesDetails, step]);
+  }, [bookDetails, step]);
 
-  if (bookLoading || copiesLoading) {
+  if (bookLoading) {
     return <LoadingScreen />;
   }
 

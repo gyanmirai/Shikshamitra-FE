@@ -16,10 +16,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { LibraryBookStatus } from 'src/enums/library-book-status';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, TextField, IconButton, Typography } from '@mui/material';
-import {
-  useGetSectionManagementQuery,
-  useGetSectionManagementByIdQuery,
-} from 'src/redux/library/settingApi';
+import { useGetSectionManagementQuery } from 'src/redux/library/settingApi';
 
 import type { IBookCopy, IBookPayload } from '../Components/type';
 
@@ -28,22 +25,17 @@ interface ShelfDropdownProps {
   copies: IBookCopy[];
   setCopies: React.Dispatch<React.SetStateAction<IBookCopy[]>>;
   formik: FormikProps<IBookPayload>;
-  currentYearId?: string;
+  sectionData?: any;
 }
 
-const ShelfDropdown = ({ row, copies, setCopies, formik, currentYearId }: ShelfDropdownProps) => {
+const ShelfDropdown = ({ row, copies, setCopies, formik, sectionData }: ShelfDropdownProps) => {
   const sectionId = formik.values.copies[row.copyNo - 1]?.section;
 
-  const { data: apiSectionDetails, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSectionManagementByIdQuery,
-    params: { sectionId, academicYearId: currentYearId },
-    options: { skip: !sectionId || !currentYearId },
-  });
+  const selectedSection = sectionData?.items?.find((item: any) => item.id === sectionId);
 
   const shelfOptions =
-    apiSectionDetails?.shelfDetails?.map((shelf: any) => ({
-      value: shelf.shelfName,
+    selectedSection?.shelfDetails?.map((shelf: any) => ({
+      value: shelf.id,
       label: shelf.shelfName,
     })) || [];
 
@@ -87,7 +79,7 @@ const ShelfDropdown = ({ row, copies, setCopies, formik, currentYearId }: ShelfD
             )
           }
           formControlProps={{ sx: { minWidth: 200 } }}
-          disabled={!sectionId || isLoading}
+          disabled={!sectionId}
         />
       </ShakingTextField>
     </Box>
@@ -144,6 +136,8 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
       skip: !currentYear?.id,
     },
   });
+
+  console.log('formik values----', formik.values);
 
   const sectionOptions =
     sectionData?.items?.map((item: any) => ({
@@ -371,7 +365,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                     copies={copies}
                     setCopies={setCopies}
                     formik={formik}
-                    currentYearId={currentYear?.id}
+                    sectionData={sectionData}
                   />
                 ),
               },

@@ -160,7 +160,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
               </Tooltip>
               {/* Section */}
               <Tooltip
-                title={`Section: ${copy.section || 'N/A'} / Shelf: ${copy.shelf || 'N/A'}`}
+                title={`Section: ${(copy.section as any)?.name || copy.section || 'N/A'} / Shelf: ${(copy.shelf as any)?.name || copy.shelf || 'N/A'}`}
                 arrow
                 placement="top"
               >
@@ -182,7 +182,8 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
                       minWidth: 0,
                     }}
                   >
-                    {copy.section || '—'} / {copy.shelf || '—'}
+                    {(copy.section as any)?.name || copy.section || '—'} /{' '}
+                    {(copy.shelf as any)?.name || copy.shelf || '—'}
                   </Typography>
                 </Stack>
               </Tooltip>

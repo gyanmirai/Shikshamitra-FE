@@ -1,7 +1,6 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { BookLanguage } from 'src/enums/book-language';
-import type { Standards, Organization } from 'src/types/school';
 import type { FileWithPreview } from 'src/components/custom-upload/custom-upload';
 
 import { useSelector } from 'react-redux';
@@ -61,26 +60,6 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
   const { data, isFetching } = useSearchBooksQuery(debouncedInputValue, {
     skip: !debouncedInputValue,
   });
-
-  const [, setAllClass] = useState<Standards[]>([]);
-
-  useEffect(() => {
-    // If medium or its stages are missing, clear classes
-    if (!medium || !medium.educationMediumStages?.length) {
-      setAllClass([]);
-      return;
-    }
-
-    // Flatten standards from all stages of this medium
-    const mergedStandards =
-      medium.educationMediumStages.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    // Add "All" option at the top
-    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
-
-    setAllClass(withAll);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [medium]);
 
   useEffect(() => {
     if (formik.values.title) {

@@ -38,9 +38,10 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteBookMutation,
   });
-  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to store currently selected book for editing
   const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
+  console.log('selectedBook', selectedBook);
   const [, setSelectedReservation] = useState<any>(null);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -436,12 +437,16 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
             color="error"
             size="small"
             onClick={async () => {
+              const bookToDelete = selectedBook;
+              const bookId = bookToDelete?.id;
+              if (!bookId) return;
+              const queryArg = { academicYearId: (currentYear as any)?.id };
               confirmWithUndo({
-                item: selectedBook,
+                item: bookToDelete,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    booksApi.util.updateQueryData('getAllBooks', undefined, (draft: any) => {
-                      const index = draft.items?.findIndex((b: any) => b.id === selectedBook?.id);
+                    booksApi.util.updateQueryData('getAllBooks', queryArg, (draft: any) => {
+                      const index = draft.items?.findIndex((b: any) => b.id === bookId);
                       setDeleteIndex(index);
                       if (index !== -1) {
                         draft.items.splice(index, 1);
@@ -450,12 +455,12 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
                   ),
                 onUndoRestore: (dispatchFn, index) =>
                   dispatchFn(
-                    booksApi.util.updateQueryData('getAllBooks', undefined, (draft: any) => {
+                    booksApi.util.updateQueryData('getAllBooks', queryArg, (draft: any) => {
                       if (!draft.items) return;
-                      draft.items.splice(index, 0, selectedBook);
+                      draft.items.splice(index, 0, bookToDelete);
                     })
                   ),
-                onCommit: () => deleteBook(selectedBook?.id || ''),
+                onCommit: () => deleteBook({ bookId }),
               });
               deleteDialog.onFalse();
               setSelectedBook(null);
