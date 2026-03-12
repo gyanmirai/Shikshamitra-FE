@@ -157,7 +157,8 @@ export default function CompactKPICard({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        p: 2,
+        px: 2,
+        py: 1.5,
         height: '100%',
         position: 'relative',
         cursor: path ? 'pointer' : 'default',
@@ -194,7 +195,7 @@ export default function CompactKPICard({
       )}
 
       <Box sx={{ flexGrow: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.5 }}>
+        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.25 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
             {title}
           </Typography>
@@ -210,7 +211,7 @@ export default function CompactKPICard({
             </CustomTooltip>
           )}
         </Stack>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>
+        <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
           {value}
         </Typography>
 

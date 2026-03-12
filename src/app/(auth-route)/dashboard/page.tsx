@@ -1,5 +1,5 @@
-import MainDashboardAdmin from 'src/screens/mainDashboard/admin/main-dashboard-admin';
+import MainDashboard from 'src/screens/mainDashboard/main-dashboard';
 
-const Dashboard = () => <MainDashboardAdmin />;
+const Dashboard = () => <MainDashboard />;
 
 export default Dashboard;

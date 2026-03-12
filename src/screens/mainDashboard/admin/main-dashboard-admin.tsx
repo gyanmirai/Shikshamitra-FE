@@ -14,6 +14,7 @@ export default function MainDashboardAdmin() {
         <Grid size={12}>
           <AdminKpiCards />
         </Grid>
+
         <Grid size={12}>
           <AdminActionRequired />
         </Grid>
@@ -21,17 +22,6 @@ export default function MainDashboardAdmin() {
         <Grid size={12}>
           <AdminCharts />
         </Grid>
-
-        {/* ── SECTION 4 – Today & Upcoming + Quick Actions ─────────────── */}
-        {/* <Grid size={12} sx={{ mt: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-            Today &amp; Upcoming
-          </Typography>
-        </Grid>
-
-        <Grid size={12}>
-          <AdminLists />
-        </Grid> */}
       </Grid>
     </DashboardContent>
   );
