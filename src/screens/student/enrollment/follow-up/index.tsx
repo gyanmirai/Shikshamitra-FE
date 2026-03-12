@@ -31,20 +31,21 @@ import {
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 import {
+  useGetFollowUpQuery,
+  useAddFollowUpMutation,
+  useGetAllFollowUpQuery,
+} from 'src/redux/student/follow-up/follow-up-api';
+import {
   Box,
   Grid,
   Paper,
   Button,
+  Skeleton,
   TextField,
   IconButton,
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useGetFollowUpQuery,
-  useAddFollowUpMutation,
-  useGetAllFollowUpQuery,
-} from 'src/redux/student/follow-up/follow-up-api';
 import {
   Timeline,
   TimelineDot,
@@ -168,8 +169,10 @@ export default FollowUpScreen;
 
 interface IFollowUpResponse {
   note: string;
-  status: string;
+  status: FollowUpStatusType;
   nextReminderDate: string;
+  createdAt?: string;
+  creatorName?: string;
 }
 export const CommunicationForm = ({
   handleCloseDialog,
@@ -254,46 +257,135 @@ export const CommunicationForm = ({
           }}
         >
           {isLoading ? (
-            <Box className="loader" />
+            <Timeline
+              sx={{
+                [`& .MuiTimelineOppositeContent-root`]: {
+                  flex: 0.25,
+                  minWidth: 100,
+                  textAlign: 'left',
+                  pl: 0,
+                  pt: 1.5,
+                },
+              }}
+            >
+              {[1, 2, 3].map((_, index) => (
+                <TimelineItem key={index}>
+                  <TimelineOppositeContent>
+                    <Skeleton variant="text" width={80} height={20} />
+                    <Skeleton variant="text" width={60} height={16} sx={{ mt: 0.5 }} />
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot sx={{ bgcolor: 'divider' }} />
+                    {index < 2 && <TimelineConnector sx={{ bgcolor: 'divider' }} />}
+                  </TimelineSeparator>
+                  <TimelineContent sx={{ pb: 3, pr: 0 }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                        border: (theme) =>
+                          `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      <Skeleton variant="text" width={100} height={24} sx={{ mb: 1.5 }} />
+                      <Skeleton variant="text" width="80%" height={20} />
+                      <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1.5 }} />
+                      <Skeleton variant="text" width={140} height={16} />
+                    </Paper>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
           ) : (
-            <Timeline>
+            <Timeline
+              sx={{
+                [`& .MuiTimelineOppositeContent-root`]: {
+                  flex: 0.25,
+                  minWidth: 100,
+                  textAlign: 'left',
+                  pl: 0,
+                  pt: 1.5,
+                },
+              }}
+            >
               {data?.length ? (
-                data?.map((item: IFollowUpResponse, index: number) => (
-                  <TimelineItem key={index}>
-                    <TimelineOppositeContent>
-                      <Typography variant="caption" sx={{ color: 'text.primary' }}>
-                        {dayjs(item?.nextReminderDate).format('DD/MM/YYYY')}
-                      </Typography>
-                      {/* <Typography sx={{ color: 'text.secondary' }}>
-                          {item?.author
-                            ? item?.author.charAt(0).toUpperCase() + item?.author.slice(1)
-                            : ''}
-                        </Typography> */}
-                    </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineDot color="primary" />
-                      {data?.length === index ? null : <TimelineConnector />}
-                    </TimelineSeparator>
-                    <TimelineContent>
-                      <Paper
-                        sx={{
-                          p: 2,
-                          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['400Channel'], 0.12),
-                          border: (theme) =>
-                            `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {item?.note}
+                data?.map((item: IFollowUpResponse, index: number) => {
+                  const colorKey =
+                    FollowUpStatusTypeColors[item.status as FollowUpStatusType] || 'primary';
+                  return (
+                    <TimelineItem key={index}>
+                      <TimelineOppositeContent>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: 'text.secondary', fontWeight: 'bold' }}
+                        >
+                          {dayjs(item?.createdAt || item?.nextReminderDate).format('YYYY-MM-DD')}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Reminder Date: {dayjs(item.nextReminderDate).format('DD/MM/YYYY')}
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'text.disabled', fontWeight: 'bold', display: 'block' }}
+                        >
+                          {dayjs(item?.createdAt || item?.nextReminderDate).format('hh:mm A')}
                         </Typography>
-                      </Paper>
-                    </TimelineContent>
-                  </TimelineItem>
-                ))
+                      </TimelineOppositeContent>
+                      <TimelineSeparator>
+                        <TimelineDot sx={{ bgcolor: `${colorKey}.main` }} />
+                        {data?.length === index + 1 ? null : (
+                          <TimelineConnector sx={{ bgcolor: 'divider' }} />
+                        )}
+                      </TimelineSeparator>
+                      <TimelineContent sx={{ pb: 3, pr: 0 }}>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            bgcolor: (theme) =>
+                              varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                            border: (theme) =>
+                              `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+                            borderRadius: 1.5,
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              color: `${colorKey}.main`,
+                              mb: 1.5,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {
+                              FollowUpStatusType[
+                                item.status as unknown as keyof typeof FollowUpStatusType
+                              ]
+                            }
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.primary',
+                              mb: 1.5,
+                              fontWeight: 500,
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {item?.note}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: 'text.secondary', fontWeight: 500 }}
+                            >
+                              • Creator: {item?.creatorName || 'admin'}
+                            </Typography>
+                          </Box>
+                        </Paper>
+                      </TimelineContent>
+                    </TimelineItem>
+                  );
+                })
               ) : (
                 <EmptyContent title="No notes added yet" />
               )}

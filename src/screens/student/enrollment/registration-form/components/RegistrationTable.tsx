@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { GenderOptions } from 'src/enums/gender';
 import sortQueryString from 'src/utils/sort-query-string';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { MenuItem, MenuList, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -88,8 +89,27 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         label: 'Address',
         minWidth: '200px',
         align: 'left',
-        render(value) {
-          return value || '-';
+        render: (value: unknown) => {
+          const addressText = value as string;
+          if (!addressText) return '-';
+
+          return (
+            <CustomTooltip title={addressText} placement="top" arrow>
+              <Typography
+                variant="body2"
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'normal',
+                }}
+              >
+                {addressText}
+              </Typography>
+            </CustomTooltip>
+          );
         },
       },
       {

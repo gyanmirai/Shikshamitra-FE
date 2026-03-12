@@ -4,7 +4,16 @@ import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Card, Grid, Divider, TextField, Typography, InputAdornment } from '@mui/material';
+import {
+  Box,
+  Card,
+  Grid,
+  Divider,
+  Skeleton,
+  TextField,
+  Typography,
+  InputAdornment,
+} from '@mui/material';
 
 import type { IInquiryFormValues } from '../../type';
 
@@ -26,7 +35,13 @@ export const ContactInformation = ({ formik, loading }: ContactInformationProps)
           Contact Information
         </Typography>
         <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-        <Typography color="text.secondary">Loading...</Typography>
+        <Grid container spacing={2.5}>
+          {[1, 2, 3].map((item) => (
+            <Grid size={{ xs: 12, md: 4 }} key={item}>
+              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+            </Grid>
+          ))}
+        </Grid>
       </Card>
     );
   }

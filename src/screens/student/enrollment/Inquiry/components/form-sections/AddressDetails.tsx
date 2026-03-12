@@ -2,10 +2,10 @@ import type { FormikProps } from 'formik';
 
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Card, Grid, Divider, TextField, Typography } from '@mui/material';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
+import { Card, Grid, Divider, Skeleton, TextField, Typography } from '@mui/material';
 
 import type { IInquiryFormValues } from '../../type';
 
@@ -27,7 +27,13 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
           Address Details
         </Typography>
         <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-        <Typography color="text.secondary">Loading...</Typography>
+        <Grid container spacing={2.5}>
+          {[1, 2, 3, 4, 5, 6, 7].map((item) => (
+            <Grid size={{ xs: 12, md: 4 }} key={item}>
+              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+            </Grid>
+          ))}
+        </Grid>
       </Card>
     );
   }
