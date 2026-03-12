@@ -72,9 +72,9 @@ const AdminCharts = () => {
         <StudentStrengthChart
           title={renderTitleWithTooltip(
             'Student Strength by Class',
-            'Class-wise breakdown of enrolled students by gender.'
+            'Class-wise breakdown of enrolled students by gender. Hover each bar for Boys, Girls & Total per class. ⚠ marks classes significantly below average enrollment.'
           )}
-          subheader="Class-wise student count (Boys vs Girls)"
+          subheader="Boys vs Girls distribution — hover bars for class totals"
           chart={{
             series: [
               {
@@ -102,15 +102,15 @@ const AdminCharts = () => {
       <Grid size={{ xs: 12, md: 4 }}>
         <AppCurrentDownload
           title={renderTitleWithTooltip(
-            'Fee Collection Status',
-            'Distribution of fee payments — paid, pending, and overdue amounts.'
+            'Fee Collection (This Year)',
+            'Distribution of fee payments this month — paid, pending, and overdue amounts. Hover segments for student counts.'
           )}
-          subheader="Paid vs Pending vs Overdue"
+          subheader="Paid ₹18L · Pending ₹5L · Overdue ₹2.4L"
           chart={{
             series: [
-              { label: 'Paid', value: 1850 },
-              { label: 'Pending', value: 420 },
-              { label: 'Overdue', value: 180 },
+              { label: 'Paid', value: 1800000 },
+              { label: 'Pending', value: 500000 },
+              { label: 'Overdue', value: 240000 },
             ],
             colors: [
               theme.palette.primary.main,
@@ -120,7 +120,16 @@ const AdminCharts = () => {
             options: {
               tooltip: {
                 y: {
-                  formatter: (value: number) => formatNumber(value, 'INR'),
+                  formatter: (value: number, opts: any) => {
+                    const studentCounts: Record<number, string> = {
+                      0: '1,430 students',
+                      1: '320 students',
+                      2: '180 students',
+                    };
+                    const idx = opts?.seriesIndex ?? -1;
+                    const extra = studentCounts[idx] ? ` · ${studentCounts[idx]}` : '';
+                    return `${formatNumber(value, 'INR')}${extra}`;
+                  },
                 },
               },
               plotOptions: {
@@ -132,6 +141,7 @@ const AdminCharts = () => {
                         formatter: (value: number | string) => formatNumber(Number(value), 'INR'),
                       },
                       total: {
+                        label: 'Total Fee',
                         formatter: (w: { globals: { seriesTotals: number[] } }) => {
                           const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                           return formatNumber(sum, 'INR');
@@ -181,14 +191,14 @@ const AdminCharts = () => {
               options: {
                 tooltip: {
                   y: {
-                    formatter: (value: number) => `${value}%`,
+                    formatter: (value: number) => `${value}`,
                   },
                 },
                 yaxis: {
                   min: 80,
                   max: 100,
                   labels: {
-                    formatter: (value: number) => `${value}%`,
+                    formatter: (value: number) => `${value}`,
                   },
                 },
               },

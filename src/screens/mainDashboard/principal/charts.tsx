@@ -1,14 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { BoardMediumOption } from 'src/components/boardMediumDropdown';
+import type { BoardMediumStageOption } from 'src/components/boardMediumStageDropdown';
 
-import { useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { Box, Grid, Stack } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useCallback } from 'react';
 import { Chart, useChart } from 'src/components/chart';
 import CustomTooltip from 'src/components/custom-tooltip';
 import BoardMediumDropdown from 'src/components/boardMediumDropdown';
+import BoardMediumStageDropdown from 'src/components/boardMediumStageDropdown';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import AllInfoCalendar from '../admin/Components/AllInfoCalendar';
@@ -94,19 +98,50 @@ const renderTitleWithTooltip = (title: string, tooltip: string) => (
   </Stack>
 );
 
+// Deterministic fallback data when a class name isn't in the static map
+const getFallbackData = (index: number): number[] => {
+  const base = 15 + (index % 5) * 3;
+  return MONTHS.map((_, i) => Math.min(100, Math.round(base + (5 + (index % 3)) * (i / 1.8))));
+};
+
 const PrincipalCharts = () => {
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Academic Progress filter
-  const [selectedBoardMedium, setSelectedBoardMedium] = useState<BoardMediumOption | undefined>(
-    undefined
-  );
-  const handleBoardMediumChange = useCallback((val: BoardMediumOption) => {
-    setSelectedBoardMedium(val);
+  const [selectedBoardMediumStage, setSelectedBoardMediumStage] = useState<
+    BoardMediumStageOption | undefined
+  >(undefined);
+  const handleBoardMediumStageChange = useCallback((val: BoardMediumStageOption) => {
+    setSelectedBoardMediumStage(val);
   }, []);
 
+  // Derive classes (standards) belonging to the selected stage
+  const stageClassNames = useMemo<string[]>(() => {
+    if (!selectedBoardMediumStage || !currentYear?.boards?.length) {
+      return Object.keys(ACADEMIC_PROGRESS_DATA);
+    }
+    const { boardId, mediumId, stageId } = selectedBoardMediumStage;
+    const board = (currentYear.boards as any[]).find((b) => b.id === boardId);
+    const medium = (board?.educationMediums ?? []).find((m: any) => m.id === mediumId);
+    const stage = (medium?.educationMediumStages ?? []).find((s: any) => s.id === stageId);
+    const standards: any[] = stage?.standards ?? [];
+    return standards.length > 0
+      ? standards.map((s) => s.name)
+      : Object.keys(ACADEMIC_PROGRESS_DATA);
+  }, [selectedBoardMediumStage, currentYear]);
+
+  const academicProgressSeries = useMemo(
+    () =>
+      stageClassNames.map((className, idx) => ({
+        name: className,
+        data: ACADEMIC_PROGRESS_DATA[className] ?? getFallbackData(idx),
+      })),
+    [stageClassNames]
+  );
+
   // Subject-wise Marks filter
-  const [selectedClass, setSelectedClass] = useState('all');
+  const [selectedClass] = useState('all');
 
   // Subject-wise Marks board/medium filter
   const [selectedSubjectBoardMedium, setSelectedSubjectBoardMedium] = useState<
@@ -212,17 +247,17 @@ const PrincipalCharts = () => {
           )}
           subheader="Curriculum completion % by class per month"
           action={
-            <BoardMediumDropdown value={selectedBoardMedium} onChange={handleBoardMediumChange} />
+            <BoardMediumStageDropdown
+              value={selectedBoardMediumStage}
+              onChange={handleBoardMediumStageChange}
+            />
           }
         >
           <AnalyticsWebsiteVisits
             title=""
             chart={{
               categories: MONTHS,
-              series: Object.entries(ACADEMIC_PROGRESS_DATA).map(([name, data]) => ({
-                name,
-                data,
-              })),
+              series: academicProgressSeries,
               options: {
                 tooltip: { y: { formatter: (v: number) => `${v}%` } },
                 yaxis: {
