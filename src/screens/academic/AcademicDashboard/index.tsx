@@ -1,11 +1,7 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
-
-import { useSelector } from 'react-redux';
+import React from 'react';
 import { Box, Grid } from '@mui/material';
-import React, { useState, useEffect } from 'react';
 
 import SummaryCards from './Components/SummaryCards';
 import { PerformersList } from './Components/Performers';
@@ -15,34 +11,6 @@ import DivisionPerformanceChart from './Components/DivisionPerformanceChart';
 import PlannedVsActualProgressChart from './Components/PlannedVsActualProgressChart';
 
 const AcademicDashboardScreen = () => {
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
-
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
-
   const topPerformersData = [
     {
       id: '1',

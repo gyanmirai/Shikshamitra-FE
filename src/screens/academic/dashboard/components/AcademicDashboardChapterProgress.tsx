@@ -2,32 +2,58 @@ import { Card } from '@mui/material';
 import React, { useState } from 'react';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
+const CHAPTERS = ['Numbers', 'Algebra', 'Geometry', 'Data and Statistics', 'Problem Solving'];
+const PROGRESS = [90, 20, 80, 65, 45];
+
+const getBarColor = (value: number): string => {
+  if (value >= 80) return '#22c55e'; // Green  80–100%
+  if (value >= 50) return '#eab308'; // Yellow 50–79%
+  return '#ef4444'; // Red     0–49%
+};
+
+const getEmoji = (value: number): string => {
+  if (value >= 80) return '🟢';
+  if (value >= 50) return '🟡';
+  return '🔴';
+};
+
 const AcademicDashboardChapterProgress = () => {
   const [selectedSubject, setSelectedSubject] = useState('mathematics');
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card sx={{ height: '100%', p: 2 }}>
       <AnalyticsWebsiteVisits
         title="Chapter Progress Tracking"
         chart={{
-          categories: ['Numbers', 'Algebra', 'Geometry', 'Data and Statistics', 'Problem Solving'],
+          categories: CHAPTERS,
+          colors: PROGRESS.map(getBarColor),
           series: [
             {
-              name: 'Participation',
-              data: [9, 2, 8, 9, 8],
+              name: 'Progress',
+              data: PROGRESS,
             },
           ],
           options: {
+            plotOptions: {
+              bar: {
+                distributed: true,
+                borderRadius: 4,
+                columnWidth: '45%',
+              },
+            },
+            legend: { show: false },
+            yaxis: {
+              max: 100,
+              labels: { formatter: (val: number) => `${val}%` },
+            },
             tooltip: {
-              custom: ({ series, seriesIndex, dataPointIndex }) => {
-                const participants = [30, 10, 25, 28, 26];
-                const scores = [80, 70, 75, 85, 78];
+              custom: ({ dataPointIndex }: { dataPointIndex: number }) => {
+                const value = PROGRESS[dataPointIndex];
                 return `
-            <div style="padding: 8px; font-size: 13px;">
-              <strong>Class ${dataPointIndex + 1}</strong><br/>
-              <span style="color: green;">●</span> Participant: ${participants[dataPointIndex]}<br/>
-              <span style="color: orange;">●</span> Average Score: ${scores[dataPointIndex]}%
-            </div>
-          `;
+                  <div style="padding:8px;font-size:13px;">
+                    <strong>${CHAPTERS[dataPointIndex]}</strong><br/>
+                    ${getEmoji(value)} Progress: <strong>${value}%</strong>
+                  </div>
+                `;
               },
             },
           },
