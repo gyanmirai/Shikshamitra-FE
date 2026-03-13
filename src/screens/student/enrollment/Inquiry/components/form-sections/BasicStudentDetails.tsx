@@ -15,6 +15,7 @@ import {
   Grid,
   Radio,
   Divider,
+  Skeleton,
   TextField,
   RadioGroup,
   Typography,
@@ -63,14 +64,29 @@ export const BasicStudentDetails = ({
             Inquiry & Admission
           </Typography>
           <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-          <Typography color="text.secondary">Loading...</Typography>
+          <Grid container spacing={2.5}>
+            {[1, 2, 3, 4, 5].map((item) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item}>
+                <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+              </Grid>
+            ))}
+          </Grid>
         </Card>
         <Card sx={{ p: 3, mb: 3, borderRadius: 2 }}>
           <Typography variant="h6" fontWeight={600} color="text.primary">
             Student
           </Typography>
           <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-          <Typography color="text.secondary">Loading...</Typography>
+          <Grid container spacing={2.5}>
+            {[1, 2, 3, 4].map((item) => (
+              <Grid size={{ xs: 12, sm: 4 }} key={item}>
+                <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+              </Grid>
+            ))}
+            <Grid size={{ xs: 12, sm: 8 }}>
+              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+            </Grid>
+          </Grid>
         </Card>
       </>
     );

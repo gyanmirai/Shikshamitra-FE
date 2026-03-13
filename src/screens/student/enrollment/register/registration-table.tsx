@@ -172,7 +172,34 @@ const RegistrationTable = ({
         minWidth: '90px',
         enumOptions: GenderOptions,
       },
-      { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
+      {
+        id: 'address',
+        label: 'Address',
+        minWidth: '150px',
+        align: 'left',
+        render: (value: unknown) => {
+          const addressText = value as string;
+          if (!addressText) return '-';
+
+          return (
+            <CustomTooltip title={addressText} placement="top" arrow>
+              <Typography
+                variant="body2"
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'normal',
+                }}
+              >
+                {addressText}
+              </Typography>
+            </CustomTooltip>
+          );
+        },
+      },
       {
         id: 'primaryContactNo',
         label: 'Primary Contact No.',

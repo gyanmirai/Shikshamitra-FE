@@ -157,7 +157,7 @@ export const useInquiryTableColumns = ({
         },
       },
       {
-        id: 'progress',
+        id: 'inquiryStatus',
         label: 'Status',
         filterType: 'enum',
         enumOptions: FollowUpStatusTypeOptions,

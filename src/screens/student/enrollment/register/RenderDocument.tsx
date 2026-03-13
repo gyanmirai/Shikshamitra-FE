@@ -31,6 +31,7 @@ export const RenderDocuments = (props: any) => {
   const [docId, setDocId] = useState<null | string>(null);
   // State to store the selected document name for dialog title
   const [selectedDocName, setSelectedDocName] = useState<string>('');
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
 
   // Dialog state for adding documents
   const addDocumentDialog = useBoolean();
@@ -100,6 +101,10 @@ export const RenderDocuments = (props: any) => {
             align: 'left',
             isSort: false,
             render(value, row) {
+              const isUploading = uploadingDocId === row.documentTypeId;
+              if (isUploading) {
+                return <Skeleton variant="rounded" width={80} height={24} />;
+              }
               return (
                 <UploadButton
                   disableRipple
@@ -117,6 +122,7 @@ export const RenderDocuments = (props: any) => {
                   onChange={async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
+                    setUploadingDocId(row.documentTypeId);
                     // Convert file to base64
                     const reader = new FileReader();
                     reader.onloadend = async () => {
@@ -137,10 +143,21 @@ export const RenderDocuments = (props: any) => {
                         shikshaMitraToast.success({
                           message: `${row.documentTypeName} uploaded successfully`,
                         });
-                      } catch (error) {
-                        shikshaMitraToast.error({
-                          message: `Failed to upload ${row.documentTypeName}`,
-                        });
+                      } catch (error: any) {
+                        const errorData = error?.data?.error;
+                        if (errorData?.code === 'Document:InvalidFormat') {
+                          shikshaMitraToast.error({
+                            message: `Invalid format. Accepted formats are: ${errorData?.data?.AcceptedFormats}`,
+                          });
+                        } else {
+                          shikshaMitraToast.error({
+                            message:
+                              errorData?.message || `Failed to upload ${row.documentTypeName}`,
+                          });
+                        }
+                      } finally {
+                        setUploadingDocId(null);
+                        e.target.value = '';
                       }
                     };
                     reader.readAsDataURL(file);

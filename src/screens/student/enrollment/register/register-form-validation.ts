@@ -62,7 +62,7 @@ export const generalFieldValidation = Yup.object({
         return !value || value !== this.parent.primaryContactNumber;
       }
     ),
-  addressLine1: Yup.string().required('Building No./Flat/ House No. is required'),
+  addressLine1: Yup.string().required('Building/Flat/House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
   email: Yup.string().email('Invalid email format'),
   medium: Yup.string().required('Medium is required'),
