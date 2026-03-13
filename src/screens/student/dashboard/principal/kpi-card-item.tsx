@@ -202,11 +202,7 @@ export default function CompactKPICard({
           {tooltip && (
             <CustomTooltip title={tooltip} arrow placement="top">
               <Box component="span" className="tooltip-icon" sx={{ display: 'inline-flex' }}>
-                <Iconify
-                  icon="eva:info-outline"
-                  width={16}
-                  sx={{ color: 'text.disabled', cursor: 'help' }}
-                />
+                <Iconify icon="eva:info-outline" width={16} sx={{ color: 'text.disabled' }} />
               </Box>
             </CustomTooltip>
           )}
@@ -233,7 +229,7 @@ export default function CompactKPICard({
               {Math.abs(percentChange)}%
             </Typography>
             <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-              vs last year
+              Compare to last year
             </Typography>
           </Stack>
         )}
