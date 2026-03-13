@@ -17,33 +17,13 @@ const KPI_DATA = [
     title: 'Total Students',
     value: fNumber(2450),
     percentChange: 2.4,
-    icon: 'mdi:account-school-outline',
     status: 'info' as const,
-    trendData: [2400, 2410, 2405, 2425, 2430, 2450],
-    fullChart: {
-      type: 'bar',
-      series: [
-        { name: 'Boys', data: [1300] },
-        { name: 'Girls', data: [1150] },
-      ],
+    chart: {
+      type: 'bar' as const,
+      series: [1300, 1150],
+      labels: ['Boys', 'Girls'],
       colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
-      options: {
-        tooltip: {
-          x: { show: false },
-          y: { formatter: (val: number) => `${val} Students` },
-        },
-        xaxis: {
-          categories: ['Total'],
-          labels: { show: false },
-        },
-        plotOptions: {
-          bar: {
-            columnWidth: '40%',
-            borderRadius: 2,
-            distributed: false,
-          },
-        },
-      },
+      width: 30, // Matches our 30px standard from admin kpi cards!
     },
     path: studentPaths.records.studentList,
   },
@@ -52,9 +32,14 @@ const KPI_DATA = [
     title: 'Present Today',
     value: fNumber(2315),
     percentChange: -0.5,
-    icon: 'mdi:account-check-outline',
     status: 'success' as const,
-    trendData: [2300, 2350, 2320, 2310, 2340, 2315],
+    chart: {
+      type: 'donut' as const,
+      series: [2315, 135],
+      labels: ['Present', 'Absent'],
+      width: 56,
+      height: 56,
+    },
     path: studentPaths.attendance.markAttendance,
   },
   {
@@ -62,9 +47,15 @@ const KPI_DATA = [
     title: 'Avg Attendance',
     value: fPercent(94.5),
     percentChange: 1.2,
-    icon: 'mdi:chart-timeline-variant',
     status: 'success' as const,
-    trendData: [92, 93, 91, 94, 93, 94.5],
+    chart: {
+      type: 'donut' as const,
+      series: [94.5, 5.5],
+      labels: ['Present', 'Absent'],
+      colors: ['#22C55E', '#FF5630'],
+      width: 56,
+      height: 56,
+    },
     path: studentPaths.attendance.reports,
   },
   {
@@ -72,9 +63,14 @@ const KPI_DATA = [
     title: 'Academic Avg',
     value: fPercent(78),
     percentChange: 3.1,
-    icon: 'mdi:school-outline',
     status: 'primary' as const,
-    trendData: [72, 74, 75, 76, 77, 78],
+    chart: {
+      type: 'donut' as const,
+      series: [78, 22],
+      labels: ['Score', 'Remaining'],
+      width: 56,
+      height: 56,
+    },
     path: studentPaths.records.reports,
   },
   {
@@ -82,9 +78,13 @@ const KPI_DATA = [
     title: 'At-Risk Students',
     value: fNumber(45),
     percentChange: 5.2,
-    icon: 'mdi:alert-circle-outline',
     status: 'error' as const,
-    trendData: [40, 42, 41, 44, 43, 45],
+    chart: {
+      type: 'bar' as const,
+      series: [40, 42, 41, 44, 45],
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      width: 40,
+    },
     path: studentPaths.enrollment.reports,
     tooltip: 'Students identified with low attendance (<75%) or poor academic performance.',
   },
@@ -93,9 +93,15 @@ const KPI_DATA = [
     title: 'Pending Fees',
     value: '₹ 2.4L',
     percentChange: -2.4,
-    icon: 'mdi:cash-multiple',
     status: 'warning' as const,
-    trendData: [2.8, 2.7, 2.6, 2.5, 2.45, 2.4],
+    chart: {
+      type: 'donut' as const,
+      series: [22, 78],
+      labels: ['Paid', 'Pending'],
+      colors: ['#22C55E', '#FF5630'],
+      width: 56,
+      height: 56,
+    },
     path: financePaths.dashboard,
   },
   {
@@ -103,9 +109,14 @@ const KPI_DATA = [
     title: 'Teacher Attendance',
     value: fPercent(98),
     percentChange: 0.2,
-    icon: 'mdi:human-male-board',
     status: 'success' as const,
-    trendData: [97, 98, 96, 98, 98, 98],
+    chart: {
+      type: 'donut' as const,
+      series: [98, 2],
+      labels: ['Present', 'Absent'],
+      width: 56,
+      height: 56,
+    },
     path: hrPaths.attendance.attendanceTracking,
   },
   {
@@ -113,9 +124,13 @@ const KPI_DATA = [
     title: 'Events / Alerts',
     value: '3',
     percentChange: 0,
-    icon: 'mdi:calendar-alert',
     status: 'info' as const,
-    trendData: [1, 2, 0, 1, 3, 3],
+    chart: {
+      type: 'bar' as const,
+      series: [1, 2, 0, 1, 3],
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      width: 40,
+    },
     path: calendarPaths.dashboard,
   },
 ];
@@ -124,25 +139,6 @@ const PrincipalKPICards = () => {
   const [timeFilter] = useState('Today');
 
   const strategicMetrics = ['Total Students', 'Academic Avg', 'Avg Attendance', 'Pending Fees'];
-
-  const getComparisonLabel = (title: string, filter: string) => {
-    if (strategicMetrics.includes(title)) {
-      return 'vs last year';
-    }
-
-    switch (filter) {
-      case 'Today':
-        return 'vs Yesterday';
-      case 'This Week':
-        return 'vs Last Week';
-      case 'This Month':
-        return 'vs Last Month';
-      case 'Academic Year':
-        return 'vs Last Academic Year';
-      default:
-        return 'vs last year';
-    }
-  };
 
   const getDynamicPercentChange = (baseChange: number, title: string, filter: string) => {
     if (strategicMetrics.includes(title)) return baseChange;
@@ -171,13 +167,12 @@ const PrincipalKPICards = () => {
               title={item.title}
               value={item.value}
               percentChange={getDynamicPercentChange(item.percentChange, item.title, timeFilter)}
-              comparisonLabel={getComparisonLabel(item.title, timeFilter)}
-              icon={item.icon}
+              // comparisonLabel={getComparisonLabel(item.title, timeFilter)}
+              // icon={item.icon}
               status={item.status}
-              trendData={item.trendData}
               path={item.path}
               tooltip={item.tooltip}
-              chart={(item as any).fullChart}
+              chart={item.chart}
             />
           </Grid>
         ))}

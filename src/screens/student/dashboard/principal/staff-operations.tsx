@@ -6,6 +6,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Card, Grid, Stack, Avatar, CardHeader, Typography } from '@mui/material';
 
+import ClassDivisionFilter from './class-division-filter';
+
 const PrincipalStaffOperations = () => {
   // 1. Teacher Attendance & Performance Overview
   const teacherPerformance = [
@@ -83,19 +85,27 @@ const PrincipalStaffOperations = () => {
         <Card sx={{ p: 1 }}>
           <CardHeader
             title={
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box component="span">Teacher Performance Overview</Box>
-                <CustomTooltip
-                  title="Overview of teacher performance based on attendance records and student feedback ratings."
-                  arrow
-                  placement="top"
-                >
-                  <Iconify
-                    icon="eva:info-outline"
-                    width={18}
-                    sx={{ color: 'text.disabled', cursor: 'pointer' }}
-                  />
-                </CustomTooltip>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{ display: 'flex', justifyContent: 'space-between' }}
+              >
+                <Box component="span">
+                  Teacher Performance Overview
+                  <CustomTooltip
+                    title="Overview of teacher performance based on attendance records and student feedback ratings."
+                    arrow
+                    placement="top"
+                  >
+                    <Iconify
+                      icon="eva:info-outline"
+                      width={18}
+                      sx={{ color: 'text.disabled', cursor: 'pointer', ml: 1 }}
+                    />
+                  </CustomTooltip>
+                </Box>
+                <ClassDivisionFilter />
               </Stack>
             }
             subheader="Attendance & Student Ratings"

@@ -43,7 +43,10 @@ const RegistrationTable = ({
     skipCount: 0,
     maxResultCount: 10,
   });
-  const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
+  const [
+    moveToAdmission,
+    { isLoading: isMoveToAdmissionLoading, isFetching: isMoveToAdmissionFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: {
@@ -386,7 +389,7 @@ const RegistrationTable = ({
         action={
           <LoadingButton
             variant="contained"
-            loading={isMoveToAdmissionLoading}
+            loading={isMoveToAdmissionLoading || isMoveToAdmissionFetching}
             onClick={async () => {
               await moveToAdmission(moveId);
               confirmMovePopup.onFalse();

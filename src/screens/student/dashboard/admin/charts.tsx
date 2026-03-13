@@ -11,6 +11,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Grid, Card, Stack, CardHeader, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
+import ClassDivisionFilter from '../principal/class-division-filter';
+
 const AdminCharts = () => {
   const theme = useTheme();
   // State to store all classes/standards for the selected organization
@@ -305,6 +307,7 @@ const AdminCharts = () => {
               'Entrance Exam Status',
               'Breakdown of entrance exam results (Passed/Failed/Awaiting).'
             )}
+            action={<ClassDivisionFilter />}
           />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart

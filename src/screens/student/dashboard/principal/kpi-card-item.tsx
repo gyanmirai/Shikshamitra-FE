@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles/utils';
 import { Chart, useChart } from 'src/components/chart';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
@@ -9,14 +10,15 @@ import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
 interface CompactKPICardProps {
   title: string;
   value: string | number;
-  icon: string;
+
   percentChange?: number;
   trendData?: number[];
   status?: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary';
   sx?: any;
   path?: string;
   tooltip?: string;
-  comparisonLabel?: string;
+  icon?: string;
+
   chart?: {
     type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
     series?: any[];
@@ -33,13 +35,12 @@ const RADIAL_TYPES = ['donut', 'pie', 'radialBar'];
 export default function CompactKPICard({
   title,
   value,
-  icon,
   percentChange,
   trendData,
   status = 'info',
   path,
   tooltip,
-  comparisonLabel,
+  icon,
   chart,
   sx,
 }: CompactKPICardProps) {
@@ -91,6 +92,12 @@ export default function CompactKPICard({
         },
       },
       marker: { show: true },
+      fixed: {
+        enabled: true,
+        position: 'topLeft',
+        offsetY: -5,
+        offsetX: -100, // Move it explicitly to the left of the small chart using native offsets
+      },
     },
     stroke: {
       show: true,
@@ -99,7 +106,7 @@ export default function CompactKPICard({
       curve: 'smooth',
     },
     plotOptions: {
-      bar: { columnWidth: '60%', borderRadius: 2, distributed: chart?.type === 'bar' },
+      bar: { columnWidth: '70%', borderRadius: 2, distributed: chart?.type === 'bar' },
     },
     xaxis: {
       categories: chart?.labels || [],
@@ -125,6 +132,9 @@ export default function CompactKPICard({
         title: { formatter: (name: string) => `${name}: ` },
       },
       marker: { show: true },
+      fixed: {
+        enabled: false,
+      },
     },
     stroke: { width: 0 },
     plotOptions: {
@@ -155,6 +165,7 @@ export default function CompactKPICard({
     <Card
       onClick={handleClick}
       sx={{
+        overflow: 'visible', // allows native apex tooltip to render outside without clipping
         display: 'flex',
         alignItems: 'center',
         px: 2,
@@ -163,12 +174,20 @@ export default function CompactKPICard({
         position: 'relative',
         cursor: path ? 'pointer' : 'default',
         transition: 'transform 0.2s, box-shadow 0.2s',
+        '& .apexcharts-tooltip': {
+          pointerEvents: 'none !important', // Fixes lingering
+          zIndex: 9999, // Brings above other elements
+        },
+        '& .apexcharts-tooltip.apexcharts-active': {
+          opacity: 1,
+        },
         '&:hover': path
           ? {
               transform: 'translateY(-4px)',
               boxShadow: theme.shadows[8],
+              zIndex: 10,
             }
-          : {},
+          : { zIndex: 10 },
         ...sx,
       }}
     >
@@ -195,7 +214,24 @@ export default function CompactKPICard({
       )}
 
       <Box sx={{ flexGrow: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.25 }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.25 }}>
+          {icon && (
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                display: 'flex',
+                borderRadius: '8px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: `${status}.main`,
+                bgcolor: (t) => varAlpha(t.vars.palette[status].mainChannel, 0.16),
+              }}
+            >
+              <Iconify icon={icon} width={20} />
+            </Box>
+          )}
+
           <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
             {title}
           </Typography>
@@ -214,29 +250,6 @@ export default function CompactKPICard({
         <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
           {value}
         </Typography>
-
-        {percentChange && (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Iconify
-              icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
-              sx={{
-                color: isPositive ? 'success.main' : 'error.main',
-                width: 18,
-                height: 18,
-              }}
-            />
-            <Typography
-              variant="subtitle2"
-              component="span"
-              sx={{ color: isPositive ? 'success.main' : 'error.main' }}
-            >
-              {Math.abs(percentChange)}%
-            </Typography>
-            <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-              vs last year
-            </Typography>
-          </Stack>
-        )}
       </Box>
 
       {chart?.series &&

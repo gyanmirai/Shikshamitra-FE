@@ -1,7 +1,6 @@
 import { Grid } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
-// Import the shared component from principal dashboard
-// Ideally this should be moved to a common folder, but importing from relative path for now
+
 import CompactKPICard from '../principal/kpi-card-item';
 
 const kpiData = [
@@ -9,88 +8,96 @@ const kpiData = [
     id: 'ENQ_TOTAL',
     title: 'Total Inquiries',
     value: '1,250',
-    percent: 12.5,
-    chart: { data: [20, 41, 63, 33, 28, 35, 50, 46, 11, 26] },
-    icon: 'mdi:clipboard-text-outline',
     status: 'success' as const,
     path: studentPaths.enrollment.inquiry,
+    // Bar chart: Walk-in vs Online inquiries
+    chart: {
+      type: 'bar' as const,
+      series: [820, 430],
+      labels: ['Walk-in', 'Online'],
+      width: 30,
+    },
   },
   {
     id: 'REG_TOTAL',
     title: 'Total Registration',
     value: '980',
-    percent: 8.2,
-    chart: { data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35] },
-    icon: 'mdi:account-plus-outline',
     status: 'info' as const,
     path: studentPaths.enrollment.registration,
+    // Donut: Completed vs Pending registrations
+    chart: {
+      type: 'donut' as const,
+      series: [780, 200],
+      width: 56,
+      height: 56,
+      colors: ['#22C55E', '#FFA500'],
+      labels: ['Completed', 'Pending'],
+    },
   },
   {
     id: 'ADM_TOTAL',
     title: 'Total Admission',
     value: '850',
-    percent: -2.4,
-    chart: { data: [100, 40, 30, 70, 40, 20, 80, 40, 10, 20] },
-    icon: 'mdi:file-document-edit-outline',
     status: 'warning' as const,
     path: studentPaths.enrollment.admission,
+    // Donut: Approved vs Rejected vs Pending
+    chart: {
+      type: 'donut' as const,
+      series: [680, 120, 50],
+      width: 56,
+      height: 56,
+      colors: ['#22C55E', '#EF4444', '#FFA500'],
+      labels: ['Approved', 'Rejected', 'Pending'],
+    },
   },
   {
     id: 'STU_TOTAL',
     title: 'Total Students',
     value: '3,500',
-    percent: 5.1,
-    chart: { data: [15, 35, 50, 40, 60, 45, 80, 70, 90, 100] },
-    fullChart: {
-      type: 'bar',
-      series: [
-        { name: 'Boys', data: [1800] },
-        { name: 'Girls', data: [1700] },
-      ],
-      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
-      options: {
-        tooltip: {
-          x: { show: false },
-          y: { formatter: (val: number) => `${val} Students` },
-        },
-        xaxis: {
-          categories: ['Total'],
-          labels: { show: false },
-        },
-        plotOptions: {
-          bar: {
-            columnWidth: '40%',
-            borderRadius: 2,
-            distributed: false,
-          },
-        },
-      },
-    },
-    icon: 'mdi:school-outline',
     status: 'primary' as const,
     path: studentPaths.records.studentList,
+    // Bar chart: Boys vs Girls
+    chart: {
+      type: 'bar' as const,
+      series: [1800, 1700],
+      labels: ['Boys', 'Girls'],
+      colors: ['#00B8D9', '#FF5630'],
+      width: 30,
+    },
   },
   {
     id: 'STU_LEFT',
     title: 'Students Left',
     value: '45',
-    percent: 1.2,
-    chart: { data: [5, 10, 5, 15, 8, 12, 10, 15, 18, 20] },
-    icon: 'mdi:account-minus-outline',
     status: 'error' as const,
     path: studentPaths.records.studentList,
     tooltip: 'Includes transferred and dropped-out students during the selected period.',
+    // Donut: Transferred vs Dropped-out
+    chart: {
+      type: 'donut' as const,
+      series: [28, 17],
+      width: 56,
+      height: 56,
+      colors: ['#FF5630', '#FFAB00'],
+      labels: ['Transferred', 'Dropped-out'],
+    },
   },
   {
     id: 'RTE_STUDENTS',
     title: 'RTE Students',
     value: '120',
-    percent: 0.5,
-    chart: { data: [110, 112, 114, 115, 116, 118, 119, 120, 120, 120] },
-    icon: 'mdi:account-check-outline',
     status: 'info' as const,
     path: studentPaths.records.studentList,
     tooltip: 'Students admitted under the Right to Education scheme.',
+    // Donut: RTE vs General students
+    chart: {
+      type: 'donut' as const,
+      series: [120, 3380],
+      width: 56,
+      height: 56,
+      colors: ['#00B8D9', '#E5E7EB'],
+      labels: ['RTE', 'General'],
+    },
   },
 ];
 
@@ -101,13 +108,10 @@ const AdminKPICards = () => (
         <CompactKPICard
           title={kpi.title}
           value={kpi.value}
-          icon={kpi.icon}
-          percentChange={kpi.percent}
-          trendData={kpi.chart.data}
           path={kpi.path}
-          tooltip={kpi.tooltip}
+          // tooltip={(kpi as any).tooltip}
           status={kpi.status}
-          chart={(kpi as any).fullChart}
+          chart={kpi.chart}
         />
       </Grid>
     ))}

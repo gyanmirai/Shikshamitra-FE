@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -71,7 +71,6 @@ const absentStudents = [
 const TeacherLists = () => {
   const [openExamsDialog, setOpenExamsDialog] = useState(false);
   const [openStudentsDialog, setOpenStudentsDialog] = useState(false);
-
   // Table columns for exams
   const examColumns: any[] = [
     { id: 'subject', label: 'Subject', align: 'left' },

@@ -146,7 +146,7 @@ const ChangeClassScreen = ({
             // },
             // { id: 'srNo', label: 'Sr. No.' },
             { id: 'grNoRecord', label: 'GR No.', align: 'left' },
-            { id: 'name', label: 'Name', align: 'left' },
+            { id: 'studentName', label: 'Name', align: 'left' },
             // { id: 'division', label: 'Division' },
             // {
             //   id: 'feeStatus',

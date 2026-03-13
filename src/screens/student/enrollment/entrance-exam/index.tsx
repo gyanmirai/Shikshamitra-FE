@@ -752,7 +752,7 @@ export const ExamForm = ({
                                 label={`${slot.slotName} (${slot.startTime} - ${slot.endTime})`}
                               />
                               <Label variant="soft" color="success">
-                                {slot.studentCount} / {slot.studentLimit}
+                                {slot.enrolledStudents} / {slot.studentLimit}
                               </Label>
                             </Grid>
                           ))
