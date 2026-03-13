@@ -409,7 +409,11 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                       <Grid size={{ xs: 12, md: 2 }}>
                         <Box
                           component="img"
-                          src={selectedBook?.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
+                          src={
+                            selectedBook?.book.coverImage
+                              ? `${process.env.NEXT_PUBLIC_API_URL}${selectedBook.book.coverImage}`
+                              : '/placeholder-book.jpg'
+                          }
                           alt={selectedBook?.book.title}
                           sx={{
                             width: '100%',

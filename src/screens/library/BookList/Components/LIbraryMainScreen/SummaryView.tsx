@@ -88,7 +88,9 @@ const SummaryView = ({
             }}
           >
             <Image
-              src={book.bookCoverImages?.[0] || noCover}
+              src={
+                book.coverImage ? `${process.env.NEXT_PUBLIC_API_URL}${book.coverImage}` : noCover
+              }
               alt={book.title}
               width={250}
               height={250}

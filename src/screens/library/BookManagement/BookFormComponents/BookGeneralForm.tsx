@@ -1,20 +1,31 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { BookLanguage } from 'src/enums/book-language';
-import type { FileWithPreview } from 'src/components/custom-upload/custom-upload';
 
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { CheckCircle } from '@mui/icons-material';
+import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { BOOK_LANGUAGE_OPTIONS } from 'src/enums/book-language';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
-import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  Box,
+  Grid,
+  TextField,
+  IconButton,
+  Typography,
+  Autocomplete,
+  CircularProgress,
+} from '@mui/material';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { fetchBookDetails } from './getBookDetails';
 import { getInitialBookData } from '../Components/BookManageInitialValues';
@@ -23,16 +34,23 @@ import type { IBookPayload } from '../Components/type';
 
 interface BookGeneralStepProps {
   formik: FormikProps<IBookPayload>;
+  isEdit?: boolean;
 }
 
-const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
+const BookGeneralStep = ({ formik, isEdit }: BookGeneralStepProps) => {
   const [inputValue, setInputValue] = useState('');
   const [debouncedInputValue, setDebouncedInputValue] = useState('');
   const [loadingBookDetails, setLoadingBookDetails] = useState(false);
   const [, setBookFound] = useState(false);
   const [fieldsEnabled, setFieldsEnabled] = useState(false);
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: bookCategoryData, isLoading: bookCategoryLoading } = useQueryAndMutation({
     type: 'query',
@@ -317,21 +335,15 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
             <ShakingTextField error={!!(formik.touched.categoryId && formik.errors.categoryId)}>
               <CustomSelect
                 label="Category"
-                name="category"
-                options={[
-                  { value: 'Fiction', label: 'Fiction' },
-                  { value: 'Non-Fiction', label: 'Non-Fiction' },
-                  { value: 'Reference', label: 'Reference' },
-                  { value: 'Textbook', label: 'Textbook' },
-                  { value: 'Children', label: 'Children' },
-                  { value: 'Biography', label: 'Biography' },
-                ]}
-                value={formik.values.category || ''}
+                name="categoryId"
+                isLoading={bookCategoryLoading}
+                options={categoryOptions as any}
+                value={formik.values.categoryId || ''}
                 onChange={(value) => {
-                  formik.setFieldValue('category', value);
+                  formik.setFieldValue('categoryId', value);
                 }}
-                error={!!(formik.touched.category && formik.errors.category)}
-                helperText={(formik.touched.category && formik.errors.category) as string}
+                error={!!(formik.touched.categoryId && formik.errors.categoryId)}
+                helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -394,6 +406,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 fullWidth
                 name="numberOfCopies"
                 type="number"
+                disabled={isEdit}
                 label="Number of Copies *"
                 value={formik.values.numberOfCopies || ''}
                 onChange={(e) => {
@@ -512,15 +525,90 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         {/* Upload */}
         <Grid size={{ xs: 12 }}>
           {fieldsEnabled && (
-            <CustomUpload
-              multiple
-              onChange={(files) => {
-                formik.setFieldValue(`bookCoverImages`, files);
-              }}
-              value={formik.values.bookCoverImages as unknown as (string | FileWithPreview)[]}
-              label="Upload Book Cover, Front, Back Images."
-              outputFormat="file"
-            />
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*,.pdf"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  const formData = new FormData();
+                  formData.append('FileName', file.name);
+                  formData.append('File', file);
+                  try {
+                    const response = await uploadCurriculumFile(formData).unwrap();
+                    const uploadedUrl = response.data;
+                    formik.setFieldValue('coverImage', uploadedUrl);
+                    shikshaMitraToast.success({ message: 'Cover image uploaded successfully.' });
+                  } catch (error) {
+                    console.error('Cover image upload failed:', error);
+                    shikshaMitraToast.error({ message: 'Cover image upload failed.' });
+                  } finally {
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }
+                }}
+              />
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Book Cover Image
+                  </Typography>
+                  {formik.values.coverImage ? (
+                    <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                      <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                      <Typography variant="caption" color="success.main" fontWeight={600}>
+                        Uploaded
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      No image uploaded
+                    </Typography>
+                  )}
+                </Box>
+                <Box display="flex" gap={1} alignItems="center">
+                  {formik.values.coverImage && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        window.open(
+                          `${process.env.NEXT_PUBLIC_API_URL}${formik.values.coverImage}`,
+                          '_blank'
+                        );
+                      }}
+                    >
+                      <Iconify icon="carbon:view-filled" />
+                    </IconButton>
+                  )}
+                  <LoadingButton
+                    size="small"
+                    variant="outlined"
+                    loading={isUploading}
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    startIcon={<Iconify icon="eva:cloud-upload-outline" />}
+                  >
+                    {formik.values.coverImage ? 'Replace' : 'Upload'}
+                  </LoadingButton>
+                </Box>
+              </Box>
+            </>
           )}
         </Grid>
 
