@@ -229,7 +229,7 @@ export default function CompactKPICard({
               {Math.abs(percentChange)}%
             </Typography>
             <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-              Compare to last year
+              vs last year
             </Typography>
           </Stack>
         )}
