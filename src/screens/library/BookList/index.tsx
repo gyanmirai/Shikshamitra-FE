@@ -275,7 +275,6 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           }}
           onReserveBook={(data) => {
             setSelectedBook(data);
-
             reserveDialog.onTrue();
           }}
           onViewAllReservationBook={(data) => {
