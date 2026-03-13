@@ -70,14 +70,14 @@ export default function CompactKPICard({
       chart?.type === 'bar'
         ? { type: 'solid' }
         : {
-            type: 'gradient',
-            gradient: {
-              colorStops: [
-                { offset: 0, color: lightColor, opacity: 1 },
-                { offset: 100, color: mainColor, opacity: 1 },
-              ],
-            },
+          type: 'gradient',
+          gradient: {
+            colorStops: [
+              { offset: 0, color: lightColor, opacity: 1 },
+              { offset: 100, color: mainColor, opacity: 1 },
+            ],
           },
+        },
     chart: {
       animations: { enabled: false },
       sparkline: { enabled: true },
@@ -183,10 +183,10 @@ export default function CompactKPICard({
         },
         '&:hover': path
           ? {
-              transform: 'translateY(-4px)',
-              boxShadow: theme.shadows[8],
-              zIndex: 10,
-            }
+            transform: 'translateY(-4px)',
+            boxShadow: theme.shadows[8],
+            zIndex: 10,
+          }
           : { zIndex: 10 },
         ...sx,
       }}
@@ -238,11 +238,7 @@ export default function CompactKPICard({
           {tooltip && (
             <CustomTooltip title={tooltip} arrow placement="top">
               <Box component="span" className="tooltip-icon" sx={{ display: 'inline-flex' }}>
-                <Iconify
-                  icon="eva:info-outline"
-                  width={16}
-                  sx={{ color: 'text.disabled', cursor: 'help' }}
-                />
+                <Iconify icon="eva:info-outline" width={16} sx={{ color: 'text.disabled' }} />
               </Box>
             </CustomTooltip>
           )}
@@ -250,6 +246,29 @@ export default function CompactKPICard({
         <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
           {value}
         </Typography>
+
+        {percentChange && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Iconify
+              icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
+              sx={{
+                color: isPositive ? 'success.main' : 'error.main',
+                width: 18,
+                height: 18,
+              }}
+            />
+            <Typography
+              variant="subtitle2"
+              component="span"
+              sx={{ color: isPositive ? 'success.main' : 'error.main' }}
+            >
+              {Math.abs(percentChange)}%
+            </Typography>
+            <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
+              vs last year
+            </Typography>
+          </Stack>
+        )}
       </Box>
 
       {chart?.series &&

@@ -8,7 +8,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 interface Props {
-  books: IBook[];
+  books: any[];
   onView?: (book: IBook) => void;
   onEdit?: (book: IBook) => void;
   onDelete?: (book: IBook) => void;

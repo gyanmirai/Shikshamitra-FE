@@ -71,6 +71,9 @@ const AdminCharts = () => {
         'Dec',
       ],
     },
+    yaxis: {
+      min: 0,
+    },
     tooltip: {
       y: {
         formatter: (value: number) => fNumber(value),
