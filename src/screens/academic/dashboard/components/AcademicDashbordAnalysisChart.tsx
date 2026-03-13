@@ -11,14 +11,16 @@ const AcademicDashbordAnalysisChart = () => {
         title="Analysis Chart"
         chart={{
           series: [
-            { label: 'High Performance (45%)', value: 45 },
-            { label: 'Average (35%)', value: 35 },
-            { label: 'Low Performance (20%)', value: 20 },
+            { label: 'Excellent (30%)', value: 30 },
+            { label: 'Good (40%)', value: 40 },
+            { label: 'Average (20%)', value: 20 },
+            { label: 'Needs Improvement (10%)', value: 10 },
           ],
           colors: [
-            theme.vars.palette.success.main, // Green for High Performance
+            theme.vars.palette.success.main, // Green for Excellent
+            theme.vars.palette.info.main, // Blue for Good
             theme.vars.palette.warning.main, // Orange for Average
-            theme.vars.palette.info.main, // Blue for Low Performance
+            theme.vars.palette.error.main, // Red for Needs Improvement
           ],
         }}
         sx={{ boxShadow: 'none' }}
