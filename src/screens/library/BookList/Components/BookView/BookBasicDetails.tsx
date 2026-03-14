@@ -63,19 +63,9 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
         value: book?.price ? `₹${book.price.toFixed(2)}` : '—',
       },
       {
-        label: 'Publish Date',
+        label: 'Added On',
         icon: 'mdi:calendar-check',
-        value: book?.publishDate ? new Date(book.publishDate).toLocaleDateString() : '—',
-      },
-      {
-        label: 'Section',
-        icon: 'uit:web-section',
-        value: (book?.section as any)?.name || book?.section || '—',
-      },
-      {
-        label: 'Shelf',
-        icon: 'mdi:bookshelf',
-        value: (book?.shelf as any)?.name || book?.shelf || '—',
+        value: book?.addedOn ? new Date(book.addedOn).toLocaleDateString() : '—',
       },
       {
         label: 'Description',
@@ -111,8 +101,6 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
           />
         }
         sx={{
-          px: { xs: 2, sm: 2.5 },
-          py: 0.5,
           minHeight: 56,
           '& .MuiAccordionSummary-content': {
             my: 1.5,
@@ -271,7 +259,11 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                 }}
               >
                 <Image
-                  src={book?.bookCoverImages?.[0] || noCover}
+                  src={
+                    book?.coverImage
+                      ? `${process.env.NEXT_PUBLIC_API_URL}${book.coverImage}`
+                      : noCover
+                  }
                   alt={book?.title || 'No Preview'}
                   fill
                   style={{ objectFit: 'cover' }}

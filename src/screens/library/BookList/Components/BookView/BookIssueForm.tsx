@@ -366,9 +366,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                           <Box
                             component="img"
                             src={
-                              bookData?.bookCoverImages?.[0] ||
-                              bookData?.bookCoverImage ||
-                              '/placeholder-book.jpg'
+                              bookData?.coverImage
+                                ? `${process.env.NEXT_PUBLIC_API_URL}${bookData.coverImage}`
+                                : '/placeholder-book.jpg'
                             }
                             alt={bookData?.title}
                             sx={{

@@ -160,7 +160,11 @@ const GlobalAcademicSearch = () => {
   return (
     <Box data-onboarding="academic-year">
       {isYearLoading || isBoardLoading ? (
-        <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
+        <Skeleton
+          variant="rounded"
+          height={56}
+          sx={{ minWidth: isShowOnlyYearModule ? '200px' : '300px', width: '100%' }}
+        />
       ) : (
         <>
           {ConfirmDialog}

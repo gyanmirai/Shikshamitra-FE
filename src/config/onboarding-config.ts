@@ -4,9 +4,9 @@ export const onboardingSteps: DriveStep[] = [
   {
     element: '[data-onboarding="academic-year"]',
     popover: {
-      title: 'Academic Year Selection',
+      title: 'Select Academic Year',
       description:
-        'You must select an Academic Year to proceed. This is required for all operations.',
+        'Choose the academic year you want to work in. All records such as students, subjects, attendance, and exams will be managed based on the selected academic year.',
       side: 'bottom',
       align: 'center',
     },
@@ -15,8 +15,9 @@ export const onboardingSteps: DriveStep[] = [
   {
     element: '#onboarding-sidebar',
     popover: {
-      title: 'Navigation Menu',
-      description: 'Access all modules like Students, Academics, and Finance from this sidebar.',
+      title: 'Main Navigation Menu',
+      description:
+        'Use this sidebar to navigate through different modules of the system such as Students, Academics, Library, Transport, and more. Click any module to open and manage its features.',
       side: 'right',
       align: 'start',
     },
@@ -25,7 +26,8 @@ export const onboardingSteps: DriveStep[] = [
     element: '[aria-label="Institute Setup"]',
     popover: {
       title: 'Institute Setup',
-      description: 'Configure your institute settings, including academic years and boards.',
+      description:
+        'Start by configuring your institute structure here. Set up boards, mediums, standards, divisions.',
       side: 'right',
       align: 'center',
     },
@@ -33,8 +35,9 @@ export const onboardingSteps: DriveStep[] = [
   {
     element: '#onboarding-user-profile',
     popover: {
-      title: 'User Profile',
-      description: 'Manage your personal settings, password, and logout from here.',
+      title: 'User Profile & Settings',
+      description:
+        'Access your profile settings from here. You can update your account details, change your password, and log out of the system when needed.',
       side: 'bottom',
       align: 'end',
       doneBtnText: 'Finish',
