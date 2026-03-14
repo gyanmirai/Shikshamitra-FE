@@ -1,37 +1,33 @@
+'use client';
+
 import type { ICalendarEvent } from 'src/types/calendar';
 
+import confetti from 'canvas-confetti';
 import React, { useState } from 'react';
-import { Label } from 'src/components/label';
-import Autoplay from 'embla-carousel-autoplay';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import UserHoverProfile from 'src/components/student-popover';
-import {
-  Carousel,
-  useCarousel,
-  CarouselDotButtons,
-  CarouselArrowBasicButtons,
-} from 'src/components/carousel';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Tab,
   Card,
-  List,
+  Chip,
   Tabs,
-  Avatar,
+  Stack,
   Button,
+  Avatar,
   Divider,
-  Tooltip,
-  ListItem,
+  CardHeader,
+  IconButton,
   Typography,
-  ListItemText,
-  ListItemAvatar,
 } from '@mui/material';
 
 import CelebrationsCalendarDialog from './CelebrationsCalendarDialog';
 
-// Mock data generator to ensure we always have data for "Today" and "Upcoming"
+// -----------------------------------------------------------------------
+
 const getMockData = () => {
   const today = new Date();
   const currentMonth = today.toLocaleString('default', { month: 'long' });
@@ -94,18 +90,18 @@ const getMockData = () => {
   return { todaysCelebrations, upcomingCelebrations };
 };
 
+// -----------------------------------------------------------------------
+
 const HRBirthdaysAndAnniversaries = () => {
   const theme = useTheme();
   const { todaysCelebrations, upcomingCelebrations } = getMockData();
-  const [currentTab, setCurrentTab] = React.useState('birthday');
+  const [currentTab, setCurrentTab] = useState('birthday');
+  const [wishedIds, setWishedIds] = useState<number[]>([]);
   const [openCalendar, setOpenCalendar] = useState(false);
 
-  const carousel = useCarousel({ loop: true }, [
-    Autoplay({ playOnInit: true, delay: 3000, stopOnMouseEnter: true }),
-  ]);
-
-  const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
-    setCurrentTab(newValue);
+  const handleWish = (id: number) => {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    setWishedIds((prev) => [...prev, id]);
   };
 
   const filteredTodays = todaysCelebrations.filter((item) =>
@@ -116,60 +112,48 @@ const HRBirthdaysAndAnniversaries = () => {
     currentTab === 'birthday' ? item.type === 'Birthday' : item.type === 'Work Anniversary'
   );
 
-  // Transform mock data to calendar events
   const getCalendarEvents = (): ICalendarEvent[] => {
     const today = new Date();
     const currentYear = today.getFullYear();
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
 
-    const events: ICalendarEvent[] = [];
-
-    // Helper to create date object from "Month Day" string
     const parseDate = (dateStr: string) => {
       const [month, day] = dateStr.split(' ');
-      // Simple mapping for month names to index
-      const months = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-      ];
       const monthIndex = months.findIndex((m) => m === month);
-
       if (monthIndex !== -1) {
-        const date = new Date(currentYear, monthIndex, parseInt(day, 10));
-        return date.toISOString(); // Return ISO string
+        return new Date(currentYear, monthIndex, parseInt(day, 10)).toISOString();
       }
       return null;
     };
 
-    // Add today's celebrations
+    const events: ICalendarEvent[] = [];
+
     todaysCelebrations.forEach((item) => {
       events.push({
         id: item.id.toString(),
         title: `${item.name} (${item.type})`,
-        start: today.toISOString(), // Use ISO string
+        start: today.toISOString(),
         end: today.toISOString(),
         color: item.type === 'Birthday' ? theme.palette.secondary.main : theme.palette.info.main,
         textColor: 'white',
         allDay: true,
         description: item.role,
-        // extendedProps: {
-        //   type: item.type,
-        //   age: item.age,
-        //   years: item.years,
-        // },
-      } as any); // Type assertion needed due to strict ICalendarEvent definition vs FullCalendar flexibility
+      } as any);
     });
 
-    // Add upcoming celebrations
     upcomingCelebrations.forEach((item) => {
       if (item.date) {
         const dateIso = parseDate(item.date);
@@ -184,11 +168,6 @@ const HRBirthdaysAndAnniversaries = () => {
             textColor: 'white',
             allDay: true,
             description: item.role,
-            // extendedProps: {
-            //   type: item.type,
-            //   age: item.age,
-            //   years: item.years,
-            // },
           } as any);
         }
       }
@@ -199,48 +178,53 @@ const HRBirthdaysAndAnniversaries = () => {
 
   return (
     <>
-      <Card
-        sx={{
-          p: 2,
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          borderRadius: 3,
-          boxShadow: theme.customShadows.z4,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Iconify
-              icon="mdi:party-popper"
-              width={32}
-              height={32}
-              sx={{ color: 'primary.main' }}
-            />
-            <Typography variant="h6" sx={{ ml: 2, fontWeight: 'bold' }}>
-              Celebrations
-            </Typography>
-          </Box>
-          <Button
-            size="small"
-            startIcon={<Iconify icon="mdi:calendar-month" />}
-            onClick={() => setOpenCalendar(true)}
-            sx={{ textTransform: 'none' }}
-          >
-            View Calendar
-          </Button>
-        </Box>
+      <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <CardHeader
+          title={
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: -1, ml: -1 }}>
+              <Iconify icon="mdi:party-popper" width={24} color="primary.main" />
+              <Typography variant="h6">Celebrations</Typography>
+              <CustomTooltip
+                title="View today's and upcoming birthdays & work anniversaries"
+                placement="top"
+              >
+                <IconButton size="small" sx={{ p: 0 }}>
+                  <Iconify
+                    icon="solar:info-circle-linear"
+                    width={18}
+                    sx={{ color: 'text.disabled' }}
+                  />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
+          }
+          action={
+            <Button
+              size="small"
+              color="inherit"
+              endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
+              onClick={() => setOpenCalendar(true)}
+            >
+              View Calendar
+            </Button>
+          }
+          sx={{ flexShrink: 0 }}
+        />
 
+        {/* Tabs */}
         <Tabs
           value={currentTab}
-          onChange={handleChangeTab}
+          onChange={(_e, val) => setCurrentTab(val)}
           sx={{
-            mb: 3,
+            px: 2,
+            mb: 1,
             minHeight: 40,
+            flexShrink: 0,
             '& .MuiTab-root': {
               minHeight: 40,
               textTransform: 'none',
-              fontWeight: 'bold',
+              fontWeight: 600,
               borderRadius: 1,
               mr: 1,
               '&.Mui-selected': {
@@ -255,246 +239,199 @@ const HRBirthdaysAndAnniversaries = () => {
           <Tab
             value="birthday"
             label="Birthdays"
-            icon={<Iconify icon="mdi:cake-variant" width={20} />}
+            icon={<Iconify icon="mdi:cake-variant" width={18} />}
             iconPosition="start"
           />
           <Tab
             value="anniversary"
             label="Anniversaries"
-            icon={<Iconify icon="mdi:medal" width={20} />}
+            icon={<Iconify icon="mdi:medal" width={18} />}
             iconPosition="start"
           />
         </Tabs>
 
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ mb: 2, color: 'text.secondary', fontWeight: 'bold' }}
-          >
-            TODAY&apos;S SPECIAL
-          </Typography>
-
-          {filteredTodays.length > 0 ? (
-            <Card
-              sx={{
-                bgcolor: 'background.neutral',
-                mb: 3,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              {filteredTodays.length > 1 && (
-                <>
-                  <CarouselDotButtons
-                    scrollSnaps={carousel.dots.scrollSnaps}
-                    selectedIndex={carousel.dots.selectedIndex}
-                    onClickDot={carousel.dots.onClickDot}
-                    sx={{
-                      bottom: 8,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      position: 'absolute',
-                      color: 'primary.main',
-                      zIndex: 9,
-                    }}
-                  />
-                  <CarouselArrowBasicButtons
-                    {...carousel.arrows}
-                    options={carousel.options}
-                    sx={{
-                      top: 8,
-                      right: 8,
-                      position: 'absolute',
-                      color: 'text.primary',
-                      zIndex: 9,
-                    }}
-                  />
-                </>
-              )}
-
-              <Carousel carousel={carousel}>
-                {filteredTodays.map((item) => (
-                  <Box
-                    key={item.id}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      p: 3,
-                      pb: filteredTodays.length > 1 ? 5 : 3, // Space for dots
-                    }}
-                  >
-                    <UserHoverProfile
-                      avatarComp={
-                        <Avatar
-                          src={item.avatarUrl}
-                          alt={item.name}
-                          sx={{
-                            width: 64,
-                            height: 64,
-                            mr: 2.5,
-                            cursor: 'pointer',
-                            border: `2px solid ${theme.palette.background.paper}`,
-                            boxShadow: theme.customShadows.z8,
-                          }}
-                        />
-                      }
-                      user={{
-                        name: item.name,
-                        avatarUrl: item.avatarUrl,
-                        role: item.role,
-                        email: item.email,
-                        // Add other required props with dummy data if needed by UserHoverProfile
-                        class: '',
-                        division: '',
-                        board: '',
-                        medium: '',
-                        organization: 'Shiksha Mitra',
-                      }}
-                    />
-
-                    <Box>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 'bold', color: 'text.primary' }}
+        {/* Scrollable content */}
+        <Scrollbar sx={{ flexGrow: 1 }}>
+          <Stack spacing={1} sx={{ p: 1.5 }}>
+            {/* Today */}
+            {filteredTodays.length > 0 && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, ml: 0.5 }}>
+                  Today
+                </Typography>
+                <Stack spacing={1}>
+                  {filteredTodays.map((item) => {
+                    const isWished = wishedIds.includes(item.id);
+                    return (
+                      <Box
+                        key={item.id}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          border: (t) => `1px solid ${t.palette.divider}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          bgcolor: (t: any) =>
+                            varAlpha(
+                              t.vars?.palette?.primary?.mainChannel ||
+                                t.palette.primary.mainChannel ||
+                                '',
+                              0.16
+                            ),
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            borderColor: 'transparent',
+                            bgcolor: 'background.neutral',
+                            transform: 'scale(1.01)',
+                          },
+                        }}
                       >
-                        {item.name}
-                      </Typography>
-                      <Label
-                        variant="soft"
-                        color={item.type === 'Birthday' ? 'secondary' : 'info'}
-                        startIcon={
-                          <Iconify
-                            icon={item.type === 'Birthday' ? 'mdi:cake-variant' : 'mdi:medal'}
-                          />
-                        }
-                        sx={{ mt: 0.5 }}
-                      >
-                        {item.type === 'Birthday'
-                          ? `Turning ${item.age}`
-                          : `${item.years} Year Anniversary`}
-                      </Label>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}
-                      >
-                        {item.role}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Carousel>
-            </Card>
-          ) : (
-            <Box
-              sx={{
-                p: 3,
-                textAlign: 'center',
-                bgcolor: 'background.neutral',
-                borderRadius: 2,
-                mb: 3,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                No {currentTab === 'birthday' ? 'birthdays' : 'anniversaries'} today
-              </Typography>
-            </Box>
-          )}
-
-          <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-
-          <Typography
-            variant="subtitle2"
-            sx={{ mb: 2, color: 'text.secondary', fontWeight: 'bold' }}
-          >
-            UPCOMING THIS MONTH
-          </Typography>
-
-          <Scrollbar sx={{ maxHeight: 280 }}>
-            <List disablePadding>
-              {filteredUpcoming.length > 0 ? (
-                filteredUpcoming.map((item) => (
-                  <Tooltip title={`${item.type} on ${item.date}`} key={item.id} placement="left">
-                    <ListItem
-                      disablePadding
-                      sx={{
-                        mb: 1.5,
-                        p: 1.5,
-                        borderRadius: 1.5,
-                        bgcolor: 'background.paper',
-                        border: `1px solid ${theme.palette.divider}`,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                          transform: 'translateY(-2px)',
-                          boxShadow: theme.customShadows.z4,
-                        },
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <UserHoverProfile
-                          avatarComp={
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Box sx={{ position: 'relative' }}>
                             <Avatar
                               src={item.avatarUrl}
                               alt={item.name}
-                              sx={{ width: 48, height: 48, cursor: 'pointer' }}
+                              sx={{ width: 44, height: 44 }}
                             />
-                          }
-                          user={{
-                            name: item.name,
-                            avatarUrl: item.avatarUrl,
-                            role: item.role,
-                            email: item.email,
-                            class: '',
-                            division: '',
-                            board: '',
-                            medium: '',
-                            organization: 'Shiksha Mitra',
-                          }}
+                            <Box
+                              sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: 0,
+                                bgcolor: 'background.paper',
+                                borderRadius: '50%',
+                                width: 18,
+                                height: 18,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: 1,
+                              }}
+                            >
+                              <Typography variant="caption">
+                                {item.type === 'Birthday' ? '🎂' : '🏆'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                              {item.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {item.role}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <CustomTooltip
+                            title={isWished ? 'Already wished!' : `Wish ${item.name}`}
+                            placement="top"
+                          >
+                            <Button
+                              size="small"
+                              variant={isWished ? 'soft' : 'contained'}
+                              color={isWished ? 'success' : 'primary'}
+                              startIcon={
+                                <Iconify
+                                  icon={isWished ? 'mdi:check-circle-outline' : 'mdi:gift-outline'}
+                                />
+                              }
+                              onClick={() => !isWished && handleWish(item.id)}
+                              sx={{ borderRadius: 3, px: 2 }}
+                            >
+                              {isWished ? 'Wished!' : 'Wish'}
+                            </Button>
+                          </CustomTooltip>
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+            )}
+
+            {filteredTodays.length === 0 && (
+              <Box
+                sx={{
+                  p: 2.5,
+                  textAlign: 'center',
+                  bgcolor: 'background.neutral',
+                  borderRadius: 2,
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  No {currentTab === 'birthday' ? 'birthdays' : 'anniversaries'} today
+                </Typography>
+              </Box>
+            )}
+
+            <Divider sx={{ borderStyle: 'dashed' }} />
+
+            {/* Upcoming */}
+            {filteredUpcoming.length > 0 && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1, ml: 0.5 }}>
+                  Upcoming
+                </Typography>
+                <Stack spacing={1}>
+                  {filteredUpcoming.map((item) => (
+                    <Box
+                      key={item.id}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: (t) => `1px solid ${t.palette.divider}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: 'transparent',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          borderColor: 'transparent',
+                          bgcolor: 'background.neutral',
+                          transform: 'scale(1.01)',
+                        },
+                      }}
+                    >
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar
+                          src={item.avatarUrl}
+                          alt={item.name}
+                          sx={{ width: 44, height: 44 }}
                         />
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={600}>
                             {item.name}
                           </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary">
                             {item.role}
                           </Typography>
-                        }
+                        </Box>
+                      </Stack>
+
+                      <Chip
+                        label={item.date}
+                        size="small"
+                        color={item.type === 'Birthday' ? 'secondary' : 'info'}
+                        variant="soft"
                       />
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Label
-                          variant="soft"
-                          color={item.type === 'Birthday' ? 'secondary' : 'info'}
-                          startIcon={
-                            <Iconify
-                              icon={item.type === 'Birthday' ? 'mdi:cake-variant' : 'mdi:medal'}
-                            />
-                          }
-                          sx={{ mb: 0.5 }}
-                        >
-                          {item.date}
-                        </Label>
-                        <Typography variant="caption" display="block" color="text.disabled">
-                          {item.type === 'Birthday' ? `Turning ${item.age}` : `${item.years} Years`}
-                        </Typography>
-                      </Box>
-                    </ListItem>
-                  </Tooltip>
-                ))
-              ) : (
-                <Box sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No upcoming {currentTab === 'birthday' ? 'birthdays' : 'anniversaries'} this
-                    month
-                  </Typography>
-                </Box>
-              )}
-            </List>
-          </Scrollbar>
-        </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+
+            {filteredUpcoming.length === 0 && (
+              <Box sx={{ p: 2.5, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  No upcoming {currentTab === 'birthday' ? 'birthdays' : 'anniversaries'} this month
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        </Scrollbar>
       </Card>
 
       <CelebrationsCalendarDialog

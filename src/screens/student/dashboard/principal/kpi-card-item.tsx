@@ -246,29 +246,6 @@ export default function CompactKPICard({
         <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
           {value}
         </Typography>
-
-        {percentChange && (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Iconify
-              icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
-              sx={{
-                color: isPositive ? 'success.main' : 'error.main',
-                width: 18,
-                height: 18,
-              }}
-            />
-            <Typography
-              variant="subtitle2"
-              component="span"
-              sx={{ color: isPositive ? 'success.main' : 'error.main' }}
-            >
-              {Math.abs(percentChange)}%
-            </Typography>
-            <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-              vs last year
-            </Typography>
-          </Stack>
-        )}
       </Box>
 
       {chart?.series &&
