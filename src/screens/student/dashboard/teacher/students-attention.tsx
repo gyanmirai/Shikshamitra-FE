@@ -151,6 +151,7 @@ const StudentsNeedingAttention = () => {
       {
         id: 'status',
         label: 'Status',
+        sticky: true,
         render: (value, row) => (
           <Label
             variant="soft"
@@ -167,7 +168,7 @@ const StudentsNeedingAttention = () => {
       {
         id: 'action',
         label: 'Action',
-        align: 'left',
+        sticky: true,
         render: (value, row) => (
           <Stack direction="row" spacing={1} justifyContent="flex-start">
             <Tooltip title="Contact Parent">
@@ -188,7 +189,12 @@ const StudentsNeedingAttention = () => {
   );
 
   return (
-    <Card sx={{ mb: 1 }}>
+    <Card
+      sx={{
+        mb: 1,
+        '&:hover': { transform: 'translateY(-4px)', boxShadow: (theme) => theme.shadows[8] },
+      }}
+    >
       <CardHeader
         title={renderInfoTooltip(
           'Students Needing Attention',
@@ -223,6 +229,7 @@ const StudentsNeedingAttention = () => {
       <Box sx={{ p: 1 }}>
         <CustomizableTable
           tableId="students-attention-table"
+          noDataText="No students available"
           columns={columns}
           data={studentsAtRisk}
           isPagination={false}

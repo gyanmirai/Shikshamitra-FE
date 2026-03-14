@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, Grid } from '@mui/material';
 // Paths
 import { hrPaths } from 'src/constants/hr-menus';
@@ -10,20 +10,19 @@ import { calendarPaths } from 'src/constants/calendar-menu';
 import CompactKPICard from './kpi-card-item';
 
 // ----------------------------------------------------------------------
-
 const KPI_DATA = [
   {
     id: 1,
     title: 'Total Students',
     value: fNumber(2450),
-    percentChange: 2.4,
+    tooltip: 'Total number of enrolled students in the institution, including boys and girls.',
     status: 'info' as const,
     chart: {
       type: 'bar' as const,
       series: [1300, 1150],
       labels: ['Boys', 'Girls'],
-      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
-      width: 30, // Matches our 30px standard from admin kpi cards!
+      colors: ['#00B8D9', '#FF5630'],
+      width: 30,
     },
     path: studentPaths.records.studentList,
   },
@@ -31,7 +30,7 @@ const KPI_DATA = [
     id: 2,
     title: 'Present Today',
     value: fNumber(2315),
-    percentChange: -0.5,
+    tooltip: "Number of students present today based on today's attendance records.",
     status: 'success' as const,
     chart: {
       type: 'donut' as const,
@@ -46,7 +45,7 @@ const KPI_DATA = [
     id: 3,
     title: 'Avg Attendance',
     value: fPercent(94.5),
-    percentChange: 1.2,
+    tooltip: 'Average student attendance percentage calculated for the current academic period.',
     status: 'success' as const,
     chart: {
       type: 'donut' as const,
@@ -62,7 +61,7 @@ const KPI_DATA = [
     id: 4,
     title: 'Academic Avg',
     value: fPercent(78),
-    percentChange: 3.1,
+    tooltip: 'Average academic performance of students based on recent exam results.',
     status: 'primary' as const,
     chart: {
       type: 'donut' as const,
@@ -77,7 +76,7 @@ const KPI_DATA = [
     id: 5,
     title: 'At-Risk Students',
     value: fNumber(45),
-    percentChange: 5.2,
+    tooltip: 'Students identified with low attendance (<75%) or poor academic performance.',
     status: 'error' as const,
     chart: {
       type: 'bar' as const,
@@ -86,13 +85,12 @@ const KPI_DATA = [
       width: 40,
     },
     path: studentPaths.enrollment.reports,
-    tooltip: 'Students identified with low attendance (<75%) or poor academic performance.',
   },
   {
     id: 6,
     title: 'Pending Fees',
     value: '₹ 2.4L',
-    percentChange: -2.4,
+    tooltip: 'Total amount of student fees that are still pending payment.',
     status: 'warning' as const,
     chart: {
       type: 'donut' as const,
@@ -108,7 +106,7 @@ const KPI_DATA = [
     id: 7,
     title: 'Teacher Attendance',
     value: fPercent(98),
-    percentChange: 0.2,
+    tooltip: 'Overall teacher attendance percentage recorded for today.',
     status: 'success' as const,
     chart: {
       type: 'donut' as const,
@@ -123,7 +121,7 @@ const KPI_DATA = [
     id: 8,
     title: 'Events / Alerts',
     value: '3',
-    percentChange: 0,
+    tooltip: 'Number of upcoming school events or important alerts scheduled for this week.',
     status: 'info' as const,
     chart: {
       type: 'bar' as const,
@@ -135,50 +133,23 @@ const KPI_DATA = [
   },
 ];
 
-const PrincipalKPICards = () => {
-  const [timeFilter] = useState('Today');
-
-  const strategicMetrics = ['Total Students', 'Academic Avg', 'Avg Attendance', 'Pending Fees'];
-
-  const getDynamicPercentChange = (baseChange: number, title: string, filter: string) => {
-    if (strategicMetrics.includes(title)) return baseChange;
-
-    // Specific handling for 'Events / Alerts' which has 0%
-    if (title === 'Events / Alerts' && baseChange === 0) {
-      if (filter === 'Today') return 0;
-      if (filter === 'This Week') return 5;
-      if (filter === 'This Month') return 12;
-      if (filter === 'Academic Year') return 25;
-    }
-
-    if (filter === 'Today') return baseChange;
-    if (filter === 'This Week') return Number((baseChange * 1.2).toFixed(1));
-    if (filter === 'This Month') return Number((baseChange * 1.5).toFixed(1));
-    if (filter === 'Academic Year') return Number((baseChange * 2.1).toFixed(1));
-    return baseChange;
-  };
-
-  return (
-    <Box>
-      <Grid container spacing={1}>
-        {KPI_DATA.map((item) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.id}>
-            <CompactKPICard
-              title={item.title}
-              value={item.value}
-              percentChange={getDynamicPercentChange(item.percentChange, item.title, timeFilter)}
-              // comparisonLabel={getComparisonLabel(item.title, timeFilter)}
-              // icon={item.icon}
-              status={item.status}
-              path={item.path}
-              tooltip={item.tooltip}
-              chart={item.chart}
-            />
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  );
-};
+const PrincipalKPICards = () => (
+  <Box>
+    <Grid container spacing={1}>
+      {KPI_DATA.map((item) => (
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.id}>
+          <CompactKPICard
+            title={item.title}
+            value={item.value}
+            status={item.status}
+            path={item.path}
+            tooltip={item.tooltip}
+            chart={item.chart}
+          />
+        </Grid>
+      ))}
+    </Grid>
+  </Box>
+);
 
 export default PrincipalKPICards;

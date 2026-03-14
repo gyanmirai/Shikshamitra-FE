@@ -1,6 +1,7 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
 import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -104,10 +105,18 @@ const Birthdays = () => {
     });
     setWishedStudents((prev) => [...prev, id]);
   };
+  const theme = useTheme();
 
   return (
     <>
-      <Card sx={{ height: 500, display: 'flex', flexDirection: 'column' }}>
+      <Card
+        sx={{
+          height: 500,
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+        }}
+      >
         <CardHeader
           title={
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: -1, ml: -1 }}>
@@ -116,7 +125,7 @@ const Birthdays = () => {
             </Stack>
           }
           subheaderTypographyProps={{
-            sx: { color: (theme: any) => theme.vars?.palette?.text?.secondary || 'text.secondary' },
+            sx: { color: () => theme.vars?.palette?.text?.secondary || 'text.secondary' },
           }}
           action={
             <Button
@@ -150,11 +159,11 @@ const Birthdays = () => {
                           sx={{
                             p: 2,
                             borderRadius: 2,
-                            border: (theme) => `1px solid ${theme.palette.divider}`,
+                            border: () => `1px solid ${theme.palette.divider}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            bgcolor: (theme: any) =>
+                            bgcolor: () =>
                               varAlpha(
                                 theme.vars?.palette?.primary?.mainChannel ||
                                   theme.palette.primary.mainChannel ||
@@ -243,7 +252,7 @@ const Birthdays = () => {
                         sx={{
                           p: 2,
                           borderRadius: 2,
-                          border: (theme) => `1px solid ${theme.palette.divider}`,
+                          border: () => `1px solid ${theme.palette.divider}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',

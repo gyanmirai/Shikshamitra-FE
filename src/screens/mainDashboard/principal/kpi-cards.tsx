@@ -1,8 +1,7 @@
 'use client';
 
-import { Box, Grid } from '@mui/material';
+import { Grid } from '@mui/material';
 import { hrPaths } from 'src/constants/hr-menus';
-import { Chart, useChart } from 'src/components/chart';
 import { studentPaths } from 'src/constants/student-menu';
 import { academicPaths } from 'src/constants/academic-menu';
 import { classManagementPaths } from 'src/constants/class-management';
@@ -10,155 +9,103 @@ import CompactKPICard from 'src/screens/student/dashboard/principal/kpi-card-ite
 
 // ----------------------------------------------------------------------
 
-interface BarEntry {
-  label: string;
-  value: number;
-  color: string;
-}
-
-interface KpiItem {
-  id: string;
-  title: string;
-  value: string;
-  icon: string;
-  status: 'primary' | 'success' | 'info' | 'warning' | 'error';
-  path: string;
-  bars?: BarEntry[];
-}
-
-const kpiData: KpiItem[] = [
+const kpiData = [
   {
     id: 'TOTAL_STUDENTS',
     title: 'Total Students',
     value: '2,450',
-    icon: 'hugeicons:students',
-    status: 'primary',
+    status: 'primary' as const,
     path: studentPaths.records.studentList,
-    bars: [
-      { label: 'Girls', value: 1190, color: '#FF6B9D' },
-      { label: 'Boys', value: 1260, color: '#4FC3F7' },
-    ],
+    tooltip: 'Current Academic Year · 1,260 boys · 1,190 girls',
+    chart: {
+      type: 'bar' as const,
+      series: [1190, 1260] as any,
+      colors: ['#FF6B9D', '#4FC3F7'],
+      labels: ['Girls', 'Boys'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
     id: 'AVG_STUDENT_ATTENDANCE',
     title: 'Avg Student Attendance %',
     value: '91.4%',
-    icon: 'solar:user-check-bold',
-    status: 'success',
+    status: 'success' as const,
     path: studentPaths.attendance.markAttendance,
-    bars: [
-      { label: 'Girls', value: 91, color: '#FF6B9D' },
-      { label: 'Boys', value: 92, color: '#4FC3F7' },
-    ],
+    tooltip: 'Today · Girls: 91% · Boys: 92%',
+    chart: {
+      type: 'bar' as const,
+      series: [91, 92] as any,
+      colors: ['#FF6B9D', '#4FC3F7'],
+      labels: ['Girls', 'Boys'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
     id: 'AVG_TEACHER_ATTENDANCE',
     title: 'Avg Teacher Attendance %',
     value: '95.8%',
-    icon: 'clarity:employee-group-solid',
-    status: 'info',
+    status: 'info' as const,
     path: hrPaths.attendance.attendanceTracking,
-    bars: [
-      { label: 'Present', value: 91, color: '#22C55E' },
-      { label: 'Absent', value: 92, color: '#EF4444' },
-    ],
+    tooltip: 'Today · Present: 91% · Absent: 9%',
+    chart: {
+      type: 'bar' as const,
+      series: [91, 9] as any,
+      colors: ['#22C55E', '#EF4444'],
+      labels: ['Present', 'Absent'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
     id: 'CURRICULUM_COMPLETION',
     title: 'Curriculum Completion %',
     value: '68.2%',
-    icon: 'solar:book-bold',
-    status: 'warning',
+    status: 'warning' as const,
     path: classManagementPaths.chapters,
-    bars: [
-      { label: 'Completed', value: 68, color: '#22C55E' },
-      { label: 'Pending', value: 32, color: '#EF4444' },
-    ],
+    tooltip: 'Current Term · Completed: 68% · Pending: 32%',
+    chart: {
+      type: 'bar' as const,
+      series: [68, 32] as any,
+      colors: ['#22C55E', '#EF4444'],
+      labels: ['Done', 'Pending'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
     id: 'UPCOMING_EXAMS',
     title: 'Upcoming Exams (7d)',
     value: '6',
-    icon: 'solar:document-bold',
-    status: 'error',
+    status: 'error' as const,
     path: academicPaths.examination.schedule,
+    tooltip: 'Next 7 days · 6 exams scheduled',
+    chart: {
+      type: 'bar' as const,
+      series: [4, 2] as any,
+      colors: ['#FF5630', '#FFAB00'],
+      labels: ['Theory', 'Practical'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
 ];
-
-// ----------------------------------------------------------------------
-
-function InlineBarChart({ bars }: { bars: BarEntry[] }) {
-  const chartOptions = useChart({
-    colors: bars.map((b) => b.color),
-    chart: {
-      animations: { enabled: false },
-      sparkline: { enabled: true },
-    },
-    plotOptions: {
-      bar: {
-        columnWidth: '55%',
-        borderRadius: 2,
-        distributed: true,
-      },
-    },
-    tooltip: {
-      x: { show: false },
-      y: {
-        formatter: (val: number) => `${val}`,
-        title: {
-          formatter: (seriesName: string, opts: any) =>
-            `${bars[opts?.dataPointIndex]?.label ?? seriesName}:`,
-        },
-      },
-      marker: { show: true },
-    },
-    legend: { show: false },
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: bars.map((b) => b.label),
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      labels: {
-        show: true,
-        style: {
-          fontSize: '7px',
-          fontWeight: 600,
-          /* Each label inherits its bar's color for visual cohesion */
-          colors: bars.map((b) => b.color),
-        },
-        // offsetY: -2,
-      },
-    },
-    yaxis: { show: false },
-  });
-
-  return (
-    /* Chart + text labels wrapper — labels rendered via MUI since sparkline hides xaxis */
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <Box sx={{ width: 20, height: 40 }}>
-        <Chart
-          type="bar"
-          series={[{ name: 'Value', data: bars.map((b) => b.value) }]}
-          options={chartOptions}
-          width={30}
-          height={40}
-          dir="ltr"
-        />
-      </Box>
-      {/* Colored text labels below each bar */}
-      {/* <Stack direction="row" spacing={0.5} sx={{ mt: 0.25 }}>
-        {bars.map((b) => (
-          <Typography
-            key={b.label}
-            sx={{ fontSize: '0.58rem', fontWeight: 700, color: b.color, lineHeight: 1 }}
-          >
-            {b.label}
-          </Typography>
-        ))}
-      </Stack> */}
-    </Box>
-  );
-}
 
 // ----------------------------------------------------------------------
 
@@ -166,27 +113,14 @@ const PrincipalKpiCards = () => (
   <Grid container spacing={1}>
     {kpiData.map((kpi) => (
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }} key={kpi.id}>
-        <Box sx={{ position: 'relative', height: '100%' }}>
-          <CompactKPICard
-            title={kpi.title}
-            value={kpi.value}
-            icon={kpi.icon}
-            status={kpi.status}
-            path={kpi.path}
-          />
-          {kpi.bars && (
-            <Box
-              sx={{
-                position: 'absolute',
-                right: 20,
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            >
-              <InlineBarChart bars={kpi.bars} />
-            </Box>
-          )}
-        </Box>
+        <CompactKPICard
+          title={kpi.title}
+          value={kpi.value}
+          status={kpi.status}
+          path={kpi.path}
+          tooltip={kpi.tooltip}
+          chart={kpi.chart}
+        />
       </Grid>
     ))}
   </Grid>

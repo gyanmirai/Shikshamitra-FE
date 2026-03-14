@@ -80,6 +80,7 @@ const TeacherLists = () => {
     {
       id: 'status',
       label: 'Status',
+      sticky: true,
       align: 'left',
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
@@ -109,6 +110,7 @@ const TeacherLists = () => {
       id: 'status',
       label: 'Status',
       align: 'left',
+      sticky: true,
       render: (value: string) => (
         <Label variant="soft" color={value === 'Absent' ? 'error' : 'warning'}>
           {value}

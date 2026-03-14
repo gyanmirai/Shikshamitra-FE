@@ -8,9 +8,10 @@ const kpiData = [
     id: 'ENQ_TOTAL',
     title: 'Total Inquiries',
     value: '1,250',
+    tooltip:
+      'Total number of admission inquiries received from parents via walk-in or online channels.',
     status: 'success' as const,
     path: studentPaths.enrollment.inquiry,
-    // Bar chart: Walk-in vs Online inquiries
     chart: {
       type: 'bar' as const,
       series: [820, 430],
@@ -22,9 +23,9 @@ const kpiData = [
     id: 'REG_TOTAL',
     title: 'Total Registration',
     value: '980',
+    tooltip: 'Total number of students who have completed or started the registration process.',
     status: 'info' as const,
     path: studentPaths.enrollment.registration,
-    // Donut: Completed vs Pending registrations
     chart: {
       type: 'donut' as const,
       series: [780, 200],
@@ -38,9 +39,10 @@ const kpiData = [
     id: 'ADM_TOTAL',
     title: 'Total Admission',
     value: '850',
+    tooltip:
+      'Number of students whose admission applications have been processed (approved, rejected, or pending).',
     status: 'warning' as const,
     path: studentPaths.enrollment.admission,
-    // Donut: Approved vs Rejected vs Pending
     chart: {
       type: 'donut' as const,
       series: [680, 120, 50],
@@ -54,9 +56,9 @@ const kpiData = [
     id: 'STU_TOTAL',
     title: 'Total Students',
     value: '3,500',
+    tooltip: 'Total number of currently enrolled students in the school.',
     status: 'primary' as const,
     path: studentPaths.records.studentList,
-    // Bar chart: Boys vs Girls
     chart: {
       type: 'bar' as const,
       series: [1800, 1700],
@@ -69,10 +71,10 @@ const kpiData = [
     id: 'STU_LEFT',
     title: 'Students Left',
     value: '45',
+    tooltip:
+      'Students who left the school during the selected period, including transfers and dropouts.',
     status: 'error' as const,
     path: studentPaths.records.studentList,
-    tooltip: 'Includes transferred and dropped-out students during the selected period.',
-    // Donut: Transferred vs Dropped-out
     chart: {
       type: 'donut' as const,
       series: [28, 17],
@@ -86,10 +88,9 @@ const kpiData = [
     id: 'RTE_STUDENTS',
     title: 'RTE Students',
     value: '120',
+    tooltip: 'Students admitted under the Right to Education (RTE) scheme.',
     status: 'info' as const,
     path: studentPaths.records.studentList,
-    tooltip: 'Students admitted under the Right to Education scheme.',
-    // Donut: RTE vs General students
     chart: {
       type: 'donut' as const,
       series: [120, 3380],
@@ -109,7 +110,7 @@ const AdminKPICards = () => (
           title={kpi.title}
           value={kpi.value}
           path={kpi.path}
-          // tooltip={(kpi as any).tooltip}
+          tooltip={(kpi as any).tooltip}
           status={kpi.status}
           chart={kpi.chart}
         />

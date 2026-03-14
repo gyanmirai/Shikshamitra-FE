@@ -35,17 +35,13 @@ const TeacherDashboard = () => (
         <Grid size={{ xs: 12, md: 6 }}>
           <HomeworkStatus />
         </Grid>
+        <Grid size={{ xs: 12 }}>
+          <StudentsNeedingAttention />
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <AbsentStudents />
+        </Grid>
       </Grid>
-
-      {/* SECTION 4 – STUDENTS NEEDING ATTENTION */}
-      <Box>
-        <StudentsNeedingAttention />
-      </Box>
-
-      {/* SECTION 5 – ABSENT STUDENTS TODAY */}
-      <Box>
-        <AbsentStudents />
-      </Box>
     </Stack>
   </Box>
 );

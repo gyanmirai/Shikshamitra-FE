@@ -56,6 +56,7 @@ const PrincipalStaffOperations = () => {
       {
         id: 'status',
         label: 'Status',
+        sticky: true,
         render: (value: any, row: any) => {
           let statusLabel = 'Excellent';
           let statusColor: 'success' | 'warning' | 'error' = 'success';
@@ -82,7 +83,12 @@ const PrincipalStaffOperations = () => {
   return (
     <Grid container sx={{ mb: 1 }}>
       <Grid size={{ xs: 12 }}>
-        <Card sx={{ p: 1 }}>
+        <Card
+          sx={{
+            p: 1,
+            '&:hover': { transform: 'translateY(-4px)', boxShadow: (theme) => theme.shadows[8] },
+          }}
+        >
           <CardHeader
             title={
               <Stack
@@ -113,6 +119,7 @@ const PrincipalStaffOperations = () => {
           />
           <CustomizableTable
             tableId="teacher_performance_table"
+            noDataText="No Teacher Performance Data Available"
             columns={TABLE_COLUMNS}
             data={teacherPerformance}
             isSearch

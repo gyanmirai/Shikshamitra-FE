@@ -177,16 +177,18 @@ const AdminLists = () => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Card
           sx={{
-            boxShadow: (theme) => theme.shadows[2],
             borderRadius: 2,
             height: 480,
             display: 'flex',
             flexDirection: 'column',
+            '&:hover': {
+              boxShadow: (theme) => theme.shadows[8],
+            },
           }}
         >
           <CardHeader
             title="Upcoming & Recent Exams"
-            titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
+            titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
             action={
               <Button
                 size="small"
@@ -202,7 +204,7 @@ const AdminLists = () => {
           />
 
           <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
-            <Stack spacing={1}>
+            <Stack spacing={1} sx={{ pb: 1 }}>
               {upcomingExams.map((exam) => (
                 <Box
                   key={exam.id}

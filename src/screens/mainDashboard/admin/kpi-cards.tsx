@@ -14,7 +14,7 @@ const kpiData = [
     id: 'TOTAL_STUDENTS',
     title: 'Total Students',
     value: '2,450',
-    icon: 'hugeicons:students',
+    // icon: 'hugeicons:students',
     status: 'primary' as const,
     path: studentPaths.records.studentList,
     tooltip: 'Current Academic Year · 1,260 boys · 1,190 girls',
@@ -34,7 +34,7 @@ const kpiData = [
     id: 'TOTAL_STAFF',
     title: 'Total Staff',
     value: '185',
-    icon: 'clarity:employee-group-solid',
+    // icon: 'clarity:employee-group-solid',
     status: 'info' as const,
     path: hrPaths.employee.list,
     tooltip: 'Current Academic Year · 103 male · 82 female',
@@ -54,7 +54,7 @@ const kpiData = [
     id: 'TODAY_ATTENDANCE',
     title: 'Student Attendance',
     value: '70.2%',
-    icon: 'solar:user-check-bold',
+    // icon: 'solar:user-check-bold',
     status: 'success' as const,
     path: hrPaths.attendance.attendanceTracking,
     tooltip: 'Today · 145 students absent',
@@ -74,7 +74,7 @@ const kpiData = [
     id: 'PENDING_FEE',
     title: 'Total Fees',
     value: '₹12.5L',
-    icon: 'solar:wad-of-money-bold',
+    // icon: 'solar:wad-of-money-bold',
     status: 'error' as const,
     path: financePaths.feeCollection,
     tooltip: 'Current Academic Year · 320 students pending',
@@ -94,7 +94,7 @@ const kpiData = [
     id: 'ACTIVE_ROUTES',
     title: 'Transport Routes',
     value: '26',
-    icon: 'solar:bus-bold',
+    // icon: 'solar:bus-bold',
     status: 'warning' as const,
     path: transportPaths.routeManagement,
     tooltip: 'Today · 5 buses at full capacity',
@@ -114,7 +114,7 @@ const kpiData = [
     id: 'PENDING_ADMISSIONS',
     title: 'Pending Admissions',
     value: '42',
-    icon: 'solar:document-add-bold',
+    // icon: 'solar:document-add-bold',
     status: 'secondary' as const,
     path: studentPaths.enrollment.admission,
     tooltip: 'This Session · 5 applications waiting > 3 days',
@@ -141,7 +141,6 @@ const AdminKpiCards = () => (
         <CompactKPICard
           title={kpi.title}
           value={kpi.value}
-          icon={kpi.icon}
           status={kpi.status}
           path={kpi.path}
           tooltip={kpi.tooltip}

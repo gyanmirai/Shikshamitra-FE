@@ -10,8 +10,6 @@ import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
 interface CompactKPICardProps {
   title: string;
   value: string | number;
-
-  percentChange?: number;
   trendData?: number[];
   status?: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary';
   sx?: any;
@@ -35,7 +33,6 @@ const RADIAL_TYPES = ['donut', 'pie', 'radialBar'];
 export default function CompactKPICard({
   title,
   value,
-  percentChange,
   trendData,
   status = 'info',
   path,
@@ -159,8 +156,6 @@ export default function CompactKPICard({
   // Keep backward-compat alias
   const chartOptions = sparklineOptions;
 
-  const isPositive = percentChange !== undefined && percentChange >= 0;
-
   return (
     <Card
       onClick={handleClick}
@@ -246,29 +241,6 @@ export default function CompactKPICard({
         <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
           {value}
         </Typography>
-
-        {percentChange && (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <Iconify
-              icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
-              sx={{
-                color: isPositive ? 'success.main' : 'error.main',
-                width: 18,
-                height: 18,
-              }}
-            />
-            <Typography
-              variant="subtitle2"
-              component="span"
-              sx={{ color: isPositive ? 'success.main' : 'error.main' }}
-            >
-              {Math.abs(percentChange)}%
-            </Typography>
-            <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-              vs last year
-            </Typography>
-          </Stack>
-        )}
       </Box>
 
       {chart?.series &&
