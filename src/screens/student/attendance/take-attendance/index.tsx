@@ -17,13 +17,14 @@ import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
-import { Box, Card, Stack, Button, Tooltip, TextField, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
 import {
   useMarkAttendanceMutation,
   useLockAttendanceMutation,
@@ -55,6 +56,8 @@ const TakeAttendanceScreen = () => {
   const isSaved = useBoolean();
   // Reset confirmation dialog
   const resetConfirmDialog = useBoolean();
+  // Lock confirmation dialog
+  const lockConfirmDialog = useBoolean();
 
   const { currentYear, currentMedium: medium } = useSelector(
     (state: RootState) => state.globalState
@@ -152,8 +155,10 @@ const TakeAttendanceScreen = () => {
         await lockAttendance(lockPayload).unwrap();
         shikshaMitraToast.success({ message: 'Attendance locked successfully' });
       }
+      lockConfirmDialog.onFalse();
     } catch (error) {
       console.error('Lock/unlock error:', error);
+      lockConfirmDialog.onFalse();
     }
   };
 
@@ -253,68 +258,85 @@ const TakeAttendanceScreen = () => {
           disabled={!classes}
         />
         {/* Reset Button */}
-        <Button
-          size="small"
-          variant="outlined"
-          color="inherit"
-          startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
-          onClick={() => {
-            resetConfirmDialog.onTrue();
-          }}
-          disabled={
-            studentData.length === 0 ||
-            studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
-          }
-          sx={{
-            minWidth: '90px',
-            fontWeight: 500,
-            fontSize: '0.875rem',
-          }}
-        >
-          Reset
-        </Button>
+        {!isLocked && (
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
+            onClick={() => {
+              resetConfirmDialog.onTrue();
+            }}
+            disabled={
+              isLockLoading ||
+              isUnlockLoading ||
+              studentData.length === 0 ||
+              studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
+            }
+            sx={{
+              minWidth: '90px',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Reset
+          </Button>
+        )}
 
         {/* Lock / Unlock Button */}
-        <Button
-          size="small"
-          variant={isLocked ? 'contained' : 'outlined'}
-          color={isLocked ? 'error' : 'inherit'}
-          loading={isLockLoading || isUnlockLoading}
-          disabled={!attendanceDayId}
-          startIcon={
-            <Iconify
-              icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
-              sx={{ fontSize: '16px' }}
-            />
+        <CustomTooltip
+          title={
+            isLocked ? 'Attendance is locked and cannot be modified' : 'Click to lock attendance'
           }
-          onClick={handleLockToggle}
-          sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
+          arrow
+          placement="top"
         >
-          {isLocked ? 'Locked' : 'Lock'}
-        </Button>
+          <span>
+            <Button
+              size="small"
+              variant={isLocked ? 'contained' : 'outlined'}
+              color={isLocked ? 'error' : 'inherit'}
+              loading={isLockLoading || isUnlockLoading}
+              disabled={isLocked || !attendanceDayId || isLockLoading || isUnlockLoading}
+              startIcon={
+                <Iconify
+                  icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
+                  sx={{ fontSize: '16px' }}
+                />
+              }
+              onClick={() => lockConfirmDialog.onTrue()}
+              sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
+            >
+              {isLocked ? 'Locked' : 'Lock'}
+            </Button>
+          </span>
+        </CustomTooltip>
 
         {/* Save Button */}
-        <Button
-          size="small"
-          variant="contained"
-          loading={isMarkAttendanceLoading}
-          startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
-          onClick={() => {
-            handleSave();
-          }}
-          disabled={
-            isLocked ||
-            studentData.length === 0 ||
-            studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
-          }
-          sx={{
-            minWidth: '90px',
-            fontWeight: 500,
-            fontSize: '0.875rem',
-          }}
-        >
-          Save
-        </Button>
+        {!isLocked && (
+          <Button
+            size="small"
+            variant="contained"
+            loading={isMarkAttendanceLoading}
+            startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
+            onClick={() => {
+              handleSave();
+            }}
+            disabled={
+              isLockLoading ||
+              isUnlockLoading ||
+              studentData.length === 0 ||
+              studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
+            }
+            sx={{
+              minWidth: '90px',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+            }}
+          >
+            Save
+          </Button>
+        )}
       </Card>
 
       <ListView
@@ -324,6 +346,40 @@ const TakeAttendanceScreen = () => {
         isLoading={isLoading}
         isFetching={isFetching}
         studentData={studentData}
+        isLocked={isLocked}
+      />
+
+      {/* Lock Confirmation Dialog */}
+      <ConfirmDialog
+        open={lockConfirmDialog.value}
+        onClose={() => {
+          if (!isLockLoading && !isUnlockLoading) {
+            lockConfirmDialog.onFalse();
+          }
+        }}
+        title={isLocked ? 'Unlock Attendance' : 'Lock Attendance'}
+        content={
+          <>
+            Are you sure you want to {isLocked ? 'unlock' : 'lock'} the attendance?
+            <br />
+            <strong>
+              {isLocked
+                ? 'Unlocking will allow further modifications to the attendance.'
+                : 'Locking will prevent any further modifications to the attendance.'}
+            </strong>
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color={isLocked ? 'error' : 'primary'}
+            size="small"
+            loading={isLockLoading || isUnlockLoading}
+            onClick={handleLockToggle}
+          >
+            Yes, {isLocked ? 'Unlock' : 'Lock'}
+          </Button>
+        }
       />
 
       {/* Reset Confirmation Dialog */}
@@ -365,7 +421,15 @@ const TakeAttendanceScreen = () => {
 };
 export default TakeAttendanceScreen;
 
-const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studentData }: any) => {
+const ListView = ({
+  isSaved,
+  data,
+  setStudentData,
+  isLoading,
+  isFetching,
+  studentData,
+  isLocked,
+}: any) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -443,6 +507,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
               return row.isPresent === AttendanceStatus.Absent ? (
                 <TextField
                   size="small"
+                  disabled={isLocked}
                   value={value || ''}
                   onChange={(e) => {
                     setStudentData(
@@ -566,7 +631,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                   }}
                 >
                   {/* Present Button with Tooltip - Clickable to Mark All */}
-                  <Tooltip
+                  <CustomTooltip
                     title={
                       studentData.filter((item: any) => item.isPresent === AttendanceStatus.Present)
                         .length > 0 ? (
@@ -639,6 +704,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                       onClick={(e) => {
                         e.stopPropagation();
                         if (
+                          isLocked ||
                           data.length === 0 ||
                           data.every((item: any) => item.isPresent === AttendanceStatus.Present)
                         ) {
@@ -667,11 +733,13 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                             ? theme.vars.palette.success.contrastText
                             : theme.vars.palette.text.secondary,
                         cursor:
+                          isLocked ||
                           data.length === 0 ||
                           data.every((item: any) => item.isPresent === AttendanceStatus.Present)
                             ? 'not-allowed'
                             : 'pointer',
                         opacity:
+                          isLocked ||
                           data.length === 0 ||
                           data.every((item: any) => item.isPresent === AttendanceStatus.Present)
                             ? 0.5
@@ -679,6 +747,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                         transition: 'all 0.2s',
                         '&:hover': {
                           bgcolor: (theme) =>
+                            isLocked ||
                             data.length === 0 ||
                             data.every((item: any) => item.isPresent === AttendanceStatus.Present)
                               ? 'transparent'
@@ -692,10 +761,10 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                     >
                       <Iconify icon="eva:checkmark-fill" width={18} />
                     </Box>
-                  </Tooltip>
+                  </CustomTooltip>
 
                   {/* Pending Button with Tooltip */}
-                  <Tooltip
+                  <CustomTooltip
                     title={
                       studentData.filter((item: any) => item.isPresent === AttendanceStatus.Pending)
                         .length > 0 ? (
@@ -781,10 +850,10 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                     >
                       <Iconify icon="eva:minus-fill" width={18} />
                     </Box>
-                  </Tooltip>
+                  </CustomTooltip>
 
                   {/* Absent Button with Tooltip - Clickable to Mark All */}
-                  <Tooltip
+                  <CustomTooltip
                     title={
                       studentData.filter((item: any) => item.isPresent === AttendanceStatus.Absent)
                         .length > 0 ? (
@@ -857,6 +926,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                       onClick={(e) => {
                         e.stopPropagation();
                         if (
+                          isLocked ||
                           data.length === 0 ||
                           data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
                         ) {
@@ -885,11 +955,13 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                             ? theme.vars.palette.error.contrastText
                             : theme.vars.palette.text.secondary,
                         cursor:
+                          isLocked ||
                           data.length === 0 ||
                           data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
                             ? 'not-allowed'
                             : 'pointer',
                         opacity:
+                          isLocked ||
                           data.length === 0 ||
                           data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
                             ? 0.5
@@ -897,6 +969,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                         transition: 'all 0.2s',
                         '&:hover': {
                           bgcolor: (theme) =>
+                            isLocked ||
                             data.length === 0 ||
                             data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
                               ? 'transparent'
@@ -910,7 +983,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                     >
                       <Iconify icon="eva:close-fill" width={18} />
                     </Box>
-                  </Tooltip>
+                  </CustomTooltip>
                 </Box>
               </Stack>
             ),
@@ -953,6 +1026,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                     {/* Present Button */}
                     <Box
                       onClick={() => {
+                        if (isLocked) return;
                         setStudentData(
                           data.map((item: any) =>
                             item.studentId === row.studentId
@@ -967,7 +1041,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        opacity: isLocked ? 0.5 : 1,
                         bgcolor:
                           value === AttendanceStatus.Present
                             ? (theme) => theme.vars.palette.success.main
@@ -991,6 +1066,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                     {/* Pending Button */}
                     <Box
                       onClick={() => {
+                        if (isLocked) return;
                         setStudentData(
                           data.map((item: any) =>
                             item.studentId === row.studentId
@@ -1005,7 +1081,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        opacity: isLocked ? 0.5 : 1,
                         bgcolor:
                           value === AttendanceStatus.Pending
                             ? (theme) => theme.vars.palette.warning.main
@@ -1029,6 +1106,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                     {/* Absent Button */}
                     <Box
                       onClick={() => {
+                        if (isLocked) return;
                         setStudentData(
                           data.map((item: any) =>
                             item.studentId === row.studentId
@@ -1043,7 +1121,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching, studen
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        opacity: isLocked ? 0.5 : 1,
                         bgcolor:
                           value === AttendanceStatus.Absent
                             ? (theme) => theme.vars.palette.error.main
