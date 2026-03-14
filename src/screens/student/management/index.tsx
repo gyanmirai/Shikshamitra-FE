@@ -233,7 +233,16 @@ const StudentManagementScreen = () => {
             }}
           >
             {/* Filters Section */}
-            <Card sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Card
+              sx={{
+                p: 1,
+                display: 'flex',
+                gap: 2,
+                alignItems: 'center',
+                minHeight: 0,
+                flexShrink: 0,
+              }}
+            >
               <CustomSelect
                 options={allOrganization}
                 label="Organization"

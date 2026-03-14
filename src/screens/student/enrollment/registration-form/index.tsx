@@ -24,7 +24,7 @@ const RegistrationFormScreen = () => {
   const dispatch = useDispatch();
   const [editData, setEditData] = useState<IGeneralInformationResponse | null>(null);
   const followUpDialog = useBoolean();
-  const { tableData, isLoading } = useRegistrationFormData();
+  const { tableData, isLoading, isFetching } = useRegistrationFormData();
 
   // Mutation hook to move student to registration status
   // const [moveToRegistration] = useQueryAndMutation({
@@ -113,7 +113,7 @@ const RegistrationFormScreen = () => {
       ) : (
         <RegistrationTable
           data={tableData}
-          isLoading={isLoading}
+          isLoading={isLoading || isFetching}
           onMoveToRegistration={handleMoveToRegistration}
           onOpenNotes={handleOpenNotes}
         />

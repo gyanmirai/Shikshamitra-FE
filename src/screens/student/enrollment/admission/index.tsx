@@ -64,6 +64,7 @@ import {
   IconButton,
   Typography,
   RadioGroup,
+  Autocomplete,
   DialogActions,
   CircularProgress,
   FormControlLabel,
@@ -95,6 +96,7 @@ const AdmissionScreen = () => {
     skipCount: 0,
     maxResultCount: 10,
   });
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const {
     data: admissionData,
     isLoading,
@@ -103,40 +105,44 @@ const AdmissionScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetStudentAdmissionQuery,
     params: {
+      AcademicMediumId: currentMedium?.id,
       approvalStatus: tabs.value,
       ...query,
     },
   });
-  const counts = useMemo(
-    () => ({
-      pending: admissionData?.items?.length || 0,
-      approved: 0,
-      rejected: 0,
-    }),
-    [admissionData?.items]
-  );
+  // Persist the last-known count per tab so badges don't reset to 0 when switching
+  const [tabCounts, setTabCounts] = useState<Record<string | number, number>>({});
+  useEffect(() => {
+    if (!isFetching && admissionData?.items !== undefined) {
+      setTabCounts((prev) => ({
+        ...prev,
+        [tabs.value]: admissionData.items.length,
+      }));
+    }
+  }, [admissionData?.items, tabs.value, isFetching]);
+
   const TABS = useMemo(
     () => [
       {
         label: 'Pending',
         value: RegistrationStatusType.Pending,
-        count: counts.pending || 0,
+        count: tabCounts[RegistrationStatusType.Pending] ?? 0,
         color: 'warning',
       },
       {
         label: 'Approved',
         value: RegistrationStatusType.Approved,
-        count: counts.approved || 0,
+        count: tabCounts[RegistrationStatusType.Approved] ?? 0,
         color: 'success',
       },
       {
         label: 'Rejected',
         value: RegistrationStatusType.Rejected,
-        count: counts.rejected || 0,
+        count: tabCounts[RegistrationStatusType.Rejected] ?? 0,
         color: 'error',
       },
     ],
-    [counts]
+    [tabCounts]
   );
 
   // Reset form and close dialog
@@ -188,6 +194,8 @@ const AdmissionScreen = () => {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     setSelectedStudents([]);
+    // Reset pagination and sorting so the new tab always starts from page 1
+    setQuery({ sorting: '', skipCount: 0, maxResultCount: 10 });
     tabs.onChange(event, newValue);
   };
 
@@ -847,7 +855,8 @@ const DocumentsSections = ({ editData }: any) => {
   const { data: employeeDocuments } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
-    params: editData?.id,
+    params: { studentId: editData?.studentId },
+    options: { skip: !editData?.studentId },
   });
 
   const tableData = useMemo(
@@ -1076,9 +1085,11 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
   });
   const formik = useFormik<{
     status: RegistrationStatusType;
+    remarks: string;
   }>({
     initialValues: {
       status: 0,
+      remarks: '',
     },
     onSubmit: async (values) => {
       try {
@@ -1091,7 +1102,7 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
           body: selectedStudents.map((i: any) => ({
             studentId: i.studentId,
             action: values.status,
-            remarks: '',
+            remarks: values.remarks,
           })),
         }).unwrap();
         shikshaMitraToast.success({
@@ -1104,31 +1115,97 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     },
   });
 
+  const options = [
+    {
+      label: 'Approved',
+      value: RegistrationStatusType.Approved,
+      description: 'Approve the student admission',
+    },
+    {
+      label: 'Pending',
+      value: RegistrationStatusType.Pending,
+      description: 'Keep the admission pending',
+    },
+    {
+      label: 'Rejected',
+      value: RegistrationStatusType.Rejected,
+      description: 'Reject the student admission',
+    },
+  ];
+
   return (
     <>
       <DialogScrollContent>
-        <CustomSelect
-          options={[
-            { label: 'Approved', value: RegistrationStatusType.Approved },
-            { label: 'Pending', value: RegistrationStatusType.Pending },
-            { label: 'Rejected', value: RegistrationStatusType.Rejected },
-          ]}
-          value={formik.values.status}
-          onChange={(val) => {
-            formik.setFieldValue('status', val);
-          }}
-          label="Status"
-          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-        />
+        <Stack spacing={2}>
+          <Autocomplete
+            options={options}
+            value={options.find((opt) => opt.value === formik.values.status)}
+            onChange={(_, newValue) => {
+              formik.setFieldValue('status', newValue?.value || 0);
+            }}
+            size="small"
+            disableClearable
+            getOptionLabel={(option) => String(option.label)}
+            renderOption={(props, option) => (
+              <Box
+                component="li"
+                {...props}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
+              >
+                {option.label}
+                <Box sx={{ marginLeft: 'auto' }}>
+                  <CustomTooltip title={option.description} placement="right">
+                    <IconButton
+                      size="small"
+                      sx={{
+                        color:
+                          option.value === RegistrationStatusType.Approved
+                            ? 'success.main'
+                            : option.value === RegistrationStatusType.Rejected
+                              ? 'error.main'
+                              : 'warning.main',
+                      }}
+                    >
+                      <Iconify icon="mdi:information" width={20} />
+                    </IconButton>
+                  </CustomTooltip>
+                </Box>
+              </Box>
+            )}
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Select Status" fullWidth />
+            )}
+          />
+          <TextField
+            fullWidth
+            label="Remarks"
+            name="remarks"
+            value={formik.values.remarks}
+            onChange={formik.handleChange}
+            multiline
+            rows={4}
+          />
+        </Stack>
       </DialogScrollContent>
       <DialogActions>
-        <CancelButton onClick={handleClose} />
-        <SubmitButton
+        <Button
+          variant="outlined"
+          onClick={handleClose}
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
           loading={isLoading}
-          onClick={() => {
-            formik.handleSubmit();
-          }}
-        />
+          variant="contained"
+          type="submit"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Update
+        </LoadingButton>
       </DialogActions>
     </>
   );

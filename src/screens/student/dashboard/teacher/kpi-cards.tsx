@@ -9,15 +9,15 @@ interface KPIItem {
   title: string;
   value: string;
   percent: number;
-  chart: { data: number[] };
-  fullChart?: {
+  chart: {
     type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
     series?: any[];
     colors?: string[];
-    options?: any;
+    width?: number;
+    height?: number;
+    labels?: string[];
   };
-  icon: string;
-  status: 'info' | 'success' | 'warning' | 'primary';
+  status: 'info' | 'success' | 'warning' | 'primary' | 'error' | 'secondary';
   path?: string;
 }
 
@@ -27,34 +27,14 @@ const kpiData: KPIItem[] = [
     title: 'Class Strength',
     value: '45',
     percent: 0, // No change usually
-    chart: { data: [45, 45, 45, 45, 45, 45, 45, 45, 45, 45] },
-    fullChart: {
-      type: 'bar',
-      series: [
-        { name: 'Boys', data: [20] },
-        { name: 'Girls', data: [25] },
-      ],
-      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
-      options: {
-        tooltip: {
-          x: { show: false },
-          y: { formatter: (val: number) => `${val} Students` },
-        },
-        xaxis: {
-          categories: ['Strength'],
-          labels: { show: false },
-        },
-        plotOptions: {
-          bar: {
-            columnWidth: '40%',
-            borderRadius: 2,
-            distributed: false,
-          },
-        },
-      },
-    },
-    icon: 'mdi:account-group-outline',
     status: 'info' as const,
+    chart: {
+      type: 'bar' as const,
+      series: [20, 25],
+      labels: ['Boys', 'Girls'],
+      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
+      width: 30, // Matches our 30px standard for Total Students
+    },
     path: studentPaths.records.studentList,
   },
   {
@@ -62,9 +42,15 @@ const kpiData: KPIItem[] = [
     title: 'Present Today',
     value: '42',
     percent: 2.4, // Comparison vs yesterday
-    chart: { data: [40, 41, 42, 38, 39, 42, 41, 40, 41, 42] },
-    icon: 'mdi:account-check-outline',
     status: 'success' as const,
+    chart: {
+      type: 'donut' as const,
+      series: [42, 3],
+      labels: ['Present', 'Absent'],
+      colors: ['#22C55E', '#EF4444'],
+      width: 56,
+      height: 56,
+    },
     path: studentPaths.attendance.markAttendance,
   },
   {
@@ -72,9 +58,15 @@ const kpiData: KPIItem[] = [
     title: 'Pending Assignments',
     value: '12',
     percent: -5.0,
-    chart: { data: [15, 14, 18, 12, 10, 12, 8, 14, 15, 12] },
-    icon: 'mdi:clipboard-clock-outline',
-    status: 'warning' as const,
+    status: 'success' as const,
+    chart: {
+      type: 'donut' as const,
+      series: [12, 30],
+      labels: ['Pending', 'Completed'],
+      colors: ['#FF5630', '#22C55E'],
+      width: 56,
+      height: 56,
+    },
     path: academicPaths.homework.learningTasks,
   },
   {
@@ -82,24 +74,18 @@ const kpiData: KPIItem[] = [
     title: 'Class Performance',
     value: '78%',
     percent: 3.5, // Improved
-    chart: { data: [65, 68, 70, 72, 74, 75, 76, 75, 77, 78] },
-    icon: 'mdi:chart-line',
     status: 'primary' as const,
+    chart: {
+      type: 'donut' as const,
+      series: [78, 22],
+      labels: ['Score', 'Remaining'],
+      colors: ['#22C55E', '#FF5630'],
+      width: 56,
+      height: 56,
+    },
     path: academicPaths.examination.recordMarks,
   },
 ];
-
-const getComparisonLabel = (title: string) => {
-  switch (title) {
-    case 'Present Today':
-    case 'Pending Assignments':
-      return 'vs Yesterday';
-    case 'Class Strength':
-    case 'Class Performance':
-    default:
-      return 'vs last year';
-  }
-};
 
 const TeacherKPICards = () => (
   <Grid container spacing={1}>
@@ -108,13 +94,10 @@ const TeacherKPICards = () => (
         <CompactKPICard
           title={kpi.title}
           value={kpi.value}
-          icon={kpi.icon}
           percentChange={kpi.percent}
-          trendData={kpi.chart.data}
           status={kpi.status}
           path={kpi.path}
-          comparisonLabel={getComparisonLabel(kpi.title)}
-          chart={kpi.fullChart}
+          chart={kpi.chart}
         />
       </Grid>
     ))}

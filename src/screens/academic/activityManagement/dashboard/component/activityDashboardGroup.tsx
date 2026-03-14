@@ -2,7 +2,7 @@ import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
 import { Box, Card, Grid } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -63,10 +63,7 @@ const ActivityDashboardGroup = () => {
                 { name: 'Dynamic', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
                 { name: 'Static', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
               ],
-              colors: [
-                alpha(theme.vars.palette.warning.dark, 0.8),
-                alpha(theme.vars.palette.secondary.main, 0.8),
-              ],
+              colors: [theme.vars.palette.warning.dark, theme.vars.palette.secondary.main],
             }}
             sx={{ height: '100%' }}
           />

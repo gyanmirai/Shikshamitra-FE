@@ -12,9 +12,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
-import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -151,7 +151,7 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
 
   // Toggle manual GR number generation mode
   const handleManualToggle = () => {
-    setIsManual(true);
+    setIsManual((prev) => !prev);
   };
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -261,8 +261,8 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
           )}
           <Button
             size="small"
-            startIcon={<Grading />}
-            variant="outlined"
+            startIcon={<ChecklistOutlined />}
+            variant={isManual ? 'contained' : 'outlined'}
             onClick={handleManualToggle}
           >
             Manual

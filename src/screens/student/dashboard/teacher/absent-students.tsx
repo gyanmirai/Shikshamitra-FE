@@ -1,8 +1,12 @@
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { Division, Standards, Organization } from 'src/types/school';
 
-import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
@@ -68,6 +72,27 @@ const MiniTrend = ({ data }: { data: number[] }) => (
 );
 
 const AbsentStudents = () => {
+  // Class & Division state (same pattern as SubjectPassFailChart)
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  useEffect(() => {
+    const currentClass = allClass.find((org: Standards) => org?.id === classes);
+    setAllDivision(currentClass?.divisions || []);
+    setDivision(currentClass?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -135,6 +160,29 @@ const AbsentStudents = () => {
         sx={{ ml: -1, mt: -1 }}
         title="Absent Students Today"
         subheader="3 Students Absent"
+        action={
+          <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+              disabled={!classes}
+            />
+          </Box>
+        }
       />
       <Box sx={{ p: 1 }}>
         <CustomizableTable

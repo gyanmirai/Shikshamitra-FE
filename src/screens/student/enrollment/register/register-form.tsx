@@ -199,7 +199,7 @@ const RegisterForm = ({
             // academicYearId: values.academicYear,
             // educationBoardId: values.board,
           }).unwrap();
-          formik.setFieldValue('id', resp?.studentId);
+          formik.setFieldValue('id', resp?.data?.studentId);
         }
       } catch (error) {
         throw new Error(error);

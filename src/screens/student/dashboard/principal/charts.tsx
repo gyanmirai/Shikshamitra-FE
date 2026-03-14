@@ -5,6 +5,19 @@ import { Box, Grid, Card, Stack, CardHeader, Typography, LinearProgress } from '
 
 import ClassDivisionFilter from './class-division-filter';
 
+const renderInfoTooltip = (title: string, tooltipText: string) => (
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Box component="span">{title}</Box>
+    <CustomTooltip title={tooltipText} arrow placement="top">
+      <Iconify
+        icon="eva:info-outline"
+        width={18}
+        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+      />
+    </CustomTooltip>
+  </Stack>
+);
+
 // ... (existing imports)
 
 // ... inside the component
@@ -100,8 +113,10 @@ const PrincipalCharts = () => {
         <Card sx={{ height: '100%' }}>
           <CardHeader
             sx={{ ml: -1, mt: -1 }}
-            title="Monthly Attendance Trend"
-            subheader="(+4%) than last year"
+            title={renderInfoTooltip(
+              'Monthly Attendance Trend',
+              'Trend of attendance over the past 6 months for selected class and division.'
+            )}
             action={<ClassDivisionFilter />}
           />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
@@ -174,8 +189,10 @@ const PrincipalCharts = () => {
       <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader
-            title="Exam's Pass/Fail Rate"
-            subheader="Student Performance by Exam"
+            title={renderInfoTooltip(
+              'Exam Pass/Fail Rate',
+              'Student performance by different exam selected class and division.'
+            )}
             sx={{ ml: -1, mt: -1 }}
             action={<ClassDivisionFilter />}
           />

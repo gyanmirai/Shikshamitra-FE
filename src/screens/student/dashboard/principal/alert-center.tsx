@@ -7,7 +7,22 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Card, Chip, Grid, Stack, Button, CardHeader, Typography } from '@mui/material';
 
+import ClassDivisionFilter from './class-division-filter';
+
 // ----------------------------------------------------------------------
+
+const renderInfoTooltip = (title: string, tooltipText: string) => (
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Box component="span">{title}</Box>
+    <CustomTooltip title={tooltipText} arrow placement="top">
+      <Iconify
+        icon="eva:info-outline"
+        width={18}
+        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+      />
+    </CustomTooltip>
+  </Stack>
+);
 
 type AlertType = 'absent' | 'academic' | 'finance' | 'doc' | 'health' | 'leave';
 
@@ -275,20 +290,26 @@ const AlertCenter = () => {
           <Card>
             <CardHeader
               title={
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box component="span">Alert Center</Box>
-                  <CustomTooltip
-                    title="Real-time alerts for attendance, academics, and administrative issues requiring immediate attention."
-                    arrow
-                    placement="top"
-                  >
-                    <Iconify
-                      icon="eva:info-outline"
-                      width={18}
-                      sx={{ color: 'text.disabled', cursor: 'pointer' }}
-                    />
-                  </CustomTooltip>
-                </Stack>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box component="span">Alert Center</Box>
+
+                    <CustomTooltip
+                      title="Real-time alerts for attendance, academics, and administrative issues requiring immediate attention."
+                      arrow
+                      placement="top"
+                    >
+                      <Iconify
+                        icon="eva:info-outline"
+                        width={18}
+                        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+                      />
+                    </CustomTooltip>
+                  </Stack>
+                  <ClassDivisionFilter />
+                </Box>
               }
               sx={{
                 '& .MuiCardHeader-title': { typography: 'h6' },
@@ -296,7 +317,7 @@ const AlertCenter = () => {
                 pb: 1,
               }}
             />
-            <Scrollbar sx={{ maxHeight: 320 }}>
+            <Scrollbar sx={{ maxHeight: 308 }}>
               <Stack sx={{ pb: 1 }}>
                 {initialAlerts.map((alert) => (
                   <AlertItemRow
@@ -314,8 +335,12 @@ const AlertCenter = () => {
           {/* Enrollment Trends */}
           <Card sx={{ height: 370, p: 2, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="subtitle1" gutterBottom>
-              Enrollment Trends (6M)
+              {renderInfoTooltip(
+                'Enrollment Trends (6M)',
+                'Trends of new enrollments over the past 6 months.'
+              )}
             </Typography>
+
             <Box sx={{ flexGrow: 1, minHeight: 120 }}>
               <Chart
                 type="area"

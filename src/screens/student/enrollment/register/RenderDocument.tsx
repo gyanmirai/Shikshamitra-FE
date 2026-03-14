@@ -46,6 +46,7 @@ export const RenderDocuments = (props: any) => {
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: { studentId: id },
+    options: { skip: !id },
   });
 
   // Get the isChanges state from the Redux store
@@ -280,6 +281,7 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentByIdQuery,
     params: { studentId: id, documentId: docId },
+    options: { skip: !id || !docId },
   });
 
   return (

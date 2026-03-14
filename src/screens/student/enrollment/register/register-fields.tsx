@@ -16,8 +16,8 @@ export const documentFields: FieldsType[] = [
     name: 'certificateName',
 
     gridProps: { size: { xs: 12, md: 12 }, sx: { height: '100%' } },
-    renderComp(props) {
-      return <RenderDocuments id={props.formik.values.id} />;
+    renderComp(props: any) {
+      return <RenderDocuments id={props.formik.values.id || props.editData?.studentId} />;
     },
   },
 ];

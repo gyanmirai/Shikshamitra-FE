@@ -38,7 +38,7 @@ const InquiryTable = ({
   setEditData,
   inquiryDialog,
 }: InquiryTableProps) => {
-  const { tableData, isLoading } = useInquiryTableData();
+  const { tableData, isLoading, isFetching } = useInquiryTableData();
   const columns = useInquiryTableColumns({
     inquiryDialog,
     issueRegistrationFormDialog,
@@ -81,7 +81,7 @@ const InquiryTable = ({
     <Box sx={{ minHeight: 0, flexGrow: 1 }}>
       <CustomizableTable
         showCheckbox
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         tableId="inquiry-table"
         noDataText={noDataText}
         columns={columns}

@@ -164,9 +164,7 @@ const ChangeDivisionScreen = ({
       sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
     >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
-        <Box
-          sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2, alignItems: 'center' }}
-        >
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, alignItems: 'center' }}>
           {/* Visual indicator for pending changes */}
           {changesSummary.length > 0 && (
             <Chip
@@ -195,7 +193,7 @@ const ChangeDivisionScreen = ({
           isLoading={isStudentDataLoading || isStudentDataFetching}
           columns={[
             { id: 'grNo', label: 'GR No.', filterType: 'number' },
-            { id: 'name', label: 'Name' },
+            { id: 'studentName', label: 'Name' },
             {
               id: 'divisionId',
               label: 'Division',
