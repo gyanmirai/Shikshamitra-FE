@@ -1,4 +1,4 @@
-import { employeeApi } from '../employee/employeeApi';
+import { employeeApi } from '../hr/employeeApi';
 
 export const attendanceTrackingApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({

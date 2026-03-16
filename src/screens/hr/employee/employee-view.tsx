@@ -9,8 +9,8 @@ import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { Tab, Box, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
@@ -241,11 +241,6 @@ export function EmployeeCard({ employee }: any) {
 const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  // const tabs = useTabs('personalInformation');
-  // const currentActiveComponent = useMemo(
-  //   () => TABS.find((tab) => tab.value === tabs.value),
-  //   [tabs.value]
-  // );
   const [getEmployById, { data: employee, isLoading, isError }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeByIdQuery,

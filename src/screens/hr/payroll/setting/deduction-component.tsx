@@ -47,7 +47,7 @@ import {
   useAddDeductionComponentMutation,
   useUpdateDeductionComponentMutation,
   useDeleteDeductionComponentMutation,
-} from 'src/redux/employee-payroll/employee-payroll-api';
+} from 'src/redux/hr/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
@@ -73,6 +73,8 @@ interface PayElement {
 }
 
 const DeductionComponent = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const confirm = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
@@ -88,6 +90,9 @@ const DeductionComponent = () => {
     useQueryAndMutation({
       type: 'query',
       currentQueryAndMutation: useGetDeductionComponentsQuery,
+      params: {
+        academicYearId: currentYear?.id,
+      },
     });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -158,7 +163,7 @@ const DeductionComponent = () => {
                   dispatchFn(
                     employeePayrollApi.util.updateQueryData(
                       'getDeductionComponents',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (b: any) => b.id === deleteInformation?.id
@@ -174,7 +179,7 @@ const DeductionComponent = () => {
                   dispatchFn(
                     employeePayrollApi.util.updateQueryData(
                       'getDeductionComponents',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
                         if (!draft.items) return;
                         draft.items.splice(index, 0, deleteInformation);
@@ -378,14 +383,22 @@ const DeductionComponentForm = ({
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: getEarningComponentsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEarningComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   const { data: getDeductionComponentsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeductionComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   const [addDeductionComponent, { isLoading: addDeductionComponentLoading }] = useQueryAndMutation({
@@ -430,7 +443,10 @@ const DeductionComponentForm = ({
             body: payload,
           }).unwrap();
         } else {
-          await addDeductionComponent(payload).unwrap();
+          await addDeductionComponent({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
         }
         handleClose(null, true);
       } catch (error) {

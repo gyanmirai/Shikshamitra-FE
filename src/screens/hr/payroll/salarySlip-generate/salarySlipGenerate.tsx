@@ -14,10 +14,10 @@ import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useLazyGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/employee-salary-slip/employee-salary-slip-api';
+import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/hr/employee-salary-slip-api';
 import {
   Box,
   Card,

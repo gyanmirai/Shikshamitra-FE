@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 
 import { CardActions } from './InformationFields';
@@ -10,16 +10,20 @@ import { CardActions } from './InformationFields';
 import type { FieldsType } from './types';
 
 const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: any) => {
-  const { values, errors, touched, setFieldValue } = formik;
-
-  const { data: employees, isLoading } = useQueryAndMutation({
+  const { errors, touched, setFieldValue } = formik;
+  const [employeeParams, setEmployeeParams] = useState({
+    search: '',
+  });
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const {
+    data: employees,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
+    params: employeeParams,
   });
-  const employeeValue = useMemo(
-    () => employees?.items?.find((i: any) => i.id === values.reportingManager) || null,
-    [employees?.items, values.reportingManager]
-  );
 
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
@@ -52,10 +56,18 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
       ) : (
         <Autocomplete
           options={employees?.items || []}
-          getOptionLabel={(option: any) => option?.fullName}
+          getOptionLabel={(option: any) => option?.fullName || ''}
+          isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
+          filterOptions={(x) => x}
           disabled={!isEditable.value}
+          loading={isFetching}
+          onInputChange={(_e, newInputValue, reason) => {
+            if (reason === 'input') {
+              setEmployeeParams((prev) => ({ ...prev, search: newInputValue }));
+            }
+          }}
           renderInput={(params) => (
-            <CustomTooltip placement="top" title={employeeValue && employeeValue?.fullName}>
+            <CustomTooltip placement="top" title={selectedEmployee?.fullName}>
               <TextField
                 {...params}
                 label="Reporting Manager *"
@@ -68,10 +80,10 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
             </CustomTooltip>
           )}
           sx={{ minWidth: 300 }}
-          value={employeeValue}
-          onChange={(e, value) => {
-            setFieldValue('reportingManager', value?.id);
-            // formik.setFieldValue('examType', value?.id);
+          value={selectedEmployee}
+          onChange={(_e, value) => {
+            setSelectedEmployee(value || null);
+            setFieldValue('reportingManager', value?.id || '');
           }}
         />
       )}

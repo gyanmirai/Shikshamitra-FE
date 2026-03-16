@@ -23,7 +23,7 @@ import {
   useUpdateAdditionalInformationMutation,
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
-} from 'src/redux/employee/employeeApi';
+} from 'src/redux/hr/employeeApi';
 
 // import {
 //   FamilyFields,

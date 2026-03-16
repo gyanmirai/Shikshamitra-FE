@@ -16,6 +16,7 @@ export interface IPersonalInformationResponse {
   email: string;
   mobileNo: string;
   secondaryMobileNo: string;
+  dateOfJoining: string;
   doj: string;
   isTeaching: boolean;
   department: string;
@@ -72,7 +73,7 @@ export interface IAdditionalInformationResponse {
 
 export interface IWorkExperienceResponse {
   id: string;
-  mediumStageName: string;
+  organizationName: string;
   designation: string;
   department: string;
   country: {

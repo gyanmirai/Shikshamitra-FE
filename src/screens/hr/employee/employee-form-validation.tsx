@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { matchIsValidTel } from 'mui-tel-input';
 
 const MIN_DOB = dayjs('1947-01-01');
 
@@ -51,24 +50,18 @@ const personalInformationValidationSchema = Yup.object({
   mobileNo: Yup.string()
     .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) => {
       if (!value) return false;
-      if (!value.includes('+')) {
-        value = `+91${value}`;
-      }
-
-      const digits = value.replace(/\D/g, '');
-      const national = digits.replace(/^91/, '');
-
-      return matchIsValidTel(value, { onlyCountries: ['IN'] }) && national.length === 10;
+      const stripped = value.replace(/\s/g, '');
+      const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
+      return /^\+91[6-9][0-9]{9}$/.test(normalized);
     })
     .required('Primary Contact No. is required'),
   secondaryMobileNo: Yup.string()
     .nullable()
-    .test('Mobile NO', 'Secondary Contact No. is not valid', (value) => {
-      const digits = value?.replace(/\D/g, '');
-      const national = digits?.replace(/^91/, '');
-      return value
-        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
-        : true;
+    .test('valid-indian-mobile', 'Secondary Contact No. is not valid', (value) => {
+      if (!value) return true;
+      const stripped = value.replace(/\s/g, '');
+      const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
+      return /^\+91[6-9][0-9]{9}$/.test(normalized);
     })
     .test(
       'unique',
@@ -124,12 +117,11 @@ const familyInformationValidationSchema = Yup.object({
   //   fatherOccupation: Yup.string().required('Father occupation is required'),
   fatherContactNo: Yup.string()
     .nullable()
-    .test('Mobile NO', 'Mobile No. is not valid', (value) => {
-      const digits = value?.replace(/\D/g, '');
-      const national = digits?.replace(/^91/, '');
-      return value
-        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
-        : true;
+    .test('valid-indian-mobile', 'Mobile No. is not valid', (value) => {
+      if (!value) return true;
+      const stripped = value.replace(/\s/g, '');
+      const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
+      return /^\+91[6-9][0-9]{9}$/.test(normalized);
     }),
   // fatherAddress1: Yup.string(),
   // fatherAddress2: Yup.string(),
@@ -147,12 +139,11 @@ const familyInformationValidationSchema = Yup.object({
   //   motherOccupation: Yup.string().required('Mother occupation is required'),
   motherContactNo: Yup.string()
     .nullable()
-    .test('Mobile NO', 'Mobile No. is not valid', (value) => {
-      const digits = value?.replace(/\D/g, '');
-      const national = digits?.replace(/^91/, '');
-      return value
-        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
-        : true;
+    .test('valid-indian-mobile', 'Mobile No. is not valid', (value) => {
+      if (!value) return true;
+      const stripped = value.replace(/\s/g, '');
+      const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
+      return /^\+91[6-9][0-9]{9}$/.test(normalized);
     }),
   // motherAddress1: Yup.string(),
   // motherAddress2: Yup.string(),
@@ -169,12 +160,11 @@ const familyInformationValidationSchema = Yup.object({
   //   spouseOccupation: Yup.string().required('Spouse occupation is required'),
   spouseContactNo: Yup.string()
     .nullable()
-    .test('Mobile NO', 'Mobile No. is not valid', (value) => {
-      const digits = value?.replace(/\D/g, '');
-      const national = digits?.replace(/^91/, '');
-      return value
-        ? matchIsValidTel(value, { onlyCountries: ['IN'] }) && national?.length === 10
-        : true;
+    .test('valid-indian-mobile', 'Mobile No. is not valid', (value) => {
+      if (!value) return true;
+      const stripped = value.replace(/\s/g, '');
+      const normalized = stripped.includes('+') ? stripped : `+91${stripped}`;
+      return /^\+91[6-9][0-9]{9}$/.test(normalized);
     }),
   // spouseAddress1: Yup.string(),
   // spouseAddress2: Yup.string(),
@@ -290,32 +280,32 @@ export const payrollValidationSchema = Yup.object({
     .nullable()
     .typeError('TDS amount must be a number')
     .min(0, 'TDS amount cannot be negative'),
-  earningComponents: Yup.array().of(
-    Yup.object({
-      name: Yup.string().required('Name is required'),
-      type: Yup.string().required('Type is required'),
-      // eslint-disable-next-line func-names
-      amount: Yup.string().test('amount', 'Amount is required', function () {
-        if (this.parent.type === 'Fixed') {
-          return false;
-        }
-        return true;
-      }),
-    })
-  ),
-  deductionComponents: Yup.array().of(
-    Yup.object({
-      name: Yup.string().required('Name is required'),
-      type: Yup.string().required('Type is required'),
-      // eslint-disable-next-line func-names
-      amount: Yup.string().test('amount', 'Amount is required', function () {
-        if (this.parent.type === 'Fixed') {
-          return false;
-        }
-        return true;
-      }),
-    })
-  ),
+  // earningComponents: Yup.array().of(
+  //   Yup.object({
+  //     name: Yup.string().required('Name is required'),
+  //     type: Yup.string().required('Type is required'),
+  //     // eslint-disable-next-line func-names
+  //     amount: Yup.string().test('amount', 'Amount is required', function () {
+  //       if (this.parent.type === 'Fixed') {
+  //         return false;
+  //       }
+  //       return true;
+  //     }),
+  //   })
+  // ),
+  // deductionComponents: Yup.array().of(
+  //   Yup.object({
+  //     name: Yup.string().required('Name is required'),
+  //     type: Yup.string().required('Type is required'),
+  //     // eslint-disable-next-line func-names
+  //     amount: Yup.string().test('amount', 'Amount is required', function () {
+  //       if (this.parent.type === 'Fixed') {
+  //         return false;
+  //       }
+  //       return true;
+  //     }),
+  //   })
+  // ),
 });
 
 export const reportingManagerValidationSchema = Yup.object({

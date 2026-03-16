@@ -13,9 +13,9 @@ import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,

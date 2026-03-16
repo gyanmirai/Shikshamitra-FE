@@ -61,9 +61,12 @@ const PF = () => {
   // const [employee, setEmployee] = useState<string[] | undefined>([]);
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: PFData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPFQuery,
+    params: { academicYearId: currentYear?.id },
   });
   const [deletePF, { isLoading: isPFDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -141,20 +144,28 @@ const PF = () => {
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    pfApi.util.updateQueryData('getPF', undefined, (draft: any) => {
-                      const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
-                      setDeleteIndex(index);
-                      if (index !== -1) {
-                        draft.items.splice(index, 1);
+                    pfApi.util.updateQueryData(
+                      'getPF',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
                       }
-                    })
+                    )
                   ),
                 onUndoRestore: (dispatchFn, index) =>
                   dispatchFn(
-                    pfApi.util.updateQueryData('getPF', undefined, (draft: any) => {
-                      if (!draft.items) return;
-                      draft.items.splice(index, 0, editData);
-                    })
+                    pfApi.util.updateQueryData(
+                      'getPF',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, editData);
+                      }
+                    )
                   ),
                 onCommit: () => deletePF(editData?.id || ''),
               });
@@ -267,6 +278,7 @@ const PFForm = ({
     currentQueryAndMutation: useUpdatePFMutation,
     isThrowError: true,
   });
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
     initialValues: {
@@ -293,14 +305,17 @@ const PFForm = ({
       try {
         if (editData) {
           await updatePF({
-            body: values,
+            body: {
+              ...values,
+              academicYearId: currentYear?.id,
+            },
             id: editData.id,
           });
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" updated successfully`,
           });
         } else {
-          await addPF(values);
+          await addPF({ body: values, academicYearId: currentYear?.id });
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" created successfully`,
           });

@@ -28,12 +28,12 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { AccuralPolicyType, AccuralPolicyTypeArray } from 'src/enums/accuralPolicyType';
 import {
-  employeeApi,
-  useGetEmployeeLeavePolicyQuery,
-  useAddEmployeeLeavePolicyMutation,
-  useDeleteEmployeeLeavePolicyMutation,
-  useUpdateEmployeeLeavePolicyMutation,
-} from 'src/redux/employee/employeeApi';
+  leaveApi,
+  useGetLeavePoliciesQuery,
+  useCreateLeavePolicyMutation,
+  useUpdateLeavePolicyMutation,
+  useDeleteLeavePolicyMutation,
+} from 'src/redux/hr/leaveApi';
 import {
   Box,
   Grid,
@@ -70,15 +70,19 @@ const LeavePolicy = () => {
 
   const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
 
-  const { data: leavePolicyData, isLoading } = useQueryAndMutation({
+  const {
+    data: leavePolicyData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+    currentQueryAndMutation: useGetLeavePoliciesQuery,
     params: mediumStageId?.id,
   });
 
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useDeleteLeavePolicyMutation,
   });
 
   const tableData = useMemo(() => leavePolicyData?.items || [], [leavePolicyData?.items]);
@@ -238,29 +242,15 @@ const LeavePolicy = () => {
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    employeeApi.util.updateQueryData(
-                      'getEmployeeLeavePolicy',
-                      undefined,
-                      (draft: any) => {
-                        const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
+                    leaveApi.util.updateQueryData('getLeavePolicies', undefined, (draft: any) => {
+                      const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        draft.items.splice(index, 1);
                       }
-                    )
+                    })
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    employeeApi.util.updateQueryData(
-                      'getEmployeeLeavePolicy',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteLeavePolicy(editData?.id || ''),
               });
               confirm.onFalse();
@@ -380,13 +370,13 @@ export const LeavePolicyForm = ({
 
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useCreateLeavePolicyMutation,
     params: mediumStageId?.id,
   });
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useUpdateLeavePolicyMutation,
   });
   const formik = useFormik({
     initialValues: {

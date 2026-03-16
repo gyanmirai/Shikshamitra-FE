@@ -17,12 +17,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
-import { useNewSearchParam } from 'src/hooks/use-search-param';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -33,6 +33,10 @@ import {
   EmployeeStatusTypeColor,
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/hr/employee-salary-structure-api';
 import {
   Box,
   Card,
@@ -45,13 +49,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/employee-salary-structure/employee-salary-structure-api';
 
-import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
+// eslint-disable-next-line import/no-named-as-default
+import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
 import { RenderComponents } from './employee-form-fields/PayrollFields';
 
@@ -59,13 +60,18 @@ const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   const statusDialog = useBoolean();
-  const [searchParams, setSearchParams] = useNewSearchParam<{ employee?: string }>();
+
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({ employee: '' });
+  const searchParams = getAllParams();
+
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
   const [employeeParams, setEmployeeParams] = useState({
-    page: 1,
-    pageSize: 10,
+    // page: 1,
+    // pageSize: 10,
+    // academicYearId: currentYear?.id,
+    search: '',
   });
 
   const payrollDialog = useBoolean();
@@ -137,16 +143,20 @@ const HrEmployee = () => {
     refetch();
   };
 
-  const tableData = employee?.items?.map((item: any) => ({
-    ...item,
-    dob: dayjs(item?.dob).format('DD-MM-YYYY'),
-    genderValue: item?.gender,
-    doi: dayjs(item?.doj).format('DD-MM-YYYY'),
-    roleValue: item?.roleName || 'Not Assigned',
-    statusValue: EmployeeStatusType[item?.status],
-    shiftName: `${item?.shift.name} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
-    organization: item?.educationMediumStage?.name,
-  }));
+  const tableData = useMemo(
+    () =>
+      employee?.items?.map((item: any) => ({
+        ...item,
+        dob: dayjs(item?.dob).format('DD-MM-YYYY'),
+        genderValue: item?.gender,
+        doi: dayjs(item?.doj).format('DD-MM-YYYY'),
+        roleValue: item?.roleName || 'Not Assigned',
+        statusValue: EmployeeStatusType[item?.status],
+        shiftName: `${item?.shift.name} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
+        organization: item?.educationMediumStage?.name,
+      })),
+    [employee?.items]
+  );
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handlerSendNotification = () => {
@@ -261,7 +271,7 @@ const HrEmployee = () => {
               showViewIcon
               showEditIcon
               handleViewClick={() => {
-                setSearchParams({ employee: row?.id });
+                setSearchParams('employee', row?.id);
               }}
               // showThreeDots={false}
               handleEditClick={() => {
@@ -273,8 +283,7 @@ const HrEmployee = () => {
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [actions, setSearchParams]
   );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -356,6 +365,13 @@ const HrEmployee = () => {
                 pageSize: rowsPerPage,
               }));
             }}
+            serverSideSearch
+            onServerSearch={(search) => {
+              setEmployeeParams((pre) => ({
+                ...pre,
+                search,
+              }));
+            }}
             columns={columns}
             data={tableData || []}
           />
@@ -393,7 +409,9 @@ const HrEmployee = () => {
             title="Salary Structure"
             paperProps={{ sx: { maxHeight: '70vh' } }}
           >
-            <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
+            {payrollDialog.value && editData && (
+              <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
+            )}
           </CustomDialog>
         </>
       ) : (
@@ -408,7 +426,8 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
   const { data: salaryStructure, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeSalaryStructureQuery,
-    params: { id: editData?.id },
+    params: { employeeId: editData?.id },
+    options: { skip: !editData?.id },
   });
 
   const [updateSalaryStructure] = useQueryAndMutation({
@@ -445,7 +464,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         earningComponents: values.earningComponents.map((item: any) => ({
           name: item?.name || item?.componentName,
           description: item?.description,
-          amount: item?.amount,
+          amount: Number(item?.amount),
           applicableMonth: item?.applicableMonth,
           isFixed: item?.isFixed,
           isTemp: false,
@@ -456,7 +475,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         deductionComponents: values.deductionComponents.map((item: any) => ({
           name: item?.name || item?.componentName,
           description: item?.description,
-          amount: item?.amount,
+          amount: Number(item?.amount),
           applicableMonth: item?.applicableMonth,
           isFixed: item?.isFixed,
           isTemp: false,
@@ -468,7 +487,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
 
       try {
         await updateSalaryStructure({
-          id: editData?.id,
+          employeeId: editData?.id,
           data,
         }).unwrap();
         handleClose();
@@ -477,7 +496,6 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
       }
     },
   });
-
   useEffect(() => {
     if (salaryStructure) {
       formik.setValues({

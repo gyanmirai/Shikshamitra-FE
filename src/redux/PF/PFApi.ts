@@ -1,20 +1,22 @@
-import { employeeApi } from '../employee/employeeApi';
+import { employeeApi } from '../hr/employeeApi';
 
 export const pfApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getPF: builder.query({
-      query: () => ({
+      query: ({ academicYearId, ...params }) => ({
         url: '/payroll/pf-rules',
         method: 'GET',
+        params: { academicYearId, ...params },
       }),
       providesTags: ['PF'],
     }),
 
     addPF: builder.mutation({
-      query: (body) => ({
+      query: ({ body, academicYearId }) => ({
         url: '/payroll/pf-rules',
         method: 'POST',
         data: body,
+        params: { academicYearId },
       }),
       invalidatesTags: ['PF'],
     }),
