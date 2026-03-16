@@ -91,11 +91,11 @@ const RenderPreviousSchoolFields = (props: any) => {
           value={formik.values.schoolName}
           onChange={(e: any) => {
             const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            const words = onlyText.split(' ').filter(Boolean);
-            const capitalizedWords = words.map(
-              (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-            );
-            const result = capitalizedWords.join(' ');
+            const result = onlyText
+              .split(' ')
+              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+
             formik.setFieldValue('schoolName', result);
           }}
           disabled={!isEditable.value}

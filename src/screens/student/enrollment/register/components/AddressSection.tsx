@@ -32,7 +32,7 @@ const AddressSection: React.FC<SectionProps> = ({
       )
     }
   >
-    <Grid size={{ xs: 12, md: 3 }}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <ShakingTextField
         error={(formik.touched as any).addressLine1 && Boolean((formik.errors as any).addressLine1)}
       >
@@ -54,7 +54,7 @@ const AddressSection: React.FC<SectionProps> = ({
       </ShakingTextField>
     </Grid>
 
-    <Grid size={{ xs: 12, md: 3 }}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <ShakingTextField
         error={(formik.touched as any).addressLine2 && Boolean((formik.errors as any).addressLine2)}
       >
@@ -76,7 +76,7 @@ const AddressSection: React.FC<SectionProps> = ({
       </ShakingTextField>
     </Grid>
 
-    <Grid size={{ xs: 12, md: 3 }}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <ShakingTextField
         error={(formik.touched as any).addressLine3 && Boolean((formik.errors as any).addressLine3)}
       >

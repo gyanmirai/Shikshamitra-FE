@@ -321,7 +321,7 @@ export const CommunicationForm = ({
                           variant="subtitle2"
                           sx={{ color: 'text.secondary', fontWeight: 'bold' }}
                         >
-                          {dayjs(item?.createdAt || item?.nextReminderDate).format('YYYY-MM-DD')}
+                          {dayjs(item?.createdAt || item?.nextReminderDate).format('DD MMM YYYY')}
                         </Typography>
                         <Typography
                           variant="caption"
@@ -340,46 +340,90 @@ export const CommunicationForm = ({
                         <Paper
                           elevation={0}
                           sx={{
-                            p: 2,
+                            p: 1,
                             bgcolor: (theme) =>
                               varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
                             border: (theme) =>
                               `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
-                            borderRadius: 1.5,
+                            borderRadius: 1,
                           }}
                         >
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              color: `${colorKey}.main`,
-                              mb: 1.5,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {
-                              FollowUpStatusType[
-                                item.status as unknown as keyof typeof FollowUpStatusType
-                              ]
-                            }
-                          </Typography>
+                          <Box sx={{ mb: 1.5 }}>
+                            <Label color={colorKey as LabelColor}>
+                              {
+                                FollowUpStatusType[
+                                  item.status as unknown as keyof typeof FollowUpStatusType
+                                ]
+                              }
+                            </Label>
+                          </Box>
                           <Typography
                             variant="body2"
                             sx={{
                               color: 'text.primary',
-                              mb: 1.5,
+                              mb: 2,
                               fontWeight: 500,
-                              lineHeight: 1.5,
+                              lineHeight: 1.6,
                             }}
                           >
                             {item?.note}
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Typography
-                              variant="caption"
-                              sx={{ color: 'text.secondary', fontWeight: 500 }}
-                            >
-                              • Creator: {item?.creatorName || 'admin'}
-                            </Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: '50%',
+                                  bgcolor: `${colorKey}.main`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: 'white', fontWeight: 700, fontSize: '0.7rem' }}
+                                >
+                                  {(item?.creatorName || 'Admin')
+                                    .split(' ')
+                                    .map((n: string) => n[0])
+                                    .join('')
+                                    .toUpperCase()
+                                    .slice(0, 2)}
+                                </Typography>
+                              </Box>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: 'text.secondary', fontWeight: 500 }}
+                              >
+                                {item?.creatorName || 'Admin'}
+                              </Typography>
+                            </Box>
+                            {item?.nextReminderDate && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Iconify
+                                  icon="mdi:calendar-outline"
+                                  width={16}
+                                  sx={{ color: 'text.disabled' }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                >
+                                  Remind{' '}
+                                  <strong>
+                                    {dayjs(item.nextReminderDate).format('DD MMM YYYY')}
+                                  </strong>
+                                </Typography>
+                              </Box>
+                            )}
                           </Box>
                         </Paper>
                       </TimelineContent>

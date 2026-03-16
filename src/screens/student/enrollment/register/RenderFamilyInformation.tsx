@@ -31,7 +31,7 @@ function MotherOfficeAddressComponent(props: any) {
         <Typography variant="subtitle1">Office Address</Typography>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.motherOfficeAddress1 && Boolean(formik.errors.motherOfficeAddress1)}
         >
@@ -51,7 +51,7 @@ function MotherOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.motherOfficeAddress2 && Boolean(formik.errors.motherOfficeAddress2)}
         >
@@ -71,7 +71,7 @@ function MotherOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.motherOfficeAddress3 && Boolean(formik.errors.motherOfficeAddress3)}
         >
@@ -151,7 +151,7 @@ function GuardianOfficeAddressComponent(props: any) {
         <Typography variant="subtitle1">Office Address</Typography>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={
             formik.touched.guardianOfficeAddress1 && Boolean(formik.errors.guardianOfficeAddress1)
@@ -175,7 +175,7 @@ function GuardianOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={
             formik.touched.guardianOfficeAddress2 && Boolean(formik.errors.guardianOfficeAddress2)
@@ -199,7 +199,7 @@ function GuardianOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={
             formik.touched.guardianOfficeAddress3 && Boolean(formik.errors.guardianOfficeAddress3)
@@ -285,7 +285,7 @@ function MotherAddressComponent(props: any) {
         <Typography variant="subtitle1">Local Address</Typography>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
         >
@@ -303,7 +303,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
         >
@@ -321,7 +321,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
         >
@@ -399,7 +399,7 @@ function GuardianAddressComponent(props: any) {
         <Typography variant="subtitle1">Local Address</Typography>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.guardianAddress1 && Boolean(formik.errors.guardianAddress1)}
         >
@@ -417,7 +417,7 @@ function GuardianAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.guardianAddress2 && Boolean(formik.errors.guardianAddress2)}
         >
@@ -435,7 +435,7 @@ function GuardianAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
         <ShakingTextField
           error={formik.touched.guardianAddress3 && Boolean(formik.errors.guardianAddress3)}
         >
@@ -593,9 +593,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.fatherOccupation}
             onChange={(e) => {
               const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
 
-              formik.setFieldValue('fatherOccupation', capitalized);
+              formik.setFieldValue('fatherOccupation', result);
             }}
             error={formik.touched.fatherOccupation && Boolean(formik.errors.fatherOccupation)}
             helperText={formik.touched.fatherOccupation && formik.errors.fatherOccupation}
@@ -638,7 +642,7 @@ function RenderFamilyInformation(props: any) {
             label="Qualification"
             value={formik.values.fatherQualification}
             onChange={(e) => {
-              const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+              const { value } = e.target;
               const capitalized = capitalize(value);
               formik.setFieldValue('fatherQualification', capitalized);
             }}
@@ -703,8 +707,8 @@ function RenderFamilyInformation(props: any) {
             label="Designation"
             value={formik.values.fatherDesignation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const { value } = e.target;
+              const capitalized = capitalize(value);
               formik.setFieldValue('fatherDesignation', capitalized);
             }}
             error={formik.touched.fatherDesignation && Boolean(formik.errors.fatherDesignation)}
@@ -721,8 +725,8 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
             value={formik.values.fatherOrganization}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const { value } = e.target;
+              const capitalized = capitalize(value);
               formik.setFieldValue('fatherOrganization', capitalized);
             }}
             error={formik.touched.fatherOrganization && Boolean(formik.errors.fatherOrganization)}
@@ -770,7 +774,7 @@ function RenderFamilyInformation(props: any) {
         <Grid size={12}>
           <Typography variant="subtitle1">Office Address</Typography>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <ShakingTextField
             error={
               formik.touched.fatherOfficeAddress1 && Boolean(formik.errors.fatherOfficeAddress1)
@@ -792,7 +796,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <ShakingTextField
             error={
               formik.touched.fatherOfficeAddress2 && Boolean(formik.errors.fatherOfficeAddress2)
@@ -814,7 +818,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <ShakingTextField
             error={
               formik.touched.fatherOfficeAddress3 && Boolean(formik.errors.fatherOfficeAddress3)
@@ -886,7 +890,7 @@ function RenderFamilyInformation(props: any) {
         <Grid size={12}>
           <Typography variant="subtitle1">Local Address</Typography>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <ShakingTextField
             error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
           >
@@ -904,7 +908,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <ShakingTextField
             error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
           >
@@ -922,7 +926,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
           <ShakingTextField
             error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
           >
@@ -1056,8 +1060,12 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.motherOccupation}
             onChange={(e) => {
               const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
-              formik.setFieldValue('motherOccupation', capitalized);
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('motherOccupation', result);
             }}
             error={formik.touched.motherOccupation && Boolean(formik.errors.motherOccupation)}
             helperText={formik.touched.motherOccupation && formik.errors.motherOccupation}
@@ -1100,7 +1108,8 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherQualification}
             onChange={(e) => {
-              const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              // const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+              const { value } = e.target;
               const capitalized = capitalize(value);
               formik.setFieldValue('motherQualification', capitalized);
             }}
@@ -1166,8 +1175,8 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherDesignation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const { value } = e.target;
+              const capitalized = capitalize(value);
               formik.setFieldValue('motherDesignation', capitalized);
             }}
             error={formik.touched.motherDesignation && Boolean(formik.errors.motherDesignation)}
@@ -1183,8 +1192,8 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherOrganization}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const { value } = e.target;
+              const capitalized = capitalize(value);
               formik.setFieldValue('motherOrganization', capitalized);
             }}
             error={formik.touched.motherOrganization && Boolean(formik.errors.motherOrganization)}
@@ -1304,8 +1313,12 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.guardianOccupation}
             onChange={(e) => {
               const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
-              formik.setFieldValue('guardianOccupation', capitalized);
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('guardianOccupation', result);
             }}
             error={formik.touched.guardianOccupation && Boolean(formik.errors.guardianOccupation)}
             helperText={formik.touched.guardianOccupation && formik.errors.guardianOccupation}
@@ -1415,8 +1428,8 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianDesignation}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const { value } = e.target;
+              const capitalized = capitalize(value);
               formik.setFieldValue('guardianDesignation', capitalized);
             }}
             error={formik.touched.guardianDesignation && Boolean(formik.errors.guardianDesignation)}
@@ -1432,8 +1445,8 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianOrganization}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const { value } = e.target;
+              const capitalized = capitalize(value);
               formik.setFieldValue('guardianOrganization', capitalized);
             }}
             error={

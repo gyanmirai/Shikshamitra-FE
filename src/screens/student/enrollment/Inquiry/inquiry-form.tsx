@@ -130,7 +130,7 @@ const InquiryForm = ({
               actions.isSaveAndNewRef.current = false;
             }}
           >
-            Submit Inquiry
+            {editData ? 'Update' : 'Submit'}
           </LoadingButton>
         </DialogActions>
       </Box>

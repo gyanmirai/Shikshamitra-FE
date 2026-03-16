@@ -135,7 +135,11 @@ const RenderAdditionalDetails = (props: any) => {
           value={formik.values.relationName}
           onChange={(e) => {
             const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            formik.setFieldValue('relationName', onlyText);
+            const capitalLatter = onlyText
+              .split(' ')
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            formik.setFieldValue('relationName', capitalLatter);
           }}
           error={formik.touched.relationName && Boolean(formik.errors.relationName)}
           helperText={formik.touched.relationName && formik.errors.relationName}
@@ -151,7 +155,11 @@ const RenderAdditionalDetails = (props: any) => {
           value={formik.values.relation}
           onChange={(e) => {
             const onlyText = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-            formik.setFieldValue('relation', onlyText);
+            const capitalLatter = onlyText
+              .split(' ')
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            formik.setFieldValue('relation', capitalLatter);
           }}
           error={formik.touched.relation && Boolean(formik.errors.relation)}
           helperText={formik.touched.relation && formik.errors.relation}

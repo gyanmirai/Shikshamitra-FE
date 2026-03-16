@@ -129,9 +129,6 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         label: 'Previous School',
         minWidth: '170px',
         align: 'left',
-        render(value) {
-          return value || '-';
-        },
       },
       {
         id: 'inquiryPreference',

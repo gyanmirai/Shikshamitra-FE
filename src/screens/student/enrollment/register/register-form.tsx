@@ -2,14 +2,13 @@ import type { BoxProps } from '@mui/material';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Grid, Slide, TextField } from '@mui/material';
 import { getBase64String } from 'src/utils/get-base64-string';
-import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { Box, Grid, Slide, Stack, Skeleton, TextField } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useGetBasicDetailsQuery,
@@ -755,7 +754,16 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
         studentMedicalDetailsLoading ||
         previousSchoolDetailsLoading ||
         parentBankDetailsLoading ? (
-          <LoadingScreen />
+          <Grid container spacing={2.5} sx={{ height: '100%' }}>
+            {[...Array(9)].map((_, index) => (
+              <Grid size={4} key={index}>
+                <Stack spacing={1}>
+                  <Skeleton variant="text" width="40%" height={20} />
+                  <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+                </Stack>
+              </Grid>
+            ))}
+          </Grid>
         ) : (
           <Grid container spacing={2.5} sx={{ height: '100%' }}>
             {allFields[step].map((field: FieldsType) => (

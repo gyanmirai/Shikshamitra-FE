@@ -43,7 +43,15 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
       <Formik
         initialValues={initialValues}
         validationSchema={Yup.object({
-          formNumber: Yup.string().required('Form Number is required'),
+          formNumber: Yup.string()
+            .trim()
+            .required('Form number is required')
+            .min(3, 'Form number must be between 3 and 50 characters')
+            .max(50, 'Form number must be between 3 and 50 characters')
+            .matches(
+              /^[A-Z0-9-]+$/,
+              'Form number must contain only uppercase letters, numbers, and hyphens'
+            ),
           amount: Yup.number().required('Amount is required'),
         })}
         onSubmit={async (
@@ -104,12 +112,14 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       helperText={touched.formNumber && errors.formNumber}
                       value={values.formNumber}
                       onChange={(e) => {
-                        const onlyLettersAndNumbers = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                        if (onlyLettersAndNumbers.length <= 30) {
-                          setFieldValue('formNumber', onlyLettersAndNumbers);
+                        const uppercaseLettersNumbersHyphens = e.target.value
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9-]/g, '');
+                        if (uppercaseLettersNumbersHyphens.length <= 50) {
+                          setFieldValue('formNumber', uppercaseLettersNumbersHyphens);
                         }
                       }}
-                      inputProps={{ maxLength: 30 }}
+                      inputProps={{ maxLength: 50 }}
                     />
                   </ShakingTextField>
                 </Grid>
