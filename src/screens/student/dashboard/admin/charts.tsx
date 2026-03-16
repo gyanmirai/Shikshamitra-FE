@@ -238,7 +238,15 @@ const AdminCharts = () => {
     <Grid container spacing={1}>
       {/* Enrollment Trend - Full Width */}
       <Grid size={{ xs: 12 }}>
-        <Card>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+            },
+          }}
+        >
           <Stack
             direction="row"
             alignItems="center"
@@ -303,7 +311,12 @@ const AdminCharts = () => {
 
       {/* Entrance Exam Status - Half Width */}
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+          }}
+        >
           <CardHeader
             sx={{ mt: -1, ml: -1 }}
             title={renderTitleWithTooltip(
@@ -326,7 +339,12 @@ const AdminCharts = () => {
 
       {/* Class-wise Participation - Half Width */}
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+          }}
+        >
           <CardHeader
             sx={{ mt: -1, ml: -1 }}
             title={renderTitleWithTooltip(

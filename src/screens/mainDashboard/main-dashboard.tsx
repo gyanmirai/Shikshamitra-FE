@@ -16,6 +16,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+import UserDashboard from './userDashboard/UserDashboard';
 import MainDashboardAdmin from './admin/main-dashboard-admin';
 import MainDashboardTeacher from './teacher/main-dashboard-teacher';
 import MainDashboardPrincipal from './principal/main-dashboard-principal';
@@ -56,6 +57,8 @@ const MainDashboard = () => {
         return <MainDashboardPrincipal />;
       case 'teacher':
         return <MainDashboardTeacher />;
+      case 'user':
+        return <UserDashboard />;
       default:
         return (
           <Stack sx={{ p: 5, alignItems: 'center' }}>
@@ -84,6 +87,7 @@ const MainDashboard = () => {
             <MenuItem value="admin">Admin</MenuItem>
             <MenuItem value="principal">Principal</MenuItem>
             <MenuItem value="teacher">Teacher</MenuItem>
+            <MenuItem value="user">User</MenuItem>
           </Select>
         </FormControl>
       </Card>

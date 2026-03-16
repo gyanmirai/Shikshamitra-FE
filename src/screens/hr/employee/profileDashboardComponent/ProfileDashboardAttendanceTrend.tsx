@@ -13,16 +13,30 @@ const ProfileDashboardAttendanceTrend = () => {
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 2,
+        p: 2,
       }}
     >
       <AnalyticsWebsiteVisits
         title="Attendance Trend"
         chart={{
-          categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+          categories: [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ],
           series: [
-            { name: 'Present', data: [40, 58, 27, 45, 48, 50, 90] },
-            { name: 'Half-Day', data: [30, 45, 40, 30, 20, 10, 57] },
-            { name: 'Absent', data: [35, 20, 45, 22, 20, 30, 35] },
+            { name: 'Present', data: [25, 20, 26, 24, 28, 22, 27, 25, 26, 24, 25, 20] },
+            { name: 'Half-Day', data: [2, 3, 1, 2, 0, 4, 2, 1, 2, 3, 2, 5] },
+            { name: 'Absent', data: [4, 5, 4, 4, 3, 4, 2, 5, 2, 4, 3, 6] },
           ],
           colors: [
             theme.palette.success.main, // Green for Present

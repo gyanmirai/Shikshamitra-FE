@@ -1,3 +1,4 @@
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -43,6 +44,8 @@ const renderInfoTooltip = (title: string, tooltipText: string) => (
 />;
 
 const PrincipalCharts = () => {
+  const theme = useTheme();
+
   // 1. Monthly Attendance Trend (Line Chart)
   const attendanceTrendOptions = useChart({
     xaxis: {
@@ -110,7 +113,15 @@ const PrincipalCharts = () => {
     <Grid container spacing={1}>
       {/* Monthly Attendance */}
       <Grid size={{ xs: 12, md: 8 }}>
-        <Card sx={{ height: '100%' }}>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+            },
+          }}
+        >
           <CardHeader
             sx={{ ml: -1, mt: -1 }}
             title={renderInfoTooltip(
@@ -133,7 +144,15 @@ const PrincipalCharts = () => {
 
       {/* Top/Bottom Performing Classes */}
       <Grid size={{ xs: 12, md: 4 }}>
-        <Card sx={{ height: '100%' }}>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+            },
+          }}
+        >
           <CardHeader
             sx={{ ml: -1, mt: -1 }}
             title={
@@ -173,7 +192,7 @@ const PrincipalCharts = () => {
                   sx={{
                     height: 8,
                     borderRadius: 1,
-                    bgcolor: (theme) =>
+                    bgcolor: () =>
                       item.type === 'top'
                         ? theme.palette.success.lighter
                         : theme.palette.error.lighter,
@@ -187,7 +206,14 @@ const PrincipalCharts = () => {
 
       {/* Exam's Pass/Fail Rate */}
       <Grid size={{ xs: 12 }}>
-        <Card>
+        <Card
+          sx={{
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+            },
+          }}
+        >
           <CardHeader
             title={renderInfoTooltip(
               'Exam Pass/Fail Rate',

@@ -104,7 +104,6 @@ const SmartKPICards = () => (
           title={kpi.title}
           value={kpi.value}
           icon={kpi.icon}
-          percentChange={kpi.percent}
           trendData={kpi.chart.data}
           status={kpi.status}
           tooltip={kpi.tooltip}

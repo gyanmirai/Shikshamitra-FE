@@ -8,7 +8,6 @@ interface KPIItem {
   id: string;
   title: string;
   value: string;
-  percent: number;
   chart: {
     type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
     series?: any[];
@@ -19,6 +18,7 @@ interface KPIItem {
   };
   status: 'info' | 'success' | 'warning' | 'primary' | 'error' | 'secondary';
   path?: string;
+  tooltip?: string;
 }
 
 const kpiData: KPIItem[] = [
@@ -26,14 +26,14 @@ const kpiData: KPIItem[] = [
     id: 'CLASS_STRENGTH',
     title: 'Class Strength',
     value: '45',
-    percent: 0, // No change usually
+    tooltip: 'Total number of students in the class, including boys and girls.',
     status: 'info' as const,
     chart: {
       type: 'bar' as const,
       series: [20, 25],
       labels: ['Boys', 'Girls'],
-      colors: ['#00B8D9', '#FF5630'], // Info (blue), Error (red/orange)
-      width: 30, // Matches our 30px standard for Total Students
+      colors: ['#00B8D9', '#FF5630'],
+      width: 30,
     },
     path: studentPaths.records.studentList,
   },
@@ -41,7 +41,7 @@ const kpiData: KPIItem[] = [
     id: 'PRESENT_TODAY',
     title: 'Present Today',
     value: '42',
-    percent: 2.4, // Comparison vs yesterday
+    tooltip: "Shows today's attendance status for the class. View present and absent students.",
     status: 'success' as const,
     chart: {
       type: 'donut' as const,
@@ -57,7 +57,7 @@ const kpiData: KPIItem[] = [
     id: 'ASSIGNMENT_STATUS',
     title: 'Pending Assignments',
     value: '12',
-    percent: -5.0,
+    tooltip: 'Number of assignments that are still pending submission from students.',
     status: 'success' as const,
     chart: {
       type: 'donut' as const,
@@ -73,7 +73,7 @@ const kpiData: KPIItem[] = [
     id: 'CLASS_PERFORMANCE',
     title: 'Class Performance',
     value: '78%',
-    percent: 3.5, // Improved
+    tooltip: 'Average academic performance of the class based on recorded exam marks.',
     status: 'primary' as const,
     chart: {
       type: 'donut' as const,
@@ -94,9 +94,9 @@ const TeacherKPICards = () => (
         <CompactKPICard
           title={kpi.title}
           value={kpi.value}
-          percentChange={kpi.percent}
           status={kpi.status}
           path={kpi.path}
+          tooltip={kpi.tooltip}
           chart={kpi.chart}
         />
       </Grid>

@@ -1,3 +1,4 @@
+import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -238,6 +239,7 @@ const AlertItemRow = ({ alert, onView }: { alert: AlertItem; onView: () => void 
 
 const AlertCenter = () => {
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
+  const theme = useTheme();
 
   const handleClose = () => {
     setSelectedAlert(null);
@@ -252,6 +254,7 @@ const AlertCenter = () => {
       {
         id: 'status',
         label: 'Status',
+        sticky: true,
         isSort: true,
         render: (value: any, row: any) => (
           <Chip
@@ -287,7 +290,14 @@ const AlertCenter = () => {
     <>
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
+          <Card
+            sx={{
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.shadows[8],
+              },
+            }}
+          >
             <CardHeader
               title={
                 <Box
@@ -333,7 +343,18 @@ const AlertCenter = () => {
 
         <Grid size={{ xs: 12, md: 6 }}>
           {/* Enrollment Trends */}
-          <Card sx={{ height: 370, p: 2, display: 'flex', flexDirection: 'column' }}>
+          <Card
+            sx={{
+              height: 370,
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.shadows[8],
+              },
+            }}
+          >
             <Typography variant="subtitle1" gutterBottom>
               {renderInfoTooltip(
                 'Enrollment Trends (6M)',
@@ -363,6 +384,7 @@ const AlertCenter = () => {
         >
           <CustomizableTable
             tableId="alert_details_table"
+            noDataText="No Alert Details Available"
             columns={TABLE_COLUMNS}
             data={selectedAlert.studentData}
             isSearch

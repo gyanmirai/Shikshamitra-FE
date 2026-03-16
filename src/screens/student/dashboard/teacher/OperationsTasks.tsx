@@ -219,7 +219,15 @@ export const UpcomingExams = () => {
 
   return (
     <>
-      <Card sx={{ height: '100%', maxHeight: 480, display: 'flex', flexDirection: 'column' }}>
+      <Card
+        sx={{
+          height: '100%',
+          maxHeight: 480,
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': { transform: 'translateY(-4px)', boxShadow: (theme) => theme.shadows[8] },
+        }}
+      >
         <CardHeader
           title={renderInfoTooltip(
             'Upcoming Exams',

@@ -1,6 +1,6 @@
 import React from 'react';
-import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Card, Grid, Stack, CardHeader, Typography } from '@mui/material';
@@ -16,12 +16,19 @@ const houseData = [
 
 export default function HouseDistribution() {
   const totalStudents = houseData.reduce((a, b) => a + b.value, 0);
-
+  const theme = useTheme();
   // Sort houses by value to find the rank
   const sortedHouses = [...houseData].sort((a, b) => b.value - a.value);
 
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Card
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+      }}
+    >
       <CardHeader
         sx={{ mt: -1, ml: -1 }}
         title={

@@ -142,6 +142,7 @@ const AbsentStudents = () => {
       {
         id: 'action',
         label: 'Action',
+        sticky: true,
         render: (value, row) => (
           <Tooltip title="Call Parent">
             <IconButton size="small" sx={{ color: 'primary.main', bgcolor: 'primary.lighter' }}>
@@ -155,7 +156,12 @@ const AbsentStudents = () => {
   );
 
   return (
-    <Card sx={{ mb: 1 }}>
+    <Card
+      sx={{
+        mb: 1,
+        '&:hover': { transform: 'translateY(-4px)', boxShadow: (theme) => theme.shadows[8] },
+      }}
+    >
       <CardHeader
         sx={{ ml: -1, mt: -1 }}
         title="Absent Students Today"
@@ -187,6 +193,7 @@ const AbsentStudents = () => {
       <Box sx={{ p: 1 }}>
         <CustomizableTable
           tableId="absent-students-table"
+          noDataText="No absent students today"
           columns={columns}
           data={absentStudents}
           isPagination={false}
