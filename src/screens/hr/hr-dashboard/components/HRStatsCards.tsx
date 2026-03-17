@@ -46,7 +46,7 @@ const KPI_DATA = [
     path: hrPaths.attendance.leaveManagement,
     chart: {
       type: 'donut' as const,
-      series: [8, 110],
+      series: [110, 8],
       width: 56,
       height: 56,
       colors: ['#22C55E', '#FFA500'],
