@@ -17,10 +17,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  useGetAccessControlQuery,
-  useAddAccessControlMutation,
-} from 'src/redux/employee/employeeApi';
+import { useGetAccessControlQuery, useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
 import {
   Box,
   Card,

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusTypeOptions } from 'src/enums/employee-status-type';
 
 export const EARNING_COMPONENTS = [

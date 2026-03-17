@@ -15,10 +15,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import {
-  useGetEmployeeLeaveQuery,
-  useGetEmployeeLeaveByIdQuery,
-} from 'src/redux/employee/employeeApi';
+import { useGetLeaveRequestsQuery, useGetLeaveRequestByIdQuery } from 'src/redux/hr/leaveApi';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
@@ -47,8 +44,8 @@ const LeaveCalender = (props: TabComponentType) => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeaveQuery,
-    params: mediumStageId?.id,
+    currentQueryAndMutation: useGetLeaveRequestsQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
   useEffect(() => {
@@ -183,7 +180,7 @@ export const LeaveRequestForm = ({ editData }: any) => {
   const isView = useBoolean();
   const { isLoading: isLeavePolicyLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeaveByIdQuery,
+    currentQueryAndMutation: useGetLeaveRequestByIdQuery,
     params: { id: editData?.id },
   });
   return isLeavePolicyLoading ? (
@@ -270,6 +267,7 @@ export const LeaveRequestForm = ({ editData }: any) => {
           <Typography variant="body2">
             {editData?.reason ||
               (editData?.description && (
+                // eslint-disable-next-line react/no-danger
                 <span dangerouslySetInnerHTML={{ __html: editData.description }} />
               ))}
           </Typography>

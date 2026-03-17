@@ -24,11 +24,7 @@ import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
-import {
-  useAddEmployeeLeaveMutation,
-  useGetEmployeeLeavePolicyQuery,
-  useUpdateEmployeeLeaveMutation,
-} from 'src/redux/employee/employeeApi';
+import { useGetLeaveRequestsQuery, useCreateLeaveRequestMutation } from 'src/redux/hr/leaveApi';
 
 import type { TabComponentType } from '.';
 
@@ -65,22 +61,16 @@ interface FormValues {
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
-  // Mutation hook for updating leave request status
-  const [updateLeaveStatus, { isLoading: isUpdateStatusLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeLeaveMutation,
-  });
-
   // Mutation hook for adding new leave request
   const [addLeave, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddEmployeeLeaveMutation,
+    currentQueryAndMutation: useCreateLeaveRequestMutation,
   });
 
   // Query hook to fetch employee leave policy data
-  const { data: leavePolicyData, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
+  const { data: leaveRequestData, isLoading: isLeaveRequestLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+    currentQueryAndMutation: useGetLeaveRequestsQuery,
   });
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
 
@@ -183,18 +173,18 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       try {
         setSubmitting(true);
         if (editData) {
-          await updateLeaveStatus({
-            leaveRequestId: editData.id,
-            body: {
-              status:
-                formValues.status === EmployeeLeaveStatusType.Rejected
-                  ? 'REJECTED'
-                  : formValues.status === EmployeeLeaveStatusType.Approved
-                    ? 'APPROVED'
-                    : 'REVIEWED',
-              remarks: formValues.rejectionReason || undefined,
-            },
-          });
+          // await updateLeaveStatus({
+          //   leaveRequestId: editData.id,
+          //   body: {
+          //     status:
+          //       formValues.status === EmployeeLeaveStatusType.Rejected
+          //         ? 'REJECTED'
+          //         : formValues.status === EmployeeLeaveStatusType.Approved
+          //           ? 'APPROVED'
+          //           : 'REVIEWED',
+          //     remarks: formValues.rejectionReason || undefined,
+          //   },
+          // });
         } else {
           await addLeave({
             mediumStageId: currentMedium?.id,
@@ -230,13 +220,13 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
                 <CustomSelect
-                  isLoading={isLeavePolicyLoading}
-                  options={leavePolicyData?.items || []}
+                  isLoading={isLeaveRequestLoading}
+                  options={leaveRequestData?.items || []}
                   label="Leave Type *"
                   value={values.leaveTypeId}
                   name="leaveTypeId"
                   valueKey="id"
-                  disabled={!!editData || isLeavePolicyLoading}
+                  disabled={!!editData || isLeaveRequestLoading}
                   labelKey="leaveType"
                   error={!!touched.leaveTypeId && !!errors.leaveTypeId}
                   helperText={(touched.leaveTypeId && errors.leaveTypeId) || ''}
@@ -463,7 +453,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         </Button>
         {!editData && (
           <LoadingButton
-            loading={isSubmitting}
+            loading={isSubmitting || isLoading}
             startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
             onClick={(e: any) => {
               handleSubmit(e);
@@ -478,12 +468,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
         {editData && values.status !== EmployeeLeaveStatusType.Approved && (
           <LoadingButton
-            loading={isUpdateStatusLoading}
+            // loading={isUpdateStatusLoading}
             onClick={(e: any) => {
               handleSubmit(e);
             }}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
-            disabled={isUpdateStatusLoading}
+            // disabled={isUpdateStatusLoading}
             size="small"
           >
             {values.status === EmployeeLeaveStatusType.Rejected ? 'Approve' : 'Update Status'}

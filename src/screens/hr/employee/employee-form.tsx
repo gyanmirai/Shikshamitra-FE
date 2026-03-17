@@ -31,7 +31,7 @@ import {
   useUpdateExperienceInformationMutation,
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
-} from 'src/redux/employee/employeeApi';
+} from 'src/redux/hr/employeeApi';
 
 import { allFields } from './employee-form-fields';
 import { validations } from './employee-form-validation';
@@ -45,45 +45,38 @@ import type {
   IAdditionalInformationResponse,
 } from './types';
 
+const toRawMobile = (value: string) => value.replace(/\s/g, '').replace(/^\+91/, '');
+
 export const personalInformationInitialValues = (
   editData?: Partial<IPersonalInformationResponse>
 ) => ({
   photo: '',
-
-  // Always string
-  lastName: editData?.lastName ?? '',
-  firstName: editData?.firstName ?? '',
-  middleName: editData?.middleName ?? '',
-  shortName: editData?.shortName ?? '',
-
-  // Dates
-  dob: editData?.dob ? dayjs(editData.dob) : null,
-
-  familyCast: editData?.familyCaste ?? '',
-
-  // 🔥 Convert numeric selects to string
-  castType: editData?.casteType != null ? String(editData.casteType) : '',
-  gender: editData?.gender != null ? String(editData.gender) : '',
-  maritalStatus: editData?.maritalStatus != null ? String(editData.maritalStatus) : '',
-  bloodGroup: editData?.bloodGroup != null ? String(editData.bloodGroup) : '',
-
-  // Strings only
-  mobileNo: editData?.mobileNo ?? '',
-  secondaryMobileNo: editData?.secondaryMobileNo ?? '',
-  email: editData?.email ?? '',
-  department: editData?.department ?? '',
-
-  dateOfJoining: editData?.doj ? dayjs(editData.doj) : null,
-
-  // 🔥 Convert boolean to string (since select usually string)
-  employeeGroup: editData?.isTeaching != null ? (editData.isTeaching ? '0' : '1') : '',
-
-  role: editData?.roleId ?? '',
-
-  addressLine1: editData?.address1 ?? '',
-  addressLine2: editData?.address2 ?? '',
-  addressLine3: editData?.address3 ?? '',
-
+  lastName: editData ? editData.lastName : '',
+  firstName: editData ? editData.firstName : '',
+  middleName: editData ? editData.middleName : '',
+  shortName: editData ? editData.shortName : '',
+  // employeeStatusType: editData ? editData?.employeeStatusType : EmployeeStatusType.Active,
+  // subject: editData ? editData.subject || [] : [],
+  dob: editData ? dayjs(editData.dob, 'YYYY-MM-DD') : null,
+  familyCast: editData ? editData.familyCaste : '',
+  castType: editData ? editData.casteType : '',
+  gender: editData?.gender ?? '',
+  religion: editData ? ReligionType[editData.religion as keyof typeof ReligionType] : '',
+  maritalStatus: editData ? editData.maritalStatus : '',
+  bloodGroup: editData ? editData.bloodGroup : '',
+  mobileNo: editData ? editData.mobileNo : '',
+  secondaryMobileNo: editData ? editData?.secondaryMobileNo : null,
+  email: editData ? editData.email : '',
+  department: editData ? editData.department : '',
+  // designation: editData ? editData.designation : '',
+  dateOfJoining: editData ? dayjs(editData.doj, 'YYYY-MM-DD') : dayjs(),
+  employeeGroup: editData ? (editData.isTeaching ? 0 : 1) : '',
+  // qualification: editData ? editData. : '',
+  role: editData ? editData?.roleId : '',
+  // identificationMark1: editData ? editData.identificationMark1 : '',
+  addressLine1: editData ? editData.address1 : '',
+  addressLine2: editData ? editData.address2 : '',
+  addressLine3: editData ? editData.address3 : '',
   country: editData?.country?.name
     ? { name: editData.country.name, isoCode: editData.country.isoCode }
     : { name: 'India', isoCode: 'IN' },
@@ -109,22 +102,22 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
   // ================= FATHER =================
   fatherName: editData?.fatherDetails?.name ?? '',
   fatherOccupation: editData?.fatherDetails?.occupation ?? '',
-  fatherContactNo: editData?.fatherDetails?.mobileNo ?? '',
+  fatherContactNo: editData?.fatherDetails?.mobileNo ?? 'null',
   fatherAddress1: editData?.fatherDetails?.address1 ?? '',
   fatherAddress2: editData?.fatherDetails?.address2 ?? '',
   fatherAddress3: editData?.fatherDetails?.address3 ?? '',
 
   fatherCountry: editData?.fatherDetails?.country
     ? {
-        name: editData.fatherDetails.country.name ?? '',
-        isoCode: editData.fatherDetails.country.isoCode ?? '',
+        name: editData?.fatherDetails?.country.name,
+        isoCode: editData?.fatherDetails?.country.isoCode,
       }
     : { name: 'India', isoCode: 'IN' },
 
   fatherState: editData?.fatherDetails?.state
     ? {
-        name: editData.fatherDetails.state.name ?? '',
-        isoCode: editData.fatherDetails.state.isoCode ?? '',
+        name: editData?.fatherDetails?.state.name,
+        isoCode: editData?.fatherDetails?.state.isoCode,
       }
     : { name: '', isoCode: '' },
 
@@ -142,15 +135,15 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
 
   motherCountry: editData?.motherDetails?.country
     ? {
-        name: editData.motherDetails.country.name ?? '',
-        isoCode: editData.motherDetails.country.isoCode ?? '',
+        name: editData?.motherDetails?.country.name,
+        isoCode: editData?.motherDetails?.country.isoCode,
       }
     : { name: 'India', isoCode: 'IN' },
 
   motherState: editData?.motherDetails?.state
     ? {
-        name: editData.motherDetails.state.name ?? '',
-        isoCode: editData.motherDetails.state.isoCode ?? '',
+        name: editData?.motherDetails?.state.name,
+        isoCode: editData?.motherDetails?.state.isoCode,
       }
     : { name: '', isoCode: '' },
 
@@ -168,15 +161,15 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
 
   spouseCountry: editData?.spouseDetails?.country
     ? {
-        name: editData.spouseDetails.country.name ?? '',
-        isoCode: editData.spouseDetails.country.isoCode ?? '',
+        name: editData?.spouseDetails?.country.name,
+        isoCode: editData?.spouseDetails?.country.isoCode,
       }
     : { name: 'India', isoCode: 'IN' },
 
   spouseState: editData?.spouseDetails?.state
     ? {
-        name: editData.spouseDetails.state.name ?? '',
-        isoCode: editData.spouseDetails.state.isoCode ?? '',
+        name: editData?.spouseDetails?.state.name,
+        isoCode: editData?.spouseDetails?.state.isoCode,
       }
     : { name: '', isoCode: '' },
 
@@ -318,7 +311,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     isThrowError: true,
   });
 
-  const [addAccessControl, { isLoading: isAddAccessControlLoading }] = useQueryAndMutation({
+  const [addAccessControl] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAccessControlMutation,
   });
@@ -343,13 +336,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
-        const resp = await addEmployee({
-          // profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+        const body: Record<string, any> = {
           lastName: values.lastName,
           firstName: values.firstName,
-          middleName: values.middleName,
-          shortName: values.shortName,
-          employeeStatusType: values.employeeStatusType,
+          middleName: values.middleName || '',
+          shortName: values.shortName || '',
           dob: dateConvertor(values.dob.format(dateFormat)),
           familyCaste: values.familyCast,
           casteType: values.castType,
@@ -357,25 +348,29 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           religion: ReligionType[values.religion],
           maritalStatus: values.maritalStatus,
           bloodGroup: values.bloodGroup,
-          mobileNo: values.mobileNo,
-          secondaryMobileNo: values.secondaryMobileNo,
+          mobileNo: toRawMobile(values.mobileNo),
           email: values.email,
           department: values.department,
           doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
           isTeaching: values.employeeGroup === 0,
-          // qualification: values.qualification,
           roleId: values.role,
-          // identificationMark1: values.identificationMark1,
           address1: values.addressLine1,
           address2: values.addressLine2,
-          address3: values.addressLine3,
           country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-          city: values?.city?.name,
           state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-          pincode: `${values.pincode}`,
-          // educationMediumStageId: values.organization,
+          city: values?.city?.name,
+          pinCode: String(values.pincode),
           shiftId: values.shift,
-        }).unwrap();
+        };
+
+        if (values.secondaryMobileNo) {
+          body.secondaryMobileNo = toRawMobile(values.secondaryMobileNo);
+        }
+        if (values.addressLine3) {
+          body.address3 = values.addressLine3;
+        }
+
+        const resp = await addEmployee({ body }).unwrap();
         formik.setFieldValue('employeeId', resp.id);
       }
     },
@@ -387,10 +382,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       const res = await updateFamilyInfo({
         employeeId: values.employeeId,
         body: {
+          id: values.employeeId,
           fatherDetails: {
             name: values.fatherName,
             occupation: values.fatherOccupation,
-            mobileNo: values.fatherContactNo,
+            mobileNo: toRawMobile(values.fatherContactNo) || null,
             address1: values.fatherAddress1,
             address2: values.fatherAddress2,
             address3: values.fatherAddress3,
@@ -402,7 +398,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           motherDetails: {
             name: values.motherName,
             occupation: values.motherOccupation,
-            mobileNo: values.motherContactNo,
+            mobileNo: toRawMobile(values.motherContactNo) || null,
             address1: values.motherAddress1,
             address2: values.motherAddress2,
             address3: values.motherAddress3,
@@ -416,7 +412,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           spouseDetails: {
             name: values.spouseName,
             occupation: values.spouseOccupation,
-            mobileNo: values.spouseContactNo,
+            mobileNo: toRawMobile(values.spouseContactNo) || null,
             address1: values.spouseAddress1,
             address2: values.spouseAddress2,
             address3: values.spouseAddress3,
@@ -454,19 +450,19 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       const res = await updateExperienceInfo({
         employeeId: values.employeeId,
         body: values.experiences.map((i: any) => ({
-          ...i,
-          mediumStageName: i.mediumStageName,
+          id: i.id,
+          mediumStageName: i.mediumStageName ?? '',
           designation: i.designation,
           department: i.department,
           country: {
-            name: i.country.name,
-            isoCode: i.country.isoCode,
+            name: i.country?.name ?? '',
+            isoCode: i.country?.isoCode ?? '',
           },
           state: {
-            name: i.state.name,
-            isoCode: i.state.isoCode,
+            name: i.state?.name ?? '',
+            isoCode: i.state?.isoCode ?? '',
           },
-          city: i.city.name,
+          city: i.city?.name ?? '',
           startDate: i.startDate ? dateConvertor(i.startDate.format(dateFormat)) : null,
           endDate: i.endDate ? dateConvertor(i.endDate.format(dateFormat)) : null,
         })),
@@ -492,10 +488,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             pfRuleId: values.pfRule,
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
-            basicSalary: Number(values.basicSalary),
             punchId: values.punchId,
-            tdsPercentage: Number(values.tdsPercentage),
-            tdsAmount: Number(values.tdsAmount),
+            totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
           },
 
           earningComponents: values.earningComponents,
@@ -509,47 +503,46 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const handelUpdateEmployee = useCallback(
     async (values: any, formik: any, id: any) => {
-      try {
-        const res = await updateEmployee({
-          id,
-          body: {
-            lastName: values.lastName,
-            firstName: values.firstName,
-            middleName: values.middleName,
-            shortName: values.shortName,
-            employeeStatusType: values.employeeStatusType,
-            dob: dateConvertor(values.dob.format(dateFormat)),
-            familyCaste: values.familyCast,
-            casteType: values.castType,
-            gender: values.gender,
-            religion: ReligionType[values.religion],
-            maritalStatus: values.maritalStatus,
-            bloodGroup: values.bloodGroup,
-            mobileNo: values.mobileNo,
-            secondaryMobileNo: values.secondaryMobileNo,
-            email: values.email,
-            department: values.department,
-            doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
-            isTeaching: values.employeeGroup === 0,
-            // qualification: values.qualification,
-            roleId: values.role,
-            // identificationMark1: values.identificationMark1,
-            address1: values.addressLine1,
-            address2: values.addressLine2,
-            address3: values.addressLine3,
-            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-            city: values?.city?.name,
-            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-            pincode: `${values.pincode}`,
-            // educationMediumStageId: values.organization,
-            shiftId: values.shift,
-          },
-        }).unwrap();
+      const body: Record<string, any> = {
+        lastName: values.lastName,
+        firstName: values.firstName,
+        middleName: values.middleName || '',
+        shortName: values.shortName || '',
+        dob: dateConvertor(values.dob.format(dateFormat)),
+        familyCaste: values.familyCast,
+        casteType: values.castType,
+        gender: values.gender,
+        religion: ReligionType[values.religion],
+        maritalStatus: values.maritalStatus,
+        bloodGroup: values.bloodGroup,
+        mobileNo: toRawMobile(values.mobileNo),
+        email: values.email,
+        department: values.department,
+        doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
+        isTeaching: values.employeeGroup === 0,
+        roleId: values.role,
+        address1: values.addressLine1,
+        address2: values.addressLine2,
+        country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+        state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+        city: values?.city?.name,
+        pinCode: String(values.pincode),
+        shiftId: values.shift,
+      };
 
-        return res;
-      } catch (error) {
-        throw new Error(error);
+      if (values.secondaryMobileNo) {
+        body.secondaryMobileNo = toRawMobile(values.secondaryMobileNo);
       }
+      if (values.addressLine3) {
+        body.address3 = values.addressLine3;
+      }
+
+      const res = await updateEmployee({
+        id,
+        body,
+      }).unwrap();
+
+      return res;
     },
     [updateEmployee]
   );
@@ -559,7 +552,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       const res = await updateReportingManager({
         id: values.employeeId,
         body: {
-          reportingManagerId: values?.reportingManager?.id,
+          reportingManagerId: values?.reportingManager,
         },
       }).unwrap();
       return res;
@@ -594,16 +587,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       try {
         setIsLoading(true);
         if (editData && activeStep === 0) {
-          // await handelUpdateEmployee(values, formik, editData.id);
-          // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Employee details updated successfully' });
-          // }
+          await handelUpdateEmployee(values, formik, editData.id);
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+          }
         } else if (activeStep === 0) {
           if (values.employeeId) {
-            // await handelUpdateEmployee(values, formik, values.employeeId);
-            // if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
-            // }
+            await handelUpdateEmployee(values, formik, values.employeeId);
+            if (isSaveButton) {
+              shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+            }
           } else {
             await handleBasicInformation(values, formik);
             if (isSaveButton) {
@@ -611,31 +604,31 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             }
           }
         } else if (activeStep === 1) {
-          // await handleFamilyInformation(values, formik);
-          // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Family information updated successfully' });
-          // }
+          await handleFamilyInformation(values, formik);
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Family information updated successfully' });
+          }
         } else if (activeStep === 2) {
-          // await handleAdditionalDetails(values, formik);
+          await handleAdditionalDetails(values, formik);
           shikshaMitraToast.success({ message: 'Additional details updated successfully' });
         } else if (activeStep === 4) {
-          // await handleWorkExperience(values, formik);
-          // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Work experience updated successfully' });
-          // }
+          await handleWorkExperience(values, formik);
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Work experience updated successfully' });
+          }
         } else if (activeStep === 5) {
-          // await handleBankDetailsInformation(values, formik);
-          // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
-          // }
+          await handleBankDetailsInformation(values, formik);
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          }
         } else if (activeStep === 6) {
-          // await handleReportingManager(values, formik, values.employeeId);
-          // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Reporting manager updated successfully' });
-          // }
+          await handleReportingManager(values, formik, values.employeeId);
+          if (isSaveButton) {
+            shikshaMitraToast.success({ message: 'Reporting manager updated successfully' });
+          }
         }
         if (isLastStep && !isSaveButton) {
-          // await handleAcademicPermission(values, formik, values.employeeId);
+          await handleAcademicPermission(values, formik, values.employeeId);
           shikshaMitraToast.success({
             message: `Employee ${editData ? 'updated' : 'added'}  successfully`,
           });
@@ -651,7 +644,19 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         handleClose(null, true);
       }
     },
-    [activeStep, editData, handleBasicInformation, handleClose]
+    [
+      activeStep,
+      editData,
+      handleBasicInformation,
+      handleClose,
+      handelUpdateEmployee,
+      handleFamilyInformation,
+      handleAdditionalDetails,
+      handleWorkExperience,
+      handleBankDetailsInformation,
+      handleReportingManager,
+      handleAcademicPermission,
+    ]
   );
 
   return (
@@ -728,7 +733,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
   const { data: workExperience, isLoading: workExperienceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWorkExperienceQuery,
-    params: editData?.id,
+    params: { id: editData?.id, page: 1, pageSize: 100 },
     options: {
       skip: !(editData?.id && step === 4),
     },
@@ -911,7 +916,8 @@ const FormSlider = ({ step, formik, editData }: any) => {
               key={index}
             >
               <Box display="flex" height="100%">
-                {/* {step === 0 && (
+                <Scrollbar>
+                  {/* {step === 0 && (
                   <Box display="flex">
                     <UploadAvatar
                       maxSize={3145728}
@@ -926,13 +932,13 @@ const FormSlider = ({ step, formik, editData }: any) => {
                     />
                   </Box>
                 )} */}
-                <Scrollbar sx={{ height: '100%', width: '100%' }}>
                   <Box
                     p={2}
                     display={step === 2 || step === 1 || step === 3 ? 'block' : 'flex'}
                     flexWrap="wrap"
                     gap={2}
                     width="100%"
+                    height="100%"
                   >
                     {basicDetailsLoading ||
                     familyDetailsLoading ||
@@ -944,7 +950,6 @@ const FormSlider = ({ step, formik, editData }: any) => {
                       <LoadingScreen />
                     ) : (
                       <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
-                        {' '}
                         {allFields[step].map((field) => (
                           <Grid
                             size={{

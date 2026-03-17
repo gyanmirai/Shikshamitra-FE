@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { Box, Chip, Button, TextField, Typography, Autocomplete } from '@mui/material';
 
 const TDS = () => {

@@ -9,7 +9,7 @@ import { Box, Card, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { useLazyGetAttendanceByEmployeeIdQuery } from 'src/redux/employee/employeeApi';
+import { useLazyGetAttendanceEmployeeWiseQuery } from 'src/redux/hr/attendanceApi';
 import {
   EmployeeAttendanceStatus,
   EmployeeAttendanceStatusColor,
@@ -37,7 +37,7 @@ const TeacherAttendanceTracking = ({
 
   const [getAttendance, { data, isLoading: attendanceLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
+    currentQueryAndMutation: useLazyGetAttendanceEmployeeWiseQuery,
   });
 
   useEffect(() => {

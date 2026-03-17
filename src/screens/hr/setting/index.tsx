@@ -1,5 +1,6 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
@@ -9,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -33,14 +35,17 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  documentApi,
-  useGetDocumentsQuery,
-  useAddDocumentMutation,
-  useDeleteDocumentMutation,
-  useUpdateDocumentMutation,
-} from 'src/redux/document/documentApi';
+  employeeApi,
+  useGetDocumentConfigurationsQuery,
+  useDeleteDocumentConfigurationMutation,
+  useCreateDocumentConfigurationMutation,
+  useUpdateDocumentConfigurationMutation,
+} from 'src/redux/hr/employeeApi';
 
 const HrSetting = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const dispatch = useDispatch();
   const dialog = useBoolean();
   const confirm = useBoolean();
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
@@ -53,14 +58,22 @@ const HrSetting = () => {
     maxResultCount: 10,
   });
 
+  const queryParams = {
+    page: query.skipCount / query.maxResultCount + 1,
+    pageSize: query.maxResultCount,
+    academicYearId: currentYear?.id,
+  };
+
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetDocumentsQuery,
+    currentQueryAndMutation: useGetDocumentConfigurationsQuery,
+    params: queryParams,
+    options: { skip: !currentYear?.id },
   });
 
-  const [deleteDocument, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+  const [deleteDocumentConfiguration, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteDocumentMutation,
+    currentQueryAndMutation: useDeleteDocumentConfigurationMutation,
   });
 
   const tableData = useMemo(
@@ -129,24 +142,32 @@ const HrSetting = () => {
                 item: deleteInformation,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    documentApi.util.updateQueryData('getDocuments', null, (draft: any) => {
-                      const index = draft.items?.findIndex(
-                        (b: any) => b.id === deleteInformation?.id
-                      );
-                      setDeleteIndex(index);
-                      if (index !== -1) {
-                        draft.items.splice(index, 1);
+                    employeeApi.util.updateQueryData(
+                      'getDocumentConfigurations',
+                      queryParams,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === deleteInformation?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
                       }
-                    })
+                    )
                   ),
                 onUndoRestore: (dispatchFn, index) =>
                   dispatchFn(
-                    documentApi.util.updateQueryData('getDocuments', undefined, (draft: any) => {
-                      if (!draft.items) return;
-                      draft.items.splice(index, 0, deleteInformation);
-                    })
+                    employeeApi.util.updateQueryData(
+                      'getDocumentConfigurations',
+                      queryParams,
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, deleteInformation);
+                      }
+                    )
                   ),
-                onCommit: () => deleteDocument(deleteInformation?.id || ''),
+                onCommit: () => deleteDocumentConfiguration(deleteInformation?.id || ''),
               });
               confirm.onFalse();
               setEditData(null);
@@ -236,6 +257,8 @@ const HrSetting = () => {
             dialog.onFalse();
           }}
           editData={editData}
+          queryParams={queryParams}
+          dispatch={dispatch}
         />
       </CustomDialog>
     </Box>
@@ -244,14 +267,25 @@ const HrSetting = () => {
 
 export default HrSetting;
 
-const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; editData?: any }) => {
-  const [addDocument, { isLoading }] = useQueryAndMutation({
+const DocumentForm = ({
+  handleClose,
+  editData,
+  queryParams,
+  dispatch,
+}: {
+  handleClose?: () => void;
+  editData?: any;
+  queryParams: { page: number; pageSize: number; academicYearId: string | undefined };
+  dispatch: any;
+}) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [createDocumentConfiguration, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddDocumentMutation,
+    currentQueryAndMutation: useCreateDocumentConfigurationMutation,
   });
-  const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateDocumentConfiguration, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateDocumentMutation,
+    currentQueryAndMutation: useUpdateDocumentConfigurationMutation,
   });
 
   const { values, setFieldValue, handleSubmit, errors, touched, handleChange } = useFormik<{
@@ -282,7 +316,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
     }),
     onSubmit: async (formikValues) => {
       if (editData) {
-        await updateDocument({
+        const updatedDoc = await updateDocumentConfiguration({
           id: editData.id,
           body: {
             title: formikValues.title,
@@ -290,15 +324,36 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
             documentSize: formikValues.documentSize,
           },
         }).unwrap();
+        dispatch(
+          employeeApi.util.updateQueryData(
+            'getDocumentConfigurations',
+            queryParams,
+            (draft: any) => {
+              const idx = draft.items?.findIndex((b: any) => b.id === editData.id);
+              if (idx !== -1) draft.items[idx] = updatedDoc;
+            }
+          )
+        );
         shikshaMitraToast.success({ message: 'Document updated successfully' });
         handleClose?.();
         return;
       }
-      await addDocument({
-        title: formikValues.title,
-        documentTypes: formikValues.documentType.map((item: any) => item.value),
-        documentSize: formikValues.documentSize,
+      const newDoc = await createDocumentConfiguration({
+        academicYearId: currentYear?.id,
+        body: {
+          title: formikValues.title,
+          documentTypes: formikValues.documentType.map((item: any) => item.value),
+          documentSize: formikValues.documentSize,
+        },
       }).unwrap();
+      dispatch(
+        employeeApi.util.updateQueryData('getDocumentConfigurations', queryParams, (draft: any) => {
+          if (draft.items) {
+            draft.items.push(newDoc);
+            if (draft.totalCount !== undefined) draft.totalCount += 1;
+          }
+        })
+      );
       shikshaMitraToast.success({ message: 'Document added successfully' });
       handleClose?.();
     },

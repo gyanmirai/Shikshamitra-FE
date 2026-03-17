@@ -2,8 +2,8 @@ import { useFormik } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import {
   Box,
   Card,

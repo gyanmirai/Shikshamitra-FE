@@ -20,7 +20,7 @@ import {
   useGetEmployeeDocumentsQuery,
   useGetEmployeeDocumentByIdQuery,
   useEmployeeUpdateDocumentMutation,
-} from 'src/redux/employee/employeeApi';
+} from 'src/redux/hr/employeeApi';
 
 interface ViewDocumentsProps {
   employeeId: string;
@@ -83,7 +83,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
   const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeDocumentsQuery,
-    params: employeeId,
+    params: { id: employeeId, page: 1, pageSize: 100 },
   });
 
   const tableData =
@@ -106,7 +106,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
         isLoading={isLoading || isEmployeeDocLoading}
         tableId="documents"
         columns={[
-          { id: 'documentName', label: 'Name' },
+          { id: 'title', label: 'Name' },
           // {
           //   id: 'docType',
           //   label: 'Document Format',
@@ -174,9 +174,6 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                     const file = e.target.files[0];
                     if (!file) return;
                     const acceptableFileFormats: string[] = [];
-
-                    console.log(row, 'row');
-
                     row.documentTypes.forEach((item: number) => {
                       acceptableFileFormats.push(
                         DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]
@@ -188,7 +185,9 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                     }
                     const myNewFile = new File([file], row.documentName, { type: file.type });
                     const formData = new FormData();
-                    formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
+                    formData.append('documentNameId', row.id);
+                    formData.append('fileName', row.documentName);
+                    formData.append('file', myNewFile);
 
                     try {
                       if (row.uploadDocument) {
