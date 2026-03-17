@@ -134,13 +134,9 @@ const GlobalAcademicSearch = () => {
 
   const pathname = usePathname();
 
-  const isShowOnlyYearModule = [
-    '/dashboard',
-    '/finance',
-    '/library',
-    '/calendar',
-    '/hr/employee',
-  ].some((route) => pathname.startsWith(route));
+  const isShowOnlyYearModule = ['/dashboard', '/finance', '/library', '/calendar', '/hr'].some(
+    (route) => pathname.startsWith(route)
+  );
 
   // --- Start of Onboarding Logic ---
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
