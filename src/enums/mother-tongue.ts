@@ -10,4 +10,6 @@ export enum MotherTongueType {
   Other,
 }
 
-export const MotherTongueTypeArray = Object.values(MotherTongueType);
+export const MotherTongueTypeArray = Object.values(MotherTongueType).filter(
+  (value) => typeof value === 'string'
+);
