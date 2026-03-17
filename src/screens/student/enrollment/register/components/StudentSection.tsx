@@ -57,6 +57,9 @@ const StudentSection: React.FC<SectionProps> = ({
           formik.setFieldValue('photo', base64);
           formik.setFieldTouched('photo', true);
         }}
+        onDelete={() => {
+          formik.setFieldValue('photo', '');
+        }}
         value={(formik.values as any).photo}
         error={(formik.touched as any).photo && Boolean((formik.errors as any).photo)}
         disabled={!isEdit.value}

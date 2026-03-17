@@ -40,7 +40,7 @@ export const InquiryHeader = React.memo(
             onClick={onAddClick}
             sx={{ px: '32px' }}
           >
-            Add Inquiry
+            Inquiry
           </Button>
         )
       }

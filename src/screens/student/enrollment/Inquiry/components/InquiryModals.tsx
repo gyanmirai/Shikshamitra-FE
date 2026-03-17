@@ -53,6 +53,7 @@ export const InquiryModals = React.memo(
             </CustomTooltip>
           </Box>
         }
+        maxWidth="sm"
       >
         <CommunicationForm
           handleCloseDialog={onCloseFollowUp}

@@ -17,7 +17,7 @@ interface AddressDetailsProps {
 }
 
 export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
-  const { values, touched, errors, setFieldValue } = formik;
+  const { values, touched, errors, setFieldValue, setValues } = formik;
   const { isGetLoading } = loading;
 
   if (isGetLoading) {
@@ -116,43 +116,43 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <ShakingTextField error={!!(touched.country && errors.country)}>
+          <ShakingTextField error={!!(touched.country && (errors.country as any)?.name)}>
             <CountryComponent
               value={values.country}
               onChange={(_e: any, value: any) => {
-                setFieldValue('state', { name: '', isoCode: '' });
-                setFieldValue('country', {
-                  name: value?.name,
-                  isoCode: value?.isoCode,
+                setValues({
+                  ...values,
+                  country: { name: value?.name, isoCode: value?.isoCode },
+                  state: { name: '', isoCode: '' },
+                  city: { name: '' },
                 });
               }}
               error={touched.country && Boolean((errors.country as any)?.name)}
               helperText={(touched.country && (errors.country as any)?.name) || ''}
-              textFieldProps={{ label: 'Country' }}
+              textFieldProps={{ label: 'Country *' }}
             />
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <ShakingTextField error={!!(touched.state && errors?.state)}>
+          <ShakingTextField error={!!(touched.state && (errors.state as any)?.name)}>
             <StateComponent
               value={values.state}
               onChange={(_e: any, value: any) => {
-                setFieldValue('state', {
-                  ...(value || {}),
-                  name: value?.name,
-                  isoCode: value?.isoCode,
+                setValues({
+                  ...values,
+                  state: { ...(value || {}), name: value?.name, isoCode: value?.isoCode },
+                  city: { name: '' },
                 });
-                setFieldValue('city', { name: '' });
               }}
               error={touched.state && Boolean((errors.state as any)?.name)}
               helperText={touched.state && (errors.state as any)?.name}
               countryValue={values.country}
-              textFieldProps={{ label: 'State' }}
+              textFieldProps={{ label: 'State *' }}
             />
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <ShakingTextField error={!!(touched.city && errors.city)}>
+          <ShakingTextField error={!!(touched.city && (errors.city as any)?.name)}>
             <CityComponent
               value={values.city}
               onChange={(_e: any, value: any) => {
@@ -161,7 +161,7 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
               error={touched.city && Boolean((errors.city as any)?.name)}
               helperText={touched.city && (errors.city as any)?.name}
               stateValue={values.state}
-              textFieldProps={{ label: 'City' }}
+              textFieldProps={{ label: 'City *' }}
             />
           </ShakingTextField>
         </Grid>

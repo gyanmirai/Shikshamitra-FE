@@ -75,18 +75,17 @@ export const useTableData = ({
               return false;
           }
         } else {
+          const safeValue = (value ?? '').toString().toLowerCase();
+          const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
           switch (filter.type) {
             case 'contains':
-              return value.toString().toLowerCase().includes(filter.value.toString().toLowerCase());
+              return safeValue.includes(safeFilterValue);
             case 'equals':
-              return value.toString().toLowerCase() === filter.value.toString().toLowerCase();
+              return safeValue === safeFilterValue;
             case 'startsWith':
-              return value
-                .toString()
-                .toLowerCase()
-                .startsWith(filter.value.toString().toLowerCase());
+              return safeValue.startsWith(safeFilterValue);
             case 'endsWith':
-              return value.toString().toLowerCase().endsWith(filter.value.toString().toLowerCase());
+              return safeValue.endsWith(safeFilterValue);
             case 'greaterThan':
               return valueAsNumber > filterValueAsNumber;
             case 'lessThan':
