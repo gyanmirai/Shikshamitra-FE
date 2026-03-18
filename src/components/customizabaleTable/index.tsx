@@ -33,6 +33,7 @@ import type { IColumnFilterAnchor, ICustomizableTableProps } from './types';
 const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
   data,
+  tableTitle = 'Table View',
   serverSide = false,
   serverSidePagination = false,
   serverSideSearch = false,
@@ -418,7 +419,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       <CustomDialog
         open={fullScreenDialog.value}
         fullScreen
-        title="Table View"
+        title={tableTitle}
         handleClose={handleCloseFullScreen}
       >
         {tableContent}

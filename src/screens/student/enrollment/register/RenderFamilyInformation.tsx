@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { capitalize } from 'lodash';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -643,8 +642,11 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.fatherQualification}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('fatherQualification', capitalized);
+              const result = value
+                .split(' ')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+              formik.setFieldValue('fatherQualification', result);
             }}
             error={formik.touched.fatherQualification && Boolean(formik.errors.fatherQualification)}
             helperText={formik.touched.fatherQualification && formik.errors.fatherQualification}
@@ -654,26 +656,30 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-          <TextField
-            name="fatherPassOutYear"
-            label="Year of Passing"
-            type="number"
-            value={formik.values.fatherPassOutYear}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              formik.setFieldValue('fatherPassOutYear', value);
-            }}
+          <ShakingTextField
             error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
-            helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
-            fullWidth
-            size="small"
-            disabled={!isFatherDetailsEditable.value}
-          />
+          >
+            <TextField
+              name="fatherPassOutYear"
+              label="Year of Passing"
+              type="number"
+              value={formik.values.fatherPassOutYear}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                formik.setFieldValue('fatherPassOutYear', value);
+              }}
+              error={formik.touched.fatherPassOutYear && Boolean(formik.errors.fatherPassOutYear)}
+              helperText={formik.touched.fatherPassOutYear && formik.errors.fatherPassOutYear}
+              fullWidth
+              size="small"
+              disabled={!isFatherDetailsEditable.value}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
@@ -708,8 +714,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.fatherDesignation}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('fatherDesignation', capitalized);
+              const onlyLetters = value.replace(/[^a-zA-Z\s]/g, '');
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('fatherDesignation', result);
             }}
             error={formik.touched.fatherDesignation && Boolean(formik.errors.fatherDesignation)}
             helperText={formik.touched.fatherDesignation && formik.errors.fatherDesignation}
@@ -726,8 +737,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.fatherOrganization}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('fatherOrganization', capitalized);
+              const onlyLetters = value.replace(/[^a-zA-Z\s]/g, '');
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('fatherOrganization', result);
             }}
             error={formik.touched.fatherOrganization && Boolean(formik.errors.fatherOrganization)}
             helperText={formik.touched.fatherOrganization && formik.errors.fatherOrganization}
@@ -1108,10 +1124,12 @@ function RenderFamilyInformation(props: any) {
             disabled={!isMotherDetailsEditable.value}
             value={formik.values.motherQualification}
             onChange={(e) => {
-              // const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('motherQualification', capitalized);
+              const result = value
+                .split(' ')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+              formik.setFieldValue('motherQualification', result);
             }}
             error={formik.touched.motherQualification && Boolean(formik.errors.motherQualification)}
             helperText={formik.touched.motherQualification && formik.errors.motherQualification}
@@ -1120,26 +1138,30 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-          <TextField
-            name="motherPassOutYear"
-            label="Year of Passing"
-            type="number"
-            disabled={!isMotherDetailsEditable.value}
-            value={formik.values.motherPassOutYear}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              formik.setFieldValue('motherPassOutYear', value);
-            }}
+          <ShakingTextField
             error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
-            helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
-            fullWidth
-            size="small"
-          />
+          >
+            <TextField
+              name="motherPassOutYear"
+              label="Year of Passing"
+              type="number"
+              disabled={!isMotherDetailsEditable.value}
+              value={formik.values.motherPassOutYear}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                formik.setFieldValue('motherPassOutYear', value);
+              }}
+              error={formik.touched.motherPassOutYear && Boolean(formik.errors.motherPassOutYear)}
+              helperText={formik.touched.motherPassOutYear && formik.errors.motherPassOutYear}
+              fullWidth
+              size="small"
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
@@ -1176,8 +1198,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.motherDesignation}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('motherDesignation', capitalized);
+              const onlyLetters = value.replace(/[^a-zA-Z\s]/g, '');
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('motherDesignation', result);
             }}
             error={formik.touched.motherDesignation && Boolean(formik.errors.motherDesignation)}
             helperText={formik.touched.motherDesignation && formik.errors.motherDesignation}
@@ -1193,8 +1220,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.motherOrganization}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('motherOrganization', capitalized);
+              const onlyLetters = value.replace(/[^a-zA-Z\s]/g, '');
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('motherOrganization', result);
             }}
             error={formik.touched.motherOrganization && Boolean(formik.errors.motherOrganization)}
             helperText={formik.touched.motherOrganization && formik.errors.motherOrganization}
@@ -1361,9 +1393,12 @@ function RenderFamilyInformation(props: any) {
             disabled={!isGuardianDetailsEditable.value}
             value={formik.values.guardianQualification}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
-              formik.setFieldValue('guardianQualification', capitalized);
+              const { value } = e.target;
+              const result = value
+                .split(' ')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+              formik.setFieldValue('guardianQualification', result);
             }}
             error={
               formik.touched.guardianQualification && Boolean(formik.errors.guardianQualification)
@@ -1374,26 +1409,32 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-          <TextField
-            name="guardianPassOutYear"
-            label="Year of Passing"
-            type="number"
-            disabled={!isGuardianDetailsEditable.value}
-            value={formik.values.guardianPassOutYear}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              formik.setFieldValue('guardianPassOutYear', value);
-            }}
+          <ShakingTextField
             error={formik.touched.guardianPassOutYear && Boolean(formik.errors.guardianPassOutYear)}
-            helperText={formik.touched.guardianPassOutYear && formik.errors.guardianPassOutYear}
-            fullWidth
-            size="small"
-          />
+          >
+            <TextField
+              name="guardianPassOutYear"
+              label="Year of Passing"
+              type="number"
+              disabled={!isGuardianDetailsEditable.value}
+              value={formik.values.guardianPassOutYear}
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                formik.setFieldValue('guardianPassOutYear', value);
+              }}
+              error={
+                formik.touched.guardianPassOutYear && Boolean(formik.errors.guardianPassOutYear)
+              }
+              helperText={formik.touched.guardianPassOutYear && formik.errors.guardianPassOutYear}
+              fullWidth
+              size="small"
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
@@ -1429,8 +1470,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.guardianDesignation}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('guardianDesignation', capitalized);
+              const onlyLetters = value.replace(/[^a-zA-Z\s]/g, '');
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('guardianDesignation', result);
             }}
             error={formik.touched.guardianDesignation && Boolean(formik.errors.guardianDesignation)}
             helperText={formik.touched.guardianDesignation && formik.errors.guardianDesignation}
@@ -1446,8 +1492,13 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.guardianOrganization}
             onChange={(e) => {
               const { value } = e.target;
-              const capitalized = capitalize(value);
-              formik.setFieldValue('guardianOrganization', capitalized);
+              const onlyLetters = value.replace(/[^a-zA-Z\s]/g, '');
+              const words = onlyLetters.split(' ');
+              const capitalizedWords = words.map(
+                (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+              );
+              const result = capitalizedWords.join(' ');
+              formik.setFieldValue('guardianOrganization', result);
             }}
             error={
               formik.touched.guardianOrganization && Boolean(formik.errors.guardianOrganization)

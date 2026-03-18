@@ -3,14 +3,19 @@ import Box from '@mui/material/Box';
 import { varAlpha } from 'src/theme/styles';
 import { useDropzone } from 'react-dropzone';
 import Typography from '@mui/material/Typography';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
+  Menu,
   Stack,
   Dialog,
   Button,
   Tooltip,
+  Skeleton,
+  MenuItem,
   IconButton,
   DialogTitle,
+  ListItemIcon,
+  ListItemText,
   DialogActions,
   DialogContent,
   CircularProgress,
@@ -33,9 +38,10 @@ export function UploadAvatar({
   helperText,
   ...other
 }: UploadProps) {
-  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, isDragReject, open } = useDropzone({
     multiple: false,
     disabled,
+    noClick: true,
     accept: { 'image/*': [] },
     ...other,
   });
@@ -47,7 +53,19 @@ export function UploadAvatar({
   const [preview, setPreview] = useState('');
   const [webcamOpen, setWebcamOpen] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [webcamReady, setWebcamReady] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const webcamRef = useRef<Webcam>(null);
+
+  const handleOpenOptions = (event: React.MouseEvent<HTMLElement>) => {
+    if (disabled) return;
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseOptions = () => {
+    setAnchorEl(null);
+  };
 
   useEffect(() => {
     if (typeof value === 'string') {
@@ -181,6 +199,7 @@ export function UploadAvatar({
           )}
           <Box
             {...getRootProps()}
+            onClick={handleOpenOptions}
             sx={{
               p: 1,
               m: 'auto',
@@ -208,21 +227,6 @@ export function UploadAvatar({
             {renderContent}
           </Box>
         </Box>
-
-        {!disabled && (
-          <Tooltip title="Take photo">
-            <IconButton
-              size="small"
-              onClick={() => setWebcamOpen(true)}
-              sx={{
-                bgcolor: 'background.neutral',
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <Iconify icon="solar:videocamera-record-bold" width={20} />
-            </IconButton>
-          </Tooltip>
-        )}
       </Stack>
 
       {helperText && (
@@ -232,25 +236,91 @@ export function UploadAvatar({
         </Typography>
       )}
 
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleCloseOptions}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        {hasFile && (
+          <MenuItem
+            onClick={() => {
+              handleCloseOptions();
+              setViewOpen(true);
+            }}
+          >
+            <ListItemIcon>
+              <Iconify icon="solar:eye-bold" width={24} />
+            </ListItemIcon>
+            <ListItemText primary="View Photo" />
+          </MenuItem>
+        )}
+        <MenuItem
+          onClick={() => {
+            handleCloseOptions();
+            setWebcamReady(false);
+            setWebcamOpen(true);
+          }}
+        >
+          <ListItemIcon>
+            <Iconify icon="solar:camera-bold" width={24} />
+          </ListItemIcon>
+          <ListItemText primary="Take Photo" />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleCloseOptions();
+            open();
+          }}
+        >
+          <ListItemIcon>
+            <Iconify icon="solar:gallery-bold" width={24} />
+          </ListItemIcon>
+          <ListItemText primary="Select from local" />
+        </MenuItem>
+      </Menu>
+
       {/* Webcam capture dialog */}
       <Dialog open={webcamOpen} onClose={() => setWebcamOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Take a Photo</DialogTitle>
         <DialogContent
           sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 2 }}
         >
-          <Box sx={{ borderRadius: 2, overflow: 'hidden', width: '100%' }}>
+          <Box
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              width: '100%',
+              position: 'relative',
+              minHeight: 300,
+            }}
+          >
+            {!webcamReady && (
+              <Skeleton
+                variant="rectangular"
+                width="100%"
+                height="100%"
+                sx={{ position: 'absolute', top: 0, left: 0, zIndex: 2 }}
+              />
+            )}
             <Webcam
               ref={webcamRef}
               audio={false}
               screenshotFormat="image/jpeg"
               mirrored
               videoConstraints={{ facingMode: 'user' }}
+              onUserMedia={() => setWebcamReady(true)}
               style={{ width: '100%', display: 'block' }}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={() => setWebcamOpen(false)}>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon="mingcute:close-line" width={16} />}
+            onClick={() => setWebcamOpen(false)}
+          >
             Cancel
           </Button>
           <Button
@@ -268,6 +338,45 @@ export function UploadAvatar({
             {capturing ? 'Capturing...' : 'Capture'}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* View Photo Dialog */}
+      <Dialog open={viewOpen} onClose={() => setViewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          Photo Preview
+          <IconButton
+            aria-label="close"
+            onClick={() => setViewOpen(false)}
+            sx={{
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <Iconify icon="mingcute:close-line" width={20} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          {preview && (
+            <Box
+              component="img"
+              src={preview}
+              alt="Avatar preview"
+              sx={{
+                maxWidth: '100%',
+                maxHeight: '70vh',
+                objectFit: 'contain',
+                borderRadius: 1,
+              }}
+            />
+          )}
+        </DialogContent>
       </Dialog>
     </Box>
   );

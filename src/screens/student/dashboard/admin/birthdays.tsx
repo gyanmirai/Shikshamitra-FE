@@ -114,7 +114,11 @@ const Birthdays = () => {
           height: 500,
           display: 'flex',
           flexDirection: 'column',
-          '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: theme.shadows[8],
+            transition: 'all 0.3s ease-in-out',
+          },
         }}
       >
         <CardHeader

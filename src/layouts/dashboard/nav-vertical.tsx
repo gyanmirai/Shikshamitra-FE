@@ -3,9 +3,9 @@ import type { NavSectionProps } from 'src/components/nav-section';
 
 import Box from '@mui/material/Box';
 import { useSelector } from 'react-redux';
-import { Logo } from 'src/components/logo';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Logo, LogoWithText } from 'src/components/logo';
 import { varAlpha, hideScrollY } from 'src/theme/styles';
 import { NavSectionMini, NavSectionVertical } from 'src/components/nav-section';
 
@@ -41,7 +41,7 @@ export function NavVertical({
     <>
       {slots?.topArea ?? (
         <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
-          <Logo />
+          <LogoWithText />
         </Box>
       )}
 

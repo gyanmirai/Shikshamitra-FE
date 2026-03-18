@@ -104,6 +104,11 @@ export const AttendanceTrend = () => {
       sx={{
         height: '100%',
         position: 'relative',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
+        },
       }}
     >
       <CardHeader
@@ -255,6 +260,11 @@ export const SubjectPerformance = () => {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
+        },
       }}
     >
       <CardHeader
@@ -398,6 +408,11 @@ export const HomeworkStatus = () => {
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
+        },
       }}
     >
       <CardHeader

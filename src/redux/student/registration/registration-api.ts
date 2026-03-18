@@ -220,6 +220,7 @@ export const {
   useGetStudentDocumentsQuery,
   useGetStudentDocumentListQuery,
   useGetStudentDocumentByIdQuery,
+  useLazyGetStudentDocumentByIdQuery,
 
   useGetBasicDetailsQuery,
   useGetFamilyDetailsQuery,

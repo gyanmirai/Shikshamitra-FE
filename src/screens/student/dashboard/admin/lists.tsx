@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -134,6 +135,7 @@ const AdminLists = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [openViewAll, setOpenViewAll] = useState(false);
   const router = useRouter();
+  const theme = useTheme();
 
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
@@ -182,7 +184,9 @@ const AdminLists = () => {
             display: 'flex',
             flexDirection: 'column',
             '&:hover': {
-              boxShadow: (theme) => theme.shadows[8],
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
             },
           }}
         >
@@ -214,7 +218,7 @@ const AdminLists = () => {
                   }}
                   sx={{
                     p: 2,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: 1.5,
                     display: 'flex',
                     alignItems: 'center',
@@ -322,11 +326,16 @@ const AdminLists = () => {
       <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
         <Card
           sx={{
-            boxShadow: (theme) => theme.shadows[2],
+            boxShadow: theme.shadows[2],
             borderRadius: 2,
             height: 480,
             display: 'flex',
             flexDirection: 'column',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
           }}
         >
           <Stack
@@ -382,7 +391,7 @@ const AdminLists = () => {
                   sx={{
                     p: 1.5,
                     borderRadius: 1.5,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    border: `1px solid ${theme.palette.divider}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
