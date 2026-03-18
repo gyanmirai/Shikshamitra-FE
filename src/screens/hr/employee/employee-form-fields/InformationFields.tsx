@@ -19,12 +19,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BloodGroupArray } from 'src/enums/blood-group';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
-import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import {
   Box,
   Grid,
@@ -229,6 +229,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const handleCancel = () => {
     // formik.resetForm();
   };
+  console.log('formik initial values----', formik.initialValues);
+  console.log('formik values-----', formik.values);
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -488,9 +490,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Marital Status *"
                     name="maritalStatus"
                   >
-                    {MaritalStatusTypeArray.map((i, index) => (
-                      <MenuItem key={i} value={index}>
-                        {MaritalStatusType[index]}
+                    {MaritalStatusTypeArray.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
                       </MenuItem>
                     ))}
                   </Select>

@@ -146,7 +146,6 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     formik.resetForm();
     onClose();
   };
-  console.log('formik.values', formik.values);
   return (
     <Menu
       anchorEl={anchorEl?.element}

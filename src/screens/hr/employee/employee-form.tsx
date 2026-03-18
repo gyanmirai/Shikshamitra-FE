@@ -60,9 +60,21 @@ export const personalInformationInitialValues = (
   familyCast: editData ? editData.familyCaste : '',
   castType: editData ? editData.casteType : '',
   gender: editData?.gender ?? '',
-  religion: editData ? ReligionType[editData.religion as keyof typeof ReligionType] : '',
-  maritalStatus: editData ? editData.maritalStatus : '',
-  bloodGroup: editData ? editData.bloodGroup : '',
+  religion: editData
+    ? typeof editData.religion === 'number'
+      ? editData.religion
+      : (ReligionType[editData.religion as keyof typeof ReligionType] ?? '')
+    : '',
+  maritalStatus: editData
+    ? typeof editData.maritalStatus === 'number'
+      ? editData.maritalStatus
+      : ''
+    : '',
+  bloodGroup: editData
+    ? typeof editData.bloodGroup === 'number'
+      ? editData.bloodGroup
+      : null
+    : null,
   mobileNo: editData ? editData.mobileNo : '',
   secondaryMobileNo: editData ? editData?.secondaryMobileNo : null,
   email: editData ? editData.email : '',
@@ -242,7 +254,7 @@ export const academicPermissionInitialValues = (editData?: any) => ({
     standards: [],
     divisions: [],
   },
-  academicPermissionSelectedData: {
+  academicPermissionSelectedData: editData || {
     boards: [],
     mediums: [],
     organizations: [],
@@ -317,7 +329,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const initialValues = useMemo(
     () => ({
-      ...personalInformationInitialValues(),
+      ...personalInformationInitialValues(editData),
       employeeId: editData?.id,
       ...familyInformationInitialValues(),
       ...additionalDetailsInitialValues(),
@@ -327,9 +339,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       ...assignReportingManagerInitialValues(),
       ...academicPermissionInitialValues(),
     }),
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [editData?.id]
   );
 
   const handleBasicInformation = useCallback(
@@ -660,6 +671,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   return (
     <CustomStepperWithFormik
+      key={editData?.id || 'new'}
       initialValues={initialValues}
       steps={steps}
       viewMode="vertical"
@@ -702,20 +714,17 @@ export default EmployeeFrom;
 const FormSlider = ({ step, formik, editData }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  // Always keep a ref to the latest formik instance to avoid stale closures in effects
+  const formikRef = React.useRef(formik);
+  formikRef.current = formik;
+
+  // Track which steps have been populated so background refetches don't re-overwrite user edits
   const initializedStepsRef = React.useRef<Record<number, boolean>>({});
-
-  // Reset initialized flags whenever the employee being edited changes
-  const prevEditIdRef = React.useRef<string | undefined>(undefined);
-  if (prevEditIdRef.current !== editData?.id) {
-    prevEditIdRef.current = editData?.id;
+  useEffect(() => {
     initializedStepsRef.current = {};
-  }
-
-  const {
-    data: basicDetails,
-    isLoading: basicDetailsLoading,
-    isFetching: basicDetailsFetching,
-  } = useQueryAndMutation({
+  }, [editData?.id]);
+  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBasicInformationQuery,
     params: editData?.id,
@@ -724,11 +733,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
     },
   });
 
-  const {
-    data: familyDetails,
-    isLoading: familyDetailsLoading,
-    isFetching: familyDetailsFetching,
-  } = useQueryAndMutation({
+  const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFamilyInformationQuery,
     params: editData?.id,
@@ -736,11 +741,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 1),
     },
   });
-  const {
-    data: additionalDetails,
-    isLoading: additionalDetailsLoading,
-    isFetching: additionalDetailsFetching,
-  } = useQueryAndMutation({
+  const { data: additionalDetails, isLoading: additionalDetailsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAdditionalInformationQuery,
     params: editData?.id,
@@ -748,11 +749,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 2),
     },
   });
-  const {
-    data: workExperience,
-    isLoading: workExperienceLoading,
-    isFetching: workExperienceFetching,
-  } = useQueryAndMutation({
+  const { data: workExperience, isLoading: workExperienceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWorkExperienceQuery,
     params: { id: editData?.id, page: 1, pageSize: 100 },
@@ -760,11 +757,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 4),
     },
   });
-  const {
-    data: bankDetails,
-    isLoading: bankDetailsLoading,
-    isFetching: bankDetailsFetching,
-  } = useQueryAndMutation({
+  const { data: bankDetails, isLoading: bankDetailsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBankDetailsQuery,
     params: editData?.id,
@@ -773,94 +766,86 @@ const FormSlider = ({ step, formik, editData }: any) => {
     },
   });
 
-  const {
-    data: reportingManagerDetails,
-    isLoading: reportingManagerDetailsLoading,
-    isFetching: reportingManagerDetailsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetReportingManagerByEmployeeIdQuery,
-    params: editData?.id,
-    options: {
-      skip: !(editData?.id && step === 6),
-    },
-  });
+  const { data: reportingManagerDetails, isLoading: reportingManagerDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetReportingManagerByEmployeeIdQuery,
+      params: editData?.id,
+      options: {
+        skip: !(editData?.id && step === 6),
+      },
+    });
 
-  const {
-    data: accessControl,
-    isLoading: accessControlLoading,
-    isFetching: accessControlFetching,
-  } = useQueryAndMutation({
+  const { data: accessControl, isLoading: accessControlLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
     params: { userId: editData?.id, academicYearId: currentYear?.id },
     options: { skip: !(editData?.id && currentYear?.id && step === 7) },
   });
-
+  console.log(accessControl, '============================');
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
+    if (!editData?.id) return;
+
     if (basicDetails && step === 0) {
       const updatedFields = personalInformationInitialValues(basicDetails);
-      formik.resetForm({
-        values: {
-          ...formik.values,
-          ...updatedFields,
-        },
-      });
+      formikRef.current.setValues((prev: any) => ({
+        ...prev,
+        ...updatedFields,
+      }));
       initializedStepsRef.current[step] = true;
     } else if (familyDetails && step === 1) {
       const updatedFields = familyInformationInitialValues(familyDetails);
-      formik.resetForm({
-        values: {
-          ...formik.values,
-          ...updatedFields,
-        },
-      });
+      formikRef.current.setValues((prev: any) => ({
+        ...prev,
+        ...updatedFields,
+      }));
       initializedStepsRef.current[step] = true;
     } else if (additionalDetails && step === 2) {
       const updatedFields = additionalDetailsInitialValues(additionalDetails);
-      formik.resetForm({
-        values: {
-          ...formik.values,
-          ...updatedFields,
-        },
-      });
+      formikRef.current.setValues((prev: any) => ({
+        ...prev,
+        ...updatedFields,
+      }));
       initializedStepsRef.current[step] = true;
     } else if (workExperience && step === 4) {
       const updatedFields = workExperienceInitialValues(workExperience);
-      formik.resetForm({
-        values: {
-          ...formik.values,
-          ...updatedFields,
-        },
-      });
+      formikRef.current.setValues((prev: any) => ({
+        ...prev,
+        ...updatedFields,
+      }));
       initializedStepsRef.current[step] = true;
     } else if (bankDetails && step === 5) {
       const updatedFields = payrollInitialValues(bankDetails);
-      formik.resetForm({
-        values: {
-          ...formik.values,
-          ...updatedFields,
-        },
-      });
+      formikRef.current.setValues((prev: any) => ({
+        ...prev,
+        ...updatedFields,
+      }));
       initializedStepsRef.current[step] = true;
     } else if (reportingManagerDetails && step === 6) {
       const updatedFields = assignReportingManagerInitialValues(reportingManagerDetails);
-      formik.resetForm({
-        values: {
-          ...formik.values,
-          ...updatedFields,
-        },
-      });
+      formikRef.current.setValues((prev: any) => ({
+        ...prev,
+        ...updatedFields,
+      }));
       initializedStepsRef.current[step] = true;
     } else if (accessControl && step === 7) {
       if (accessControl?.accessibleHierarchy) {
+        const data = {
+          boards: [] as any,
+          mediums: [] as any,
+          organizations: [] as any,
+          standards: [] as any,
+          divisions: [] as any,
+        };
+
         const keyMapping: any = {
           0: 'hasFullMediumAccess',
           1: 'hasFullMediumStageAccess',
           2: 'hasFullStandardAccess',
           3: 'hasFullDivisionAccess',
         };
+
         const idMapping: any = {
           0: 'boardId',
           1: 'mediumId',
@@ -868,72 +853,57 @@ const FormSlider = ({ step, formik, editData }: any) => {
           3: 'standardId',
           4: 'divisionId',
         };
+
         const levelMapping: any = {
-          0: 'boards',
-          1: 'mediums',
-          2: 'mediumStages',
-          3: 'standards',
-          4: 'divisions',
+          0: 'mediums',
+          1: 'mediumStages',
+          2: 'standards',
+          3: 'divisions',
         };
-        const data: {
-          boards: string[];
-          mediums: string[];
-          organizations: string[];
-          standards: string[];
-          divisions: string[];
-        } = {
-          boards: [],
-          mediums: [],
-          organizations: [],
-          standards: [],
-          divisions: [],
-        };
-        const recursionFn = (academicData: any[], level = 0) => {
+
+        const recursionFn = (academicData: any[], level = 0, isParentFullyAccessible = false) => {
           academicData?.forEach((element) => {
-            if (element.hasAccess || element?.[(keyMapping as any)[level]]) {
-              if (level === 0) {
-                data.boards.push(element?.[idMapping[level]]);
-              }
-              if (level === 1) {
-                data.mediums.push(element?.[idMapping[level]]);
-              }
-              if (level === 2) {
-                data.organizations.push(element?.[idMapping[level]]);
-              }
-              if (level === 3) {
-                data.standards.push(element?.[idMapping[level]]);
-              }
-              if (level === 4) {
-                data.divisions.push(element?.[idMapping[level]]);
-              }
+            const hasFullAccessHere = !!element?.[(keyMapping as any)?.[level]];
+            const isAccessible = element.hasAccess || hasFullAccessHere || isParentFullyAccessible;
+
+            if (isAccessible) {
+              if (level === 0) data.boards.push(element?.[idMapping[level]] as any);
+              if (level === 1) data.mediums.push(element?.[idMapping[level]]);
+              if (level === 2) data.organizations.push(element?.[idMapping[level]]);
+              if (level === 3) data.standards.push(element?.[idMapping[level]]);
+              if (level === 4) data.divisions.push(element?.[idMapping[level]]);
             }
 
             if (element?.[levelMapping[level]]?.length) {
-              recursionFn(element?.[levelMapping[level]], level + 1);
+              recursionFn(
+                element[levelMapping[level]],
+                level + 1,
+                isParentFullyAccessible || hasFullAccessHere
+              );
             }
           });
         };
-        recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
+
+        recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards, 0, false);
 
         const updatedFields = academicPermissionInitialValues(data);
-        formik.resetForm({
-          values: {
-            ...formik.values,
-            ...updatedFields,
-          },
-        });
+
+        formikRef.current.setValues((prev: any) => ({
+          ...prev,
+          ...updatedFields,
+        }));
         initializedStepsRef.current[step] = true;
       }
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    editData?.id,
     basicDetails,
     familyDetails,
     additionalDetails,
     workExperience,
     bankDetails,
     reportingManagerDetails,
+    accessControl,
     step,
   ]);
 
@@ -974,19 +944,12 @@ const FormSlider = ({ step, formik, editData }: any) => {
                     height="100%"
                   >
                     {basicDetailsLoading ||
-                    basicDetailsFetching ||
                     familyDetailsLoading ||
-                    familyDetailsFetching ||
                     additionalDetailsLoading ||
-                    additionalDetailsFetching ||
                     workExperienceLoading ||
-                    workExperienceFetching ||
                     bankDetailsLoading ||
-                    bankDetailsFetching ||
                     reportingManagerDetailsLoading ||
-                    reportingManagerDetailsFetching ||
-                    accessControlLoading ||
-                    accessControlFetching ? (
+                    accessControlLoading ? (
                       <LoadingScreen />
                     ) : (
                       <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
