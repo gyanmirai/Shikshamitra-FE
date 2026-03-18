@@ -28,7 +28,7 @@ const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => 
         name="inquiryPreference"
         isLoading={inquiryPrefrenceLoading}
         options={inquiryPreference?.items || []}
-        value={formik.values.inquiryPreference}
+        value={formik.values.inquiryPreference || ''}
         labelKey="preferenceName"
         valueKey="id"
         multiple={false}

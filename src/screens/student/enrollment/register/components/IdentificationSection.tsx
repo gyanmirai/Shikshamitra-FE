@@ -1,11 +1,11 @@
 import React from 'react';
+import { ReligionTypeArray } from 'src/enums/religion';
 import CustomSelect from 'src/components/custom-select';
 import { toLettersTitleCase } from 'src/utils/input-format';
+import { MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import { Box, Grid, TextField, FormLabel, FormHelperText } from '@mui/material';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
-import { MotherTongueType, MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import {
   SectionCard,
@@ -26,14 +26,14 @@ const Slot: React.FC<{
 }> = ({ char, isActive, hasFakeCaret, error = false, disabled = false }) => (
   <Box
     sx={{
-      width: 28,
-      height: 36,
+      width: 25,
+      height: 30,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontSize: '0.9rem',
-      fontWeight: 500,
-      fontFamily: 'inherit',
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
       border: '1px solid',
       borderColor: isActive
         ? error
@@ -42,7 +42,7 @@ const Slot: React.FC<{
         : error
           ? 'error.main'
           : 'grey.400',
-      borderRadius: '6px',
+      borderRadius: '8px',
       bgcolor: disabled ? 'action.disabledBackground' : 'background.paper',
       color: disabled ? 'text.disabled' : 'text.primary',
       boxShadow: isActive ? (error ? '0 0 0 2px #d32f2f33' : '0 0 0 2px #1976d233') : 'none',
@@ -98,7 +98,7 @@ const OtpInputField: React.FC<{
   disabled = false,
   pasteTransformer,
 }) => (
-  <Box>
+  <Box sx={{ position: 'relative' }}>
     <FormLabel
       error={error}
       sx={{
@@ -159,7 +159,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
       )
     }
   >
-    <Grid size={{ xs: 12, md: 6 }}>
+    <Grid size={{ xs: 12, md: 6.5 }}>
       <ShakingTextField
         error={(formik.touched as any).adharNo && Boolean((formik.errors as any).adharNo)}
       >
@@ -172,7 +172,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
           onChange={(val) => {
             formik.setFieldValue('adharNo', val);
           }}
-          onBlur={() => formik.setFieldTouched('adharNo', true, false)}
+          onBlur={() => formik.setFieldTouched('adharNo', true, true)}
           error={(formik.touched as any).adharNo && Boolean((formik.errors as any).adharNo)}
           helperText={(formik.touched as any).adharNo && (formik.errors as any).adharNo}
           disabled={!isEdit.value}
@@ -181,7 +181,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
       </ShakingTextField>
     </Grid>
 
-    <Grid size={{ xs: 12, md: 6 }}>
+    <Grid size={{ xs: 12, md: 5.5 }}>
       <ShakingTextField
         error={(formik.touched as any).panNo && Boolean((formik.errors as any).panNo)}
       >
@@ -290,10 +290,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
           onBlur={formik.handleBlur}
           label="Religion "
           name="religion"
-          options={ReligionTypeArray.map((_, index) => ({
-            value: index,
-            label: (ReligionType as any)[index],
-          }))}
+          options={ReligionTypeArray}
           valueKey="value"
           labelKey="label"
           error={(formik.touched as any)?.religion && (formik.errors as any)?.religion}
@@ -331,11 +328,12 @@ const IdentificationSection: React.FC<SectionProps> = ({
       >
         <CustomSelect
           labelId="castCategory-label"
-          value={(formik.values as any).castCategory}
+          value={(formik.values as any).castCategory ?? ''}
           onChange={(val) => {
             formik.setFieldValue('castCategory', val);
           }}
           size="small"
+          inputProps={{ shrink: true }}
           onBlur={formik.handleBlur}
           label="Caste Category *"
           name="castCategory"
@@ -411,9 +409,9 @@ const IdentificationSection: React.FC<SectionProps> = ({
             formik.setFieldValue('motherTongue', value);
           }}
           onBlur={formik.handleBlur}
-          options={MotherTongueTypeArray.map((_, index) => ({
-            value: index,
-            label: (MotherTongueType as any)[index],
+          options={MotherTongueTypeArray.map((tongue) => ({
+            value: tongue,
+            label: tongue,
           }))}
           valueKey="value"
           labelKey="label"

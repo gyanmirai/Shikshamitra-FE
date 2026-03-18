@@ -54,6 +54,7 @@ export interface GeneralFormValues {
 }
 
 export type FormikLike<TValues> = {
+  validateField(arg0: string): unknown;
   values: TValues;
   touched: Record<string, unknown>;
   errors: Record<string, unknown>;

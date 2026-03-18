@@ -68,7 +68,30 @@ export const useInquiryTableColumns = ({
         align: 'left',
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left', minWidth: '120px', filterType: 'string' },
+      {
+        id: 'age',
+        label: 'Age',
+        align: 'left',
+        minWidth: '120px',
+        filterType: 'string',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'doiValue',
         label: 'Date of Inquiry',
@@ -90,28 +113,23 @@ export const useInquiryTableColumns = ({
         minWidth: '200px',
         align: 'left',
         filterType: 'string',
-        render: (value: unknown) => {
-          const addressText = value as string;
-          if (!addressText) return '-';
-
-          return (
-            <CustomTooltip title={addressText} placement="top" arrow>
-              <Typography
-                variant="body2"
-                sx={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'normal',
-                }}
-              >
-                {addressText}
-              </Typography>
-            </CustomTooltip>
-          );
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'primaryContactNo',
@@ -133,9 +151,23 @@ export const useInquiryTableColumns = ({
         minWidth: '150px',
         align: 'left',
         filterType: 'string',
-        render(value: string) {
-          return value || '-';
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'inquiryPreference',

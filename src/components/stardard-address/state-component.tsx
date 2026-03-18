@@ -3,7 +3,7 @@ import type { TextFieldProps, AutocompleteProps } from '@mui/material';
 
 import React, { useMemo } from 'react';
 import { State } from 'country-state-city';
-import { TextField, Autocomplete } from '@mui/material';
+import { TextField, Typography, Autocomplete } from '@mui/material';
 
 const StateComponent = ({
   onChange,
@@ -27,7 +27,7 @@ const StateComponent = ({
   );
   return (
     <Autocomplete
-      noOptionsText="No State Found"
+      noOptionsText={<Typography variant="caption">No State Found</Typography>}
       fullWidth
       value={value}
       onChange={onChange}
