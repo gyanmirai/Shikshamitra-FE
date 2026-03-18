@@ -78,14 +78,17 @@ const EarningComponent = () => {
       currentQueryAndMutation: useDeleteEarningComponentMutation,
     });
 
-  const { data: getEarningComponentsData, isLoading: getEarningComponentsLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      currentQueryAndMutation: useGetEarningComponentsQuery,
-      params: {
-        academicYearId: currentYear?.id,
-      },
-    });
+  const {
+    data: getEarningComponentsData,
+    isLoading: getEarningComponentsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEarningComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+  });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Handles closing the incident form
@@ -166,17 +169,7 @@ const EarningComponent = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    employeePayrollApi.util.updateQueryData(
-                      'getEarningComponents',
-                      { academicYearId: currentYear?.id },
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, deleteInformation);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteEarningComponent(deleteInformation?.id || ''),
               });
               confirm.onFalse();
@@ -191,7 +184,7 @@ const EarningComponent = () => {
         tableId="earning-component"
         isLoading={getEarningComponentsLoading}
         columns={[
-          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw', sticky: true },
           {
             id: 'isFixed',
             label: 'Earning Type',
@@ -226,7 +219,7 @@ const EarningComponent = () => {
             filterType: 'number',
             render(value, row) {
               return (
-                <Typography variant="body2" color="primary.secondary" fontWeight="bold">
+                <Typography variant="caption" fontSize="13px">
                   {formatNumber(value, 'INR')}
                 </Typography>
               );
@@ -391,6 +384,7 @@ const EarningComponentForm = ({
       amount: editData?.amount || '',
       showOnPayslip: editData?.visibleInPayslip ?? true,
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {

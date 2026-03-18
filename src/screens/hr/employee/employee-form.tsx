@@ -7,7 +7,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Slide, TextField } from '@mui/material';
-import { useAddUserMutation } from 'src/redux/user/userApi';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -273,11 +272,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     currentQueryAndMutation: useAddBasicInformationMutation,
     isThrowError: true,
   });
-  useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useAddUserMutation,
-    isThrowError: true,
-  });
+  // useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useAddUserMutation,
+  //   isThrowError: true,
+  // });
   const [updateFamilyInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFamilyInformationMutation,
@@ -664,7 +663,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       initialValues={initialValues}
       steps={steps}
       viewMode="vertical"
-      showSaveButton={isChanges}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
@@ -705,7 +703,19 @@ const FormSlider = ({ step, formik, editData }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const initializedStepsRef = React.useRef<Record<number, boolean>>({});
-  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+
+  // Reset initialized flags whenever the employee being edited changes
+  const prevEditIdRef = React.useRef<string | undefined>(undefined);
+  if (prevEditIdRef.current !== editData?.id) {
+    prevEditIdRef.current = editData?.id;
+    initializedStepsRef.current = {};
+  }
+
+  const {
+    data: basicDetails,
+    isLoading: basicDetailsLoading,
+    isFetching: basicDetailsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBasicInformationQuery,
     params: editData?.id,
@@ -714,7 +724,11 @@ const FormSlider = ({ step, formik, editData }: any) => {
     },
   });
 
-  const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
+  const {
+    data: familyDetails,
+    isLoading: familyDetailsLoading,
+    isFetching: familyDetailsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFamilyInformationQuery,
     params: editData?.id,
@@ -722,7 +736,11 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 1),
     },
   });
-  const { data: additionalDetails, isLoading: additionalDetailsLoading } = useQueryAndMutation({
+  const {
+    data: additionalDetails,
+    isLoading: additionalDetailsLoading,
+    isFetching: additionalDetailsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAdditionalInformationQuery,
     params: editData?.id,
@@ -730,7 +748,11 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 2),
     },
   });
-  const { data: workExperience, isLoading: workExperienceLoading } = useQueryAndMutation({
+  const {
+    data: workExperience,
+    isLoading: workExperienceLoading,
+    isFetching: workExperienceFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWorkExperienceQuery,
     params: { id: editData?.id, page: 1, pageSize: 100 },
@@ -738,7 +760,11 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 4),
     },
   });
-  const { data: bankDetails, isLoading: bankDetailsLoading } = useQueryAndMutation({
+  const {
+    data: bankDetails,
+    isLoading: bankDetailsLoading,
+    isFetching: bankDetailsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBankDetailsQuery,
     params: editData?.id,
@@ -747,17 +773,24 @@ const FormSlider = ({ step, formik, editData }: any) => {
     },
   });
 
-  const { data: reportingManagerDetails, isLoading: reportingManagerDetailsLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      currentQueryAndMutation: useGetReportingManagerByEmployeeIdQuery,
-      params: editData?.id,
-      options: {
-        skip: !(editData?.id && step === 6),
-      },
-    });
+  const {
+    data: reportingManagerDetails,
+    isLoading: reportingManagerDetailsLoading,
+    isFetching: reportingManagerDetailsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReportingManagerByEmployeeIdQuery,
+    params: editData?.id,
+    options: {
+      skip: !(editData?.id && step === 6),
+    },
+  });
 
-  const { data: accessControl, isLoading: accessControlLoading } = useQueryAndMutation({
+  const {
+    data: accessControl,
+    isLoading: accessControlLoading,
+    isFetching: accessControlFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
     params: { userId: editData?.id, academicYearId: currentYear?.id },
@@ -905,7 +938,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
   ]);
 
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', height: '100%' }}>
+    <Box ref={containerRef} sx={{ overflowX: 'hidden', height: '100%' }}>
       {steps.map(
         (_, index) =>
           index === step && (
@@ -941,12 +974,19 @@ const FormSlider = ({ step, formik, editData }: any) => {
                     height="100%"
                   >
                     {basicDetailsLoading ||
+                    basicDetailsFetching ||
                     familyDetailsLoading ||
+                    familyDetailsFetching ||
                     additionalDetailsLoading ||
+                    additionalDetailsFetching ||
                     workExperienceLoading ||
+                    workExperienceFetching ||
                     bankDetailsLoading ||
+                    bankDetailsFetching ||
                     reportingManagerDetailsLoading ||
-                    accessControlLoading ? (
+                    reportingManagerDetailsFetching ||
+                    accessControlLoading ||
+                    accessControlFetching ? (
                       <LoadingScreen />
                     ) : (
                       <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>

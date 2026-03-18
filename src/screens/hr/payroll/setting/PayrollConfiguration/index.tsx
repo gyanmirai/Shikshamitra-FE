@@ -60,7 +60,7 @@ const PayrollConfiguration = () => {
         description="Configure the payroll calculation rules, including how days are counted for salary processing."
         links={[
           { name: 'HR', href: '/hr/dashboard' },
-          { name: 'Payroll', href: '/hr/payroll/dashboard' },
+          { name: 'Payroll Management', href: '/hr/payroll/dashboard' },
           { name: 'Setting', href: '/hr/payroll/setting/earning' },
           { name: 'Payroll Configuration' },
         ]}

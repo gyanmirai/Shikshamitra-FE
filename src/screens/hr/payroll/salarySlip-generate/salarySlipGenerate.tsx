@@ -90,10 +90,10 @@ const PaySlipGenerationScreen = () => {
         direction={{ xs: 'column', md: 'row' }}
         alignItems={{ xs: 'stretch', md: 'center' }}
         justifyContent="space-between"
-        spacing={2}
+        spacing={1}
       >
         <Card sx={{ width: '100%' }}>
-          <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap" p={2}>
+          <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap" p={1.5}>
             {/* Filters */}
             <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
               <PaginatedSearchSelect

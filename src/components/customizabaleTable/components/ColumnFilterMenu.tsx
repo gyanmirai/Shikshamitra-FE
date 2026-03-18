@@ -146,7 +146,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     formik.resetForm();
     onClose();
   };
-
+  console.log('formik.values', formik.values);
   return (
     <Menu
       anchorEl={anchorEl?.element}
@@ -232,7 +232,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
               <TextField
                 fullWidth
                 size="small"
-                value={formik.values.min}
+                value={formik.values.min ?? ''}
                 onChange={(e) => formik.setFieldValue('min', e.target.value)}
                 type="number"
                 label={`${anchorEl?.column.label} Min *`}
@@ -244,7 +244,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
               <TextField
                 fullWidth
                 size="small"
-                value={formik.values.max}
+                value={formik.values.max ?? ''}
                 onChange={(e) => formik.setFieldValue('max', e.target.value)}
                 type="number"
                 label={`${anchorEl?.column.label} Max *`}

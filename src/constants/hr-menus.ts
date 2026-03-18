@@ -344,14 +344,14 @@ const hrModule = (isDdvs: boolean) => ({
           permissionName: hrPermissions.reports,
           icon: menuIconView('mdi:chart-box-outline'),
         },
-        {
-          title: 'Events & Holidays',
-          _action: 'events-holidays',
-          path: '/hr/events-holidays',
-          shortcutKey: 'Alt+H+V',
-          shortcutKeyName: 'Alt+H+V',
-          icon: menuIconView('mdi:calendar-star-outline'),
-        },
+        // {
+        //   title: 'Events & Holidays',
+        //   _action: 'events-holidays',
+        //   path: '/hr/events-holidays',
+        //   shortcutKey: 'Alt+H+V',
+        //   shortcutKeyName: 'Alt+H+V',
+        //   icon: menuIconView('mdi:calendar-star-outline'),
+        // },
         {
           title: 'Notification',
           path: hrPaths.notification,

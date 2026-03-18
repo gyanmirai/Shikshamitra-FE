@@ -33,7 +33,11 @@ export const FilterChips = ({ filters, onRemoveFilter, onClearAll }: FilterChips
                 {startCase(filter.type)} →
               </Box>
               <Box component="span" sx={{ color: 'text.primary' }}>
-                {filter.value}
+                {filter.type === 'between' &&
+                typeof filter.value === 'object' &&
+                filter.value !== null
+                  ? `${(filter.value as any).min} - ${(filter.value as any).max}`
+                  : (filter.value as any)}
               </Box>
             </Box>
           }

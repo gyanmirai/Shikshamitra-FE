@@ -256,6 +256,7 @@ const BiometricIntegrationScreen = () => {
           p: 2,
           pl: 1,
           flexWrap: 'wrap',
+          mb: 1,
         }}
       >
         {/* Date Picker */}

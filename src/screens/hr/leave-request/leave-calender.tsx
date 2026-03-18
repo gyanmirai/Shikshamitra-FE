@@ -92,7 +92,7 @@ const LeaveCalender = (props: TabComponentType) => {
           onChange={(val) => setOrganization(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 2, mb: 2 } }}
+          formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 1, mb: 1 } }}
           disabled={!mediumStageId}
         />
       </Card>
