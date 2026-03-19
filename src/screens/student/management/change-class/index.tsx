@@ -102,6 +102,7 @@ const ChangeClassScreen = ({
           </Button> */}
         </Box>
         <CustomizableTable
+          tableTitle="Change Class"
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudent.length !== 0}
           tableId="change-class-table"

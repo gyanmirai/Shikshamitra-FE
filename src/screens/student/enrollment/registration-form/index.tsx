@@ -76,8 +76,8 @@ const RegistrationFormScreen = () => {
           description="Move students from Form Issuance to Registered Status to begin the formal admission process."
           links={[
             { name: 'Student', href: '/student/dashboard/' },
-            { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
-            { name: 'Registration Form Issued' },
+            { name: 'Student Enrollment', href: '/student/dashboard/' },
+            { name: 'Registration Form Issued', href: '/student/dashboard/' },
             { name: 'Move to Registration' },
           ]}
           isBack

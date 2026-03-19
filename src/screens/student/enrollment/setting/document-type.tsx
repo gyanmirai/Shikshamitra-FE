@@ -148,8 +148,8 @@ const StudentDocumentType = () => {
       <CustomBreadcrumbs
         heading="Document Types"
         links={[
-          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
-          { name: 'Settings' },
+          { name: 'Student Enrollment', href: '/student/dashboard/' },
+          { name: 'Settings', href: '/student/dashboard/' },
           { name: 'Document Types' },
         ]}
         action={
@@ -212,6 +212,7 @@ const StudentDocumentType = () => {
         }
       />
       <CustomizableTable
+        tableTitle="Document Type"
         tableId="student-document-type"
         noDataText={
           <>

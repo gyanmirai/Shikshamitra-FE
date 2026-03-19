@@ -95,8 +95,8 @@ const InquiryPreference = () => {
       <CustomBreadcrumbs
         heading="Inquiry Preference"
         links={[
-          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
-          { name: 'Settings' },
+          { name: 'Student Enrollment', href: '/student/dashboard/' },
+          { name: 'Settings', href: '/student/dashboard/' },
           { name: 'Inquiry Preference' },
         ]}
         description="Manage how inquiries are received to optimize student admissions tracking."
@@ -176,6 +176,7 @@ const InquiryPreference = () => {
       />
       <CustomizableTable
         tableId="inquiry-preference"
+        tableTitle="Inquiry Preference"
         noDataText={
           <>
             No Inquiry Preference Data Found{' '}

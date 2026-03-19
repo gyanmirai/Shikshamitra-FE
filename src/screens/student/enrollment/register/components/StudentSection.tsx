@@ -145,6 +145,7 @@ const StudentSection: React.FC<SectionProps> = ({
               value={(formik.values as any).dob as any}
               disabled={!isEdit.value}
               format="DD-MM-YYYY"
+              disableFuture
               onClose={() => formik.setFieldTouched('dob', true, true)}
               slotProps={{
                 textField: {

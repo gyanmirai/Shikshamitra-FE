@@ -227,21 +227,6 @@ export function UploadAvatar({
             {renderContent}
           </Box>
         </Box>
-
-        {!disabled && (
-          <Tooltip title="Take photo">
-            <IconButton
-              size="small"
-              onClick={() => setWebcamOpen(true)}
-              sx={{
-                bgcolor: 'background.neutral',
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <Iconify icon="solar:videocamera-record-bold" width={17} />
-            </IconButton>
-          </Tooltip>
-        )}
       </Stack>
 
       {helperText && (

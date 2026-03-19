@@ -1,9 +1,9 @@
 import React from 'react';
 import { ReligionTypeArray } from 'src/enums/religion';
 import CustomSelect from 'src/components/custom-select';
-import { toLettersTitleCase } from 'src/utils/input-format';
 import { MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { toNumericWithMax, toLettersTitleCase } from 'src/utils/input-format';
 import { Box, Grid, TextField, FormLabel, FormHelperText } from '@mui/material';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
@@ -239,7 +239,6 @@ const IdentificationSection: React.FC<SectionProps> = ({
         <TextField
           key="pennNo"
           size="small"
-          type="number"
           label="PENN No."
           name="pennNo"
           value={(formik.values as any).pennNo}
@@ -252,15 +251,8 @@ const IdentificationSection: React.FC<SectionProps> = ({
           }}
           inputProps={{
             maxLength: 11,
-            pattern: '[0-9]*',
           }}
           disabled={!isEdit.value}
-          onKeyDown={(e) => {
-            if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-              e.preventDefault();
-            }
-          }}
-          onWheel={(e) => (e.target as HTMLElement).blur()}
         />
       </ShakingTextField>
     </Grid>
@@ -424,6 +416,3 @@ const IdentificationSection: React.FC<SectionProps> = ({
 );
 
 export default IdentificationSection;
-function toNumericWithMax(value: string, arg1: number): unknown {
-  throw new Error('Function not implemented.');
-}

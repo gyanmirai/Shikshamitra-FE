@@ -403,14 +403,14 @@ const AdmissionScreen = () => {
 
   const links = open
     ? [
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
-        { name: 'Admission' },
+        { name: 'Student', href: '/student/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/dashboard/' },
+        { name: 'Admission', href: '/student/dashboard/' },
         { name: 'Update Details' },
       ]
     : [
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
+        { name: 'Student', href: '/student/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/dashboard/' },
         { name: 'Admission' },
       ];
 
@@ -434,7 +434,18 @@ const AdmissionScreen = () => {
         </Card>
       ) : (
         <>
-          <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1 }}>
+          <Paper
+            elevation={2}
+            sx={{
+              display: 'flex',
+              gap: 1,
+              alignItems: 'center',
+              px: 2,
+
+              mb: 1,
+              borderRadius: '15px',
+            }}
+          >
             <Tabs
               value={tabs.value}
               onChange={handleTabChange}
@@ -476,6 +487,7 @@ const AdmissionScreen = () => {
             </Button>
           </Paper>
           <CustomizableTable
+            tableTitle="Admission"
             onSendNotification={handlerSendNotification}
             showCheckbox={selectedStudents.length !== 0}
             tableId="student-enrollment-admission-table"

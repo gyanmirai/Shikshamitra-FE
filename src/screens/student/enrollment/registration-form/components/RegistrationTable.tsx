@@ -214,6 +214,7 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
 
   return (
     <CustomizableTable
+      tableTitle="Registration Form Issued"
       isLoading={isLoading}
       noDataText={<Typography variant="body2">No Registration Form Issued Data Found</Typography>}
       tableId="student-registration-form-table"

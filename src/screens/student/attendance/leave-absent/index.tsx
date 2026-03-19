@@ -308,8 +308,8 @@ const LeaveAndAbsentScreen = () => {
       <CustomBreadcrumbs
         heading="Leave and Absent"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Attendance', href: '/student/dashboard/' },
           { name: 'Leave and Absent' },
         ]}
         action={
@@ -326,6 +326,7 @@ const LeaveAndAbsentScreen = () => {
         description="Submit a new leave request by clicking 'add leave request', manage requests in 'Actions'."
       />
       <CustomizableTable
+        tableTitle="Leave and Absent"
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudent?.length !== 0}
         tableId="leave-absent-table"

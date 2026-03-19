@@ -21,6 +21,7 @@ export const onboardingSteps: DriveStep[] = [
       side: 'right',
       align: 'start',
     },
+    disableActiveInteraction: true,
   },
   {
     element: '[aria-label="Institute Setup"]',
@@ -31,6 +32,7 @@ export const onboardingSteps: DriveStep[] = [
       side: 'right',
       align: 'center',
     },
+    disableActiveInteraction: true,
   },
   {
     element: '#onboarding-user-profile',
@@ -42,5 +44,6 @@ export const onboardingSteps: DriveStep[] = [
       align: 'end',
       doneBtnText: 'Finish',
     },
+    disableActiveInteraction: true,
   },
 ];

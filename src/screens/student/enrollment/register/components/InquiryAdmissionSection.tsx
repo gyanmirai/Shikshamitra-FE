@@ -48,6 +48,7 @@ const InquiryAdmissionSection: React.FC<SectionProps> = ({
           error={(formik.touched as any).formNo && Boolean((formik.errors as any).formNo)}
           helperText={(formik.touched as any).formNo && (formik.errors as any).formNo}
           disabled={!isEdit.value}
+          inputProps={{ maxLength: 20 }}
         />
       </ShakingTextField>
     </Grid>

@@ -32,10 +32,15 @@ const StudentIcardScreen = () => {
   const [cardBackgroundColor] = useState();
   const [cardBackground] = useState();
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Student I-Card"
-        links={[{ name: 'Student' }, { name: 'Student Record' }, { name: 'Student I-Card' }]}
+        description="Create and manage student I-cards."
+        links={[
+          { name: 'Student', href: '/student/dashboard' },
+          { name: 'Student Record', href: '/student/dashboard' },
+          { name: 'Student I-Card' },
+        ]}
         action={
           <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained">
             Create I-card
@@ -43,6 +48,7 @@ const StudentIcardScreen = () => {
         }
       />
       <CustomizableTable
+        tableTitle="Student I-Card"
         tableId="student-icard"
         columns={[
           { label: 'Class', id: 'class' },
