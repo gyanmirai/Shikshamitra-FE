@@ -18,6 +18,7 @@ import {
   useUploadDocumentsMutation,
   useGetStudentDocumentsQuery,
   useGetStudentDocumentByIdQuery,
+  useLazyGetStudentDocumentByIdQuery,
 } from 'src/redux/student/registration/registration-api';
 
 import { DocumentForm } from '../setting/document-type';
@@ -40,6 +41,8 @@ export const RenderDocuments = (props: any) => {
     type: 'mutation',
     currentQueryAndMutation: useUploadDocumentsMutation,
   });
+
+  const [fetchDocument] = useLazyGetStudentDocumentByIdQuery();
 
   // Query hook to fetch student's uploaded documents using student ID
   const { data: studentsDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
@@ -67,6 +70,7 @@ export const RenderDocuments = (props: any) => {
     <Box sx={{ height: '100%', minHeight: 0 }}>
       <CustomizableTable
         isLoading={isEmployeeDocLoading}
+        tableTitle="Documents"
         tableId="documents"
         columns={[
           { id: 'documentTypeName', label: 'Name' },
@@ -217,9 +221,22 @@ export const RenderDocuments = (props: any) => {
                   }}
                   disabled={!row.isUploaded}
                   onClick={async () => {
-                    // TODO: Implement download functionality
-                    // Fetch document content using getStudentDocumentById
-                    // Create download link with base64 content
+                    try {
+                      // Fetch the actual document object instead of reading metadata list
+                      const docRes = await fetchDocument({
+                        studentId: id,
+                        documentId: row.uploadedDocumentId,
+                      }).unwrap();
+
+                      const link = document.createElement('a');
+                      link.href = convertBase64Format(docRes.content);
+                      link.download = docRes.filename || `${row.documentTypeName}.pdf`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    } catch (err) {
+                      shikshaMitraToast.error({ message: 'Failed to download document' });
+                    }
                   }}
                 >
                   <Iconify icon="material-symbols:download" width={20} height={20} />
@@ -247,8 +264,9 @@ export const RenderDocuments = (props: any) => {
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
         maxWidth="lg"
+        fullWidth={false}
       >
-        <Box p={2}>
+        <Box p={2} sx={{ display: 'flex', justifyContent: 'center' }}>
           <ViewDocuments id={id} docId={docId} />
         </Box>
       </CustomDialog>
@@ -285,22 +303,35 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
   });
 
   return (
-    <Box height="60vh" width="100%" sx={{ '& iframe img': { height: '100%' } }}>
+    <Box
+      sx={{
+        height: '75vh',
+        minWidth: { xs: '250px', sm: '350px' },
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       {isLoading ? (
-        <Skeleton variant="rectangular" height={300} />
+        <Skeleton variant="rectangular" height="100%" width="100%" />
       ) : documents?.contentType === 'application/pdf' ? (
         <Box
           component="iframe"
           src={convertBase64Format(documents.content)}
-          sx={{ width: '100%', height: '100%', border: 'none' }}
-          title="Employee Document"
+          sx={{
+            width: '100%',
+            minWidth: { sm: '600px', md: '800px' },
+            height: '100%',
+            border: 'none',
+          }}
+          title="Student Document"
         />
       ) : (
         <Box
           component="img"
           src={convertBase64Format(documents.content)}
-          sx={{ width: '100%', height: '100%', border: 'none', objectFit: 'contain' }}
-          title="Employee Document"
+          sx={{ height: '100%', maxWidth: '100%', border: 'none', objectFit: 'contain' }}
+          title="Student Document"
         />
       )}
     </Box>

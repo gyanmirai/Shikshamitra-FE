@@ -37,6 +37,7 @@ export interface ICustomizableTableProps {
   tableContainerProps?: TableContainerProps;
   columns: IColumn[];
   data: IData[];
+  tableTitle?: ReactNode;
   serverSide?: boolean;
   serverSidePagination?: boolean;
   serverSideSearch?: boolean;

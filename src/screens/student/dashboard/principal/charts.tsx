@@ -119,6 +119,7 @@ const PrincipalCharts = () => {
             '&:hover': {
               transform: 'translateY(-4px)',
               boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
             },
           }}
         >
@@ -150,6 +151,7 @@ const PrincipalCharts = () => {
             '&:hover': {
               transform: 'translateY(-4px)',
               boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
             },
           }}
         >
@@ -211,6 +213,7 @@ const PrincipalCharts = () => {
             '&:hover': {
               transform: 'translateY(-4px)',
               boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
             },
           }}
         >

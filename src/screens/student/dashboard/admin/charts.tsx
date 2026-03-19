@@ -244,6 +244,7 @@ const AdminCharts = () => {
             '&:hover': {
               transform: 'translateY(-4px)',
               boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
             },
           }}
         >
@@ -314,7 +315,11 @@ const AdminCharts = () => {
         <Card
           sx={{
             height: '100%',
-            '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
           }}
         >
           <CardHeader
@@ -342,7 +347,11 @@ const AdminCharts = () => {
         <Card
           sx={{
             height: '100%',
-            '&:hover': { transform: 'translateY(-4px)', boxShadow: theme.shadows[8] },
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
           }}
         >
           <CardHeader

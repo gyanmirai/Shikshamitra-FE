@@ -295,6 +295,7 @@ const AlertCenter = () => {
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: theme.shadows[8],
+                transition: 'all 0.3s ease-in-out',
               },
             }}
           >
@@ -352,6 +353,7 @@ const AlertCenter = () => {
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: theme.shadows[8],
+                transition: 'all 0.3s ease-in-out',
               },
             }}
           >

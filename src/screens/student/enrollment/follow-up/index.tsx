@@ -25,6 +25,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   FollowUpStatusType,
   FollowUpStatusTypeColors,
@@ -246,7 +247,7 @@ export const CommunicationForm = ({
   }, [data]);
 
   return (
-    <Box>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent sx={{ p: 0 }}>
         <Scrollbar
           sx={{
@@ -530,6 +531,6 @@ export const CommunicationForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </BackPopUpChecked>
   );
 };

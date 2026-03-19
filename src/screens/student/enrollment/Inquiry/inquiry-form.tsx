@@ -108,7 +108,7 @@ const InquiryForm = ({
           </Button>
           {!editData && (
             <LoadingButton
-              loading={isAddLoading}
+              loading={isAddLoading && actions.isSaveAndNewRef.current}
               variant="outlined"
               onClick={() => {
                 actions.isSaveAndNewRef.current = true;
@@ -121,7 +121,7 @@ const InquiryForm = ({
             </LoadingButton>
           )}
           <LoadingButton
-            loading={isAddLoading || isUpdateLoading}
+            loading={isUpdateLoading || (isAddLoading && !actions.isSaveAndNewRef.current)}
             type="submit"
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.submit} />}

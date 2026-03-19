@@ -225,7 +225,11 @@ export const UpcomingExams = () => {
           maxHeight: 480,
           display: 'flex',
           flexDirection: 'column',
-          '&:hover': { transform: 'translateY(-4px)', boxShadow: (theme) => theme.shadows[8] },
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: (theme) => theme.shadows[8],
+            transition: 'all 0.3s ease-in-out',
+          },
         }}
       >
         <CardHeader

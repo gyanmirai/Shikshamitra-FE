@@ -158,7 +158,28 @@ const RegistrationTable = ({
         isFilter: true,
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left' },
+      {
+        id: 'age',
+        label: 'Age',
+        align: 'left',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'doiValue',
         label: 'Date of Inquiry',
@@ -180,28 +201,23 @@ const RegistrationTable = ({
         label: 'Address',
         minWidth: '150px',
         align: 'left',
-        render: (value: unknown) => {
-          const addressText = value as string;
-          if (!addressText) return '-';
-
-          return (
-            <CustomTooltip title={addressText} placement="top" arrow>
-              <Typography
-                variant="body2"
-                sx={{
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'normal',
-                }}
-              >
-                {addressText}
-              </Typography>
-            </CustomTooltip>
-          );
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'primaryContactNo',

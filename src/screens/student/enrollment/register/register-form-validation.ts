@@ -32,6 +32,7 @@ export const generalFieldValidation = Yup.object({
   gender: Yup.string().required('Gender is required'),
   apparId: Yup.string().matches(/\b\d{12}\b/, 'Appar Id must be 12 digits'),
   adharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  panNo: Yup.string().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Pan number must be 10 digits'),
   religion: Yup.string(),
   familyCast: Yup.string().required('Family caste is required'),
   castCategory: Yup.string().required('Cast Category is required'),
@@ -64,7 +65,7 @@ export const generalFieldValidation = Yup.object({
     ),
   addressLine1: Yup.string().required('Building/Flat/House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
-  email: Yup.string().email('Invalid email format'),
+  email: Yup.string().email('Invalid email address'),
   medium: Yup.string().required('Medium is required'),
   board: Yup.string().required('Board is required'),
   academicYear: Yup.string().required('Academic Year is required'),
@@ -104,7 +105,13 @@ export const familyFieldsValidation = Yup.object({
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     'Please enter a valid email'
   ),
-  fatherPassOutYear: Yup.string(),
+  fatherPassOutYear: Yup.string()
+    .nullable()
+    .test('is-valid-year', 'Invalid year', (value) => {
+      if (!value) return true;
+      const year = parseInt(value, 10);
+      return year >= 1947 && year <= new Date().getFullYear();
+    }),
   fatherOfficeNo: Yup.string()
     .nullable()
     .test('Mobile NO', 'Office No. is not valid', (value) => {
@@ -141,7 +148,13 @@ export const familyFieldsValidation = Yup.object({
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     'Please enter a valid email'
   ),
-  motherPassOutYear: Yup.string(),
+  motherPassOutYear: Yup.string()
+    .nullable()
+    .test('is-valid-year', 'Invalid year', (value) => {
+      if (!value) return true;
+      const year = parseInt(value, 10);
+      return year >= 1947 && year <= new Date().getFullYear();
+    }),
   motherOfficeNo: Yup.string()
     .nullable()
     .test('Mobile NO', 'Office No. is not valid', (value) => {
@@ -178,7 +191,13 @@ export const familyFieldsValidation = Yup.object({
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     'Please enter a valid email'
   ),
-  guardianPassOutYear: Yup.string(),
+  guardianPassOutYear: Yup.string()
+    .nullable()
+    .test('is-valid-year', 'Invalid year', (value) => {
+      if (!value) return true;
+      const year = parseInt(value, 10);
+      return year >= 1947 && year <= new Date().getFullYear();
+    }),
   guardianOfficeNo: Yup.string()
     .nullable()
     .test('Mobile NO', 'Office No. is not valid', (value) => {
@@ -211,11 +230,11 @@ export const communicationFieldsValidation = Yup.object({
     .test('secondaryContactNumber', 'Secondary Contact No. is not valid', (value) =>
       value?.replace('+91', '') ? matchIsValidTel(value as string) : true
     ),
-  parentEmail: Yup.string().email('Invalid email format'),
+  parentEmail: Yup.string().email('Invalid email address'),
   studentContactNo: Yup.string().test('Mobile NO', 'Student Contact No. is not valid', (value) =>
     value ? matchIsValidTel(value as string) : true
   ),
-  studentEmail: Yup.string().email('Invalid email format'),
+  studentEmail: Yup.string().email('Invalid email address'),
   whatsAppContactNo: Yup.string().test('Mobile NO', 'WhatsApp No. is not valid', (value) =>
     value?.replace('+91', '') ? matchIsValidTel(value as string) : true
   ),
