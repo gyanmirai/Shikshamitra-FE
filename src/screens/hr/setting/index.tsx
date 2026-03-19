@@ -88,7 +88,13 @@ const HrSetting = () => {
   const columns: IColumn[] = useMemo(
     () => [
       { id: 'title', label: 'Document Name' },
-      { id: 'documentSize', label: 'Document Size (MB)', minWidth: '200px', align: 'left' },
+      {
+        id: 'documentSize',
+        label: 'Document Size (MB)',
+        minWidth: '200px',
+        align: 'left',
+        filterType: 'number',
+      },
       {
         id: 'documentTypesString',
         label: 'Accepted Format',
@@ -183,6 +189,7 @@ const HrSetting = () => {
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Employee', href: '/hr/employee/' },
           { name: 'Setting' },
+          { name: 'Document Types' },
         ]}
         sx={{ px: 1 }}
         description="Add, update or delete documents associated with an employee."

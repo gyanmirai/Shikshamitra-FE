@@ -56,7 +56,6 @@ const LeaveRequest = () => {
           },
           { name: 'Leave Management' },
         ]}
-        sx={{ px: 2 }}
         description={
           currentActiveComponent?.value === 'leaveRequest'
             ? 'Create new leave requests and manage existing ones by approving or rejecting them.'

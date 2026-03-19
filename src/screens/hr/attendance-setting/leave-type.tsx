@@ -40,25 +40,26 @@ import {
 
 export interface ILeavePolicy {
   id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  isDeleted: boolean;
-  deleterId: string;
-  deletionTime: string;
-  title: string;
-  leaveType: string;
+  creationTime?: string;
+  creatorId?: string;
+  lastModificationTime?: string;
+  lastModifierId?: string;
+  isDeleted?: boolean;
+  deleterId?: string;
+  deletionTime?: string;
+  title?: string;
+  policyTitle: string;
+  leaveType: { id: string; name: string } | string;
   leaveCount: number;
   accuralPolicyType: AccuralPolicyType;
-  maxLeavePerYear: number;
+  maxLeavePerYear?: number;
   paidType: string;
   carryForward: boolean;
   encashmentAllowed: boolean;
-  encashmentTiming?: 'next_payroll' | 'year_end';
+  encashmentTiming?: 'next_payroll' | 'end_of_year';
   requiresApproval: boolean;
   description: string;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 const LeaveType = () => {
@@ -161,7 +162,7 @@ const LeaveType = () => {
         heading="Leave Type"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave Management', href: '' },
+          { name: 'Attendance & Leave', href: '' },
           { name: 'Setting' },
           { name: 'Leave Type', href: '' },
         ]}

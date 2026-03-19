@@ -192,7 +192,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     () => (
       <Box
         sx={{
-          pt: 1,
+          // pt: 1,
           display: 'flex',
           flexDirection: 'column',
           height: '100%',

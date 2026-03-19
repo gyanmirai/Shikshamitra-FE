@@ -86,14 +86,17 @@ const DeductionComponent = () => {
       currentQueryAndMutation: useDeleteDeductionComponentMutation,
     });
 
-  const { data: getDeductionComponentsData, isLoading: getDeductionComponentsLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      currentQueryAndMutation: useGetDeductionComponentsQuery,
-      params: {
-        academicYearId: currentYear?.id,
-      },
-    });
+  const {
+    data: getDeductionComponentsData,
+    isLoading: getDeductionComponentsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDeductionComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+  });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Handles closing the incident form
@@ -175,17 +178,7 @@ const DeductionComponent = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    employeePayrollApi.util.updateQueryData(
-                      'getDeductionComponents',
-                      { academicYearId: currentYear?.id },
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, deleteInformation);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteDeductionComponent(deleteInformation?.id || ''),
               });
               confirm.onFalse();
@@ -200,7 +193,7 @@ const DeductionComponent = () => {
         tableId="earning-component"
         isLoading={getDeductionComponentsLoading}
         columns={[
-          { id: 'deductionName', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'deductionName', label: 'Name', align: 'left', minWidth: '10vw', sticky: true },
           {
             id: 'deductionType',
             label: 'Deduction Type',
@@ -238,7 +231,7 @@ const DeductionComponent = () => {
             filterType: 'number',
             render(value, row) {
               return (
-                <Typography variant="body2" color="primary.secondary" fontWeight="bold">
+                <Typography variant="caption" fontSize="13px">
                   {formatNumber(value, 'INR')}
                 </Typography>
               );
@@ -258,7 +251,6 @@ const DeductionComponent = () => {
               return value ? 'Yes' : 'No';
             },
           },
-
           {
             id: 'action',
             label: 'Action',

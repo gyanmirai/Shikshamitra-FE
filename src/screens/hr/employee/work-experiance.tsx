@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Add, RemoveCircle } from '@mui/icons-material';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
@@ -72,6 +73,7 @@ const WorkExperiences = (props: any) => {
       </Box>
 
       <Box display="flex" flexDirection="column" gap={2} mt={2}>
+        {values.experiences.length === 0 && <EmptyContent title="No work experience added yet." />}
         {values.experiences.map((experience: any, index: number) => (
           <Paper
             key={index}

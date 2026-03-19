@@ -65,6 +65,13 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             size="small"
             label="Second Language"
             {...formik.getFieldProps('secondLanguage')}
+            onChange={(e) => {
+              const val = e.target.value;
+              const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+              if (/^[A-Za-z ]*$/.test(newName)) {
+                formik.setFieldValue('secondLanguage', newName);
+              }
+            }}
             error={formik.touched.secondLanguage && Boolean(formik.errors.secondLanguage)}
             helperText={formik.touched.secondLanguage && formik.errors.secondLanguage}
           />

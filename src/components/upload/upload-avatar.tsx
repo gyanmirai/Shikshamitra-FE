@@ -174,7 +174,7 @@ export function UploadAvatar({
 
   return (
     <Box display="flex" flexDirection="column" gap={1} alignItems="center">
-      <Stack direction="row" alignItems="flex-end" spacing={0.5}>
+      <Stack direction="row" alignItems="flex-end" spacing={0.2}>
         <Box sx={{ position: 'relative' }}>
           {hasFile && !disabled && onDelete && (
             <Tooltip title="Remove photo">
@@ -227,11 +227,30 @@ export function UploadAvatar({
             {renderContent}
           </Box>
         </Box>
+
+        {!disabled && (
+          <Tooltip title="Take photo">
+            <IconButton
+              size="small"
+              onClick={() => setWebcamOpen(true)}
+              sx={{
+                bgcolor: 'background.neutral',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <Iconify icon="solar:videocamera-record-bold" width={17} />
+            </IconButton>
+          </Tooltip>
+        )}
       </Stack>
 
       {helperText && (
-        <Typography fontSize={10} variant="subtitle2" color={error ? 'error.main' : 'default.main'}>
-          {' '}
+        <Typography
+          pr={3}
+          fontSize={10}
+          variant="subtitle2"
+          color={error ? 'error.main' : 'default.main'}
+        >
           {helperText}
         </Typography>
       )}

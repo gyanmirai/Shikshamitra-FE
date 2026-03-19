@@ -132,11 +132,10 @@ export const AccessControlForm = ({
         4: 'divisionId',
       };
       const levelMapping: any = {
-        0: 'boards',
-        1: 'mediums',
-        2: 'mediumStages',
-        3: 'standards',
-        4: 'divisions',
+        0: 'mediums',
+        1: 'mediumStages',
+        2: 'standards',
+        3: 'divisions',
       };
       const data: {
         boards: string[];
@@ -151,9 +150,12 @@ export const AccessControlForm = ({
         standards: [],
         divisions: [],
       };
-      const recursionFn = (academicData: any[], level = 0) => {
+      const recursionFn = (academicData: any[], level = 0, isParentFullyAccessible = false) => {
         academicData?.forEach((element) => {
-          if (element.hasAccess || element?.[(keyMapping as any)[level]]) {
+          const hasFullAccessHere = !!element?.[(keyMapping as any)[level]];
+          const isAccessible = element.hasAccess || hasFullAccessHere || isParentFullyAccessible;
+
+          if (isAccessible) {
             if (level === 0) {
               data.boards.push(element?.[idMapping[level]]);
             }
@@ -172,11 +174,15 @@ export const AccessControlForm = ({
           }
 
           if (element?.[levelMapping[level]]?.length) {
-            recursionFn(element?.[levelMapping[level]], level + 1);
+            recursionFn(
+              element?.[levelMapping[level]],
+              level + 1,
+              isParentFullyAccessible || hasFullAccessHere
+            );
           }
         });
       };
-      recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
+      recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards, 0, false);
       setCheckedItem(data);
     }
   }, [accessControl?.accessibleHierarchy]);
@@ -495,30 +501,16 @@ export const BoardScreenStep = ({
     };
 
     const processNode = (node: any) => {
+      // Add the node to the final output if it is selected in uiState
+      if (uiState[node.type]?.includes(node.id)) {
+        if (!output[node.type].includes(node.id)) {
+          output[node.type].push(node.id);
+        }
+      }
+
+      // Always process children to ensure all selected descendants are included
       const childNodes = node.children || [];
-
-      if (childNodes.length === 0) {
-        // leaf node
-        if (uiState[node.type].includes(node.id)) {
-          output[node.type].push(node.id);
-        }
-        return;
-      }
-
-      // check if all children are selected
-      const allChildrenSelected = childNodes.every((c: any) => uiState[c.type].includes(c.id));
-
-      if (allChildrenSelected) {
-        // store parent only
-        output[node.type].push(node.id);
-      } else {
-        // store parent + individually selected children
-        if (uiState[node.type].includes(node.id)) {
-          output[node.type].push(node.id);
-        }
-
-        childNodes.forEach((child: any) => processNode(child));
-      }
+      childNodes.forEach((child: any) => processNode(child));
     };
 
     nodeData.forEach((root: any) => processNode(root));
@@ -593,8 +585,8 @@ export const BoardScreenStep = ({
                       />
                     }
                     sx={{
-                      py: 2,
-                      px: 2.5,
+                      py: 1,
+                      px: 1,
                       bgcolor: (theme) => varAlpha(theme.vars.palette.primary.lighterChannel, 0.4),
                       borderBottom: '1px solid',
                       borderColor: 'divider',

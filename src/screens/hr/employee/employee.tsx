@@ -184,7 +184,7 @@ const HrEmployee = () => {
       {
         id: 'fullName',
         label: 'Name',
-        minWidth: '12vw',
+        minWidth: 500,
         sticky: true,
         align: 'left',
         render(value, row) {
@@ -241,7 +241,7 @@ const HrEmployee = () => {
           return EmployeeGroupType[value === true ? 0 : 1];
         },
       },
-      { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
+      { id: 'shiftName', label: 'Shift', align: 'left', minWidth: 350 },
       // { id: 'organization', label: 'Organization', align: 'left' },
       {
         id: 'status',
@@ -288,7 +288,7 @@ const HrEmployee = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {open ? (
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
+        <Box display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
             heading={`${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
             links={[
