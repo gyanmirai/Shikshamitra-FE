@@ -273,7 +273,13 @@ const RenderPayrollFields = (props: any) => {
               label="Bank Name"
               name="bankName"
               value={values.bankName || ''}
-              onChange={handleChange}
+              onChange={(e) => {
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  formik.setFieldValue('bankName', newName);
+                }
+              }}
               error={formik.touched.bankName && Boolean(formik.errors.bankName)}
               helperText={formik.touched.bankName && formik.errors.bankName}
             />
@@ -288,7 +294,13 @@ const RenderPayrollFields = (props: any) => {
               label="Branch Name"
               name="branchName"
               value={values.branchName || ''}
-              onChange={handleChange}
+              onChange={(e) => {
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  formik.setFieldValue('branchName', newName);
+                }
+              }}
               error={formik.touched.branchName && Boolean(formik.errors.branchName)}
               helperText={formik.touched.branchName && formik.errors.branchName}
             />
@@ -306,13 +318,10 @@ const RenderPayrollFields = (props: any) => {
               name="accountHolderName"
               value={values.accountHolderName || ''}
               onChange={(e) => {
-                const { value } = e.target;
-                if (/^[A-Za-z\s]*$/.test(value)) {
-                  const formattedValue = value
-                    .split(' ')
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                    .join(' ');
-                  formik.setFieldValue('accountHolderName', formattedValue);
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  formik.setFieldValue('accountHolderName', newName);
                 }
               }}
               error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
@@ -337,6 +346,9 @@ const RenderPayrollFields = (props: any) => {
                 if (value.length <= 18) {
                   formik.setFieldValue('accountNumber', value);
                 }
+              }}
+              inputProps={{
+                min: 0,
               }}
               error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
               helperText={formik.touched.accountNumber && formik.errors.accountNumber}
@@ -434,7 +446,15 @@ const RenderPayrollFields = (props: any) => {
               name="totalWorkingHourPerMonth"
               type="number"
               value={values.totalWorkingHourPerMonth || ''}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                if (value.length <= 2) {
+                  formik.handleChange(e);
+                }
+              }}
+              inputProps={{
+                min: 0,
+              }}
               error={
                 formik.touched.totalWorkingHourPerMonth &&
                 Boolean(formik.errors.totalWorkingHourPerMonth)

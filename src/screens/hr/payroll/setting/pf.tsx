@@ -63,7 +63,11 @@ const PF = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const { data: PFData, isLoading } = useQueryAndMutation({
+  const {
+    data: PFData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPFQuery,
     params: { academicYearId: currentYear?.id },
@@ -156,17 +160,7 @@ const PF = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    pfApi.util.updateQueryData(
-                      'getPF',
-                      { academicYearId: currentYear?.id },
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deletePF(editData?.id || ''),
               });
               confirm.onFalse();
@@ -205,15 +199,14 @@ const PF = () => {
         columns={[
           { id: 'name', label: 'Name', sticky: true, minWidth: '140px', align: 'left' },
           { id: 'code', label: 'Code' },
-          { id: 'employeePercentage', label: 'Employee Percentage' },
-          { id: 'employerPercentage', label: 'Employer Percentage' },
+          { id: 'employeePercentage', label: 'Employee Percentage', filterType: 'number' },
+          { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
           {
             id: 'action',
             label: 'Action',
             isSort: false,
             isFilter: false,
             sticky: true,
-
             minWidth: '80px',
             render(value, row) {
               return (

@@ -75,18 +75,21 @@ const RunPayroll = () => {
         label: 'Total Working Days',
         minWidth: '170px',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'totalPresentDays',
         label: 'Total Present Days',
         minWidth: '170px',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'totalAbsentDays',
         label: 'Total Absent Days',
         minWidth: '170px',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'salary',
@@ -149,12 +152,12 @@ const RunPayroll = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Run Payroll"
-        links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
+        links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
         description="Run payroll by selecting a month, and verify details before processing."
       />
       {/* <StepsForPayroll /> */}
 
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ p: 1.5 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 1, alignItems: 'center' }}>
           <DatePicker
             label="Select Month *"
@@ -192,7 +195,7 @@ const RunPayroll = () => {
         </Alert>
       </Card>
       {month && (
-        <Card sx={{ p: 2, mt: 2 }}>
+        <Card sx={{ p: 1.5, mt: 1 }}>
           <Box
             sx={{
               display: 'flex',

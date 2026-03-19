@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
@@ -81,7 +82,6 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 2 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
@@ -147,10 +147,15 @@ const DateWise = ({
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
-  const dateValue = useMemo(
-    () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
-    [searchParams.date]
+  const [dateValue, setDateValue] = useState<Dayjs | null>(
+    searchParams.date ? dayjs(searchParams.date, 'DD/MM/YYYY') : dayjs()
   );
+
+  useEffect(() => {
+    if (searchParams.date) {
+      setDateValue(dayjs(searchParams.date, 'DD/MM/YYYY'));
+    }
+  }, [searchParams.date]);
   const tabs = useTabs('Pending');
   const {
     data: attendanceData,
@@ -160,7 +165,7 @@ const DateWise = ({
     type: 'query',
     currentQueryAndMutation: useGetDateWiseAttendanceQuery,
     params: {
-      attendanceDate: dateValue?.format('DD-MM-YYYY'),
+      attendanceDate: dateValue?.format('DD/MM/YYYY'),
       status: tabs.value,
       page: 1,
       pageSize: 10,
@@ -181,7 +186,7 @@ const DateWise = ({
   useEffect(() => {
     if (searchParams.date) {
       const dateTimeOffset = dateConvertor(
-        dayjs(searchParams.date, 'DD-MM-YYYY').format(dateFormat),
+        dayjs(searchParams.date, 'DD/MM/YYYY').format(dateFormat),
         true
       );
       getDateWiseAttendance(dateTimeOffset);
@@ -371,6 +376,7 @@ const DateWise = ({
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
+          mb: 1,
         }}
       >
         <FormControl sx={{ maxWidth: '268px', width: '100%' }}>
@@ -400,18 +406,18 @@ const DateWise = ({
           </Select>
         </FormControl>
         <DatePicker
-          disableFuture
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           label="Date"
           value={dateValue}
           onChange={(value) => {
-            setSearchParams('date', value?.format('DD-MM-YYYY') || '');
-            // setDate(value);
+            setDateValue(value);
+          }}
+          onAccept={(value) => {
+            setSearchParams('date', value?.format('DD/MM/YYYY') || '');
           }}
           views={['year', 'month', 'day']}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
-          sx={{ ml: 0 }}
           slotProps={{
             textField: {
               size: 'small',
@@ -478,18 +484,11 @@ const EmployeeWise = ({
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
-
-  const startDate = useMemo(
-    () =>
-      searchParams.startDate
-        ? dayjs(searchParams.startDate, 'DD-MM-YYYY')
-        : dayjs().startOf('month'),
-    [searchParams.startDate]
+  const [startDate, setStartDate] = useState<Dayjs | null>(
+    searchParams.startDate ? dayjs(searchParams.startDate, 'DD/MM/YYYY') : dayjs().startOf('month')
   );
-  const endDate = useMemo(
-    () =>
-      searchParams.endDate ? dayjs(searchParams.endDate, 'DD-MM-YYYY') : dayjs().endOf('month'),
-    [searchParams.endDate]
+  const [endDate, setEndDate] = useState<Dayjs | null>(
+    searchParams.endDate ? dayjs(searchParams.endDate, 'DD/MM/YYYY') : dayjs().endOf('month')
   );
 
   const tabs = useTabs('Pending');
@@ -508,8 +507,8 @@ const EmployeeWise = ({
     currentQueryAndMutation: useGetEmployeeWiseAttendanceQuery,
     params: {
       employeeId: searchParams.employeeId,
-      startDate: startDate.format('DD-MM-YYYY'),
-      endDate: endDate.format('DD-MM-YYYY'),
+      startDate: startDate?.format('DD/MM/YYYY'),
+      endDate: endDate?.format('DD/MM/YYYY'),
       status: tabs.value,
       page: 1,
       pageSize: 10,
@@ -546,11 +545,11 @@ const EmployeeWise = ({
   );
 
   useEffect(() => {
-    if (searchParams?.employeeId && startDate) {
+    if (searchParams?.employeeId && startDate && endDate) {
       getEmployeeWiseAttendance({
         employeeId: `${searchParams.employeeId}`,
-        startDate: startDate.format('DD-MM-YYYY'),
-        endDate: endDate.format('DD-MM-YYYY'),
+        startDate: startDate?.format('DD/MM/YYYY'),
+        endDate: endDate?.format('DD/MM/YYYY'),
         status: tabs.value,
         page: 1,
         pageSize: 10,
@@ -684,7 +683,7 @@ const EmployeeWise = ({
         filterType: 'date',
         sticky: true,
         render(value, row) {
-          return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
+          return dayjs(value, 'YYYY-MM-DD').format('DD/MM/YYYY');
         },
       },
       {
@@ -757,7 +756,7 @@ const EmployeeWise = ({
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          my: 1,
           p: 1,
           flexWrap: 'wrap',
         }}
@@ -837,14 +836,16 @@ const EmployeeWise = ({
 
         <DatePicker
           disableFuture
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           label="Start Date"
           value={startDate}
           onChange={(value) => {
-            setSearchParams('startDate', value?.format('DD-MM-YYYY') || '');
+            setStartDate(value);
             // setDate(value);
           }}
-          views={['year', 'month', 'day']}
+          onAccept={(value) => {
+            setSearchParams('startDate', value?.format('DD/MM/YYYY') || '');
+          }}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
@@ -856,15 +857,17 @@ const EmployeeWise = ({
         />
 
         <DatePicker
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           label="End Date"
           disableFuture
           value={endDate}
           onChange={(value) => {
-            setSearchParams('endDate', value?.format('DD-MM-YYYY') || '');
+            setEndDate(value);
             // setDate(value);
           }}
-          views={['year', 'month', 'day']}
+          onAccept={(value) => {
+            setSearchParams('endDate', value?.format('DD/MM/YYYY') || '');
+          }}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
