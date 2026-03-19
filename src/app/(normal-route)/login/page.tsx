@@ -177,7 +177,7 @@ export default function LoginPage() {
     fontSize: '0.9375rem',
     fontWeight: 600,
     textTransform: 'none' as const,
-    backgroundColor: '#111827 !important',
+    backgroundColor: 'rgb(34 126 90) !important',
     color: '#ffffff !important',
     border: 'none',
     boxShadow: 'none',
@@ -221,7 +221,7 @@ export default function LoginPage() {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          width: { md: '480px', lg: '560px' },
+          width: { md: '480px', lg: '600px' },
           flexShrink: 0,
           position: 'relative',
           overflow: 'hidden',
@@ -378,16 +378,26 @@ export default function LoginPage() {
               height: '2px',
               bgcolor: 'rgba(255,255,255,0.35)',
               borderRadius: '2px',
-              mb: 3,
+              mb: 4,
             }}
           />
 
-          {/* Feature highlights */}
-          <Stack spacing={1.5}>
+          {/* Feature Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 2,
+              mb: 4,
+            }}
+          >
             {[
               { icon: 'ph:calendar-check-duotone', label: 'Attendance & Academics' },
               { icon: 'ph:currency-circle-dollar-duotone', label: 'Finance & Administration' },
               { icon: 'ph:chats-circle-duotone', label: 'Parent Communication' },
+              { icon: 'ph:chart-line-up-duotone', label: 'Advanced Analytics' },
+              { icon: 'ph:users-three-duotone', label: 'HR & Payroll' },
+              { icon: 'ph:bus-duotone', label: 'Transport Management' },
             ].map((feature) => (
               <Box key={feature.label} sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                 <Box
@@ -398,10 +408,15 @@ export default function LoginPage() {
                     width: 36,
                     height: 36,
                     minWidth: 36,
-                    borderRadius: '9px',
-                    bgcolor: 'rgba(255,255,255,0.16)',
-                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '10px',
+                    bgcolor: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.18)',
                     flexShrink: 0,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.25)',
+                      transform: 'scale(1.05)',
+                    },
                   }}
                 >
                   <Icon
@@ -412,38 +427,107 @@ export default function LoginPage() {
                 </Box>
                 <Typography
                   sx={{
-                    fontSize: '0.875rem',
-                    color: 'rgba(255,255,255,0.88)',
+                    fontSize: '0.85rem',
+                    color: 'rgba(255,255,255,0.9)',
                     fontWeight: 500,
-                    lineHeight: 1.4,
+                    lineHeight: 1.3,
                   }}
                 >
                   {feature.label}
                 </Typography>
               </Box>
             ))}
-          </Stack>
+          </Box>
+
+          {/* Divider */}
+          <Box
+            sx={{
+              width: '40px',
+              height: '2px',
+              bgcolor: 'rgba(255,255,255,0.35)',
+              borderRadius: '2px',
+              mb: 4,
+            }}
+          />
+
+          {/* Security & Reliability */}
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            // @ts-ignore
+            transition={{ delay: 0.3, duration: 0.6 }}
+            sx={{
+              p: 2.5,
+              borderRadius: '16px',
+              bgcolor: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              position: 'relative',
+              overflow: 'hidden',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.75 }}>
+              <Box
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: '10px',
+                  bgcolor: 'rgba(255,255,255,0.16)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  flexShrink: 0,
+                }}
+              >
+                <Icon icon="ph:shield-star-duotone" width={24} style={{ color: '#fff' }} />
+              </Box>
+              <Box>
+                <Typography
+                  sx={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', lineHeight: 1.2 }}
+                >
+                  Enterprise-Grade Security
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: '0.8rem',
+                    color: 'rgba(255,255,255,0.85)',
+                    lineHeight: 1.5,
+                    mt: 0.75,
+                  }}
+                >
+                  Your institute&apos;s data is protected with state-of-the-art encryption, ensuring
+                  complete privacy and compliance.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
 
           {/* Trust badge */}
           <Box
             sx={{
-              mt: 5,
-              pt: 3,
-              borderTop: '1px solid rgba(255,255,255,0.15)',
+              mt: 4,
               display: 'flex',
               alignItems: 'center',
-              gap: 1,
+              gap: 1.5,
             }}
           >
-            <Icon
-              icon="ph:shield-check-duotone"
-              width={16}
-              style={{ color: 'rgba(255,255,255,0.65)' }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Icon
+                icon="ph:shield-check-duotone"
+                width={18}
+                style={{ color: 'rgba(255,255,255,0.8)' }}
+              />
+            </Box>
             <Typography
-              sx={{ fontSize: '0.775rem', color: 'rgba(255,255,255,0.6)', fontWeight: 400 }}
+              sx={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}
             >
-              Trusted by schools across India
+              Trusted by <span style={{ color: '#fff', fontWeight: 600 }}>500+</span> schools across
+              India
             </Typography>
           </Box>
         </Box>
