@@ -190,7 +190,7 @@ const LeaveManagement = () => {
     >
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="h6" fontWeight="bold">
             Leave Management
           </Typography>

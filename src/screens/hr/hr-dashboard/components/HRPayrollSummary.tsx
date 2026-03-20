@@ -1,21 +1,11 @@
 'use client';
 
 import React from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
 import CustomTooltip from 'src/components/custom-tooltip';
-import {
-  Box,
-  Card,
-  Stack,
-  Button,
-  Divider,
-  CardHeader,
-  Typography,
-  IconButton,
-} from '@mui/material';
+import { Box, Card, Stack, Button, CardHeader, Typography, IconButton } from '@mui/material';
 
 // -----------------------------------------------------------------------
 
@@ -74,7 +64,7 @@ const HRPayrollSummary = () => {
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardHeader
         title={
-          <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             <Typography variant="h6">Payroll Summary</Typography>
             <CustomTooltip
               title="Overview of payroll status - paid, pending, and on hold"
@@ -90,46 +80,8 @@ const HRPayrollSummary = () => {
             </CustomTooltip>
           </Stack>
         }
-        sx={{ px: 2, py: 1 }}
+        sx={{ p: 2 }}
       />
-
-      {/* Amount summary rows */}
-      <Stack spacing={1} sx={{ px: 2, pt: 1, pb: 0.5 }}>
-        {PAYROLL_STATS.map((stat) => (
-          <Stack
-            key={stat.label}
-            direction="row"
-            alignItems="center"
-            spacing={1.5}
-            sx={{
-              p: 1.5,
-              borderRadius: 1,
-              bgcolor: (t) => varAlpha(t.vars.palette[stat.color].mainChannel, 0.08),
-              border: (t) => `1px solid ${varAlpha(t.vars.palette[stat.color].mainChannel, 0.16)}`,
-            }}
-          >
-            <Iconify
-              icon={stat.icon}
-              width={20}
-              sx={{ color: `${stat.color}.main`, flexShrink: 0 }}
-            />
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                {stat.label}
-              </Typography>
-              <Typography variant="subtitle2" fontWeight={600}>
-                {stat.amount}
-              </Typography>
-            </Box>
-            <Typography variant="caption" color="text.secondary">
-              {stat.employees} employees
-            </Typography>
-          </Stack>
-        ))}
-      </Stack>
-
-      <Divider sx={{ mx: 3, my: 1.5, borderStyle: 'dashed' }} />
-
       {/* Chart */}
       <Box sx={{ mx: 3 }} dir="ltr">
         <Chart type="bar" series={series} options={chartOptions} height={180} />

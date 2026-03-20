@@ -64,7 +64,7 @@ function CarouselItem({ item, ...other }: CarouselItemProps) {
     <Box sx={{ width: 1, position: 'relative', ...other }}>
       <Box
         sx={{
-          p: 3,
+          p: 2,
           gap: 1,
           width: 1,
           bottom: 0,
