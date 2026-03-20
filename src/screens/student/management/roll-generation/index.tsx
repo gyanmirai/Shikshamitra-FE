@@ -260,7 +260,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
       sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
     >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
+        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={1}>
           <Box display="flex" gap={2}>
             <CustomSelect
               options={[
@@ -339,6 +339,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
 
         {arrangeBy && (
           <CustomizableTable
+            tableTitle="Roll No. Generation"
             onSendNotification={handlerSendNotification}
             isLoading={isStudentDataLoading || isStudentDataFetching}
             showCheckbox={selectedStudents.length !== 0}

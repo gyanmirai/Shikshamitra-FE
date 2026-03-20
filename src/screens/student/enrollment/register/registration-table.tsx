@@ -75,7 +75,7 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right-circle" />
+            <Iconify icon="mdi:arrow-right-circle-outline" />
             Move To Admission
           </MenuItem>
           <MenuItem
@@ -345,6 +345,7 @@ const RegistrationTable = ({
   return (
     <>
       <CustomizableTable
+        tableTitle="Registration"
         tableId="student-registration-table"
         noDataText={
           <>

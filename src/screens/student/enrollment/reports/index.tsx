@@ -38,8 +38,8 @@ const EnrollmentReportScreen = () => {
         heading="Reports"
         description="Generate and filter enrollment reports by class, gender, and other criteria."
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Enrollment', href: '/student/enrollment/dashboard/' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Enrollment', href: '/student/dashboard/' },
           { name: 'Reports' },
         ]}
         isBack={openGenerateReport.value}
@@ -196,6 +196,7 @@ const EnrollmentReportScreen = () => {
       ) : (
         <CustomizableTable
           tableId="enrollment-reports"
+          tableTitle="Enrollment Reports"
           columns={[
             {
               label: 'Report Name',

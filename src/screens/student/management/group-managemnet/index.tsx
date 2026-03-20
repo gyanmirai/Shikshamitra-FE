@@ -375,6 +375,7 @@ const GroupManagement = ({ division }: { division: string }) => {
       <CustomizableTable
         // onSendNotification={handlerSendNotification}
         // showCheckbox={selectedStudent.length !== 0}
+        tableTitle="House Management"
         tableId="group-management-table"
         noDataText="No Student data available"
         isLoading={isGetAllStudentGroupLoading}

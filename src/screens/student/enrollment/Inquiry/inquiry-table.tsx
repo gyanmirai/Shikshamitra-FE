@@ -80,6 +80,7 @@ const InquiryTable = ({
   return (
     <Box sx={{ minHeight: 0, flexGrow: 1 }}>
       <CustomizableTable
+        tableTitle="Inquiry"
         showCheckbox
         isLoading={isLoading || isFetching}
         tableId="inquiry-table"

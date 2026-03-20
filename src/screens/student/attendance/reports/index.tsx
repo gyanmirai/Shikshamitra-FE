@@ -34,8 +34,8 @@ const AttendanceReportScreen = () => {
         heading="Reports"
         description="Generate and filter attendance reports by class, division, date range, and other criteria."
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Attendance', href: '/student/dashboard/' },
           { name: 'Reports' },
         ]}
         isBack={openGenerateReport.value}
@@ -152,14 +152,34 @@ const AttendanceReportScreen = () => {
         />
       ) : (
         <CustomizableTable
+          tableTitle="Attendance Reports"
           tableId="attendance-reports"
           columns={[
             {
               label: 'Report Name',
               id: 'reportName',
-              minWidth: '15vw',
+              minWidth: '150px',
               align: 'left',
               sticky: true,
+              render(value, row) {
+                return (
+                  <CustomTooltip title={row.reportName} arrow sx={{ textAlign: 'justify' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: '13px',
+                        display: 'block',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '12vw',
+                      }}
+                    >
+                      {row.reportName}
+                    </Typography>
+                  </CustomTooltip>
+                );
+              },
             },
             { label: 'Report Category', id: 'reportCategory', minWidth: '10vw', align: 'left' },
             {
@@ -196,7 +216,7 @@ const AttendanceReportScreen = () => {
             {
               label: 'Applied Filters',
               id: 'appliedFilters',
-              minWidth: 400,
+              minWidth: '400px',
               align: 'left',
               render(value, row) {
                 return (

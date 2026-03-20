@@ -262,7 +262,7 @@ export const TableToolbar = React.memo(
                     setExportAnchorEl(null);
                   }}
                 >
-                  <Iconify icon="solar:document-bold" />
+                  <Iconify icon="file-icons:microsoft-excel" />
                   &nbsp; Export as Excel
                 </MenuItem>
 

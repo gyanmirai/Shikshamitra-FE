@@ -163,8 +163,8 @@ const HouseSetting = () => {
         heading="Setting"
         description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Student Records', href: '/student/overview/' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Student Records', href: '/student/dashboard/' },
           { name: 'Setting' },
         ]}
         action={
@@ -180,6 +180,7 @@ const HouseSetting = () => {
         }
       />
       <CustomizableTable
+        tableTitle="House Setting"
         tableId="group-management-table"
         noDataText={
           <>

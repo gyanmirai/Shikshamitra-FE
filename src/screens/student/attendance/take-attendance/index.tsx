@@ -195,8 +195,8 @@ const TakeAttendanceScreen = () => {
       <CustomBreadcrumbs
         heading="Mark Attendance"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Attendance', href: '' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Attendance', href: '/student/dashboard//' },
           { name: 'Mark Attendance' },
         ]}
         description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
@@ -204,7 +204,7 @@ const TakeAttendanceScreen = () => {
 
       <Card
         sx={{
-          mb: 0,
+          mb: 1,
           pb: 1.5,
           pt: 1,
           pl: 1,
@@ -448,6 +448,7 @@ const ListView = ({
   return (
     <>
       <CustomizableTable
+        tableTitle="Mark Attendance"
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudent.length !== 0}
         tableId="student-attendance-list"
@@ -510,9 +511,11 @@ const ListView = ({
                   disabled={isLocked}
                   value={value || ''}
                   onChange={(e) => {
-                    setStudentData(
-                      data.map((item: any) =>
-                        item.id === row.id ? { ...item, remarks: e.target.value } : item
+                    setStudentData((prev: any) =>
+                      prev.map((item: any) =>
+                        item.studentId === row.studentId
+                          ? { ...item, remarks: e.target.value }
+                          : item
                       )
                     );
                   }}

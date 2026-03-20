@@ -38,13 +38,13 @@ const RegisterScreen = () => {
   // Dynamic breadcrumb links based on form dialog state
   const links = formDialog.value
     ? [
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/registration/' },
+        { name: 'Student', href: '/student/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/dashboard/' },
         { name: 'Registration' },
       ]
     : [
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/registration/' },
+        { name: 'Student', href: '/student/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/dashboard/' },
         { name: 'Registration' },
       ];
 

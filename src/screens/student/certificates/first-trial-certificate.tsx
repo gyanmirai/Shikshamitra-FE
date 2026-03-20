@@ -96,6 +96,7 @@ const FirstTrialCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableTitle="First Trial Certificate"
         tableId="first-trial-certificate"
         noDataText={
           <>

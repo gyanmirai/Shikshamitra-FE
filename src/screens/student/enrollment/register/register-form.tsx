@@ -16,7 +16,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useGetBasicDetailsQuery,
   useGetFamilyDetailsQuery,
@@ -719,6 +718,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 0),
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
     },
   });
 
@@ -730,6 +731,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 2),
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
     },
   });
   const { data: studentCommunicationDetails, isLoading: studentCommunicationDetailsLoading } =
@@ -741,6 +744,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 3),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
 
@@ -753,6 +758,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 4),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
 
@@ -765,6 +772,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 5),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
   const { data: previousSchoolDetails, isLoading: previousSchoolDetailsLoading } =
@@ -776,6 +785,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 6),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
 
@@ -787,6 +798,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 7),
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
     },
   });
 
@@ -875,66 +888,64 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
   const isLoading = stepLoadings[step] || false;
 
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-        <Grid container spacing={2.5} sx={{ height: '100%' }}>
-          {allFields[step].map((field: FieldsType) => (
-            <Grid size={4} key={field.name} {...(field.gridProps || {})}>
-              {field.renderComp ? (
-                field.renderComp({
-                  formik,
-                  field,
-                  isEdit: true,
-                  isMainForm: true,
-                  editData,
-                  isLoading,
-                })
-              ) : field.type === 'date' ? (
-                <DatePicker
+    <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
+      <Grid container spacing={2.5} sx={{ height: '100%' }}>
+        {allFields[step].map((field: FieldsType) => (
+          <Grid size={4} key={field.name} {...(field.gridProps || {})}>
+            {field.renderComp ? (
+              field.renderComp({
+                formik,
+                field,
+                isEdit: true,
+                isMainForm: true,
+                editData,
+                isLoading,
+              })
+            ) : field.type === 'date' ? (
+              <DatePicker
+                label={field.label}
+                name={field.name}
+                value={formik.values[field.name]}
+                format="DD-MM-YYYY"
+                onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                slotProps={{
+                  textField: {
+                    placeholder: field.placeholder,
+                    fullWidth: true,
+                    size: 'small',
+                    helperText: formik.touched[field.name] && formik.errors[field.name],
+                    error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                  },
+                }}
+              />
+            ) : (
+              <ShakingTextField
+                error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+              >
+                <TextField
+                  key={field.name}
+                  type={field.type}
+                  size="small"
                   label={field.label}
                   name={field.name}
+                  placeholder={field.placeholder}
                   value={formik.values[field.name]}
-                  format="DD-MM-YYYY"
-                  onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                  slotProps={{
-                    textField: {
-                      placeholder: field.placeholder,
-                      fullWidth: true,
-                      size: 'small',
-                      helperText: formik.touched[field.name] && formik.errors[field.name],
-                      error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                    },
-                  }}
-                />
-              ) : (
-                <ShakingTextField
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                >
-                  <TextField
-                    key={field.name}
-                    type={field.type}
-                    size="small"
-                    label={field.label}
-                    name={field.name}
-                    placeholder={field.placeholder}
-                    value={formik.values[field.name]}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                    helperText={formik.touched[field.name] && formik.errors[field.name]}
-                    fullWidth
-                    // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                    {...((typeof field?.otherProps === 'function'
-                      ? field?.otherProps({ formik })
-                      : field?.otherProps) || {})}
-                  />
-                </ShakingTextField>
-              )}
-            </Grid>
-          ))}
-        </Grid>
-      </FormSlider>
-    </BackPopUpChecked>
+                  helperText={formik.touched[field.name] && formik.errors[field.name]}
+                  fullWidth
+                  // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                  {...((typeof field?.otherProps === 'function'
+                    ? field?.otherProps({ formik })
+                    : field?.otherProps) || {})}
+                />
+              </ShakingTextField>
+            )}
+          </Grid>
+        ))}
+      </Grid>
+    </FormSlider>
   );
 };
 

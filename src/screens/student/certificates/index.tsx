@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Card, Button } from '@mui/material';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LeavingCertificate from './leaving-certificate';
@@ -39,11 +39,12 @@ const TABS = [
 ];
 
 const StudentCertificatesScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'bonafiedCertificates' });
+  const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
+  const activeTab = searchParams?.tab || 'bonafiedCertificates';
 
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
+    () => TABS.find((tab) => tab.value === activeTab),
+    [activeTab]
   );
 
   // const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
@@ -52,8 +53,8 @@ const StudentCertificatesScreen = () => {
       <CustomBreadcrumbs
         heading="Certificates"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Student Records', href: '/student/overview/' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Student Records', href: '/student/dashboard/' },
           { name: 'Certificates' },
         ]}
         description="Generate certificates like Bonafide, Leaving, and others here."
@@ -82,7 +83,7 @@ const StudentCertificatesScreen = () => {
               }}
             >
               {TABS.map((tab) => {
-                const isSelected = searchParams.tab === tab.value;
+                const isSelected = activeTab === tab.value;
                 return (
                   <Button
                     key={tab.value}

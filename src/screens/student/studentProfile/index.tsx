@@ -272,9 +272,9 @@ export function StudentProfile() {
           <CustomBreadcrumbs
             heading="Student Profile"
             links={[
-              { name: 'Student', href: '/student/enrollment/dashboard' },
-              { name: 'Student Records', href: '/student/overview/' },
-              { name: 'Student Profile' },
+              { name: 'Student', href: '/student/dashboard' },
+              { name: 'Student Records', href: '/student/dashboard' },
+              { name: 'Student Profile', href: '/student/dashboard' },
             ]}
             isBack
             onBack={() => setSearchParams('student', '')}
@@ -284,9 +284,9 @@ export function StudentProfile() {
           <CustomBreadcrumbs
             heading="Student List"
             links={[
-              { name: 'Student', href: '/student/enrollment/dashboard' },
-              { name: 'Student Records', href: '/student/overview/' },
-              { name: 'Student List' },
+              { name: 'Student', href: '/student/dashboard' },
+              { name: 'Student Records', href: '/student/dashboard' },
+              { name: 'Student List', href: '/student/dashboard' },
             ]}
             description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
           />
@@ -305,7 +305,7 @@ export function StudentProfile() {
               alignItems: 'center',
               px: 1,
               py: 1,
-              // mb: 1,
+              mb: 1,
             }}
           >
             <CustomSelect
@@ -342,6 +342,7 @@ export function StudentProfile() {
 
           <CustomizableTable
             onSendNotification={handlerSendNotification}
+            tableTitle="Student List"
             showCheckbox={selectedStudents.length !== 0}
             tableId="student-list"
             noDataText={<>No Student Data Found </>}

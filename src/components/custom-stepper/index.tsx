@@ -248,7 +248,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const formik = useFormik({
     initialValues,
     validationSchema,
-    enableReinitialize: true,
     validateOnMount: true,
     onSubmit: (values) => {
       setIsBackClick(false);
