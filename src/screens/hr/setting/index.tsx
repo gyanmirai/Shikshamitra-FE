@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -186,9 +187,9 @@ const HrSetting = () => {
       <CustomBreadcrumbs
         heading="Document Types"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Employee', href: '/hr/employee/' },
-          { name: 'Setting' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Employee', href: hrPaths.employee.list },
+          { name: 'Settings', href: hrPaths.employee.setting.documentTypes },
           { name: 'Document Types' },
         ]}
         sx={{ px: 1 }}

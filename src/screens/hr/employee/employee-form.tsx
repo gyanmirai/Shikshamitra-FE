@@ -841,45 +841,57 @@ const FormSlider = ({ step, formik, editData }: any) => {
 
     if (basicDetails && step === 0) {
       const updatedFields = personalInformationInitialValues(basicDetails);
-      formikRef.current.setValues((prev: any) => ({
-        ...prev,
-        ...updatedFields,
-      }));
+      formikRef.current.resetForm({
+        values: {
+          ...formikRef.current.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (familyDetails && step === 1) {
       const updatedFields = familyInformationInitialValues(familyDetails);
-      formikRef.current.setValues((prev: any) => ({
-        ...prev,
-        ...updatedFields,
-      }));
+      formikRef.current.resetForm({
+        values: {
+          ...formikRef.current.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (additionalDetails && step === 2) {
       const updatedFields = additionalDetailsInitialValues(additionalDetails);
-      formikRef.current.setValues((prev: any) => ({
-        ...prev,
-        ...updatedFields,
-      }));
+      formikRef.current.resetForm({
+        values: {
+          ...formikRef.current.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (workExperience && step === 4) {
       const updatedFields = workExperienceInitialValues(workExperience);
-      formikRef.current.setValues((prev: any) => ({
-        ...prev,
-        ...updatedFields,
-      }));
+      formikRef.current.resetForm({
+        values: {
+          ...formikRef.current.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (bankDetails && step === 5) {
       const updatedFields = payrollInitialValues(bankDetails);
-      formikRef.current.setValues((prev: any) => ({
-        ...prev,
-        ...updatedFields,
-      }));
+      formikRef.current.resetForm({
+        values: {
+          ...formikRef.current.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (reportingManagerDetails && step === 6) {
       const updatedFields = assignReportingManagerInitialValues(reportingManagerDetails);
-      formikRef.current.setValues((prev: any) => ({
-        ...prev,
-        ...updatedFields,
-      }));
+      formikRef.current.resetForm({
+        values: {
+          ...formikRef.current.values,
+          ...updatedFields,
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (accessControl && step === 7) {
       if (accessControl?.accessibleHierarchy) {
@@ -940,10 +952,12 @@ const FormSlider = ({ step, formik, editData }: any) => {
 
         const updatedFields = academicPermissionInitialValues(data);
 
-        formikRef.current.setValues((prev: any) => ({
-          ...prev,
-          ...updatedFields,
-        }));
+        formikRef.current.resetForm({
+          values: {
+            ...formikRef.current.values,
+            ...updatedFields,
+          },
+        });
         initializedStepsRef.current[step] = true;
       }
     }

@@ -309,7 +309,7 @@ export const payrollValidationSchema = Yup.object({
 });
 
 export const reportingManagerValidationSchema = Yup.object({
-  reportingManager: Yup.string().required('Reporting manager is required'),
+  // reportingManager: Yup.string().required('Reporting manager is required'),
 });
 
 export const validations = [

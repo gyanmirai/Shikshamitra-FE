@@ -231,7 +231,7 @@ export function UploadAvatar({
 
       {helperText && (
         <Typography
-          pr={3}
+          // pr={3}
           fontSize={10}
           variant="subtitle2"
           color={error ? 'error.main' : 'default.main'}

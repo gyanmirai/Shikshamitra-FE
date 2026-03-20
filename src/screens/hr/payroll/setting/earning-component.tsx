@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
@@ -117,9 +118,9 @@ const EarningComponent = () => {
         heading="Earning Component"
         description="Manage the various earning components that make up employee salaries, including fixed and variable pay elements."
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Payroll Management', href: '/hr/payroll/dashboard/' },
-          { name: 'Settings' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
+          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'Earning Component' },
         ]}
         action={

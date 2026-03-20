@@ -3,6 +3,7 @@ import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import { Icon } from '@iconify/react';
 import { useTabs } from 'src/hooks/use-tabs';
+import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { EmptyContent } from 'src/components/empty-content';
@@ -244,7 +245,11 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
     <>
       <CustomBreadcrumbs
         heading="Employee Profile"
-        links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee Profile' }]}
+        links={[
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Employee', href: hrPaths.employee.list },
+          { name: 'Employee Profile' },
+        ]}
         description="View and manage employee information including personal details, documents, payroll, transportation, academic records and communications"
         isBack
         onBack={() => {

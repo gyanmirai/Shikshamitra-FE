@@ -34,7 +34,6 @@ interface ColumnFilterMenuProps {
 }
 
 export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFilterMenuProps) => {
-  console.log(anchorEl);
   const formik = useFormik<{
     min: number | null;
     max: number | null;

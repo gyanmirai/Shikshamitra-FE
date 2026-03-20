@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
@@ -79,8 +80,8 @@ const PaySlipGenerationScreen = () => {
       <CustomBreadcrumbs
         heading="Generate Salary Slip"
         links={[
-          { name: 'HR/Staff' },
-          { name: 'Payroll Management' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
           { name: 'Generate Salary Slip' },
         ]}
         description="Generate and download salary slips by selecting the pay period and employee details."

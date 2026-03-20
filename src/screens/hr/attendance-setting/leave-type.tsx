@@ -12,6 +12,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -162,9 +163,9 @@ const LeaveType = () => {
         heading="Leave Type"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: '' },
-          { name: 'Setting' },
-          { name: 'Leave Type', href: '' },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Settings', href: hrPaths.attendance.setting.root },
+          { name: 'Leave Type' },
         ]}
         description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
         action={

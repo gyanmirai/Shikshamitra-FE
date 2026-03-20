@@ -134,7 +134,7 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:card-account-details-outline'),
             },
             {
-              title: 'Setting',
+              title: 'Settings',
               path: hrPaths.employee.setting.root,
               _action: 'hr-setting',
               shortcutKey: 'Alt+H+S',
@@ -201,7 +201,7 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
-                  title: 'Earning Components',
+                  title: 'Earning Component',
                   path: hrPaths.payroll.settings.earningComponents,
                   _action: 'payroll-setting-earning-components',
                   shortcutKey: 'Alt+H+P+4',
@@ -210,7 +210,7 @@ const hrModule = (isDdvs: boolean) => ({
                   icon: menuIconView('mdi:cash-plus'),
                 },
                 {
-                  title: 'Deduction Components',
+                  title: 'Deduction Component',
                   path: hrPaths.payroll.settings.deductionComponents,
                   _action: 'payroll-setting-deduction-components',
                   shortcutKey: 'Alt+H+P+4+2',
@@ -277,7 +277,7 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:calendar-check-outline'),
             },
             {
-              title: 'Setting',
+              title: 'Settings',
               path: hrPaths.attendance.setting.root,
               _action: 'setting',
               shortcutKey: 'Alt+H+A+4',

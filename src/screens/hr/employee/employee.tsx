@@ -11,6 +11,7 @@ import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
@@ -107,8 +108,18 @@ const HrEmployee = () => {
         </MenuList>
       </>
     ),
-    [payrollDialog, statusDialog]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [payrollDialog.onTrue, statusDialog.onTrue]
   );
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setEmployeeParams((pre) => ({ ...pre, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setEmployeeParams((pre) => ({ ...pre, search }));
+  }, []);
+
   const {
     data: employee,
     isLoading,
@@ -292,9 +303,9 @@ const HrEmployee = () => {
           <CustomBreadcrumbs
             heading={`${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
             links={[
-              { name: 'HR/Staff', href: '/hr/dashboard/' },
-              { name: 'Employee', href: '/hr/employee/' },
-              { name: 'Employee List', href: '/hr/employee/' },
+              { name: 'HR/Staff', href: hrPaths.dashboard },
+              { name: 'Employee', href: hrPaths.employee.list },
+              { name: 'Employee List', href: hrPaths.employee.list },
               {
                 name: `${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`,
               },
@@ -314,9 +325,9 @@ const HrEmployee = () => {
           <CustomBreadcrumbs
             heading="Employee List"
             links={[
-              { name: 'HR/Staff', href: '/hr/dashboard/' },
-              { name: 'Employee', href: '/hr/employee/' },
-              { name: 'Employee List', href: '/hr/employee/' },
+              { name: 'HR/Staff', href: hrPaths.dashboard },
+              { name: 'Employee', href: hrPaths.employee.list },
+              { name: 'Employee List', href: hrPaths.employee.list },
             ]}
             action={
               <Button
@@ -358,20 +369,9 @@ const HrEmployee = () => {
             tableId="employee-table"
             serverSidePagination
             totalCount={employee?.totalCount}
-            onServerPagination={(page, rowsPerPage) => {
-              setEmployeeParams((pre) => ({
-                ...pre,
-                page,
-                pageSize: rowsPerPage,
-              }));
-            }}
+            onServerPagination={handleServerPagination}
             serverSideSearch
-            onServerSearch={(search) => {
-              setEmployeeParams((pre) => ({
-                ...pre,
-                search,
-              }));
-            }}
+            onServerSearch={handleServerSearch}
             columns={columns}
             data={tableData || []}
           />

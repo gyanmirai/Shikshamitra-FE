@@ -3,6 +3,7 @@
 import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -50,10 +51,7 @@ const LeaveRequest = () => {
         heading="Leave Management"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          {
-            name: 'Attendance & Leave',
-            href: `/hr/leave-requests/?tab=${currentActiveComponent?.value}`,
-          },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.leaveManagement },
           { name: 'Leave Management' },
         ]}
         description={
