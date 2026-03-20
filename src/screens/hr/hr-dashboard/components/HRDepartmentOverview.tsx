@@ -43,7 +43,7 @@ const HRDepartmentOverview = () => {
           const isLow = row.absent >= 3;
           return (
             <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="caption" fontSize="13px">
                 {value}
               </Typography>
               {isLow && (
@@ -58,15 +58,14 @@ const HRDepartmentOverview = () => {
       {
         id: 'total',
         label: 'Total',
-        align: 'center',
         minWidth: 100,
-        render: (value) => <Typography variant="body2">{value}</Typography>,
+        filterType: 'number',
       },
       {
         id: 'present',
         label: 'Present',
-        align: 'center',
         minWidth: 100,
+        filterType: 'number',
         render: (value) => (
           <Typography variant="body2" color="success.main" fontWeight={600}>
             {value}
@@ -76,8 +75,8 @@ const HRDepartmentOverview = () => {
       {
         id: 'absent',
         label: 'Absent',
-        align: 'center',
         minWidth: 100,
+        filterType: 'number',
         render: (value) => (
           <Typography
             variant="body2"
@@ -92,8 +91,8 @@ const HRDepartmentOverview = () => {
         id: 'attendance',
         sticky: true,
         label: 'Attendance',
-        align: 'center',
         minWidth: 100,
+        filterType: 'number',
         render: (_, row) => {
           const pct = Math.round((row.present / row.total) * 100);
           return (
@@ -145,7 +144,7 @@ const HRDepartmentOverview = () => {
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardHeader
         title={
-          <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             <Typography variant="h6">Department Staff Overview</Typography>
             <CustomTooltip title="Real-time staffing status by department" placement="top">
               <IconButton size="small" sx={{ p: 0 }}>
@@ -158,7 +157,7 @@ const HRDepartmentOverview = () => {
             </CustomTooltip>
           </Stack>
         }
-        sx={{ p: 1.5 }}
+        sx={{ p: 2 }}
       />
       <Scrollbar sx={{ flexGrow: 1, height: '50vh' }}>
         <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%" p={1}>

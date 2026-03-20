@@ -8,29 +8,19 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
-import {
-  Box,
-  Card,
-  Grid,
-  Stack,
-  Button,
-  Avatar,
-  Divider,
-  CardHeader,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Grid, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 
 const PayrollSummary = ({ employee }: any) => {
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 1 }}>
       {/* Header & Actions */}
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         alignItems={{ xs: 'stretch', md: 'center' }}
         justifyContent="space-between"
-        spacing={2}
+        spacing={1}
       >
         <DatePicker
           value={monthYear}
@@ -38,7 +28,7 @@ const PayrollSummary = ({ employee }: any) => {
           views={['month', 'year']}
           label="Select Year Month"
           format="MMMM-YYYY"
-          sx={{ maxWidth: { xs: '100%', md: 240 } }}
+          sx={{ maxWidth: { xs: '100%', md: 240 }, mt: 1 }}
           slotProps={{ textField: { size: 'small' } }}
         />
 
@@ -79,7 +69,7 @@ const PayrollSummary = ({ employee }: any) => {
       </Stack>
 
       {/* Summary Stats */}
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card
             sx={{
@@ -174,7 +164,7 @@ const PayrollSummary = ({ employee }: any) => {
       </Grid>
 
       {/* Tables Section */}
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader
@@ -187,8 +177,9 @@ const PayrollSummary = ({ employee }: any) => {
                   <Iconify icon="solar:hand-money-linear" width={20} />
                 </Avatar>
               }
+              sx={{ p: 2 }}
             />
-            <Divider />
+
             <CustomizableTable
               noDataText="No Data Found For Earning Section"
               tableId="earning-section"
@@ -236,8 +227,8 @@ const PayrollSummary = ({ employee }: any) => {
                   <Iconify icon="solar:minus-circle-linear" width={20} />
                 </Avatar>
               }
+              sx={{ p: 2 }}
             />
-            <Divider />
             <CustomizableTable
               noDataText="No Data Found For Deduction"
               tableId="deduction-section"
@@ -270,36 +261,6 @@ const PayrollSummary = ({ employee }: any) => {
           </Card>
         </Grid>
       </Grid>
-
-      {/* Net Salary Footer */}
-      <Card
-        sx={{
-          p: 3,
-          bgcolor: 'primary.darker',
-          color: 'common.white',
-          backgroundImage: (theme) =>
-            theme.palette.mode === 'dark'
-              ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.darker} 100%)`
-              : `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          justifyContent="space-between"
-          alignItems="center"
-          spacing={2}
-        >
-          <Box>
-            <Typography variant="h6" sx={{ opacity: 0.72 }}>
-              Net Salary Payable
-            </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.72 }}>
-              Calculated after all earnings and deductions for the selected month.
-            </Typography>
-          </Box>
-          <Typography variant="h3">{formatCurrency(24000)}</Typography>
-        </Stack>
-      </Card>
     </Box>
   );
 };

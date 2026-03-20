@@ -54,18 +54,18 @@ const HRQuickActionsPanel = () => (
   >
     <CardHeader
       title={
-        <Stack direction="row" alignItems="center" spacing={0.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="h6">Quick Actions</Typography>
           <CustomTooltip title="Perform common HR tasks quickly" placement="top">
-            <IconButton size="small" sx={{ p: 0 }}>
+            <IconButton size="small">
               <Iconify icon="solar:info-circle-linear" width={18} sx={{ color: 'text.disabled' }} />
             </IconButton>
           </CustomTooltip>
         </Stack>
       }
-      sx={{ mb: 0, mt: -1, ml: -1 }}
+      sx={{ p: 2 }}
     />
-    <Box sx={{ px: 1, pb: 1, mt: 1 }}>
+    <Box sx={{ px: 1, pb: 1 }}>
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         {QUICK_ACTIONS.map((action) => (
           <Button
@@ -77,7 +77,6 @@ const HRQuickActionsPanel = () => (
             sx={{
               flex: 1,
               minWidth: 'auto',
-
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

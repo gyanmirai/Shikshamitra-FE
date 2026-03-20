@@ -12,7 +12,7 @@ import HRDashboardAttendanceTrend from './components/HRDashboardAttendanceTrend'
 import HRBirthdaysAndAnniversaries from './components/HRBirthdaysAndAnniversaries';
 
 const HRDashboardScreen = () => (
-  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 1 }}>
     {/* Row 1 – KPI Summary Cards */}
     <HRStatsCards />
 

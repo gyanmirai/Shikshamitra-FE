@@ -1,19 +1,21 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
 import { ReligionType } from 'src/enums/religion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Grid, Slide, TextField } from '@mui/material';
-import { LoadingScreen } from 'src/components/loading-screen';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
 import {
   useGetBankDetailsQuery,
   useGetAccessControlQuery,
@@ -33,6 +35,7 @@ import {
 } from 'src/redux/hr/employeeApi';
 
 import { allFields } from './employee-form-fields';
+import { StepSkeleton } from './employee-form-skeleton';
 import { validations } from './employee-form-validation';
 
 import type {
@@ -275,9 +278,11 @@ const steps = [
 ];
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
+  const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [activeStep, setActiveStep] = useState(0);
+  const [pendingStep, setPendingStep] = useState<number | null>(null);
 
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -670,42 +675,85 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   );
 
   return (
-    <CustomStepperWithFormik
-      key={editData?.id || 'new'}
-      initialValues={initialValues}
-      steps={steps}
-      viewMode="vertical"
-      activeStep={activeStep}
-      handleBack={() => {
-        setActiveStep(activeStep - 1);
-      }}
-      validationSchema={validations[activeStep]}
-      onStepClick={(step) => {
-        if (editData) {
-          setActiveStep(step);
+    <>
+      <CustomStepperWithFormik
+        showSaveButton={isChanges}
+        disableSubmit={!isChanges}
+        key={editData?.id || 'new'}
+        initialValues={initialValues}
+        steps={steps}
+        viewMode="vertical"
+        activeStep={activeStep}
+        handleBack={() => {
+          setActiveStep(activeStep - 1);
+        }}
+        validationSchema={validations[activeStep]}
+        onStepClick={(step) => {
+          if (editData) {
+            if (isChanges) {
+              setPendingStep(step);
+            } else {
+              setActiveStep(step);
+            }
+          }
+        }}
+        isDisabledLabel={!editData}
+        validateOnChange
+        handleNext={(
+          isLastStep: boolean,
+          value: any,
+          formik: any,
+          setIsLoading: (val: boolean) => void
+        ) => handleSave(isLastStep, value, formik, setIsLoading)}
+        onSave={(
+          isLastStep: boolean,
+          value: any,
+          formik: any,
+          setIsLoading: (val: boolean) => void
+        ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
+        renderItem={({ activeStep: step, formik }: any) => (
+          <>
+            <SyncReduxDirty formik={formik} />
+            <FormSlider step={step} formik={formik} editData={editData} />
+          </>
+        )}
+      />
+
+      <ConfirmDialog
+        open={pendingStep !== null}
+        onClose={() => setPendingStep(null)}
+        icon="warning"
+        title="Alert"
+        content={
+          <Typography variant="body2">
+            You have unsaved changes on this step. If you navigate away, your changes will be lost.
+            Are you sure you want to continue?
+          </Typography>
         }
-      }}
-      isDisabledLabel={!editData}
-      validateOnChange
-      handleNext={(
-        isLastStep: boolean,
-        value: any,
-        formik: any,
-        setIsLoading: (val: boolean) => void
-      ) => handleSave(isLastStep, value, formik, setIsLoading)}
-      onSave={(
-        isLastStep: boolean,
-        value: any,
-        formik: any,
-        setIsLoading: (val: boolean) => void
-      ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
-      renderItem={({ activeStep: step, formik }: any) => (
-        <>
-          <SyncReduxDirty formik={formik} />
-          <FormSlider step={step} formik={formik} editData={editData} />
-        </>
-      )}
-    />
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={() => {
+              if (pendingStep !== null) {
+                dispatch(setIsChanges(false));
+                setActiveStep(pendingStep);
+                setPendingStep(null);
+              }
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
+    </>
   );
 };
 
@@ -724,6 +772,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
   useEffect(() => {
     initializedStepsRef.current = {};
   }, [editData?.id]);
+
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBasicInformationQuery,
@@ -950,7 +999,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
                     bankDetailsLoading ||
                     reportingManagerDetailsLoading ||
                     accessControlLoading ? (
-                      <LoadingScreen />
+                      <StepSkeleton step={step} />
                     ) : (
                       <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
                         {allFields[step].map((field) => (

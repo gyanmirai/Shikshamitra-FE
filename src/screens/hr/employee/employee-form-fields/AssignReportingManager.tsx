@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 
 import { CardActions } from './InformationFields';
