@@ -162,7 +162,7 @@ const AttendanceType = () => {
         links={[
           { name: 'Student', href: '/student/dashboard/' },
           { name: 'Attendance', href: '/student/dashboard/' },
-          { name: 'Setting', href: '/student/dashboard/' },
+          { name: 'Settings', href: '/student/dashboard/' },
           { name: 'Leave Type' },
         ]}
         action={

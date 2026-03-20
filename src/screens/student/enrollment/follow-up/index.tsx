@@ -1,12 +1,12 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useDispatch } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
@@ -14,15 +14,18 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -65,6 +68,10 @@ const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
 
   const [openDialog, setOpenDialog] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -82,8 +89,19 @@ const FollowUpScreen: React.FC = () => {
   );
 
   const handleCloseDialog = () => {
+    if (isChanges) {
+      setConfirmOpen(true);
+    } else {
+      setOpenDialog(false);
+      setSelectedInquiry(null);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    dispatch(setIsChanges(false));
     setOpenDialog(false);
     setSelectedInquiry(null);
+    setConfirmOpen(false);
   };
   return (
     <Box>
@@ -162,6 +180,34 @@ const FollowUpScreen: React.FC = () => {
           studentEnrollmentId={selectedInquiry}
         />
       </CustomDialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        icon="warning"
+        title="Alert"
+        content={
+          <Typography variant="body2">
+            You have unsaved changes on this step. If you navigate away, your changes will be lost.
+            Are you sure you want to continue?
+          </Typography>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={handleConfirmClose}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Box>
   );
 };
@@ -186,11 +232,13 @@ export const CommunicationForm = ({
   isStatus?: boolean;
   selectedStudent?: IInquiryResponse | IGeneralInformationResponse | null;
 }) => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [addFollowUp, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddFollowUpMutation,
   });
   const dispatch = useDispatch();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFollowUpQuery,
@@ -225,12 +273,28 @@ export const CommunicationForm = ({
         shikshaMitraToast.success({
           message: `Note added successfully for ${selectedStudent?.firstName} ${selectedStudent?.lastName} `,
         });
+        dispatch(setIsChanges(false));
         handleCloseDialog();
       } catch (error) {
         console.error(error);
       }
     },
   });
+
+  const handleCancelClick = () => {
+    if (isChanges) {
+      setConfirmOpen(true);
+    } else {
+      dispatch(setIsChanges(false));
+      handleCloseDialog();
+    }
+  };
+
+  const handleConfirmCancel = () => {
+    dispatch(setIsChanges(false));
+    handleCloseDialog();
+    setConfirmOpen(false);
+  };
 
   useEffect(() => {
     if (data?.length) {
@@ -514,7 +578,7 @@ export const CommunicationForm = ({
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={handleCloseDialog}
+          onClick={handleCancelClick}
           variant="outlined"
           size="small"
         >
@@ -531,6 +595,34 @@ export const CommunicationForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        icon="warning"
+        title="Alert"
+        content={
+          <Typography variant="body2">
+            You have unsaved changes on this step. If you navigate away, your changes will be lost.
+            Are you sure you want to continue?
+          </Typography>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={handleConfirmCancel}
+          >
+            Yes
+          </Button>
+        }
+      />
     </BackPopUpChecked>
   );
 };

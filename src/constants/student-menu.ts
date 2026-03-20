@@ -284,7 +284,7 @@ const studentModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:chart-box-outline'),
             },
             {
-              title: 'Setting',
+              title: 'Settings',
               path: studentPaths.records.settings,
               _action: 'student-setting',
               shortcutKey: 'Alt+S+R+6',
@@ -331,7 +331,7 @@ const studentModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:chart-box-outline'),
             },
             {
-              title: 'Setting',
+              title: 'Settings',
               path: studentPaths.attendance.settings.root,
               _action: 'student-attendance-setting',
               shortcutKey: 'Alt+S+A+5',

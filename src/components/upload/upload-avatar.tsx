@@ -281,7 +281,7 @@ export function UploadAvatar({
           <ListItemIcon>
             <Iconify icon="solar:gallery-bold" width={24} />
           </ListItemIcon>
-          <ListItemText primary="Select from local" />
+          <ListItemText primary="Select from Gallery" />
         </MenuItem>
       </Menu>
 

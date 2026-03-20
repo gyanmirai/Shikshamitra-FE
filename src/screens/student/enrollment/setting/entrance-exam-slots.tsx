@@ -212,6 +212,7 @@ const EntranceExamSlots = () => {
                         academicYearId: currentYear?.id,
                         startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
                         endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+                        ...query,
                       },
                       (draft: any) => {
                         const index = draft?.items?.findIndex(
@@ -344,16 +345,16 @@ export const SlotsForm = ({
   });
   const formik = useFormik({
     initialValues: {
-      slotName: editData?.slotName || null,
+      slotName: editData?.slotName || '',
       startTime: editData?.startTime ? dayjs(editData?.startTime, 'hh:mm A') : null,
       endTime: editData?.endTime ? dayjs(editData?.endTime, 'hh:mm A') : null,
-      duration: editData?.duration || null,
-      studentLimit: editData?.studentLimit || null,
-      roomNo: editData?.roomNo || null,
+      duration: editData?.duration || '',
+      studentLimit: editData?.studentLimit || '',
+      roomNo: editData?.roomNo || '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
-      slotName: Yup.string().required('Slot Name is required'),
+      slotName: Yup.string().trim('Slot Name is required').required('Slot Name is required'),
       startTime: Yup.date()
         .required('Start Time is required')
         .test('startTime', 'Start time must be before end time', (value, context) => {
@@ -436,7 +437,12 @@ export const SlotsForm = ({
                 name="slotName"
                 label="Slot Name *"
                 value={formik.values.slotName}
-                onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
+                onChange={(e) => {
+                  let onlyText = e.target.value;
+                  onlyText = onlyText.replace(/^\s+/g, ''); // Remove leading spaces
+                  const capitalize = onlyText.charAt(0).toUpperCase() + onlyText.slice(1);
+                  formik.setFieldValue('slotName', capitalize);
+                }}
                 onBlur={formik.handleBlur}
                 size="small"
                 fullWidth
@@ -446,6 +452,9 @@ export const SlotsForm = ({
                     ? String(formik.errors.slotName)
                     : ''
                 }
+                inputProps={{
+                  maxLength: 40,
+                }}
               />
             </ShakingTextField>
 
@@ -563,6 +572,9 @@ export const SlotsForm = ({
                   formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
                 }
                 error={formik.touched.roomNo && !!formik.errors.roomNo}
+                inputProps={{
+                  maxLength: 20,
+                }}
               />
             </ShakingTextField>
           </Stack>
