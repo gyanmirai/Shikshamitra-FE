@@ -84,7 +84,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
           height: dayHeight,
           // backgroundImage: `linear-gradient(to bottom, ${theme.palette.grey[400]} 1px, transparent 1px)`,
           backgroundSize: '100% 50px', // 30min slots = 50px height
-          backgroundColor: theme.palette.grey[200],
+          backgroundColor: theme.vars.palette.background.neutral,
         }}
       >
         {slots.map((slot) => (

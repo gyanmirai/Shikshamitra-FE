@@ -46,7 +46,7 @@ const personalInformationValidationSchema = Yup.object({
   gender: Yup.string().required('Gender is required'),
   religion: Yup.string().required('Religion is required'),
   maritalStatus: Yup.string().required('Marital Status is required'),
-  bloodGroup: Yup.string(),
+  bloodGroup: Yup.string().nullable(),
   mobileNo: Yup.string()
     .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) => {
       if (!value) return false;

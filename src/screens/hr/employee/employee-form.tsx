@@ -47,7 +47,10 @@ import type {
   IAdditionalInformationResponse,
 } from './types';
 
-const toRawMobile = (value: string) => value.replace(/\s/g, '').replace(/^\+91/, '');
+const toRawMobile = (value: string | null | undefined) => {
+  if (!value) return '';
+  return value.replace(/\s/g, '').replace(/^\+91/, '');
+};
 
 export const personalInformationInitialValues = (
   editData?: Partial<IPersonalInformationResponse>
@@ -116,7 +119,7 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
   // ================= FATHER =================
   fatherName: editData?.fatherDetails?.name ?? '',
   fatherOccupation: editData?.fatherDetails?.occupation ?? '',
-  fatherContactNo: editData?.fatherDetails?.mobileNo ?? 'null',
+  fatherContactNo: editData?.fatherDetails?.mobileNo ?? null,
   fatherAddress1: editData?.fatherDetails?.address1 ?? '',
   fatherAddress2: editData?.fatherDetails?.address2 ?? '',
   fatherAddress3: editData?.fatherDetails?.address3 ?? '',

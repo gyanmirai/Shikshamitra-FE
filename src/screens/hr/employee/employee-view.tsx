@@ -1,8 +1,8 @@
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
+import { Icon } from '@iconify/react';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { EmptyContent } from 'src/components/empty-content';
@@ -21,7 +21,6 @@ import EmployeeCalendar from './EmployeeCalendar';
 import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
-import EmployeeTransportation from './EmployeeTransportation';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
@@ -30,7 +29,7 @@ export const TABS = [
   {
     value: 'dashboard',
     label: 'Dashboard',
-    icon: <Iconify icon="ic:round-space-dashboard" width={20} />,
+    icon: <Icon icon="lucide:layout-dashboard" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeProfileDashboard editData={props.employee} />
     ),
@@ -38,7 +37,7 @@ export const TABS = [
   {
     value: 'personalInformation',
     label: 'Information',
-    icon: <Iconify icon="solar:user-id-bold" width={20} />,
+    icon: <Icon icon="solar:user-id-outline" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeInformation editData={props.employee} />
     ),
@@ -46,37 +45,23 @@ export const TABS = [
   {
     value: 'qualificationsCertifications',
     label: 'Documents',
-    icon: <Iconify icon="healthicons:i-exam-qualification" width={20} />,
+    icon: <Icon icon="solar:document-broken" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <QualificationAndCertification employee={props.employee} />
     ),
   },
-  // {
-  //   value: 'employmentHistory',
-  //   label: 'Employment History',
-  //   icon: <Iconify icon="mdi:clipboard-text-history" width={20} />,
-  //   component: (props: { tabs: UseTabsReturn }) => <EmployeeHistory />,
-  // },
   {
     value: 'payrollSummary',
     label: 'Payroll Summary',
-    icon: <Iconify icon="fluent:payment-16-filled" width={20} />,
+    icon: <Icon icon="lucide:landmark" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <PayrollSummary employee={props.employee} />
     ),
   },
   {
-    value: 'transport',
-    label: 'Transportation',
-    icon: <Iconify icon="solar:bus-bold" width={20} />,
-    component: (props: { employee: unknown; tabs: UseTabsReturn }) => (
-      <EmployeeTransportation employee={props.employee} />
-    ),
-  },
-  {
     value: 'academic',
     label: 'Academic',
-    icon: <Iconify icon="solar:square-academic-cap-bold" width={20} />,
+    icon: <Icon icon="solar:square-academic-cap-2-broken" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeAcademic employee={props.employee} />
     ),
@@ -84,7 +69,7 @@ export const TABS = [
   {
     value: 'communications',
     label: 'Communication',
-    icon: <Iconify icon="maki:communications-tower" width={20} />,
+    icon: <Icon icon="fluent-mdl2:office-chat" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeCommunication employee={props.employee} />
     ),
@@ -92,7 +77,7 @@ export const TABS = [
   {
     value: 'library',
     label: 'Library',
-    icon: <Iconify icon="mdi:library" width={20} />,
+    icon: <Icon icon="ph:books-light" width={18} height={18} />,
     component: (props: { employee: any; tabs: UseTabsReturn }) => (
       <EmployeeLibrary employee={props.employee} />
     ),
@@ -100,7 +85,7 @@ export const TABS = [
   {
     value: 'calendar',
     label: 'Calendar',
-    icon: <Iconify icon="mdi:calendar" width={20} />,
+    icon: <Icon icon="radix-icons:calendar" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeCalendar employee={props.employee} />
     ),
@@ -131,7 +116,6 @@ export function EmployeeCard({ employee }: any) {
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0,
           boxShadow: 'var(--shadows-4)',
-          mt: 1,
         }}
       >
         <Paper
@@ -265,10 +249,10 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
         isBack
         onBack={() => {
           if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
-            setSearchParams({ employee: '' });
+            setSearchParams('employee', '');
             dispatch(setIsChanges(false));
           } else if (!isChanges) {
-            setSearchParams({ employee: '' });
+            setSearchParams('employee', '');
           }
         }}
       />

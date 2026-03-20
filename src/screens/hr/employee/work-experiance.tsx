@@ -116,13 +116,10 @@ const WorkExperiences = (props: any) => {
                     label="Organization Name *"
                     value={experience.organizationName}
                     onChange={(e) => {
-                      const { value } = e.target;
-                      if (/^[A-Za-z\s]*$/.test(value)) {
-                        const formattedValue = value
-                          .split(' ')
-                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                          .join(' ');
-                        setFieldValue(`experiences.${index}.organizationName`, formattedValue);
+                      const val = e.target.value;
+                      const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                      if (/^[A-Za-z ]*$/.test(newName)) {
+                        formik.setFieldValue(`experiences.${index}.organizationName`, newName);
                       }
                     }}
                     error={

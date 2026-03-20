@@ -51,7 +51,7 @@ const SectionSkeleton = ({
 // Step 0 – Personal Information
 // ---------------------------------------------------------------------------
 export const PersonalInformationSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     {/* Basic Details */}
     <SectionSkeleton title fields={0}>
       {/* Avatar */}
@@ -118,7 +118,7 @@ const FamilySectionSkeleton = ({ label }: { label: string }) => (
 );
 
 export const FamilyInformationSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     <FamilySectionSkeleton label="Father" />
     <FamilySectionSkeleton label="Mother" />
     <FamilySectionSkeleton label="Spouse" />
@@ -129,7 +129,7 @@ export const FamilyInformationSkeleton = () => (
 // Step 2 – Additional Details
 // ---------------------------------------------------------------------------
 export const AdditionalDetailsSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     <SectionSkeleton fields={0}>
       {/* bplCardNo, personWithDisability, secondLanguage */}
       {[...Array(3)].map((_, i) => (
@@ -154,7 +154,7 @@ export const AdditionalDetailsSkeleton = () => (
 // Step 3 – Documents
 // ---------------------------------------------------------------------------
 export const DocumentsSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     <SectionSkeleton title fields={0}>
       {/* upload area */}
       <Grid size={{ xs: 12 }}>
@@ -202,7 +202,7 @@ const WorkExperienceCardSkeleton = () => (
   <Paper
     elevation={0}
     sx={{
-      p: 2,
+      p: 1,
       mb: 1.5,
       borderRadius: 2,
       border: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
@@ -223,7 +223,7 @@ const WorkExperienceCardSkeleton = () => (
 );
 
 export const WorkExperienceSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
       <Skeleton variant="rounded" width={140} height={32} />
     </Box>
@@ -236,7 +236,7 @@ export const WorkExperienceSkeleton = () => (
 // Step 5 – Payroll
 // ---------------------------------------------------------------------------
 export const PayrollSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     {/* Bank + Salary details */}
     <SectionSkeleton fields={0}>
       {/* bankName, branchName, accountHolderName, accountNumber, ifscCode */}
@@ -276,7 +276,7 @@ export const PayrollSkeleton = () => (
     <Paper
       elevation={0}
       sx={{
-        p: 2,
+        p: 1,
         mb: 1,
         borderRadius: 2,
         border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
@@ -297,7 +297,7 @@ export const PayrollSkeleton = () => (
 // Step 6 – Assign Reporting Manager
 // ---------------------------------------------------------------------------
 export const ReportingManagerSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     <Skeleton variant="rounded" height={40} sx={{ maxWidth: 300 }} />
   </Box>
 );
@@ -317,7 +317,7 @@ const AcademicLevelSkeleton = ({ items }: { items: number }) => (
 );
 
 export const AcademicPermissionSkeleton = () => (
-  <Box sx={{ p: 2, width: '100%' }}>
+  <Box sx={{ p: 1, width: '100%' }}>
     <Grid container spacing={2}>
       {/* Board / Medium / Stage / Standard / Division columns */}
       {['Board', 'Medium', 'Stage', 'Standard', 'Division'].map((label, colIdx) => (

@@ -249,22 +249,29 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid size={{ xs: 12, md: 3, lg: 2.3 }} sx={{ display: 'flex', justifyContent: 'center' }}>
-          <UploadAvatar
-            onDrop={async (acceptedFiles: File[]) => {
-              const file = acceptedFiles?.[0];
-              if (!file) return;
-              const base64 = await fileToBase64(file);
-              formik.setFieldValue('photo', base64); // set value
-              formik.setFieldTouched('photo', true, false); // mark as touched
-              await formik.validateField('photo'); // force Yup validation
-            }}
-            value={formik.values.photo}
-            error={formik.touched.photo && Boolean(formik.errors.photo)}
-            helperText={formik.touched.photo && formik.errors.photo}
-            sx={{ m: 'initial' }}
-            disabled={!isBasicDetailsEditable.value}
-          />
+        <Grid size={{ xs: 12, md: 3, lg: 2.4 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Box display="flex" alignItems="center">
+            <UploadAvatar
+              onDrop={async (acceptedFiles: File[]) => {
+                const file = acceptedFiles?.[0];
+                if (!file) return;
+                const base64 = await fileToBase64(file);
+                formik.setFieldValue('photo', base64); // set value
+                formik.setFieldTouched('photo', true, false); // mark as touched
+                await formik.validateField('photo'); // force Yup validation
+              }}
+              value={formik.values.photo}
+              error={formik.touched.photo && Boolean(formik.errors.photo)}
+              helperText={formik.touched.photo && formik.errors.photo}
+              disabled={!isBasicDetailsEditable.value}
+              sx={{
+                '& .MuiFormHelperText-root': {
+                  pr: 0,
+                  mr: 0,
+                },
+              }}
+            />
+          </Box>
           {/* <FormHelperText>{formik.touched.photo && formik.errors.photo}</FormHelperText> */}
         </Grid>
         <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
@@ -519,7 +526,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     id="bloodGroup"
                     name="bloodGroup"
                     size="small"
-                    value={formik.values.bloodGroup}
+                    value={formik.values.bloodGroup === null ? '' : formik.values.bloodGroup}
                     onChange={formik.handleChange}
                     label="Blood Group"
                   >
