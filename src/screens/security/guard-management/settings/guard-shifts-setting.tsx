@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Add from '@mui/icons-material/Add';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 

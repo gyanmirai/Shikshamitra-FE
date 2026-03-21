@@ -17,7 +17,7 @@ import FileUploader from 'src/components/custom-upload';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/custom-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';

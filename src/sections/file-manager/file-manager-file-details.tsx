@@ -15,7 +15,7 @@ import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { fDateTime } from 'src/utils/format-time';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import Autocomplete from '@mui/material/Autocomplete';
 import { fileFormat, FileThumbnail } from 'src/components/file-thumbnail';

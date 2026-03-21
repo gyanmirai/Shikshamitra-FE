@@ -3,7 +3,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 // Components
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Button, Typography, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';

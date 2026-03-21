@@ -1,12 +1,12 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Box, Checkbox } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 

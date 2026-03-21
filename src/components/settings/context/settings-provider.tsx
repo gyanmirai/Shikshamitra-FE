@@ -1,7 +1,7 @@
 'use client';
 
-import { useCookies } from 'src/hooks/use-cookies';
-import { useLocalStorage } from 'src/hooks/use-local-storage';
+import { useCookies } from 'src/hooks/useCookies';
+import { useLocalStorage } from 'src/hooks/useLocalStorage';
 import { useMemo, useState, useCallback, createContext } from 'react';
 
 import { STORAGE_KEY, defaultSettings } from '../config-settings';

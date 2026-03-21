@@ -1,5 +1,5 @@
 import React from 'react';
-import CalendarView from 'src/screens/calendar/CalendarView';
+import CalendarView from 'src/screens/calendar/calendar-view';
 
 const page = () => <CalendarView />;
 

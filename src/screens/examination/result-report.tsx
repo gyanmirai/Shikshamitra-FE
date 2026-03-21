@@ -4,7 +4,7 @@ import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Button, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 const ResultReport = () => (
   <Box>

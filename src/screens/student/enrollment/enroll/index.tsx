@@ -3,12 +3,12 @@
 import { toast } from 'sonner';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import React, { useState, useCallback } from 'react';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Button, Checkbox, MenuItem, MenuList, DialogActions } from '@mui/material';
 

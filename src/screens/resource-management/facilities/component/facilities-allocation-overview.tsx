@@ -2,9 +2,9 @@ import type { LabelColor } from 'src/components/label/types';
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Card, Typography, LinearProgress } from '@mui/material';
-import facilityAllocation from 'src/json/ResourceManagement/facility/facilityAllocationData.json';
+import facilityAllocation from 'src/json/resource-management/facility/facilityAllocationData.json';
 import {
   FacilityStatusType,
   FacilityStatusTypeColor,

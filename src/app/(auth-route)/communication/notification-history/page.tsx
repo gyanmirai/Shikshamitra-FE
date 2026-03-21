@@ -1,5 +1,5 @@
 import React from 'react';
-import NotificationHistory from 'src/screens/communication/NotificationHistory';
+import NotificationHistory from 'src/screens/communication/notification-history';
 
 const NotificationPage = () => <NotificationHistory />;
 

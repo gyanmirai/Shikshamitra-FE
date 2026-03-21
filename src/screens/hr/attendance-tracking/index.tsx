@@ -4,24 +4,24 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/useSearchParam';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
@@ -31,7 +31,7 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import {
   useGetDateWiseAttendanceQuery,
   useGetEmployeeWiseAttendanceQuery,
-} from 'src/redux/attendanceTracking/attendanceTrackingApi';
+} from 'src/redux/attendance-tracking/attendanceTrackingApi';
 import {
   Box,
   Tab,

@@ -1,5 +1,5 @@
 import React from 'react';
-import GateApproval from 'src/screens/hostel/attendanceManagement/gateApproval';
+import GateApproval from 'src/screens/hostel/attendance-management/gate-approval';
 
 const page = () => <GateApproval />;
 

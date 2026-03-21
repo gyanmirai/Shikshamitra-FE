@@ -1,5 +1,5 @@
 import React from 'react';
-import SalarySlipGenerate from 'src/screens/hr/payroll/salarySlip-generate/salarySlipGenerate';
+import SalarySlipGenerate from 'src/screens/hr/payroll/salary-slip-generate/salarySlipGenerate';
 
 const GenerateSalarySlipPage = () => <SalarySlipGenerate />;
 

@@ -4,8 +4,8 @@ import 'leaflet/dist/leaflet.css';
 
 import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog from 'src/components/custom-dialog';
+import CustomizableTable from 'src/components/customizable-table';
 
 interface ViewStopDetailDialogProps {
   dialogValue: boolean;

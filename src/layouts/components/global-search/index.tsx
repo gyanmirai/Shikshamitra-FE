@@ -5,7 +5,7 @@ import { Label } from 'src/components/label';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useTheme } from '@mui/material/styles';
 import { usePopover } from 'src/components/custom-popover';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import {
   Box,
   Grid,

@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { AccuralPolicyType } from 'src/enums/accuralPolicyType';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -13,7 +13,7 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { hrPaths } from 'src/constants/hr-menus';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -21,13 +21,13 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';

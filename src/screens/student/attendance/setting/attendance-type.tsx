@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -9,7 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -18,12 +18,12 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {

@@ -1,5 +1,5 @@
 import React from 'react';
-import FeeCollection from 'src/screens/finance/FeeCollection';
+import FeeCollection from 'src/screens/finance/fee-collection';
 
 const FinanceFeeCollection = () => <FeeCollection />;
 

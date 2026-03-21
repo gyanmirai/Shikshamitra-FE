@@ -1,5 +1,5 @@
 import React from 'react';
-import RoomConfiguration from 'src/screens/hostel/hostelConfiguration/roomConfiguration';
+import RoomConfiguration from 'src/screens/hostel/hostel-configuration/room-configuration';
 
 const page = () => <RoomConfiguration />;
 

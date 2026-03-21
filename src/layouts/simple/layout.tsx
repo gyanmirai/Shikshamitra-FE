@@ -3,7 +3,7 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
 import Alert from '@mui/material/Alert';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 
 import { Main, CompactContent } from './main';
 import { HeaderBase } from '../core/header-base';

@@ -6,7 +6,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/custom-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
 import {

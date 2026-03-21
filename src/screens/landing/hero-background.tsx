@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
 import { varAlpha, stylesMode } from 'src/theme/styles';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 import { MotionContainer } from 'src/components/animate';
 
 import { Dots, Lines, Texts, Circles, PlusIcon } from './hero-svg';

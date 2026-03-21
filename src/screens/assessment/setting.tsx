@@ -1,7 +1,7 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Card, IconButton, CardHeader, Typography, CardContent } from '@mui/material';
 
 const Setting = () => (

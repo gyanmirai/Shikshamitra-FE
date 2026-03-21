@@ -1,5 +1,5 @@
 import React from 'react';
-import TemplatesManagement from 'src/screens/communication/settings/Notification/NotificationTemplate';
+import TemplatesManagement from 'src/screens/communication/settings/notification/notification-template';
 
 const page = () => <TemplatesManagement />;
 

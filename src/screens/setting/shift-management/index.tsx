@@ -9,7 +9,7 @@ import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { styled } from '@mui/material/styles';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Add, ArrowBack } from '@mui/icons-material';
 import { MobileTimePicker } from '@mui/x-date-pickers';
 import SubmitButton from 'src/components/submit-button';
@@ -17,7 +17,7 @@ import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -36,7 +36,7 @@ import {
   useAddShiftMutation,
   useUpdateShiftMutation,
   useDeleteShiftMutation,
-} from 'src/redux/shiftManagement/shift-management-api';
+} from 'src/redux/shift-management/shift-management-api';
 
 const ShiftManageMentScreen = () => {
   const open = useBoolean();

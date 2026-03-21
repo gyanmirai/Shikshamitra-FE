@@ -3,11 +3,11 @@
 import React, { useMemo } from 'react';
 import { Tab, Box, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ResourceTypeCreation from './components/learningResourceType';
-import SyllabusNotification from './components/syllabusNotification';
+import ResourceTypeCreation from './components/learning-resource-type';
+import SyllabusNotification from './components/syllabus-notification';
 
 const TABS = [
   {

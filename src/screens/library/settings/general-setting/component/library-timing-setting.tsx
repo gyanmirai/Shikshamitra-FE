@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Box, TextField } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 import { libraryTimingDataDummy } from '../data/general-setting-data';
 

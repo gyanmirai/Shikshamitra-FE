@@ -2,7 +2,7 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
@@ -11,20 +11,20 @@ import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Card, Alert, Avatar, Button, Typography, IconButton } from '@mui/material';
 import {
   useGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
-} from 'src/redux/runPayroll/runPayrollApi';
+} from 'src/redux/run-payroll/runPayrollApi';
 
 import { salaryData } from './component/verifyPayrollComponent';
-import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
+import { SalaryDetailsTableCard } from '../salary-slip-generate/salarySlipGenerate';
 
 const RunPayroll = () => {
   const deductionDialog = useBoolean();

@@ -11,7 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import UserHoverProfile from 'src/components/student-popover';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Paper, Avatar, Button, Typography } from '@mui/material';
 import {

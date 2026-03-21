@@ -1,4 +1,4 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
@@ -6,9 +6,9 @@ import React, { useState, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Chart, useChart, ChartSelect } from 'src/components/chart';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import {
   Box,
   Grid,

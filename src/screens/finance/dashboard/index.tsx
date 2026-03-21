@@ -2,13 +2,13 @@
 
 import { Box, Grid } from '@mui/material';
 
-import FinanceRecentExpenses from './Components/FinanceRecentExpenses';
-import FinanceCategoryExpense from './Components/FinanceCategoryExpense';
-import FinanceCollectionMethod from './Components/FinanceCollectionMethod';
-import FinanceDashboardOverview from './Components/FinanceDashboardOverview';
-import FinanceIncomeExpenseTrend from './Components/FinanceIncomeExpenseTrend';
-import FinanceOutstandingByClass from './Components/FinanceOutstandingByClass';
-import FinanceMonthlyFeesCollectionTrend from './Components/FinanceMonthlyFeesCollectionTrend';
+import FinanceRecentExpenses from './components/FinanceRecentExpenses';
+import FinanceCategoryExpense from './components/FinanceCategoryExpense';
+import FinanceCollectionMethod from './components/FinanceCollectionMethod';
+import FinanceDashboardOverview from './components/FinanceDashboardOverview';
+import FinanceIncomeExpenseTrend from './components/FinanceIncomeExpenseTrend';
+import FinanceOutstandingByClass from './components/FinanceOutstandingByClass';
+import FinanceMonthlyFeesCollectionTrend from './components/FinanceMonthlyFeesCollectionTrend';
 
 const FinanceAccountantDashboardScreen = () => (
   <Box>

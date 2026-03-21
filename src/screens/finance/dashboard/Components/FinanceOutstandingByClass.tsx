@@ -2,14 +2,14 @@
 
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
-import type { BoardMediumOption } from 'src/components/boardMediumDropdown';
+import type { BoardMediumOption } from 'src/components/board-medium-dropdown';
 
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fCurrency } from 'src/utils/format-number';
 import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
-import BoardMediumDropdown from 'src/components/boardMediumDropdown';
+import BoardMediumDropdown from 'src/components/board-medium-dropdown';
 
 interface Props extends CardProps {
   title?: string;

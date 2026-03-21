@@ -3,7 +3,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import DashboardCard from 'src/components/dasboard-card';
+import DashboardCard from 'src/components/stat-card';
 import { Box, Grid, TextField, Autocomplete } from '@mui/material';
 
 const AlertDashboardCard = () => (

@@ -1,5 +1,5 @@
 import React from 'react';
-import StudentRoomAllocate from 'src/screens/hostel/roomAllocate';
+import StudentRoomAllocate from 'src/screens/hostel/room-allocate';
 
 const page = () => <StudentRoomAllocate />;
 

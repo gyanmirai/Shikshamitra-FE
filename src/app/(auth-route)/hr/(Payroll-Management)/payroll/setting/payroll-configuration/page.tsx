@@ -1,5 +1,5 @@
 import React from 'react';
-import PayrollConfiguration from 'src/screens/hr/payroll/setting/PayrollConfiguration';
+import PayrollConfiguration from 'src/screens/hr/payroll/setting/payroll-configuration';
 
 const page = () => <PayrollConfiguration />;
 

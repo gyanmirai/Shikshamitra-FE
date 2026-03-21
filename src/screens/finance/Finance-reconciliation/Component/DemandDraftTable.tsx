@@ -1,5 +1,5 @@
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import * as Yup from 'yup';
 import { Box } from '@mui/system';
@@ -9,12 +9,12 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import { Button, MenuList, TextField, IconButton, Typography, DialogActions } from '@mui/material';
 import {

@@ -9,9 +9,9 @@ import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { styled } from '@mui/material/styles';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
 import { Box, Step, Button, Stepper, StepLabel, StepConnector } from '@mui/material';
 

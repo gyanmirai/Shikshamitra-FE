@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import Subject from '../../subjectAssignment';
+import Subject from '../../subject-assignment';
 
 const SubjectManagement = () => <Subject />;
 

@@ -1,6 +1,6 @@
 import type { IFileFilters } from 'src/types/file';
 import type { IDatePickerControl } from 'src/types/common';
-import type { UseSetStateReturn } from 'src/hooks/use-set-state';
+import type { UseSetStateReturn } from 'src/hooks/useSetState';
 
 import { useCallback } from 'react';
 import Box from '@mui/material/Box';

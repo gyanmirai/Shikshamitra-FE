@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Grid, Button, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import { AppAreaInstalled } from '../hr/dashboard/app-area-installed';

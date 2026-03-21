@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
 import { useReactToPrint } from 'react-to-print';
 import { Add, Cancel } from '@mui/icons-material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Box,
@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import CustomSelect from '../custom-select';
 
 export const DraggableField = ({

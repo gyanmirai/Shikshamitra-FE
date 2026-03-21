@@ -1,9 +1,9 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Button, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 // eslint-disable-next-line import/no-named-as-default
 import ViewStopDetailDialog from './view-stop-details-dialog';

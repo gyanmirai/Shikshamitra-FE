@@ -6,17 +6,17 @@ import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
 import QuizManagement from './quizManagement';
-import GradeEntry from './gradeEntry/gradeEntry';
-import ScheduleExam from './scheduleExam/ScheduleExam';
+import GradeEntry from './grade-entry/gradeEntry';
+import ScheduleExam from './schedule-exam/ScheduleExam';
 import GradingAndAnalytics from './gradingAndAnalytics';
 import ExaminationDashboardTab from './dashboard/examination-dashboard-tab';
 // eslint-disable-next-line import/no-named-as-default
-import AssessmentManagement from './assessmentManagement.tsx/assessment-management';
+import AssessmentManagement from './assessment-management.tsx/assessment-management';
 
 import type { TabComponentType } from '../hr/leave-request';
 

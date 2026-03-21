@@ -1,4 +1,4 @@
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Card, Grid, Divider, Skeleton, Typography } from '@mui/material';
 
 import StudentSection from './components/StudentSection';

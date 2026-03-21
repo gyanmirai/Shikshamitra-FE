@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Card, Button, Tooltip, Typography, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import { shikshaMitraToast } from '../toast';
 import { SingleFilePreview } from '../upload';
 import CustomTooltip from '../custom-tooltip';

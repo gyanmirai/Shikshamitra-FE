@@ -1,6 +1,6 @@
 'use client';
 
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import React from 'react';
 import { Box } from '@mui/material';

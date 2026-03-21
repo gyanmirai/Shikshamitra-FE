@@ -1,6 +1,6 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
-import type { IHolidayType } from 'src/screens/communication/settings/HolidayType/type';
+import type { IHolidayType } from 'src/screens/communication/settings/holiday-type/type';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';

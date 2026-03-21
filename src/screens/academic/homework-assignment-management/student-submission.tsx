@@ -10,7 +10,7 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { StudentSubmissions } from './assignmentCreation/studentSubmission/studentSubmission';
+import { StudentSubmissions } from './assignment-creation/student-submission/studentSubmission';
 
 const StudentSubmission = (props: TabComponentType) => {
   // Dialog state for modal/popup control

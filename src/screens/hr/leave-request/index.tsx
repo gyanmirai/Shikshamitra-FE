@@ -5,9 +5,9 @@ import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useNewSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/useBoolean';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import LeaveHistory from './leave-history';

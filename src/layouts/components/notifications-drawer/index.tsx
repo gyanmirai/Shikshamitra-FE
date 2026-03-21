@@ -17,7 +17,7 @@ import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { varHover } from 'src/components/animate';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 

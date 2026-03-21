@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import VisitorApprovalTable from './component/visitor-pre-approval-table';

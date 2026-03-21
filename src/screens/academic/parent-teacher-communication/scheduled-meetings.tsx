@@ -1,8 +1,8 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomSelect from 'src/components/custom-select';
 import { CalendarView } from 'src/sections/calendar/view';
 import { Box, Card, Button, Typography, CardContent } from '@mui/material';

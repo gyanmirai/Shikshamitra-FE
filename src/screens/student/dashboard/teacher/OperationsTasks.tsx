@@ -7,10 +7,10 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Card, Stack, Button, CardHeader, Typography, IconButton } from '@mui/material';
 
 // ----------------------------------------------------------------------

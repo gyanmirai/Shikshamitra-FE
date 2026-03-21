@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Checkbox, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DeleteConfirmationDialog } from 'src/components/delete-confirmation';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';

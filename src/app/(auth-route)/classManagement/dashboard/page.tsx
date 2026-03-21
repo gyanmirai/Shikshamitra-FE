@@ -1,5 +1,5 @@
 import React from 'react';
-import ClassManagementDashboard from 'src/screens/classManagement/dashboard';
+import ClassManagementDashboard from 'src/screens/class-management/dashboard';
 
 const page = () => <ClassManagementDashboard />;
 

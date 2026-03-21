@@ -7,7 +7,7 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Rating from '@mui/material/Rating';
 import Avatar from '@mui/material/Avatar';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CardHeader from '@mui/material/CardHeader';

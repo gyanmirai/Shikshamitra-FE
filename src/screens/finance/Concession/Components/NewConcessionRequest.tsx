@@ -14,14 +14,14 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+import { cardStyle } from 'src/screens/academic/homework-assignment-management/homework-creation/component/homeworkForm';
 import {
   Box,
   Grid,
@@ -38,7 +38,7 @@ import {
   useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
+} from 'src/redux/finance/concession-management/concessionRequestApi';
 
 import { concessionValidation } from './ConcessionValidation';
 import { getInitialConcessionFormData } from './ConcessionInitialValues';

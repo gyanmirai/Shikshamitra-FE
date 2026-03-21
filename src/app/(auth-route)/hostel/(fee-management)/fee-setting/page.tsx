@@ -1,5 +1,5 @@
 import React from 'react';
-import HostelFeeSetting from 'src/screens/hostel/feeManagement/Setting/hostelSetting';
+import HostelFeeSetting from 'src/screens/hostel/fee-management/setting/hostelSetting';
 
 const page = () => <HostelFeeSetting />;
 

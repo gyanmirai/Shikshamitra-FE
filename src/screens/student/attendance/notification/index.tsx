@@ -1,16 +1,16 @@
 'use client';
 
 import { Box, Tab } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import React, { useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-import ExamNotificationManagement from 'src/screens/student/studentNotification/Components/ExamNotification';
-import AttendanceNotificationManagement from 'src/screens/student/studentNotification/Components/AttendanceNotification';
-import EnrollmentNotificationManagement from 'src/screens/student/studentNotification/Components/EnrollmentNotification';
+import ExamNotificationManagement from 'src/screens/student/student-notification/components/ExamNotification';
+import AttendanceNotificationManagement from 'src/screens/student/student-notification/components/AttendanceNotification';
+import EnrollmentNotificationManagement from 'src/screens/student/student-notification/components/EnrollmentNotification';
 
 // Stable component references defined OUTSIDE the component to prevent
 // new function identities on every render (which cases remount + re-fetch loops)

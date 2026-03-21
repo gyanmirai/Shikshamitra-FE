@@ -11,7 +11,7 @@ import { fToNow } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 

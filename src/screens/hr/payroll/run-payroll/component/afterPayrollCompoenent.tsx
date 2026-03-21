@@ -3,7 +3,7 @@
 import React from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Card, Alert, Button, MenuList, MenuItem, Typography } from '@mui/material';
 

@@ -2,9 +2,9 @@
 
 // import { Box } from '@mui/material';
 
-// import { useBoolean } from 'src/hooks/use-boolean';
+// import { useBoolean } from 'src/hooks/useBoolean';
 
-// import CustomDialog from 'src/components/customDialog';
+// import CustomDialog from 'src/components/custom-dialog';
 // import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 // import TransportAddingStopDialog from './transport-adding-stop-dialog';

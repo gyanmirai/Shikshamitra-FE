@@ -5,8 +5,8 @@ import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useTabs } from 'src/hooks/useTabs';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -32,7 +32,7 @@ import { Iconify } from '../iconify';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 import { CustomStyling } from '../tree-view/custom-styling';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
+import CustomDialog, { DialogScrollContent } from '../custom-dialog';
 
 export interface EducationMedium {
   id: string;

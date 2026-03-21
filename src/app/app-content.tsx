@@ -1,6 +1,6 @@
 'use client';
 
-import { useOffLine } from 'src/hooks/use-off-line';
+import { useOffLine } from 'src/hooks/useOffLine';
 import { NoInternetView } from 'src/sections/error';
 
 // ----------------------------------------------------------------------

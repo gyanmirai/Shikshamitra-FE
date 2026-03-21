@@ -1,5 +1,5 @@
 import React from 'react';
-import GroupManagement from 'src/screens/calendar/GroupManagement';
+import GroupManagement from 'src/screens/calendar/group-management';
 
 const page = () => <GroupManagement />;
 

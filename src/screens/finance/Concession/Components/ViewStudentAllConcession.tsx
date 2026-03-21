@@ -5,7 +5,7 @@
 // import React, { useMemo, useCallback } from 'react';
 // import { Scrollbar } from 'src/components/scrollbar';
 // import ThreeDotsActions from 'src/components/three-dots-actions';
-// import CustomizableTable from 'src/components/customizabaleTable';
+// import CustomizableTable from 'src/components/customizable-table';
 // import { Box, Grid, MenuItem, MenuList, Typography } from '@mui/material';
 // import {
 //   ConcessionStatusType,

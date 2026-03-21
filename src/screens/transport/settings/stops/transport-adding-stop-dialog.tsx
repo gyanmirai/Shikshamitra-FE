@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import SubmitButton from 'src/components/submit-button';
 import { Popup, useMap, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
 import {

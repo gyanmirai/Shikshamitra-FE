@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
+import { ResponsiveMultiSelect } from 'src/components/responsive-multi-select';
 
 import { ReportForm } from './ReportForm';
 import { useLibraryReportOptions } from '../hooks/useLibraryReportOptions';

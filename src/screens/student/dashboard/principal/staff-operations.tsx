@@ -3,7 +3,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fPercent } from 'src/utils/format-number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Card, Grid, Stack, Avatar, CardHeader, Typography } from '@mui/material';
 
 import ClassDivisionFilter from './class-division-filter';

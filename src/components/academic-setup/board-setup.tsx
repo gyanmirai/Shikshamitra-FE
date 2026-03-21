@@ -6,8 +6,8 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useTabs } from 'src/hooks/useTabs';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { BoardEnum, BoardList } from 'src/enums/board';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -34,7 +34,7 @@ import MediumSetup from './medium-setup';
 import CustomSelect from '../custom-select';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
+import CustomDialog, { DialogScrollContent } from '../custom-dialog';
 
 import type { EducationMedium } from './medium-setup';
 

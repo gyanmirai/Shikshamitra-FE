@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import CreateSlotsForm from 'src/screens/academic/timetable-schedule-management/settings/components/lectureSlots/createSlotsForm';
+import CreateSlotsForm from 'src/screens/academic/timetable-schedule-management/settings/components/lecture-slots/createSlotsForm';
 import {
   Box,
   Paper,
@@ -20,7 +20,7 @@ import {
 import { SlotType } from './types';
 import DayColumn from './DayColumn';
 import { Iconify } from '../iconify';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import SubjectPalette from './SubjectPalette';
 import { MOCK_ROOMS, MOCK_TEACHERS, generateTimelineStamps } from './utils';
 

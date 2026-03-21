@@ -2,12 +2,12 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Box, Tab, Card } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   FinesChargesStatusType,
@@ -18,7 +18,7 @@ import {
   useGetIssuedBooksQuery,
   useGetFinesChargesQuery,
   useGetReservedBooksQuery,
-} from 'src/redux/memberManagement/memberManagementApi';
+} from 'src/redux/member-management/memberManagementApi';
 
 interface EmployeeLibraryProps {
   employee?: any;

@@ -12,7 +12,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';

@@ -3,16 +3,16 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import GeneralSettings from './settingScreen/general';
-import Integrations from './settingScreen/integrations';
-import NotificationSetting from './settingScreen/notification';
-import CourseManagementSetting from './settingScreen/courseManagement';
-import ContentManagementSetting from './settingScreen/contentManagement';
+import GeneralSettings from './setting-screen/general';
+import Integrations from './setting-screen/integrations';
+import NotificationSetting from './setting-screen/notification';
+import CourseManagementSetting from './setting-screen/courseManagement';
+import ContentManagementSetting from './setting-screen/contentManagement';
 
 const TABS = [
   {

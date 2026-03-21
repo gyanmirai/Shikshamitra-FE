@@ -5,11 +5,11 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { MenuItem, MenuList } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import data from 'src/json/ResourceManagement/orderManagement/approved-order-management-data.json';
+import CustomizableTable from 'src/components/customizable-table';
+import data from 'src/json/resource-management/order-management/approved-order-management-data.json';
 import {
   ResourceOrderStatusType,
   ResourceOrderStatusTypeColors,

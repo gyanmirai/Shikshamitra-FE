@@ -3,9 +3,9 @@
 import React from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const StudentSiblingScreen = () => {

@@ -13,7 +13,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CommonCalender from 'src/components/calender';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -22,12 +22,12 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
@@ -45,7 +45,7 @@ import {
   useDeleteEventHolidayMutation,
   useUpdateEventHolidayMutation,
   useLazyGetEventHolidayByDateQuery,
-} from 'src/redux/eventHoliday/eventHolidayApi';
+} from 'src/redux/event-holiday/eventHolidayApi';
 
 import { eventAndHolidayInitialValues } from './initialValue';
 import { eventAndHolidayValidationSchema } from './validationSchema';

@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -12,7 +12,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -21,12 +21,12 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
 import {

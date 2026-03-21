@@ -1,11 +1,11 @@
 'use client';
 
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import { Box } from '@mui/material';
 import React, { useState } from 'react';
 import sortQueryString from 'src/utils/sort-query-string';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 import { useInquiryTableData } from './hooks/useInquiryTableData';
 import { useInquiryTableColumns } from './hooks/useInquiryTableColumns';

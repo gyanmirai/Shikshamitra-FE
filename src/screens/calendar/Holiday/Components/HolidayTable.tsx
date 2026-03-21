@@ -1,14 +1,14 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Tab, Tabs, Paper, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {

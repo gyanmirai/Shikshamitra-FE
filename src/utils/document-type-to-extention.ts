@@ -2,7 +2,7 @@ import { DocumentType } from 'src/enums/documnet-type';
 
 export function getFileExtension(extension: string): number | null {
   switch (extension) {
-    case '.jpg':
+    case './pg':
       return DocumentType.Jpg;
     case '.jpeg':
       return DocumentType.Jpeg;

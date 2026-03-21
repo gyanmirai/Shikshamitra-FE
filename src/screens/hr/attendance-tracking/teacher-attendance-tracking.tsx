@@ -6,7 +6,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Card, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useLazyGetAttendanceEmployeeWiseQuery } from 'src/redux/hr/attendanceApi';

@@ -1,5 +1,5 @@
 import React from 'react';
-import InquiryScreen from 'src/screens/student/enrollment/Inquiry';
+import InquiryScreen from 'src/screens/student/enrollment/inquiry';
 
 const Inquiry = () => <InquiryScreen />;
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Grid } from '@mui/material';
-import AllInfoCalendar from 'src/screens/mainDashboard/admin/Components/AllInfoCalendar';
+import AllInfoCalendar from 'src/screens/main-dashboard/admin/components/AllInfoCalendar';
 
-import EmployeeProfileOverview from './profileDashboardComponent/ProfileOverview';
-import ProfileDashboardAttendance from './profileDashboardComponent/ProfileDashboardAttendance';
-import ProfileDashboardAttendanceTrend from './profileDashboardComponent/ProfileDashboardAttendanceTrend';
+import EmployeeProfileOverview from './profile-dashboard-component/ProfileOverview';
+import ProfileDashboardAttendance from './profile-dashboard-component/ProfileDashboardAttendance';
+import ProfileDashboardAttendanceTrend from './profile-dashboard-component/ProfileDashboardAttendanceTrend';
 
 const EmployeeProfileDashboard = ({ editData }: { editData: any }) => (
   <Box sx={{ pb: 1 }}>

@@ -21,13 +21,13 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   FollowUpStatusType,
@@ -62,7 +62,7 @@ import {
 } from '@mui/lab';
 
 import type { IGeneralInformationResponse } from '../register/type';
-import type { IInquiryData, IInquiryResponse } from '../Inquiry/type';
+import type { IInquiryData, IInquiryResponse } from '../inquiry/type';
 
 const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
-import entraceExamsData from 'src/json/student/enrollementDashboard/entranceExamData.json';
+import entraceExamsData from 'src/json/student/enrollement-dashboard/entranceExamData.json';
 
 const UpcomingEntranceExams = () => (
   <Card sx={{ p: 3, borderRadius: 3 }}>

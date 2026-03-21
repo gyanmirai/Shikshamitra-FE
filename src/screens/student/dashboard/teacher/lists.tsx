@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog from 'src/components/custom-dialog';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Grid, Card, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 
 const upcomingExams = [

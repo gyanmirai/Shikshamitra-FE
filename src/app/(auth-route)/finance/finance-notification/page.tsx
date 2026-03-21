@@ -1,5 +1,5 @@
 import React from 'react';
-import FinanceNotificationScreen from 'src/screens/finance/financeNotification';
+import FinanceNotificationScreen from 'src/screens/finance/finance-notification';
 
 // import FinanceNotificationScreen from 'src/screens/finance/finance-notification/finance-notification-screen';
 

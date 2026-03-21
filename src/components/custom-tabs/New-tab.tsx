@@ -3,7 +3,7 @@ import type { RootState } from 'src/redux/store';
 import React from 'react';
 import { Box } from '@mui/system';
 import { useSelector, useDispatch } from 'react-redux';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 
 import { StyledTab, StyledTabs, StyledMainDiv } from './styled';
 

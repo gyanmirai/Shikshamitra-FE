@@ -1,4 +1,4 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 export interface IRoomFormProps {
   open: UseBooleanReturn;

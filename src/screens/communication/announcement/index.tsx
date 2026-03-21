@@ -9,7 +9,7 @@ import AnnouncementTable from './components/announcementTable';
 import { useAnnouncementLogic } from './hooks/useAnnouncementLogic';
 import AnnouncementBreadcrumbs from './components/AnnouncementBreadcrumbs';
 import AnnouncementActionDialogs from './components/AnnouncementActionDialogs';
-import SchoolManagementViewDetails from './components/SchoolWiseDetails/SchoolManagementViewDetails';
+import SchoolManagementViewDetails from './components/school-wise-details/SchoolManagementViewDetails';
 
 const Announcement = (props: TabComponentType) => {
   const { state, dialogs, handlers } = useAnnouncementLogic();

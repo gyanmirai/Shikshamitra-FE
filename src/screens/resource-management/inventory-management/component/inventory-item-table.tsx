@@ -1,18 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { paper, varAlpha } from 'src/theme/styles';
 import { drawerClasses } from '@mui/material/Drawer';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Tab, Tabs, Paper, Button, Drawer } from '@mui/material';
-import inventoryItem from 'src/json/ResourceManagement/InventoryManagement/inventory-data-for-all-categories.json';
+import inventoryItem from 'src/json/resource-management/inventory-management/inventory-data-for-all-categories.json';
 
 import InventoryManagementDetailsView from './inventory-management-details-view';
 

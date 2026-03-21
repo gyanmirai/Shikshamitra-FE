@@ -4,13 +4,13 @@ import type { LabelColor } from 'src/components/label';
 
 import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import facilityData from 'src/json/ResourceManagement/facility/facilityData.json';
+import CustomizableTable from 'src/components/customizable-table';
+import facilityData from 'src/json/resource-management/facility/facilityData.json';
 import { Box, Tab, Tabs, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   FacilityStatusType,

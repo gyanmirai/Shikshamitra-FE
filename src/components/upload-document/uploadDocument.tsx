@@ -1,13 +1,13 @@
-import type { UploadedFile } from 'src/screens/academic/homework-assignment-management/homeworkCreation/type';
+import type { UploadedFile } from 'src/screens/academic/homework-assignment-management/homework-creation/type';
 
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Card, Grid, Tooltip, Typography, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Upload } from '../upload/upload';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import { DeleteButton } from '../upload/components/preview-single-file';
 
 type UploadDocumentProps = {

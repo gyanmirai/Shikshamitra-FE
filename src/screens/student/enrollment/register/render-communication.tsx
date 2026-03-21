@@ -1,5 +1,5 @@
 import { Box, Grid } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import {
   CardActions,
   SectionCard,

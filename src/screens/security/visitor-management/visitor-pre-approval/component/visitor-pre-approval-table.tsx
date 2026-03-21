@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { Box } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import data from 'src/json/security/visitor-management/visitor-pre-approval-data.json';
 
 import type {

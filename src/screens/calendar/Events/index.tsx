@@ -8,9 +8,9 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
@@ -18,7 +18,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import {
   eventApi,
   useGetEventsQuery,
@@ -28,7 +28,7 @@ import {
 import AddEvent from './addeventForm';
 import EventAnnouncementTable from './components/EventTable';
 import UploadFileUploadForm from './components/EventUploadGallery';
-import EventDetailsComponent from './components/EventDetails/EventDetailsComponent';
+import EventDetailsComponent from './components/event-details/EventDetailsComponent';
 
 import type { IEventAnnouncement } from './type';
 

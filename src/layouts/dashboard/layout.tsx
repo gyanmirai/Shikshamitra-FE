@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import Alert from '@mui/material/Alert';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 import { bulletColor } from 'src/components/nav-section';
 import { iconButtonClasses } from '@mui/material/IconButton';

@@ -6,8 +6,8 @@ import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { Add } from '@mui/icons-material';
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useTabs } from 'src/hooks/useTabs';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { boardApi } from 'src/redux/board/boardApi';
 import { getBase64String } from 'src/utils/get-base64-string';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -37,7 +37,7 @@ import ClassSetup from './class-setup';
 import UploadButton from '../upload-button';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
+import CustomDialog, { DialogScrollContent } from '../custom-dialog';
 
 export interface IOrganizationSetup {
   id: string;

@@ -5,11 +5,11 @@ import dynamic from 'next/dynamic';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { useTheme } from '@mui/material/styles';
 import { flattenArray } from 'src/utils/helper';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { paper, varAlpha } from 'src/theme/styles';
 import ZoomAndDrag from 'src/components/zoom-drag';
 import { drawerClasses } from '@mui/material/Drawer';
@@ -27,10 +27,10 @@ import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import {
   Box,
   Tab,
@@ -57,7 +57,7 @@ import {
   useAddUserToOrganizationUnitMutation,
   useRemoveRoleFromOrganizationUnitMutation,
   useRemoveUserFromOrganizationUnitMutation,
-} from 'src/redux/organizationUnit/organizationUnitApi';
+} from 'src/redux/organization-unit/organizationUnitApi';
 
 import StandardNode from './standard-node';
 

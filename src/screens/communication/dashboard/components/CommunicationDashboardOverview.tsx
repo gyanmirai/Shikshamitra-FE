@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CustomizableView from 'src/components/customizable-view';
-import { SummaryCard } from 'src/screens/finance/dashboard/Components/FinanceDashboardOverview';
+import { SummaryCard } from 'src/screens/finance/dashboard/components/FinanceDashboardOverview';
 
 // ----------------------------------------------------------------------
 

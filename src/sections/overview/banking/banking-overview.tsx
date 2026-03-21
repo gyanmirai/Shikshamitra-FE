@@ -5,7 +5,7 @@ import Tab from '@mui/material/Tab';
 import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';

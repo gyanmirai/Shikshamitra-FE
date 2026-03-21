@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { MenuItem, MenuList } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { FamilyRestroomRounded } from '@mui/icons-material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 import { Driverdata } from '../data/transport-driver-data';
 import DriverFormDialog from './transport-driver-form-dialog';

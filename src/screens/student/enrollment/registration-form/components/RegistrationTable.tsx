@@ -1,4 +1,4 @@
-import type { IData, IColumn } from 'src/components/customizabaleTable/types';
+import type { IData, IColumn } from 'src/components/customizable-table/types';
 
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -7,7 +7,7 @@ import sortQueryString from 'src/utils/sort-query-string';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { MenuItem, MenuList, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 export type RegistrationTableProps = {
   data: IData[];

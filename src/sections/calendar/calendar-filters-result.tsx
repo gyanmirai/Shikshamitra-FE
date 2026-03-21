@@ -1,6 +1,6 @@
 import type { ICalendarFilters } from 'src/types/calendar';
 import type { Theme, SxProps } from '@mui/material/styles';
-import type { UseSetStateReturn } from 'src/hooks/use-set-state';
+import type { UseSetStateReturn } from 'src/hooks/useSetState';
 
 import { useCallback } from 'react';
 import Box from '@mui/material/Box';

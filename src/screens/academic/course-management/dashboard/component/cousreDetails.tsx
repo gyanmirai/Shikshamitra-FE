@@ -7,7 +7,7 @@ import { Box, Grid } from '@mui/material';
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const CousreDetails = () => {

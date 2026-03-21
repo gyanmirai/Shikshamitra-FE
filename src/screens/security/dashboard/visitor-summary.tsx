@@ -3,7 +3,7 @@
 import React from 'react';
 import { Grid, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import DashboardCard from 'src/components/dasboard-card';
+import DashboardCard from 'src/components/stat-card';
 
 const VisitorSummary = () => (
   <>

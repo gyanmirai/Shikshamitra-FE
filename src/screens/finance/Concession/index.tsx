@@ -5,21 +5,21 @@ import type { RootState } from 'src/redux/store';
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 
-import ReasonApprovalForm from './Components/ConcessionRequestApprove';
-import StudentConcessionTable from './Components/StudentConcessionTable';
-import NewConcessionRequestForm from './Components/NewConcessionRequest';
-import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
+import ReasonApprovalForm from './components/ConcessionRequestApprove';
+import StudentConcessionTable from './components/StudentConcessionTable';
+import NewConcessionRequestForm from './components/NewConcessionRequest';
+import ViewConcessionRequest from '../concession-admin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
-import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
+import type { IViewConcessionRequestProps } from '../concession-admin/type';
 
 const Concession = () => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);

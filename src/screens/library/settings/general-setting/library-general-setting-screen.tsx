@@ -2,10 +2,10 @@
 
 import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LibraryLoanSetting from './component/library-loan-setting';

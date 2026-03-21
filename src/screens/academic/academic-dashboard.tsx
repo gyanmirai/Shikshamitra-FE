@@ -17,8 +17,8 @@ import {
 } from '@mui/material';
 
 import AcademicTeacherDashboardScreen from './dashboard';
-import AcademicDashboardScreen from './AcademicDashboard';
-import AcademicPrincipalDashboardScreen from './AcademicPrincipalDashboard';
+import AcademicDashboardScreen from './academic-dashboard';
+import AcademicPrincipalDashboardScreen from './academic-principal-dashboard';
 
 const AcademicDashboard = () => {
   const { data: session, status } = useSession() as any;

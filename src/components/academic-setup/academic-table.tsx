@@ -1,4 +1,4 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import Table from '@mui/material/Table';
 import { LoadingButton } from '@mui/lab';
@@ -7,13 +7,13 @@ import { useState, useEffect } from 'react';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableCell from '@mui/material/TableCell';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Paper, Button, Collapse, TableBody, IconButton, CircularProgress } from '@mui/material';
 
 import { Iconify } from '../iconify';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 

@@ -7,23 +7,23 @@ import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
 import { Box, Chip, Button, Typography, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import type { TableDivisionDropDownProps } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
+import type { IInquiryData } from '../../enrollment/inquiry/type';
 
 // Fixed width for Division column to prevent layout shifts
 const DIVISION_COLUMN_WIDTH = 180;

@@ -5,13 +5,13 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useMemo } from 'react';
 import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
 import SharedWithMe from './shared-with-me';
 import Dashboard from './dashboard/dashboard';
-import AllResources from './allResources/all-resources';
+import AllResources from './all-resources/all-resources';
 
 const TABS = [
   {

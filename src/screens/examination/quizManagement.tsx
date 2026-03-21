@@ -3,12 +3,12 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Tab, Box, Paper } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ActiveQuiz from './quizManagement/activeQuiz/activeQuiz';
+import ActiveQuiz from './quiz-management/active-quiz/activeQuiz';
 
 const TABS = [
   {

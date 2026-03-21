@@ -14,10 +14,10 @@ import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import { fDateTime } from 'src/utils/format-time';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import ListItemText from '@mui/material/ListItemText';
 import { FileThumbnail } from 'src/components/file-thumbnail';
-import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
+import { useCopyToClipboard } from 'src/hooks/useCopyToClipboard';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 

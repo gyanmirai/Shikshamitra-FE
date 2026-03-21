@@ -1,6 +1,6 @@
 import React from 'react';
 import { Grid } from '@mui/material';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { EcommerceSalesOverview } from 'src/sections/overview/e-commerce/ecommerce-sales-overview';
 

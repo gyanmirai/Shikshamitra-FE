@@ -1,5 +1,5 @@
 import React from 'react';
-import MemberManagement from 'src/screens/library/MemberManagement';
+import MemberManagement from 'src/screens/library/member-management';
 
 const LibraryMemberManagement = () => <MemberManagement />;
 

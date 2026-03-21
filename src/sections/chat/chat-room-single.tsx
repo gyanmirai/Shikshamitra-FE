@@ -5,7 +5,7 @@ import Avatar from '@mui/material/Avatar';
 import Collapse from '@mui/material/Collapse';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 
 import { CollapseButton } from './styles';
 

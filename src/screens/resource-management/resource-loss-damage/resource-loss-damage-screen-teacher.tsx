@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Iconify } from 'src/components/iconify/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 

@@ -3,13 +3,13 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Tab, Tabs, IconButton, Typography } from '@mui/material';
 import {
   MeetingStatus,

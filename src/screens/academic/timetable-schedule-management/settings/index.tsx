@@ -3,17 +3,17 @@
 import { Add } from '@mui/icons-material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
-import RoomDetails from './components/roomSetting/roomDetails';
-import LectureSlots from './components/lectureSlots/lectureSlots';
-import WeeklyLectures from './components/weeklyLectures/weeklyLectures';
+import RoomDetails from './components/room-setting/roomDetails';
+import LectureSlots from './components/lecture-slots/lectureSlots';
+import WeeklyLectures from './components/weekly-lectures/weeklyLectures';
 
 const TABS = [
   {

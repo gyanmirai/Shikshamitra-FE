@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import { UploadBox } from 'src/components/upload';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DashboardContent } from 'src/layouts/dashboard';
 

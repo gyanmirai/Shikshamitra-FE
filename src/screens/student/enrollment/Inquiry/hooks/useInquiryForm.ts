@@ -3,7 +3,7 @@ import type { Board, AcademicYear } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 // Redux / API
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 // Utils / Components

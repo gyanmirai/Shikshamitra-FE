@@ -10,17 +10,17 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Search } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomSelect from 'src/components/custom-select';
 import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-// import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
+// import { useGetPayElementsQuery } from 'src/redux/pay-element/payElementApi';
 import {
   Box,
   Grid,
@@ -38,7 +38,7 @@ import {
   useDeletePayrollStructureMutation,
   useUpdatePayrollStructureMutation,
   useGetPayrollStructureByOrganizationQuery,
-} from 'src/redux/payrollStructure/payrollStructureApi';
+} from 'src/redux/payroll-structure/payrollStructureApi';
 
 const EmployeeSalaryStructureScreen = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);

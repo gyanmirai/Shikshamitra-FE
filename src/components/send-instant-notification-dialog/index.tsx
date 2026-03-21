@@ -2,10 +2,10 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Box, Button, DialogActions } from '@mui/material';
-import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiledForMessageWithPlaceholder';
+import CustomPlaceholderInput from 'src/screens/student/student-notification/textfiledForMessageWithPlaceholder';
 
 import { Scrollbar } from '../scrollbar';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import CustomSelect from '../custom-select';
 import { Iconify } from '../iconify/iconify';
 

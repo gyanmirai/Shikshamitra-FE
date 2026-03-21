@@ -1,5 +1,5 @@
 import React from 'react';
-import ChargeTypeCreation from 'src/screens/library/settings/ChargeType';
+import ChargeTypeCreation from 'src/screens/library/settings/charge-type';
 
 const page = () => <ChargeTypeCreation />;
 

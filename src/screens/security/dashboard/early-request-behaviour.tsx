@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Card, Grid, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const EarlyRequestBehaviour = () => {

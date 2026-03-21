@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';

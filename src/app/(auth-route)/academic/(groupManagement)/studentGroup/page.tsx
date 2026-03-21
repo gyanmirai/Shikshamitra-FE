@@ -1,5 +1,5 @@
 import React from 'react';
-import StudentGroup from 'src/screens/academic/activityManagement/studentGroup';
+import StudentGroup from 'src/screens/academic/activity-management/studentGroup';
 
 const StudentGroupScreen = () => <StudentGroup />;
 

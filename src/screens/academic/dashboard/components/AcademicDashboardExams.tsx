@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Card, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import {
   ScheduleExamStatus,
   ScheduleExamStatusColor,

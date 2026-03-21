@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { BoardScreenStep } from 'src/screens/security/accessControl';
+import { BoardScreenStep } from 'src/screens/security/access-control';
 
 import type { FieldsType } from './types';
 

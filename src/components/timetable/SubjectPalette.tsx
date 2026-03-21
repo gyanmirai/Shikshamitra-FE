@@ -1,14 +1,14 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import { Add } from '@mui/icons-material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, List, Card, Button, ListItem, Typography } from '@mui/material';
-import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
+import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weekly-lectures/createWeeklyLectures';
 
 import { ItemTypes } from './types';
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import CustomTooltip from '../custom-tooltip';
 
 import type { Subject } from './types';

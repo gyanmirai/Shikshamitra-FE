@@ -1,16 +1,16 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { useDropzone } from 'react-dropzone';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import FormHelperText from '@mui/material/FormHelperText';
 import { Card, IconButton, ListItemText } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
-import CustomDialog from '../customDialog';
+import CustomDialog from '../custom-dialog';
 import { fileData, FileThumbnail } from '../file-thumbnail';
 import { UploadPlaceholder } from './components/placeholder';
 import { RejectionFiles } from './components/rejection-files';

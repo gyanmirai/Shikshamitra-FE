@@ -6,7 +6,7 @@ import Popover from '@mui/material/Popover';
 import { useState, useCallback } from 'react';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 
 import { RangeField } from './RangeField';
 import { CalendarPanel } from './CalendarPanel';

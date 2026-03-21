@@ -9,7 +9,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
 import { bgBlur, varAlpha } from 'src/theme/styles';
 import { styled, useTheme } from '@mui/material/styles';
-import { useScrollOffSetTop } from 'src/hooks/use-scroll-offset-top';
+import { useScrollOffSetTop } from 'src/hooks/useScrollOffsetTop';
 
 import { layoutClasses } from '../classes';
 

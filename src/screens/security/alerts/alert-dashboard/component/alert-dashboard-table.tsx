@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label/types';
 import dayjs from 'dayjs';
 import React from 'react';
 import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import data from 'src/json/security/admin-dashboard-table-data.json';
 import {
   CommonComplaintStatusType,

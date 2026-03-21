@@ -1,5 +1,5 @@
 import React from 'react';
-import RoomCreateManagement from 'src/screens/setting/RoomManagement/RoomCreateManagement';
+import RoomCreateManagement from 'src/screens/setting/room-management/room-create-management';
 
 const page = () => <RoomCreateManagement />;
 

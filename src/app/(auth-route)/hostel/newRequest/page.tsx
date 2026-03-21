@@ -1,5 +1,5 @@
 import React from 'react';
-import StudentHostelRequest from 'src/screens/hostel/newRequest';
+import StudentHostelRequest from 'src/screens/hostel/new-request';
 
 const page = () => <StudentHostelRequest />;
 

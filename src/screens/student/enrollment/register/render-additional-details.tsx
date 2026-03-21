@@ -1,5 +1,5 @@
 import { YesNoArray } from 'src/enums/yes-no';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import PhoneInput from 'src/components/phone-input';
 import CustomSelect from 'src/components/custom-select';
 import { CategoryArray } from 'src/enums/studnet-category';

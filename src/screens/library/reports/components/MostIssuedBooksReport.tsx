@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
+import { ResponsiveMultiSelect } from 'src/components/responsive-multi-select';
 
 import { ReportForm } from './ReportForm';
 import { useLibraryReportOptions } from '../hooks/useLibraryReportOptions';

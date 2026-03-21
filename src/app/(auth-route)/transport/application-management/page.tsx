@@ -1,5 +1,5 @@
 import React from 'react';
-import TransportRequests from 'src/screens/transport/ApplicationManagement';
+import TransportRequests from 'src/screens/transport/application-management';
 
 const TransportApplicationManagement = () => <TransportRequests />;
 

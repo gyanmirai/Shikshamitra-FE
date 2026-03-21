@@ -7,7 +7,7 @@ import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import data from 'src/json/security/staff-request-data.json';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import {
   CommonRequestStatusType,
   CommonRequestStatusTypeColor,

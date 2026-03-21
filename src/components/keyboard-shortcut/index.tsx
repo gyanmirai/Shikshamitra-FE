@@ -1,6 +1,6 @@
 'use client';
 
-import useKeyboardShortcuts from 'src/hooks/use-keyboard-shortcuts';
+import useKeyboardShortcuts from 'src/hooks/useKeyboardShortcuts';
 
 const KeyboardShortcut = () => {
   useKeyboardShortcuts();

@@ -1,0 +1,219 @@
+'use client';
+
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
+import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/useBoolean';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/custom-dialog';
+import { Box, Button, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
+import {
+  homeworkTypesApi,
+  useGetHomeworkTypesQuery,
+  useDeleteHomeworkTypeMutation,
+} from 'src/redux/academic-api/homework-assignment-api/settings/HomeworkTypesApi';
+
+import HomeworkTypeForm from './homeworkTypeForm';
+import HomeworkTypeTable from './homeworkTypeTable';
+
+import type { IHomeworkType } from './type';
+
+const HomeworkTypeCreation = () => {
+  // Dialog control for add/Update Homework Type
+  const addHomeworkTypeDialog = useBoolean();
+
+  // Dialog control for delete confirmation
+  const deleteDialog = useBoolean();
+
+  // Modal open/close state
+  const [, setOpen] = useState(false);
+
+  // Track unsaved changes from redux store
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // Get current medium from global state
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  // Currently selected homework type for edit/delete
+  const [selectedData, setSelectedData] = useState<IHomeworkType | null>(null);
+
+  // Redux dispatch function
+  const dispatch = useDispatch();
+
+  // Delete mutation hook
+  const [deleteHomeworkType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteHomeworkTypeMutation,
+  });
+  const { confirmWithUndo } = useConfirmWithUndo();
+
+  /**
+   * Handles closing of the add/edit dialog
+   * @param _e - Event object
+   * @param isSubmit - Boolean indicating if form was submitted
+   */
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setOpen(false);
+        setSelectedData(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust delay as needed
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addHomeworkTypeDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      addHomeworkTypeDialog.onFalse();
+      resetState();
+    }
+  };
+
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: homeworkTypeData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+  });
+
+  return (
+    <Box height="100%" display="flex" flexDirection="column">
+      <CustomBreadcrumbs
+        heading="Homework Type"
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Homework & Assignment' },
+          { name: 'Settings' },
+          { name: 'Homework Type' },
+        ]}
+        description="Create and manage homework types for homework and assignments. Add, edit, or delete assignment types as needed."
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={addHomeworkTypeDialog.onTrue}
+            size="small"
+            sx={{ px: '32px' }}
+          >
+            Homework Type
+          </Button>
+        }
+      />
+
+      <HomeworkTypeTable
+        isLoading={isLoading || isFetching}
+        data={homeworkTypeData}
+        onEdit={(data) => {
+          setSelectedData(data);
+          addHomeworkTypeDialog.onTrue();
+        }}
+        onDelete={(data) => {
+          setSelectedData(data);
+          deleteDialog.onTrue();
+        }}
+      />
+
+      <CustomDialog
+        open={addHomeworkTypeDialog.value}
+        handleClose={() => {
+          addHomeworkTypeDialog.onFalse();
+          setTimeout(() => {
+            setSelectedData(null);
+          }, 300); // Adjust delay if your dialog's animation is longer
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedData ? 'Update Homework Type' : 'Add Homework Type'}
+            </Typography>
+            <CustomTooltip
+              sx={{ textAlign: 'justify' }}
+              arrow
+              placement="right"
+              title={
+                selectedData
+                  ? 'You can update the homework type details entering the name.'
+                  : 'You can create a new homework type by entering the name.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <HomeworkTypeForm
+          open={addHomeworkTypeDialog}
+          onClose={handleClose}
+          editData={selectedData}
+        />
+      </CustomDialog>
+
+      <ConfirmDialog
+        open={deleteDialog.value}
+        onClose={() => {
+          setSelectedData(null);
+          deleteDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete Homework Type{' '}
+            <strong>{selectedData?.homeworkTypeName}</strong>?
+          </>
+        }
+        action={
+          <LoadingButton
+            loading={isDeleteLoading}
+            variant="contained"
+            size="small"
+            color="error"
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    homeworkTypesApi.util.updateQueryData(
+                      'getHomeworkTypes',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.findIndex((item: any) => item.id === selectedData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () =>
+                  deleteHomeworkType({
+                    academicMediumId: (medium as Medium)?.id,
+                    homeworkTypeId: selectedData?.id,
+                  }),
+              });
+              deleteDialog.onFalse();
+              setSelectedData(null);
+            }}
+          >
+            Yes
+          </LoadingButton>
+        }
+      />
+    </Box>
+  );
+};
+
+export default HomeworkTypeCreation;

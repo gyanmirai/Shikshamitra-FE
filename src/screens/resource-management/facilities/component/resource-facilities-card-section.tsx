@@ -3,7 +3,7 @@
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import DashboardCard from 'src/components/dasboard-card';
+import DashboardCard from 'src/components/stat-card';
 import { Box, Card, Grid, Typography } from '@mui/material';
 
 const ResourceFacilitiesCardSection = () => {

@@ -9,24 +9,24 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import {
   holidayApi,
   useGetHolidaysQuery,
   useDeleteHolidayMutation,
 } from 'src/redux/communication/holiday/holidayDataApi';
 
-import HolidayForm from './Components/HolidayForm';
-import HolidayTable from './Components/HolidayTable';
+import HolidayForm from './components/HolidayForm';
+import HolidayTable from './components/HolidayTable';
 
-import type { IHoliday } from './Components/type';
+import type { IHoliday } from './components/type';
 
 const HolidayManagement = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);

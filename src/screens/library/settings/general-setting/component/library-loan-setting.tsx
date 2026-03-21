@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, TextField } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 const LibraryLoanSetting: React.FC = () => {
   const dummyData = [

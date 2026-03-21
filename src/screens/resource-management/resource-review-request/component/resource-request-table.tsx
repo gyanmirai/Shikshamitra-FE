@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import data from 'src/json/ResourceManagement/myResourceRequest/my-resource-request-data.json';
+import CustomizableTable from 'src/components/customizable-table';
+import data from 'src/json/resource-management/my-resource-request/my-resource-request-data.json';
 
 import ResourceRequestReviewDialog from './resourece-request-view-dialog';
 

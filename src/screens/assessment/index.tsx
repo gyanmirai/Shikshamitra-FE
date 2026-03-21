@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Iconify } from 'src/components/iconify';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';

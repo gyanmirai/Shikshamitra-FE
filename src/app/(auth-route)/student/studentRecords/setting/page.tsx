@@ -1,5 +1,5 @@
 import React from 'react';
-import HouseSetting from 'src/screens/student/recordsSetting';
+import HouseSetting from 'src/screens/student/records-setting';
 
 const page = () => <HouseSetting />;
 

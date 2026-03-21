@@ -3,7 +3,7 @@ import type { IChatAttachment } from 'src/types/chat';
 import Stack from '@mui/material/Stack';
 import Collapse from '@mui/material/Collapse';
 import { fDateTime } from 'src/utils/format-time';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import ListItemText from '@mui/material/ListItemText';
 import { FileThumbnail } from 'src/components/file-thumbnail';
 

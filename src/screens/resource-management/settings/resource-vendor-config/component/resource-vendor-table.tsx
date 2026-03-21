@@ -1,8 +1,8 @@
 import { Box } from '@mui/material';
 import React, { useState } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import data from 'src/json/ResourceManagement/resourceSettings/vendor/resource-vendor-data.json';
+import CustomizableTable from 'src/components/customizable-table';
+import data from 'src/json/resource-management/resource-settings/vendor/resource-vendor-data.json';
 
 import type {
   IReportVendorTableProps,

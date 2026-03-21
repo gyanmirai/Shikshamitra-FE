@@ -19,7 +19,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateAvatar } from 'src/components/animate';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -28,7 +28,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Button, MenuItem, TextField, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';

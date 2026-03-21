@@ -9,7 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 
 type Props = {
   open: boolean;

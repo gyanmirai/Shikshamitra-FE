@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 
-import TimeTableView from '../../timetable-schedule-management/timeTable/component/timeTableView';
+import TimeTableView from '../../timetable-schedule-management/time-table/component/timeTableView';
 
-import type { TimetableSlot } from '../../timetable-schedule-management/timeTable/type';
+import type { TimetableSlot } from '../../timetable-schedule-management/time-table/type';
 
 const studentTimetable: TimetableSlot[] = [
   {

@@ -1,10 +1,10 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Grid, TextField, Autocomplete } from '@mui/material';
 import data from 'src/json/security/guard-management/all-guard-handover-data.json';
 

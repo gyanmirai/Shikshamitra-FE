@@ -1,6 +1,6 @@
 import type { LabelColor } from 'src/components/label';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';

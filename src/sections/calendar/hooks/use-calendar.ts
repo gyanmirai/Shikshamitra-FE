@@ -3,7 +3,7 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import type { EventDropArg, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 import type { ICalendarView, ICalendarRange, ICalendarEvent } from 'src/types/calendar';
 
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 // ----------------------------------------------------------------------

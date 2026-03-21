@@ -1,5 +1,5 @@
 import React from 'react';
-import ActivityManagement from 'src/screens/academic/activityManagement/activityManagement';
+import ActivityManagement from 'src/screens/academic/activity-management/activityManagement';
 
 const ActivityManagementScreen = () => <ActivityManagement />;
 

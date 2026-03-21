@@ -3,10 +3,10 @@ import confetti from 'canvas-confetti';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CommonCalender from 'src/components/calender';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Chip, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 

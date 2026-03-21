@@ -5,12 +5,12 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useMemo } from 'react';
 import { Tab, Box, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import PastSurvey from './pastFeedback/pastFeedback';
-import ActiveSurvey from './activeSurvey/activeSurvey';
-import AllSurvey from './scheduledSurvey/scheduledSurvey';
+import PastSurvey from './past-feedback/pastFeedback';
+import ActiveSurvey from './active-survey/activeSurvey';
+import AllSurvey from './scheduled-survey/scheduledSurvey';
 
 const TABS = [
   {

@@ -9,7 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useDeleteClassMutation } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -53,7 +53,7 @@ import CustomTooltip from '../custom-tooltip';
 import { DivisionForm } from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import { OrganizationForm } from './organization-setup';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
+import CustomDialog, { DialogScrollContent } from '../custom-dialog';
 
 // ----------------------------------------------------------------------
 

@@ -6,25 +6,25 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { StudentApi } from 'src/redux/student';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
 import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
-} from 'src/redux/student/studentGrNumber/student-gr-number-api';
+} from 'src/redux/student/student-gr-number/student-gr-number-api';
 
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
+import type { IInquiryData } from '../../enrollment/inquiry/type';
 
 const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // State to track if manual GR number generation is enabled

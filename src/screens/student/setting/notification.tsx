@@ -2,10 +2,10 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { Editor } from 'src/components/editor';
 import { Add, Save } from '@mui/icons-material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomDialog from 'src/components/custom-dialog';
+import CustomizableTable from 'src/components/customizable-table';
 import {
   Box,
   Card,

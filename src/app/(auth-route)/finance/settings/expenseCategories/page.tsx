@@ -1,5 +1,5 @@
 import React from 'react';
-import FinanceExpenseCategory from 'src/screens/finance/settings/ExpenseCategories/ExpenseCategories';
+import FinanceExpenseCategory from 'src/screens/finance/settings/expense-categories/ExpenseCategories';
 
 const ExpenseCategoryPage = () => <FinanceExpenseCategory />;
 

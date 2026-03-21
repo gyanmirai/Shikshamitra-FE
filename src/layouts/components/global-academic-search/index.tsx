@@ -13,7 +13,7 @@ import { useGetYearQuery } from 'src/redux/year/yearApi';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import React, { useMemo, useEffect, useCallback } from 'react';
-import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
+import { useConfirmDialog } from 'src/hooks/useConfirmDialog';
 import { setDriverNextEnabled } from 'src/utils/driverBtnConfig';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
@@ -21,7 +21,7 @@ import {
   setCurrentYear,
   setCurrentBoard,
   setCurrentMedium,
-} from 'src/redux/globalState/globalSlice';
+} from 'src/redux/global-state/globalSlice';
 
 import type { GlobalAcademicSearchOption } from './types';
 

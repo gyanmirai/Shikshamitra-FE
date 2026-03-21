@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -14,7 +14,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import FileUploader from 'src/components/custom-upload';
@@ -26,14 +26,14 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { editorClasses } from 'src/components/editor/classes';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
@@ -61,7 +61,7 @@ import {
 import { AttendanceTypeForm } from '../setting/attendance-type';
 
 import type { IFormValues } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
+import type { IInquiryData } from '../../enrollment/inquiry/type';
 
 const LeaveAndAbsentScreen = () => {
   // State to control the dialog visibility

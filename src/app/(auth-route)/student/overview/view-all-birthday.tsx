@@ -1,6 +1,6 @@
 import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 import { allBirthdayData } from './data/view-all-birthday-data';
 

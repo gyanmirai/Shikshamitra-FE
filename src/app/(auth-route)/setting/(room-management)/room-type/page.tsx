@@ -1,5 +1,5 @@
 import React from 'react';
-import RoomTypeManagement from 'src/screens/setting/RoomManagement/RoomTypeManagement';
+import RoomTypeManagement from 'src/screens/setting/room-management/room-type-management';
 
 const page = () => <RoomTypeManagement />;
 

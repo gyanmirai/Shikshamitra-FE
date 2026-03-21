@@ -4,7 +4,7 @@ import React from 'react';
 import { Grid } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { formatNumber } from 'src/utils/formate_number';
-import DashboardCard from 'src/components/dasboard-card';
+import DashboardCard from 'src/components/stat-card';
 import { Iconify } from 'src/components/iconify/iconify';
 
 const ResourceManagementCardSection = () => (

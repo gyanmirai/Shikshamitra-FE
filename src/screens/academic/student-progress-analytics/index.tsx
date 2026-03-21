@@ -5,15 +5,15 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useMemo } from 'react';
 import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Reports from './reports';
 import ClassProgress from './class-progress';
 import Dashboard from './dashboard/dashboard';
-import ComparativeAnalytics from './comparativeAnalytics/comparative-analytics';
+import ComparativeAnalytics from './comparative-analytics/comparative-analytics';
 import StudentProgressAnalyticsSetting from './settings/student-progress-analytics-setting';
-import IndividualStudentProgress from './individualStudentPerformance/Individual-student-progress';
+import IndividualStudentProgress from './individual-student-performance/Individual-student-progress';
 
 const TABS = [
   {

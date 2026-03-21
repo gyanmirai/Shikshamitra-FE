@@ -3,16 +3,16 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import GradingScale from './settingsScreen/gradingScale';
-import GradeSubmission from './settingsScreen/gradeSubmission';
-import PermissionAccess from './settingsScreen/permissionAccess';
-import NotificationAlert from './settingsScreen/notificationAlert';
-import WeightingAdjustment from './settingsScreen/weightingAdjustment';
+import GradingScale from './settings-screen/gradingScale';
+import GradeSubmission from './settings-screen/gradeSubmission';
+import PermissionAccess from './settings-screen/permissionAccess';
+import NotificationAlert from './settings-screen/notificationAlert';
+import WeightingAdjustment from './settings-screen/weightingAdjustment';
 
 const TABS = [
   {

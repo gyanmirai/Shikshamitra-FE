@@ -9,13 +9,13 @@ import ListItem from '@mui/material/ListItem';
 import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import { kanbanClasses } from 'src/sections/kanban/classes';
 import { memo, useState, useEffect, forwardRef } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { Box, Avatar, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
 
 import RegisterForm from '../register/register-form';

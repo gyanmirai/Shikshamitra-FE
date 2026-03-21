@@ -19,7 +19,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import { isExternalLink } from 'src/routes/utils';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useMemo, useState, useCallback } from 'react';
 import InputAdornment from '@mui/material/InputAdornment';

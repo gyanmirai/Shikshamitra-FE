@@ -1,5 +1,5 @@
 import type { SxProps } from '@mui/material';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 // Shared value contracts for the General form
 export interface CountryValue {
   name: string;

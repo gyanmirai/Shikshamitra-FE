@@ -1,4 +1,4 @@
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CustomSelect from 'src/components/custom-select';
 import { Grid, TextField, Typography } from '@mui/material';
 import {

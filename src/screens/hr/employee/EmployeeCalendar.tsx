@@ -6,7 +6,7 @@ import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Chip, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CommonCalender from 'src/components/calender';
 
 interface EmployeeCalendarProps {

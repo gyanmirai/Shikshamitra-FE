@@ -3,8 +3,8 @@ import type { LabelColor } from 'src/components/label/types';
 import React from 'react';
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
-import bookingRequestData from 'src/json/ResourceManagement/booking/bookingData.json';
+import CustomizableTable from 'src/components/customizable-table';
+import bookingRequestData from 'src/json/resource-management/booking/bookingData.json';
 import {
   ResourceBookingStatusType,
   ResourceBookingStatusTypeColor,

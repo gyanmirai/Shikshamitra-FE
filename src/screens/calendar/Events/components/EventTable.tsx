@@ -1,16 +1,16 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { RemoveCircle } from '@mui/icons-material';
 import React, { useMemo, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Tab, Tabs, Paper, MenuList, MenuItem, Typography } from '@mui/material';
 import { EventStatus, EventStatusColor, EventStatusOptions } from 'src/enums/event-type';

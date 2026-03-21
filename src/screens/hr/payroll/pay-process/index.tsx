@@ -11,7 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const PayProcessScreen = () => {

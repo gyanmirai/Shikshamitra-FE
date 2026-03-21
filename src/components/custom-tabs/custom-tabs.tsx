@@ -8,7 +8,7 @@ import { tabClasses } from '@mui/material/Tab';
 import { useTheme } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import Tabs, { tabsClasses } from '@mui/material/Tabs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 
 // ----------------------------------------------------------------------
 

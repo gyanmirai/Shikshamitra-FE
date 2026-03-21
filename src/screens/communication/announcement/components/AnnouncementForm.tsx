@@ -6,11 +6,11 @@ import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
@@ -28,7 +28,7 @@ import SchedulingSection from './form/SchedulingSection';
 import { useAnnouncementForm } from '../hooks/useAnnouncementForm';
 import BasicInformationSection from './form/BasicInformationSection';
 import DeliveryChannelsSection from './form/DeliveryChannelsSection';
-import SchoolWiseAnnouncementCard from './SchoolWiseDetails/SchoolWiseAnnouncementPreview';
+import SchoolWiseAnnouncementCard from './school-wise-details/SchoolWiseAnnouncementPreview';
 
 import type { ISchoolWiseAnnouncementFormProps } from '../type';
 

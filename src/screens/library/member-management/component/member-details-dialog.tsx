@@ -1,6 +1,6 @@
 import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import {
   Table,
   Paper,

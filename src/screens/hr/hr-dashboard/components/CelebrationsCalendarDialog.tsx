@@ -2,7 +2,7 @@ import type { ICalendarEvent } from 'src/types/calendar';
 
 import React from 'react';
 import CommonCalender from 'src/components/calender';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 
 // ----------------------------------------------------------------------
 

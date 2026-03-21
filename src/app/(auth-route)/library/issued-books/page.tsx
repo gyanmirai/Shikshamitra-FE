@@ -1,5 +1,5 @@
 import React from 'react';
-import IssueReturnBook from 'src/screens/library/IssuedBook';
+import IssueReturnBook from 'src/screens/library/issued-book';
 
 const page = () => <IssueReturnBook />;
 

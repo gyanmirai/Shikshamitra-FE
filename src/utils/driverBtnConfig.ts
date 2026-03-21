@@ -1,5 +1,5 @@
 export function setDriverNextEnabled(enabled: boolean) {
-  const btn: any = document.querySelector('.driver-popover-next-btn');
+  const btn: any = document.querySelector('./river-popover-next-btn');
   if (!btn) return;
   if (enabled) {
     btn.style.pointerEvents = 'auto';

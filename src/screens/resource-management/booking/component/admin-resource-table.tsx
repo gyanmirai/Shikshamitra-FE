@@ -5,12 +5,12 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Button, MenuItem, MenuList } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import bookingRequestData from 'src/json/ResourceManagement/booking/bookingData.json';
+import CustomizableTable from 'src/components/customizable-table';
+import bookingRequestData from 'src/json/resource-management/booking/bookingData.json';
 import {
   ResourceBookingStatusType,
   ResourceBookingStatusTypeColor,

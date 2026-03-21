@@ -13,7 +13,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import DialogTitle from '@mui/material/DialogTitle';
 import { fCurrency } from 'src/utils/format-number';
 import ListItemText from '@mui/material/ListItemText';

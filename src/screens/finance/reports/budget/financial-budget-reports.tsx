@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Card, Grid, Menu, Button, MenuItem, Typography } from '@mui/material';
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 

@@ -4,8 +4,8 @@ import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import { Box, Grid, Card, Button, Typography, CardContent } from '@mui/material';
 
 import { subjects } from '../dashboard';

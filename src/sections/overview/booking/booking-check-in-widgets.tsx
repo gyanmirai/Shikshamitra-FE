@@ -8,7 +8,7 @@ import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart } from 'src/components/chart';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 
 // ----------------------------------------------------------------------
 

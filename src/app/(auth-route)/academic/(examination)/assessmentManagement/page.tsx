@@ -1,5 +1,5 @@
 import React from 'react';
-import AssessmentManagement from 'src/screens/examination/assessmentManagement.tsx/assessment-management';
+import AssessmentManagement from 'src/screens/examination/assessment-management.tsx/assessment-management';
 
 const AssessmentManagementScreen = () => <AssessmentManagement />;
 

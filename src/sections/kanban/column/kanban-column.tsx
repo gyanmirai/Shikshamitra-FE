@@ -5,7 +5,7 @@ import type { IKanbanTask, IKanbanColumn } from 'src/types/kanban';
 import { useCallback } from 'react';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from 'src/components/snackbar';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useSortable, defaultAnimateLayoutChanges } from '@dnd-kit/sortable';
 import { createTask, clearColumn, deleteColumn, updateColumn } from 'src/actions/kanban';
 

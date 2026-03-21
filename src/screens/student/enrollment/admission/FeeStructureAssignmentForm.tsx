@@ -12,7 +12,7 @@ import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/custom-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetStandardFeeStructureQuery as useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
@@ -31,7 +31,7 @@ import {
   useGetStandardFeeStructureQuery as useGetAssignedFeeStructureQuery,
 } from 'src/redux/student/admission/admission-api';
 
-import type { IInquiryData } from '../Inquiry/type';
+import type { IInquiryData } from '../inquiry/type';
 
 interface FeeHeadItem {
   feeHeadId: string;

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Grid } from '@mui/material';
-import TeacherSchedule from 'src/screens/mainDashboard/teacher/schedule';
+import TeacherSchedule from 'src/screens/main-dashboard/teacher/schedule';
 import CompactKPICard from 'src/screens/student/dashboard/principal/kpi-card-item';
 
 import AcademicDashboardTopPerformer from './components/AcademicDashboardTopPerformer';

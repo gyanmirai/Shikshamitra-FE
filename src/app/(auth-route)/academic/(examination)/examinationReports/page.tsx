@@ -1,5 +1,5 @@
 import React from 'react';
-import ExaminationReportsList from 'src/screens/examination/ExaminationReports/ExaminationReportList';
+import ExaminationReportsList from 'src/screens/examination/examination-reports/ExaminationReportList';
 
 const ExaminationReportsScreen = () => <ExaminationReportsList />;
 

@@ -9,10 +9,10 @@ import { Chart, useChart } from 'src/components/chart';
 import { Box, Card, Grid, CardHeader } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ClassPerformance from './performanceAnalytics/classPerformance';
-import SubjectAnalytics from './performanceAnalytics/subjectAnalytics';
-import StudentGroupCompare from './performanceAnalytics/studentGroupCompare';
-import GradeDistributionChart from './performanceAnalytics/gradeDistribution';
+import ClassPerformance from './performance-analytics/classPerformance';
+import SubjectAnalytics from './performance-analytics/subjectAnalytics';
+import StudentGroupCompare from './performance-analytics/studentGroupCompare';
+import GradeDistributionChart from './performance-analytics/gradeDistribution';
 
 const PerformanceAnalytics = (props: TabComponentType) => (
   <Box>

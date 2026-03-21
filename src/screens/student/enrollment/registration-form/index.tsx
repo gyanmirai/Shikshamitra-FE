@@ -2,13 +2,13 @@
 
 import { useDispatch } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import React, { useState, useCallback } from 'react';
 import { Box, Card, Typography } from '@mui/material';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { StudentRegistrationFormApi } from 'src/redux/student/registration-form/registration-form-api';
 
 import { CommunicationForm } from '../follow-up';

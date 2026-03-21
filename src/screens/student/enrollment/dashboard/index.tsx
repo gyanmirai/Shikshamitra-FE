@@ -15,7 +15,7 @@ import EntranceExamCard from './entranceExamCard';
 import AdmissionOverTime from './admission-over-time';
 import OrganizationStatus from './organization-status';
 import BoardEnrollmentStatus from './board-enrollment-status';
-import EnrollmentActivities from '../../studentProfile/studentDashbordComponent/recentEnrollmentActivities';
+import EnrollmentActivities from '../../student-profile/student-dashbord-component/recentEnrollmentActivities';
 
 const EnrollmentDashboardScreen = () => (
   <Box>

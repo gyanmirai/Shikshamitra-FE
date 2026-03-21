@@ -1,6 +1,6 @@
 'use client';
 
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Typography, Breadcrumbs, CircularProgress } from '@mui/material';
 import { Separator, CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { BreadcrumbsLink } from 'src/components/custom-breadcrumbs/breadcrumb-link';

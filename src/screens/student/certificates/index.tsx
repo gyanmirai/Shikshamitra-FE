@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Card, Button } from '@mui/material';
-import { useNewSearchParam } from 'src/hooks/use-search-param';
+import { useNewSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import LeavingCertificate from './leaving-certificate';

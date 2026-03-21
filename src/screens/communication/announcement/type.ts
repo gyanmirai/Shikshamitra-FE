@@ -1,8 +1,8 @@
 import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
 
-import type { IImportanceLevel } from '../settings/ImportanceLevel/type';
-import type { IAnnouncementType } from '../settings/AnnouncementType/Components/type';
+import type { IImportanceLevel } from '../settings/importance-level/type';
+import type { IAnnouncementType } from '../settings/announcement-type/components/type';
 
 export interface IAudience {
   name: ReactNode;

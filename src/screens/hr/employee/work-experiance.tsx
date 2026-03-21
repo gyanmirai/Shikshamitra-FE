@@ -1,7 +1,7 @@
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Add, RemoveCircle } from '@mui/icons-material';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';

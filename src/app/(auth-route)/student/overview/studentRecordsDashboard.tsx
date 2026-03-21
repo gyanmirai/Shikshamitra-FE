@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Grid } from '@mui/material';
-import activities from 'src/json/student/enrollementDashboard/recentActivities.json';
+import activities from 'src/json/student/enrollement-dashboard/recentActivities.json';
 
 import OverviewCard from './overview';
 import BirthdaySection from './student-birthdate';

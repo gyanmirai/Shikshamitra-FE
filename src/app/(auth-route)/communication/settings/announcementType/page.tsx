@@ -1,5 +1,5 @@
 import React from 'react';
-import AnnouncementTypeCreation from 'src/screens/communication/settings/AnnouncementType';
+import AnnouncementTypeCreation from 'src/screens/communication/settings/announcement-type';
 
 const page = () => <AnnouncementTypeCreation />;
 

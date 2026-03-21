@@ -1,8 +1,8 @@
 import type { RootState } from 'src/redux/store';
-import type { UseTabsReturn } from 'src/hooks/use-tabs';
+import type { UseTabsReturn } from 'src/hooks/useTabs';
 
 import { Icon } from '@iconify/react';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -11,7 +11,7 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { Tab, Box, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
@@ -19,7 +19,7 @@ import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
 import EmployeeLibrary from './EmployeeLibrary';
 import EmployeeCalendar from './EmployeeCalendar';
-import EmployeeAcademic from './employeeAcademic/academic';
+import EmployeeAcademic from './employee-academic/academic';
 import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';

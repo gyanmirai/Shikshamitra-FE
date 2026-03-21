@@ -1,4 +1,4 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 const getStickyOffsets = (columns: IColumn[]) => {
   let leftOffset = 0;

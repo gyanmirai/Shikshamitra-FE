@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';
@@ -11,12 +11,12 @@ import * as Yup from 'yup';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { GenderType } from 'src/enums/gender';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,13 +28,13 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
 import { RegistrationStatusType } from 'src/enums/registration-status-type';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentDocumentsQuery } from 'src/redux/student/registration/registration-api';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
@@ -75,7 +75,7 @@ import RegisterForm from '../register/register-form';
 import { ViewDocuments } from '../register/RenderDocument';
 import FeeStructureAssignmentForm from './FeeStructureAssignmentForm';
 
-import type { IInquiryData } from '../Inquiry/type';
+import type { IInquiryData } from '../inquiry/type';
 
 const AdmissionScreen = () => {
   const tabs = useTabs(RegistrationStatusType.Pending);

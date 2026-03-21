@@ -8,7 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Grid, Button, DialogActions } from '@mui/material';
-import { DialogScrollContent } from 'src/components/customDialog';
+import { DialogScrollContent } from 'src/components/custom-dialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IEventAnnouncement } from '../type';

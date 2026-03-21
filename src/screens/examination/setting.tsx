@@ -1,18 +1,18 @@
-'use client';
+﻿'use client';
 
 import { Add } from '@mui/icons-material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import GradeScaling from './settings/gradeScaleManagement/gradeScaling';
+import GradeScaling from './settings/grade-scale-management/gradeScaling';
 import { FormSlider } from '../student/enrollment/register/register-form';
-import ExamTypeSettings from './settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeSetting';
+import ExamTypeSettings from './settings/exam-assessment-type-setting.tsx/exam-type-setting/examTypeSetting';
 
 import type { TabComponentType } from '../hr/leave-request';
 

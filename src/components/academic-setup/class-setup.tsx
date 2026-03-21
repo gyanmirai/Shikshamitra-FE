@@ -7,13 +7,13 @@ import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { useDispatch } from 'react-redux';
 import { Add } from '@mui/icons-material';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { GlobalIcons } from 'src/utils/icons';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { boardApi } from 'src/redux/board/boardApi';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
+import { useGetShiftsQuery } from 'src/redux/shift-management/shift-management-api';
 import {
   useGetClassQuery,
   useAddClassMutation,
@@ -38,7 +38,7 @@ import { Iconify } from '../iconify';
 import DivisionSetup from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
-import CustomDialog, { DialogScrollContent } from '../customDialog';
+import CustomDialog, { DialogScrollContent } from '../custom-dialog';
 
 interface IClassSetup {
   id: string;

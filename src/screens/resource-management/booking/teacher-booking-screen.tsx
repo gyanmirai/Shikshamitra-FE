@@ -3,8 +3,8 @@
 import React from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import TeacherResourceTable from './component/teacher-resource-table';

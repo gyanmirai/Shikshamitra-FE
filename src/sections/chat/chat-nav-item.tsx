@@ -10,7 +10,7 @@ import AvatarGroup from '@mui/material/AvatarGroup';
 import { clickConversation } from 'src/actions/chat';
 import ListItemText from '@mui/material/ListItemText';
 import { today, fToNow } from 'src/utils/format-time';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 import ListItemButton from '@mui/material/ListItemButton';
 import { useRouter, usePathname } from 'src/routes/hooks';
 

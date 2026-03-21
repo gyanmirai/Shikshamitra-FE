@@ -1,4 +1,4 @@
-import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
+import type { IViewConcessionRequestProps } from '../concession-admin/type';
 
 export interface IConcession {
   id?: string;

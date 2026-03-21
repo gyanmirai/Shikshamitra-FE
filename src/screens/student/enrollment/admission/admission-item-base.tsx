@@ -1,7 +1,7 @@
 import type { IKanbanTask } from 'src/types/kanban';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import type { Theme, SxProps } from '@mui/material/styles';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import { useSortable } from '@dnd-kit/sortable';
 import { imageClasses } from 'src/components/image';

@@ -6,7 +6,7 @@ import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import data from 'src/json/security/alert-report-data.json';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Grid, TextField, Autocomplete } from '@mui/material';
 import {
   SLAMeetStatusType,

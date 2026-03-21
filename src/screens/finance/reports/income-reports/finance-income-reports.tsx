@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { exportCurrentVisitsData } from 'src/utils/exportDiffGraph';
 import { Box, Grid, Card, Menu, Button, MenuItem, Typography } from '@mui/material';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';

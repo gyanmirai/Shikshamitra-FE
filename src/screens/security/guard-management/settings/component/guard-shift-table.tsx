@@ -2,7 +2,7 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { Box } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import data from 'src/json/security/guard-management/guard-shifts.json';
 
 import type { IGuardShiftFormValues, IGuardShiftTableProps } from '../guard-settings-interface';

@@ -1,5 +1,5 @@
 import React from 'react';
-import ReportsAnalytics from 'src/screens/academic/learning-management-system/reportsAnalytics/reports-analytics';
+import ReportsAnalytics from 'src/screens/academic/learning-management-system/reports-analytics/reports-analytics';
 
 const ReportsAndAnalyticsScreen = () => <ReportsAnalytics />;
 

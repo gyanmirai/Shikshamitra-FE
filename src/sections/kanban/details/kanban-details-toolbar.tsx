@@ -6,8 +6,8 @@ import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useBoolean } from 'src/hooks/useBoolean';
+import { useResponsive } from 'src/hooks/useResponsive';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 

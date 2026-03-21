@@ -4,7 +4,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import {
   useGetEarningComponentsQuery,
   useGetDeductionComponentsQuery,

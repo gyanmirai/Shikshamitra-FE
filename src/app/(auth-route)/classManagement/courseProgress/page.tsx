@@ -1,5 +1,5 @@
 import React from 'react';
-import CourseProgress from 'src/screens/classManagement/courseProgress';
+import CourseProgress from 'src/screens/class-management/course-progress';
 
 const page = () => <CourseProgress />;
 

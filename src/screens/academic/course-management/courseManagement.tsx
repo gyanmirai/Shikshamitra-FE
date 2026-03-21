@@ -4,22 +4,22 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Add, Create } from '@mui/icons-material';
 import { fNumber } from 'src/utils/format-number';
 import { UploadBox } from 'src/components/upload';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { SvgColor } from 'src/components/svg-color';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,

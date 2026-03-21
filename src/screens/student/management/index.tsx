@@ -18,7 +18,7 @@ import GrNoGenerationScreen from './gr-generation';
 import ChangeDivisionScreen from './change-division';
 import RollNoGenerationScreen from './roll-generation';
 
-import type { IInquiryData } from '../enrollment/Inquiry/type';
+import type { IInquiryData } from '../enrollment/inquiry/type';
 
 // Stable component references defined OUTSIDE the component to prevent
 // new function identities on every render (which causes remount + re-fetch loops)

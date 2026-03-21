@@ -6,14 +6,14 @@ import { orderBy } from 'src/utils/helper';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { Upload, ViewAgenda } from '@mui/icons-material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { fNumber, fShortenNumber } from 'src/utils/format-number';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 import {
   Box,

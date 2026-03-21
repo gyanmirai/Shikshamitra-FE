@@ -4,9 +4,9 @@ import dayjs from 'dayjs';
 import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import CommonCalender from 'src/components/calender';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEventHolidayByDateQuery } from 'src/redux/eventHoliday/eventHolidayApi';
+import { useGetEventHolidayByDateQuery } from 'src/redux/event-holiday/eventHolidayApi';
 
 import { HrEventsAndHolidaysForm } from '../events-holidays';
 

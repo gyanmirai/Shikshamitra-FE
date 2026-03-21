@@ -4,16 +4,16 @@ import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
@@ -22,7 +22,7 @@ import {
   useAddProfessionalTaxMutation,
   useDeleteProfessionalTaxMutation,
   useUpdateProfessionalTaxMutation,
-} from 'src/redux/ProfessionalTax/ProfessionalTaxApi';
+} from 'src/redux/professional-tax/ProfessionalTaxApi';
 
 interface IProfessionalTaxRange {
   id: string;

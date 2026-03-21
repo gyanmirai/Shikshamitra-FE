@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { UndoToast } from 'src/components/UndoToast';
+import { UndoToast } from 'src/components/undo-toast';
 import { shikshaMitraToast } from 'src/components/toast';
 
 type UndoConfig<T> = {

@@ -5,11 +5,11 @@ import React, { useState } from 'react';
 import { Box, Grid } from '@mui/material';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import data from 'src/json/security/staff-request-data.json';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import {
   CommonRequestStatusType,
   CommonRequestStatusTypeColor,

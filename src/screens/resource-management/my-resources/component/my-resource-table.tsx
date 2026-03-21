@@ -3,8 +3,8 @@ import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import data from 'src/json/ResourceManagement/myResources/my-resource-data.json';
+import CustomizableTable from 'src/components/customizable-table';
+import data from 'src/json/resource-management/my-resources/my-resource-data.json';
 
 import type { IMyResources, IMyResourcesTableProps } from '../my-resources-interface';
 

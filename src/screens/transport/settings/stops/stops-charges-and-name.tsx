@@ -1,5 +1,5 @@
 import React from 'react';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 interface StopsChargesAndNameProps {
   stopList: any;

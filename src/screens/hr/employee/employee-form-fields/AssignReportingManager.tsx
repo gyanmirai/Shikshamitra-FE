@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';

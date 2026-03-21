@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 

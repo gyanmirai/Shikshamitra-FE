@@ -9,7 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useState, useEffect, useCallback } from 'react';
-import { useResponsive } from 'src/hooks/use-responsive';
+import { useResponsive } from 'src/hooks/useResponsive';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useRouter, usePathname } from 'src/routes/hooks';
 import ClickAwayListener from '@mui/material/ClickAwayListener';

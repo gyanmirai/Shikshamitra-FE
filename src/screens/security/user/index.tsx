@@ -4,17 +4,17 @@ import _ from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetUsersQuery } from 'src/redux/user/userApi';
 import React, { useRef, useState, useEffect } from 'react';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import CustomDialog, { DialogScrollContent } from 'src/components/custom-dialog';
 import { Box, Avatar, MenuList, MenuItem, DialogActions, CircularProgress } from '@mui/material';
 import {
   useGetPermissionsQuery,
@@ -22,7 +22,7 @@ import {
 } from 'src/redux/permission/permissionApi';
 
 import Visibility from '../role/visibility';
-import { AccessControlForm } from '../accessControl';
+import { AccessControlForm } from '../access-control';
 import { PermissionForm, extractGrantedPermissions } from '../role';
 
 const UserManagementScreen = () => {

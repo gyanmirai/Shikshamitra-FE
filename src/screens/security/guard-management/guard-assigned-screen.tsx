@@ -3,7 +3,7 @@
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import data from 'src/json/security/guard-management/guard-list.json';
 import {
   Box,

@@ -1,4 +1,4 @@
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
@@ -11,16 +11,16 @@ import { GenderType, GenderOptions } from 'src/enums/gender';
 import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/useBoolean';
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
 import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
 
-import type { IInquiryData } from '../Inquiry/type';
+import type { IInquiryData } from '../inquiry/type';
 
 const RegistrationTable = ({
   dialog,

@@ -5,13 +5,13 @@ import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import { Button, MenuItem, MenuList } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import procurementRequestData from 'src/json/ResourceManagement/procurementRequest/procurementRequestData.json';
+import CustomizableTable from 'src/components/customizable-table';
+import procurementRequestData from 'src/json/resource-management/procurement-request/procurementRequestData.json';
 import {
   ResourceBookingStatusType,
   ResourceBookingStatusTypeColor,

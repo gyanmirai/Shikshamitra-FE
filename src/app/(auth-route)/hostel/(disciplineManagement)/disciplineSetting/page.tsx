@@ -1,5 +1,5 @@
 import React from 'react';
-import HostelDisciplineSetting from 'src/screens/hostel/disciplineManagement/settings';
+import HostelDisciplineSetting from 'src/screens/hostel/discipline-management/settings';
 
 const page = () => <HostelDisciplineSetting />;
 

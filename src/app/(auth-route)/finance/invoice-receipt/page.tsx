@@ -1,5 +1,5 @@
 import React from 'react';
-import InvoiceAndReceipt from 'src/screens/finance/InvoiceAndReceipt';
+import InvoiceAndReceipt from 'src/screens/finance/invoice-and-receipt';
 
 const page = () => <InvoiceAndReceipt />;
 

@@ -7,7 +7,7 @@ import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { CalendarView } from 'src/sections/calendar/view';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Card, Grid, Button, Typography, CardContent } from '@mui/material';
 
 const ExaminationDashboardExamlistComponent = (props: TabComponentType) => (

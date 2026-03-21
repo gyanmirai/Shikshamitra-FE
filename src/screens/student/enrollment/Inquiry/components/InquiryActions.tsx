@@ -1,4 +1,4 @@
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';

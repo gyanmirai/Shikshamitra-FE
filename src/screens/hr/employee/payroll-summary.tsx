@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { Box, Grid, Card, Stack, Avatar, CardHeader } from '@mui/material';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
 

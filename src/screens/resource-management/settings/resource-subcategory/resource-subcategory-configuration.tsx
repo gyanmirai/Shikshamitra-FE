@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import Add from '@mui/icons-material/Add';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Button, Tooltip } from '@mui/material';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import data from 'src/json/ResourceManagement/resourceSettings/resourceSubcategoryData.json';
+import data from 'src/json/resource-management/resource-settings/resourceSubcategoryData.json';
 
 import AddSubCategoryDialog from './component/add-resource-subcategory-dialog';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import StopManagement from 'src/screens/transport/StopManagement';
+import StopManagement from 'src/screens/transport/stop-management';
 
 const TransportStopManagement = () => <StopManagement />;
 

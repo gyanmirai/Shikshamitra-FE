@@ -1,13 +1,13 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn } from 'src/components/customizable-table/types';
 
 import * as yup from 'yup';
 import React, { useState } from 'react';
 import { Box, Avatar } from '@mui/material';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 const VerifyPayrollComponent = ({ onClose }: any) => {

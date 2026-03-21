@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import SubmitButton from 'src/components/submit-button';
 import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 

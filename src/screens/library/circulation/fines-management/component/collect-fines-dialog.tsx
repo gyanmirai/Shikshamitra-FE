@@ -2,9 +2,9 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { formatNumber } from 'src/utils/formate_number';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
 import { Box, Grid, Button, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
 

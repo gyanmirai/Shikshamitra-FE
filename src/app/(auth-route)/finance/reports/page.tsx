@@ -1,5 +1,5 @@
 import React from 'react';
-import FinanceReportsList from 'src/screens/finance/FinanceReports/Components/FinanceReportsList';
+import FinanceReportsList from 'src/screens/finance/finance-reports/components/FinanceReportsList';
 
 const page = () => <FinanceReportsList />;
 

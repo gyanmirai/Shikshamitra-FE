@@ -1,5 +1,5 @@
 import React from 'react';
-import ConcessionList from 'src/screens/finance/Concession/ConcessionList';
+import ConcessionList from 'src/screens/finance/concession/concession-list';
 
 const page = () => <ConcessionList />;
 

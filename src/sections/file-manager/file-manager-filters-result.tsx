@@ -1,6 +1,6 @@
 import type { IFileFilters } from 'src/types/file';
 import type { Theme, SxProps } from '@mui/material/styles';
-import type { UseSetStateReturn } from 'src/hooks/use-set-state';
+import type { UseSetStateReturn } from 'src/hooks/useSetState';
 
 import { useCallback } from 'react';
 import Chip from '@mui/material/Chip';

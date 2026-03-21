@@ -1,6 +1,6 @@
 import React from 'react';
 import CommonCalender from 'src/components/calender';
-import CalendarViewDialog from 'src/screens/calendar/CalendarView/Components/ViewDialog';
+import CalendarViewDialog from 'src/screens/calendar/calendar-view/components/ViewDialog';
 
 import communicationData from '../../../../../communicationData.json';
 

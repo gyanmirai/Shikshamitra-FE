@@ -14,7 +14,7 @@ import { ProgressBar } from 'src/components/progress-bar';
 import { detectSettings } from 'src/components/settings/server';
 import KeyboardShortcut from 'src/components/keyboard-shortcut';
 import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/components/settings';
-import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
+import { LocalizationProvider } from 'src/components/localization-provider/localization-provider';
 
 import { AppContent } from './app-content';
 import NextAuthSessionProvider from './providers';

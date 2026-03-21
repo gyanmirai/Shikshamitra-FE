@@ -1,5 +1,5 @@
 import { Grid, TextField } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import {
   SectionCard,
   CardActions,

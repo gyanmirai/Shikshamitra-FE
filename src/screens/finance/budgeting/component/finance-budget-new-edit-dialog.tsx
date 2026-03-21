@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import { ComponentBlock } from 'src/components/component-block';
 import { Box, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
 

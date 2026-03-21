@@ -1,5 +1,5 @@
 import React from 'react';
-import SeatAllocation from 'src/screens/examination/seatAllocation';
+import SeatAllocation from 'src/screens/examination/seat-allocation';
 
 const page = () => <SeatAllocation />;
 

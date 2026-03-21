@@ -1,7 +1,7 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CalendarView } from 'src/sections/calendar/view';
 import { Box, Card, Stack, Button, Avatar, Divider, CardHeader, Typography } from '@mui/material';

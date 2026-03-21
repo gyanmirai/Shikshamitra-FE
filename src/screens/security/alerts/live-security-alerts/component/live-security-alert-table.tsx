@@ -2,12 +2,12 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Button, MenuItem, MenuList } from '@mui/material';
 import data from 'src/json/security/live-security-data.json';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 const LiveSecurityAlertTable = () => {
   const acknowledgeDialog = useBoolean();

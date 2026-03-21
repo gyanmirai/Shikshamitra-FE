@@ -8,22 +8,22 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
-import UpiTable from './Component/UpiTable';
-import WalletTable from './Component/WalletTable';
-import CreditCardTable from './Component/CreditCardTable';
-import DemandDraftTable from './Component/DemandDraftTable';
-import BankTransferTable from './Component/BankTransferTable';
-import ChequeDetailsForm from './Component/ChequeDetailsTable';
-import OnlineGatewayTable from './Component/OnlineGatewayTable';
+import UpiTable from './component/UpiTable';
+import WalletTable from './component/WalletTable';
+import CreditCardTable from './component/CreditCardTable';
+import DemandDraftTable from './component/DemandDraftTable';
+import BankTransferTable from './component/BankTransferTable';
+import ChequeDetailsForm from './component/ChequeDetailsTable';
+import OnlineGatewayTable from './component/OnlineGatewayTable';
 
 // Example data with type property for demonstration
 const exampleData = [

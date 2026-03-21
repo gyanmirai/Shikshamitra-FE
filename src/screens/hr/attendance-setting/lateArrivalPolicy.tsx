@@ -7,15 +7,15 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import React, { useState, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomizableTable from 'src/components/customizable-table';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,

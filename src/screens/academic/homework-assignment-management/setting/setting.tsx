@@ -19,8 +19,8 @@ import {
   IconButton,
 } from '@mui/material';
 
-import AssessmentTypeSetting from './assessmentType/assessmentTypeSetting';
-import HomeworkTypeSettingCard from './homeworkType/homeworkTypeSettingCard';
+import AssessmentTypeSetting from './assessment-type/assessmentTypeSetting';
+import HomeworkTypeSettingCard from './homework-type/homeworkTypeSettingCard';
 
 const Setting = (props: TabComponentType) => (
   <Box>

@@ -1,5 +1,5 @@
 import type { IDatePickerControl } from 'src/types/common';
-import type { UseSetStateReturn } from 'src/hooks/use-set-state';
+import type { UseSetStateReturn } from 'src/hooks/useSetState';
 import type { ICalendarEvent, ICalendarFilters } from 'src/types/calendar';
 
 import { useCallback } from 'react';

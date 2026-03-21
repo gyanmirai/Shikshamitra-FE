@@ -1,5 +1,5 @@
 import React from 'react';
-import ServiceTypeSettingScreen from 'src/screens/transport/settings/ServiceType';
+import ServiceTypeSettingScreen from 'src/screens/transport/settings/service-type';
 
 const ServiceTypeSetting = () => <ServiceTypeSettingScreen />;
 

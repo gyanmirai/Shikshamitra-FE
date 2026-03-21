@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 const HRDashboardRecentPayrollRunsCard = () => (
   <Card sx={{ borderRadius: 3, p: 2, height: '100%' }}>

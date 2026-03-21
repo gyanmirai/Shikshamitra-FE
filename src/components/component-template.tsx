@@ -10,7 +10,7 @@ import { useState, useCallback } from 'react';
 import Container from '@mui/material/Container';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
-import { useEventListener } from 'src/hooks/use-event-listener';
+import { useEventListener } from 'src/hooks/useEventListener';
 
 // ----------------------------------------------------------------------
 

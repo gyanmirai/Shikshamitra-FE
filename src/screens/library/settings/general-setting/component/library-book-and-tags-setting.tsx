@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 import { libararyCategoryDummyData } from '../data/general-setting-data';
 

@@ -1,7 +1,7 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import { Grid, TextField, DialogActions } from '@mui/material';

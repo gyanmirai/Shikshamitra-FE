@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { useMemo, useEffect } from 'react';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 
 export const BackPopUpChecked = ({
   initialValues,

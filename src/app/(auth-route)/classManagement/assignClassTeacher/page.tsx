@@ -1,5 +1,5 @@
 import React from 'react';
-import ClassTeacherAssignment from 'src/screens/classManagement/assignClassTeacher/assignClassTeacher';
+import ClassTeacherAssignment from 'src/screens/class-management/assign-class-teacher/assignClassTeacher';
 
 const AssignTeacherPage = () => <ClassTeacherAssignment />;
 

@@ -1,10 +1,10 @@
 import dayjs from 'dayjs';
 import { Box } from '@mui/material';
 import React, { useState } from 'react';
-// import { useBoolean } from 'src/hooks/use-boolean';
+// import { useBoolean } from 'src/hooks/useBoolean';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import data from 'src/json/ResourceManagement/lossDamaged/lossDamagedData.json';
+import CustomizableTable from 'src/components/customizable-table';
+import data from 'src/json/resource-management/loss-damaged/lossDamagedData.json';
 
 import type {
   IReportLossTableProps,

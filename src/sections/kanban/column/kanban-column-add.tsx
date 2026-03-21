@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import { createColumn } from 'src/actions/kanban';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { inputBaseClasses } from '@mui/material/InputBase';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 

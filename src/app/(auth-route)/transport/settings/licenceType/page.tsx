@@ -1,5 +1,5 @@
 import React from 'react';
-import LicenceTypeSettingScreen from 'src/screens/transport/settings/LicenceType';
+import LicenceTypeSettingScreen from 'src/screens/transport/settings/licence-type';
 
 const LicenceTypeSetting = () => <LicenceTypeSettingScreen />;
 

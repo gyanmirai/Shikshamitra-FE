@@ -8,7 +8,7 @@ import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
@@ -22,7 +22,7 @@ import {
   CardHeader,
   InputAdornment,
 } from '@mui/material';
-// import { EcommerceYearlySales } from 'src/components/studentProfile/academicDashboard';
+// import { EcommerceYearlySales } from 'src/components/student-profile/academicDashboard';
 
 const ProgressReport = (props: TabComponentType) => (
   <Box>

@@ -5,19 +5,19 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
+import CustomDialog from 'src/components/custom-dialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { setIsChanges } from 'src/redux/confirm-popup/confirmPopupSlice';
 import quizTableData from 'src/json/academic/examination/quizTableData.json';
 
-import QuizPortal from '../quizManagement/quizPortal';
-import QuizTable from '../quizManagement/activeQuiz/components/activeQuizTable';
-import AddNewQuiz from '../quizManagement/activeQuiz/components/quizFormComponent';
+import QuizPortal from '../quiz-management/quizPortal';
+import QuizTable from '../quiz-management/active-quiz/components/activeQuizTable';
+import AddNewQuiz from '../quiz-management/active-quiz/components/quizFormComponent';
 
 import type { IQuizData } from './type';
 import type { TabComponentType } from '../../hr/leave-request';

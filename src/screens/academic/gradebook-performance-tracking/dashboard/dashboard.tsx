@@ -6,7 +6,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import { Box, Grid } from '@mui/material';
 // import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-// import { useBoolean } from 'src/hooks/use-boolean';
+// import { useBoolean } from 'src/hooks/useBoolean';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';

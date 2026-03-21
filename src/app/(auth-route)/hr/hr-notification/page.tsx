@@ -1,5 +1,5 @@
 import React from 'react';
-import HRNotificationScreen from 'src/screens/hr/hrNotification';
+import HRNotificationScreen from 'src/screens/hr/hr-notification';
 
 const HrNotification = () => <HRNotificationScreen />;
 

@@ -2,9 +2,9 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 
-import ViewMeetingDetail from './MeetingDetails/ViewMeetingDetail';
-import ViewMeetingMode from './MeetingDetails/ViewMeetingModeDetails';
-import ViewMeetingDescription from './MeetingDetails/ViewMeetingDescrption';
+import ViewMeetingDetail from './meeting-details/ViewMeetingDetail';
+import ViewMeetingMode from './meeting-details/ViewMeetingModeDetails';
+import ViewMeetingDescription from './meeting-details/ViewMeetingDescrption';
 
 import type { IMeeting } from './type';
 

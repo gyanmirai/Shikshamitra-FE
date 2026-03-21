@@ -2,14 +2,14 @@
 
 import type { RootState } from 'src/redux/store';
 import type { GridProps, PaperProps } from '@mui/material';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { UseBooleanReturn } from 'src/hooks/useBoolean';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
 import { ReligionTypeArray } from 'src/enums/religion';

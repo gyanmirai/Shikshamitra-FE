@@ -6,15 +6,15 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
+import { useTabs } from 'src/hooks/useTabs';
 import { Label } from 'src/components/label';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CustomSelect from 'src/components/custom-select';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -22,12 +22,12 @@ import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@m
 import {
   concessionRequestApi,
   useDeleteConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
+} from 'src/redux/finance/concession-management/concessionRequestApi';
 
 import concessionData from '../../../../../concession.json';
 
 import type { IStudentInfo } from '../type';
-import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
+import type { IViewConcessionRequestProps } from '../../concession-admin/type';
 
 interface ICombinedProps {
   onRequestConcession?: (student: IStudentInfo) => void;

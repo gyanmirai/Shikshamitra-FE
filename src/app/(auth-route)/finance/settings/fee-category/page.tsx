@@ -1,5 +1,5 @@
 import React from 'react';
-import FeeCategoryCreation from 'src/screens/finance/settings/FeeCategory';
+import FeeCategoryCreation from 'src/screens/finance/settings/fee-category';
 
 const page = () => <FeeCategoryCreation />;
 

@@ -8,17 +8,17 @@ import { useDispatch } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { StudentApi } from 'src/redux/student';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useChangeStudentClassMutation } from 'src/redux/student/student-change-class/student-change-class-api';
 
 import type { ITableClassDropDownProps } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry/type';
+import type { IInquiryData } from '../../enrollment/inquiry/type';
 
 const ChangeClassScreen = ({
   tableData: studentData,

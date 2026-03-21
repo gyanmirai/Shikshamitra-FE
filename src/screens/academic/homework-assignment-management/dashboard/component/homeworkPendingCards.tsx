@@ -3,7 +3,7 @@
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Grid, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 
 export const assignmentData = [
   {

@@ -4,9 +4,9 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 import { Box } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const ContentLibrary = (props: TabComponentType) => {

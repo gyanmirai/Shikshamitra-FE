@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useBoolean } from 'src/hooks/useBoolean';
+import CustomDialog from 'src/components/custom-dialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
+import CustomizableTable from 'src/components/customizable-table';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
-import data from 'src/json/ResourceManagement/resourceSettings/resourceCategoryData.json';
+import data from 'src/json/resource-management/resource-settings/resourceCategoryData.json';
 
 import AddResourceCategoryDialog from './component/add-resource-category-dialog';
 

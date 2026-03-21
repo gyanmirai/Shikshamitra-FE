@@ -15,8 +15,8 @@
 // import ShakingTextField from 'src/components/shaking-text-field';
 // import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-// import { getReviewStaffGatePassRequestInitialValues } from '../initialValue';
-// import { reviewStaffGatePassRequestValidationSchema } from '../validationSchema';
+// import { getReviewStaffGatePassRequestInitialValues } from '../initial-value';
+// import { reviewStaffGatePassRequestValidationSchema } from '../validation-schema';
 
 // import type { IReviewStaffGatePassRequestDetailViewDialogProps } from '../review-gate-pass-staff-interfcae';
 

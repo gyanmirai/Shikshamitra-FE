@@ -3,7 +3,7 @@
 import React from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AddResourceDialog from './component/add-resource-dialog';

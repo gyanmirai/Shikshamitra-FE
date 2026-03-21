@@ -4,7 +4,7 @@ import type { DragEvent, ChangeEvent } from 'react';
 import React, { useState } from 'react';
 import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import {
   Box,
   Card,

@@ -5,7 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React, { useMemo } from 'react';
 import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useSearchParam } from 'src/hooks/useSearchParam';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Reports from './newReport';

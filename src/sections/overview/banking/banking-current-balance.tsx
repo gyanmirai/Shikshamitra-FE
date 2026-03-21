@@ -7,7 +7,7 @@ import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useBoolean } from 'src/hooks/useBoolean';
 import { fCurrency } from 'src/utils/format-number';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { Carousel, useCarousel, CarouselDotButtons } from 'src/components/carousel';

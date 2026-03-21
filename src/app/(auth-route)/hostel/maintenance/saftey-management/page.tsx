@@ -1,5 +1,5 @@
 import React from 'react';
-import SafteyManagementScreen from 'src/screens/hostel/hostelMaintenance/safteyManagement/saftey-management-screen';
+import SafteyManagementScreen from 'src/screens/hostel/hostel-maintenance/saftey-management/saftey-management-screen';
 
 const page = () => <SafteyManagementScreen />;
 
