@@ -249,7 +249,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid size={{ xs: 12, md: 3, lg: 2.3 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Grid size={{ xs: 12, md: 3, lg: 2.4 }} sx={{ display: 'flex', justifyContent: 'center' }}>
           <UploadAvatar
             onDrop={async (acceptedFiles: File[]) => {
               const file = acceptedFiles?.[0];
@@ -262,10 +262,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             value={formik.values.photo}
             error={formik.touched.photo && Boolean(formik.errors.photo)}
             helperText={formik.touched.photo && formik.errors.photo}
-            sx={{ m: 'initial' }}
             disabled={!isBasicDetailsEditable.value}
           />
-          {/* <FormHelperText>{formik.touched.photo && formik.errors.photo}</FormHelperText> */}
         </Grid>
         <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
           <Grid container spacing={3}>
@@ -519,7 +517,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     id="bloodGroup"
                     name="bloodGroup"
                     size="small"
-                    value={formik.values.bloodGroup}
+                    value={formik.values.bloodGroup === null ? '' : formik.values.bloodGroup}
                     onChange={formik.handleChange}
                     label="Blood Group"
                   >

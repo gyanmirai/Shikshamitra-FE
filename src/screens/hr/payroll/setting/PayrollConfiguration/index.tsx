@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -59,9 +60,9 @@ const PayrollConfiguration = () => {
         heading="Payroll Configuration"
         description="Configure the payroll calculation rules, including how days are counted for salary processing."
         links={[
-          { name: 'HR', href: '/hr/dashboard' },
-          { name: 'Payroll Management', href: '/hr/payroll/dashboard' },
-          { name: 'Setting', href: '/hr/payroll/setting/earning' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
+          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'Payroll Configuration' },
         ]}
       />

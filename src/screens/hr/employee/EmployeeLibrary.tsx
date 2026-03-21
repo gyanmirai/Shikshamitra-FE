@@ -4,6 +4,7 @@ import React from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Tab, Card } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -27,18 +28,22 @@ const TABS = [
   {
     value: 'borrowed-books',
     label: 'Borrowed Books',
+    icon: 'solar:book-bookmark-linear',
   },
   {
     value: 'reserved-books',
     label: 'Reserved Books',
+    icon: 'solar:bookmark-linear',
   },
   {
     value: 'charges',
     label: 'Charges',
+    icon: 'solar:wallet-linear',
   },
   {
     value: 'borrow-history',
     label: 'Borrow History',
+    icon: 'solar:history-linear',
   },
 ];
 
@@ -193,13 +198,20 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
           role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              label={tab.label}
+              icon={<Iconify icon={tab.icon} width={20} />}
+              iconPosition="start"
+              sx={{ minHeight: 48 }}
+            />
           ))}
         </CustomTabs>
       </Card>
 
       {/* Tab Content */}
-      <Scrollbar sx={{ p: 1 }}>{renderTabContent()}</Scrollbar>
+      <Scrollbar sx={{ pt: 1 }}>{renderTabContent()}</Scrollbar>
     </Box>
   );
 };

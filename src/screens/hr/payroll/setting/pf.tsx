@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -104,12 +105,12 @@ const PF = () => {
         heading="PF Rule"
         description="Configure PF rule for employees"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard' },
           {
             name: 'Payroll Management',
-            href: '/hr/payroll/dashboard/',
+            href: hrPaths.payroll.runPayroll,
           },
-          { name: ' Settings' },
+          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'PF Rule' },
         ]}
         action={

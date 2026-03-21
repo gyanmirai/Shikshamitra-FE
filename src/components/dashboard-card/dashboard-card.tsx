@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Avatar, Divider, Typography } from '@mui/material';
+import { Box, Card, Avatar, Typography } from '@mui/material';
 
 import { SubjectColorIndicator } from '../subject-color/SubejctColor';
 
@@ -41,7 +41,7 @@ export const DashboardCard = ({
   const cardContent = (
     <Card
       sx={{
-        p: 2,
+        p: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
@@ -71,8 +71,8 @@ export const DashboardCard = ({
         <Avatar
           variant="rounded"
           sx={{
-            width: 48,
-            height: 48,
+            width: 40,
+            height: 40,
             bgcolor: bgColor,
             color,
             borderRadius: 1.5,
@@ -84,7 +84,7 @@ export const DashboardCard = ({
         {/* Content */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
-            variant="h3"
+            variant="h6"
             sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: -0.5, mb: 0.25 }}
           >
             {value}
@@ -108,8 +108,6 @@ export const DashboardCard = ({
           {description}
         </Typography>
       )}
-
-      <Divider sx={{ borderStyle: 'dashed', width: '100%' }} />
 
       {labels.length > 0 && (
         <Box

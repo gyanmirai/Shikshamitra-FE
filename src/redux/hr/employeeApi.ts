@@ -87,18 +87,15 @@ export const employeeApi = createApi({
     }),
     getFamilyInformation: builder.query({
       query: (id) => ({
-        url: `/app/employee-family-info`,
+        url: `/employees/${id}/family-info`,
         method: 'GET',
-        params: {
-          employeeId: id,
-        },
       }),
       providesTags: ['Employee'],
     }),
     updateFamilyInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee-family-info/upsert/${employeeId}`,
-        method: 'POST',
+        url: `/employees/${employeeId}/family-info`,
+        method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],

@@ -13,6 +13,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -79,7 +80,7 @@ const AttendanceTrackingScreen = () => {
         heading="Attendance Tracking"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.attendanceTracking },
           { name: 'Attendance Tracking' },
         ]}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."

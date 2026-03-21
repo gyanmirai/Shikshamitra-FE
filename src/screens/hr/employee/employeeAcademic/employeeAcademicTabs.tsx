@@ -3,18 +3,14 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Tab, Box, Card } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import TeacherSchedule from 'src/screens/mainDashboard/teacher/schedule';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import CourseProgress from './subjectPerformance';
-import EmployeeTimetable from './employeeTimetable';
-import DummyScheduledExamTable from './employeeExam';
-import HomeworkAssignment from './homeworkAssignment';
 
 const TABS = [
   { value: 'timetable', label: 'Timetable' },
   { value: 'subjectPerformace', label: 'Subject Progress' },
-  // { value: 'homework/assignments', label: 'Homework/Assignments' },
-  // { value: 'examination', label: 'Examination' },
 ];
 const EmployeeAcademicTabs = () => {
   const tabs = useTabs('timetable');
@@ -55,11 +51,9 @@ const EmployeeAcademicTabs = () => {
         }}
       >
         <Scrollbar sx={{ minHeight: 384 }}>
-          <Box sx={{ p: 3, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-            {tabs.value === 'timetable' && <EmployeeTimetable />}
+          <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+            {tabs.value === 'timetable' && <TeacherSchedule />}
             {tabs.value === 'subjectPerformace' && <CourseProgress />}
-            {tabs.value === 'homework/assignments' && <HomeworkAssignment />}
-            {tabs.value === 'examination' && <DummyScheduledExamTable />}
           </Box>
         </Scrollbar>
       </FormSlider>

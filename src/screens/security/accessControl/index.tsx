@@ -6,7 +6,6 @@ import type { Board, Medium, Division, Standards, Organization } from 'src/types
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -587,7 +586,7 @@ export const BoardScreenStep = ({
                     sx={{
                       py: 1,
                       px: 1,
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.primary.lighterChannel, 0.4),
+                      bgcolor: (theme) => theme.vars.palette.background.neutral,
                       borderBottom: '1px solid',
                       borderColor: 'divider',
                     }}

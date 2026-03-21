@@ -38,19 +38,19 @@ export function NavVertical({
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNavVertical = (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {slots?.topArea ?? (
         <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
           <LogoWithText />
         </Box>
       )}
-
-      <Scrollbar fillContent>
-        <NavSectionVertical data={data} sx={{ px: 2, flex: '1 1 auto' }} {...other} />
-
-        {/* {slots?.bottomArea ?? <NavUpgrade />} */}
-      </Scrollbar>
-    </>
+      <Box sx={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <Scrollbar fillContent>
+          <NavSectionVertical data={data} sx={{ px: 2 }} {...other} />
+        </Scrollbar>
+      </Box>
+      {/* Bottom section (Institute Setup) will be rendered outside this Box */}
+    </Box>
   );
 
   const renderNavMini = (
@@ -105,33 +105,36 @@ export function NavVertical({
           },
         }}
       />
-      {isNavMini ? renderNavMini : renderNavVertical}
-      {/* <NavList depth={1} data={settingMenu} cssVars={cssVars} /> */}
-      {isNavMini ? (
-        <NavSectionMini
-          data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
-          sx={{
-            pb: 2,
-            px: 0.5,
-            ...hideScrollY,
-            flex: '1 1 auto',
-            overflowY: 'hidden',
-            borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
-            '& ul': {
-              justifyContent: 'end',
-            },
-          }}
-        />
-      ) : (
-        <NavSectionVertical
-          data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
-          sx={{
-            px: 2,
-            borderTop: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
-          }}
-          {...other}
-        />
-      )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', flex: 1, minHeight: 0 }}>
+        {isNavMini ? renderNavMini : renderNavVertical}
+        {/* Bottom section (Institute Setup) pinned to bottom */}
+        <Box sx={{ width: '100%' }}>
+          {isNavMini ? (
+            <NavSectionMini
+              data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
+              sx={{
+                pb: 2,
+                px: 0.5,
+                ...hideScrollY,
+                overflowY: 'hidden',
+                borderTop: `4px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['100Channel'], 0.2)})`,
+                '& ul': {
+                  justifyContent: 'end',
+                },
+              }}
+            />
+          ) : (
+            <NavSectionVertical
+              data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
+              sx={{
+                px: 2,
+                borderTop: `1px solid var(--layout-nav-border-color, ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)})`,
+              }}
+              {...other}
+            />
+          )}
+        </Box>
+      </Box>
     </Box>
   );
 }

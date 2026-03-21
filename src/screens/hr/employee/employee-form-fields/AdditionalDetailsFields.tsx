@@ -26,6 +26,12 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             size="small"
             label="BPL Card No."
             {...formik.getFieldProps('bplCardNo')}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (/^[A-Za-z0-9 ]*$/.test(val)) {
+                formik.setFieldValue('bplCardNo', val);
+              }
+            }}
             error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}
             helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
           />

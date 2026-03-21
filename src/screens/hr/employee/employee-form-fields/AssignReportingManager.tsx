@@ -70,10 +70,10 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
             <CustomTooltip placement="top" title={selectedEmployee?.fullName}>
               <TextField
                 {...params}
-                label="Reporting Manager *"
+                label="Reporting Manager"
                 size="small"
-                error={!!touched.reportingManager && !!errors.reportingManager}
-                helperText={touched.reportingManager && errors.reportingManager}
+                // error={!!touched.reportingManager && !!errors.reportingManager}
+                // helperText={touched.reportingManager && errors.reportingManager}
                 disabled={!isEditable.value}
                 sx={{ maxWidth: 268 }}
               />

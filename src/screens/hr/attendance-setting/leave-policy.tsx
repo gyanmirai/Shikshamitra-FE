@@ -10,6 +10,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
@@ -207,8 +208,8 @@ const LeavePolicy = () => {
         description="Define and manage leave policies for your organization to ensure smooth attendance and leave management."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave' },
-          { name: 'Setting' },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Settings', href: hrPaths.attendance.setting.root },
           { name: 'Leave Policy' },
         ]}
         action={

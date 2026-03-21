@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 // Icons
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -111,10 +112,10 @@ const AttendanceConfigurationScreen = () => {
       <CustomBreadcrumbs
         heading="Attendance Configuration"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: '' },
-          { name: 'Setting' },
-          { name: 'Attendance Configuration', href: '' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Settings', href: hrPaths.attendance.setting.root },
+          { name: 'Attendance Configuration' },
         ]}
         description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
       />
@@ -126,7 +127,7 @@ const AttendanceConfigurationScreen = () => {
             style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
           >
             <Scrollbar sx={{ p: 2, flexGrow: 1 }}>
-              <Grid container spacing={2}>
+              <Grid container spacing={1} pb={1}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Card
                     elevation={0}
