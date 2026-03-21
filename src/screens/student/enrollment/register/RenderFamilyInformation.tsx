@@ -1568,7 +1568,7 @@ function RenderFamilyInformation(props: any) {
           <Autocomplete
             disabled={!isSiblingDetailsEditable.value}
             loading={false}
-            noOptionsText="No Student Found"
+            noOptionsText={<Typography variant="caption">No Student Found</Typography>}
             fullWidth
             value={student}
             onChange={(e, value: any) => {

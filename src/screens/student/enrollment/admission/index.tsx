@@ -257,7 +257,30 @@ const AdmissionScreen = () => {
         isFilter: true,
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left' },
+      {
+        id: 'age',
+        label: 'Age',
+        align: 'left',
+        isFilter: true,
+        filterType: 'number',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       { id: 'genderValue', label: 'Gender', align: 'left' },
       { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left', filterType: 'number' },
       {
@@ -289,32 +312,23 @@ const AdmissionScreen = () => {
         label: 'Address',
         minWidth: '180px',
         align: 'left',
-        render: (value, row) => {
-          const addressLines = value.split(', ');
-          const displayAddress = addressLines.slice(0, 3).join(', ');
-          const hasMoreLines = addressLines.length > 3;
-
-          return (
-            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '13px',
-                  // width: 200,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  lineHeight: '1.2em',
-                  maxHeight: '2.4em',
-                }}
-              >
-                {displayAddress}
-                {hasMoreLines && '...'}
-              </Typography>
-            </CustomTooltip>
-          );
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'primaryContactNo',
@@ -328,7 +342,29 @@ const AdmissionScreen = () => {
         minWidth: '220px',
         align: 'left',
       },
-      { id: 'previousSchool', label: 'Previous School', minWidth: '170px', align: 'left' },
+      {
+        id: 'previousSchool',
+        label: 'Previous School',
+        minWidth: '170px',
+        align: 'left',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'inquiryPreference',
         label: 'Inquiry Preference',

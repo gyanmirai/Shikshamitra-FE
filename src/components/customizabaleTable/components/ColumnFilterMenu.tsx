@@ -256,8 +256,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
               size="small"
               value={formik.values.filterValue ?? ''}
               onChange={(e) => {
-                // Remove special characters using regex
-                const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                const sanitizedValue = e.target.value;
                 formik.setFieldValue('filterValue', sanitizedValue);
               }}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}

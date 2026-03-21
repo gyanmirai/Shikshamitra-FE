@@ -256,7 +256,6 @@ const EntranceExamScreen = () => {
         id: 'progress',
         label: 'Progress',
         align: 'left',
-        sticky: true,
         filterType: 'number',
         render(value, row) {
           return (
@@ -298,6 +297,7 @@ const EntranceExamScreen = () => {
         label: 'Percentage',
         filterType: 'number',
         sticky: true,
+        minWidth: '100px',
         align: 'left',
         render(value, row) {
           return (
@@ -340,6 +340,7 @@ const EntranceExamScreen = () => {
         filterType: 'enum',
         enumOptions: EntranceExamStatusOptions,
         align: 'left',
+        minWidth: 100,
         sticky: true,
         render(value, row) {
           const color = EntranceExamStatusTypeColors[value as EntranceExamStatusType] as LabelColor;

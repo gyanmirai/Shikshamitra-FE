@@ -200,16 +200,17 @@ export function StudentProfile() {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+
   // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
-        // academicYearId: year?.id,
+        academicMediumId: medium?.id,
         standardId: classes,
         divisionId: division,
       });
     }
-  }, [division, classes, organization, getStudents]);
+  }, [division, classes, organization, medium?.id, getStudents]);
 
   // Transform students data to include full name
   const tableData = useMemo(
@@ -217,10 +218,11 @@ export function StudentProfile() {
       StudentsData?.items?.map((item: any) => ({
         ...item,
         name: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item.genderType],
+        genderLabel: GenderType[item.gender],
         age: calculateAge(item.dateOfBirth),
         address:
           [item.addressLine1, item.addressLine2, item.addressLine3].filter(Boolean).join(', ') ||
+          item.address ||
           '-',
         RTE: item?.studentAdditionalDetails?.rightToEducation ? 'Yes' : 'No',
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
@@ -252,7 +254,7 @@ export function StudentProfile() {
     statusDialog.onFalse();
     setSelectedStudentForStatus(null);
     getStudents({
-      // academicYearId: year?.id,
+      academicMediumId: medium?.id,
       standardId: classes,
       divisionId: division,
     });
@@ -300,6 +302,7 @@ export function StudentProfile() {
             elevation={2}
             sx={{
               display: 'flex',
+              borderRadius: 2,
               gap: 1,
               flexWrap: 'wrap',
               alignItems: 'center',
@@ -385,7 +388,7 @@ export function StudentProfile() {
               },
 
               {
-                id: 'genderValue',
+                id: 'genderLabel',
                 label: 'Gender',
                 minWidth: '6vw',
                 align: 'left',

@@ -1236,7 +1236,19 @@ const YearForm = ({ handleClose, editData }: IYearForm) => {
     },
     validationSchema: Yup.object().shape({
       startDate: Yup.date().required('Start Date is required'),
-      endDate: Yup.date().required('End Date is required'),
+      endDate: Yup.date()
+        .required('End Date is required')
+        .test(
+          'year-gap-exactly-one',
+          'End year must be exactly 1 year after start year (e.g. 2024-2025)',
+          (endDate, context) => {
+            const { startDate } = context.parent;
+            if (!startDate || !endDate) return true;
+            const startYear = dayjs(startDate).year();
+            const endYear = dayjs(endDate).year();
+            return endYear - startYear === 1;
+          }
+        ),
     }),
     onSubmit: async () => {
       confirm.onTrue();

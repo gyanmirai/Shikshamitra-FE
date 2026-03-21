@@ -141,7 +141,10 @@ const InquiryPreference = () => {
                   dispatchFn(
                     inquiryPreferenceApi.util.updateQueryData(
                       'getInquiryPreference',
-                      { academicYearId: currentYear?.id },
+                      {
+                        academicYearId: currentYear?.id,
+                        ...query,
+                      },
                       (draft: any) => {
                         const index = draft?.items?.findIndex(
                           (pref: any) => pref.id === editData?.id
