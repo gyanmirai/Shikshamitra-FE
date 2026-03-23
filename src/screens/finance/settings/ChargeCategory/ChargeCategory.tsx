@@ -201,9 +201,9 @@ const FinanceChargeCategory = () => {
         heading="Charge Category"
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"
         links={[
-          { name: 'Finance', href: '/finance' },
-          { name: 'Settings', href: '/finance/setting' },
-          { name: 'Charge Category', href: '/finance/settings/charge-category' },
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Settings' },
+          { name: 'Charge Category' },
         ]}
         action={
           <Button
@@ -251,8 +251,6 @@ const FinanceChargeCategory = () => {
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
-        fullWidth
       >
         <ChargeCategoryDialog
           open={addDialog.value || editDialog.value}
@@ -366,7 +364,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <DialogScrollContent>
-          <Stack spacing={3} p={0}>
+          <Stack spacing={2} p={0}>
             {/* Charge Category Name Field */}
             <ShakingTextField
               error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
@@ -378,7 +376,10 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
                 fullWidth
                 label="Charge Category Name *"
                 onChange={(e: any) => {
-                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  const onlyLetters = e.target.value
+                    .replace(/[^a-zA-Z0-9\s]/g, '')
+                    .replace(/^\s+/g, '')
+                    .trimStart();
                   const newName = onlyLetters
                     .split(' ')
                     .map(
@@ -388,6 +389,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
                   formik.setFieldValue('chargeName', newName);
                 }}
                 error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
+                inputProps={{ maxLength: 40 }}
                 helperText={
                   formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
                     ? formik.errors.chargeName

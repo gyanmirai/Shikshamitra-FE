@@ -97,7 +97,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Fee Category */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField
@@ -142,7 +142,12 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                   formik.setFieldValue('name', value);
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                helperText={
+                  formik.touched.name && formik.errors.name
+                    ? formik.errors.name
+                    : `${formik.values.name.length}/40 Maximum characters allowed`
+                }
+                inputProps={{ maxLength: 40 }}
               />
             </ShakingTextField>
           </Grid>

@@ -104,7 +104,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Expense Category Name */}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
@@ -117,6 +117,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                 onChange={(e) => {
                   const value = e.target.value
                     .replace(/[^a-zA-Z\s]/g, '')
+                    .replace(/^\s+/g, '')
+                    .trimStart()
                     .split(' ')
                     .map((word) =>
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -129,21 +131,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
               />
             </ShakingTextField>
           </Grid>
-
-          {/* Description */}
-          <Grid size={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Description"
-              name="description"
-              size="small"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-
+          {/* Tags */}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
               <TextField
@@ -191,10 +179,23 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
                 helperText={
                   formik.touched.tags && typeof formik.errors.tags === 'string'
                     ? formik.errors.tags
-                    : undefined
+                    : 'Press Enter to add a tag'
                 }
               />
             </ShakingTextField>
+          </Grid>
+          {/* Description */}
+          <Grid size={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Description"
+              name="description"
+              size="small"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+            />
           </Grid>
         </Grid>
       </DialogScrollContent>

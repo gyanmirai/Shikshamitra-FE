@@ -67,7 +67,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             value === true ? theme.palette.success.main : theme.palette.text.secondary;
           return (
             <CustomTooltip
-              title={value === true ? 'Active' : 'InActive'}
+              title={value === true ? 'Active' : 'Deactive'}
               arrow
               placement="left"
               PopperProps={{

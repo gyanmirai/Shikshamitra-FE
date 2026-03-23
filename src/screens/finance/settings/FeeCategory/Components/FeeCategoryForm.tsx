@@ -68,7 +68,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Fee Category Name */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
@@ -81,7 +81,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                 onChange={(e) => {
                   let value = e.target.value
                     .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
-                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                    .replace(/^\s+/g, '') // Remove leading spaces
                     .replace(/^\d+/, '') // Remove leading numbers
                     .trimStart(); // Remove leading spaces
                   value = value
@@ -94,7 +94,12 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                   formik.setFieldValue('name', value);
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                helperText={
+                  formik.touched.name && formik.errors.name
+                    ? formik.errors.name
+                    : `${formik.values.name.length}/40 Maximum characters allowed`
+                }
+                inputProps={{ maxLength: 40 }}
               />
             </ShakingTextField>
           </Grid>
