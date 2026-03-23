@@ -3,7 +3,7 @@ import type { TextFieldProps, AutocompleteProps } from '@mui/material';
 
 import React, { useMemo } from 'react';
 import { City } from 'country-state-city';
-import { TextField, Autocomplete } from '@mui/material';
+import { TextField, Typography, Autocomplete } from '@mui/material';
 
 const CityComponent = ({
   onChange,
@@ -30,7 +30,7 @@ const CityComponent = ({
   );
   return (
     <Autocomplete
-      noOptionsText="No City Found"
+      noOptionsText={<Typography variant="caption">No City Found</Typography>}
       fullWidth
       value={value}
       onChange={onChange}

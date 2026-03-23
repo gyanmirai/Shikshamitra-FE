@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles/utils';
 import { Chart, useChart } from 'src/components/chart';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
@@ -9,24 +10,35 @@ import { Box, Card, Stack, Typography, CircularProgress } from '@mui/material';
 interface CompactKPICardProps {
   title: string;
   value: string | number;
-  icon: string;
-  percentChange?: number;
   trendData?: number[];
   status?: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary';
   sx?: any;
   path?: string;
   tooltip?: string;
+  icon?: string;
+
+  chart?: {
+    type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
+    series?: any[];
+    colors?: string[];
+    options?: any;
+    width?: number;
+    height?: number;
+    labels?: string[];
+  };
 }
+
+const RADIAL_TYPES = ['donut', 'pie', 'radialBar'];
 
 export default function CompactKPICard({
   title,
   value,
-  icon,
-  percentChange = 0,
-  trendData = [5, 10, 5, 15, 10, 20, 15, 25],
+  trendData,
   status = 'info',
   path,
   tooltip,
+  icon,
+  chart,
   sx,
 }: CompactKPICardProps) {
   const theme = useTheme();
@@ -45,18 +57,24 @@ export default function CompactKPICard({
 
   const mainColor = theme.palette[status].main;
   const lightColor = theme.palette[status].light;
+  const lighterColor = theme.palette[status].lighter;
 
-  const chartOptions = useChart({
-    colors: [mainColor],
-    fill: {
-      type: 'gradient',
-      gradient: {
-        colorStops: [
-          { offset: 0, color: lightColor, opacity: 1 },
-          { offset: 100, color: mainColor, opacity: 1 },
-        ],
-      },
-    },
+  const isRadialChart = RADIAL_TYPES.includes(chart?.type || '');
+
+  const sparklineOptions = useChart({
+    colors: chart?.colors || [mainColor],
+    fill:
+      chart?.type === 'bar'
+        ? { type: 'solid' }
+        : {
+            type: 'gradient',
+            gradient: {
+              colorStops: [
+                { offset: 0, color: lightColor, opacity: 1 },
+                { offset: 100, color: mainColor, opacity: 1 },
+              ],
+            },
+          },
     chart: {
       animations: { enabled: false },
       sparkline: { enabled: true },
@@ -66,34 +84,105 @@ export default function CompactKPICard({
       y: {
         formatter: (val: number) => `${val}`,
         title: {
-          formatter: () => '',
+          formatter: (_s: string, opts?: any) =>
+            chart?.labels?.[opts?.dataPointIndex] ? `${chart.labels[opts.dataPointIndex]}: ` : '',
         },
       },
-      marker: { show: false },
+      marker: { show: true },
+      fixed: {
+        enabled: true,
+        position: 'topLeft',
+        offsetY: -5,
+        offsetX: -100, // Move it explicitly to the left of the small chart using native offsets
+      },
     },
-    stroke: { width: 2, curve: 'smooth' },
-    plotOptions: { bar: { columnWidth: '80%', borderRadius: 2 } },
+    stroke: {
+      show: true,
+      width: chart?.type === 'bar' ? 4 : 2,
+      colors: chart?.type === 'bar' ? ['transparent'] : undefined,
+      curve: 'smooth',
+    },
+    plotOptions: {
+      bar: { columnWidth: '70%', borderRadius: 2, distributed: chart?.type === 'bar' },
+    },
+    xaxis: {
+      categories: chart?.labels || [],
+    },
+    ...(!isRadialChart ? chart?.options : {}),
   });
 
-  const isPositive = percentChange >= 0;
+  const donutOptions = useChart({
+    colors: chart?.colors || [mainColor, lighterColor],
+    labels: chart?.labels || [],
+    chart: {
+      animations: { enabled: false },
+      sparkline: { enabled: true },
+    },
+    legend: { show: false },
+    dataLabels: { enabled: false },
+    tooltip: {
+      enabled: true,
+      fillSeriesColor: false,
+      style: { fontSize: '11px' },
+      y: {
+        formatter: (val: number) => `${val}`,
+        title: { formatter: (name: string) => `${name}: ` },
+      },
+      marker: { show: true },
+      fixed: {
+        enabled: false,
+      },
+    },
+    stroke: { width: 0 },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '60%',
+          labels: {
+            show: false,
+            total: { show: false },
+          },
+        },
+      },
+      radialBar: {
+        hollow: { size: '40%' },
+        dataLabels: { show: false },
+        track: { background: lighterColor },
+      },
+    },
+    ...(isRadialChart ? chart?.options : {}),
+  });
+
+  // Keep backward-compat alias
+  const chartOptions = sparklineOptions;
 
   return (
     <Card
       onClick={handleClick}
       sx={{
+        overflow: 'visible', // allows native apex tooltip to render outside without clipping
         display: 'flex',
         alignItems: 'center',
-        p: 2,
+        px: 2,
+        py: 1.5,
         height: '100%',
         position: 'relative',
         cursor: path ? 'pointer' : 'default',
         transition: 'transform 0.2s, box-shadow 0.2s',
+        '& .apexcharts-tooltip': {
+          pointerEvents: 'none !important', // Fixes lingering
+          zIndex: 9999, // Brings above other elements
+        },
+        '& .apexcharts-tooltip.apexcharts-active': {
+          opacity: 1,
+        },
         '&:hover': path
           ? {
               transform: 'translateY(-4px)',
               boxShadow: theme.shadows[8],
+              zIndex: 10,
             }
-          : {},
+          : { zIndex: 10 },
         ...sx,
       }}
     >
@@ -109,7 +198,8 @@ export default function CompactKPICard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            bgcolor: (t) => t.vars.palette.background.paper,
+            opacity: 0.8,
             backdropFilter: 'blur(2px)',
             borderRadius: 2,
           }}
@@ -119,58 +209,106 @@ export default function CompactKPICard({
       )}
 
       <Box sx={{ flexGrow: 1 }}>
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.5 }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.25 }}>
+          {icon && (
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                display: 'flex',
+                borderRadius: '8px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: `${status}.main`,
+                bgcolor: (t) => varAlpha(t.vars.palette[status].mainChannel, 0.16),
+              }}
+            >
+              <Iconify icon={icon} width={20} />
+            </Box>
+          )}
+
           <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
             {title}
           </Typography>
           {tooltip && (
             <CustomTooltip title={tooltip} arrow placement="top">
               <Box component="span" className="tooltip-icon" sx={{ display: 'inline-flex' }}>
-                <Iconify
-                  icon="eva:info-outline"
-                  width={16}
-                  sx={{ color: 'text.disabled', cursor: 'help' }}
-                />
+                <Iconify icon="eva:info-outline" width={16} sx={{ color: 'text.disabled' }} />
               </Box>
             </CustomTooltip>
           )}
         </Stack>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>
+        <Typography variant="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
           {value}
         </Typography>
+      </Box>
 
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Iconify
-            icon={isPositive ? 'eva:trending-up-fill' : 'eva:trending-down-fill'}
-            sx={{
-              color: isPositive ? 'success.main' : 'error.main',
-              width: 18,
-              height: 18,
-            }}
+      {chart?.series &&
+        isRadialChart &&
+        (() => {
+          const w = chart.width ?? 64;
+          const h = chart.height ?? 64;
+          return (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+                flexShrink: 0,
+              }}
+            >
+              <Chart
+                type={chart.type as any}
+                series={chart.series}
+                options={donutOptions}
+                width={w}
+                height={h}
+                dir="ltr"
+              />
+            </Box>
+          );
+        })()}
+
+      {chart?.series &&
+        !isRadialChart &&
+        (() => {
+          const w = chart.width ?? 80;
+          const h = chart.height ?? 40;
+          return (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 0.5,
+                flexShrink: 0,
+              }}
+            >
+              <Chart
+                type={(chart.type || 'line') as any}
+                series={[{ data: chart.series as number[] }]}
+                options={sparklineOptions}
+                width={w}
+                height={h}
+                dir="ltr"
+              />
+            </Box>
+          );
+        })()}
+
+      {!chart?.series && trendData && (
+        <Box sx={{ width: 80, height: 40, flexShrink: 0 }}>
+          <Chart
+            type="line"
+            series={[{ data: trendData }]}
+            options={chartOptions}
+            width={80}
+            height={40}
+            dir="ltr"
           />
-          <Typography
-            variant="subtitle2"
-            component="span"
-            sx={{ color: isPositive ? 'success.main' : 'error.main' }}
-          >
-            {Math.abs(percentChange)}%
-          </Typography>
-          <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: 0.5 }}>
-            vs last month
-          </Typography>
-        </Stack>
-      </Box>
-
-      <Box sx={{ width: 80, height: 40 }}>
-        <Chart
-          type="line"
-          series={[{ data: trendData }]}
-          options={chartOptions}
-          width={80}
-          height={40}
-          dir="ltr"
-        />
-      </Box>
+        </Box>
+      )}
     </Card>
   );
 }

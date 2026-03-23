@@ -10,6 +10,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
@@ -28,12 +29,13 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { AccuralPolicyType, AccuralPolicyTypeArray } from 'src/enums/accuralPolicyType';
 import {
-  employeeApi,
-  useGetEmployeeLeavePolicyQuery,
-  useAddEmployeeLeavePolicyMutation,
-  useDeleteEmployeeLeavePolicyMutation,
-  useUpdateEmployeeLeavePolicyMutation,
-} from 'src/redux/employee/employeeApi';
+  leaveApi,
+  useGetLeaveTypesQuery,
+  useGetLeavePoliciesQuery,
+  useCreateLeavePolicyMutation,
+  useUpdateLeavePolicyMutation,
+  useDeleteLeavePolicyMutation,
+} from 'src/redux/hr/leaveApi';
 import {
   Box,
   Grid,
@@ -68,17 +70,21 @@ const LeavePolicy = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Removed leave policy fetch – using static sample data for simplified form.
 
-  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const { data: leavePolicyData, isLoading } = useQueryAndMutation({
+  const {
+    data: leavePolicyData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
-    params: mediumStageId?.id,
+    currentQueryAndMutation: useGetLeavePoliciesQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useDeleteLeavePolicyMutation,
   });
 
   const tableData = useMemo(() => leavePolicyData?.items || [], [leavePolicyData?.items]);
@@ -105,7 +111,7 @@ const LeavePolicy = () => {
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'title',
+        id: 'policyTitle',
         label: 'Name',
         minWidth: '12vw',
         align: 'left',
@@ -116,6 +122,7 @@ const LeavePolicy = () => {
         label: 'Leave Type',
         minWidth: '11vw',
         align: 'left',
+        render: (value) => (typeof value === 'object' ? value?.name : value) || '-',
       },
       {
         id: 'accuralPolicyType',
@@ -128,12 +135,14 @@ const LeavePolicy = () => {
         label: 'Leave Count',
         minWidth: '11vw',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'maxLeavePerYear',
         label: 'Maximum Per year',
         minWidth: '17vw',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'carryForward',
@@ -199,8 +208,8 @@ const LeavePolicy = () => {
         description="Define and manage leave policies for your organization to ensure smooth attendance and leave management."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave Management' },
-          { name: 'Setting' },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Settings', href: hrPaths.attendance.setting.root },
           { name: 'Leave Policy' },
         ]}
         action={
@@ -238,9 +247,9 @@ const LeavePolicy = () => {
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    employeeApi.util.updateQueryData(
-                      'getEmployeeLeavePolicy',
-                      undefined,
+                    leaveApi.util.updateQueryData(
+                      'getLeavePolicies',
+                      { academicYearId: currentYear?.id } as any,
                       (draft: any) => {
                         const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
                         setDeleteIndex(index);
@@ -250,17 +259,7 @@ const LeavePolicy = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    employeeApi.util.updateQueryData(
-                      'getEmployeeLeavePolicy',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteLeavePolicy(editData?.id || ''),
               });
               confirm.onFalse();
@@ -342,22 +341,21 @@ const LeavePolicy = () => {
 };
 export default LeavePolicy;
 
-const leaveTypes = ['Sick Leave', 'Casual Leave', 'Earned Leave'];
 const paidTypes = ['Paid', 'Unpaid'];
 // Simplified validation schema per new requirements
 const validationSchema = Yup.object({
-  policyTitle: Yup.string().required('Policy title is required'),
-  leaveType: Yup.string().required('Leave type is required'),
+  policyTitle: Yup.string().required('Policy Name is required'),
+  leaveType: Yup.string().required('Leave Type is required'),
 
-  accuralPolicyType: Yup.string().required('Accural policy type is required'),
+  accuralPolicyType: Yup.string().required('Accural Policy is required'),
   leaveCount: Yup.number()
     .typeError('Must be a number')
     .integer('Must be an integer')
     .min(0, 'Cannot be negative')
-    .required('Leave count is required'),
+    .required('Leave Count is required'),
   requiresApproval: Yup.boolean(),
 
-  paidType: Yup.string().required('Paid type is required'),
+  paidType: Yup.string().required('Paid Type is required'),
   carryForward: Yup.boolean(),
   encashmentAllowed: Yup.boolean(),
   encashmentTiming: Yup.string().when('encashmentAllowed', {
@@ -376,22 +374,31 @@ export const LeavePolicyForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   editData: ILeavePolicy | null;
 }) => {
-  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
-    params: mediumStageId?.id,
+    currentQueryAndMutation: useCreateLeavePolicyMutation,
   });
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useUpdateLeavePolicyMutation,
   });
+
+  const { data: leaveTypesData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLeaveTypesQuery,
+    params: { academicYearId: currentYear?.id },
+  });
+
+  const leaveTypeOptions = useMemo(() => leaveTypesData?.items || [], [leaveTypesData?.items]);
   const formik = useFormik({
     initialValues: {
-      policyTitle: editData?.title || '',
-      leaveType: editData?.leaveType || '',
+      policyTitle: editData?.policyTitle || editData?.title || '',
+      leaveType:
+        (typeof editData?.leaveType === 'object' ? editData?.leaveType?.id : editData?.leaveType) ||
+        '',
       accuralPolicyType: editData?.accuralPolicyType || AccuralPolicyType.Monthly,
       leaveCount: editData?.leaveCount || '1',
       paidType: editData?.paidType || 'Paid',
@@ -405,10 +412,8 @@ export const LeavePolicyForm = ({
     onSubmit: async (values) => {
       try {
         const payload = {
-          mediumStageId: mediumStageId?.id,
           policyTitle: values.policyTitle,
           leaveType: values.leaveType,
-
           leaveCount: Number(values.leaveCount),
           accuralPolicyType: values.accuralPolicyType,
           paidType: values.paidType,
@@ -421,7 +426,7 @@ export const LeavePolicyForm = ({
 
         if (!editData) {
           await addLeavePolicy({
-            mediumStageId: mediumStageId?.id,
+            academicYearId: currentYear?.id,
             body: payload,
           });
           shikshaMitraToast.success({
@@ -429,7 +434,7 @@ export const LeavePolicyForm = ({
           });
         } else {
           await updateLeavePolicy({
-            policyId: editData.id,
+            id: editData.id,
             body: payload,
           });
           shikshaMitraToast.success({
@@ -481,9 +486,9 @@ export const LeavePolicyForm = ({
                   onBlur={formik.handleBlur}
                   fullWidth
                 >
-                  {leaveTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
+                  {leaveTypeOptions.map((type: any) => (
+                    <MenuItem key={type.id} value={type.id}>
+                      {type.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -551,6 +556,11 @@ export const LeavePolicyForm = ({
                     e.preventDefault();
                   }
                 }}
+                InputProps={{
+                  inputProps: {
+                    min: 0,
+                  },
+                }}
                 error={formik.touched.leaveCount && Boolean(formik.errors.leaveCount)}
                 helperText={
                   (formik.touched.leaveCount && (formik.errors.leaveCount as string)) || ''
@@ -605,14 +615,13 @@ export const LeavePolicyForm = ({
                   name="encashmentAllowed"
                 />
               }
-              sx={{ mt: -2 }}
               label="Encashable"
             />
             <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
               Allow employees to encash unused leaves
             </Typography>
           </Grid>
-          <Grid size={{ xs: 6 }} sx={{ mb: 2 }}>
+          <Grid size={{ xs: 6 }}>
             {formik.values.encashmentAllowed && (
               <>
                 <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
@@ -630,7 +639,7 @@ export const LeavePolicyForm = ({
                     label="Next Payroll"
                   />
                   <FormControlLabel
-                    value="year_end"
+                    value="end_of_year"
                     control={<Radio size="small" />}
                     label="Year End"
                   />

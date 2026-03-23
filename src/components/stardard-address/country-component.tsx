@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { TextField } from '@mui/material';
 import { type ICountry } from 'country-state-city';
+import { TextField, Typography } from '@mui/material';
 import { Autocomplete, type TextFieldProps, type AutocompleteProps } from '@mui/material';
 
 import ShakingTextField from '../shaking-text-field';
@@ -46,7 +46,7 @@ const CountryComponent = ({
   return (
     <ShakingTextField error={error}>
       <Autocomplete
-        noOptionsText="No Country Found"
+        noOptionsText={<Typography variant="caption">No Country Found</Typography>}
         fullWidth
         value={value}
         onChange={onChange}

@@ -34,7 +34,6 @@ interface ColumnFilterMenuProps {
 }
 
 export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFilterMenuProps) => {
-  console.log(anchorEl);
   const formik = useFormik<{
     min: number | null;
     max: number | null;
@@ -146,7 +145,6 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
     formik.resetForm();
     onClose();
   };
-
   return (
     <Menu
       anchorEl={anchorEl?.element}
@@ -232,7 +230,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
               <TextField
                 fullWidth
                 size="small"
-                value={formik.values.min}
+                value={formik.values.min ?? ''}
                 onChange={(e) => formik.setFieldValue('min', e.target.value)}
                 type="number"
                 label={`${anchorEl?.column.label} Min *`}
@@ -244,7 +242,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
               <TextField
                 fullWidth
                 size="small"
-                value={formik.values.max}
+                value={formik.values.max ?? ''}
                 onChange={(e) => formik.setFieldValue('max', e.target.value)}
                 type="number"
                 label={`${anchorEl?.column.label} Max *`}
@@ -258,8 +256,7 @@ export const ColumnFilterMenu = ({ anchorEl, onClose, onApplyFilter }: ColumnFil
               size="small"
               value={formik.values.filterValue ?? ''}
               onChange={(e) => {
-                // Remove special characters using regex
-                const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                const sanitizedValue = e.target.value;
                 formik.setFieldValue('filterValue', sanitizedValue);
               }}
               type={anchorEl?.column.filterType === 'number' ? 'number' : 'text'}

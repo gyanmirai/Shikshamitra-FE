@@ -24,7 +24,7 @@ const RegistrationFormScreen = () => {
   const dispatch = useDispatch();
   const [editData, setEditData] = useState<IGeneralInformationResponse | null>(null);
   const followUpDialog = useBoolean();
-  const { tableData, isLoading } = useRegistrationFormData();
+  const { tableData, isLoading, isFetching } = useRegistrationFormData();
 
   // Mutation hook to move student to registration status
   // const [moveToRegistration] = useQueryAndMutation({
@@ -76,8 +76,8 @@ const RegistrationFormScreen = () => {
           description="Move students from Form Issuance to Registered Status to begin the formal admission process."
           links={[
             { name: 'Student', href: '/student/dashboard/' },
-            { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
-            { name: 'Registration Form Issued' },
+            { name: 'Student Enrollment', href: '/student/dashboard/' },
+            { name: 'Registration Form Issued', href: '/student/dashboard/' },
             { name: 'Move to Registration' },
           ]}
           isBack
@@ -113,7 +113,7 @@ const RegistrationFormScreen = () => {
       ) : (
         <RegistrationTable
           data={tableData}
-          isLoading={isLoading}
+          isLoading={isLoading || isFetching}
           onMoveToRegistration={handleMoveToRegistration}
           onOpenNotes={handleOpenNotes}
         />

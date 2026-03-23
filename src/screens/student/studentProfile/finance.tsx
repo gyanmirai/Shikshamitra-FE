@@ -46,7 +46,6 @@ const Finance = (props: StudentTabsComponentType) => {
       value: '₹60,000',
       icon: 'solar:bill-list-bold-duotone',
       status: 'primary' as const,
-      percentChange: 2.5,
       chart: { data: [20, 41, 63, 33, 28, 35, 50, 46, 11, 26] },
       tooltip: 'Total amount including all fee heads',
     },
@@ -56,7 +55,6 @@ const Finance = (props: StudentTabsComponentType) => {
       value: '₹40,000',
       icon: 'solar:check-circle-bold-duotone',
       status: 'success' as const,
-      percentChange: 3.8,
       chart: { data: [15, 25, 30, 45, 40, 55, 60, 50, 65, 70] },
       tooltip: 'Total amount paid till date',
     },
@@ -66,18 +64,15 @@ const Finance = (props: StudentTabsComponentType) => {
       value: '₹20,000',
       icon: 'solar:clock-circle-bold-duotone',
       status: 'warning' as const,
-      percentChange: -2.1,
       chart: { data: [50, 45, 40, 35, 30, 25, 20, 15, 10, 5] },
       tooltip: 'Total amount currently pending',
     },
-
     {
       id: 'REFUND_STATUS',
       title: 'Refund Status',
       value: '₹0',
       icon: 'solar:card-recive-bold-duotone',
       status: 'info' as const,
-      percentChange: 0,
       chart: { data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
       tooltip: 'No pending refunds',
     },
@@ -95,7 +90,6 @@ const Finance = (props: StudentTabsComponentType) => {
                   title={kpi.title}
                   value={kpi.value}
                   icon={kpi.icon}
-                  percentChange={kpi.percentChange}
                   trendData={kpi.chart.data}
                   tooltip={kpi.tooltip}
                   status={kpi.status}

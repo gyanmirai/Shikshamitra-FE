@@ -1,8 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type {
-  IBookCopy,
-  IBookCopyWithBook,
-} from 'src/screens/library/BookManagement/Components/type';
+import type { IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -18,10 +15,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
-import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetBookDetailsByAccessionQuery } from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
+import { useGetMemberDetailsQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
+import {
+  useIssueBookMutation,
+  useGetBookDetailsByAccessionQuery,
+} from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
 import {
   Box,
   Grid,
@@ -37,7 +36,6 @@ import {
 } from '@mui/material';
 
 import { getInitialValues } from './getBookIssueInitialValues';
-import libraryDummyData from '../../../../../../libraryData.json';
 import { getIssueBookSchema } from './getBookIssueValidatonSchema';
 
 export interface IssueBookFormProps {
@@ -46,12 +44,7 @@ export interface IssueBookFormProps {
 }
 
 const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => {
-  const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(editData);
-  const [selectedMember, setSelectedMember] = useState<any | null>(editData?.memberId || null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [books] = useState(libraryDummyData.books);
-  const [loading, setLoading] = useState(false);
-  const [loadingMember, setLoadingMember] = useState(false);
   const [expandedBook, setExpandedBook] = useState(false);
   const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
 
@@ -60,15 +53,36 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     editData?.accessionNo || ''
   );
   const [debouncedMemberId, setDebouncedMemberId] = useState(editData?.memberId || '');
-
+  const [issueBook, { isLoading: issueBookLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useIssueBookMutation,
+  });
   const formik = useFormik({
     initialValues: getInitialValues(editData),
     validationSchema: getIssueBookSchema(currentYear),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `${editData?.book?.title || ''} book issued successfully`,
-      });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          accessionNo: values.accessionNumber,
+          memberId: memberData?.id || values.memberId,
+          issueDate: values.issueDate ? dayjs(values.issueDate).toISOString() : undefined,
+          dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : undefined,
+        };
+
+        const res = await issueBook(payload);
+        if (res.error) {
+          shikshaMitraToast.error({
+            message: `${editData?.book?.title || ''} book issued failed`,
+          });
+          return;
+        }
+        shikshaMitraToast.success({
+          message: `${editData?.book?.title || ''} book issued successfully`,
+        });
+        onClose(null, true);
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
 
@@ -76,17 +90,16 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
   const { data: bookData, isLoading: isLoadingBookData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBookDetailsByAccessionQuery,
-    params: { accessionNo: debouncedAccessionNumber, academicYearId: currentYear?.id },
+    params: { accessionNo: debouncedAccessionNumber },
+    options: { skip: !debouncedAccessionNumber },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: memberData, isLoading: isLoadingMemberData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllMembersQuery,
-  });
-  const { data: copies } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAllCopiesQuery,
+    currentQueryAndMutation: useGetMemberDetailsQuery,
+    params: { memberId: debouncedMemberId },
+    options: { skip: !debouncedMemberId },
   });
 
   // Accession Number Search Handler
@@ -94,141 +107,105 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     formik.setFieldValue('accessionNumber', value);
 
     if (!value) {
-      setSelectedBook(null);
       setDebouncedAccessionNumber('');
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
     debounce(() => {
       setDebouncedAccessionNumber(value);
-      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-      const foundBook = foundCopy
-        ? {
-            ...foundCopy,
-            book: books?.find((b) => b.id === foundCopy.bookId),
-          }
-        : null;
-
-      if (foundBook) {
-        setSelectedBook(foundBook);
-      } else {
-        setSelectedBook(null);
-      }
-      setLoading(false);
     }, 800);
   };
 
   // Book details using useMemo
   const bookDetails = useMemo(() => {
-    if (!selectedBook) return [];
+    if (!bookData) return [];
     return [
       {
         label: 'Book Title',
         icon: 'mdi:book-open-page-variant',
-        value: selectedBook.book.title || '—',
+        value: bookData.title || '—',
       },
-      { label: 'Accession No.', icon: 'mdi:barcode', value: selectedBook.accessionNo || '—' },
-      { label: 'Author', icon: 'mdi:account', value: selectedBook.book.author || '—' },
-      { label: 'ISBN', icon: 'mdi:barcode-scan', value: selectedBook.book.isbn || '—' },
+      { label: 'Accession No.', icon: 'mdi:barcode', value: bookData.accessionNo || '—' },
+      { label: 'Author', icon: 'mdi:account', value: bookData.author || '—' },
+      { label: 'ISBN', icon: 'mdi:barcode-scan', value: bookData.isbn || '—' },
       {
         label: 'Publisher',
         icon: 'mdi:office-building',
-        value: selectedBook.book.publisher || '—',
+        value: bookData.publisher || '—',
       },
       {
         label: 'Added On',
         icon: 'mdi:calendar',
-        value: selectedBook.book.createdOn
-          ? dayjs(selectedBook.book.createdOn).format('YYYY')
-          : '—',
+        value: bookData.addedOn ? dayjs(bookData.addedOn).format('YYYY') : '—',
       },
-      { label: 'Language', icon: 'mdi:translate', value: selectedBook.book.language || '—' },
-      { label: 'Edition', icon: 'mdi:numeric', value: selectedBook.book.edition || '—' },
-      { label: 'Category', icon: 'mdi:shape', value: selectedBook.book.category || '—' },
+      { label: 'Language', icon: 'mdi:translate', value: bookData.language || '—' },
+      { label: 'Edition', icon: 'mdi:numeric', value: bookData.edition || '—' },
+      { label: 'Category', icon: 'mdi:shape', value: bookData.category || '—' },
       {
         label: 'No. of Pages',
         icon: 'mdi:book-open-variant',
-        value: selectedBook.book.numberOfPages || '—',
+        value: bookData.pages || '—',
       },
     ];
-  }, [selectedBook]);
+  }, [bookData]);
 
   // Member details using useMemo
   const memberDetails = useMemo(() => {
-    if (!selectedMember) return [];
+    if (!memberData) return [];
     const details = [
-      { label: 'Member Name', icon: 'mdi:account', value: selectedMember.name || '—' },
-      { label: 'Email', icon: 'mdi:email', value: selectedMember.email || '—' },
+      { label: 'Member Name', icon: 'mdi:account', value: memberData.memberName || '—' },
+      { label: 'Email', icon: 'mdi:email', value: memberData.email || '—' },
       {
         label: 'Member ID',
         icon: 'mdi:card-account-details',
-        value: selectedMember.memberId || '—',
+        value: debouncedMemberId || '—',
       },
-      { label: 'Phone', icon: 'mdi:phone', value: selectedMember.contactNo || '—' },
-      { label: 'Role', icon: 'mdi:account-group', value: selectedMember.role || '—' },
-      { label: 'Join Date', icon: 'mdi:calendar-check', value: selectedMember.joinDate || '—' },
+      { label: 'Phone', icon: 'mdi:phone', value: memberData.phone || memberData.contactNo || '—' },
+      { label: 'Role', icon: 'mdi:account-group', value: memberData.role || '—' },
+      {
+        label: 'Join Date',
+        icon: 'mdi:calendar-check',
+        value: memberData.joinDate ? dayjs(memberData.joinDate).format('DD MMM YYYY') : '—',
+      },
     ];
 
     // Add student-specific fields if role is Student
-    if (selectedMember.role === 'Student') {
+    if (memberData.role === 'Student') {
       details.splice(
         3,
         0,
         {
           label: 'Class/Division',
           icon: 'mdi:school',
-          value: `${selectedMember.class || '—'} - ${selectedMember.division || '—'}`,
+          value: memberData.classDivision || '—',
         },
         {
           label: 'Roll No.',
           icon: 'mdi:format-list-numbered',
-          value: selectedMember.rollNo || '—',
+          value: memberData.rollNo || '—',
         },
         {
           label: 'GR No.',
           icon: 'mdi:card-account-details-outline',
-          value: selectedMember.grNo || '—',
+          value: memberData.grNo || '—',
         }
       );
     }
 
     return details;
-  }, [selectedMember]);
+  }, [memberData, debouncedMemberId]);
 
   // Member ID Search Handler
   const handleMemberIdChange = (value: string) => {
     formik.setFieldValue('memberId', value);
 
     if (!value) {
-      setSelectedMember(null);
       setDebouncedMemberId('');
       return;
     }
 
-    setLoadingMember(true);
     debounce(() => {
       setDebouncedMemberId(value);
-      const searchValue = value.toLowerCase().trim();
-
-      const foundMember = memberData?.find(
-        (member: any) =>
-          member.memberId?.toLowerCase() === searchValue ||
-          member.rollNo?.toLowerCase() === searchValue ||
-          member.name?.toLowerCase() === searchValue
-      );
-
-      if (foundMember) {
-        setSelectedMember(foundMember);
-        formik.setFieldValue('memberName', foundMember.name || '');
-        formik.setFieldValue('role', foundMember.role);
-        formik.setFieldValue('class', foundMember.className || '');
-        formik.setFieldValue('division', foundMember.division || '');
-      } else {
-        setSelectedMember(null);
-      }
-      setLoadingMember(false);
     }, 800);
   };
 
@@ -260,7 +237,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
 
           {/* Book Details Display */}
           {(() => {
-            if (loading) {
+            if (isLoadingBookData) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box display="flex" justifyContent="center" alignItems="center">
@@ -270,7 +247,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
               );
             }
 
-            if (selectedBook) {
+            if (bookData) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Accordion
@@ -323,9 +300,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   color="text.primary"
                                   sx={{ fontSize: '0.9rem' }}
                                   noWrap
-                                  title={selectedBook.book.title}
+                                  title={bookData.title}
                                 >
-                                  {selectedBook.book.title || '—'}
+                                  {bookData.title || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
@@ -349,7 +326,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
-                                  {selectedBook.accessionNo || '—'}
+                                  {bookData.accessionNo || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
@@ -372,9 +349,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   color="text.primary"
                                   sx={{ fontSize: '0.9rem' }}
                                   noWrap
-                                  title={selectedBook.book.author}
+                                  title={bookData.author}
                                 >
-                                  {selectedBook.book.author || '—'}
+                                  {bookData.author || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
@@ -388,8 +365,12 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                         <Grid size={{ xs: 12, md: 2 }}>
                           <Box
                             component="img"
-                            src={selectedBook?.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-                            alt={selectedBook?.book.title}
+                            src={
+                              bookData?.coverImage
+                                ? `${process.env.NEXT_PUBLIC_API_URL}${bookData.coverImage}`
+                                : '/placeholder-book.jpg'
+                            }
+                            alt={bookData?.title}
                             sx={{
                               width: '100%',
                               height: 'auto',
@@ -463,7 +444,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             return null;
           })()}
 
-          {selectedBook && (
+          {bookData && (
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!(formik.touched.memberId && formik.errors.memberId)}>
                 <TextField
@@ -492,7 +473,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
 
           {/* Member Details */}
           {(() => {
-            if (loadingMember) {
+            if (isLoadingMemberData) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box display="flex" justifyContent="center" alignItems="center">
@@ -502,7 +483,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
               );
             }
 
-            if (selectedMember) {
+            if (memberData) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Accordion
@@ -555,9 +536,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   color="text.primary"
                                   sx={{ fontSize: '0.9rem' }}
                                   noWrap
-                                  title={selectedMember.name}
+                                  title={memberData.memberName}
                                 >
-                                  {selectedMember.name || '—'}
+                                  {memberData.memberName || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
@@ -585,7 +566,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
-                                  {selectedMember.memberId || '—'}
+                                  {debouncedMemberId || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
@@ -609,7 +590,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
-                                  {selectedMember.role || '—'}
+                                  {memberData.role || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
@@ -630,7 +611,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                           }}
                         >
                           <Avatar
-                            src={selectedMember.avatarUrl}
+                            src={memberData.avatar || memberData.avatarUrl}
                             sx={{
                               width: 80,
                               height: 80,
@@ -697,7 +678,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             return null;
           })()}
 
-          {selectedBook && selectedMember && (
+          {bookData && memberData && (
             <>
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>

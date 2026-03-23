@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form';
 import Button from '@mui/material/Button';
 import { uuidv4 } from 'src/utils/uuidv4';
 import Tooltip from '@mui/material/Tooltip';
-import { toast } from 'src/components/snackbar';
 import { Form } from 'src/components/hook-form';
 import { fIsAfter } from 'src/utils/format-time';
 import { Iconify } from 'src/components/iconify';
@@ -16,6 +15,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { Scrollbar } from 'src/components/scrollbar';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DialogActions from '@mui/material/DialogActions';
+import { shikshaMitraToast } from 'src/components/toast';
 import { createEvent, updateEvent, deleteEvent } from 'src/actions/calendar';
 
 // ----------------------------------------------------------------------
@@ -80,10 +80,10 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }: Props) {
       if (!dateError) {
         if (currentEvent?.id) {
           await updateEvent(eventData);
-          toast.success('Update success!');
+          shikshaMitraToast.success({ message: 'Update success!' });
         } else {
           await createEvent(eventData);
-          toast.success('Create success!');
+          shikshaMitraToast.success({ message: 'Create success!' });
         }
         onClose();
         reset();
@@ -96,7 +96,7 @@ export function CalendarForm({ currentEvent, colorOptions, onClose }: Props) {
   const onDelete = useCallback(async () => {
     try {
       await deleteEvent(`${currentEvent?.id}`);
-      toast.success('Delete success!');
+      shikshaMitraToast.success({ message: 'Delete success!' });
       onClose();
     } catch (error) {
       console.error(error);

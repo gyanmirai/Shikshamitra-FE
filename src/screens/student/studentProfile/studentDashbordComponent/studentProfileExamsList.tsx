@@ -103,6 +103,11 @@ const StudentExamsList = () => {
       id: 'status',
       label: 'Status',
       align: 'left',
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Scheduled', value: 'Scheduled' },
+        { label: 'Completed', value: 'Completed' },
+      ],
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
           {value}
@@ -114,11 +119,13 @@ const StudentExamsList = () => {
   return (
     <Card
       sx={{
-        boxShadow: (theme) => theme.shadows[2], // Match Admin list styled
         borderRadius: 2,
         height: 480,
         display: 'flex',
         flexDirection: 'column',
+        '&:hover': {
+          boxShadow: (theme) => theme.shadows[8],
+        },
       }}
     >
       <CardHeader
@@ -138,7 +145,7 @@ const StudentExamsList = () => {
         sx={{ pb: 0, flexShrink: 0, mt: -1, ml: -1, mb: 2 }} // Adjusted spacing to match Admin layout
       />
 
-      <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
+      <Scrollbar sx={{ p: 1, flexGrow: 1, mb: 2 }}>
         <Stack spacing={1}>
           {upcomingExams.map((exam) => (
             <Box
@@ -267,7 +274,7 @@ const StudentExamsList = () => {
           data={upcomingExams} // Use correct data source
           tableId="upcoming-exams-table"
           isSearch={false}
-          isFilter={false}
+          isFilter
           isPagination={false}
           wrapperProps={{ sx: { height: '60vh' }, padding: 1 }}
         />

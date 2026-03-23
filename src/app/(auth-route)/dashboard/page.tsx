@@ -1,4 +1,3 @@
-import React from 'react';
 import MainDashboard from 'src/screens/mainDashboard/main-dashboard';
 
 const Dashboard = () => <MainDashboard />;

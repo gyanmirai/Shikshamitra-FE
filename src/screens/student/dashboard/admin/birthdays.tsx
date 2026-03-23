@@ -1,11 +1,13 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
+import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { CalendarView } from 'src/sections/calendar/view';
 import { Box, Card, Chip, Stack, Button, Avatar, CardHeader, Typography } from '@mui/material';
 
 const birthdays = [
@@ -103,10 +105,22 @@ const Birthdays = () => {
     });
     setWishedStudents((prev) => [...prev, id]);
   };
+  const theme = useTheme();
 
   return (
     <>
-      <Card sx={{ height: 500, display: 'flex', flexDirection: 'column' }}>
+      <Card
+        sx={{
+          height: 500,
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: theme.shadows[8],
+            transition: 'all 0.3s ease-in-out',
+          },
+        }}
+      >
         <CardHeader
           title={
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: -1, ml: -1 }}>
@@ -114,7 +128,9 @@ const Birthdays = () => {
               <Typography variant="h6">Birthdays</Typography>
             </Stack>
           }
-          subheader="Upcoming Birthdays"
+          subheaderTypographyProps={{
+            sx: { color: () => theme.vars?.palette?.text?.secondary || 'text.secondary' },
+          }}
           action={
             <Button
               size="small"
@@ -147,11 +163,17 @@ const Birthdays = () => {
                           sx={{
                             p: 2,
                             borderRadius: 2,
-                            border: (theme) => `1px solid ${theme.palette.divider}`,
+                            border: () => `1px solid ${theme.palette.divider}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            bgcolor: 'primary.lighter',
+                            bgcolor: () =>
+                              varAlpha(
+                                theme.vars?.palette?.primary?.mainChannel ||
+                                  theme.palette.primary.mainChannel ||
+                                  '',
+                                0.16
+                              ),
                             transition: 'all 0.2s',
                             '&:hover': {
                               borderColor: 'transparent',
@@ -234,7 +256,7 @@ const Birthdays = () => {
                         sx={{
                           p: 2,
                           borderRadius: 2,
-                          border: (theme) => `1px solid ${theme.palette.divider}`,
+                          border: () => `1px solid ${theme.palette.divider}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -297,7 +319,7 @@ const Birthdays = () => {
           </Box>
         }
       >
-        <CalendarView />
+        <CommonCalender data={undefined} />
       </CustomDialog>
     </>
   );

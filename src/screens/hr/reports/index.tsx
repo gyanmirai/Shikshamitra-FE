@@ -69,7 +69,7 @@ const ReportsScreen = () => {
           ]}
           subCategories={[
             {
-              name: 'Employee Profile',
+              name: '',
               id: 'Employee-Profile',
               icon: '',
               render: () => <EmployeeProfileReport />,
@@ -218,9 +218,7 @@ const ReportsScreen = () => {
               sticky: true,
               filterType: 'string',
             },
-
             { label: 'Report Category', id: 'reportCategory', minWidth: '10vw', align: 'left' },
-
             {
               label: 'Report Description',
               id: 'reportDescription',

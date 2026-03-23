@@ -1,6 +1,3 @@
-import type { RootState } from 'src/redux/store';
-
-import { useSelector } from 'react-redux';
 import { Scrollbar } from 'src/components/scrollbar';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -53,10 +50,6 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { currentAcademicYear, currentMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
   // const {
   //   data: books,
   //   isLoading,
@@ -92,12 +85,12 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
 
   const groupedBooks: GroupedBooks = useMemo(
     () =>
-      visibleBooks.reduce((groups: GroupedBooks, book: IBook) => {
+      visibleBooks.reduce((groups: GroupedBooks, book) => {
         const firstLetter = book.title[0].toUpperCase();
         if (!groups[firstLetter]) groups[firstLetter] = [];
-        groups[firstLetter].push(book);
+        groups[firstLetter].push(book as any);
         return groups;
-      }, {}),
+      }, {} as GroupedBooks),
     [visibleBooks]
   );
 

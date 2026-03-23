@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
@@ -47,7 +48,7 @@ import {
   useAddDeductionComponentMutation,
   useUpdateDeductionComponentMutation,
   useDeleteDeductionComponentMutation,
-} from 'src/redux/employee-payroll/employee-payroll-api';
+} from 'src/redux/hr/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
@@ -73,6 +74,8 @@ interface PayElement {
 }
 
 const DeductionComponent = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const confirm = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
@@ -84,11 +87,17 @@ const DeductionComponent = () => {
       currentQueryAndMutation: useDeleteDeductionComponentMutation,
     });
 
-  const { data: getDeductionComponentsData, isLoading: getDeductionComponentsLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      currentQueryAndMutation: useGetDeductionComponentsQuery,
-    });
+  const {
+    data: getDeductionComponentsData,
+    isLoading: getDeductionComponentsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDeductionComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+  });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Handles closing the incident form
@@ -118,9 +127,9 @@ const DeductionComponent = () => {
         heading="Deduction Component"
         description="Manage the various deduction components that are subtracted from employee salaries, including fixed and variable deductions."
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Payroll Management', href: '/hr/payroll/dashboard/' },
-          { name: 'Settings' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
+          { name: 'Settings', href: hrPaths.payroll.settings.deductionComponents },
           { name: 'Deduction Component' },
         ]}
         action={
@@ -158,7 +167,7 @@ const DeductionComponent = () => {
                   dispatchFn(
                     employeePayrollApi.util.updateQueryData(
                       'getDeductionComponents',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (b: any) => b.id === deleteInformation?.id
@@ -170,17 +179,7 @@ const DeductionComponent = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    employeePayrollApi.util.updateQueryData(
-                      'getDeductionComponents',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, deleteInformation);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteDeductionComponent(deleteInformation?.id || ''),
               });
               confirm.onFalse();
@@ -195,7 +194,7 @@ const DeductionComponent = () => {
         tableId="earning-component"
         isLoading={getDeductionComponentsLoading}
         columns={[
-          { id: 'deductionName', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'deductionName', label: 'Name', align: 'left', minWidth: '10vw', sticky: true },
           {
             id: 'deductionType',
             label: 'Deduction Type',
@@ -233,7 +232,7 @@ const DeductionComponent = () => {
             filterType: 'number',
             render(value, row) {
               return (
-                <Typography variant="body2" color="primary.secondary" fontWeight="bold">
+                <Typography variant="caption" fontSize="13px">
                   {formatNumber(value, 'INR')}
                 </Typography>
               );
@@ -253,7 +252,6 @@ const DeductionComponent = () => {
               return value ? 'Yes' : 'No';
             },
           },
-
           {
             id: 'action',
             label: 'Action',
@@ -378,14 +376,22 @@ const DeductionComponentForm = ({
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: getEarningComponentsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEarningComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   const { data: getDeductionComponentsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeductionComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   const [addDeductionComponent, { isLoading: addDeductionComponentLoading }] = useQueryAndMutation({
@@ -430,7 +436,10 @@ const DeductionComponentForm = ({
             body: payload,
           }).unwrap();
         } else {
-          await addDeductionComponent(payload).unwrap();
+          await addDeductionComponent({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
         }
         handleClose(null, true);
       } catch (error) {

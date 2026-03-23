@@ -77,6 +77,11 @@ const RouteFormStepper = ({
       activeStep={activeStep}
       validateOnChange
       isDisabledLabel={!selectedRoute}
+      onStepClick={(step) => {
+        if (selectedRoute) {
+          setActiveStep(step);
+        }
+      }}
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={routeValidationSchema[activeStep as keyof typeof routeValidationSchema]}
       handleNext={(

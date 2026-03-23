@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
@@ -12,6 +11,8 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
+
+import type { MarksFeedbackTabProps } from './index';
 
 const ASSIGNMENT_OPTIONS = [
   { value: 'Periodic Assessment 1', label: 'Periodic Assessment 1' },
@@ -26,7 +27,7 @@ const ASSIGNMENT_OPTIONS = [
   { value: 'Practical Skills Evaluation', label: 'Practical Skills Evaluation' },
 ];
 
-const AssignmentMarksAndFeedback = (props: TabComponentType) => {
+const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // State to store selected assignment data
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   // Dialog state for modal/popup control

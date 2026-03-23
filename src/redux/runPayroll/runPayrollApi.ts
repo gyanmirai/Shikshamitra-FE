@@ -1,20 +1,19 @@
-import { employeeApi } from '../employee/employeeApi';
+import { employeeApi } from '../hr/employeeApi';
 
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getRunPayrollPreview: builder.query({
-      query: ({ month }) => ({
-        url: `/payroll/run/?month=${month}`,
+      query: ({ month, academicYearId }) => ({
+        url: `/payroll/run?month=${month}&academicYearId=${academicYearId}`,
         method: 'GET',
       }),
       providesTags: ['Run-Payroll'],
     }),
 
     generateAndLockPayroll: builder.mutation({
-      query: (body) => ({
-        url: `/payroll/run/?month=${body.month}`,
+      query: ({ month, academicYearId }) => ({
+        url: `/payroll/run?month=${month}&academicYearId=${academicYearId}`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['Run-Payroll'],
     }),

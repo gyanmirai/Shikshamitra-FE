@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
@@ -12,6 +11,8 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
+
+import type { MarksFeedbackTabProps } from './index';
 
 const SUBJECTS = [
   { id: '1', name: 'Mathematics' },
@@ -67,7 +68,7 @@ const HOMEWORK_OPTIONS = [
   },
 ];
 
-const HomeworkMarksAndFeedback = (props: TabComponentType) => {
+const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // State to store selected subject
   const [subject, setSubject] = useState('');
   // State to store list of all available classes/standards

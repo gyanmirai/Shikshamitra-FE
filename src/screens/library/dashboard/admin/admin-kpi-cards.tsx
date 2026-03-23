@@ -82,7 +82,6 @@ const AdminKPICards = () => (
           title={kpi.title}
           value={kpi.value}
           icon={kpi.icon}
-          percentChange={kpi.percent}
           trendData={kpi.chart.data}
           path={kpi.path}
           tooltip={kpi.tooltip}

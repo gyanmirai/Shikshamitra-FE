@@ -8,11 +8,17 @@ interface KPIItem {
   id: string;
   title: string;
   value: string;
-  percent: number;
-  chart: { data: number[] };
-  icon: string;
-  status: 'info' | 'success' | 'warning' | 'primary';
+  chart: {
+    type?: 'line' | 'bar' | 'area' | 'donut' | 'pie' | 'radialBar';
+    series?: any[];
+    colors?: string[];
+    width?: number;
+    height?: number;
+    labels?: string[];
+  };
+  status: 'info' | 'success' | 'warning' | 'primary' | 'error' | 'secondary';
   path?: string;
+  tooltip?: string;
 }
 
 const kpiData: KPIItem[] = [
@@ -20,40 +26,63 @@ const kpiData: KPIItem[] = [
     id: 'CLASS_STRENGTH',
     title: 'Class Strength',
     value: '45',
-    percent: 0, // No change usually
-    chart: { data: [45, 45, 45, 45, 45, 45, 45, 45, 45, 45] },
-    icon: 'mdi:account-group-outline',
+    tooltip: 'Total number of students in the class, including boys and girls.',
     status: 'info' as const,
+    chart: {
+      type: 'bar' as const,
+      series: [20, 25],
+      labels: ['Boys', 'Girls'],
+      colors: ['#00B8D9', '#FF5630'],
+      width: 30,
+    },
     path: studentPaths.records.studentList,
   },
   {
     id: 'PRESENT_TODAY',
     title: 'Present Today',
     value: '42',
-    percent: 2.4, // Comparison vs yesterday
-    chart: { data: [40, 41, 42, 38, 39, 42, 41, 40, 41, 42] },
-    icon: 'mdi:account-check-outline',
+    tooltip: "Shows today's attendance status for the class. View present and absent students.",
     status: 'success' as const,
+    chart: {
+      type: 'donut' as const,
+      series: [42, 3],
+      labels: ['Present', 'Absent'],
+      colors: ['#22C55E', '#EF4444'],
+      width: 56,
+      height: 56,
+    },
     path: studentPaths.attendance.markAttendance,
   },
   {
     id: 'ASSIGNMENT_STATUS',
     title: 'Pending Assignments',
     value: '12',
-    percent: -5.0,
-    chart: { data: [15, 14, 18, 12, 10, 12, 8, 14, 15, 12] },
-    icon: 'mdi:clipboard-clock-outline',
-    status: 'warning' as const,
+    tooltip: 'Number of assignments that are still pending submission from students.',
+    status: 'success' as const,
+    chart: {
+      type: 'donut' as const,
+      series: [12, 30],
+      labels: ['Pending', 'Completed'],
+      colors: ['#FF5630', '#22C55E'],
+      width: 56,
+      height: 56,
+    },
     path: academicPaths.homework.learningTasks,
   },
   {
     id: 'CLASS_PERFORMANCE',
     title: 'Class Performance',
     value: '78%',
-    percent: 3.5, // Improved
-    chart: { data: [65, 68, 70, 72, 74, 75, 76, 75, 77, 78] },
-    icon: 'mdi:chart-line',
+    tooltip: 'Average academic performance of the class based on recorded exam marks.',
     status: 'primary' as const,
+    chart: {
+      type: 'donut' as const,
+      series: [78, 22],
+      labels: ['Score', 'Remaining'],
+      colors: ['#22C55E', '#FF5630'],
+      width: 56,
+      height: 56,
+    },
     path: academicPaths.examination.recordMarks,
   },
 ];
@@ -65,11 +94,10 @@ const TeacherKPICards = () => (
         <CompactKPICard
           title={kpi.title}
           value={kpi.value}
-          icon={kpi.icon}
-          percentChange={kpi.percent}
-          trendData={kpi.chart.data}
           status={kpi.status}
           path={kpi.path}
+          tooltip={kpi.tooltip}
+          chart={kpi.chart}
         />
       </Grid>
     ))}

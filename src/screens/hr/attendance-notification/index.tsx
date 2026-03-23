@@ -6,7 +6,7 @@ import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/employee/employeeApi';
+import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/hr/employeeApi';
 
 const HrAttendanceNotificationScreen = () => {
   useQueryAndMutation({

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useDrop, useDrag } from 'react-dnd';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -22,6 +22,7 @@ interface TimetableSlotProps {
   onRemoveSubject?: (slotId: string, subject: Subject) => void;
   onAssignTeacher?: (slotId: string, subject: Subject) => void;
   onAssignRoom?: (slotId: string, subject: Subject) => void;
+  readOnly?: boolean;
 }
 
 const TimetableSlot: React.FC<TimetableSlotProps> = ({
@@ -31,8 +32,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   onRemoveSubject,
   onAssignTeacher,
   onAssignRoom,
+  readOnly = false,
 }) => {
-  console.log('attachedSubject---', attachedSubject);
   const deleteDialog = useBoolean();
 
   const handleConfirmRemove = (e: React.MouseEvent) => {
@@ -103,11 +104,11 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const getSx = () => {
     const baseSx: any = {
       position: 'absolute',
-      top: `${top}px`,
-      height: `${height}px`,
+      top: `${top + 2}px`,
+      height: `${height - 4}px`,
       width: '94%',
       left: '3%',
-      borderRadius: 1,
+      borderRadius: 0.8,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -122,15 +123,16 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     if (isBreak) {
       return {
         ...baseSx,
-        bgcolor: theme.palette.grey[200],
         opacity: 0.8,
-        color: theme.palette.text.secondary,
+        bgcolor: theme.vars.palette.action.disabledBackground,
+        color: theme.vars.palette.text.primary,
+        border: `1px dashed ${theme.vars.palette.divider}`,
+        boxShadow: 'none',
         fontWeight: 600,
         justifyContent: 'flex-start',
         pl: 1,
         cursor: 'not-allowed',
-        borderLeft: 3,
-        border: `1px solid ${theme.palette.grey[300]}`,
+        borderLeft: `3px dashed ${theme.vars.palette.divider}`,
         textAlign: 'center',
       };
     }
@@ -140,22 +142,25 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
 
       return {
         ...baseSx,
+        bgcolor: theme.vars.palette.background.paper,
         borderLeft: `4px solid ${mainColor}`,
-        color: '#37474f',
+        color: theme.vars.palette.text.primary,
         fontWeight: 500,
-        bgcolor: alpha(mainColor, 0.1),
         zIndex: 1,
         flexDirection: 'column',
         alignItems: 'stretch',
         padding: '2px',
+        boxShadow: theme.shadows[1],
       };
     }
 
     return {
       ...baseSx,
-      bgcolor: isOver ? 'action.hover' : 'transparent',
+      bgcolor: isOver ? theme.vars.palette.action.hover : 'transparent',
       border: '1px dashed',
-      borderColor: isOver ? `${theme.palette.success.light}` : `${theme.palette.grey[300]}`,
+      borderColor: isOver
+        ? `${theme.vars.palette.success.light}`
+        : `${theme.vars.palette.grey[300]}`,
       backgroundColor: isOver
         ? `${theme.palette.success.lighter}`
         : `${theme.vars.palette.background.paper}`,
@@ -250,16 +255,46 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             }}
           >
             {!isCompactSlot ? (
-              <Typography variant="body2" fontWeight="bold">
-                {isBreak ? `${slot.breakType} BREAK` : subjectNames.join(' | ')}
-              </Typography>
+              <Box>
+                <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
+                  {isBreak ? `${slot.breakType} BREAK` : subjectNames.join(' | ')}
+                </Typography>
+                {!isBreak && displaySubjects[0]?.className && (
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ color: 'text.secondary', lineHeight: 1.2, mt: 0.25 }}
+                  >
+                    Class {displaySubjects[0].className}
+                    {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
+                  </Typography>
+                )}
+                {!isBreak && displaySubjects[0]?.roomName && (
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                  >
+                    {displaySubjects[0].roomName}
+                  </Typography>
+                )}
+              </Box>
             ) : (
               <Tooltip title={fullText}>
                 <Box>
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
                     {isBreak ? slot.breakType : firstSubject}
                   </Typography>
-
+                  {!isBreak && displaySubjects[0]?.className && (
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{ color: 'text.secondary', lineHeight: 1.2 }}
+                    >
+                      {displaySubjects[0].className}
+                      {displaySubjects[0].division ? `-${displaySubjects[0].division}` : ''}
+                    </Typography>
+                  )}
                   {!isBreak && extraCount > 0 && (
                     <Typography variant="caption">+{extraCount}</Typography>
                   )}
@@ -270,7 +305,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         </Box>
       </CustomTooltip>
 
-      {isFilled && !isBreak && (
+      {isFilled && !isBreak && !readOnly && (
         <Box
           sx={{
             position: 'absolute',

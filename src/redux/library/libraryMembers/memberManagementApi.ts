@@ -13,7 +13,7 @@ export const memberManagementApi = libraryModuleApi.injectEndpoints({
 
     getMemberDetails: builder.query({
       query: ({ memberId, academicYearId }) => ({
-        url: `/library/members/${memberId}/details`,
+        url: `/library/members/${memberId}`,
         method: 'GET',
         params: { academicYearId },
       }),

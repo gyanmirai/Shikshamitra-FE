@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusTypeOptions } from 'src/enums/employee-status-type';
 import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
 

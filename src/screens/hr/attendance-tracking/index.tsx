@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { EmployeeAttendance } from 'src/types/employee';
@@ -12,15 +13,16 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
@@ -48,7 +50,14 @@ import {
 import TeacherAttendanceTracking from './teacher-attendance-tracking';
 
 const AttendanceTrackingScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
+  const {
+    getAllParams,
+    setParam: setSearchParams,
+    setMultipleParams,
+  } = useCustomSearchParams({
+    tab: 'dateWise',
+  });
+  const searchParams = getAllParams();
   const { employee } = useSelector((store: any) => store.auth);
   const MAIN_TABS = [
     {
@@ -71,10 +80,9 @@ const AttendanceTrackingScreen = () => {
         heading="Attendance Tracking"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.attendanceTracking },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 2 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
@@ -87,7 +95,7 @@ const AttendanceTrackingScreen = () => {
               onChange={(e, value) => {
                 const findNewIndex = MAIN_TABS.findIndex((i) => i.value === value);
                 setIsBackClick(currentIndex > findNewIndex);
-                setSearchParams({ tab: value });
+                setSearchParams('tab', value);
               }}
               // variant="fullWidth"
               role="tablist"
@@ -114,7 +122,11 @@ const AttendanceTrackingScreen = () => {
               {searchParams.tab === 'dateWise' ? (
                 <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
               ) : (
-                <EmployeeWise searchParams={searchParams} setSearchParams={setSearchParams} />
+                <EmployeeWise
+                  searchParams={searchParams}
+                  setSearchParams={setSearchParams}
+                  setMultipleParams={setMultipleParams}
+                />
               )}
             </Box>
           </FormSlider>
@@ -131,15 +143,20 @@ const DateWise = ({
   setSearchParams,
 }: {
   searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
+  setSearchParams: (key: string, value: string) => void;
 }) => {
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
-  const dateValue = useMemo(
-    () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
-    [searchParams.date]
+  const [dateValue, setDateValue] = useState<Dayjs | null>(
+    searchParams.date ? dayjs(searchParams.date, 'DD/MM/YYYY') : dayjs()
   );
+
+  useEffect(() => {
+    if (searchParams.date) {
+      setDateValue(dayjs(searchParams.date, 'DD/MM/YYYY'));
+    }
+  }, [searchParams.date]);
   const tabs = useTabs('Pending');
   const {
     data: attendanceData,
@@ -149,7 +166,7 @@ const DateWise = ({
     type: 'query',
     currentQueryAndMutation: useGetDateWiseAttendanceQuery,
     params: {
-      attendanceDate: dateValue?.format('DD-MM-YYYY'),
+      attendanceDate: dateValue?.format('DD/MM/YYYY'),
       status: tabs.value,
       page: 1,
       pageSize: 10,
@@ -170,7 +187,7 @@ const DateWise = ({
   useEffect(() => {
     if (searchParams.date) {
       const dateTimeOffset = dateConvertor(
-        dayjs(searchParams.date, 'DD-MM-YYYY').format(dateFormat),
+        dayjs(searchParams.date, 'DD/MM/YYYY').format(dateFormat),
         true
       );
       getDateWiseAttendance(dateTimeOffset);
@@ -179,12 +196,7 @@ const DateWise = ({
     }
   }, [getDateWiseAttendance, searchParams.date]);
 
-  useEffect(
-    () => () => {
-      setSearchParams({ date: '' });
-    },
-    [setSearchParams]
-  );
+  // cleanup removed to avoid infinite re-render loop
 
   const counts = useMemo(
     () => ({
@@ -365,6 +377,7 @@ const DateWise = ({
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
+          mb: 1,
         }}
       >
         <FormControl sx={{ maxWidth: '268px', width: '100%' }}>
@@ -394,18 +407,18 @@ const DateWise = ({
           </Select>
         </FormControl>
         <DatePicker
-          disableFuture
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           label="Date"
           value={dateValue}
           onChange={(value) => {
-            setSearchParams({ date: value?.format('DD-MM-YYYY') });
-            // setDate(value);
+            setDateValue(value);
+          }}
+          onAccept={(value) => {
+            setSearchParams('date', value?.format('DD/MM/YYYY') || '');
           }}
           views={['year', 'month', 'day']}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
-          sx={{ ml: 0 }}
           slotProps={{
             textField: {
               size: 'small',
@@ -463,25 +476,20 @@ const DateWise = ({
 const EmployeeWise = ({
   searchParams,
   setSearchParams,
+  setMultipleParams,
 }: {
   searchParams: Record<string, string>;
-  setSearchParams: (obj: Record<string, any>) => void;
+  setSearchParams: (key: string, value: string) => void;
+  setMultipleParams: (params: Record<string, string>) => void;
 }) => {
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
-
-  const startDate = useMemo(
-    () =>
-      searchParams.startDate
-        ? dayjs(searchParams.startDate, 'DD-MM-YYYY')
-        : dayjs().startOf('month'),
-    [searchParams.startDate]
+  const [startDate, setStartDate] = useState<Dayjs | null>(
+    searchParams.startDate ? dayjs(searchParams.startDate, 'DD/MM/YYYY') : dayjs().startOf('month')
   );
-  const endDate = useMemo(
-    () =>
-      searchParams.endDate ? dayjs(searchParams.endDate, 'DD-MM-YYYY') : dayjs().endOf('month'),
-    [searchParams.endDate]
+  const [endDate, setEndDate] = useState<Dayjs | null>(
+    searchParams.endDate ? dayjs(searchParams.endDate, 'DD/MM/YYYY') : dayjs().endOf('month')
   );
 
   const tabs = useTabs('Pending');
@@ -500,8 +508,8 @@ const EmployeeWise = ({
     currentQueryAndMutation: useGetEmployeeWiseAttendanceQuery,
     params: {
       employeeId: searchParams.employeeId,
-      startDate: startDate.format('DD-MM-YYYY'),
-      endDate: endDate.format('DD-MM-YYYY'),
+      startDate: startDate?.format('DD/MM/YYYY'),
+      endDate: endDate?.format('DD/MM/YYYY'),
       status: tabs.value,
       page: 1,
       pageSize: 10,
@@ -538,11 +546,11 @@ const EmployeeWise = ({
   );
 
   useEffect(() => {
-    if (searchParams?.employeeId && startDate) {
+    if (searchParams?.employeeId && startDate && endDate) {
       getEmployeeWiseAttendance({
         employeeId: `${searchParams.employeeId}`,
-        startDate: startDate.format('DD-MM-YYYY'),
-        endDate: endDate.format('DD-MM-YYYY'),
+        startDate: startDate?.format('DD/MM/YYYY'),
+        endDate: endDate?.format('DD/MM/YYYY'),
         status: tabs.value,
         page: 1,
         pageSize: 10,
@@ -550,12 +558,7 @@ const EmployeeWise = ({
     }
   }, [searchParams.employeeId, getEmployeeWiseAttendance, startDate, endDate, tabs.value]);
 
-  useEffect(
-    () => () => {
-      setSearchParams({ date: '', startDate: '', endDate: '', employeeId: '' });
-    },
-    [setSearchParams]
-  );
+  // cleanup removed to avoid infinite re-render loop
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -681,7 +684,7 @@ const EmployeeWise = ({
         filterType: 'date',
         sticky: true,
         render(value, row) {
-          return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
+          return dayjs(value, 'YYYY-MM-DD').format('DD/MM/YYYY');
         },
       },
       {
@@ -754,7 +757,7 @@ const EmployeeWise = ({
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          my: 1,
           p: 1,
           flexWrap: 'wrap',
         }}
@@ -816,13 +819,13 @@ const EmployeeWise = ({
               value={employeeValue}
               onChange={(e, value) => {
                 if (value) {
-                  setSearchParams({
+                  setMultipleParams({
                     employeeId: value?.id as string,
                     employeeIdentifier: value?.employeeIdentifier as string,
                   });
                 } else {
                   // Clear employee selection
-                  setSearchParams({
+                  setMultipleParams({
                     employeeId: '',
                     employeeIdentifier: '',
                   });
@@ -834,14 +837,16 @@ const EmployeeWise = ({
 
         <DatePicker
           disableFuture
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           label="Start Date"
           value={startDate}
           onChange={(value) => {
-            setSearchParams({ startDate: value?.format('DD-MM-YYYY') });
+            setStartDate(value);
             // setDate(value);
           }}
-          views={['year', 'month', 'day']}
+          onAccept={(value) => {
+            setSearchParams('startDate', value?.format('DD/MM/YYYY') || '');
+          }}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}
@@ -853,15 +858,17 @@ const EmployeeWise = ({
         />
 
         <DatePicker
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           label="End Date"
           disableFuture
           value={endDate}
           onChange={(value) => {
-            setSearchParams({ endDate: value?.format('DD-MM-YYYY') });
+            setEndDate(value);
             // setDate(value);
           }}
-          views={['year', 'month', 'day']}
+          onAccept={(value) => {
+            setSearchParams('endDate', value?.format('DD/MM/YYYY') || '');
+          }}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
           sx={{ maxWidth: 268, width: '100%' }}

@@ -23,7 +23,17 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import { Box, Tab, Tabs, Paper, Avatar, Divider, MenuItem, Typography } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Tabs,
+  Paper,
+  Avatar,
+  Divider,
+  MenuList,
+  MenuItem,
+  Typography,
+} from '@mui/material';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -190,16 +200,17 @@ export function StudentProfile() {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+
   // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
-        // academicYearId: year?.id,
+        academicMediumId: medium?.id,
         standardId: classes,
         divisionId: division,
       });
     }
-  }, [division, classes, organization, getStudents]);
+  }, [division, classes, organization, medium?.id, getStudents]);
 
   // Transform students data to include full name
   const tableData = useMemo(
@@ -207,10 +218,11 @@ export function StudentProfile() {
       StudentsData?.items?.map((item: any) => ({
         ...item,
         name: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item.genderType],
+        genderLabel: GenderType[item.gender],
         age: calculateAge(item.dateOfBirth),
         address:
           [item.addressLine1, item.addressLine2, item.addressLine3].filter(Boolean).join(', ') ||
+          item.address ||
           '-',
         RTE: item?.studentAdditionalDetails?.rightToEducation ? 'Yes' : 'No',
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
@@ -242,7 +254,7 @@ export function StudentProfile() {
     statusDialog.onFalse();
     setSelectedStudentForStatus(null);
     getStudents({
-      // academicYearId: year?.id,
+      academicMediumId: medium?.id,
       standardId: classes,
       divisionId: division,
     });
@@ -262,9 +274,9 @@ export function StudentProfile() {
           <CustomBreadcrumbs
             heading="Student Profile"
             links={[
-              { name: 'Student', href: '/student/enrollment/dashboard' },
-              { name: 'Student Records', href: '/student/overview/' },
-              { name: 'Student Profile' },
+              { name: 'Student', href: '/student/dashboard' },
+              { name: 'Student Records', href: '/student/dashboard' },
+              { name: 'Student Profile', href: '/student/dashboard' },
             ]}
             isBack
             onBack={() => setSearchParams('student', '')}
@@ -274,9 +286,9 @@ export function StudentProfile() {
           <CustomBreadcrumbs
             heading="Student List"
             links={[
-              { name: 'Student', href: '/student/enrollment/dashboard' },
-              { name: 'Student Records', href: '/student/overview/' },
-              { name: 'Student List' },
+              { name: 'Student', href: '/student/dashboard' },
+              { name: 'Student Records', href: '/student/dashboard' },
+              { name: 'Student List', href: '/student/dashboard' },
             ]}
             description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
           />
@@ -290,12 +302,13 @@ export function StudentProfile() {
             elevation={2}
             sx={{
               display: 'flex',
+              borderRadius: 2,
               gap: 1,
               flexWrap: 'wrap',
               alignItems: 'center',
               px: 1,
               py: 1,
-              // mb: 1,
+              mb: 1,
             }}
           >
             <CustomSelect
@@ -332,6 +345,7 @@ export function StudentProfile() {
 
           <CustomizableTable
             onSendNotification={handlerSendNotification}
+            tableTitle="Student List"
             showCheckbox={selectedStudents.length !== 0}
             tableId="student-list"
             noDataText={<>No Student Data Found </>}
@@ -374,7 +388,7 @@ export function StudentProfile() {
               },
 
               {
-                id: 'genderValue',
+                id: 'genderLabel',
                 label: 'Gender',
                 minWidth: '6vw',
                 align: 'left',
@@ -420,25 +434,28 @@ export function StudentProfile() {
                 align: 'left',
                 render: (value, row) => (
                   <ThreeDotsActions
+                    placement="right-top"
                     showViewIcon
                     showThreeDots
                     handleViewClick={() => {
                       setSearchParams('student', row.studentId);
                     }}
                     actions={({ popover: pop }) => (
-                      <MenuItem
-                        onClick={() => {
-                          pop.onClose();
-                          setSelectedStudentForStatus(row);
-                          statusDialog.onTrue();
-                        }}
-                      >
-                        <Iconify
-                          icon="mdi:form-dropdown"
-                          sx={{ height: '16px', width: '16px', mr: 1 }}
-                        />
-                        Change Status
-                      </MenuItem>
+                      <MenuList>
+                        <MenuItem
+                          onClick={() => {
+                            pop.onClose();
+                            statusDialog.onTrue();
+                            setSelectedStudentForStatus(row);
+                          }}
+                        >
+                          <Iconify
+                            icon="mdi:form-dropdown"
+                            sx={{ height: '16px', width: '16px', mr: 1 }}
+                          />
+                          Change Status
+                        </MenuItem>
+                      </MenuList>
                     )}
                   />
                 ),

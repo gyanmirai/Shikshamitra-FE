@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 // Icons
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -111,10 +112,10 @@ const AttendanceConfigurationScreen = () => {
       <CustomBreadcrumbs
         heading="Attendance Configuration"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave Management', href: '' },
-          { name: 'Setting' },
-          { name: 'Attendance Configuration', href: '' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Settings', href: hrPaths.attendance.setting.root },
+          { name: 'Attendance Configuration' },
         ]}
         description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
       />
@@ -126,7 +127,7 @@ const AttendanceConfigurationScreen = () => {
             style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
           >
             <Scrollbar sx={{ p: 2, flexGrow: 1 }}>
-              <Grid container spacing={2}>
+              <Grid container spacing={1} pb={1}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Card
                     elevation={0}
@@ -211,7 +212,17 @@ const AttendanceConfigurationScreen = () => {
                                 name="dailyRules.hoursBasedPayPercentage"
                                 type="number"
                                 value={values.dailyRules.hoursBasedPayPercentage}
-                                onChange={handleChange}
+                                onChange={(e) => {
+                                  const { value } = e.target;
+                                  if (value === '' || value === null || value === undefined) {
+                                    setFieldValue('dailyRules.hoursBasedPayPercentage', '');
+                                    return;
+                                  }
+                                  const numValue = Number(value);
+                                  if (numValue >= 0 && numValue <= 100) {
+                                    setFieldValue('dailyRules.hoursBasedPayPercentage', numValue);
+                                  }
+                                }}
                                 InputProps={{
                                   endAdornment: (
                                     <InputAdornment position="end">
@@ -325,6 +336,22 @@ const AttendanceConfigurationScreen = () => {
                                   type="number"
                                   value={values.lateEarlyRules.graceTime}
                                   onChange={handleChange}
+                                  InputProps={{
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        <Typography
+                                          variant="body2"
+                                          color="text.secondary"
+                                          sx={{ fontWeight: 500 }}
+                                        >
+                                          Mins
+                                        </Typography>
+                                      </InputAdornment>
+                                    ),
+                                    inputProps: {
+                                      min: 0,
+                                    },
+                                  }}
                                   error={error}
                                   helperText={errorMessage || 'Allowed delay before marking late'}
                                 />
@@ -361,6 +388,11 @@ const AttendanceConfigurationScreen = () => {
                                   helperText={
                                     errorMessage || 'Maximum late entries allowed per month'
                                   }
+                                  InputProps={{
+                                    inputProps: {
+                                      min: 0,
+                                    },
+                                  }}
                                 />
                               </Box>
                             );
@@ -626,6 +658,11 @@ const AttendanceConfigurationScreen = () => {
                                       value={values.overtime.minOvertimeMinutes}
                                       onChange={handleChange}
                                       error={error}
+                                      InputProps={{
+                                        inputProps: {
+                                          min: 0,
+                                        },
+                                      }}
                                       helperText={
                                         errorMessage ||
                                         'Minimum overtime duration to qualify for OT pay'

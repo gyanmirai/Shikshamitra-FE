@@ -7,7 +7,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
 import { Box, Card, Grid, Divider, MenuList, MenuItem, Typography } from '@mui/material';
 
 import noCover from '../../../../../assets/icons/no-cover.png';
@@ -22,8 +21,6 @@ const SummaryView = ({
   onReserveBook,
   onViewAllReservationBook,
 }: { books: IBook[] } & LibrarySearchProps) => {
-  const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -72,12 +69,11 @@ const SummaryView = ({
           }}
           onClick={async () => {
             try {
-              const copies = await fetchCopies(book.id).unwrap();
-              onView?.({ ...book, copies });
+              onView?.(book);
             } catch (error) {
               console.error('Failed to fetch copies:', error);
               shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
-              onView?.({ ...book, copies: [] });
+              onView?.(book);
             }
           }}
         >
@@ -92,7 +88,9 @@ const SummaryView = ({
             }}
           >
             <Image
-              src={book.bookCoverImages?.[0] || noCover}
+              src={
+                book.coverImage ? `${process.env.NEXT_PUBLIC_API_URL}${book.coverImage}` : noCover
+              }
               alt={book.title}
               width={250}
               height={250}
@@ -167,16 +165,9 @@ const SummaryView = ({
             showEditIcon
             showViewIcon
             actions={(prop) => actions({ ...prop, row: book })}
-            handleViewClick={async () => {
+            handleViewClick={() => {
               const selectedBook = book as IBook;
-              try {
-                const copies = await fetchCopies(selectedBook.id).unwrap();
-                onView?.({ ...selectedBook, copies });
-              } catch (error) {
-                console.error('Failed to fetch copies:', error);
-                shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
-                onView?.({ ...selectedBook, copies: [] });
-              }
+              onView?.(selectedBook);
             }}
             handleDeleteClick={() => {
               const selectedBook = book as IBook;

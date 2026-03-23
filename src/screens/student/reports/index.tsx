@@ -48,7 +48,7 @@ const StudentReportsScreen = () => {
         description="Generate and view comprehensive reports on student records, including academic performance, attendance, and other relevant data."
         links={[
           { name: 'Student', href: '/student/dashboard/' },
-          { name: 'Student Records', href: '/student/overview/' },
+          { name: 'Student Records', href: '/student/dashboard/' },
           { name: 'Reports' },
         ]}
         isBack={openGenerateReport.value}
@@ -277,6 +277,7 @@ const StudentReportsScreen = () => {
       ) : (
         <CustomizableTable
           tableId="student-records-reports"
+          tableTitle="Student Records Reports"
           columns={[
             {
               label: 'Report Name',

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { GenderOptions } from 'src/enums/gender';
 import sortQueryString from 'src/utils/sort-query-string';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { MenuItem, MenuList, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -67,7 +68,28 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         isFilter: true,
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left' },
+      {
+        id: 'age',
+        label: 'Age',
+        align: 'left',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'doiValue',
         label: 'Date of Inquiry',
@@ -88,9 +110,23 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         label: 'Address',
         minWidth: '200px',
         align: 'left',
-        render(value) {
-          return value || '-';
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'primaryContactNo',
@@ -109,9 +145,23 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         label: 'Previous School',
         minWidth: '170px',
         align: 'left',
-        render(value) {
-          return value || '-';
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'inquiryPreference',
@@ -164,6 +214,7 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
 
   return (
     <CustomizableTable
+      tableTitle="Registration Form Issued"
       isLoading={isLoading}
       noDataText={<Typography variant="body2">No Registration Form Issued Data Found</Typography>}
       tableId="student-registration-form-table"

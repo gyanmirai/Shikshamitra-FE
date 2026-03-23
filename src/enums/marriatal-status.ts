@@ -5,6 +5,9 @@ export enum MaritalStatusType {
   Widowed,
 }
 
-export const MaritalStatusTypeArray = Array.from(
-  Array(Object.keys(MaritalStatusType).length / 2).keys()
-);
+export const MaritalStatusTypeArray = [
+  { label: 'Unmarried', value: MaritalStatusType.Unmarried },
+  { label: 'Married', value: MaritalStatusType.Married },
+  { label: 'Divorced', value: MaritalStatusType.Divorced },
+  { label: 'Widowed', value: MaritalStatusType.Widowed },
+];

@@ -94,6 +94,7 @@ const CharacterCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableTitle="Character Certificate"
         tableId="character-certificate"
         noDataText={
           <>

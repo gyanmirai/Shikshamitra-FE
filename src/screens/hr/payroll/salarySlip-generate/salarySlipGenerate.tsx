@@ -8,16 +8,17 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useLazyGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/employee-salary-slip/employee-salary-slip-api';
+import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/hr/employee-salary-slip-api';
 import {
   Box,
   Card,
@@ -79,8 +80,8 @@ const PaySlipGenerationScreen = () => {
       <CustomBreadcrumbs
         heading="Generate Salary Slip"
         links={[
-          { name: 'HR/Staff' },
-          { name: 'Payroll Management' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
           { name: 'Generate Salary Slip' },
         ]}
         description="Generate and download salary slips by selecting the pay period and employee details."
@@ -90,10 +91,10 @@ const PaySlipGenerationScreen = () => {
         direction={{ xs: 'column', md: 'row' }}
         alignItems={{ xs: 'stretch', md: 'center' }}
         justifyContent="space-between"
-        spacing={2}
+        spacing={1}
       >
         <Card sx={{ width: '100%' }}>
-          <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap" p={2}>
+          <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap" p={1.5}>
             {/* Filters */}
             <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
               <PaginatedSearchSelect

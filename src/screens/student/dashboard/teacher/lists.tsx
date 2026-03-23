@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
@@ -71,7 +71,6 @@ const absentStudents = [
 const TeacherLists = () => {
   const [openExamsDialog, setOpenExamsDialog] = useState(false);
   const [openStudentsDialog, setOpenStudentsDialog] = useState(false);
-
   // Table columns for exams
   const examColumns: any[] = [
     { id: 'subject', label: 'Subject', align: 'left' },
@@ -81,6 +80,7 @@ const TeacherLists = () => {
     {
       id: 'status',
       label: 'Status',
+      sticky: true,
       align: 'left',
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
@@ -110,6 +110,7 @@ const TeacherLists = () => {
       id: 'status',
       label: 'Status',
       align: 'left',
+      sticky: true,
       render: (value: string) => (
         <Label variant="soft" color={value === 'Absent' ? 'error' : 'warning'}>
           {value}

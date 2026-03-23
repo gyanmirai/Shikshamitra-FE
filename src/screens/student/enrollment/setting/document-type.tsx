@@ -148,8 +148,8 @@ const StudentDocumentType = () => {
       <CustomBreadcrumbs
         heading="Document Types"
         links={[
-          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
-          { name: 'Settings' },
+          { name: 'Student Enrollment', href: '/student/dashboard/' },
+          { name: 'Settings', href: '/student/dashboard/' },
           { name: 'Document Types' },
         ]}
         action={
@@ -212,6 +212,7 @@ const StudentDocumentType = () => {
         }
       />
       <CustomizableTable
+        tableTitle="Document Type"
         tableId="student-document-type"
         noDataText={
           <>
@@ -282,208 +283,6 @@ const StudentDocumentType = () => {
 
 export default StudentDocumentType;
 
-// export const DocumentForm = ({
-//   editData,
-//   handleClose,
-// }: {
-//   editData: null | IStudentDocument;
-//   handleClose?: (e: any, isSubmit: boolean) => void;
-// }) => {
-//   const dispatch = useDispatch();
-//   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-
-//   const [addDocument, { isLoading }] = useQueryAndMutation({
-//     type: 'mutation',
-//     currentQueryAndMutation: useAddStudentDocumentTypeMutation,
-//   });
-//   const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-//     type: 'mutation',
-//     currentQueryAndMutation: useUpdateStudentDocumentTypeMutation,
-//   });
-
-//   const formik = useFormik<{
-//     title: string;
-//     documentType: DocumentType[];
-//     isRequired: boolean;
-//   }>({
-//     initialValues: {
-//       title: editData?.documentName || '',
-//       documentType: editData?.documentTypes || [],
-//       isRequired: editData?.isRequired || false,
-//     },
-//     validationSchema: Yup.object({
-//       title: Yup.string().required('Document name is required'),
-//       documentType: Yup.array().min(1, 'At least one document type is required'),
-//     }),
-//     onSubmit: async (formikValues, { resetForm, setSubmitting }) => {
-//       try {
-//         setSubmitting(true);
-
-//         if (editData) {
-//           // Update existing document and close popup
-//           await updateDocument({
-//             id: editData.id,
-//             body: {
-//               documentName: formikValues.title,
-//               documentTypes: formikValues.documentType,
-//               isRequired: formikValues.isRequired,
-//             },
-//           });
-//           handleClose?.(null, true);
-//           return;
-//         }
-
-//         // Add new document - DON'T close dialog
-//         await addDocument({
-//           documentName: formikValues.title,
-//           documentTypes: formikValues.documentType,
-//           isRequired: formikValues.isRequired,
-//         });
-
-//         // Show success message
-//         setShowSuccessMessage(true);
-
-//         // Reset form for next entry
-//         resetForm();
-
-//         // Reset the changes state so dialog doesn't prompt for confirmation
-//         dispatch(setIsChanges(false));
-
-//         // Hide success message after 3 seconds
-//         setTimeout(() => {
-//           setShowSuccessMessage(false);
-//         }, 3000);
-//       } catch (error) {
-//         console.error('Error saving document:', error);
-//       } finally {
-//         setSubmitting(false);
-//       }
-//     },
-//   });
-
-//   const { values, setFieldValue, handleSubmit, errors, touched } = formik;
-
-//   // Function to handle "Add Another" button
-//   const handleAddAnother = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     handleSubmit();
-//   };
-
-//   // Function to handle "Save & Close" button
-//   const handleSaveAndClose = async (e: React.FormEvent) => {
-//     e.preventDefault();
-
-//     if (editData) {
-//       handleSubmit();
-//       return;
-//     }
-//     handleSubmit();
-//     handleClose?.(null, true);
-//   };
-
-//   return (
-//     <BackPopUpChecked initialValues={formik.initialValues} currentValues={values}>
-//       <form onSubmit={handleSubmit}>
-//         <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-//           <Stack spacing={2}>
-//             {!editData && (
-//               <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-//                 {/* <Button
-//                   size="small"
-//                   variant="outlined"
-//                   startIcon={<Iconify icon="eva:plus-fill" />}
-//                   onClick={handleAddAnother}
-//                   disabled={isLoading || isUpdateLoading}
-//                 >
-//                   {isLoading ? 'Adding...' : 'Add Another'}
-//                 </Button> */}
-//               </Box>
-//             )}
-//             {/* Success Message */}
-//             {showSuccessMessage && (
-//               <Box
-//                 sx={{
-//                   p: 2,
-//                   bgcolor: 'success.lighter',
-//                   border: '1px solid',
-//                   borderColor: 'success.main',
-//                   borderRadius: 1,
-//                   display: 'flex',
-//                   alignItems: 'center',
-//                   gap: 1,
-//                 }}
-//               >
-//                 <Iconify icon="eva:checkmark-circle-2-fill" color="success.main" />
-//                 <Typography variant="body2" color="success.dark">
-//                   Document added successfully! You can add another document.
-//                 </Typography>
-//               </Box>
-//             )}
-
-//             <ShakingTextField error={!!(touched.title && errors.title) || false}>
-//               <TextField
-//                 fullWidth
-//                 size="small"
-//                 label="Document Name *"
-//                 name="title"
-//                 value={values.title}
-//                 onChange={(e) => setFieldValue('title', e.target.value)}
-//                 error={Boolean(errors.title && touched.title)}
-//                 helperText={(touched.title && errors.title) || ''}
-//               />
-//             </ShakingTextField>
-
-//             <ShakingTextField error={!!(touched.documentType && errors.documentType) || false}>
-//               <CustomSelect
-//                 options={DocumentTypeArray}
-//                 value={values.documentType}
-//                 multiple
-//                 label="Select document Type *"
-//                 onChange={(value) => setFieldValue('documentType', value)}
-//                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-//                 error={Boolean(errors.documentType && touched.documentType)}
-//                 helperText={(touched.documentType && errors.documentType) as string}
-//               />
-//             </ShakingTextField>
-
-//             <FormControlLabel
-//               control={
-//                 <Switch
-//                   checked={values.isRequired}
-//                   onChange={(e) => setFieldValue('isRequired', e.target.checked)}
-//                 />
-//               }
-//               label="Is Required"
-//             />
-//           </Stack>
-//         </Scrollbar>
-
-//         <DialogActions sx={{ px: 2 }}>
-//           <Button
-//             size="small"
-//             startIcon={<Iconify icon={GlobalIcons.cancel} />}
-//             variant="outlined"
-//             onClick={() => {
-//               handleClose?.(null, false);
-//             }}
-//           >
-//             Cancel
-//           </Button>
-//           <LoadingButton
-//             size="small"
-//             variant="contained"
-//             loading={isUpdateLoading || isLoading}
-//             startIcon={<Iconify icon={GlobalIcons.submit} />}
-//             onClick={handleSaveAndClose}
-//           >
-//             {editData ? 'Update' : 'Submit'}
-//           </LoadingButton>
-//         </DialogActions>
-//       </form>
-//     </BackPopUpChecked>
-//   );
-// };
-
 export const DocumentForm = ({
   editData,
   handleClose,
@@ -520,7 +319,7 @@ export const DocumentForm = ({
       isRequired: editData?.isRequired || false,
     },
     validationSchema: Yup.object({
-      name: Yup.string().required('Document name is required'),
+      name: Yup.string().trim('Document name is required').required('Document name is required'),
       acceptedFormats: Yup.array()
         .min(1, 'At least one document type is required')
         .required('Document type is required'),
@@ -577,11 +376,16 @@ export const DocumentForm = ({
               name="name"
               value={values.name}
               onChange={(e) => {
-                const onlyText = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                setFieldValue('name', onlyText);
+                let onlyText = e.target.value;
+                onlyText = onlyText.replace(/^\s+/g, ''); // Remove leading spaces
+                const capitalize = onlyText.charAt(0).toUpperCase() + onlyText.slice(1);
+                setFieldValue('name', capitalize);
               }}
               error={Boolean(touched.name && errors.name)}
               helperText={touched.name && errors.name}
+              inputProps={{
+                maxLength: 40,
+              }}
             />
           </ShakingTextField>
 

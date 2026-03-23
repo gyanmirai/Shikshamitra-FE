@@ -160,9 +160,9 @@ const AttendanceType = () => {
         heading="Leave Type"
         description="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
         links={[
-          { name: 'Student', href: '/student/attendance/dashboard/' },
-          { name: 'Attendance', href: '/student/attendance/dashboard/' },
-          { name: 'Setting' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Attendance', href: '/student/dashboard/' },
+          { name: 'Settings', href: '/student/dashboard/' },
           { name: 'Leave Type' },
         ]}
         action={
@@ -178,6 +178,7 @@ const AttendanceType = () => {
         }
       />
       <CustomizableTable
+        tableTitle="Leave Type"
         tableId="attendance-type"
         noDataText={
           <>

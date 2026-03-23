@@ -5,7 +5,6 @@ import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
-import { capitalize } from 'lodash';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -20,12 +19,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BloodGroupArray } from 'src/enums/blood-group';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
 import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
-import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import {
   Box,
   Grid,
@@ -219,8 +218,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
-  console.log('formik values-----', formik.values);
-  console.log('formik initialvalues-----', formik.initialValues);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     await formik?.submitForm?.();
@@ -232,6 +229,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const handleCancel = () => {
     // formik.resetForm();
   };
+  console.log('formik initial values----', formik.initialValues);
+  console.log('formik values-----', formik.values);
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -250,7 +249,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid size={{ xs: 12, md: 3, lg: 2 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Grid size={{ xs: 12, md: 3, lg: 2.4 }} sx={{ display: 'flex', justifyContent: 'center' }}>
           <UploadAvatar
             onDrop={async (acceptedFiles: File[]) => {
               const file = acceptedFiles?.[0];
@@ -263,12 +262,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             value={formik.values.photo}
             error={formik.touched.photo && Boolean(formik.errors.photo)}
             helperText={formik.touched.photo && formik.errors.photo}
-            sx={{ m: 'initial' }}
             disabled={!isBasicDetailsEditable.value}
           />
-          {/* <FormHelperText>{formik.touched.photo && formik.errors.photo}</FormHelperText> */}
         </Grid>
-        <Grid size={{ xs: 12, md: 9, lg: 10 }}>
+        <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
               <ShakingTextField
@@ -281,7 +278,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {...formik.getFieldProps('firstName')}
                   value={formik.values.firstName || ''}
                   onChange={(e) => {
-                    const newName = capitalize(e.target.value);
+                    const val = e.target.value;
+                    const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
                     if (/^[A-Za-z ]*$/.test(newName)) {
                       formik.setFieldValue('firstName', newName);
                     }
@@ -304,7 +302,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   value={formik.values.middleName || ''}
                   name="middleName"
                   onChange={(e) => {
-                    const newName = capitalize(e.target.value);
+                    const val = e.target.value;
+                    const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
                     if (/^[A-Za-z ]*$/.test(newName)) {
                       formik.setFieldValue('middleName', newName);
                     }
@@ -325,7 +324,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {...formik.getFieldProps('lastName')}
                   value={formik.values.lastName || ''}
                   onChange={(e) => {
-                    const newName = capitalize(e.target.value);
+                    const val = e.target.value;
+                    const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
                     if (/^[A-Za-z ]*$/.test(newName)) {
                       formik.setFieldValue('lastName', newName);
                     }
@@ -347,7 +347,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   {...formik.getFieldProps('shortName')}
                   value={formik.values.shortName || ''}
                   onChange={(e) => {
-                    const newName = capitalize(e.target.value);
+                    const val = e.target.value;
+                    const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
                     formik.setFieldValue('shortName', newName);
                   }}
                   error={formik.touched.shortName && Boolean(formik.errors.shortName)}
@@ -456,7 +457,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   label="Family Caste *"
                   {...formik.getFieldProps('familyCast')}
                   onChange={(e) => {
-                    // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
                     const value = e?.target?.value?.replace(/[^A-Za-z\s]/g, '') || '';
                     const newName = value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
                     formik.setFieldValue('familyCast', newName);
@@ -488,9 +488,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Marital Status *"
                     name="maritalStatus"
                   >
-                    {MaritalStatusTypeArray.map((i, index) => (
-                      <MenuItem key={i} value={index}>
-                        {MaritalStatusType[index]}
+                    {MaritalStatusTypeArray.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
                       </MenuItem>
                     ))}
                   </Select>
@@ -517,7 +517,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     id="bloodGroup"
                     name="bloodGroup"
                     size="small"
-                    value={formik.values.bloodGroup}
+                    value={formik.values.bloodGroup === null ? '' : formik.values.bloodGroup}
                     onChange={formik.handleChange}
                     label="Blood Group"
                   >
@@ -728,13 +728,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Department"
               {...formik.getFieldProps('department')}
               onChange={(e) => {
-                const { value } = e.target;
-                if (/^[A-Za-z\s]*$/.test(value)) {
-                  const formattedValue = value
-                    .split(' ')
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                    .join(' ');
-                  formik.setFieldValue('department', formattedValue);
+                const val = e.target.value;
+                const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+                if (/^[A-Za-z ]*$/.test(newName)) {
+                  formik.setFieldValue('department', newName);
                 }
               }}
               // onChange={(e) => {

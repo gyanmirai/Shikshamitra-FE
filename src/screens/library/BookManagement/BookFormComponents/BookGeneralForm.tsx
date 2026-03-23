@@ -1,17 +1,31 @@
 import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
-import type { Standards, Organization } from 'src/types/school';
-import type { FileWithPreview } from 'src/components/custom-upload/custom-upload';
+import type { BookLanguage } from 'src/enums/book-language';
 
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { CheckCircle } from '@mui/icons-material';
+import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import { BOOK_LANGUAGE_OPTIONS } from 'src/enums/book-language';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomUpload from 'src/components/custom-upload/custom-upload';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
-import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
+import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  Box,
+  Grid,
+  TextField,
+  IconButton,
+  Typography,
+  Autocomplete,
+  CircularProgress,
+} from '@mui/material';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { fetchBookDetails } from './getBookDetails';
 import { getInitialBookData } from '../Components/BookManageInitialValues';
@@ -20,17 +34,39 @@ import type { IBookPayload } from '../Components/type';
 
 interface BookGeneralStepProps {
   formik: FormikProps<IBookPayload>;
+  isEdit?: boolean;
 }
 
-const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
+const BookGeneralStep = ({ formik, isEdit }: BookGeneralStepProps) => {
   const [inputValue, setInputValue] = useState('');
   const [debouncedInputValue, setDebouncedInputValue] = useState('');
   const [loadingBookDetails, setLoadingBookDetails] = useState(false);
   const [, setBookFound] = useState(false);
   const [fieldsEnabled, setFieldsEnabled] = useState(false);
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: bookCategoryData, isLoading: bookCategoryLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBookCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
+  });
+
+  const categoryOptions = (bookCategoryData?.items ?? []).map((item: any) => ({
+    label: item.categoryName,
+    value: item.id,
+  }));
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedInputValue(inputValue);
@@ -43,26 +79,6 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     skip: !debouncedInputValue,
   });
 
-  const [, setAllClass] = useState<Standards[]>([]);
-
-  useEffect(() => {
-    // If medium or its stages are missing, clear classes
-    if (!medium || !medium.educationMediumStages?.length) {
-      setAllClass([]);
-      return;
-    }
-
-    // Flatten standards from all stages of this medium
-    const mergedStandards =
-      medium.educationMediumStages.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    // Add "All" option at the top
-    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
-
-    setAllClass(withAll);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [medium]);
-
   useEffect(() => {
     if (formik.values.title) {
       setFieldsEnabled(true);
@@ -70,20 +86,13 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const languageOptions = [
-    { label: 'Gujarati (ગુજરાતી)', value: 'Gujarati' },
-    { label: 'Hindi (हिंदी)', value: 'Hindi' },
-    { label: 'English', value: 'English' },
-    { label: 'Marathi (मराठी)', value: 'Marathi' },
-    { label: 'Sanskrit (संस्कृत)', value: 'Sanskrit' },
-  ];
+  const languageOptions = BOOK_LANGUAGE_OPTIONS;
 
   const applicableAgeOptions = [
-    { id: 'all', name: 'All' },
     { id: '6-8', name: '6–8 years' },
     { id: '9-12', name: '9–12 years' },
     { id: '13-15', name: '13–15 years' },
-    { id: '15plus', name: '15 plus' },
+    { id: '15plus', name: '15+ years' },
   ];
 
   return (
@@ -323,24 +332,18 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
-            <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
+            <ShakingTextField error={!!(formik.touched.categoryId && formik.errors.categoryId)}>
               <CustomSelect
                 label="Category"
-                name="category"
-                options={[
-                  { value: 'Fiction', label: 'Fiction' },
-                  { value: 'Non-Fiction', label: 'Non-Fiction' },
-                  { value: 'Reference', label: 'Reference' },
-                  { value: 'Textbook', label: 'Textbook' },
-                  { value: 'Children', label: 'Children' },
-                  { value: 'Biography', label: 'Biography' },
-                ]}
-                value={formik.values.category}
+                name="categoryId"
+                isLoading={bookCategoryLoading}
+                options={categoryOptions as any}
+                value={formik.values.categoryId || ''}
                 onChange={(value) => {
-                  formik.setFieldValue('category', value);
+                  formik.setFieldValue('categoryId', value);
                 }}
-                error={!!(formik.touched.category && formik.errors.category)}
-                helperText={(formik.touched.category && formik.errors.category) as string}
+                error={!!(formik.touched.categoryId && formik.errors.categoryId)}
+                helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
                 formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
@@ -374,25 +377,19 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
-              <Autocomplete
-                fullWidth
+              <CustomSelect
                 options={languageOptions}
-                getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
-                value={languageOptions.find((opt) => opt.value === formik.values.language) || null}
-                onChange={(_, newValue) => {
-                  formik.setFieldValue('language', newValue ? newValue.value : '');
+                label="Language"
+                value={formik.values.language ?? ''}
+                onChange={(val) => {
+                  formik.setFieldValue('language', val as BookLanguage);
                 }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Language"
-                    size="small"
-                    error={!!(formik.touched.language && formik.errors.language)}
-                    helperText={formik.touched.language && formik.errors.language}
-                    fullWidth
-                  />
-                )}
-                isOptionEqualToValue={(option, value) => option.value === value.value}
+                onBlur={() => formik.setFieldTouched('language', true)}
+                error={formik.touched.language && Boolean(formik.errors.language)}
+                helperText={(formik.touched.language && formik.errors.language) as string}
+                labelKey="label"
+                valueKey="value"
+                formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
               />
             </ShakingTextField>
           )}
@@ -409,6 +406,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 fullWidth
                 name="numberOfCopies"
                 type="number"
+                disabled={isEdit}
                 label="Number of Copies *"
                 value={formik.values.numberOfCopies || ''}
                 onChange={(e) => {
@@ -478,40 +476,9 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
               <CustomSelect
                 options={applicableAgeOptions}
                 label="Applicable Age"
-                multiple
-                value={formik.values.applicableAge || []}
+                value={formik.values.applicableAge || ''}
                 onChange={(val) => {
-                  const value = val as string[];
-
-                  // All available age IDs (excluding "All")
-                  const allAgeIds = applicableAgeOptions
-                    .filter((opt) => opt.id !== 'all')
-                    .map((opt) => opt.id);
-
-                  const isAllClicked = value.includes('all');
-                  const wasAllPreviouslySelected = (
-                    formik.values.applicableAge as string[]
-                  ).includes('all');
-
-                  if (isAllClicked && !wasAllPreviouslySelected) {
-                    formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
-                  } else if (!isAllClicked && wasAllPreviouslySelected) {
-                    formik.setFieldValue('applicableAge', []);
-                  } else if (isAllClicked && wasAllPreviouslySelected) {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allAgeIds.length) {
-                      formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
-                    } else {
-                      formik.setFieldValue('applicableAge', selectedWithoutAll);
-                    }
-                  } else {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allAgeIds.length) {
-                      formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
-                    } else {
-                      formik.setFieldValue('applicableAge', selectedWithoutAll);
-                    }
-                  }
+                  formik.setFieldValue('applicableAge', val as string);
                 }}
                 onBlur={() => formik.setFieldTouched('applicableAge', true)}
                 error={formik.touched.applicableAge && Boolean(formik.errors.applicableAge)}
@@ -558,15 +525,90 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         {/* Upload */}
         <Grid size={{ xs: 12 }}>
           {fieldsEnabled && (
-            <CustomUpload
-              multiple
-              onChange={(files) => {
-                formik.setFieldValue(`bookCoverImages`, files);
-              }}
-              value={formik.values.bookCoverImages as unknown as (string | FileWithPreview)[]}
-              label="Upload Book Cover, Front, Back Images."
-              outputFormat="file"
-            />
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*,.pdf"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  const formData = new FormData();
+                  formData.append('FileName', file.name);
+                  formData.append('File', file);
+                  try {
+                    const response = await uploadCurriculumFile(formData).unwrap();
+                    const uploadedUrl = response.data;
+                    formik.setFieldValue('coverImage', uploadedUrl);
+                    shikshaMitraToast.success({ message: 'Cover image uploaded successfully.' });
+                  } catch (error) {
+                    console.error('Cover image upload failed:', error);
+                    shikshaMitraToast.error({ message: 'Cover image upload failed.' });
+                  } finally {
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }
+                }}
+              />
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Book Cover Image
+                  </Typography>
+                  {formik.values.coverImage ? (
+                    <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                      <CheckCircle sx={{ fontSize: 14, color: 'success.main' }} />
+                      <Typography variant="caption" color="success.main" fontWeight={600}>
+                        Uploaded
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      No image uploaded
+                    </Typography>
+                  )}
+                </Box>
+                <Box display="flex" gap={1} alignItems="center">
+                  {formik.values.coverImage && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        window.open(
+                          `${process.env.NEXT_PUBLIC_API_URL}${formik.values.coverImage}`,
+                          '_blank'
+                        );
+                      }}
+                    >
+                      <Iconify icon="carbon:view-filled" />
+                    </IconButton>
+                  )}
+                  <LoadingButton
+                    size="small"
+                    variant="outlined"
+                    loading={isUploading}
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    startIcon={<Iconify icon="eva:cloud-upload-outline" />}
+                  >
+                    {formik.values.coverImage ? 'Replace' : 'Upload'}
+                  </LoadingButton>
+                </Box>
+              </Box>
+            </>
           )}
         </Grid>
 

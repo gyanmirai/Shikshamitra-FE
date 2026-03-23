@@ -5,11 +5,15 @@ export interface FetchOptionsResponse<T> {
   hasMore: boolean;
 }
 
-export interface PaginatedSearchSelectProps<T>
-  extends Omit<
-    AutocompleteProps<T, false, false, false>,
-    'options' | 'loading' | 'renderInput' | 'onInputChange'
-  > {
+export type PaginatedSearchSelectProps<
+  T,
+  Multiple extends boolean | undefined = undefined,
+  DisableClearable extends boolean | undefined = undefined,
+  FreeSolo extends boolean | undefined = undefined,
+> = Omit<
+  AutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
+  'options' | 'loading' | 'renderInput' | 'onInputChange'
+> & {
   label: string;
   placeholder?: string;
   fetchOptions: (query: string, page: number) => Promise<FetchOptionsResponse<T>>;
@@ -17,4 +21,5 @@ export interface PaginatedSearchSelectProps<T>
   debounceMs?: number;
   helperText?: React.ReactNode;
   error?: boolean;
-}
+  isLoading?: boolean;
+};

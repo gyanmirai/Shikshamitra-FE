@@ -1,106 +1,80 @@
 import type { RootState } from 'src/redux/store';
 
-import { useMemo, useState } from 'react';
+import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useFormik, type FormikHelpers } from 'formik';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { useGetExpenseCategoryQuery } from 'src/redux/finance/expenseCategory';
 import {
-  useGetExpenseOptionsQuery,
   usePutExpenseDetailsMutation,
   usePostExpenseDetailsMutation,
-  useGetPaymentMethodsConfigQuery,
 } from 'src/redux/finance/expenseApi/expenseDetailedApi';
 
 import { getInitialExpenseData } from '../component/ExpenseInitialValues';
 import { getExpenseFormSchema } from '../component/ExpenseValidationSchema';
-import { paymentMethodsConfig as localPaymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
 import type { IExpenseFormProps, IExpenseFormValues } from '../component/type';
+
+// Payment method options derived directly from the enum
+export const paymentMethodOptions = Object.entries(PaymentMethodLabels).map(([value, label]) => ({
+  value: Number(value),
+  label,
+}));
 
 export const useExpenseForm = ({
   onClose,
   editData,
 }: Pick<IExpenseFormProps, 'onClose' | 'editData'>) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // API Hooks
-  const { data: expenseOptionsData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpenseOptionsQuery,
-  });
-
-  const { postExpenseDetails } = useQueryAndMutation({
+  const [postExpenseDetails, { isLoading: addLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostExpenseDetailsMutation,
   });
 
-  const { putExpenseDetails } = useQueryAndMutation({
+  const [putExpenseDetails, { isLoading: updateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePutExpenseDetailsMutation,
   });
 
-  const { data: paymentMethodsConfigData } = useQueryAndMutation({
+  const { data: categoryOptions, isLoading: categoryOptionsLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetPaymentMethodsConfigQuery,
+    currentQueryAndMutation: useGetExpenseCategoryQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
-  // Derived Data
-  const categoryOptions = useMemo(
-    () => expenseOptionsData?.categoryOptions || [],
-    [expenseOptionsData]
-  );
-
-  const paymentMethodsConfig = useMemo(
-    () => paymentMethodsConfigData || localPaymentMethodsConfig,
-    [paymentMethodsConfigData]
-  );
-
-  const paymentMethodOptions = useMemo(
-    () =>
-      expenseOptionsData?.paymentMethodOptions ||
-      Object.keys(paymentMethodsConfig).map((method) => ({
-        value: method,
-        label: method.charAt(0).toUpperCase() + method.slice(1),
-      })),
-    [expenseOptionsData, paymentMethodsConfig]
-  );
-
-  // Form Submission Handler
-  const handleSubmit = async (
-    values: IExpenseFormValues,
-    { setSubmitting }: FormikHelpers<IExpenseFormValues>
-  ) => {
+  // Form Submission Handler - payload matches API contract exactly
+  const handleSubmit = async (values: IExpenseFormValues) => {
     try {
-      setIsSubmitting(true);
-
       const payload = {
-        academicYearId: currentYear?.id,
-        categoryId: values.expenseCategory,
-        name: values.expenseName,
-        categoryTags: values.expenseCategoryTags || [],
+        categoryId: values.categoryId,
+        name: values.name,
+        categoryTags: values.categoryTags || [],
         amount: values.amount,
-        paymentMethod: values.paymentMethod,
-        paymentDate: values.date?.toISOString(),
-        notes: values.notes || '',
-        paymentDetails: values.paymentDetails,
+        paymentMethod: values.paymentMethod, // integer enum
+        paymentDate: values.paymentDate?.toISOString(),
+        notes: values.notes || null,
       };
 
       if (editData?.id) {
         await putExpenseDetails({
           expenseId: editData.id,
+          academicYearId: currentYear?.id,
           body: payload,
         }).unwrap();
 
         shikshaMitraToast.success({
-          message: `Expense Tracking : ${values.expenseName} updated successfully!`,
+          message: `Expense Tracking : ${values.name} updated successfully!`,
         });
       } else {
-        await postExpenseDetails(payload).unwrap();
+        await postExpenseDetails({
+          academicYearId: currentYear?.id,
+          body: payload,
+        }).unwrap();
 
         shikshaMitraToast.success({
-          message: `Expense Tracking : ${values.expenseName} added successfully!`,
+          message: `Expense Tracking : ${values.name} added successfully!`,
         });
       }
       onClose(null, true);
@@ -109,9 +83,6 @@ export const useExpenseForm = ({
       shikshaMitraToast.error({
         message: `Failed to ${editData ? 'update' : 'create'} expense tracking`,
       });
-    } finally {
-      setIsSubmitting(false);
-      setSubmitting(false);
     }
   };
 
@@ -125,10 +96,11 @@ export const useExpenseForm = ({
 
   return {
     formik,
-    isSubmitting,
+    addLoading,
+    updateLoading,
     categoryOptions,
-    paymentMethodsConfig,
     paymentMethodOptions,
     currentYear,
+    categoryOptionsLoading,
   };
 };

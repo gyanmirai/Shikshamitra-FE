@@ -82,7 +82,7 @@ const GroupManagement = ({ division }: { division: string }) => {
   const { data: getAllStudentGroupData, isLoading: isGetAllStudentGroupLoading } =
     useQueryAndMutation({
       type: 'query',
-      params: division,
+      params: { division },
       currentQueryAndMutation: useGetAllStudentGroupQuery,
     });
 
@@ -375,6 +375,7 @@ const GroupManagement = ({ division }: { division: string }) => {
       <CustomizableTable
         // onSendNotification={handlerSendNotification}
         // showCheckbox={selectedStudent.length !== 0}
+        tableTitle="House Management"
         tableId="group-management-table"
         noDataText="No Student data available"
         isLoading={isGetAllStudentGroupLoading}

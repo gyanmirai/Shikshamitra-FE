@@ -43,7 +43,10 @@ const RegistrationTable = ({
     skipCount: 0,
     maxResultCount: 10,
   });
-  const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
+  const [
+    moveToAdmission,
+    { isLoading: isMoveToAdmissionLoading, isFetching: isMoveToAdmissionFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: {
@@ -72,7 +75,7 @@ const RegistrationTable = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right-circle" />
+            <Iconify icon="mdi:arrow-right-circle-outline" />
             Move To Admission
           </MenuItem>
           <MenuItem
@@ -155,7 +158,28 @@ const RegistrationTable = ({
         isFilter: true,
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left' },
+      {
+        id: 'age',
+        label: 'Age',
+        align: 'left',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'doiValue',
         label: 'Date of Inquiry',
@@ -172,7 +196,29 @@ const RegistrationTable = ({
         minWidth: '90px',
         enumOptions: GenderOptions,
       },
-      { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
+      {
+        id: 'address',
+        label: 'Address',
+        minWidth: '150px',
+        align: 'left',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'primaryContactNo',
         label: 'Primary Contact No.',
@@ -299,6 +345,7 @@ const RegistrationTable = ({
   return (
     <>
       <CustomizableTable
+        tableTitle="Registration"
         tableId="student-registration-table"
         noDataText={
           <>
@@ -359,7 +406,7 @@ const RegistrationTable = ({
         action={
           <LoadingButton
             variant="contained"
-            loading={isMoveToAdmissionLoading}
+            loading={isMoveToAdmissionLoading || isMoveToAdmissionFetching}
             onClick={async () => {
               await moveToAdmission(moveId);
               confirmMovePopup.onFalse();

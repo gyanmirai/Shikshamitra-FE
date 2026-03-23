@@ -1,16 +1,21 @@
 import type { BoxProps } from '@mui/material';
+import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Grid, Slide, TextField } from '@mui/material';
 import { getBase64String } from 'src/utils/get-base64-string';
-import { LoadingScreen } from 'src/components/loading-screen';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
 import {
   useGetBasicDetailsQuery,
   useGetFamilyDetailsQuery,
@@ -53,6 +58,54 @@ import type {
   ICommunicationInformationResponse,
 } from './type';
 
+const SyncReduxDirty = ({ formik }: { formik: any }) => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    let isReallyDirty = false;
+
+    if (formik.dirty) {
+      isReallyDirty = Object.keys(formik.values).some((key) => {
+        const val1 = formik.values[key];
+        const val2 = formik.initialValues[key];
+
+        if (val1 === val2) return false;
+
+        if (val1 instanceof FormData || val2 instanceof FormData) return false;
+
+        if (dayjs.isDayjs(val1) || dayjs.isDayjs(val2)) {
+          if (dayjs.isDayjs(val1) && dayjs.isDayjs(val2)) {
+            return val1.format('YYYY-MM-DD') !== val2.format('YYYY-MM-DD');
+          }
+          return val1 !== val2;
+        }
+
+        if (key === 'mobileNo' || key === 'secondaryMobileNo') {
+          const clean1 = (val1 || '').replace(/[^0-9]/g, '');
+          const clean2 = (val2 || '').replace(/[^0-9]/g, '');
+
+          if (clean1 !== clean2) {
+            if (!clean2 && clean1.length <= 2) return false; // Default country code
+            return true;
+          }
+          return false;
+        }
+
+        if (Array.isArray(val1) && Array.isArray(val2)) {
+          return JSON.stringify(val1) !== JSON.stringify(val2);
+        }
+
+        if (val1 && val2 && typeof val1 === 'object' && typeof val2 === 'object') {
+          return JSON.stringify(val1) !== JSON.stringify(val2);
+        }
+        return val1 !== val2;
+      });
+    }
+    dispatch(setIsChanges(isReallyDirty));
+  }, [dispatch, formik.dirty, formik.values, formik.initialValues]);
+
+  return null;
+};
+
 const steps = [
   'General',
   'Documents',
@@ -82,7 +135,10 @@ const RegisterForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   isComeFromIssueForm?: boolean;
 }) => {
+  const dispatch = useDispatch();
   const [activeStep, setActiveStep] = useState(0);
+  const [pendingStep, setPendingStep] = useState<number | null>(null);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const [addRegistration] = useQueryAndMutation({
     type: 'mutation',
@@ -199,7 +255,7 @@ const RegisterForm = ({
             // academicYearId: values.academicYear,
             // educationBoardId: values.board,
           }).unwrap();
-          formik.setFieldValue('id', resp?.studentId);
+          formik.setFieldValue('id', resp?.data?.studentId);
         }
       } catch (error) {
         throw new Error(error);
@@ -550,51 +606,97 @@ const RegisterForm = ({
   );
 
   return (
-    <CustomStepperWithFormik
-      onStepClick={(index) => {
-        if (editData) {
-          setActiveStep(index);
+    <>
+      <CustomStepperWithFormik
+        showSaveButton={isChanges}
+        disableSubmit={!isChanges}
+        onStepClick={(index) => {
+          if (editData) {
+            if (isChanges) {
+              setPendingStep(index);
+            } else {
+              setActiveStep(index);
+            }
+          }
+        }}
+        viewMode="vertical"
+        validateOnChange
+        initialValues={{
+          ...generalFieldsInitialValues(),
+          ...documentFieldsInitialValues(),
+          ...familyFieldsInitialValues(),
+          ...CommunicationFieldsInitialValues(),
+          ...additionalDetailsInitialValues(),
+          ...medicalFieldsInitialValues(),
+          ...previousSchoolFieldsInitialValues(),
+          ...bankDetailsInitialValues(),
+        }}
+        steps={steps}
+        activeStep={activeStep}
+        handleBack={() => {
+          setActiveStep(activeStep - 1);
+        }}
+        validationSchema={validationSchemas[activeStep]}
+        handleNext={(
+          isLastStep: boolean,
+          value: any,
+          formik: any,
+          setIsLoading: (val: boolean) => void
+        ) => handleSave(isLastStep, value, formik, setIsLoading)}
+        onSave={(
+          isLastStep: boolean,
+          value: any,
+          formik: any,
+          setIsLoading: (val: boolean) => void
+        ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
+        renderItem={({ activeStep: step, formik, isBackClick }: any) => (
+          <>
+            <SyncReduxDirty formik={formik} />
+            <RegisterStepForm
+              activeStep={step}
+              formik={formik}
+              isBackClick={isBackClick}
+              editData={editData}
+            />
+          </>
+        )}
+      />
+
+      <ConfirmDialog
+        open={pendingStep !== null}
+        onClose={() => setPendingStep(null)}
+        icon="warning"
+        title="Alert"
+        content={
+          <Typography variant="body2">
+            You have unsaved changes on this step. If you navigate away, your changes will be lost.
+            Are you sure you want to continue?
+          </Typography>
         }
-      }}
-      viewMode="vertical"
-      validateOnChange
-      initialValues={{
-        ...generalFieldsInitialValues(),
-        ...documentFieldsInitialValues(),
-        ...familyFieldsInitialValues(),
-        ...CommunicationFieldsInitialValues(),
-        ...additionalDetailsInitialValues(),
-        ...medicalFieldsInitialValues(),
-        ...previousSchoolFieldsInitialValues(),
-        ...bankDetailsInitialValues(),
-      }}
-      steps={steps}
-      activeStep={activeStep}
-      handleBack={() => {
-        setActiveStep(activeStep - 1);
-      }}
-      validationSchema={validationSchemas[activeStep]}
-      handleNext={(
-        isLastStep: boolean,
-        value: any,
-        formik: any,
-        setIsLoading: (val: boolean) => void
-      ) => handleSave(isLastStep, value, formik, setIsLoading)}
-      onSave={(
-        isLastStep: boolean,
-        value: any,
-        formik: any,
-        setIsLoading: (val: boolean) => void
-      ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
-      renderItem={({ activeStep: step, formik, isBackClick }: any) => (
-        <RegisterStepForm
-          activeStep={step}
-          formik={formik}
-          isBackClick={isBackClick}
-          editData={editData}
-        />
-      )}
-    />
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={() => {
+              if (pendingStep !== null) {
+                dispatch(setIsChanges(false));
+                setActiveStep(pendingStep);
+                setPendingStep(null);
+              }
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
+    </>
   );
 };
 
@@ -616,6 +718,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 0),
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
     },
   });
 
@@ -627,6 +731,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 2),
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
     },
   });
   const { data: studentCommunicationDetails, isLoading: studentCommunicationDetailsLoading } =
@@ -638,6 +744,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 3),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
 
@@ -650,6 +758,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 4),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
 
@@ -662,6 +772,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 5),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
   const { data: previousSchoolDetails, isLoading: previousSchoolDetailsLoading } =
@@ -673,6 +785,8 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 6),
+        refetchOnMountOrArgChange: false,
+        refetchOnFocus: false,
       },
     });
 
@@ -684,52 +798,68 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 7),
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
     },
   });
 
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (basicDetails?.data && step === 0) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...generalFieldsInitialValues(basicDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...generalFieldsInitialValues(basicDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (familyDetails?.data && step === 2) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...familyFieldsInitialValues(familyDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...familyFieldsInitialValues(familyDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (studentCommunicationDetails?.data && step === 3) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...CommunicationFieldsInitialValues(studentCommunicationDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...CommunicationFieldsInitialValues(studentCommunicationDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (studentAdditionalDetails?.data && step === 4) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...additionalDetailsInitialValues(studentAdditionalDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...additionalDetailsInitialValues(studentAdditionalDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (studentMedicalDetails?.data && step === 5) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...medicalFieldsInitialValues(studentMedicalDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...medicalFieldsInitialValues(studentMedicalDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (previousSchoolDetails?.data && step === 6) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...previousSchoolFieldsInitialValues(previousSchoolDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...previousSchoolFieldsInitialValues(previousSchoolDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     } else if (parentBankDetails?.data && step === 7) {
-      formik.setValues((pre: any) => ({
-        ...pre,
-        ...bankDetailsInitialValues(parentBankDetails?.data),
-      }));
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          ...bankDetailsInitialValues(parentBankDetails?.data),
+        },
+      });
       initializedStepsRef.current[step] = true;
     }
 
@@ -745,76 +875,77 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     studentMedicalDetails?.data,
   ]);
 
+  const stepLoadings = [
+    basicDetailsLoading,
+    false,
+    familyDetailsLoading,
+    studentCommunicationDetailsLoading,
+    studentAdditionalDetailsLoading,
+    studentMedicalDetailsLoading,
+    previousSchoolDetailsLoading,
+    parentBankDetailsLoading,
+  ];
+  const isLoading = stepLoadings[step] || false;
+
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-        {basicDetailsLoading ||
-        familyDetailsLoading ||
-        studentCommunicationDetailsLoading ||
-        studentAdditionalDetailsLoading ||
-        studentMedicalDetailsLoading ||
-        previousSchoolDetailsLoading ||
-        parentBankDetailsLoading ? (
-          <LoadingScreen />
-        ) : (
-          <Grid container spacing={2.5} sx={{ height: '100%' }}>
-            {allFields[step].map((field: FieldsType) => (
-              <Grid size={4} key={field.name} {...(field.gridProps || {})}>
-                {field.renderComp ? (
-                  field.renderComp({
-                    formik,
-                    field,
-                    isEdit: true,
-                    isMainForm: true,
-                    editData,
-                  })
-                ) : field.type === 'date' ? (
-                  <DatePicker
-                    label={field.label}
-                    name={field.name}
-                    value={formik.values[field.name]}
-                    format="DD-MM-YYYY"
-                    onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                    slotProps={{
-                      textField: {
-                        placeholder: field.placeholder,
-                        fullWidth: true,
-                        size: 'small',
-                        helperText: formik.touched[field.name] && formik.errors[field.name],
-                        error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                      },
-                    }}
-                  />
-                ) : (
-                  <ShakingTextField
-                    error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                  >
-                    <TextField
-                      key={field.name}
-                      type={field.type}
-                      size="small"
-                      label={field.label}
-                      name={field.name}
-                      placeholder={field.placeholder}
-                      value={formik.values[field.name]}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                      helperText={formik.touched[field.name] && formik.errors[field.name]}
-                      fullWidth
-                      // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                      {...((typeof field?.otherProps === 'function'
-                        ? field?.otherProps({ formik })
-                        : field?.otherProps) || {})}
-                    />
-                  </ShakingTextField>
-                )}
-              </Grid>
-            ))}
+    <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
+      <Grid container spacing={2.5} sx={{ height: '100%' }}>
+        {allFields[step].map((field: FieldsType) => (
+          <Grid size={4} key={field.name} {...(field.gridProps || {})}>
+            {field.renderComp ? (
+              field.renderComp({
+                formik,
+                field,
+                isEdit: true,
+                isMainForm: true,
+                editData,
+                isLoading,
+              })
+            ) : field.type === 'date' ? (
+              <DatePicker
+                label={field.label}
+                name={field.name}
+                value={formik.values[field.name]}
+                format="DD-MM-YYYY"
+                onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                slotProps={{
+                  textField: {
+                    placeholder: field.placeholder,
+                    fullWidth: true,
+                    size: 'small',
+                    helperText: formik.touched[field.name] && formik.errors[field.name],
+                    error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                  },
+                }}
+              />
+            ) : (
+              <ShakingTextField
+                error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+              >
+                <TextField
+                  key={field.name}
+                  type={field.type}
+                  size="small"
+                  label={field.label}
+                  name={field.name}
+                  placeholder={field.placeholder}
+                  value={formik.values[field.name]}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                  helperText={formik.touched[field.name] && formik.errors[field.name]}
+                  fullWidth
+                  // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                  {...((typeof field?.otherProps === 'function'
+                    ? field?.otherProps({ formik })
+                    : field?.otherProps) || {})}
+                />
+              </ShakingTextField>
+            )}
           </Grid>
-        )}
-      </FormSlider>
-    </BackPopUpChecked>
+        ))}
+      </Grid>
+    </FormSlider>
   );
 };
 

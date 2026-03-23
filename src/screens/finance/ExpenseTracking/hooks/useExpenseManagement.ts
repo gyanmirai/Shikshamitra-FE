@@ -6,10 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetExpensesQuery as useGetExpensesListQuery } from 'src/redux/finance/expenseApi/expenseApi';
 import {
   expenseTrackingApi,
-  useGetExpenseByIdQuery,
   useGetExpenseDetailsQuery,
   useDeleteExpenseDetailsMutation,
 } from 'src/redux/finance/expenseApi/expenseDetailedApi';
@@ -19,6 +17,7 @@ import type { IExpenseFormValues } from '../component/type';
 export const useExpenseManagement = () => {
   // State
   const [selectedExpense, setSelectedExpense] = useState<IExpenseFormValues | null>(null);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Dialogs
   const addExpenseDialog = useBoolean();
@@ -30,30 +29,26 @@ export const useExpenseManagement = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // API Queries
-  const { isLoading: expenseLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpensesListQuery,
-  });
-
   const {
     data: expenseDetailedData,
-    isLoading,
+    isLoading: isLoadingDetails,
+    isFetching: isFetchingDetails,
     refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseDetailsQuery,
+    params: { academicYearId: currentYear?.id },
   });
 
-  const { data: expenseById, isLoading: isLoadingDetails } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExpenseByIdQuery,
-    options: {
-      skip: !selectedExpense?.id,
-    },
-  });
+  // const { data: expenseById } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetExpenseByIdQuery,
+  //   options: {
+  //     skip: !selectedExpense?.id,
+  //   },
+  // });
 
-  const { deleteExpenseDetails } = useQueryAndMutation({
+  const [deleteExpenseDetails] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExpenseDetailsMutation,
   });
@@ -109,31 +104,53 @@ export const useExpenseManagement = () => {
   );
 
   const handleConfirmDelete = useCallback(() => {
-    if (!selectedExpense?.id) return;
-
-    confirmWithUndo({
-      item: selectedExpense,
-      onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
-        dispatchFn(
-          expenseTrackingApi.util.updateQueryData('getExpenseDetails', undefined, (draft: any) => {
-            const list = Array.isArray(draft) ? draft : draft?.data || [];
-            const index = list.findIndex((item: any) => item.id === (selectedExpense as any)?.id);
+    if (selectedExpense) {
+      deleteExpenseDialog.onFalse();
+      const currentData =
+        expenseDetailedData?.items && expenseDetailedData?.items.length > 0
+          ? expenseDetailedData?.items
+          : [];
+      confirmWithUndo({
+        item: selectedExpense,
+        onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+          const index = currentData.findIndex((item: any) => item.id === selectedExpense.id);
+          if (index !== -1) {
             setDeleteIndex(index);
-            if (index !== -1) {
-              list.splice(index, 1);
-            }
-          })
-        );
-      },
-      onUndoRestore: () => refetch(),
-      onCommit: async () => {
-        // @ts-ignore - id is definitely present here
-        await deleteExpenseDetails(selectedExpense.id).unwrap();
-      },
-    });
-    deleteExpenseDialog.onFalse();
-    setSelectedExpense(null);
-  }, [selectedExpense, confirmWithUndo, deleteExpenseDetails, deleteExpenseDialog, refetch]);
+            dispatchFn(
+              expenseTrackingApi.util.updateQueryData(
+                'getExpenseDetails',
+                { academicYearId: currentYear.id },
+                (draft: any) => {
+                  const list = Array.isArray(draft) ? draft : draft?.items || [];
+                  const paramsIndex = list.findIndex((item: any) => item.id === selectedExpense.id);
+                  if (paramsIndex !== -1) {
+                    list.splice(paramsIndex, 1);
+                  }
+                }
+              )
+            );
+          }
+        },
+        onUndoRestore: () => {
+          refetch();
+        },
+        onCommit: async () => {
+          if (selectedExpense?.id) {
+            await deleteExpenseDetails(selectedExpense.id);
+          }
+        },
+      });
+      setSelectedExpense(null);
+    }
+  }, [
+    selectedExpense,
+    deleteExpenseDialog,
+    expenseDetailedData?.items,
+    confirmWithUndo,
+    currentYear.id,
+    refetch,
+    deleteExpenseDetails,
+  ]);
 
   return {
     selectedExpense,
@@ -141,11 +158,9 @@ export const useExpenseManagement = () => {
     addExpenseDialog,
     deleteExpenseDialog,
     viewExpenseDialog,
-    expenseLoading,
     expenseDetailedData,
-    isLoading,
-    expenseById,
     isLoadingDetails,
+    isFetchingDetails,
     handleClose,
     handleViewDialogClose,
     handleEdit,

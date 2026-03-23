@@ -39,10 +39,11 @@ import {
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
 import {
-  useGetEmployeeLeaveQuery,
-  useDeleteEmployeeLeaveMutation,
-  useEmployeeLeaveRequestStatusMutation,
-} from 'src/redux/employee/employeeApi';
+  useGetLeaveRequestsQuery,
+  useCancelLeaveRequestMutation,
+  useRejectLeaveRequestMutation,
+  useApproveLeaveRequestMutation,
+} from 'src/redux/hr/leaveApi';
 
 import AddLeaveRequest from './leave-requst';
 import { LeaveRequestForm } from './leave-calender';
@@ -55,17 +56,27 @@ const LeaveHistory = (props: any) => {
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeaveQuery,
-    params: mediumStageId?.id,
+    currentQueryAndMutation: useGetLeaveRequestsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      'month-year': date?.format('MM-YYYY'),
+      mediumStageId: mediumStageId?.id,
+    },
   });
-  const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
+
+  const [approveLeave, { isLoading: isApproveLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
+    currentQueryAndMutation: useApproveLeaveRequestMutation,
+  });
+
+  const [rejectLeave, { isLoading: isRejectLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectLeaveRequestMutation,
   });
 
   const [deleteLeave, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteEmployeeLeaveMutation,
+    currentQueryAndMutation: useCancelLeaveRequestMutation,
   });
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -82,17 +93,8 @@ const LeaveHistory = (props: any) => {
     ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             setEditData(row);
-            if (row.status === EmployeeLeaveStatusType.Pending) {
-              await changeStatus({
-                id: row?.id,
-                body: {
-                  status: EmployeeLeaveStatusType.Viewed,
-                  rejectionReason: '',
-                },
-              });
-            }
             modal?.onTrue?.();
             popover.onClose();
           }}
@@ -103,9 +105,7 @@ const LeaveHistory = (props: any) => {
         <MenuItem
           onClick={async () => {
             setEditData({ ...row, type: EmployeeLeaveStatusType.Approved });
-
             approveOrRejectConfirmation.onTrue();
-
             popover.onClose();
           }}
           sx={{ color: 'success.main' }}
@@ -117,7 +117,6 @@ const LeaveHistory = (props: any) => {
           onClick={async () => {
             setEditData({ ...row, type: EmployeeLeaveStatusType.Rejected });
             approveOrRejectConfirmation.onTrue();
-
             popover.onClose();
           }}
           sx={{ color: 'error.main' }}
@@ -138,7 +137,7 @@ const LeaveHistory = (props: any) => {
         </MenuItem>
       </MenuList>
     ),
-    [changeStatus, modal, approveOrRejectConfirmation, cancelConfirmation]
+    [modal, approveOrRejectConfirmation, cancelConfirmation]
   );
 
   const tableData = useMemo(
@@ -300,6 +299,7 @@ const LeaveHistory = (props: any) => {
           gap: 2,
           mt: 1,
           pl: 1,
+          mb: 1,
           justifyContent: 'space-between',
         }}
       >
@@ -369,13 +369,12 @@ const LeaveHistory = (props: any) => {
         action={
           <LoadingButton
             variant="contained"
-            loading={isChangeStatusLoading}
+            loading={isApproveLoading}
             onClick={async () => {
-              await changeStatus({
+              await approveLeave({
                 id: editData?.id,
                 body: {
-                  status: EmployeeLeaveStatusType.Approved,
-                  rejectionReason: '',
+                  remarks: '',
                 },
               });
 
@@ -510,9 +509,13 @@ export const ApproveRejectForm = ({
   handleClose: (e: any, isSubmit: boolean) => void;
   editData: any;
 }) => {
-  const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
+  const [approveLeaveRequest, { isLoading: isApproveLeaveRequestLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
+    currentQueryAndMutation: useApproveLeaveRequestMutation,
+  });
+  const [rejectLeaveRequest, { isLoading: isRejectLeaveRequestLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectLeaveRequestMutation,
   });
   const { values, handleChange, errors, touched, handleSubmit } = useFormik({
     initialValues: {
@@ -526,13 +529,21 @@ export const ApproveRejectForm = ({
     }),
     onSubmit: async (formikValues) => {
       try {
-        await changeStatus({
-          id: editData?.id,
-          body: {
-            status: editData.type,
-            remarks: formikValues.rejectionReason,
-          },
-        }).unwrap();
+        if (editData.type === EmployeeLeaveStatusType.Approved) {
+          await approveLeaveRequest({
+            id: editData?.id,
+            body: {
+              remarks: formikValues.rejectionReason,
+            },
+          }).unwrap();
+        } else if (editData.type === EmployeeLeaveStatusType.Rejected) {
+          await rejectLeaveRequest({
+            id: editData?.id,
+            body: {
+              remarks: formikValues.rejectionReason,
+            },
+          }).unwrap();
+        }
         handleClose(null, true);
       } catch (error) {
         console.error(error);
@@ -568,7 +579,7 @@ export const ApproveRejectForm = ({
         </Button>
         <LoadingButton
           variant="contained"
-          loading={isChangeStatusLoading}
+          loading={isApproveLeaveRequestLoading || isRejectLeaveRequestLoading}
           onClick={(e: any) => handleSubmit(e)}
           size="small"
           startIcon={

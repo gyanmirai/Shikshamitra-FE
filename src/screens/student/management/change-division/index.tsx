@@ -56,7 +56,7 @@ const ChangeDivisionScreen = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllStudentGroupQuery,
-    params: division,
+    params: { division },
     options: {
       skip: !division,
     },
@@ -165,7 +165,7 @@ const ChangeDivisionScreen = ({
     >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box
-          sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2, alignItems: 'center' }}
+          sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, alignItems: 'center', mb: 1 }}
         >
           {/* Visual indicator for pending changes */}
           {changesSummary.length > 0 && (
@@ -188,6 +188,7 @@ const ChangeDivisionScreen = ({
           </LoadingButton>
         </Box>
         <CustomizableTable
+          tableTitle="Change Division"
           onSendNotification={handlerSendNotification}
           showCheckbox={selectedStudents.length !== 0}
           tableId="change-division-table"
@@ -195,7 +196,7 @@ const ChangeDivisionScreen = ({
           isLoading={isStudentDataLoading || isStudentDataFetching}
           columns={[
             { id: 'grNo', label: 'GR No.', filterType: 'number' },
-            { id: 'name', label: 'Name' },
+            { id: 'studentName', label: 'Name' },
             {
               id: 'divisionId',
               label: 'Division',

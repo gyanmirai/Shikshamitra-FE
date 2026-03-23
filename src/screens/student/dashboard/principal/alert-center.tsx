@@ -1,3 +1,4 @@
+import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -7,7 +8,22 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Card, Chip, Grid, Stack, Button, CardHeader, Typography } from '@mui/material';
 
+import ClassDivisionFilter from './class-division-filter';
+
 // ----------------------------------------------------------------------
+
+const renderInfoTooltip = (title: string, tooltipText: string) => (
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Box component="span">{title}</Box>
+    <CustomTooltip title={tooltipText} arrow placement="top">
+      <Iconify
+        icon="eva:info-outline"
+        width={18}
+        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+      />
+    </CustomTooltip>
+  </Stack>
+);
 
 type AlertType = 'absent' | 'academic' | 'finance' | 'doc' | 'health' | 'leave';
 
@@ -223,6 +239,7 @@ const AlertItemRow = ({ alert, onView }: { alert: AlertItem; onView: () => void 
 
 const AlertCenter = () => {
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null);
+  const theme = useTheme();
 
   const handleClose = () => {
     setSelectedAlert(null);
@@ -237,6 +254,7 @@ const AlertCenter = () => {
       {
         id: 'status',
         label: 'Status',
+        sticky: true,
         isSort: true,
         render: (value: any, row: any) => (
           <Chip
@@ -272,23 +290,37 @@ const AlertCenter = () => {
     <>
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
+          <Card
+            sx={{
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.shadows[8],
+                transition: 'all 0.3s ease-in-out',
+              },
+            }}
+          >
             <CardHeader
               title={
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box component="span">Alert Center</Box>
-                  <CustomTooltip
-                    title="Real-time alerts for attendance, academics, and administrative issues requiring immediate attention."
-                    arrow
-                    placement="top"
-                  >
-                    <Iconify
-                      icon="eva:info-outline"
-                      width={18}
-                      sx={{ color: 'text.disabled', cursor: 'pointer' }}
-                    />
-                  </CustomTooltip>
-                </Stack>
+                <Box
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box component="span">Alert Center</Box>
+
+                    <CustomTooltip
+                      title="Real-time alerts for attendance, academics, and administrative issues requiring immediate attention."
+                      arrow
+                      placement="top"
+                    >
+                      <Iconify
+                        icon="eva:info-outline"
+                        width={18}
+                        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+                      />
+                    </CustomTooltip>
+                  </Stack>
+                  <ClassDivisionFilter />
+                </Box>
               }
               sx={{
                 '& .MuiCardHeader-title': { typography: 'h6' },
@@ -296,7 +328,7 @@ const AlertCenter = () => {
                 pb: 1,
               }}
             />
-            <Scrollbar sx={{ maxHeight: 320 }}>
+            <Scrollbar sx={{ maxHeight: 308 }}>
               <Stack sx={{ pb: 1 }}>
                 {initialAlerts.map((alert) => (
                   <AlertItemRow
@@ -312,10 +344,26 @@ const AlertCenter = () => {
 
         <Grid size={{ xs: 12, md: 6 }}>
           {/* Enrollment Trends */}
-          <Card sx={{ height: 370, p: 2, display: 'flex', flexDirection: 'column' }}>
+          <Card
+            sx={{
+              height: 370,
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.shadows[8],
+                transition: 'all 0.3s ease-in-out',
+              },
+            }}
+          >
             <Typography variant="subtitle1" gutterBottom>
-              Enrollment Trends (6M)
+              {renderInfoTooltip(
+                'Enrollment Trends (6M)',
+                'Trends of new enrollments over the past 6 months.'
+              )}
             </Typography>
+
             <Box sx={{ flexGrow: 1, minHeight: 120 }}>
               <Chart
                 type="area"
@@ -338,6 +386,7 @@ const AlertCenter = () => {
         >
           <CustomizableTable
             tableId="alert_details_table"
+            noDataText="No Alert Details Available"
             columns={TABLE_COLUMNS}
             data={selectedAlert.studentData}
             isSearch

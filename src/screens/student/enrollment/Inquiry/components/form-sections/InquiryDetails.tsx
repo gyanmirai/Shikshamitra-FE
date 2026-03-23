@@ -2,9 +2,9 @@ import type { FormikProps } from 'formik';
 
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
-import { Card, Grid, Divider, Typography } from '@mui/material';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Card, Grid, Divider, Skeleton, Typography } from '@mui/material';
 
 import type { IInquiryFormValues } from '../../type';
 
@@ -34,7 +34,13 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
           Inquiry Details
         </Typography>
         <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-        <Typography color="text.secondary">Loading...</Typography>
+        <Grid container spacing={2.5}>
+          {[1, 2].map((item) => (
+            <Grid size={{ xs: 12, md: 6 }} key={item}>
+              <Skeleton variant="rectangular" height={40} sx={{ borderRadius: 1 }} />
+            </Grid>
+          ))}
+        </Grid>
       </Card>
     );
   }

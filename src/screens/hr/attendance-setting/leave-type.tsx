@@ -12,6 +12,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -31,34 +32,35 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
-  employeeApi,
-  useGetEmployeeTypeQuery,
-  useAddEmployeeTypeMutation,
-  useUpdateEmployeeTypeMutation,
-  useDeleteEmployeeTypeMutation,
-} from 'src/redux/employee/employeeApi';
+  leaveApi,
+  useGetLeaveTypesQuery,
+  useDeleteLeaveTypeMutation,
+  useCreateLeaveTypeMutation,
+  useUpdateLeaveTypeMutation,
+} from 'src/redux/hr/leaveApi';
 
 export interface ILeavePolicy {
   id: string;
-  creationTime: string;
-  creatorId: string;
-  lastModificationTime: string;
-  lastModifierId: string;
-  isDeleted: boolean;
-  deleterId: string;
-  deletionTime: string;
-  title: string;
-  leaveType: string;
+  creationTime?: string;
+  creatorId?: string;
+  lastModificationTime?: string;
+  lastModifierId?: string;
+  isDeleted?: boolean;
+  deleterId?: string;
+  deletionTime?: string;
+  title?: string;
+  policyTitle: string;
+  leaveType: { id: string; name: string } | string;
   leaveCount: number;
   accuralPolicyType: AccuralPolicyType;
-  maxLeavePerYear: number;
+  maxLeavePerYear?: number;
   paidType: string;
   carryForward: boolean;
   encashmentAllowed: boolean;
-  encashmentTiming?: 'next_payroll' | 'year_end';
+  encashmentTiming?: 'next_payroll' | 'end_of_year';
   requiresApproval: boolean;
   description: string;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 const LeaveType = () => {
@@ -68,19 +70,19 @@ const LeaveType = () => {
   const dispatch = useDispatch();
   const leaveTypeDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+  const { academicYearId } = useSelector((state: RootState) => state.globalState);
   const {
     data: leavePolicyData,
     refetch,
     isLoading,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeTypeQuery,
-    params: mediumStageId?.id,
+    currentQueryAndMutation: useGetLeaveTypesQuery,
+    params: { academicYearId: academicYearId?.id },
   });
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteEmployeeTypeMutation,
+    currentQueryAndMutation: useDeleteLeaveTypeMutation,
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -161,9 +163,9 @@ const LeaveType = () => {
         heading="Leave Type"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave Management', href: '' },
-          { name: 'Setting' },
-          { name: 'Leave Type', href: '' },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Settings', href: hrPaths.attendance.setting.root },
+          { name: 'Leave Type' },
         ]}
         description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
         action={
@@ -201,7 +203,7 @@ const LeaveType = () => {
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    employeeApi.util.updateQueryData('getEmployeeType', undefined, (draft: any) => {
+                    leaveApi.util.updateQueryData('getLeaveTypes', undefined, (draft: any) => {
                       const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
                       setDeleteIndex(index);
                       if (index !== -1) {
@@ -296,16 +298,16 @@ const LeaveTypeForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   editData: any | null;
 }) => {
+  const { academicYearId } = useSelector((state: RootState) => state.globalState);
+
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddEmployeeTypeMutation,
+    currentQueryAndMutation: useCreateLeaveTypeMutation,
   });
-
-  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeTypeMutation,
+    currentQueryAndMutation: useUpdateLeaveTypeMutation,
   });
 
   // const { data: roles, isLoading: isRolesLoading } = useQueryAndMutation({
@@ -344,7 +346,7 @@ const LeaveTypeForm = ({
           shikshaMitraToast.success({ message: 'Leave Type updated successfully' });
         } else {
           await addLeavePolicy({
-            mediumStageId: mediumStageId?.id,
+            academicYearId: academicYearId?.id,
             body: payload,
           });
           shikshaMitraToast.success({ message: 'Leave Type added successfully' });

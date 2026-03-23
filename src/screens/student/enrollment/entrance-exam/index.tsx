@@ -183,7 +183,7 @@ const EntranceExamScreen = () => {
             popover.onClose();
           }}
         >
-          <Iconify icon="mdi:arrow-right-circle" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon="mdi:arrow-right-circle-outline" sx={{ height: '16px', width: '16px' }} />
           Move To Admission
         </MenuItem>
       </MenuList>
@@ -256,7 +256,6 @@ const EntranceExamScreen = () => {
         id: 'progress',
         label: 'Progress',
         align: 'left',
-        sticky: true,
         filterType: 'number',
         render(value, row) {
           return (
@@ -298,6 +297,7 @@ const EntranceExamScreen = () => {
         label: 'Percentage',
         filterType: 'number',
         sticky: true,
+        minWidth: '100px',
         align: 'left',
         render(value, row) {
           return (
@@ -340,6 +340,7 @@ const EntranceExamScreen = () => {
         filterType: 'enum',
         enumOptions: EntranceExamStatusOptions,
         align: 'left',
+        minWidth: 100,
         sticky: true,
         render(value, row) {
           const color = EntranceExamStatusTypeColors[value as EntranceExamStatusType] as LabelColor;
@@ -369,12 +370,23 @@ const EntranceExamScreen = () => {
         description="Manage students participation in entrance exams for the admission process."
         heading="Entrance Exam"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Student Enrollment', href: '/student/enrollment/entrance-exam/?view=calender' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Student Enrollment', href: '/student/dashboard/' },
           { name: 'Entrance Exam' },
         ]}
       />
-      <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 1, py: 1 }}>
+      <Paper
+        elevation={2}
+        sx={{
+          display: 'flex',
+          gap: 1,
+          alignItems: 'center',
+          px: 1,
+          py: 1,
+          mb: 1,
+          borderRadius: '15px',
+        }}
+      >
         <Box display="flex" gap={2}>
           <CustomDateRangePicker
             label="Start Date - End Date"
@@ -388,6 +400,7 @@ const EntranceExamScreen = () => {
         </Box>
       </Paper>
       <CustomizableTable
+        tableTitle="Entrance Exam"
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="entrance-exam-table"
@@ -752,7 +765,7 @@ export const ExamForm = ({
                                 label={`${slot.slotName} (${slot.startTime} - ${slot.endTime})`}
                               />
                               <Label variant="soft" color="success">
-                                {slot.studentCount} / {slot.studentLimit}
+                                {slot.enrolledStudents} / {slot.studentLimit}
                               </Label>
                             </Grid>
                           ))

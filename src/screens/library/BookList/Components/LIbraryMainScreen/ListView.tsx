@@ -4,10 +4,8 @@ import Image from 'next/image';
 import { useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, Divider, MenuList, MenuItem, Typography } from '@mui/material';
-import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
 
 import noCover from '../../../../../assets/icons/no-cover.png';
 
@@ -27,8 +25,6 @@ const ListView = ({
   onReserveBook,
   onViewAllReservationBook,
 }: { books: IBook[] } & LibrarySearchProps) => {
-  const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -74,15 +70,8 @@ const ListView = ({
               '&:hover': { backgroundColor: 'rgba(0,0,0,0.02)' },
               cursor: 'pointer',
             }}
-            onClick={async () => {
-              try {
-                const copies = await fetchCopies(book.id).unwrap();
-                onView?.({ ...book, copies });
-              } catch (error) {
-                console.error('Failed to fetch copies:', error);
-                shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
-                onView?.({ ...book, copies: [] });
-              }
+            onClick={() => {
+              onView?.(book);
             }}
           >
             {/* Left section - Image + Info */}
@@ -98,7 +87,11 @@ const ListView = ({
                 }}
               >
                 <Image
-                  src={book.bookCoverImages?.[0] || noCover}
+                  src={
+                    book.coverImage
+                      ? `${process.env.NEXT_PUBLIC_API_URL}${book.coverImage}`
+                      : noCover
+                  }
                   alt={book.title}
                   width={250}
                   height={250}
@@ -132,24 +125,14 @@ const ListView = ({
                 showEditIcon
                 showViewIcon
                 actions={(prop) => actions({ ...prop, row: book })}
-                handleViewClick={async () => {
-                  const selectedBook = book as IBook;
-                  try {
-                    const copies = await fetchCopies(selectedBook.id).unwrap();
-                    onView?.({ ...selectedBook, copies });
-                  } catch (error) {
-                    console.error('Failed to fetch copies:', error);
-                    shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
-                    onView?.({ ...selectedBook, copies: [] });
-                  }
+                handleViewClick={() => {
+                  onView?.(book);
                 }}
                 handleDeleteClick={() => {
-                  const selectedBook = book as IBook;
-                  onDelete?.(selectedBook);
+                  onDelete?.(book);
                 }}
                 handleEditClick={() => {
-                  const selectedBook = book as IBook;
-                  onEdit?.(selectedBook);
+                  onEdit?.(book);
                 }}
               />
             </Box>

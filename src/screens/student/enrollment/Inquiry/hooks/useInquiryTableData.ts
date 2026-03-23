@@ -33,7 +33,11 @@ interface RootState {
 export const useInquiryTableData = () => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
-  const { data: inquiryData, isLoading } = useQueryAndMutation({
+  const {
+    data: inquiryData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentInquiryQuery,
     params: {
@@ -60,5 +64,6 @@ export const useInquiryTableData = () => {
   return {
     tableData,
     isLoading,
+    isFetching,
   };
 };

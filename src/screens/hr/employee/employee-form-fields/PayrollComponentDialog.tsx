@@ -8,7 +8,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetEarningComponentsQuery,
   useGetDeductionComponentsQuery,
-} from 'src/redux/employee-payroll/employee-payroll-api';
+} from 'src/redux/hr/employee-payroll-api';
 
 type Props = {
   open: boolean;
@@ -31,6 +31,7 @@ export default function PayrollComponentDialog({
     type: 'query',
     currentQueryAndMutation:
       type === 'earning' ? useGetEarningComponentsQuery : useGetDeductionComponentsQuery,
+    params: {},
   });
 
   const formik = useFormik({

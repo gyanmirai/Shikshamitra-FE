@@ -1,150 +1,173 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
-
-import { useSelector } from 'react-redux';
+import React from 'react';
 import { Box, Grid } from '@mui/material';
-import React, { useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
-import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
+import TeacherSchedule from 'src/screens/mainDashboard/teacher/schedule';
+import CompactKPICard from 'src/screens/student/dashboard/principal/kpi-card-item';
 
-import AcademicDashboardExams from './components/AcademicDashboardExams';
-import AcademicDashboardOverview from './components/AcademicDashboardOverview';
-import AcademicDashboardTimetable from './components/AcademicDashboardTimetable';
 import AcademicDashboardTopPerformer from './components/AcademicDashboardTopPerformer';
 import AcademicDashbordAnalysisChart from './components/AcademicDashbordAnalysisChart';
 import AcademicDashboardChapterProgress from './components/AcademicDashboardChapterProgress';
 import AcademicDashboardBottomPerformer from './components/AcademicDashboardBottomPerformer';
 
-const activities = [
+const kpiData = [
   {
-    color: 'success',
-    title: 'Science Homework assigned',
-    subtitle: 'Class 5-B · Due: 30 June',
-    timeAgo: '2 hours ago',
-    date: '06-07-2025',
+    id: 'TOTAL_SUBJECTS',
+    title: 'Total Subjects',
+    value: '20',
+    icon: 'hugeicons:book-edit',
+    status: 'success' as const,
+    tooltip: 'Core - 10 · Elective - 10',
+    chart: {
+      type: 'bar' as const,
+      series: [10, 10] as any,
+      colors: ['#00A76F', '#FF5630'],
+      labels: ['Core', 'Elective'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
-    color: 'info',
-    title: 'Mid-Term exam scheduled',
-    subtitle: 'Class 4-B ⇔ 15 July',
-    timeAgo: '4 hours ago',
-    date: '06-07-2025',
+    id: 'TOTAL_EXAMS',
+    title: 'Total Exams',
+    value: '20',
+    icon: 'healthicons:i-exam-qualification-outline',
+    status: 'info' as const,
+    tooltip: 'Completed - 10 · Upcoming - 10',
+    chart: {
+      type: 'bar' as const,
+      series: [10, 10] as any,
+      colors: ['#00A76F', '#FFAB00'],
+      labels: ['Completed', 'Upcoming'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
-    color: 'success',
-    title: '3 chapter completed to social studies',
-    subtitle: 'Anjali Sharma · Class 3-A',
-    timeAgo: '6 hours ago',
-    date: '06-07-2025',
+    id: 'TOTAL_ASSIGNMENTS',
+    title: 'Total Assignment',
+    value: '20',
+    icon: 'fluent-emoji-high-contrast:page-with-curl',
+    status: 'secondary' as const,
+    tooltip: 'Completed - 10 · Upcoming - 10',
+    chart: {
+      type: 'bar' as const,
+      series: [10, 10] as any,
+      colors: ['#00A76F', '#FFAB00'],
+      labels: ['Completed', 'Upcoming'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
-    color: 'success',
-    title: 'Assignment submitted by 23 student english',
-    subtitle: 'Class 10-A',
-    timeAgo: '1 day ago',
-    date: '05-07-2025',
+    id: 'TOTAL_HOMEWORK',
+    title: 'Total Homework',
+    value: '20',
+    icon: 'streamline-freehand:book-flip-page',
+    status: 'info' as const,
+    tooltip: 'Completed - 10 · Pending - 10',
+    chart: {
+      type: 'bar' as const,
+      series: [10, 10] as any,
+      colors: ['#00A76F', '#FF5630'],
+      labels: ['Completed', 'Pending'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
   {
-    color: 'warning',
-    title: 'Timetable updated for mathemetics',
-    subtitle: 'Class 9-B',
-    timeAgo: '2 days ago',
-    date: '04-07-2025',
+    id: 'TOTAL_QUIZ',
+    title: 'Total Quiz',
+    value: '20',
+    icon: 'hugeicons:quiz-05',
+    status: 'success' as const,
+    tooltip: 'Completed - 10 · Scheduled - 10',
+    chart: {
+      type: 'bar' as const,
+      series: [10, 10] as any,
+      colors: ['#00A76F', '#FFAB00'],
+      labels: ['Completed', 'Scheduled'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
+  },
+  {
+    id: 'TOTAL_RESOURCES',
+    title: 'Learning Resources',
+    value: '10,000',
+    icon: 'ion:document',
+    status: 'warning' as const,
+    tooltip: 'Total learning resources available',
+    chart: {
+      type: 'bar' as const,
+      series: [6000, 4000] as any,
+      colors: ['#FFAB00', '#919EAB'],
+      labels: ['Active', 'Archived'],
+      width: 30,
+      height: 40,
+      options: {
+        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
+      },
+    },
   },
 ];
 
-const AcademicDashboardScreen = () => {
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
-  // Query hook to fetch class data from the API
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes, setDivision]);
-
-  return (
-    <Box>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClasses(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!classes}
-            />
-          </Box>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <AcademicDashboardOverview />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AcademicDashbordAnalysisChart />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AcademicDashboardChapterProgress />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <AcademicDashboardTimetable />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AcademicDashboardTopPerformer />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AcademicDashboardBottomPerformer />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <RecentActivities activities={activities} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AcademicDashboardExams />
+const AcademicTeacherDashboardScreen = () => (
+  <Box>
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
+        <Grid container spacing={1}>
+          {kpiData.map((kpi) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }} key={kpi.id}>
+              <CompactKPICard
+                title={kpi.title}
+                value={kpi.value}
+                icon={kpi.icon}
+                status={kpi.status}
+                tooltip={kpi.tooltip}
+                chart={kpi.chart}
+              />
+            </Grid>
+          ))}
         </Grid>
       </Grid>
-    </Box>
-  );
-};
 
-export default AcademicDashboardScreen;
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AcademicDashbordAnalysisChart />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AcademicDashboardChapterProgress />
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <TeacherSchedule />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AcademicDashboardTopPerformer />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AcademicDashboardBottomPerformer />
+      </Grid>
+    </Grid>
+  </Box>
+);
+
+export default AcademicTeacherDashboardScreen;

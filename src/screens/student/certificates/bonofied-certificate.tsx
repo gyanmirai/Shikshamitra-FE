@@ -99,6 +99,7 @@ const BonofiedCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableTitle="Bonafide Certificate"
         tableId="bonofied-certificate"
         noDataText={
           <>

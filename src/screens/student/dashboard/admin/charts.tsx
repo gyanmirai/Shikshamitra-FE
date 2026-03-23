@@ -1,11 +1,48 @@
-import React, { useState } from 'react';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Chart, useChart } from 'src/components/chart';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
 import { Box, Grid, Card, Stack, CardHeader, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
+import ClassDivisionFilter from '../principal/class-division-filter';
+
 const AdminCharts = () => {
+  const theme = useTheme();
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [division, setDivision] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
   // ------------------------------------
   // 1. Enrollment Trend (Enhanced)
   // ------------------------------------
@@ -33,6 +70,9 @@ const AdminCharts = () => {
         'Nov',
         'Dec',
       ],
+    },
+    yaxis: {
+      min: 0,
     },
     tooltip: {
       y: {
@@ -69,12 +109,15 @@ const AdminCharts = () => {
   const examStatusOptions = useChart({
     labels: ['Passed', 'Failed', 'Awaiting Result'],
     stroke: {
-      colors: ['#fff'],
+      colors: [theme.vars.palette.background.paper],
     },
     legend: {
       show: true,
       position: 'bottom',
       horizontalAlign: 'center',
+      labels: {
+        colors: theme.vars.palette.text.primary,
+      },
       formatter(val, opts) {
         return `${val} - ${opts.w.globals.series[opts.seriesIndex]}`;
       },
@@ -102,9 +145,16 @@ const AdminCharts = () => {
         donut: {
           labels: {
             show: true,
+            name: {
+              color: theme.vars.palette.text.secondary,
+            },
+            value: {
+              color: theme.vars.palette.text.primary,
+            },
             total: {
               show: true,
               label: 'Total',
+              color: theme.vars.palette.text.primary,
               formatter: (w) => {
                 const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
                 return fNumber(total);
@@ -122,6 +172,9 @@ const AdminCharts = () => {
   // 3. Class-wise Participation (Enhanced)
   // ------------------------------------
   const classParticipationOptions = useChart({
+    chart: {
+      stacked: true,
+    },
     plotOptions: {
       bar: {
         columnWidth: '45%',
@@ -132,15 +185,7 @@ const AdminCharts = () => {
       },
     },
     dataLabels: {
-      enabled: true,
-      formatter(val) {
-        return fNumber(Number(val));
-      },
-      offsetY: -20,
-      style: {
-        fontSize: '12px',
-        colors: ['#304758'],
-      },
+      enabled: false,
     },
     xaxis: {
       categories: [
@@ -160,18 +205,19 @@ const AdminCharts = () => {
     },
     tooltip: {
       y: {
-        formatter: (val, { dataPointIndex }) => {
-          const rank = dataPointIndex === 3 ? '1st' : dataPointIndex === 1 ? '2nd' : '3rd'; // Mock ranking logic
-          return `${val} (${rank})`;
-        },
+        formatter: (val: number) => `${val} Students`,
       },
     },
   });
 
   const classParticipationSeries = [
     {
-      name: 'Students',
-      data: [44, 55, 41, 67, 22, 12, 34, 56, 78, 90, 12, 34],
+      name: 'Boys',
+      data: [24, 30, 21, 35, 12, 6, 18, 30, 40, 45, 7, 18],
+    },
+    {
+      name: 'Girls',
+      data: [20, 25, 20, 32, 10, 6, 16, 26, 38, 45, 5, 16],
     },
   ];
 
@@ -192,7 +238,16 @@ const AdminCharts = () => {
     <Grid container spacing={1}>
       {/* Enrollment Trend - Full Width */}
       <Grid size={{ xs: 12 }}>
-        <Card>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
+          }}
+        >
           <Stack
             direction="row"
             alignItems="center"
@@ -257,13 +312,23 @@ const AdminCharts = () => {
 
       {/* Entrance Exam Status - Half Width */}
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
+          }}
+        >
           <CardHeader
             sx={{ mt: -1, ml: -1 }}
             title={renderTitleWithTooltip(
               'Entrance Exam Status',
               'Breakdown of entrance exam results (Passed/Failed/Awaiting).'
             )}
+            action={<ClassDivisionFilter />}
           />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart
@@ -279,13 +344,36 @@ const AdminCharts = () => {
 
       {/* Class-wise Participation - Half Width */}
       <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
+        <Card
+          sx={{
+            height: '100%',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
+          }}
+        >
           <CardHeader
             sx={{ mt: -1, ml: -1 }}
             title={renderTitleWithTooltip(
               'Class-wise Participation',
               'Student participation metrics across different classes.'
             )}
+            action={
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <CustomSelect
+                  options={allDivision}
+                  label="Division"
+                  value={division}
+                  onChange={(val) => setDivision(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+                  disabled={!classes}
+                />
+              </Box>
+            }
           />
           <Box sx={{ p: 3, pb: 1 }} dir="ltr">
             <Chart

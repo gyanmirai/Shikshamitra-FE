@@ -28,10 +28,10 @@ import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
-  useGetAttendanceEmployeeQuery,
-  useAddAttendanceEmployeeMutation,
-  useUpdateAttendanceEmployeeMutation,
-} from 'src/redux/employee/employeeApi';
+  useImportAttendanceMutation,
+  useUpdateAttendanceMutation,
+  useGetPaginatedAttendanceQuery,
+} from 'src/redux/hr/attendanceApi';
 
 const BiometricIntegrationScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
@@ -43,14 +43,14 @@ const BiometricIntegrationScreen = () => {
 
   const { data: attendanceData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAttendanceEmployeeQuery,
+    currentQueryAndMutation: useGetPaginatedAttendanceQuery,
     params: dateConvertor(date?.format(dateFormat) || '', true),
     options: { skip: !date },
   });
 
   const [importAttendance] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddAttendanceEmployeeMutation,
+    currentQueryAndMutation: useImportAttendanceMutation,
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -256,6 +256,7 @@ const BiometricIntegrationScreen = () => {
           p: 2,
           pl: 1,
           flexWrap: 'wrap',
+          mb: 1,
         }}
       >
         {/* Date Picker */}
@@ -352,7 +353,7 @@ const BiometricForm = ({
 }) => {
   const [updateAttendanceEmployee] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateAttendanceEmployeeMutation,
+    currentQueryAndMutation: useUpdateAttendanceMutation,
   });
 
   const formik = useFormik({

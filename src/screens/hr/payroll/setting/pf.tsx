@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -61,9 +62,16 @@ const PF = () => {
   // const [employee, setEmployee] = useState<string[] | undefined>([]);
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const { data: PFData, isLoading } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const {
+    data: PFData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPFQuery,
+    params: { academicYearId: currentYear?.id },
   });
   const [deletePF, { isLoading: isPFDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -97,12 +105,12 @@ const PF = () => {
         heading="PF Rule"
         description="Configure PF rule for employees"
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard' },
           {
             name: 'Payroll Management',
-            href: '/hr/payroll/dashboard/',
+            href: hrPaths.payroll.runPayroll,
           },
-          { name: ' Settings' },
+          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'PF Rule' },
         ]}
         action={
@@ -141,21 +149,19 @@ const PF = () => {
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    pfApi.util.updateQueryData('getPF', undefined, (draft: any) => {
-                      const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
-                      setDeleteIndex(index);
-                      if (index !== -1) {
-                        draft.items.splice(index, 1);
+                    pfApi.util.updateQueryData(
+                      'getPF',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
                       }
-                    })
+                    )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    pfApi.util.updateQueryData('getPF', undefined, (draft: any) => {
-                      if (!draft.items) return;
-                      draft.items.splice(index, 0, editData);
-                    })
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deletePF(editData?.id || ''),
               });
               confirm.onFalse();
@@ -194,15 +200,14 @@ const PF = () => {
         columns={[
           { id: 'name', label: 'Name', sticky: true, minWidth: '140px', align: 'left' },
           { id: 'code', label: 'Code' },
-          { id: 'employeePercentage', label: 'Employee Percentage' },
-          { id: 'employerPercentage', label: 'Employer Percentage' },
+          { id: 'employeePercentage', label: 'Employee Percentage', filterType: 'number' },
+          { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
           {
             id: 'action',
             label: 'Action',
             isSort: false,
             isFilter: false,
             sticky: true,
-
             minWidth: '80px',
             render(value, row) {
               return (
@@ -267,6 +272,7 @@ const PFForm = ({
     currentQueryAndMutation: useUpdatePFMutation,
     isThrowError: true,
   });
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
     initialValues: {
@@ -293,14 +299,17 @@ const PFForm = ({
       try {
         if (editData) {
           await updatePF({
-            body: values,
+            body: {
+              ...values,
+              academicYearId: currentYear?.id,
+            },
             id: editData.id,
           });
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" updated successfully`,
           });
         } else {
-          await addPF(values);
+          await addPF({ body: values, academicYearId: currentYear?.id });
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" created successfully`,
           });

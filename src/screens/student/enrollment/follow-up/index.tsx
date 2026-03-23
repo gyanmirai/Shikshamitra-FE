@@ -1,12 +1,12 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useDispatch } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
@@ -14,37 +14,42 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   FollowUpStatusType,
   FollowUpStatusTypeColors,
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 import {
+  useGetFollowUpQuery,
+  useAddFollowUpMutation,
+  useGetAllFollowUpQuery,
+} from 'src/redux/student/follow-up/follow-up-api';
+import {
   Box,
   Grid,
   Paper,
   Button,
+  Skeleton,
   TextField,
   IconButton,
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useGetFollowUpQuery,
-  useAddFollowUpMutation,
-  useGetAllFollowUpQuery,
-} from 'src/redux/student/follow-up/follow-up-api';
 import {
   Timeline,
   TimelineDot,
@@ -63,6 +68,10 @@ const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
 
   const [openDialog, setOpenDialog] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -80,8 +89,19 @@ const FollowUpScreen: React.FC = () => {
   );
 
   const handleCloseDialog = () => {
+    if (isChanges) {
+      setConfirmOpen(true);
+    } else {
+      setOpenDialog(false);
+      setSelectedInquiry(null);
+    }
+  };
+
+  const handleConfirmClose = () => {
+    dispatch(setIsChanges(false));
     setOpenDialog(false);
     setSelectedInquiry(null);
+    setConfirmOpen(false);
   };
   return (
     <Box>
@@ -160,6 +180,34 @@ const FollowUpScreen: React.FC = () => {
           studentEnrollmentId={selectedInquiry}
         />
       </CustomDialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        icon="warning"
+        title="Alert"
+        content={
+          <Typography variant="body2">
+            You have unsaved changes on this step. If you navigate away, your changes will be lost.
+            Are you sure you want to continue?
+          </Typography>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={handleConfirmClose}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Box>
   );
 };
@@ -168,8 +216,10 @@ export default FollowUpScreen;
 
 interface IFollowUpResponse {
   note: string;
-  status: string;
+  status: FollowUpStatusType;
   nextReminderDate: string;
+  createdAt?: string;
+  creatorName?: string;
 }
 export const CommunicationForm = ({
   handleCloseDialog,
@@ -182,11 +232,13 @@ export const CommunicationForm = ({
   isStatus?: boolean;
   selectedStudent?: IInquiryResponse | IGeneralInformationResponse | null;
 }) => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [addFollowUp, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddFollowUpMutation,
   });
   const dispatch = useDispatch();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFollowUpQuery,
@@ -221,12 +273,28 @@ export const CommunicationForm = ({
         shikshaMitraToast.success({
           message: `Note added successfully for ${selectedStudent?.firstName} ${selectedStudent?.lastName} `,
         });
+        dispatch(setIsChanges(false));
         handleCloseDialog();
       } catch (error) {
         console.error(error);
       }
     },
   });
+
+  const handleCancelClick = () => {
+    if (isChanges) {
+      setConfirmOpen(true);
+    } else {
+      dispatch(setIsChanges(false));
+      handleCloseDialog();
+    }
+  };
+
+  const handleConfirmCancel = () => {
+    dispatch(setIsChanges(false));
+    handleCloseDialog();
+    setConfirmOpen(false);
+  };
 
   useEffect(() => {
     if (data?.length) {
@@ -243,7 +311,7 @@ export const CommunicationForm = ({
   }, [data]);
 
   return (
-    <Box>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent sx={{ p: 0 }}>
         <Scrollbar
           sx={{
@@ -254,46 +322,179 @@ export const CommunicationForm = ({
           }}
         >
           {isLoading ? (
-            <Box className="loader" />
+            <Timeline
+              sx={{
+                [`& .MuiTimelineOppositeContent-root`]: {
+                  flex: 0.25,
+                  minWidth: 100,
+                  textAlign: 'left',
+                  pl: 0,
+                  pt: 1.5,
+                },
+              }}
+            >
+              {[1, 2, 3].map((_, index) => (
+                <TimelineItem key={index}>
+                  <TimelineOppositeContent>
+                    <Skeleton variant="text" width={80} height={20} />
+                    <Skeleton variant="text" width={60} height={16} sx={{ mt: 0.5 }} />
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot sx={{ bgcolor: 'divider' }} />
+                    {index < 2 && <TimelineConnector sx={{ bgcolor: 'divider' }} />}
+                  </TimelineSeparator>
+                  <TimelineContent sx={{ pb: 3, pr: 0 }}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                        border: (theme) =>
+                          `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      <Skeleton variant="text" width={100} height={24} sx={{ mb: 1.5 }} />
+                      <Skeleton variant="text" width="80%" height={20} />
+                      <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1.5 }} />
+                      <Skeleton variant="text" width={140} height={16} />
+                    </Paper>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
           ) : (
-            <Timeline>
+            <Timeline
+              sx={{
+                [`& .MuiTimelineOppositeContent-root`]: {
+                  flex: 0.25,
+                  minWidth: 100,
+                  textAlign: 'left',
+                  pl: 0,
+                  pt: 1.5,
+                },
+              }}
+            >
               {data?.length ? (
-                data?.map((item: IFollowUpResponse, index: number) => (
-                  <TimelineItem key={index}>
-                    <TimelineOppositeContent>
-                      <Typography variant="caption" sx={{ color: 'text.primary' }}>
-                        {dayjs(item?.nextReminderDate).format('DD/MM/YYYY')}
-                      </Typography>
-                      {/* <Typography sx={{ color: 'text.secondary' }}>
-                          {item?.author
-                            ? item?.author.charAt(0).toUpperCase() + item?.author.slice(1)
-                            : ''}
-                        </Typography> */}
-                    </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineDot color="primary" />
-                      {data?.length === index ? null : <TimelineConnector />}
-                    </TimelineSeparator>
-                    <TimelineContent>
-                      <Paper
-                        sx={{
-                          p: 2,
-                          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['400Channel'], 0.12),
-                          border: (theme) =>
-                            `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {item?.note}
+                data?.map((item: IFollowUpResponse, index: number) => {
+                  const colorKey =
+                    FollowUpStatusTypeColors[item.status as FollowUpStatusType] || 'primary';
+                  return (
+                    <TimelineItem key={index}>
+                      <TimelineOppositeContent>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ color: 'text.secondary', fontWeight: 'bold' }}
+                        >
+                          {dayjs(item?.createdAt || item?.nextReminderDate).format('DD MMM YYYY')}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Reminder Date: {dayjs(item.nextReminderDate).format('DD/MM/YYYY')}
+                        <Typography
+                          variant="caption"
+                          sx={{ color: 'text.disabled', fontWeight: 'bold', display: 'block' }}
+                        >
+                          {dayjs(item?.createdAt || item?.nextReminderDate).format('hh:mm A')}
                         </Typography>
-                      </Paper>
-                    </TimelineContent>
-                  </TimelineItem>
-                ))
+                      </TimelineOppositeContent>
+                      <TimelineSeparator>
+                        <TimelineDot sx={{ bgcolor: `${colorKey}.main` }} />
+                        {data?.length === index + 1 ? null : (
+                          <TimelineConnector sx={{ bgcolor: 'divider' }} />
+                        )}
+                      </TimelineSeparator>
+                      <TimelineContent sx={{ pb: 3, pr: 0 }}>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            p: 1,
+                            bgcolor: (theme) =>
+                              varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                            border: (theme) =>
+                              `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Box sx={{ mb: 1.5 }}>
+                            <Label color={colorKey as LabelColor}>
+                              {
+                                FollowUpStatusType[
+                                  item.status as unknown as keyof typeof FollowUpStatusType
+                                ]
+                              }
+                            </Label>
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.primary',
+                              mb: 2,
+                              fontWeight: 500,
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            {item?.note}
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: '50%',
+                                  bgcolor: `${colorKey}.main`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: 'white', fontWeight: 700, fontSize: '0.7rem' }}
+                                >
+                                  {(item?.creatorName || 'Admin')
+                                    .split(' ')
+                                    .map((n: string) => n[0])
+                                    .join('')
+                                    .toUpperCase()
+                                    .slice(0, 2)}
+                                </Typography>
+                              </Box>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: 'text.secondary', fontWeight: 500 }}
+                              >
+                                {item?.creatorName || 'Admin'}
+                              </Typography>
+                            </Box>
+                            {item?.nextReminderDate && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Iconify
+                                  icon="mdi:calendar-outline"
+                                  width={16}
+                                  sx={{ color: 'text.disabled' }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                >
+                                  Remind{' '}
+                                  <strong>
+                                    {dayjs(item.nextReminderDate).format('DD MMM YYYY')}
+                                  </strong>
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        </Paper>
+                      </TimelineContent>
+                    </TimelineItem>
+                  );
+                })
               ) : (
                 <EmptyContent title="No notes added yet" />
               )}
@@ -377,7 +578,7 @@ export const CommunicationForm = ({
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={handleCloseDialog}
+          onClick={handleCancelClick}
           variant="outlined"
           size="small"
         >
@@ -394,6 +595,34 @@ export const CommunicationForm = ({
           Submit
         </LoadingButton>
       </DialogActions>
-    </Box>
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        icon="warning"
+        title="Alert"
+        content={
+          <Typography variant="body2">
+            You have unsaved changes on this step. If you navigate away, your changes will be lost.
+            Are you sure you want to continue?
+          </Typography>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon={GlobalIcons.tick} />}
+            sx={{
+              bgcolor: 'grey.900',
+              color: 'common.white',
+              '&:hover': { bgcolor: 'grey.800' },
+            }}
+            size="small"
+            onClick={handleConfirmCancel}
+          >
+            Yes
+          </Button>
+        }
+      />
+    </BackPopUpChecked>
   );
 };

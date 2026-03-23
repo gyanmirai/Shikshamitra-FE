@@ -97,7 +97,7 @@ export const librarySettingsApi = createApi({
     }),
     getSectionManagement: builder.query({
       query: ({ academicYearId, ...params }) => ({
-        url: `/api/sections`,
+        url: `/api/library/sections`,
         method: 'GET',
         params: { academicYearId, ...params },
       }),
@@ -105,7 +105,7 @@ export const librarySettingsApi = createApi({
     }),
     getSectionManagementById: builder.query({
       query: ({ sectionId, academicYearId }) => ({
-        url: `/api/sections/${sectionId}`,
+        url: `/api/library/sections/${sectionId}`,
         method: 'GET',
         params: { academicYearId },
       }),
@@ -113,7 +113,7 @@ export const librarySettingsApi = createApi({
     }),
     addSectionManagement: builder.mutation({
       query: ({ academicYearId, body }) => ({
-        url: `/api/sections`,
+        url: `/api/library/sections`,
         method: 'POST',
         data: body,
         params: { academicYearId },
@@ -122,7 +122,7 @@ export const librarySettingsApi = createApi({
     }),
     updateSectionManagement: builder.mutation({
       query: ({ data, sectionId, academicYearId }) => ({
-        url: `/api/sections/${sectionId}`,
+        url: `/api/library/sections/${sectionId}`,
         method: 'PUT',
         data,
         params: { academicYearId },

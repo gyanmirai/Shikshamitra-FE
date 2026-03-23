@@ -100,6 +100,7 @@ const LeavingCertificate = () => {
         </Button>
       </Box>
       <CustomizableTable
+        tableTitle="Leaving Certificate"
         tableId="leaving-certificate"
         noDataText={
           <>

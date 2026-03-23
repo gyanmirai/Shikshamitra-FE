@@ -9,10 +9,13 @@ export const StudentApi = createApi({
   tagTypes: ['Student'],
   endpoints: (builder) => ({
     getFilterStudents: builder.query({
-      query: ({ academicYearId, standardId, divisionId }) => {
+      query: ({ academicYearId, academicMediumId, standardId, divisionId }) => {
         let queryString = '';
         if (academicYearId) {
           queryString += `AcademicYearId=${academicYearId}&`;
+        }
+        if (academicMediumId) {
+          queryString += `AcademicMediumId=${academicMediumId}&`;
         }
         if (standardId) {
           queryString += `StandardId=${standardId}&`;

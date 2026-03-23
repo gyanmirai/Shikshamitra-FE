@@ -9,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
@@ -47,32 +48,25 @@ import {
   useGetDeductionComponentsQuery,
   useDeleteEarningComponentMutation,
   useUpdateEarningComponentMutation,
-} from 'src/redux/employee-payroll/employee-payroll-api';
+} from 'src/redux/hr/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  earningName: string;
-  calculationType: string;
+  componentName: string;
+  componentType: string;
   id: string;
   description: string;
-  isEmployeeSpecific: boolean;
-  isDependent: boolean;
-  dependName: string;
-  dependent: {
-    amount: number;
-    percentage: boolean;
-    elementCode: string;
-  };
+  isFixed: boolean;
   amount: number;
-  amountOfPercentage: number;
-  showOnPayslip: boolean;
-  isSameAmountForAll: boolean;
-  calculatePercentageBasedOn: string;
-  selectedEarningComponent: string;
+  visibleInPayslip: boolean;
+  dependOn: string;
+  customComponentId: string;
 }
 
 const EarningComponent = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const confirm = useBoolean();
 
   const [editData, setEditData] = useState<any>(null);
@@ -85,11 +79,17 @@ const EarningComponent = () => {
       currentQueryAndMutation: useDeleteEarningComponentMutation,
     });
 
-  const { data: getEarningComponentsData, isLoading: getEarningComponentsLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      currentQueryAndMutation: useGetEarningComponentsQuery,
-    });
+  const {
+    data: getEarningComponentsData,
+    isLoading: getEarningComponentsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEarningComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+  });
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Handles closing the incident form
@@ -118,9 +118,9 @@ const EarningComponent = () => {
         heading="Earning Component"
         description="Manage the various earning components that make up employee salaries, including fixed and variable pay elements."
         links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Payroll Management', href: '/hr/payroll/dashboard/' },
-          { name: 'Settings' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
+          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'Earning Component' },
         ]}
         action={
@@ -141,7 +141,7 @@ const EarningComponent = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <b>{deleteInformation?.earningName}</b> Earning
+            Are you sure you want to delete <b>{deleteInformation?.componentName}</b> Earning
             Component?
           </>
         }
@@ -158,7 +158,7 @@ const EarningComponent = () => {
                   dispatchFn(
                     employeePayrollApi.util.updateQueryData(
                       'getEarningComponents',
-                      undefined,
+                      { academicYearId: currentYear?.id },
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (b: any) => b.id === deleteInformation?.id
@@ -170,17 +170,7 @@ const EarningComponent = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    employeePayrollApi.util.updateQueryData(
-                      'getEarningComponents',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, deleteInformation);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteEarningComponent(deleteInformation?.id || ''),
               });
               confirm.onFalse();
@@ -195,17 +185,20 @@ const EarningComponent = () => {
         tableId="earning-component"
         isLoading={getEarningComponentsLoading}
         columns={[
-          { id: 'earningName', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw', sticky: true },
           {
-            id: 'earningType',
+            id: 'isFixed',
             label: 'Earning Type',
             align: 'left',
             minWidth: '10vw',
             filterType: 'enum',
             enumOptions: [
-              { label: 'Fixed', value: 'Fixed' },
-              { label: 'Variable', value: 'Variable' },
+              { label: 'Fixed', value: true },
+              { label: 'Variable', value: false },
             ],
+            render(value: boolean) {
+              return value ? 'Fixed' : 'Variable';
+            },
           },
           { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
           {
@@ -220,12 +213,6 @@ const EarningComponent = () => {
             ],
           },
           {
-            id: 'calculatePercentageBasedOn',
-            label: 'Depends On',
-            align: 'left',
-            minWidth: '10vw',
-          },
-          {
             id: 'amount',
             label: 'Amount',
             align: 'right',
@@ -233,14 +220,14 @@ const EarningComponent = () => {
             filterType: 'number',
             render(value, row) {
               return (
-                <Typography variant="body2" color="primary.secondary" fontWeight="bold">
+                <Typography variant="caption" fontSize="13px">
                   {formatNumber(value, 'INR')}
                 </Typography>
               );
             },
           },
           {
-            id: 'showOnPayslip',
+            id: 'visibleInPayslip',
             label: 'Visible In Payslip',
             align: 'left',
             minWidth: '10vw',
@@ -249,7 +236,7 @@ const EarningComponent = () => {
               { value: true, label: 'Yes' },
               { value: false, label: 'No' },
             ],
-            render(value, row) {
+            render(value: boolean) {
               return value ? 'Yes' : 'No';
             },
           },
@@ -299,7 +286,7 @@ const EarningComponent = () => {
               placement="right"
               title={
                 editData
-                  ? `Edit ${editData.earningName} component settings including type, dependencies and visibility`
+                  ? `Edit ${editData.componentName} component settings including type, dependencies and visibility`
                   : 'Configure salary components like basic pay, allowances, and other earnings, including type, dependencies, and payslip visibility.'
               }
             >
@@ -386,30 +373,31 @@ const EarningComponentForm = ({
       type: 'mutation',
       currentQueryAndMutation: useUpdateEarningComponentMutation,
     });
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
     initialValues: {
-      earningName: editData?.earningName || '',
+      earningName: editData?.componentName || '',
       description: editData?.description || '',
-      earningType: editData ? (editData.isSameAmountForAll ? 'Fixed' : 'Variable') : 'Fixed',
-      calculationType: editData?.calculationType || '',
-      // calculatePercentageBasedOn: editData?.calculatePercentageBasedOn || '', // Removed as per requirement
-      selectedEarningComponent: editData?.selectedEarningComponent || null,
+      earningType: editData ? (editData.isFixed ? 'Fixed' : 'Variable') : 'Fixed',
+      calculationType: editData?.componentType || '',
+      selectedEarningComponent: editData?.customComponentId || null,
       amount: editData?.amount || '',
-      showOnPayslip: editData?.showOnPayslip || true,
+      showOnPayslip: editData?.visibleInPayslip ?? true,
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
         const payload = {
-          earningName: values.earningName,
+          componentName: values.earningName,
           description: values.description,
-          calculationType: values.calculationType,
-          calculatePercentageBasedOn: 'CUSTOM_COMPONENT', // Defaulted as per requirement to rely on 'selectedEarningComponent'
-          selectedEarningComponent: values.selectedEarningComponent,
-          amount: values.earningType === 'Fixed' ? values.amount : 0, // Reset if Variable
-          showOnPayslip: values.showOnPayslip,
-          isSameAmountForAll: values.earningType === 'Fixed',
+          componentType: values.calculationType,
+          dependOn: 'CUSTOM_COMPONENT',
+          customComponentId: values.selectedEarningComponent,
+          amount: values.earningType === 'Fixed' ? values.amount : 0,
+          visibleInPayslip: values.showOnPayslip,
+          isFixed: values.earningType === 'Fixed',
         };
 
         if (editData) {
@@ -418,7 +406,7 @@ const EarningComponentForm = ({
             body: payload,
           }).unwrap();
         } else {
-          await addEarningComponent(payload).unwrap();
+          await addEarningComponent({ academicYearId: currentYear?.id, body: payload }).unwrap();
         }
         handleClose(null, true);
       } catch (error) {

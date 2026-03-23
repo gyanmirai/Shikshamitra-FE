@@ -1,21 +1,14 @@
-import React, { useState } from 'react';
-import { useRouter } from 'src/routes/hooks';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
-import { studentPaths } from 'src/constants/student-menu';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { academicPaths } from 'src/constants/academic-menu';
-import {
-  Box,
-  Card,
-  Grid,
-  Stack,
-  Divider,
-  CardHeader,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Card, Grid, Stack, Divider, CardHeader, Typography } from '@mui/material';
 
 const renderInfoTooltip = (title: string, tooltipText: string) => (
   <Stack direction="row" alignItems="center" spacing={1}>
@@ -32,13 +25,29 @@ const renderInfoTooltip = (title: string, tooltipText: string) => (
 
 export const AttendanceTrend = () => {
   const theme = useTheme();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = () => {
-    setIsLoading(true);
-    router.push(studentPaths.attendance.markAttendance);
-  };
+  // Class & Division state (same pattern as SubjectPassFailChart)
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  useEffect(() => {
+    const currentClass = allClass.find((org: Standards) => org?.id === classes);
+    setAllDivision(currentClass?.divisions || []);
+    setDivision(currentClass?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
+  const isLight = theme.palette.mode === 'light';
 
   const attendanceOptions = useChart({
     xaxis: {
@@ -65,7 +74,11 @@ export const AttendanceTrend = () => {
     legend: {
       show: false,
     },
-    colors: [theme.palette.success.main, theme.palette.warning.main, theme.palette.error.main],
+    colors: [
+      isLight ? theme.palette.primary.main : theme.vars.palette.success.main,
+      isLight ? theme.palette.warning.main : theme.vars.palette.warning.main,
+      isLight ? theme.palette.error.main : theme.vars.palette.error.main,
+    ],
     grid: {
       strokeDashArray: 3,
     },
@@ -88,43 +101,43 @@ export const AttendanceTrend = () => {
 
   return (
     <Card
-      onClick={handleClick}
       sx={{
         height: '100%',
         position: 'relative',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
         },
       }}
     >
-      {isLoading && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 9,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(2px)',
-            borderRadius: 2,
-          }}
-        >
-          <CircularProgress color="primary" size={32} />
-        </Box>
-      )}
-
       <CardHeader
         title={renderInfoTooltip('Attendance Trend', 'Daily attendance for the last 5 days.')}
         subheader="Last 5 Days"
         sx={{ mb: 1, mt: -1, ml: -1 }}
+        action={
+          <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+              disabled={!classes}
+            />
+          </Box>
+        }
       />
 
       <Divider sx={{ borderStyle: 'dashed' }} />
@@ -137,19 +150,40 @@ export const AttendanceTrend = () => {
 
       <Stack direction="row" alignItems="center" justifyContent="center" spacing={3} sx={{ p: 2 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'success.main' }} />
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: isLight ? 'primary.main' : 'success.main',
+            }}
+          />
           <Typography variant="subtitle2" component="span">
             Present
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'warning.main' }} />
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: isLight ? 'warning.main' : 'warning.main',
+            }}
+          />
           <Typography variant="subtitle2" component="span">
             Leave
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'error.main' }} />
+          <Box
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: isLight ? 'error.main' : 'error.main',
+            }}
+          />
           <Typography variant="subtitle2" component="span">
             Absent
           </Typography>
@@ -161,13 +195,26 @@ export const AttendanceTrend = () => {
 
 export const SubjectPerformance = () => {
   const theme = useTheme();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = () => {
-    setIsLoading(true);
-    router.push(academicPaths.examination.recordMarks);
-  };
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  useEffect(() => {
+    const currentClass = allClass.find((org: Standards) => org?.id === classes);
+    setAllDivision(currentClass?.divisions || []);
+    setDivision(currentClass?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
 
   const subjectOptions = useChart({
     plotOptions: {
@@ -181,12 +228,12 @@ export const SubjectPerformance = () => {
       categories: ['Math', 'Sci', 'Eng', 'Hist', 'Geog', 'Arts'],
     },
     colors: [
-      theme.palette.primary.main,
-      theme.palette.error.main,
-      theme.palette.primary.main,
-      theme.palette.primary.main,
-      theme.palette.primary.main,
-      theme.palette.primary.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.error.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.primary.main,
+      theme.vars.palette.primary.main,
     ],
     legend: {
       show: false,
@@ -208,48 +255,47 @@ export const SubjectPerformance = () => {
 
   return (
     <Card
-      onClick={handleClick}
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
         },
       }}
     >
-      {isLoading && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 9,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(2px)',
-            borderRadius: 2,
-          }}
-        >
-          <CircularProgress color="primary" size={32} />
-        </Box>
-      )}
-
       <CardHeader
         title={renderInfoTooltip(
           'Subject Performance',
           'Average score per subject. Red indicates weak performance.'
         )}
-        subheader="Term 1 Average"
         sx={{ mb: 2, mt: -1, ml: -1 }}
+        action={
+          <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+              disabled={!classes}
+            />
+          </Box>
+        }
       />
 
       <Divider sx={{ borderStyle: 'dashed' }} />
@@ -280,23 +326,49 @@ export const SubjectPerformance = () => {
 
 export const HomeworkStatus = () => {
   const theme = useTheme();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = () => {
-    setIsLoading(true);
-    router.push(academicPaths.homework.learningTasks);
-  };
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  useEffect(() => {
+    const currentClass = allClass.find((org: Standards) => org?.id === classes);
+    setAllDivision(currentClass?.divisions || []);
+    setDivision(currentClass?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
+  const subjectOptions = [
+    { id: '', name: 'All' },
+    { id: 'english', name: 'English' },
+    { id: 'math', name: 'Math' },
+    { id: 'science', name: 'Science' },
+    { id: 'history', name: 'History' },
+  ];
 
   const homeworkOptions = useChart({
     labels: ['Submitted', 'Pending', 'Overdue'],
     stroke: {
-      colors: [theme.palette.background.paper],
+      colors: [theme.vars.palette.background.paper],
     },
     legend: {
       show: false,
     },
-    colors: [theme.palette.success.main, theme.palette.warning.main, theme.palette.error.main],
+    colors: [
+      theme.vars.palette.success.main,
+      theme.vars.palette.warning.main,
+      theme.vars.palette.error.main,
+    ],
     dataLabels: {
       enabled: true,
       dropShadow: { enabled: false },
@@ -309,9 +381,16 @@ export const HomeworkStatus = () => {
         donut: {
           labels: {
             show: true,
+            name: {
+              color: theme.vars.palette.text.secondary,
+            },
+            value: {
+              color: theme.vars.palette.text.primary,
+            },
             total: {
               show: true,
               label: 'Total',
+              color: theme.vars.palette.text.primary,
               formatter: () => '45',
             },
           },
@@ -324,42 +403,56 @@ export const HomeworkStatus = () => {
 
   return (
     <Card
-      onClick={handleClick}
       sx={{
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         position: 'relative',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
         },
       }}
     >
-      {isLoading && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 9,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(2px)',
-            borderRadius: 2,
-          }}
-        >
-          <CircularProgress color="primary" size={32} />
-        </Box>
-      )}
-
       <CardHeader
-        title={renderInfoTooltip('Homework Status', 'Current assignment submission status.')}
+        title={renderInfoTooltip(
+          'Homework Status',
+          'Current assignment submission status overall subject wise.'
+        )}
         sx={{ mb: 2, mt: -1, ml: -1 }}
+        action={
+          <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClasses(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '90px' } }}
+              disabled={!classes}
+            />
+            <CustomSelect
+              options={subjectOptions}
+              label="Subject"
+              value={subject}
+              onChange={(val) => setSubject(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { minWidth: '110px' } }}
+            />
+          </Box>
+        }
       />
 
       <Divider sx={{ borderStyle: 'dashed' }} />

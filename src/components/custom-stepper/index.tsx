@@ -72,6 +72,7 @@ interface CustomStepperWithFormikProps {
   errors?: boolean[];
   isDisabledLabel?: boolean;
   showSaveButton?: boolean;
+  disableSubmit?: boolean;
   saveButtonProps?: LoadingButtonProps;
   saveAndNextButtonProps?: LoadingButtonProps;
   viewMode?: 'horizontal' | 'vertical'; // Add this line
@@ -235,6 +236,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   onSave = () => {},
   isDisabledLabel = false,
   showSaveButton = true,
+  disableSubmit = false,
   saveButtonProps = {},
   saveAndNextButtonProps = {},
   viewMode = 'horizontal', // Default to horizontal
@@ -246,7 +248,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const formik = useFormik({
     initialValues,
     validationSchema,
-    enableReinitialize: true,
     validateOnMount: true,
     onSubmit: (values) => {
       setIsBackClick(false);
@@ -456,6 +457,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
                 <Iconify icon="ic:round-arrow-forward" width={20} />
               ) : null
             }
+            disabled={activeStep === steps.length - 1 ? disableSubmit : false}
             {...saveAndNextButtonProps}
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Save & Next'}

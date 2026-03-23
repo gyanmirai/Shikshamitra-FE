@@ -546,15 +546,15 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                           disabled={disabled || (isEdit && !!data)}
                           error={Boolean(
                             formik.touched.slotConfigurations &&
-                              Array.isArray(formik.touched.slotConfigurations) &&
-                              formik.touched.slotConfigurations[configIndex] &&
-                              typeof formik.touched.slotConfigurations[configIndex] === 'object' &&
-                              (formik.touched.slotConfigurations[configIndex] as any)?.totalSlots &&
-                              formik.errors.slotConfigurations &&
-                              Array.isArray(formik.errors.slotConfigurations) &&
-                              formik.errors.slotConfigurations[configIndex] &&
-                              typeof formik.errors.slotConfigurations[configIndex] === 'object' &&
-                              (formik.errors.slotConfigurations[configIndex] as any)?.totalSlots
+                            Array.isArray(formik.touched.slotConfigurations) &&
+                            formik.touched.slotConfigurations[configIndex] &&
+                            typeof formik.touched.slotConfigurations[configIndex] === 'object' &&
+                            (formik.touched.slotConfigurations[configIndex] as any)?.totalSlots &&
+                            formik.errors.slotConfigurations &&
+                            Array.isArray(formik.errors.slotConfigurations) &&
+                            formik.errors.slotConfigurations[configIndex] &&
+                            typeof formik.errors.slotConfigurations[configIndex] === 'object' &&
+                            (formik.errors.slotConfigurations[configIndex] as any)?.totalSlots
                           )}
                           helperText={
                             formik.touched.slotConfigurations &&

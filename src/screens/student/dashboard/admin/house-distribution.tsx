@@ -1,57 +1,38 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Chart, useChart } from 'src/components/chart';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { fNumber, fPercent } from 'src/utils/format-number';
-import { Box, Card, Stack, CardHeader, Typography, LinearProgress } from '@mui/material';
+import { Box, Card, Grid, Stack, CardHeader, Typography } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
 const houseData = [
-  { label: 'Red House', value: 145, color: '#FF4560' },
-  { label: 'Green House', value: 142, color: '#00E396' },
-  { label: 'Blue House', value: 138, color: '#008FFB' },
-  { label: 'Yellow House', value: 135, color: '#FEB019' },
+  { label: 'Red House', value: 145, color: '#FF4560', icon: 'mdi:flag-triangle' },
+  { label: 'Green House', value: 142, color: '#00E396', icon: 'mdi:flag-triangle' },
+  { label: 'Blue House', value: 138, color: '#008FFB', icon: 'mdi:flag-triangle' },
+  { label: 'Yellow House', value: 135, color: '#FEB019', icon: 'mdi:flag-triangle' },
 ];
 
 export default function HouseDistribution() {
-  const chartSeries = houseData.map((i) => i.value);
-  const chartColors = houseData.map((i) => i.color);
   const totalStudents = houseData.reduce((a, b) => a + b.value, 0);
-
-  const chartOptions = useChart({
-    chart: {
-      sparkline: {
-        enabled: true,
-      },
-    },
-    colors: chartColors,
-    labels: houseData.map((i) => i.label),
-    stroke: {
-      colors: ['#fff'],
-    },
-    tooltip: {
-      y: {
-        formatter: (value: number) => fNumber(value),
-        title: {
-          formatter: (seriesName: string) => `${seriesName}`,
-        },
-      },
-    },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '72%',
-          labels: {
-            show: false, // We will use custom center text
-          },
-        },
-      },
-    },
-  });
+  const theme = useTheme();
+  // Sort houses by value to find the rank
+  const sortedHouses = [...houseData].sort((a, b) => b.value - a.value);
 
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[8],
+          transition: 'all 0.3s ease-in-out',
+        },
+      }}
+    >
       <CardHeader
         sx={{ mt: -1, ml: -1 }}
         title={
@@ -72,71 +53,120 @@ export default function HouseDistribution() {
         }
       />
 
-      <Stack spacing={3} sx={{ p: 3 }}>
-        <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          <Chart
-            dir="ltr"
-            type="donut"
-            series={chartSeries}
-            options={chartOptions}
-            width={200}
-            height={200}
-          />
-
-          {/* Center Total */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center',
-            }}
-          >
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+      <Stack spacing={4} sx={{ p: 3, flexGrow: 1, justifyContent: 'center' }}>
+        {/* Stacked Horizontal Bar Chart */}
+        <Box>
+          <Stack direction="row" justifyContent="space-between" sx={{ mb: 1.5 }}>
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+              Total Students
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
               {fNumber(totalStudents)}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Students
-            </Typography>
+          </Stack>
+          <Box
+            sx={{
+              width: '100%',
+              height: 12,
+              borderRadius: 1.5,
+              display: 'flex',
+              overflow: 'hidden',
+            }}
+          >
+            {houseData.map((house) => (
+              <CustomTooltip key={house.label} title={`${house.label}: ${house.value}`} arrow>
+                <Box
+                  sx={{
+                    width: `${(house.value / totalStudents) * 100}%`,
+                    height: '100%',
+                    bgcolor: house.color,
+                    transition: 'all 0.3s',
+                    '&:hover': { opacity: 0.8 },
+                  }}
+                />
+              </CustomTooltip>
+            ))}
           </Box>
         </Box>
 
-        {/* Leaderboard */}
-        <Stack spacing={2}>
-          {houseData
-            .sort((a, b) => b.value - a.value)
-            .map((house, index) => (
-              <Stack key={house.label} spacing={0.5}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    {index === 0 && <Iconify icon="mdi:crown" width={16} color="warning.main" />}
-                    <Typography variant="body2" sx={{ fontWeight: index === 0 ? 700 : 400 }}>
-                      {house.label}
-                    </Typography>
-                  </Stack>
-                  <Typography variant="subtitle2">
-                    {house.value}{' '}
-                    <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>
-                      ({fPercent((house.value / totalStudents) * 100)})
-                    </Typography>
+        {/* Grid of Houses */}
+        <Grid container spacing={2}>
+          {sortedHouses.map((house, index) => (
+            <Grid size={{ xs: 6 }} key={house.label}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(house.color, 0.08),
+                  border: `1px solid ${alpha(house.color, 0.2)}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1.5,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.3s',
+                  '&:hover': {
+                    bgcolor: alpha(house.color, 0.12),
+                    transform: 'translateY(-2px)',
+                    boxShadow: `0 4px 12px 0 ${alpha(house.color, 0.2)}`,
+                  },
+                }}
+              >
+                {/* Background Icon */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -16,
+                    right: -16,
+                    opacity: 0.1,
+                    transform: 'rotate(15deg)',
+                  }}
+                >
+                  <Iconify icon={house.icon} width={80} color={house.color} />
+                </Box>
+
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1}
+                  sx={{ zIndex: 1, position: 'relative' }}
+                >
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: house.color }} />
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: 'text.primary', flexGrow: 1 }}
+                    noWrap
+                  >
+                    {house.label}
+                  </Typography>
+                  {index === 0 && (
+                    <CustomTooltip title="Current Top House" arrow>
+                      <Iconify
+                        icon="mdi:crown"
+                        width={18}
+                        sx={{ color: 'warning.main', ml: 'auto' }}
+                      />
+                    </CustomTooltip>
+                  )}
+                </Stack>
+
+                <Stack
+                  direction="row"
+                  alignItems="baseline"
+                  spacing={1}
+                  sx={{ zIndex: 1, position: 'relative' }}
+                >
+                  <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 700 }}>
+                    {house.value}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                    ({fPercent((house.value / totalStudents) * 100)})
                   </Typography>
                 </Stack>
-                <LinearProgress
-                  variant="determinate"
-                  value={(house.value / totalStudents) * 100}
-                  sx={{
-                    height: 6,
-                    borderRadius: 1,
-                    bgcolor: (theme) => theme.palette.grey[200],
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: house.color,
-                    },
-                  }}
-                />
-              </Stack>
-            ))}
-        </Stack>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
       </Stack>
     </Card>
   );

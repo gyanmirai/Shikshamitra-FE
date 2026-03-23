@@ -8,7 +8,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useUpdateEmployeeStatusMutation } from 'src/redux/employee/employeeApi';
+import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
 import {
   Box,
   Stack,

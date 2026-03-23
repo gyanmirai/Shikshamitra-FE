@@ -26,6 +26,12 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             size="small"
             label="BPL Card No."
             {...formik.getFieldProps('bplCardNo')}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (/^[A-Za-z0-9 ]*$/.test(val)) {
+                formik.setFieldValue('bplCardNo', val);
+              }
+            }}
             error={formik.touched.bplCardNo && Boolean(formik.errors.bplCardNo)}
             helperText={formik.touched.bplCardNo && formik.errors.bplCardNo}
           />
@@ -65,6 +71,13 @@ const AdditionalDetailsAllFields = ({ formik }: any) => (
             size="small"
             label="Second Language"
             {...formik.getFieldProps('secondLanguage')}
+            onChange={(e) => {
+              const val = e.target.value;
+              const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+              if (/^[A-Za-z ]*$/.test(newName)) {
+                formik.setFieldValue('secondLanguage', newName);
+              }
+            }}
             error={formik.touched.secondLanguage && Boolean(formik.errors.secondLanguage)}
             helperText={formik.touched.secondLanguage && formik.errors.secondLanguage}
           />

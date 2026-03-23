@@ -212,6 +212,11 @@ const VehicleFormStepper = ({
       activeStep={activeStep}
       validateOnChange
       isDisabledLabel={!editData}
+      onStepClick={(step) => {
+        if (editData) {
+          setActiveStep(step);
+        }
+      }}
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={vehicleValidationSchema[activeStep as keyof typeof vehicleValidationSchema]}
       handleNext={(

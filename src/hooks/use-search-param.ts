@@ -162,14 +162,17 @@ export const useCustomSearchParams = (initialValues?: ParamsObject) => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // Stabilize initialValues so the effect only runs once on mount
+  const initialValuesRef = useRef(initialValues);
+
   // Apply initial values on first render if keys are missing
   useEffect(() => {
-    if (!initialValues) return;
+    if (!initialValuesRef.current) return;
 
     const current = new URLSearchParams(searchParams.toString());
     let hasChanged = false;
 
-    Object.entries(initialValues).forEach(([key, value]) => {
+    Object.entries(initialValuesRef.current).forEach(([key, value]) => {
       if (!current.has(key)) {
         current.set(key, value);
         hasChanged = true;
@@ -179,31 +182,47 @@ export const useCustomSearchParams = (initialValues?: ParamsObject) => {
     if (hasChanged) {
       router.replace(`?${current.toString()}`); // Replace to avoid new history entry
     }
-  }, [initialValues, searchParams, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount — initialValuesRef is stable
 
-  const getParam = (key: string): string | null => searchParams.get(key);
+  const getParam = useCallback(
+    (key: string): string | null => searchParams.get(key),
+    [searchParams]
+  );
 
-  const setParam = (key: string, value: string): void => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set(key, value);
-    router.push(`?${params.toString()}`);
-  };
-
-  const setMultipleParams = (newParams: ParamsObject): void => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(newParams).forEach(([key, value]) => {
+  const setParam = useCallback(
+    (key: string, value: string): void => {
+      const params = new URLSearchParams(searchParams.toString());
       params.set(key, value);
-    });
-    router.push(`?${params.toString()}`);
-  };
+      router.push(`?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
 
-  const deleteParam = (key: string): void => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(key);
-    router.push(`?${params.toString()}`);
-  };
+  const setMultipleParams = useCallback(
+    (newParams: ParamsObject): void => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(newParams).forEach(([key, value]) => {
+        params.set(key, value);
+      });
+      router.push(`?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
 
-  const getAllParams = (): ParamsObject => Object.fromEntries(searchParams.entries());
+  const deleteParam = useCallback(
+    (key: string): void => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete(key);
+      router.push(`?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
+
+  const getAllParams = useCallback(
+    (): ParamsObject => Object.fromEntries(searchParams.entries()),
+    [searchParams]
+  );
 
   return {
     getParam,

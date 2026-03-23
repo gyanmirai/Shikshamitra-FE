@@ -9,10 +9,19 @@ export const StudentAdmissionApi = createApi({
   tagTypes: ['Student-Admission', 'Student-Document'],
   endpoints: (builder) => ({
     getStudentAdmission: builder.query({
-      query: ({ approvalStatus }) => ({
-        url: `/students/admissions?ApprovalStatus=${approvalStatus}`,
-        method: 'GET',
-      }),
+      query: ({ AcademicMediumId, approvalStatus, sorting, skipCount, maxResultCount }) => {
+        const params = new URLSearchParams({
+          AcademicMediumId,
+          approvalStatus,
+          ...(sorting ? { Sorting: sorting } : {}),
+          ...(skipCount !== undefined ? { SkipCount: String(skipCount) } : {}),
+          ...(maxResultCount !== undefined ? { MaxResultCount: String(maxResultCount) } : {}),
+        });
+        return {
+          url: `/students/admissions?${params.toString()}`,
+          method: 'GET',
+        };
+      },
       providesTags: ['Student-Admission'],
     }),
     changeAdmissionStatus: builder.mutation({

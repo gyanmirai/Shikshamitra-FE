@@ -1,10 +1,12 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -28,12 +30,13 @@ const RunPayroll = () => {
   const deductionDialog = useBoolean();
   const isPayrollOpen = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const { data: getRunPayrollPreviewData, isLoading: getRunPayrollPreviewLoading } =
     useQueryAndMutation({
       type: 'query',
       currentQueryAndMutation: useGetRunPayrollPreviewQuery,
-      params: { month: month?.format('MMMM-YYYY').toUpperCase() },
+      params: { month: month?.format('MMMM-YYYY').toUpperCase(), academicYearId: currentYear?.id },
       options: {
         skip: !month,
       },
@@ -72,18 +75,21 @@ const RunPayroll = () => {
         label: 'Total Working Days',
         minWidth: '170px',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'totalPresentDays',
         label: 'Total Present Days',
         minWidth: '170px',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'totalAbsentDays',
         label: 'Total Absent Days',
         minWidth: '170px',
         align: 'left',
+        filterType: 'number',
       },
       {
         id: 'salary',
@@ -146,12 +152,12 @@ const RunPayroll = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Run Payroll"
-        links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
+        links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
         description="Run payroll by selecting a month, and verify details before processing."
       />
       {/* <StepsForPayroll /> */}
 
-      <Card sx={{ p: 2 }}>
+      <Card sx={{ p: 1.5 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 1, alignItems: 'center' }}>
           <DatePicker
             label="Select Month *"
@@ -189,7 +195,7 @@ const RunPayroll = () => {
         </Alert>
       </Card>
       {month && (
-        <Card sx={{ p: 2, mt: 2 }}>
+        <Card sx={{ p: 1.5, mt: 1 }}>
           <Box
             sx={{
               display: 'flex',
@@ -205,8 +211,8 @@ const RunPayroll = () => {
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               onClick={() => {
                 generateAndLockPayroll({
-                  message: 'Payroll generated and locked successfully',
                   month: month?.format('MMMM-YYYY').toUpperCase(),
+                  academicYearId: currentYear?.id,
                 });
               }}
               loading={generateAndLockPayrollLoading}

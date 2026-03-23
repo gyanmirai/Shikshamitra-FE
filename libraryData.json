@@ -19,10 +19,7 @@
       "publishDate": "10-01-2023",
       "section": "A",
       "shelf": "5",
-      "reservationMemberIds": [
-        "M001",
-        "M002"
-      ],
+      "reservationMemberIds": ["M001", "M002"],
       "bookCoverImages": [
         "https://m.media-amazon.com/images/I/81s6DUyQCZL.jpg",
         "https://images-na.ssl-images-amazon.com/images/I/81s6DUyQCZL.jpg"
@@ -48,9 +45,7 @@
       "section": "B",
       "shelf": "3",
       "publishDate": "15-08-2022",
-      "reservationMemberIds": [
-        "M003"
-      ],
+      "reservationMemberIds": ["M003"],
       "edition": "1st",
       "language": "English",
       "price": 59.99,
@@ -78,9 +73,7 @@
       "section": "C",
       "shelf": "2",
       "publishDate": "20-05-2021",
-      "reservationMemberIds": [
-        "M004"
-      ],
+      "reservationMemberIds": ["M004"],
       "edition": "3rd",
       "language": "English",
       "price": 39.99,
@@ -107,17 +100,13 @@
       "category": "Motivational",
       "edition": "1st",
       "language": "English",
-      "price": 39.50,
+      "price": 39.5,
       "numberOfCopies": 12,
       "section": "D",
       "shelf": "4",
       "publishDate": "20-11-2018",
       "reservedBook": 3,
-      "reservationMemberIds": [
-        "M005",
-        "M009",
-        "M011"
-      ],
+      "reservationMemberIds": ["M005", "M009", "M011"],
       "bookCoverImages": [
         "https://m.media-amazon.com/images/I/91bYsX41DVL.jpg",
         "https://images-na.ssl-images-amazon.com/images/I/81wgcld4wxL.jpg"
@@ -149,8 +138,8 @@
       "reservationMemberIds": ["M002", "M006", "M013", "M020"],
       "bookCoverImages": [],
       "documents": [],
-      "section":"D",
-      "shelf":"2",
+      "section": "D",
+      "shelf": "2",
       "damagedBook": 2,
       "numberOfPages": 236,
       "classes": ["Class 8", "Class 9"],
@@ -177,8 +166,8 @@
       "reservationMemberIds": ["M004", "M012"],
       "bookCoverImages": [],
       "documents": [],
-      "section":"C",
-      "shelf":"1",
+      "section": "C",
+      "shelf": "1",
       "damagedBook": 0,
       "numberOfPages": 224,
       "classes": ["Class 10"],
@@ -200,7 +189,7 @@
       "language": "English",
       "section": "B",
       "shelf": "4",
-      "price": 42.00,
+      "price": 42.0,
       "numberOfCopies": 10,
       "reservedBook": 3,
       "publishDate": "05-10-2009",
@@ -229,7 +218,7 @@
       "category": "Autobiography",
       "edition": "2nd",
       "language": "English",
-      "price": 50.00,
+      "price": 50.0,
       "section": "A",
       "shelf": "3",
       "numberOfCopies": 15,
@@ -538,6 +527,341 @@
       "requestedDate": "2025-09-19T08:20:00Z",
       "reserveDueDate": "2025-09-26T08:20:00Z",
       "rollNo": "4"
+    }
+  ],
+  "memberBorrowedBooks": [
+    {
+      "memberId": "1",
+      "id": "ib-001",
+      "bookTitle": "Introduction to Physics",
+      "bookId": "Science",
+      "accessionNo": "ACC-0011",
+      "issueDate": "01-09-2025",
+      "dueDate": "15-09-2025"
+    },
+    {
+      "memberId": "1",
+      "id": "ib-002",
+      "bookTitle": "Advanced Mathematics",
+      "bookId": "Mathematics",
+      "accessionNo": "ACC-0012",
+      "issueDate": "05-09-2025",
+      "dueDate": "19-09-2025"
+    },
+    {
+      "memberId": "1",
+      "id": "ib-003",
+      "bookTitle": "Chemistry Fundamentals",
+      "bookId": "Chemistry",
+      "accessionNo": "ACC-0013",
+      "issueDate": "20-08-2025",
+      "dueDate": "03-09-2025"
+    },
+    {
+      "memberId": "1",
+      "id": "ib-004",
+      "bookTitle": "Think Like a Monk",
+      "bookId": "Self Help",
+      "accessionNo": "ACC-0014",
+      "issueDate": "12-09-2025",
+      "dueDate": "26-09-2025"
+    },
+    {
+      "memberId": "2",
+      "id": "ib-005",
+      "bookTitle": "Pride and Prejudice",
+      "bookId": "Literature",
+      "accessionNo": "ACC-0021",
+      "issueDate": "10-09-2025",
+      "dueDate": "24-09-2025"
+    },
+    {
+      "memberId": "3",
+      "id": "ib-006",
+      "bookTitle": "Discrete Mathematics",
+      "bookId": "Mathematics",
+      "accessionNo": "ACC-0031",
+      "issueDate": "08-09-2025",
+      "dueDate": "22-09-2025"
+    },
+    {
+      "memberId": "3",
+      "id": "ib-007",
+      "bookTitle": "Physics Fundamentals",
+      "bookId": "Science",
+      "accessionNo": "ACC-0032",
+      "issueDate": "15-09-2025",
+      "dueDate": "29-09-2025"
+    },
+    {
+      "memberId": "4",
+      "id": "ib-008",
+      "bookTitle": "World War II",
+      "bookId": "History",
+      "accessionNo": "ACC-0041",
+      "issueDate": "02-09-2025",
+      "dueDate": "16-09-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "ib-009",
+      "bookTitle": "Atomic Habits",
+      "bookId": "Self Help",
+      "accessionNo": "ACC-0051",
+      "issueDate": "03-09-2025",
+      "dueDate": "17-09-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "ib-010",
+      "bookTitle": "Biology Basics",
+      "bookId": "Science",
+      "accessionNo": "ACC-0052",
+      "issueDate": "06-09-2025",
+      "dueDate": "20-09-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "ib-011",
+      "bookTitle": "History of India",
+      "bookId": "History",
+      "accessionNo": "ACC-0053",
+      "issueDate": "09-09-2025",
+      "dueDate": "23-09-2025"
+    }
+  ],
+  "memberReservedBooks": [
+    {
+      "memberId": "1",
+      "id": "rb-001",
+      "bookTitle": "Biology Basics",
+      "bookCategory": "Science",
+      "author": "Albert Newton",
+      "reservationDate": "10-09-2025"
+    },
+    {
+      "memberId": "1",
+      "id": "rb-002",
+      "bookTitle": "History of India",
+      "bookCategory": "History",
+      "author": "Ramchandra Guha",
+      "reservationDate": "12-09-2025"
+    },
+    {
+      "memberId": "2",
+      "id": "rb-003",
+      "bookTitle": "Think Like a Monk",
+      "bookCategory": "Self Help",
+      "author": "Jay Shetty",
+      "reservationDate": "14-09-2025"
+    },
+    {
+      "memberId": "3",
+      "id": "rb-004",
+      "bookTitle": "Chemistry Fundamentals",
+      "bookCategory": "Chemistry",
+      "author": "Peter Atkins",
+      "reservationDate": "16-09-2025"
+    },
+    {
+      "memberId": "4",
+      "id": "rb-005",
+      "bookTitle": "Advanced Mathematics",
+      "bookCategory": "Mathematics",
+      "author": "Jane Smith",
+      "reservationDate": "17-09-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "rb-006",
+      "bookTitle": "Panchtantra",
+      "bookCategory": "Fiction",
+      "author": "Vishnu Sharma",
+      "reservationDate": "18-09-2025"
+    }
+  ],
+  "memberCharges": [
+    {
+      "memberId": "1",
+      "id": "ch-001",
+      "bookTitle": "Chemistry Fundamentals",
+      "bookCategory": "Chemistry",
+      "accessionNo": "ACC-0013",
+      "amount": 50,
+      "reason": "Late return of 'Chemistry Fundamentals' by 5 days",
+      "chargeType": "Late Book Return",
+      "dateIssued": "08-09-2025",
+      "status": 0
+    },
+    {
+      "memberId": "1",
+      "id": "ch-002",
+      "bookTitle": "Advanced Mathematics",
+      "bookCategory": "Mathematics",
+      "accessionNo": "ACC-0012",
+      "amount": 120,
+      "reason": "Damaged cover page of 'Advanced Mathematics'",
+      "chargeType": "Damaged Book",
+      "dateIssued": "20-09-2025",
+      "status": 1
+    },
+    {
+      "memberId": "2",
+      "id": "ch-003",
+      "bookTitle": "Pride and Prejudice",
+      "bookCategory": "Literature",
+      "accessionNo": "ACC-0021",
+      "amount": 30,
+      "reason": "Late return of 'Pride and Prejudice' by 3 days",
+      "chargeType": "Late Book Return",
+      "dateIssued": "27-09-2025",
+      "status": 1
+    },
+    {
+      "memberId": "3",
+      "id": "ch-004",
+      "bookTitle": "Discrete Mathematics",
+      "bookCategory": "Mathematics",
+      "accessionNo": "ACC-0031",
+      "amount": 200,
+      "reason": "Book not returned — declared lost",
+      "chargeType": "Lost Book Fee",
+      "dateIssued": "25-09-2025",
+      "status": 0
+    },
+    {
+      "memberId": "4",
+      "id": "ch-005",
+      "bookTitle": "World War II",
+      "bookCategory": "History",
+      "accessionNo": "ACC-0041",
+      "amount": 80,
+      "reason": "Late return of 'World War II' by 8 days",
+      "chargeType": "Late Book Return",
+      "dateIssued": "24-09-2025",
+      "status": 0
+    },
+    {
+      "memberId": "5",
+      "id": "ch-006",
+      "bookTitle": "Atomic Habits",
+      "bookCategory": "Self Help",
+      "accessionNo": "ACC-0051",
+      "amount": 150,
+      "reason": "Reservation cancelled after holding period expired",
+      "chargeType": "Reservation Cancel",
+      "dateIssued": "22-09-2025",
+      "status": 1
+    }
+  ],
+  "memberBorrowHistory": [
+    {
+      "memberId": "1",
+      "id": "bh-001",
+      "bookTitle": "Introduction to Computer Science",
+      "bookId": "Computer Science",
+      "accessionNo": "ACC-0001",
+      "issueDate": "01-06-2025",
+      "dueDate": "15-06-2025"
+    },
+    {
+      "memberId": "1",
+      "id": "bh-002",
+      "bookTitle": "Think Like a Monk",
+      "bookId": "Self Help",
+      "accessionNo": "ACC-0002",
+      "issueDate": "18-06-2025",
+      "dueDate": "02-07-2025"
+    },
+    {
+      "memberId": "1",
+      "id": "bh-003",
+      "bookTitle": "Atomic Habits",
+      "bookId": "Self Help",
+      "accessionNo": "ACC-0003",
+      "issueDate": "05-07-2025",
+      "dueDate": "19-07-2025"
+    },
+    {
+      "memberId": "2",
+      "id": "bh-004",
+      "bookTitle": "History of India",
+      "bookId": "History",
+      "accessionNo": "ACC-0004",
+      "issueDate": "10-05-2025",
+      "dueDate": "24-05-2025"
+    },
+    {
+      "memberId": "2",
+      "id": "bh-005",
+      "bookTitle": "Advanced Mathematics",
+      "bookId": "Mathematics",
+      "accessionNo": "ACC-0005",
+      "issueDate": "01-07-2025",
+      "dueDate": "15-07-2025"
+    },
+    {
+      "memberId": "3",
+      "id": "bh-006",
+      "bookTitle": "Physics Fundamentals",
+      "bookId": "Science",
+      "accessionNo": "ACC-0006",
+      "issueDate": "20-04-2025",
+      "dueDate": "04-05-2025"
+    },
+    {
+      "memberId": "3",
+      "id": "bh-007",
+      "bookTitle": "Biology Basics",
+      "bookId": "Science",
+      "accessionNo": "ACC-0007",
+      "issueDate": "08-06-2025",
+      "dueDate": "22-06-2025"
+    },
+    {
+      "memberId": "4",
+      "id": "bh-008",
+      "bookTitle": "Chemistry Fundamentals",
+      "bookId": "Chemistry",
+      "accessionNo": "ACC-0008",
+      "issueDate": "15-03-2025",
+      "dueDate": "29-03-2025"
+    },
+    {
+      "memberId": "4",
+      "id": "bh-009",
+      "bookTitle": "Introduction to Physics",
+      "bookId": "Science",
+      "accessionNo": "ACC-0009",
+      "issueDate": "01-05-2025",
+      "dueDate": "15-05-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "bh-010",
+      "bookTitle": "Panchtantra",
+      "bookId": "Fiction",
+      "accessionNo": "ACC-0010",
+      "issueDate": "10-02-2025",
+      "dueDate": "24-02-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "bh-011",
+      "bookTitle": "Akbar Birbal",
+      "bookId": "Fiction",
+      "accessionNo": "ACC-0011",
+      "issueDate": "05-04-2025",
+      "dueDate": "19-04-2025"
+    },
+    {
+      "memberId": "5",
+      "id": "bh-012",
+      "bookTitle": "World War II",
+      "bookId": "History",
+      "accessionNo": "ACC-0012",
+      "issueDate": "02-06-2025",
+      "dueDate": "16-06-2025"
     }
   ]
 }

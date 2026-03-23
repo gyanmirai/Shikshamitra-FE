@@ -2,9 +2,12 @@ import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { GenderOptions } from 'src/enums/gender';
+import Typography from '@mui/material/Typography';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   FollowUpStatusType,
   FollowUpStatusTypeColors,
@@ -65,7 +68,30 @@ export const useInquiryTableColumns = ({
         align: 'left',
         filterType: 'date',
       },
-      { id: 'age', label: 'Age', align: 'left', minWidth: '120px', filterType: 'string' },
+      {
+        id: 'age',
+        label: 'Age',
+        align: 'left',
+        minWidth: '120px',
+        filterType: 'string',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'doiValue',
         label: 'Date of Inquiry',
@@ -87,6 +113,23 @@ export const useInquiryTableColumns = ({
         minWidth: '200px',
         align: 'left',
         filterType: 'string',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'primaryContactNo',
@@ -108,9 +151,23 @@ export const useInquiryTableColumns = ({
         minWidth: '150px',
         align: 'left',
         filterType: 'string',
-        render(value: string) {
-          return value || '-';
-        },
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
       },
       {
         id: 'inquiryPreference',
@@ -125,9 +182,14 @@ export const useInquiryTableColumns = ({
         minWidth: '180px',
         align: 'left',
         filterType: 'date',
+        render: (value: unknown) => {
+          if (!value) return '-';
+          const validDate = dayjs(value as string);
+          return validDate.isValid() ? validDate.format('DD-MM-YYYY') : '-';
+        },
       },
       {
-        id: 'followUpStatusType',
+        id: 'inquiryStatus',
         label: 'Status',
         filterType: 'enum',
         enumOptions: FollowUpStatusTypeOptions,

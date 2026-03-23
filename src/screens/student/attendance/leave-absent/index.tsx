@@ -17,8 +17,8 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
@@ -32,10 +32,21 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
+import {
+  Box,
+  Grid,
+  Stack,
+  Button,
+  TextField,
+  IconButton,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -46,22 +57,10 @@ import {
   useAddStudentLeaveMutation,
   useChangeLeaveStatusMutation,
 } from 'src/redux/student/student-leave/student-leave-api';
-import {
-  Box,
-  Grid,
-  Stack,
-  Button,
-  MenuItem,
-  TextField,
-  IconButton,
-  Typography,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
 
 import { AttendanceTypeForm } from '../setting/attendance-type';
 
-import type { IFormValues, ILeaveAbsent } from './type';
+import type { IFormValues } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const LeaveAndAbsentScreen = () => {
@@ -309,8 +308,8 @@ const LeaveAndAbsentScreen = () => {
       <CustomBreadcrumbs
         heading="Leave and Absent"
         links={[
-          { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Student', href: '/student/dashboard/' },
+          { name: 'Attendance', href: '/student/dashboard/' },
           { name: 'Leave and Absent' },
         ]}
         action={
@@ -327,6 +326,7 @@ const LeaveAndAbsentScreen = () => {
         description="Submit a new leave request by clicking 'add leave request', manage requests in 'Actions'."
       />
       <CustomizableTable
+        tableTitle="Leave and Absent"
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudent?.length !== 0}
         tableId="leave-absent-table"
@@ -458,22 +458,13 @@ const LeaveRequestForm = ({
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  // Returns getStudents function, StudentsData response and loading state
-  const [getStudents, { data: StudentsData, isLoading: isStudentsLoading }] = useQueryAndMutation({
+  // Returns getStudents function and loading state
+  const [getStudents, { isLoading: isStudentsLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
-  // Effect to fetch students when division, class and organization are selected
-  useEffect(() => {
-    if (division && classes && organization) {
-      getStudents({
-        educationMediumStageId: organization,
-        standardId: classes,
-        divisionId: division,
-      });
-    }
-  }, [division, classes, organization, getStudents]);
+  console.log('getStudents--->', getStudents);
 
   // Fetch all attendance types
   const { data: attendanceTypes } = useQueryAndMutation({
@@ -586,40 +577,49 @@ const LeaveRequestForm = ({
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
-              options={allOrganization}
               label="Organization"
-              value={organization}
-              onChange={(val) => setOrganization(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { width: '100%' } }}
               disabled={!medium}
+              options={allOrganization || []}
+              value={organization}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value: any) => {
+                setOrganization(value || '');
+                setStudent(null);
+              }}
+              formControlProps={{ sx: { width: '100%' } }}
             />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
-              options={allClass}
               label="Class"
+              disabled={!organization}
+              options={allClass || []}
               value={classes}
-              onChange={(val) => setClass(val as string)}
               labelKey="name"
               valueKey="id"
+              onChange={(value: any) => {
+                setClass(value || '');
+                setStudent(null);
+              }}
               formControlProps={{ sx: { width: '100%' } }}
-              disabled={!organization}
             />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <CustomSelect
-              options={allDivision}
               label="Division"
+              disabled={!classes}
+              options={allDivision || []}
               value={division}
-              onChange={(val) => setDivision(val as string)}
               labelKey="name"
               valueKey="id"
+              onChange={(value: any) => {
+                setDivision(value || '');
+                setStudent(null);
+              }}
               formControlProps={{ sx: { width: '100%' } }}
-              disabled={!classes}
             />
           </Grid>
 
@@ -632,24 +632,58 @@ const LeaveRequestForm = ({
                   : undefined
               }
             >
-              <Autocomplete
-                loading={isStudentsLoading}
+              <PaginatedSearchSelect
+                key={`${organization}-${classes}-${division}`}
+                label="Student"
+                isLoading={isStudentsLoading}
                 noOptionsText="No Student Found"
-                sx={{ width: '100%' }}
-                value={student}
-                onChange={(e, value: any) => setStudent(value)}
-                options={StudentsData?.items || []}
-                getOptionLabel={(option: any) =>
-                  `${option?.firstName || ''} ${option?.lastName || ''}`
+                disabled={!division}
+                fetchOptions={async (query: string, page: number) => {
+                  if (!division) return { data: [], hasMore: false };
+                  try {
+                    const res = await getStudents({
+                      page,
+                      pageSize: 10,
+                      educationMediumStageId: organization,
+                      standardId: classes,
+                      divisionId: division,
+                      search: query,
+                    }).unwrap();
+                    const hasMore = res.currentPage !== res.totalPages;
+                    return {
+                      data: res?.items?.map((item: any) => ({
+                        label: `${item?.firstName || ''} ${item?.lastName || ''}`,
+                        id: item.studentId,
+                        originalData: item,
+                      })),
+                      hasMore,
+                    };
+                  } catch {
+                    return { data: [], hasMore: false };
+                  }
+                }}
+                value={
+                  student
+                    ? {
+                        label: `${student.firstName || ''} ${student.lastName || ''}`,
+                        id: student.studentId as string,
+                      }
+                    : null
                 }
-                renderInput={(params) => (
-                  <TextField {...params} size="small" label="Student" fullWidth />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option?.studentId}>
-                    {option.firstName || ''} {option.lastName || ''}
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                getOptionLabel={(option: any) => option?.label || ''}
+                renderOption={(prop, option: any) => (
+                  <li {...prop} key={option.id}>
+                    {option.label}
                   </li>
                 )}
+                minChars={0}
+                onChange={(_, value: any) => {
+                  setStudent(value?.originalData || null);
+                }}
+                fullWidth
+                sx={{ width: '100%' }}
+                size="small"
               />
             </CustomTooltip>
           </Grid>
@@ -661,23 +695,19 @@ const LeaveRequestForm = ({
               {/* Row 1: Leave Type and Half Day Button */}
               <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
                 <ShakingTextField error={!!(touched.leaveType && errors.leaveType)}>
-                  <TextField
-                    name="leaveType"
-                    select
-                    fullWidth
+                  <CustomSelect
                     label="Leave Type *"
-                    size="small"
+                    options={attendanceTypes?.items || []}
                     value={values.leaveType}
-                    onChange={(e) => setFieldValue('leaveType', e.target.value)}
-                    error={touched.leaveType && Boolean(errors.leaveType)}
-                    helperText={touched.leaveType && errors.leaveType}
-                  >
-                    {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
-                      <MenuItem key={option.id} value={option.id}>
-                        {option.leaveTypeName}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    labelKey="leaveTypeName"
+                    valueKey="id"
+                    onChange={(value: any) => {
+                      setFieldValue('leaveType', value || '');
+                    }}
+                    error={!!(touched.leaveType && errors.leaveType)}
+                    helperText={(touched.leaveType && errors.leaveType) as string}
+                    formControlProps={{ sx: { width: '100%' } }}
+                  />
                 </ShakingTextField>
 
                 <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">

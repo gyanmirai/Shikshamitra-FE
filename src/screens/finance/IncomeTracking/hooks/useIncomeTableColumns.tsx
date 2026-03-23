@@ -1,14 +1,16 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 
-import type { IIncomeFormValues } from '../types';
+import type { IIncomeRecord } from '../types';
 
 interface UseIncomeTableColumnsProps {
-  onView?: (row: IIncomeFormValues) => void;
-  onEdit?: (row: IIncomeFormValues) => void;
-  onDelete?: (row: IIncomeFormValues) => void;
+  onView?: (row: IIncomeRecord) => void;
+  onEdit?: (row: IIncomeRecord) => void;
+  onDelete?: (row: IIncomeRecord) => void;
 }
 
 export const useIncomeTableColumns = ({
@@ -19,20 +21,20 @@ export const useIncomeTableColumns = ({
   useMemo(
     () => [
       {
-        id: 'incomeCategory',
+        id: 'categoryName',
         label: 'Income Category',
         align: 'left',
         minWidth: '160px',
         sticky: true,
       },
       {
-        id: 'incomeName',
+        id: 'name',
         label: 'Income Name',
         align: 'left',
         minWidth: '160px',
       },
       {
-        id: 'incomeCategoryTags',
+        id: 'categoryTags',
         label: 'Income Category Tags',
         minWidth: 200,
         align: 'left',
@@ -52,12 +54,14 @@ export const useIncomeTableColumns = ({
         label: 'Payment Method',
         align: 'left',
         minWidth: '160px',
+        render: (value) => PaymentMethodLabels[value as keyof typeof PaymentMethodLabels] || value,
       },
       {
-        id: 'date',
+        id: 'paymentDate',
         label: 'Date',
         align: 'left',
         filterType: 'date',
+        render: (value) => dayjs(value).format('DD/MM/YYYY'),
       },
       {
         id: 'notes',
@@ -79,9 +83,9 @@ export const useIncomeTableColumns = ({
             showEditIcon
             showDeleteIcon
             showViewIcon
-            handleViewClick={() => onView?.(row as IIncomeFormValues)}
-            handleEditClick={() => onEdit?.(row as IIncomeFormValues)}
-            handleDeleteClick={() => onDelete?.(row as IIncomeFormValues)}
+            handleViewClick={() => onView?.(row as IIncomeRecord)}
+            handleEditClick={() => onEdit?.(row as IIncomeRecord)}
+            handleDeleteClick={() => onDelete?.(row as IIncomeRecord)}
           />
         ),
       },

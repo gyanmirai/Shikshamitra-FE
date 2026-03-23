@@ -6,10 +6,9 @@ import { Iconify } from 'src/components/iconify';
 import { MenuList, MenuItem, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
 
 interface Props {
-  books: IBook[];
+  books: any[];
   onView?: (book: IBook) => void;
   onEdit?: (book: IBook) => void;
   onDelete?: (book: IBook) => void;
@@ -25,15 +24,13 @@ const BasicBookTable: React.FC<Props> = ({
   onReserveBook,
   onViewAllReservationBook,
 }) => {
-  const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
           onClick={async () => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onReserveBook?.({ ...book, copies });
+            onReserveBook?.(book);
             pop.onClose();
           }}
         >
@@ -43,8 +40,7 @@ const BasicBookTable: React.FC<Props> = ({
         <MenuItem
           onClick={async () => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onViewAllReservationBook?.({ ...book, copies });
+            onViewAllReservationBook?.(book);
             pop.onClose();
           }}
         >
@@ -53,7 +49,7 @@ const BasicBookTable: React.FC<Props> = ({
         </MenuItem>
       </MenuList>
     ),
-    [fetchCopies, onReserveBook, onViewAllReservationBook]
+    [onReserveBook, onViewAllReservationBook]
   );
   return (
     <CustomizableTable
@@ -102,18 +98,15 @@ const BasicBookTable: React.FC<Props> = ({
                 showViewIcon
                 handleViewClick={async () => {
                   const book = row as IBook;
-                  const copies = await fetchCopies(book.id).unwrap();
-                  onView?.({ ...book, copies });
+                  onView?.(book);
                 }}
                 handleDeleteClick={async () => {
                   const book = row as IBook;
-                  const copies = await fetchCopies(book.id).unwrap();
-                  onDelete?.({ ...book, copies });
+                  onDelete?.(book);
                 }}
                 handleEditClick={async () => {
                   const book = row as IBook;
-                  const copies = await fetchCopies(book.id).unwrap();
-                  onEdit?.({ ...book, copies });
+                  onEdit?.(book);
                 }}
               />
             );

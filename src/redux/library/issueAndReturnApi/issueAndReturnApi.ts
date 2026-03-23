@@ -12,18 +12,16 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
     }),
 
     getBookDetailsByAccession: builder.query({
-      query: ({ accessionNo, academicYearId }) => ({
+      query: ({ accessionNo }) => ({
         url: `/library/books/accession/${accessionNo}`,
         method: 'GET',
-        params: { academicYearId },
       }),
     }),
 
     issueBook: builder.mutation({
-      query: ({ academicYearId, body }) => ({
-        url: '/library/issue',
+      query: ({ body }) => ({
+        url: '/library/issues',
         method: 'POST',
-        params: { academicYearId },
         data: body,
       }),
       invalidatesTags: ['Books'],

@@ -3,11 +3,15 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useSaveDayCalculationSettingsMutation } from 'src/redux/hr/employee-payroll-api';
 import {
   Box,
   Card,
@@ -24,7 +28,11 @@ import {
 
 const PayrollConfiguration = () => {
   const theme = useTheme();
-
+  const [saveDayCalculationSettings, { isLoading: saveDayCalculationSettingsLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useSaveDayCalculationSettingsMutation,
+    });
   const formik = useFormik({
     initialValues: {
       dayCalculationType: 'working-days', // 'working-days' | 'total-days'
@@ -37,9 +45,8 @@ const PayrollConfiguration = () => {
         .min(1, 'Manual Days must be at least 1')
         .max(31, 'Manual Days must be at most 31'),
     }),
-    onSubmit: (values) => {
-      // eslint-disable-next-line no-console
-      console.log('Form Values:', values);
+    onSubmit: async (values) => {
+      await saveDayCalculationSettings({ body: values, academicYearId: '' });
     },
   });
 
@@ -53,9 +60,9 @@ const PayrollConfiguration = () => {
         heading="Payroll Configuration"
         description="Configure the payroll calculation rules, including how days are counted for salary processing."
         links={[
-          { name: 'HR', href: '/hr/dashboard' },
-          { name: 'Payroll', href: '/hr/payroll/dashboard' },
-          { name: 'Setting', href: '/hr/payroll/setting/earning' },
+          { name: 'HR/Staff', href: hrPaths.dashboard },
+          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
+          { name: 'Settings', href: hrPaths.payroll.settings.earningComponents },
           { name: 'Payroll Configuration' },
         ]}
       />
@@ -426,14 +433,15 @@ const PayrollConfiguration = () => {
             >
               Reset
             </Button>
-            <Button
+            <LoadingButton
               variant="contained"
               type="submit"
               size="small"
+              loading={saveDayCalculationSettingsLoading}
               startIcon={<Iconify icon="mdi:content-save" />}
             >
               Submit
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </form>
       </Card>

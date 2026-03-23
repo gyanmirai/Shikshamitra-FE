@@ -4,20 +4,22 @@ import CustomizableTable from 'src/components/customizabaleTable';
 
 import { useIncomeTableColumns } from '../hooks/useIncomeTableColumns';
 
-import type { IIncomeFormValues } from '../types';
+import type { IIncomeRecord } from '../types';
 
 interface IIncomeTableProps {
-  data: IIncomeFormValues[];
+  data: IIncomeRecord[];
   addIncome: { onTrue: () => void };
-  setEditData: (data: IIncomeFormValues | null) => void;
-  onEdit?: (row: IIncomeFormValues) => void;
-  onDelete?: (row: IIncomeFormValues) => void;
-  onView?: (row: IIncomeFormValues) => void;
+  isLoading: true;
+  setEditData: (data: IIncomeRecord | null) => void;
+  onEdit?: (row: IIncomeRecord) => void;
+  onDelete?: (row: IIncomeRecord) => void;
+  onView?: (row: IIncomeRecord) => void;
 }
 
 const IncomeTable: React.FC<IIncomeTableProps> = ({
   data,
   addIncome,
+  isLoading,
   setEditData,
   onEdit,
   onDelete,
@@ -32,6 +34,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
   return (
     <CustomizableTable
       tableId="income-table"
+      isLoading={isLoading}
       noDataText={
         <>
           No Income data found

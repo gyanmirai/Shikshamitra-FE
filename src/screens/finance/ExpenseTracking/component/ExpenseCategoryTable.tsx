@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 
 import type { IExpenseFormValues } from './type';
 
@@ -16,7 +17,7 @@ interface IExpenseCategoryTableProps {
   setEditData: (data: IExpenseFormValues | null) => void;
   onEdit?: (row: IExpenseFormValues) => void;
   onDelete?: (row: IExpenseFormValues) => void;
-  onView?: (row: IExpenseFormValues) => void;
+  // onView?: (row: IExpenseRecord) => void;
   isLoading: boolean;
 }
 
@@ -26,7 +27,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   setEditData,
   onEdit,
   onDelete,
-  onView,
+  // onView,
   isLoading,
 }) => {
   /**
@@ -38,7 +39,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'expenseCategory',
+        id: 'categoryName',
         label: 'Expense Category',
         align: 'left',
         minWidth: 170,
@@ -46,14 +47,14 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         sticky: true,
       },
       {
-        id: 'expenseName',
+        id: 'name',
         label: 'Expense Title',
         align: 'left',
         minWidth: '160px',
         filterType: 'string',
       },
       {
-        id: 'expenseCategoryTags',
+        id: 'categoryTags',
         label: 'Expense Category Tags',
         minWidth: 200,
         align: 'left',
@@ -73,9 +74,10 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         label: 'Payment Method',
         align: 'left',
         minWidth: '160px',
+        render: (value) => PaymentMethodLabels[value as keyof typeof PaymentMethodLabels] || value,
       },
       {
-        id: 'date',
+        id: 'paymentDate',
         label: 'Date',
         align: 'left',
         filterType: 'date',
@@ -96,23 +98,23 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         isSort: false,
         isFilter: false,
         sticky: true,
-        minWidth: 50,
+        minWidth: 100,
         render: (value, row) => (
           <ThreeDotsActions
             showThreeDots={false}
             showEditIcon
             showDeleteIcon
-            showViewIcon
-            handleViewClick={() => {
-              onView?.(row as IExpenseFormValues);
-            }}
+            // showViewIcon
+            // handleViewClick={() => {
+            //   onView?.(row as IExpenseRecord);
+            // }}
             handleEditClick={() => onEdit?.(row as IExpenseFormValues)}
             handleDeleteClick={() => onDelete?.(row as IExpenseFormValues)}
           />
         ),
       },
     ],
-    [onDelete, onEdit, onView] // Added dependencies to ensure closures are updated
+    [onDelete, onEdit] // Added dependencies to ensure closures are updated
   );
 
   return (

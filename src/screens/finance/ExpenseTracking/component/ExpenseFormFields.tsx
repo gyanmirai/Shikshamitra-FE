@@ -1,75 +1,90 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
-import { getIn } from 'formik';
-import React, { memo } from 'react';
+import { Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
-import { Grid, MenuItem, TextField } from '@mui/material';
+import React, { memo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import type { IExpenseFormValues } from './type';
-import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
 interface ExpenseFormFieldsProps {
   formik: FormikProps<IExpenseFormValues>;
-  categoryOptions: { value: string; label: string }[];
-  currentYear: any; // Using exact type from global state would be better if available
-  paymentMethodsConfig: Record<string, IPaymentFieldConfig[]>;
-  paymentMethodOptions: { value: string; label: string }[];
+  categoryOptions: any[];
+  currentYear: any;
+  paymentMethodOptions: { value: number; label: string }[];
+  categoryOptionsLoading: boolean;
 }
 
 const ExpenseFormFields = ({
   formik,
   categoryOptions,
   currentYear,
-  paymentMethodsConfig,
   paymentMethodOptions,
+  categoryOptionsLoading,
 }: ExpenseFormFieldsProps) => {
-  const selectedPaymentMethod = formik.values.paymentMethod;
+  const [tags, setTags] = useState<{ name: string; id: string }[]>([]);
+  console.log('tags0000', tags);
+  // Update tags when categoryId changes or initially if editData is present
+  useEffect(() => {
+    if (formik.values.categoryId) {
+      const selectedCategory = categoryOptions.find(
+        (option) => option.id === formik.values.categoryId
+      );
+      if (selectedCategory && selectedCategory.tags) {
+        setTags(selectedCategory.tags.map((tag: any) => ({ name: tag, id: tag })));
+      } else {
+        setTags([]);
+      }
+    } else {
+      setTags([]);
+    }
+  }, [formik.values.categoryId, categoryOptions]);
 
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 6 }}>
-        <ShakingTextField
-          error={!!(formik.touched.expenseCategory && formik.errors.expenseCategory)}
-        >
+        <ShakingTextField error={!!(formik.touched.categoryId && formik.errors.categoryId)}>
           <CustomSelect
             label="Expense Category *"
             options={categoryOptions}
-            value={formik.values.expenseCategory}
-            onChange={(val) => {
-              formik.setFieldValue('expenseCategory', val);
-              formik.setFieldTouched('expenseCategory', false);
+            value={formik.values.categoryId}
+            isLoading={categoryOptionsLoading}
+            labelKey="name"
+            valueKey="id"
+            onChange={(val: any) => {
+              formik.setFieldValue('categoryId', val);
+              formik.setFieldValue('categoryTags', []); // Reset tags on category change
+              formik.setFieldTouched('categoryId', false);
+              const selectedItems = categoryOptions?.filter((item: any) => val.includes(item.id));
+
+              const formatted = selectedItems?.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+              }));
+              setTags(formatted || []);
             }}
-            error={!!(formik.touched.expenseCategory && formik.errors.expenseCategory)}
-            helperText={(formik.touched.expenseCategory && formik.errors.expenseCategory) as string}
+            error={!!(formik.touched.categoryId && formik.errors.categoryId)}
+            helperText={(formik.touched.categoryId && formik.errors.categoryId) as string}
             formControlProps={{ fullWidth: true }}
           />
         </ShakingTextField>
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ShakingTextField
-          error={!!(formik.touched.expenseCategoryTags && formik.errors.expenseCategoryTags)}
-        >
+        <ShakingTextField error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}>
           <CustomSelect
             label="Expense Category Tags *"
-            options={[
-              { value: 'Donation', label: 'Donation' },
-              { value: 'Grant', label: 'Grant' },
-              { value: 'Fee', label: 'Fee' },
-              { value: 'Fundraiser', label: 'Fundraiser' },
-              { value: 'Sponsorship', label: 'Sponsorship' },
-              { value: 'Other', label: 'Other' },
-            ]}
-            value={formik.values.expenseCategoryTags || []}
-            onChange={(val) => formik.setFieldValue('expenseCategoryTags', val)}
-            error={!!(formik.touched.expenseCategoryTags && formik.errors.expenseCategoryTags)}
-            helperText={
-              (formik.touched.expenseCategoryTags && formik.errors.expenseCategoryTags) as string
-            }
+            options={tags}
+            labelKey="name"
+            valueKey="id"
+            value={formik.values.categoryTags || []}
+            onChange={(val: any) => formik.setFieldValue('categoryTags', val)}
+            disabled={!formik.values.categoryId}
+            error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}
+            helperText={(formik.touched.categoryTags && formik.errors.categoryTags) as string}
             formControlProps={{ fullWidth: true }}
             multiple
           />
@@ -77,13 +92,13 @@ const ExpenseFormFields = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ShakingTextField error={!!(formik.touched.expenseName && formik.errors.expenseName)}>
+        <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
           <TextField
             fullWidth
             size="small"
             label="Expense Name *"
-            name="expenseName"
-            value={formik.values.expenseName}
+            name="name"
+            value={formik.values.name}
             onChange={(e) => {
               const value = e.target.value
                 .replace(/[^a-zA-Z\s]/g, '')
@@ -92,10 +107,10 @@ const ExpenseFormFields = ({
                   word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
                 )
                 .join(' ');
-              formik.setFieldValue('expenseName', value);
+              formik.setFieldValue('name', value);
             }}
-            error={!!(formik.touched.expenseName && formik.errors.expenseName)}
-            helperText={formik.touched.expenseName && formik.errors.expenseName}
+            error={!!(formik.touched.name && formik.errors.name)}
+            helperText={formik.touched.name && formik.errors.name}
           />
         </ShakingTextField>
       </Grid>
@@ -125,11 +140,11 @@ const ExpenseFormFields = ({
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }}>
-        <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
+        <ShakingTextField error={!!(formik.touched.paymentDate && formik.errors.paymentDate)}>
           <DatePicker
-            label="Date *"
-            value={formik.values.date}
-            onChange={(newValue) => formik.setFieldValue('date', newValue)}
+            label="Payment Date *"
+            value={formik.values.paymentDate}
+            onChange={(newValue) => formik.setFieldValue('paymentDate', newValue)}
             format="DD/MM/YYYY"
             minDate={dayjs(currentYear?.startDate)}
             maxDate={dayjs(currentYear?.endDate)}
@@ -137,8 +152,8 @@ const ExpenseFormFields = ({
               textField: {
                 fullWidth: true,
                 size: 'small',
-                error: !!(formik.touched.date && formik.errors.date),
-                helperText: (formik.touched.date && formik.errors.date) as string,
+                error: !!(formik.touched.paymentDate && formik.errors.paymentDate),
+                helperText: (formik.touched.paymentDate && formik.errors.paymentDate) as string,
               },
             }}
           />
@@ -154,126 +169,15 @@ const ExpenseFormFields = ({
             onChange={(val) => {
               formik.setFieldValue('paymentMethod', val);
               formik.setFieldTouched('paymentMethod', false);
-
-              // Clear payment details when method changes
-              formik.setFieldValue('paymentDetails', {});
-              // Clear touched state for paymentDetails
-              formik.setFieldTouched('paymentDetails', false);
             }}
+            labelKey="label"
+            valueKey="value"
             error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
             helperText={(formik.touched.paymentMethod && formik.errors.paymentMethod) as string}
             formControlProps={{ fullWidth: true }}
           />
         </ShakingTextField>
       </Grid>
-
-      {selectedPaymentMethod &&
-        paymentMethodsConfig[selectedPaymentMethod]?.map((field: IPaymentFieldConfig) => {
-          const fieldPath = `paymentDetails.${field.name}`;
-          const value = getIn(formik.values, fieldPath);
-          const error = getIn(formik.errors, fieldPath);
-          const touched = getIn(formik.touched, fieldPath);
-
-          return (
-            <Grid size={{ xs: 6, md: 6 }} key={`${selectedPaymentMethod}-${field.name}`}>
-              <ShakingTextField error={Boolean(touched && error)}>
-                {field.type === 'date' ? (
-                  <DatePicker
-                    label={`${field.label}`}
-                    format="DD/MM/YYYY"
-                    value={value}
-                    onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                    disablePast
-                    sx={{ width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: Boolean(touched && error),
-                        helperText: touched && typeof error === 'string' ? error : '',
-                      },
-                    }}
-                  />
-                ) : field.type === 'select' ? (
-                  <TextField
-                    select
-                    fullWidth
-                    label={field.label}
-                    name={fieldPath}
-                    value={value || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    size="small"
-                    error={Boolean(touched && error)}
-                    helperText={touched && typeof error === 'string' ? error : ''}
-                  >
-                    {field.options?.map((opt) => (
-                      <MenuItem key={opt} value={opt}>
-                        {opt}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                ) : field.type === 'multiline' ? (
-                  <TextField
-                    fullWidth
-                    multiline
-                    minRows={2}
-                    size="small"
-                    label={field.label}
-                    name={fieldPath}
-                    value={value || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(touched && error)}
-                    helperText={touched && typeof error === 'string' ? error : ''}
-                  />
-                ) : field.type === 'amount' ? (
-                  <NumericFormatCustom
-                    fullWidth
-                    size="small"
-                    label={field.label}
-                    name={fieldPath}
-                    value={value || ''}
-                    onChange={formik.handleChange}
-                    onBlur={() => formik.setFieldTouched(fieldPath, true)}
-                    error={Boolean(touched && error)}
-                    helperText={touched && typeof error === 'string' ? error : ''}
-                  />
-                ) : (
-                  <TextField
-                    fullWidth
-                    type={field.type}
-                    size="small"
-                    label={field.label}
-                    name={fieldPath}
-                    value={value || ''}
-                    onChange={(e) => {
-                      const newValue = e.target.value;
-
-                      if (field.pattern) {
-                        if (newValue === '') {
-                          formik.setFieldValue(fieldPath, newValue);
-                          return;
-                        }
-
-                        const allowedChars = 'a-zA-Z0-9 ';
-                        const typingRegex = new RegExp(`^[${allowedChars}]*$`);
-
-                        if (!typingRegex.test(newValue)) return;
-                      }
-
-                      formik.setFieldValue(fieldPath, newValue);
-                    }}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(touched && error)}
-                    helperText={touched && typeof error === 'string' ? error : ''}
-                    inputProps={field.type === 'number' ? { min: field.min, max: field.max } : {}}
-                  />
-                )}
-              </ShakingTextField>
-            </Grid>
-          );
-        })}
 
       <Grid size={{ xs: 12 }}>
         <ShakingTextField>
@@ -291,6 +195,7 @@ const ExpenseFormFields = ({
     </Grid>
   );
 };
+
 /**
  * Memoization Justification:
  * This component renders a large form.

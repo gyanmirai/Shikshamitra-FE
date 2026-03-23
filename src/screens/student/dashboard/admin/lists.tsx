@@ -1,7 +1,8 @@
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { studentPaths } from 'src/constants/student-menu';
@@ -20,15 +21,14 @@ import {
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
-
 // ----------------------------------------------------------------------
 
 const upcomingExams = [
   {
     id: 1,
-    time: '9:00 - 10:00',
+    time: '9:00AM - 10:00AM',
     date: '2025-06-10T09:00:00', // ISO format for countdown
-    displayDate: 'June 10, 2025',
+    displayDate: '10-07-2026',
     details: 'Mathematics Entrance Exam',
     type: 'Entrance',
     status: 'Scheduled',
@@ -36,9 +36,9 @@ const upcomingExams = [
   },
   {
     id: 2,
-    time: '10:00 - 11:00',
+    time: '10:00AM - 11:00AM',
     date: '2025-06-10T10:00:00',
-    displayDate: 'June 10, 2025',
+    displayDate: '10-07-2026',
     details: 'Science Placement Test',
     type: 'Internal',
     status: 'Scheduled',
@@ -46,9 +46,9 @@ const upcomingExams = [
   },
   {
     id: 3,
-    time: '11:00 - 12:00',
+    time: '11:00AM - 12:00PM',
     date: '2025-06-10T11:00:00',
-    displayDate: 'June 10, 2025',
+    displayDate: '10-07-2026',
     details: 'English Proficiency',
     type: 'Entrance',
     status: 'Completed',
@@ -56,9 +56,9 @@ const upcomingExams = [
   },
   {
     id: 4,
-    time: '11:00 - 12:00',
+    time: '11:00AM - 12:00PM',
     date: '2025-06-10T11:00:00',
-    displayDate: 'June 10, 2025',
+    displayDate: '10-07-2026',
     details: 'English Proficiency',
     type: 'Entrance',
     status: 'Completed',
@@ -67,45 +67,6 @@ const upcomingExams = [
 ];
 
 // Countdown Helper
-const useCountdown = (targetDate: string) => {
-  const countDownDate = new Date(targetDate).getTime();
-  const [countDown, setCountDown] = useState(countDownDate - new Date().getTime());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCountDown(countDownDate - new Date().getTime());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [countDownDate]);
-
-  return getReturnValues(countDown);
-};
-
-const getReturnValues = (countDown: number) => {
-  const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (countDown < 0) return { days: 0, hours: 0, minutes: 0, expired: true };
-  return { days, hours, minutes, expired: false };
-};
-
-const CountdownTimer = ({ date }: { date: string }) => {
-  const { days, hours, minutes, expired } = useCountdown(date);
-
-  if (expired) return <Label color="default">Completed</Label>;
-
-  return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
-      <Iconify icon="mdi:timer-outline" width={16} sx={{ color: 'warning.main' }} />
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main' }}>
-        {days > 0 ? `${days}d ` : ''}
-        {hours}h {minutes}m left
-      </Typography>
-    </Stack>
-  );
-};
 
 // ----------------------------------------------------------------------
 
@@ -114,8 +75,8 @@ const studentEnrollment = [
     id: 1,
     name: 'Aarav Kumar',
     class: 'Class 5',
-    section: 'Section A',
-    enrollmentDate: '06-06-2024',
+    section: 'Division A',
+    enrollmentDate: '06-06-2025',
     status: 'Documents Pending',
     avatarUrl: '/assets/images/avatars/avatar_1.jpg',
   },
@@ -123,8 +84,8 @@ const studentEnrollment = [
     id: 2,
     name: 'Ananya Sharma',
     class: 'Class 3',
-    section: 'Section B',
-    enrollmentDate: '05-06-2024',
+    section: 'Division B',
+    enrollmentDate: '05-06-2025',
     status: 'Enrolled',
     avatarUrl: '/assets/images/avatars/avatar_2.jpg',
   },
@@ -132,8 +93,8 @@ const studentEnrollment = [
     id: 3,
     name: 'Rohan Patel',
     class: 'Class 4',
-    section: 'Section A',
-    enrollmentDate: '04-06-2024',
+    section: 'Division A',
+    enrollmentDate: '04-06-2025',
     status: 'In Progress',
     avatarUrl: '/assets/images/avatars/avatar_3.jpg',
   },
@@ -141,26 +102,47 @@ const studentEnrollment = [
     id: 4,
     name: 'Ishaan Gupta',
     class: 'Class 2',
-    section: 'Section C',
-    enrollmentDate: '03-06-2024',
+    section: 'Division C',
+    enrollmentDate: '03-06-2025',
     status: 'Rejected',
     avatarUrl: '/assets/images/avatars/avatar_4.jpg',
   },
 ];
 
+export enum EntranceExamStatusType {
+  Scheduled = 'Scheduled',
+  Completed = 'Completed',
+}
+
+export const EntranceExamStatusOptions = [
+  {
+    label: 'Scheduled',
+    value: EntranceExamStatusType.Scheduled,
+  },
+  {
+    label: 'Completed',
+    value: EntranceExamStatusType.Completed,
+  },
+];
+
+export const EntranceExamStatusTypeColors = {
+  [EntranceExamStatusType.Scheduled]: 'warning',
+  [EntranceExamStatusType.Completed]: 'success',
+};
+
 const AdminLists = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [openViewAll, setOpenViewAll] = useState(false);
-
   const router = useRouter();
+  const theme = useTheme();
 
   const [loadingId, setLoadingId] = useState<number | null>(null);
 
   const examColumns: any[] = [
     { id: 'details', label: 'Exam Name', align: 'left' },
-    { id: 'displayDate', label: 'Date', align: 'left' },
-    { id: 'time', label: 'Time', align: 'left' },
+    { id: 'displayDate', label: 'Date', align: 'left', type: 'date', filterType: 'date' },
+    { id: 'time', label: 'Time', align: 'left', filterType: 'time' },
     {
       id: 'type',
       label: 'Type',
@@ -171,11 +153,13 @@ const AdminLists = () => {
         </Label>
       ),
     },
-    { id: 'students', label: 'Registered', align: 'center' },
+    { id: 'students', label: 'Registered', align: 'left' },
     {
       id: 'status',
       label: 'Status',
       align: 'left',
+      filterType: 'enum',
+      enumOptions: EntranceExamStatusOptions,
       render: (value: string) => (
         <Label variant="soft" color={value === 'Completed' ? 'success' : 'warning'}>
           {value}
@@ -195,16 +179,20 @@ const AdminLists = () => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Card
           sx={{
-            boxShadow: (theme) => theme.shadows[2],
             borderRadius: 2,
             height: 480,
             display: 'flex',
             flexDirection: 'column',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
           }}
         >
           <CardHeader
             title="Upcoming & Recent Exams"
-            titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
+            titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
             action={
               <Button
                 size="small"
@@ -220,7 +208,7 @@ const AdminLists = () => {
           />
 
           <Scrollbar sx={{ p: 1, flexGrow: 1 }}>
-            <Stack spacing={1}>
+            <Stack spacing={1} sx={{ pb: 1 }}>
               {upcomingExams.map((exam) => (
                 <Box
                   key={exam.id}
@@ -230,7 +218,7 @@ const AdminLists = () => {
                   }}
                   sx={{
                     p: 2,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: 1.5,
                     display: 'flex',
                     alignItems: 'center',
@@ -258,7 +246,8 @@ const AdminLists = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                        bgcolor: (t) => t.vars.palette.background.paper,
+                        opacity: 0.8,
                         backdropFilter: 'blur(2px)',
                         borderRadius: 1.5,
                       }}
@@ -337,11 +326,16 @@ const AdminLists = () => {
       <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
         <Card
           sx={{
-            boxShadow: (theme) => theme.shadows[2],
+            boxShadow: theme.shadows[2],
             borderRadius: 2,
             height: 480,
             display: 'flex',
             flexDirection: 'column',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: theme.shadows[8],
+              transition: 'all 0.3s ease-in-out',
+            },
           }}
         >
           <Stack
@@ -389,15 +383,15 @@ const AdminLists = () => {
             </Stack>
           </Stack>
 
-          <Scrollbar sx={{ p: 1, pt: 0, flexGrow: 1 }}>
-            <Stack spacing={2} sx={{ p: 1 }}>
+          <Scrollbar sx={{ pt: 0, flexGrow: 1 }}>
+            <Stack spacing={1} sx={{ p: 1 }}>
               {filteredEnrollments.map((student) => (
                 <Box
                   key={student.id}
                   sx={{
-                    p: 2,
+                    p: 1.5,
                     borderRadius: 1.5,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    border: `1px solid ${theme.palette.divider}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -485,7 +479,7 @@ const AdminLists = () => {
           data={upcomingExams}
           tableId="upcoming-exams-table"
           isSearch={false}
-          isFilter={false}
+          isFilter
           isPagination={false}
           wrapperProps={{ sx: { height: '60vh' }, padding: 1 }}
         />

@@ -1,8 +1,8 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { memo, useRef, useEffect } from 'react';
 import { Provider, useDispatch } from 'react-redux';
-import { memo, useRef, useMemo, useEffect } from 'react';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import store, { persistor } from './store';
@@ -47,7 +47,7 @@ const LoadUser = memo(() => {
 
   const isInitialize = useRef(false);
 
-  useMemo(() => {
+  useEffect(() => {
     if (sessionData?.profile?.sub && !isInitialize.current) {
       dispatch(loadUser(sessionData) as any);
       isInitialize.current = true;

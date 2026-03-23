@@ -1,13 +1,32 @@
-import React, { useState } from 'react';
+import type { RootState } from 'src/redux/store';
+import type { Division, Standards, Organization } from 'src/types/school';
+
+import { useSelector } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Card, Stack, Button, CardHeader, Typography, IconButton } from '@mui/material';
 
 // ----------------------------------------------------------------------
+
+const renderInfoTooltip = (title: string, tooltipText: string) => (
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Box component="span">{title}</Box>
+    <CustomTooltip title={tooltipText} arrow placement="top">
+      <Iconify
+        icon="eva:info-outline"
+        width={18}
+        sx={{ color: 'text.disabled', cursor: 'pointer' }}
+      />
+    </CustomTooltip>
+  </Stack>
+);
 
 type QuickActionColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error';
 
@@ -148,6 +167,27 @@ export const QuickActions = () => (
 export const UpcomingExams = () => {
   const [openDialog, setOpenDialog] = useState(false);
 
+  // Class & Division state (same pattern as SubjectPassFailChart)
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses);
+    setClasses(allClasses[0]?.id || '');
+  }, [medium]);
+
+  useEffect(() => {
+    const currentClass = allClass.find((org: Standards) => org?.id === classes);
+    setAllDivision(currentClass?.divisions || []);
+    setDivision(currentClass?.divisions?.[0]?.id || '');
+  }, [allClass, classes]);
+
   // Table columns for exams dialog
   const examColumns: any[] = [
     { id: 'details', label: 'Exam Name', align: 'left' },
@@ -179,18 +219,56 @@ export const UpcomingExams = () => {
 
   return (
     <>
-      <Card sx={{ height: '100%', maxHeight: 480, display: 'flex', flexDirection: 'column' }}>
+      <Card
+        sx={{
+          height: '100%',
+          maxHeight: 480,
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: (theme) => theme.shadows[8],
+            transition: 'all 0.3s ease-in-out',
+          },
+        }}
+      >
         <CardHeader
-          title="Upcoming Exams"
+          title={renderInfoTooltip(
+            'Upcoming Exams',
+            'Upcoming exams for the selected class and division.'
+          )}
           action={
-            <Button
-              size="small"
-              color="inherit"
-              onClick={() => setOpenDialog(true)}
-              endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
-            >
-              View All
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, mr: 1 }}>
+                <CustomSelect
+                  options={allClass}
+                  label="Class"
+                  value={classes}
+                  onChange={(val) => setClasses(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px' } }}
+                />
+                <CustomSelect
+                  options={allDivision}
+                  label="Division"
+                  value={division}
+                  onChange={(val) => setDivision(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px' } }}
+                  disabled={!classes}
+                />
+              </Box>
+              <Button
+                size="small"
+                color="inherit"
+                onClick={() => setOpenDialog(true)}
+                endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+              >
+                View All
+              </Button>
+            </Box>
           }
           sx={{ mt: -1, ml: -1 }}
         />

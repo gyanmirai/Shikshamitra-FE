@@ -20,10 +20,7 @@ type Props = {
   sx?: any;
 };
 
-// Simple formatters since I don't want to rely on potentially missing utils for now,
-// though I'll check if they exist later.
 const fNumber = (n: number) => new Intl.NumberFormat().format(n);
-const fPercent = (n: number) => `${n > 0 ? '+' : ''}${n}%`;
 
 export function DashboardKpiCard({
   title,
@@ -45,7 +42,7 @@ export function DashboardKpiCard({
     >
       <Card
         sx={{
-          p: 3,
+          p: 2,
           borderRadius: '16px',
           boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
           position: 'relative',
@@ -84,7 +81,7 @@ export function DashboardKpiCard({
               {typeof total === 'number' ? fNumber(total) : total}
             </Typography>
 
-            {trend && (
+            {/* {trend && (
               <Stack
                 direction="row"
                 alignItems="center"
@@ -105,7 +102,7 @@ export function DashboardKpiCard({
                   {fPercent(trend.value)}
                 </Typography>
               </Stack>
-            )}
+            )}  */}
           </Stack>
         </Stack>
       </Card>

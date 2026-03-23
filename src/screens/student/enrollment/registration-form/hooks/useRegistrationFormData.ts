@@ -24,7 +24,7 @@ export type RegistrationTableRow = RegistrationApiItem & {
 export const useRegistrationFormData = () => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState as any);
 
-  const { data, isLoading } = useQueryAndMutation({
+  const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentRegistrationFormQuery,
     params: {
@@ -54,5 +54,5 @@ export const useRegistrationFormData = () => {
     }));
   }, [data?.data?.items]);
 
-  return { tableData, isLoading };
+  return { tableData, isLoading, isFetching };
 };

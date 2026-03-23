@@ -1,4 +1,3 @@
-import { capitalize } from 'lodash';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -605,9 +604,10 @@ const FamilyMemberSection = ({
           value={formik.values[`${type}Occupation`]}
           label="Occupation"
           onChange={(e) => {
-            const value = capitalize(e.target.value);
-            if (/^[A-Za-z ]*$/.test(value)) {
-              formik.setFieldValue(`${type}Occupation`, value);
+            const val = e.target.value;
+            const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
+            if (/^[A-Za-z ]*$/.test(newName)) {
+              formik.setFieldValue(`${type}Occupation`, newName);
             }
           }}
           error={formik.touched[`${type}Occupation`] && Boolean(formik.errors[`${type}Occupation`])}

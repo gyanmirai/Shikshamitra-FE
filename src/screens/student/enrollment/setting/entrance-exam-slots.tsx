@@ -29,7 +29,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { TimePicker, DatePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   EntranceExamSlotApi,
   useGetEntranceExamSlotQuery,
@@ -163,8 +163,8 @@ const EntranceExamSlots = () => {
         heading="Entrance Exam Slots"
         description="Manage entrance exam time slots by configuring student limits, room numbers, and schedules."
         links={[
-          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
-          { name: 'Settings' },
+          { name: 'Student Enrollment', href: '/student/dashboard/' },
+          { name: 'Settings', href: '/student/dashboard/' },
           { name: 'Entrance Exam Slots' },
         ]}
         action={
@@ -212,6 +212,7 @@ const EntranceExamSlots = () => {
                         academicYearId: currentYear?.id,
                         startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
                         endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+                        ...query,
                       },
                       (draft: any) => {
                         const index = draft?.items?.findIndex(
@@ -235,20 +236,22 @@ const EntranceExamSlots = () => {
           </LoadingButton>
         }
       />
-
-      <Box sx={{ maxWidth: '250px', mb: 1 }}>
-        <DatePicker
-          label="Select Date"
-          format="DD-MM-YYYY"
-          minDate={dayjs(currentYear?.startDate)}
-          maxDate={dayjs(currentYear?.endDate)}
-          value={selectedDate}
-          onChange={(newValue) => setSelectedDate(newValue)}
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
-        />
-      </Box>
+      <Card sx={{ p: 1, mb: 1 }}>
+        <Box sx={{ maxWidth: '250px', mb: 1 }}>
+          <DatePicker
+            label="Select Date"
+            format="DD-MM-YYYY"
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
+            value={selectedDate}
+            onChange={(newValue) => setSelectedDate(newValue)}
+            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          />
+        </Box>
+      </Card>
 
       <CustomizableTable
+        tableTitle="Entrance Exam Slots"
         isLoading={isLoading || isFetching}
         tableId="entrance-exam-slots"
         noDataText={
@@ -342,16 +345,16 @@ export const SlotsForm = ({
   });
   const formik = useFormik({
     initialValues: {
-      slotName: editData?.slotName || null,
+      slotName: editData?.slotName || '',
       startTime: editData?.startTime ? dayjs(editData?.startTime, 'hh:mm A') : null,
       endTime: editData?.endTime ? dayjs(editData?.endTime, 'hh:mm A') : null,
-      duration: editData?.duration || null,
-      studentLimit: editData?.studentLimit || null,
-      roomNo: editData?.roomNo || null,
+      duration: editData?.duration || '',
+      studentLimit: editData?.studentLimit || '',
+      roomNo: editData?.roomNo || '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
-      slotName: Yup.string().required('Slot Name is required'),
+      slotName: Yup.string().trim('Slot Name is required').required('Slot Name is required'),
       startTime: Yup.date()
         .required('Start Time is required')
         .test('startTime', 'Start time must be before end time', (value, context) => {
@@ -434,7 +437,12 @@ export const SlotsForm = ({
                 name="slotName"
                 label="Slot Name *"
                 value={formik.values.slotName}
-                onChange={(e) => formik.setFieldValue('slotName', e.target.value)}
+                onChange={(e) => {
+                  let onlyText = e.target.value;
+                  onlyText = onlyText.replace(/^\s+/g, ''); // Remove leading spaces
+                  const capitalize = onlyText.charAt(0).toUpperCase() + onlyText.slice(1);
+                  formik.setFieldValue('slotName', capitalize);
+                }}
                 onBlur={formik.handleBlur}
                 size="small"
                 fullWidth
@@ -444,6 +452,9 @@ export const SlotsForm = ({
                     ? String(formik.errors.slotName)
                     : ''
                 }
+                inputProps={{
+                  maxLength: 40,
+                }}
               />
             </ShakingTextField>
 
@@ -561,6 +572,9 @@ export const SlotsForm = ({
                   formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
                 }
                 error={formik.touched.roomNo && !!formik.errors.roomNo}
+                inputProps={{
+                  maxLength: 20,
+                }}
               />
             </ShakingTextField>
           </Stack>

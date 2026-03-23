@@ -18,6 +18,7 @@ import {
   useUploadDocumentsMutation,
   useGetStudentDocumentsQuery,
   useGetStudentDocumentByIdQuery,
+  useLazyGetStudentDocumentByIdQuery,
 } from 'src/redux/student/registration/registration-api';
 
 import { DocumentForm } from '../setting/document-type';
@@ -31,6 +32,7 @@ export const RenderDocuments = (props: any) => {
   const [docId, setDocId] = useState<null | string>(null);
   // State to store the selected document name for dialog title
   const [selectedDocName, setSelectedDocName] = useState<string>('');
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
 
   // Dialog state for adding documents
   const addDocumentDialog = useBoolean();
@@ -40,11 +42,14 @@ export const RenderDocuments = (props: any) => {
     currentQueryAndMutation: useUploadDocumentsMutation,
   });
 
+  const [fetchDocument] = useLazyGetStudentDocumentByIdQuery();
+
   // Query hook to fetch student's uploaded documents using student ID
   const { data: studentsDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: { studentId: id },
+    options: { skip: !id },
   });
 
   // Get the isChanges state from the Redux store
@@ -65,6 +70,7 @@ export const RenderDocuments = (props: any) => {
     <Box sx={{ height: '100%', minHeight: 0 }}>
       <CustomizableTable
         isLoading={isEmployeeDocLoading}
+        tableTitle="Documents"
         tableId="documents"
         columns={[
           { id: 'documentTypeName', label: 'Name' },
@@ -100,6 +106,10 @@ export const RenderDocuments = (props: any) => {
             align: 'left',
             isSort: false,
             render(value, row) {
+              const isUploading = uploadingDocId === row.documentTypeId;
+              if (isUploading) {
+                return <Skeleton variant="rounded" width={80} height={24} />;
+              }
               return (
                 <UploadButton
                   disableRipple
@@ -117,6 +127,7 @@ export const RenderDocuments = (props: any) => {
                   onChange={async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
+                    setUploadingDocId(row.documentTypeId);
                     // Convert file to base64
                     const reader = new FileReader();
                     reader.onloadend = async () => {
@@ -137,10 +148,21 @@ export const RenderDocuments = (props: any) => {
                         shikshaMitraToast.success({
                           message: `${row.documentTypeName} uploaded successfully`,
                         });
-                      } catch (error) {
-                        shikshaMitraToast.error({
-                          message: `Failed to upload ${row.documentTypeName}`,
-                        });
+                      } catch (error: any) {
+                        const errorData = error?.data?.error;
+                        if (errorData?.code === 'Document:InvalidFormat') {
+                          shikshaMitraToast.error({
+                            message: `Invalid format. Accepted formats are: ${errorData?.data?.AcceptedFormats}`,
+                          });
+                        } else {
+                          shikshaMitraToast.error({
+                            message:
+                              errorData?.message || `Failed to upload ${row.documentTypeName}`,
+                          });
+                        }
+                      } finally {
+                        setUploadingDocId(null);
+                        e.target.value = '';
                       }
                     };
                     reader.readAsDataURL(file);
@@ -199,9 +221,22 @@ export const RenderDocuments = (props: any) => {
                   }}
                   disabled={!row.isUploaded}
                   onClick={async () => {
-                    // TODO: Implement download functionality
-                    // Fetch document content using getStudentDocumentById
-                    // Create download link with base64 content
+                    try {
+                      // Fetch the actual document object instead of reading metadata list
+                      const docRes = await fetchDocument({
+                        studentId: id,
+                        documentId: row.uploadedDocumentId,
+                      }).unwrap();
+
+                      const link = document.createElement('a');
+                      link.href = convertBase64Format(docRes.content);
+                      link.download = docRes.filename || `${row.documentTypeName}.pdf`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    } catch (err) {
+                      shikshaMitraToast.error({ message: 'Failed to download document' });
+                    }
                   }}
                 >
                   <Iconify icon="material-symbols:download" width={20} height={20} />
@@ -229,8 +264,9 @@ export const RenderDocuments = (props: any) => {
         open={viewDialog.value}
         handleClose={viewDialog.onFalse}
         maxWidth="lg"
+        fullWidth={false}
       >
-        <Box p={2}>
+        <Box p={2} sx={{ display: 'flex', justifyContent: 'center' }}>
           <ViewDocuments id={id} docId={docId} />
         </Box>
       </CustomDialog>
@@ -263,25 +299,39 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentByIdQuery,
     params: { studentId: id, documentId: docId },
+    options: { skip: !id || !docId },
   });
 
   return (
-    <Box height="60vh" width="100%" sx={{ '& iframe img': { height: '100%' } }}>
+    <Box
+      sx={{
+        height: '75vh',
+        minWidth: { xs: '250px', sm: '350px' },
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       {isLoading ? (
-        <Skeleton variant="rectangular" height={300} />
+        <Skeleton variant="rectangular" height="100%" width="100%" />
       ) : documents?.contentType === 'application/pdf' ? (
         <Box
           component="iframe"
           src={convertBase64Format(documents.content)}
-          sx={{ width: '100%', height: '100%', border: 'none' }}
-          title="Employee Document"
+          sx={{
+            width: '100%',
+            minWidth: { sm: '600px', md: '800px' },
+            height: '100%',
+            border: 'none',
+          }}
+          title="Student Document"
         />
       ) : (
         <Box
           component="img"
           src={convertBase64Format(documents.content)}
-          sx={{ width: '100%', height: '100%', border: 'none', objectFit: 'contain' }}
-          title="Employee Document"
+          sx={{ height: '100%', maxWidth: '100%', border: 'none', objectFit: 'contain' }}
+          title="Student Document"
         />
       )}
     </Box>

@@ -6,10 +6,21 @@ import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetExpenseListQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
-import { Box, Grid, Card, Stack, Button, Divider, Typography, DialogActions } from '@mui/material';
+import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import { useGetExpenseByIdQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
+import {
+  Box,
+  Grid,
+  Card,
+  Stack,
+  Button,
+  Divider,
+  Skeleton,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
-import type { IExpenseFormValues } from './type';
+import type { IExpenseRecord } from './type';
 
 const ViewExpenseData = ({
   viewExpenseDialog,
@@ -18,14 +29,18 @@ const ViewExpenseData = ({
   onClose,
 }: {
   viewExpenseDialog: UseBooleanReturn;
-  expenseData: IExpenseFormValues | null;
+  expenseData: IExpenseRecord | null;
   expenseDetailedData: any;
   onClose: () => void;
 }) => {
-  const { data: expenseListData } = useQueryAndMutation({
+  const { data: expenseByIdData, isLoading: expenseByIdDataLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetExpenseListQuery,
+    currentQueryAndMutation: useGetExpenseByIdQuery,
+    params: expenseData?.id || '',
   });
+
+  const expenseInfo = expenseByIdData?.expenseInformation;
+  const expenseList = expenseByIdData?.expenseList || [];
 
   return (
     <Box>
@@ -33,7 +48,7 @@ const ViewExpenseData = ({
         {/* Expense Summary Section */}
         <Card
           sx={{
-            p: 3,
+            p: 1,
             mb: 4,
             backgroundColor: (theme) => theme.palette.background.neutral,
             borderRadius: 2,
@@ -64,7 +79,11 @@ const ViewExpenseData = ({
                   EXPENSE CATEGORY
                 </Typography>
                 <Typography variant="subtitle1" fontWeight="bold">
-                  {expenseData?.expenseCategory || '—'}
+                  {expenseByIdDataLoading ? (
+                    <Skeleton width={150} />
+                  ) : (
+                    expenseInfo?.expenseCategoryName || expenseData?.categoryName || '—'
+                  )}
                 </Typography>
               </Stack>
             </Grid>
@@ -80,7 +99,15 @@ const ViewExpenseData = ({
                   TAGS
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.primary' }}>
-                  {expenseData?.expenseCategoryTags || '—'}
+                  {expenseByIdDataLoading ? (
+                    <Skeleton width={120} />
+                  ) : Array.isArray(expenseInfo?.categoryTags) ? (
+                    expenseInfo?.categoryTags.join(', ')
+                  ) : Array.isArray(expenseData?.categoryTags) ? (
+                    expenseData?.categoryTags.join(', ')
+                  ) : (
+                    '—'
+                  )}
                 </Typography>
               </Stack>
             </Grid>
@@ -96,7 +123,11 @@ const ViewExpenseData = ({
                   TOTAL AMOUNT SPENT
                 </Typography>
                 <Typography variant="h5" color="error.main" fontWeight="800">
-                  ₹ {expenseDetailedData?.totalExpenseAmount?.toLocaleString() || '0'}
+                  {expenseByIdDataLoading ? (
+                    <Skeleton width={100} />
+                  ) : (
+                    `₹ ${expenseInfo?.totalAmountSpent?.toLocaleString() || expenseDetailedData?.totalExpenseAmount?.toLocaleString() || '0'}`
+                  )}
                 </Typography>
               </Stack>
             </Grid>
@@ -118,17 +149,17 @@ const ViewExpenseData = ({
         <Card sx={{ boxShadow: 'var(--shadows-2)', borderRadius: 2 }}>
           <CustomizableTable
             tableId="expense-list-table"
-            isLoading={false}
+            isLoading={expenseByIdDataLoading}
             noDataText="No Expense data found"
             columns={[
               {
-                id: 'expenseName',
+                id: 'name',
                 label: 'Expense Name',
                 align: 'left',
                 sticky: true,
               },
               {
-                id: 'spentDate',
+                id: 'paymentDate',
                 label: 'Date',
                 align: 'left',
               },
@@ -150,7 +181,9 @@ const ViewExpenseData = ({
                       border: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    {row.paymentMethod}
+                    {PaymentMethodLabels[
+                      row.paymentMethod as unknown as keyof typeof PaymentMethodLabels
+                    ] || row.paymentMethod}
                   </Box>
                 ),
               },
@@ -165,7 +198,7 @@ const ViewExpenseData = ({
                 ),
               },
             ]}
-            data={expenseListData || []}
+            data={expenseList}
           />
         </Card>
       </DialogScrollContent>

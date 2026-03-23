@@ -9,7 +9,12 @@ import { usePaginatedSearch } from './use-paginated-search';
 
 import type { PaginatedSearchSelectProps } from './types';
 
-export function PaginatedSearchSelect<T>({
+export function PaginatedSearchSelect<
+  T,
+  Multiple extends boolean | undefined = undefined,
+  DisableClearable extends boolean | undefined = undefined,
+  FreeSolo extends boolean | undefined = undefined,
+>({
   label,
   fetchOptions,
   minChars = 2,
@@ -17,13 +22,22 @@ export function PaginatedSearchSelect<T>({
   placeholder,
   helperText,
   error,
+  isLoading,
   ...props
-}: PaginatedSearchSelectProps<T>) {
-  const { options, loading, inputValue, handleInputChange, loadMore } = usePaginatedSearch<T>({
+}: PaginatedSearchSelectProps<T, Multiple, DisableClearable, FreeSolo>) {
+  const {
+    options,
+    loading: internalLoading,
+    inputValue,
+    handleInputChange,
+    loadMore,
+  } = usePaginatedSearch<T>({
     fetchOptions,
     minChars,
     debounceMs,
   });
+
+  const loading = internalLoading || isLoading;
   const [open, setOpen] = React.useState(false);
 
   const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
@@ -55,7 +69,9 @@ export function PaginatedSearchSelect<T>({
       }}
       //   Ensure we don't show "No options" when we are just waiting for the user to type
       noOptionsText={
-        inputValue.length < minChars ? (
+        props.noOptionsText !== undefined ? (
+          props.noOptionsText
+        ) : inputValue.length < minChars ? (
           <Box p={2} textAlign="center">
             <Typography variant="body2" color="text.secondary">
               Type at least {minChars} {minChars === 1 ? 'character' : 'characters'} to search...

@@ -434,7 +434,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           </Paper>
 
           {/* Days Grid */}
-          <Box sx={{ display: 'flex', flex: 1, width: '100%' }}>
+          <Box sx={{ display: 'flex', flex: 1, width: '100%', gap: 0.5 }}>
             {(Object.keys(slots) as DayOfWeek[]).map((day) => (
               <DayColumn
                 key={day}
@@ -444,6 +444,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 onRemoveSubject={handleRemoveSubject}
                 onAssignTeacher={handleAssignTeacher}
                 onAssignRoom={handleAssignRoom}
+                readOnly={readOnly}
               />
             ))}
           </Box>

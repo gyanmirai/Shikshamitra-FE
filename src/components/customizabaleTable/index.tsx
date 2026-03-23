@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -33,6 +34,7 @@ import type { IColumnFilterAnchor, ICustomizableTableProps } from './types';
 const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
   data,
+  tableTitle = 'Table View',
   serverSide = false,
   serverSidePagination = false,
   serverSideSearch = false,
@@ -158,7 +160,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const handleRemoveFilter = useCallback(
     (index: number) => {
-      handleChangeParams({ filters: filters.filter((_, i) => i !== index) });
+      handleChangeParams({ filters: filters.filter((filterItem, i) => i !== index) });
     },
     [filters, handleChangeParams]
   );
@@ -191,7 +193,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     () => (
       <Box
         sx={{
-          pt: 1,
+          // pt: 1,
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
@@ -225,6 +227,109 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             onExport={(format) => {
               if (format === 'print') {
                 window.print();
+                return;
+              }
+
+              // Exclude action columns and hidden columns
+              const exportCols = memoizedColumns.filter(
+                (col) => columnVisibility[col.id] && col.id !== 'action' && col.id !== 'actions'
+              );
+
+              const title = typeof tableTitle === 'string' ? tableTitle : 'Table_Export';
+
+              // Helper: format a raw cell value for display
+              const formatCellValue = (val: any): string => {
+                if (val === null || val === undefined) return '-';
+                const str = String(val);
+                // Detect ISO datetime strings and format them nicely
+                if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(str)) {
+                  try {
+                    const date = new Date(str);
+                    return date.toLocaleString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true,
+                    });
+                  } catch {
+                    return str;
+                  }
+                }
+                // Detect plain date strings (YYYY-MM-DD)
+                if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                  try {
+                    const date = new Date(`${str}T00:00:00`);
+                    return date.toLocaleDateString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    });
+                  } catch {
+                    return str;
+                  }
+                }
+                return str || '-';
+              };
+
+              if (format === 'excel') {
+                import('xlsx').then((XLSX) => {
+                  const dataObjects = sortedData.map((row) => {
+                    const obj: Record<string, any> = {};
+                    exportCols.forEach((col) => {
+                      const rawVal = _.get(row, col.id);
+                      const label = typeof col.label === 'string' ? col.label : col.id;
+                      obj[label] = formatCellValue(rawVal);
+                    });
+                    return obj;
+                  });
+                  const worksheet = XLSX.utils.json_to_sheet(dataObjects);
+                  const workbook = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+                  XLSX.writeFile(workbook, `${title}.xlsx`);
+                });
+              } else if (format === 'pdf') {
+                Promise.all([import('jspdf'), import('jspdf-autotable')]).then(
+                  ([jsPDFModule, autoTableModule]) => {
+                    const JsPDF = jsPDFModule.default;
+                    const autoTable = autoTableModule.default;
+                    // Use landscape for wide tables, giving each column more space
+                    const doc = new JsPDF({ orientation: 'landscape' });
+
+                    // Build flat header string array
+                    const pdfHead = exportCols.map((col) =>
+                      typeof col.label === 'string' ? col.label : col.id
+                    );
+
+                    // Build 2D body array — values are resolved directly, no key mapping
+                    const pdfBody = sortedData.map((row) =>
+                      exportCols.map((col) => formatCellValue(_.get(row, col.id)))
+                    );
+
+                    autoTable(
+                      doc as any,
+                      {
+                        head: [pdfHead],
+                        body: pdfBody,
+                        styles: {
+                          fontSize: 8,
+                          cellPadding: 2,
+                          overflow: 'linebreak',
+                        },
+                        headStyles: {
+                          fillColor: [22, 119, 255],
+                          textColor: 255,
+                          fontStyle: 'bold',
+                          halign: 'left',
+                        },
+                        tableWidth: 'auto',
+                        margin: { top: 10, left: 10, right: 10 },
+                      } as any
+                    );
+                    doc.save(`${title}.pdf`);
+                  }
+                );
               }
             }}
             searchFieldProps={searchFieldProps}
@@ -357,10 +462,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       </Box>
     ),
     [
-      theme.palette.divider,
-      theme.vars.palette.divider,
       boxSx,
       boxOther,
+      theme.palette.divider,
+      theme.vars.palette.divider,
       isSearch,
       isFilter,
       searchTerm,
@@ -401,6 +506,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       handlePageChange,
       handleRowsPerPageChange,
       handleChangeParams,
+      tableTitle,
+      sortedData,
     ]
   );
 
@@ -418,7 +525,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       <CustomDialog
         open={fullScreenDialog.value}
         fullScreen
-        title="Table View"
+        title={tableTitle}
         handleClose={handleCloseFullScreen}
       >
         {tableContent}

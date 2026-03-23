@@ -12,9 +12,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
-import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -65,7 +65,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllStudentGroupQuery,
-    params: division,
+    params: { division },
     options: {
       skip: !division,
     },
@@ -178,7 +178,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
 
   // Toggle manual roll number generation mode
   const handleManualToggle = () => {
-    setIsManual(true);
+    setIsManual((prev) => !prev);
   };
 
   // Calculate changes summary for visual feedback before saving
@@ -260,8 +260,8 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
       sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
     >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
-          <Box display="flex" gap={2} ml={1}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={1}>
+          <Box display="flex" gap={2}>
             <CustomSelect
               options={[
                 { id: 'mix', name: 'Mix' },
@@ -302,7 +302,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
                 />
               )}
               <Button
-                startIcon={<Grading />}
+                startIcon={<ChecklistOutlined />}
                 variant="outlined"
                 onClick={handleManualToggle}
                 size="small"
@@ -339,6 +339,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
 
         {arrangeBy && (
           <CustomizableTable
+            tableTitle="Roll No. Generation"
             onSendNotification={handlerSendNotification}
             isLoading={isStudentDataLoading || isStudentDataFetching}
             showCheckbox={selectedStudents.length !== 0}
@@ -346,7 +347,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
             tableId="roll-no-generation-table"
             columns={[
               { id: 'grNo', label: 'GR No.', filterType: 'number' },
-              { id: 'name', label: 'Name' },
+              { id: 'studentName', label: 'Name' },
               {
                 id: 'rollNo',
                 label: 'Roll No.',

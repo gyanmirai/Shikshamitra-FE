@@ -18,6 +18,7 @@ interface DayColumnProps {
   onRemoveSubject: (slotId: string, subject: Subject) => void;
   onAssignTeacher: (slotId: string, subject: Subject) => void;
   onAssignRoom: (slotId: string, subject: Subject) => void;
+  readOnly?: boolean;
 }
 
 const DayColumn: React.FC<DayColumnProps> = ({
@@ -27,6 +28,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
   onRemoveSubject,
   onAssignTeacher,
   onAssignRoom,
+  readOnly = false,
 }) => {
   const theme = useTheme();
   const dayHeight = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60 * PIXELS_PER_MINUTE;
@@ -82,7 +84,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
           height: dayHeight,
           // backgroundImage: `linear-gradient(to bottom, ${theme.palette.grey[400]} 1px, transparent 1px)`,
           backgroundSize: '100% 50px', // 30min slots = 50px height
-          backgroundColor: theme.palette.grey[200],
+          backgroundColor: theme.vars.palette.background.neutral,
         }}
       >
         {slots.map((slot) => (
@@ -96,6 +98,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
             onRemoveSubject={onRemoveSubject}
             onAssignTeacher={onAssignTeacher}
             onAssignRoom={onAssignRoom}
+            readOnly={readOnly}
           />
         ))}
       </Box>
