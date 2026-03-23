@@ -8,7 +8,7 @@ on:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
-  WEBAPP_NAME: 'dev-gyanmirai-fe-g2gxevgda4h0h0hm'
+  WEBAPP_NAME: 'dev-gyanmirai-fe'
 
 jobs:
   build:
