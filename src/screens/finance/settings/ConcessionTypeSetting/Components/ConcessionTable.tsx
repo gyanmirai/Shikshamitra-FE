@@ -7,8 +7,6 @@ import React, { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import { ConcessionBasedOn } from '../type';
-
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
 const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
@@ -24,14 +22,6 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
     () =>
       (data || []).map((row: any) => ({
         ...row,
-        amountPercentageValue:
-          row.basedOn === ConcessionBasedOn.Fixed
-            ? `₹ ${row.amount?.toLocaleString()}`
-            : `${row.amount}%`,
-        applicableFeeHeadsValue: (row.applicableFeeHeads || [])
-          .map((item: any) => item.name)
-          .join(', '),
-        documentRequiredValue: row.isDocumentRequired ? 'Yes' : 'No',
       })),
     [data]
   );
@@ -44,10 +34,15 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         align: 'left',
       },
       {
-        id: 'isDocumentRequired',
-        label: 'Documents Required',
+        id: 'description',
+        label: 'Description',
         align: 'left',
-        render: (value, row) => (row.isDocumentRequired ? 'Yes' : 'No'),
+      },
+      {
+        id: 'documents',
+        label: 'Documents',
+        align: 'left',
+        render: (value) => (value || []).map((doc: any) => doc.documentName).join(', '),
       },
       {
         id: 'actions',

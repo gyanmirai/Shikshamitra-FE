@@ -5,13 +5,13 @@ import type { LabelColor } from 'src/components/label';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
+import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
+import { Box, Card, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Card, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
@@ -63,9 +63,23 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     </MenuList>
   );
 
+  const tableData = useMemo(
+    () =>
+      ((feeCollectionData?.feeCollectionData || []) as any[]).map((item) => ({
+        ...item,
+        nameValue: `${item.name || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
+        classDivValue: `${item.className || '-'}-${item.division}`,
+        paybleFeesValue: `₹ ${formatNumber(item.paybleFees ?? 0)}`,
+        totalFeesValue: `₹ ${formatNumber(item.totalFees ?? 0)}`,
+        pendingFeesValue: `₹ ${formatNumber(item.pendingFees ?? 0)}`,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [feeCollectionData?.feeCollectionData]
+  );
+
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
         <Box sx={{ display: 'flex', gap: 2, pb: 1 }}>
           <CustomSelect
             label="Board"
@@ -98,29 +112,19 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           // isLoading={feeCollectionLoading}
           columns={[
             {
-              id: 'name',
+              id: 'nameValue',
               label: 'Name',
               align: 'left',
               isFilter: true,
               minWidth: '300px',
               sticky: true,
-              render: (value, row) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'} ({row.grNumber})
-                </Typography>
-              ),
             },
             {
-              id: 'className',
+              id: 'classDivValue',
               label: 'Class/Div',
               isFilter: true,
               align: 'left',
               minWidth: '70px',
-              render: (value, row) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'}-{row.division}
-                </Typography>
-              ),
             },
             {
               id: 'rollNumber',
@@ -129,31 +133,28 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: true,
             },
             {
-              id: 'paybleFees',
+              id: 'paybleFeesValue',
               label: 'Payble Fees',
               align: 'left',
               isFilter: true,
               filterType: 'number',
               minWidth: '120px',
-              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
-              id: 'totalFees',
+              id: 'totalFeesValue',
               label: 'Total Fees',
               align: 'left',
               isFilter: true,
               filterType: 'number',
               minWidth: '120px',
-              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
-              id: 'pendingFees',
+              id: 'pendingFeesValue',
               label: 'Pending Fees',
               filterType: 'number',
               align: 'left',
               isFilter: true,
               minWidth: '130px',
-              render: (value) => `₹ ${formatNumber(value)}`,
             },
             {
               id: 'status',
@@ -197,7 +198,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               },
             },
           ]}
-          data={feeCollectionData?.feeCollectionData || []}
+          data={tableData}
         />
       ) : (
         <EmptyContent title="Please select board and medium to view fee collection data." />

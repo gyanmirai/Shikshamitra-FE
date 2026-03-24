@@ -23,7 +23,6 @@ export const financePaths = {
     feeCategory: '/finance/settings/fee-category',
     feeHead: '/finance/settings/fee-head',
     receiptBook: '/finance/settings/receipt-book',
-    paymentTerms: '/finance/settings/payment-term',
     feeStructure: '/finance/settings/create-fee-structure',
     concessionType: '/finance/settings/concession-type',
     chargeCategory: '/finance/settings/chargeCategory',
@@ -241,15 +240,6 @@ const financeModule = {
               shortcutKeyName: 'Alt+F+S+3',
               permissionName: financePermissions.settings.receiptBook,
               icon: menuIconView('mdi:book-open-outline'),
-            },
-            {
-              title: 'Payment Terms',
-              path: financePaths.settings.paymentTerms,
-              _action: 'payment-terms-setting',
-              shortcutKey: 'Alt+F+S+4',
-              shortcutKeyName: 'Alt+F+S+4',
-              permissionName: financePermissions.settings.paymentTerms,
-              icon: menuIconView('mdi:handshake-outline'),
             },
             {
               title: 'Fee Structure',

@@ -132,14 +132,9 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                 size="small"
                 value={formik.values.name}
                 onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '')
-                    .split(' ')
-                    .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                    )
-                    .join(' ');
-                  formik.setFieldValue('name', value);
+                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
+                  formik.setFieldValue('name', capitalized);
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}

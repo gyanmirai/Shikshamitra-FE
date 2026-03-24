@@ -15,7 +15,16 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Card,
+  Grid,
+  Stack,
+  Button,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   useAddReceiptBookMutation,
   useUpdateReceiptBookMutation,
@@ -155,12 +164,9 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                 Receipt Number Preview
               </Typography>
 
-              <ReceiptRangePreview
-                values={formik.values}
-                boards={boards}
-                mediums={mediums}
-                allOrganization={allOrganization}
-              />
+              <Box sx={{ mt: 1.5 }}>
+                {getReceiptPreview(formik.values, boards, mediums, allOrganization)}
+              </Box>
             </Card>
           </Grid>
 
@@ -445,19 +451,12 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
 
 export default FinanceSettingReceiptbookDialog;
 
-interface IReceiptRangePreviewProps {
-  values: FormikValues;
-  boards: Board[];
-  mediums: Medium[];
-  allOrganization: Organization[];
-}
-
-const ReceiptRangePreview: React.FC<IReceiptRangePreviewProps> = ({
-  values,
-  boards,
-  mediums,
-  allOrganization,
-}) => {
+const getReceiptPreview = (
+  values: FormikValues,
+  boards: Board[],
+  mediums: Medium[],
+  allOrganization: Organization[]
+): React.ReactNode => {
   const boardName = boards?.find((b: any) => b.id === values.boardId)?.name || '----';
   const mediumName = mediums?.find((m) => m.id === values.mediumId)?.name || '----';
   const orgName = allOrganization?.find((o) => o.id === values.mediumStageId)?.name || '----';
@@ -471,66 +470,32 @@ const ReceiptRangePreview: React.FC<IReceiptRangePreviewProps> = ({
   const endLabel = `${boardName}-${mediumName}-${orgName}-${prefix}${endNum}${suffix}`;
   const hasRange = Boolean(endNum);
 
+  const previewBoxStyle = {
+    px: 2,
+    py: 1.5,
+    border: '1px solid',
+    borderColor: 'warning.dark',
+    borderRadius: 1,
+    bgcolor: 'grey.800',
+    color: 'warning.main',
+    textAlign: 'center',
+    fontWeight: 500,
+    fontFamily: 'monospace',
+    wordBreak: 'break-all',
+    width: '100%',
+  };
+
+  if (!endNum) {
+    return <Box sx={previewBoxStyle}>{startLabel}</Box>;
+  }
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 1.5,
-        flexWrap: 'wrap',
-      }}
-    >
-      {/* Start box */}
-      <Box
-        sx={{
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
-          px: 1,
-          py: 1,
-          bgcolor: 'background.neutral',
-          minWidth: 120,
-          textAlign: 'center',
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 500, wordBreak: 'break-all', color: 'text.primary' }}
-        >
-          {startLabel}
-        </Typography>
-      </Box>
-
-      {/* Arrow */}
-      {hasRange && (
-        <>
-          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            ⬇️
-          </Typography>
-
-          {/* End box */}
-          <Box
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1,
-              px: 1,
-              py: 1,
-              bgcolor: 'background.neutral',
-              minWidth: 120,
-              textAlign: 'center',
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 500, wordBreak: 'break-all', color: 'text.primary' }}
-            >
-              {endLabel}
-            </Typography>
-          </Box>
-        </>
-      )}
-    </Box>
+    <Stack direction="column" alignItems="center" spacing={1}>
+      <Box sx={previewBoxStyle}>{startLabel}</Box>
+      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+        ↓
+      </Typography>
+      <Box sx={previewBoxStyle}>{endLabel}</Box>
+    </Stack>
   );
 };

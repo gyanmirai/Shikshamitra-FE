@@ -79,19 +79,9 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                 size="small"
                 value={formik.values.name}
                 onChange={(e) => {
-                  let value = e.target.value
-                    .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
-                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                    .replace(/^\d+/, '') // Remove leading numbers
-                    .trimStart(); // Remove leading spaces
-                  value = value
-                    .split(' ')
-                    .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                    )
-                    .join(' ');
-
-                  formik.setFieldValue('name', value);
+                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
+                  formik.setFieldValue('name', capitalized);
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}

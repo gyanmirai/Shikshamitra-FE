@@ -25,7 +25,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
                 key={index}
                 variant="rectangular"
                 sx={{
-                  width: 80,
+                  width: 95,
                   height: 36,
                   borderRadius: 1,
                 }}
@@ -42,7 +42,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
                     variant={selectedClass === classId ? 'contained' : 'outlined'}
                     color={selectedClass === classId ? 'primary' : undefined}
                     sx={{
-                      minWidth: 80,
+                      minWidth: 95,
                       textTransform: 'none',
                       fontWeight: 500,
                     }}
