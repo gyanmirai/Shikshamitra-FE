@@ -33,7 +33,7 @@ export function CustomPopover({
   useMemo(() => {
     setTimeout(() => {
       setAnchor(anchorEl);
-    }, 100);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, anchorEl]);
 

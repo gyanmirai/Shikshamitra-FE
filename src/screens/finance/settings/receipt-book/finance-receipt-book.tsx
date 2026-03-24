@@ -128,7 +128,28 @@ const FinanceReceiptBookSetting = () => {
       { id: 'mediumStageName', label: 'Organization', align: 'left' },
       { id: 'startingNumber', label: 'Starting No.', align: 'left', minWidth: 130 },
       { id: 'endingNumber', label: 'Ending No.', align: 'left', minWidth: 130 },
-      { id: 'description', label: 'Description', align: 'left' },
+      {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+        render: (value, row) => (
+          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+            >
+              {value}
+            </Typography>
+          </CustomTooltip>
+        ),
+      },
       {
         id: 'isActive',
         label: 'Active',
@@ -140,7 +161,7 @@ const FinanceReceiptBookSetting = () => {
             value === true ? theme.vars.palette.success.main : theme.vars.palette.text.secondary;
           return (
             <CustomTooltip
-              title={value === true ? 'Active' : 'Inactive'}
+              title={value === true ? 'Active' : 'Deactive'}
               arrow
               placement="left"
               PopperProps={{
@@ -213,7 +234,7 @@ const FinanceReceiptBookSetting = () => {
         heading="Receipt Book"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Settings', href: '/finance/settings/receipt-book/' },
+          { name: 'Settings' },
           { name: 'Receipt Book' },
         ]}
         action={
@@ -312,17 +333,17 @@ const FinanceReceiptBookSetting = () => {
           }, 200); // Adjust delay (in ms) as needed
           activeDialog.onFalse();
         }}
-        title={selectedEntry?.isActive === true ? 'Inactive' : 'Active'}
+        title={selectedEntry?.isActive === true ? 'Deactive' : 'Active'}
         content={
           selectedEntry && Array.isArray(selectedEntry.name) ? (
             <>
               Are you sure you want move <strong>{selectedEntry.name}</strong> receipt book to{' '}
-              {selectedEntry.isActive === true ? 'Inactive' : 'Active'} ?
+              <strong>{selectedEntry.isActive === true ? 'Deactive' : 'Active'}</strong> ?
             </>
           ) : (
             <>
               Are you sure you want move <strong>{selectedEntry?.name}</strong> receipt book to{' '}
-              {selectedEntry?.isActive === true ? 'Inactive' : 'Active'} ?
+              <strong>{selectedEntry?.isActive === true ? 'Deactive' : 'Active'}</strong> ?
             </>
           )
         }
@@ -333,9 +354,7 @@ const FinanceReceiptBookSetting = () => {
             loading={isPatchLoading}
             startIcon={
               <Iconify
-                icon={
-                  selectedEntry?.isActive === true ? GlobalIcons.draftIcon : GlobalIcons.publish
-                }
+                icon={selectedEntry?.isActive === true ? GlobalIcons.cancel : GlobalIcons.tick}
               />
             }
             onClick={async () => {
@@ -346,7 +365,7 @@ const FinanceReceiptBookSetting = () => {
                   body: { isActive: newStatus },
                 }).unwrap();
 
-                const status = newStatus ? 'Active' : 'Inactive';
+                const status = newStatus ? 'Active' : 'Deactive';
                 shikshaMitraToast.success({
                   message: (
                     <>
@@ -367,7 +386,7 @@ const FinanceReceiptBookSetting = () => {
               }
             }}
           >
-            {selectedEntry?.isActive === true ? 'Inactive' : 'Active'}
+            {selectedEntry?.isActive === true ? 'Deactive' : 'Active'}
           </LoadingButton>
         }
       />

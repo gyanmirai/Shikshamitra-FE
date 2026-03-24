@@ -100,8 +100,8 @@ const FeeHeadCreation = () => {
         description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click '+ Fee Head' to create a new one."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Settings', href: '/finance/setting' },
-          { name: 'Fee Head', href: '/finance/fee-head' },
+          { name: 'Settings' },
+          { name: 'Fee Head' },
         ]}
         action={
           <Button
@@ -222,6 +222,7 @@ const FeeHeadCreation = () => {
         }
       />
 
+      {/* Active/Inactive Confirmation Dialog */}
       <ConfirmDialog
         open={activeDialog.value}
         onClose={() => {
@@ -230,16 +231,16 @@ const FeeHeadCreation = () => {
           }, 200);
           activeDialog.onFalse();
         }}
-        title="Active"
+        title={selectedEntry?.isActive ? 'Deactivate Fee Head' : 'Activate Fee Head'}
         content={
           <>
-            Are you sure you want to active fee head <strong>{selectedEntry?.name}</strong>?
+            Are you sure you want to move <strong>{selectedEntry?.name}</strong> fee head to{' '}
+            <strong>{selectedEntry?.isActive ? 'deactivate' : 'activate'}</strong>?
           </>
         }
         action={
           <LoadingButton
             variant="contained"
-            color="error"
             size="small"
             loading={isPatchFeeHeadLoading}
             startIcon={
@@ -257,7 +258,7 @@ const FeeHeadCreation = () => {
                   message: (
                     <>
                       Fee Head: <strong>{selectedEntry?.name}</strong>{' '}
-                      {selectedEntry.isActive ? 'activated' : 'deactivated'} successfully.
+                      {selectedEntry.isActive ? 'deactivated' : 'activated'} successfully.
                     </>
                   ),
                 });

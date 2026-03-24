@@ -93,8 +93,8 @@ const FinanceExpenseCategoriesScreen = () => {
         description="This screen displays all the created expense categories with an option to create a new expense category."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Settings', href: '/finance/setting' },
-          { name: 'Expense Category', href: '/finance/settings/expense-categories' },
+          { name: 'Settings' },
+          { name: 'Expense Category' },
         ]}
         action={
           <Button

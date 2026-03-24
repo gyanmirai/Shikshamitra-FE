@@ -161,6 +161,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                           isFilter: false,
                           isSort: false,
                           minWidth: 45,
+                          sticky: true,
                           filterType: 'number',
                           render(value, row) {
                             return <span>{row.id}</span>;
@@ -462,7 +463,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                             const hasError =
                               Boolean(
                                 formik.touched.installments?.[row.index]?.overdueCharges !==
-                                  undefined
+                                undefined
                               ) &&
                               !!(formik.errors.installments?.[row.index] as any)?.overdueCharges;
 

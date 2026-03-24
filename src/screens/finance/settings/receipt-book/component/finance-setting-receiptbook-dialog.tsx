@@ -1,13 +1,13 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { FormikValues } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -15,11 +15,21 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useAddReceiptBookMutation,
   useUpdateReceiptBookMutation,
 } from 'src/redux/finance/receiptBookApi';
+import {
+  Box,
+  Grid,
+  Card,
+  Stack,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import { receiptBookValidationSchema } from '../validationSchema';
 
@@ -33,6 +43,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   allData,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const theme = useTheme();
   // POST mutation for creating
   const [addReceiptBook, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -133,38 +144,272 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
       <DialogScrollContent>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12 }}>
-            <Card
-              sx={{
-                p: 2,
-                borderRadius: 1.5,
-                boxShadow: 'var(--shadows-4)',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'text.secondary',
-                  fontWeight: 700,
-                  letterSpacing: 1.2,
-                  textTransform: 'uppercase',
-                  display: 'block',
-                  mb: 1.5,
-                }}
-              >
-                Receipt Number Preview
-              </Typography>
+            {(() => {
+              const boardName =
+                boards?.find((b: any) => b.id === formik.values.boardId)?.name || '';
+              const mediumName = mediums?.find((m) => m.id === formik.values.mediumId)?.name || '';
+              const orgName =
+                allOrganization?.find((o) => o.id === formik.values.mediumStageId)?.name || '';
+              const prefix = formik.values.prefix || '';
+              const startNum = formik.values.startingNumber || '';
+              const endNum = formik.values.endingNumber || '';
+              const suffix = formik.values.suffix || '';
+              const startFormatted = `${prefix}${startNum}${suffix}`;
+              const endFormatted = `${prefix}${endNum}${suffix}`;
+              const segments: { label: string; icon: string }[] = [
+                boardName && { label: boardName, icon: 'solar:diploma-linear' },
+                mediumName && { label: mediumName, icon: 'solar:translation-linear' },
+                orgName && { label: orgName, icon: 'solar:buildings-2-linear' },
+              ].filter(Boolean) as { label: string; icon: string }[];
+              const hasAnyData = segments.length > 0 || startFormatted;
 
-              <ReceiptRangePreview
-                values={formik.values}
-                boards={boards}
-                mediums={mediums}
-                allOrganization={allOrganization}
-              />
-            </Card>
+              return (
+                <Card
+                  sx={{
+                    p: 0,
+                    borderRadius: 2.5,
+                    overflow: 'hidden',
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
+                    boxShadow: `0 2px 12px 0 ${alpha(theme.palette.primary.main, 0.06)}`,
+                    transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+                    '&:hover': {
+                      boxShadow: `0 4px 20px 0 ${alpha(theme.palette.primary.main, 0.12)}`,
+                      borderColor: alpha(theme.palette.primary.main, 0.24),
+                    },
+                  }}
+                >
+                  {/* Header */}
+                  <Box
+                    sx={{
+                      px: 1,
+                      py: 1,
+                      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+                      borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                    }}
+                  >
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Box
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 1.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Iconify
+                          icon="solar:document-linear"
+                          sx={{ color: 'primary.main', width: 18, height: 18 }}
+                        />
+                      </Box>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ color: 'text.primary', fontWeight: 700, letterSpacing: 0.2 }}
+                      >
+                        Receipt Number Preview
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  {/* Body */}
+                  <Box sx={{ p: 1.5 }}>
+                    {!hasAnyData ? (
+                      <Stack alignItems="center" spacing={1} sx={{ py: 2 }}>
+                        <Iconify
+                          icon="solar:document-add-line-duotone"
+                          sx={{ width: 36, height: 36, color: 'text.disabled' }}
+                        />
+                        <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+                          Fill in the fields below to preview your receipt number
+                        </Typography>
+                      </Stack>
+                    ) : (
+                      <Stack spacing={1}>
+                        {/* Category labels */}
+                        {segments.length > 0 && (
+                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            {segments.map((segment, index) => (
+                              <Label
+                                key={index}
+                                color="primary"
+                                variant="soft"
+                                startIcon={<Iconify icon={segment.icon} />}
+                                sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+                              >
+                                {segment.label}
+                              </Label>
+                            ))}
+                          </Stack>
+                        )}
+
+                        {/* Range display */}
+                        {startFormatted && (
+                          <>
+                            {segments.length > 0 && (
+                              <Divider
+                                sx={{
+                                  borderStyle: 'dashed',
+                                  borderColor: alpha(theme.palette.grey[500], 0.2),
+                                }}
+                              />
+                            )}
+                            <Stack direction="row" alignItems="center" spacing={0}>
+                              {/* Start block */}
+                              <Box sx={{ flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: 'text.secondary',
+                                    fontWeight: 600,
+                                    fontSize: '0.65rem',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: 1,
+                                    mb: 0.75,
+                                    display: 'block',
+                                  }}
+                                >
+                                  Starting Receipt
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    px: 2,
+                                    py: 1,
+                                    borderRadius: 1.5,
+                                    bgcolor: alpha(theme.palette.grey[500], 0.06),
+                                    border: `1px solid ${alpha(theme.palette.grey[500], 0.12)}`,
+                                    transition: 'all 0.25s ease',
+                                    '&:hover': {
+                                      bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                    },
+                                  }}
+                                >
+                                  <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                      fontFamily:
+                                        '"JetBrains Mono", "Fira Code", "SF Mono", monospace',
+                                      fontWeight: 700,
+                                      letterSpacing: 1,
+                                      color: 'text.primary',
+                                    }}
+                                  >
+                                    {startFormatted || '---'}
+                                  </Typography>
+                                </Box>
+                              </Box>
+
+                              {/* Connector */}
+                              {endNum && (
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    mx: 1.5,
+                                    mt: 2.5,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 0,
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: 16,
+                                        height: '2px',
+                                        bgcolor: alpha(theme.palette.primary.main, 0.3),
+                                        borderRadius: 1,
+                                      }}
+                                    />
+                                    <Box
+                                      sx={{
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: '50%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                        border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                                      }}
+                                    >
+                                      <Iconify
+                                        icon="solar:arrow-right-bold"
+                                        sx={{ width: 14, height: 14, color: 'primary.main' }}
+                                      />
+                                    </Box>
+                                    <Box
+                                      sx={{
+                                        width: 16,
+                                        height: '2px',
+                                        bgcolor: alpha(theme.palette.primary.main, 0.3),
+                                        borderRadius: 1,
+                                      }}
+                                    />
+                                  </Box>
+                                </Box>
+                              )}
+
+                              {/* End block */}
+                              {endNum && (
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      color: 'text.secondary',
+                                      fontWeight: 600,
+                                      fontSize: '0.65rem',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: 1,
+                                      mb: 0.75,
+                                      display: 'block',
+                                    }}
+                                  >
+                                    Ending Receipt
+                                  </Typography>
+                                  <Box
+                                    sx={{
+                                      px: 1.5,
+                                      py: 1,
+                                      borderRadius: 1.5,
+                                      bgcolor: alpha(theme.palette.primary.main, 0.04),
+                                      border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
+                                      transition: 'all 0.25s ease',
+                                      '&:hover': {
+                                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                      },
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="subtitle1"
+                                      sx={{
+                                        fontFamily:
+                                          '"JetBrains Mono", "Fira Code", "SF Mono", monospace',
+                                        fontWeight: 700,
+                                        letterSpacing: 1,
+                                        color: 'primary.dark',
+                                      }}
+                                    >
+                                      {endFormatted}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              )}
+                            </Stack>
+                          </>
+                        )}
+                      </Stack>
+                    )}
+                  </Box>
+                </Card>
+              );
+            })()}
           </Grid>
 
-          {/* Medium Field */}
           {/* Board Field */}
           <Grid size={{ xs: 12, sm: 6 }}>
             {(() => {
@@ -196,6 +441,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
             })()}
           </Grid>
 
+          {/* Medium Field */}
           <Grid size={{ xs: 12, sm: 6 }}>
             {(() => {
               const field = 'mediumId';
@@ -252,12 +498,16 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               );
             })()}
           </Grid>
+
           {/* Receipt Book Name Field */}
           <Grid size={{ xs: 12, sm: 6 }}>
             {(() => {
               const field = 'name';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
-              const helperText = formik.touched[field] && formik.errors[field];
+              const helperText =
+                formik.touched[field] && formik.errors[field]
+                  ? formik.errors[field]
+                  : `${formik.values[field].length}/40 Maximum characters allowed`;
               return (
                 <ShakingTextField error={error}>
                   <TextField
@@ -272,6 +522,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     }}
                     error={error}
                     helperText={helperText}
+                    inputProps={{ maxLength: 40 }}
                   />
                 </ShakingTextField>
               );
@@ -444,93 +695,3 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
 };
 
 export default FinanceSettingReceiptbookDialog;
-
-interface IReceiptRangePreviewProps {
-  values: FormikValues;
-  boards: Board[];
-  mediums: Medium[];
-  allOrganization: Organization[];
-}
-
-const ReceiptRangePreview: React.FC<IReceiptRangePreviewProps> = ({
-  values,
-  boards,
-  mediums,
-  allOrganization,
-}) => {
-  const boardName = boards?.find((b: any) => b.id === values.boardId)?.name || '----';
-  const mediumName = mediums?.find((m) => m.id === values.mediumId)?.name || '----';
-  const orgName = allOrganization?.find((o) => o.id === values.mediumStageId)?.name || '----';
-
-  const prefix = values.prefix || '';
-  const startNum = values.startingNumber || '';
-  const endNum = values.endingNumber || '';
-  const suffix = values.suffix || '';
-
-  const startLabel = `${boardName}-${mediumName}-${orgName}-${prefix}${startNum}${suffix}`;
-  const endLabel = `${boardName}-${mediumName}-${orgName}-${prefix}${endNum}${suffix}`;
-  const hasRange = Boolean(endNum);
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 1.5,
-        flexWrap: 'wrap',
-      }}
-    >
-      {/* Start box */}
-      <Box
-        sx={{
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 1,
-          px: 1,
-          py: 1,
-          bgcolor: 'background.neutral',
-          minWidth: 120,
-          textAlign: 'center',
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 500, wordBreak: 'break-all', color: 'text.primary' }}
-        >
-          {startLabel}
-        </Typography>
-      </Box>
-
-      {/* Arrow */}
-      {hasRange && (
-        <>
-          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            ⬇️
-          </Typography>
-
-          {/* End box */}
-          <Box
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1,
-              px: 1,
-              py: 1,
-              bgcolor: 'background.neutral',
-              minWidth: 120,
-              textAlign: 'center',
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 500, wordBreak: 'break-all', color: 'text.primary' }}
-            >
-              {endLabel}
-            </Typography>
-          </Box>
-        </>
-      )}
-    </Box>
-  );
-};
