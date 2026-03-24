@@ -6,12 +6,12 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import React, { useMemo, useState, useCallback } from 'react';
+import { useNewSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
@@ -102,8 +102,8 @@ const reconciliationTabConfig = [
 
 const FinanceReconciliation = () => {
   // Tab state
-  // const tabs = useTabs(ReconciliationtatusType.All);
-  const [params, setSearchParams] = useSearchParam({ tab: ReconciliationtatusType.Cheque });
+  const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
+  const activeTab = searchParams?.tab || ReconciliationtatusType.Cheque;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
@@ -142,19 +142,23 @@ const FinanceReconciliation = () => {
   );
 
   // Tabs config with counts
-  const TABS = reconciliationTabConfig.map((tab) => ({
-    ...tab,
-    count: counts[tab.value] || 0,
-  }));
+  const TABS = useMemo(
+    () =>
+      reconciliationTabConfig.map((tab) => ({
+        ...tab,
+        count: counts[tab.value] || 0,
+      })),
+    [counts]
+  );
 
   // Find current tab/component
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === params.tab),
-    [TABS, params]
+    () => TABS.find((tab) => tab.value === activeTab),
+    [TABS, activeTab]
   );
   const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === params.tab),
-    [TABS, params]
+    () => TABS.findIndex((tab) => tab.value === activeTab),
+    [TABS, activeTab]
   );
   const [isBack, setIsBack] = useState(false);
 
@@ -190,20 +194,23 @@ const FinanceReconciliation = () => {
   };
 
   // Tab change handler
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
-    const newIndex = TABS.findIndex((tab) => tab.value === newValue);
-    setIsBack(currentIndex > newIndex);
-    setSearchParams({ tab: newValue });
-  };
+  const handleTabChange = useCallback(
+    (event: React.SyntheticEvent, newValue: string | number) => {
+      const newIndex = TABS.findIndex((tab) => tab.value === newValue);
+      setIsBack(currentIndex > newIndex);
+      setSearchParams({ tab: String(newValue) });
+    },
+    [TABS, currentIndex, setSearchParams]
+  );
 
   // Extract month and year from date picker
   const queryParams = useMemo(
     () => ({
       month: date ? date.format('MM') : dayjs().format('MM'),
       year: date ? date.format('YYYY') : dayjs().format('YYYY'),
-      paymentMethod: params.tab,
+      paymentMethod: activeTab,
     }),
-    [date, params.tab]
+    [date, activeTab]
   );
 
   return (
@@ -211,12 +218,9 @@ const FinanceReconciliation = () => {
       <CustomBreadcrumbs
         heading="Reconciliation"
         description="This section helps you compare recorded transactions with bank statements to ensure financial records match, quickly identify matched, unmatched, and discrepant transactions."
-        links={[
-          { name: 'Finance', href: '/finance/dashboard/' },
-          { name: 'Reconciliation', href: '/finance/reconciliation' },
-        ]}
+        links={[{ name: 'Finance', href: '/finance/dashboard/' }, { name: 'Reconciliation' }]}
       />
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, pb: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <DatePicker
             label="Month-Year"
@@ -234,7 +238,7 @@ const FinanceReconciliation = () => {
             sx={{ maxWidth: '240px', width: '100%' }}
           />
           <Tabs
-            value={params.tab}
+            value={activeTab}
             onChange={handleTabChange}
             sx={{
               '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' },

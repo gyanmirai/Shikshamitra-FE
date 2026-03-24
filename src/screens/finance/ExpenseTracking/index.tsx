@@ -57,10 +57,7 @@ const FinanceExpenseTracking = () => {
         <CustomBreadcrumbs
           heading="Expense Tracking"
           description="This screen displays all expense categories with the option to view detailed entries under each category and add new expense records."
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Expense Tracking', href: '/finance/setting' },
-          ]}
+          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Expense Tracking' }]}
           action={
             <Button
               onClick={() => addExpenseDialog.onTrue()}

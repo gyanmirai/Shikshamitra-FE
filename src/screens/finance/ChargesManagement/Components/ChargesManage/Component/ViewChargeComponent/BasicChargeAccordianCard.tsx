@@ -37,7 +37,6 @@ const ChargeInformationAccordion = ({ charge }: any) => (
             width: 48,
             height: 48,
             borderRadius: '50%',
-            bgcolor: 'common.white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -60,10 +59,13 @@ const ChargeInformationAccordion = ({ charge }: any) => (
 
       <Label
         variant="filled"
-        color={ChargesPaymentStatusColors[charge?.status as ChargesPaymentStatus] as LabelColor}
+        color={
+          (ChargesPaymentStatusColors[charge?.status as ChargesPaymentStatus] as LabelColor) ||
+          'default'
+        }
         sx={{ textTransform: 'uppercase', py: 0.5, px: 1 }}
       >
-        {ChargesPaymentStatus[charge?.status as ChargesPaymentStatus]}
+        {ChargesPaymentStatus[charge?.status as ChargesPaymentStatus] || 'N/A'}
       </Label>
     </Box>
 

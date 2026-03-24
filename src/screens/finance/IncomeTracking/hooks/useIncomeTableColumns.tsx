@@ -82,7 +82,7 @@ export const useIncomeTableColumns = ({
             showThreeDots={false}
             showEditIcon
             showDeleteIcon
-            showViewIcon
+            // showViewIcon
             handleViewClick={() => onView?.(row as IIncomeRecord)}
             handleEditClick={() => onEdit?.(row as IIncomeRecord)}
             handleDeleteClick={() => onDelete?.(row as IIncomeRecord)}

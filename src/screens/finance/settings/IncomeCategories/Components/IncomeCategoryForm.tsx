@@ -27,6 +27,7 @@ import type { IIncomeCategoryFormProps } from './type';
 const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [tag, setTag] = useState('');
+  const [tagError, setTagError] = useState('');
 
   // POST mutation for creating
   const [addIncomeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
@@ -87,10 +88,14 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
     if (e.key === 'Enter') {
       e.preventDefault();
       const trimmed = tag.trim();
-      if (trimmed && !formik.values.tags.includes(trimmed)) {
-        formik.setFieldValue('tags', [...formik.values.tags, trimmed]);
-        setTag('');
+      if (!trimmed) return;
+      if (formik.values.tags.some((t: string) => t.toLowerCase() === trimmed.toLowerCase())) {
+        setTagError(`Tag "${trimmed}" already exists`);
+        return;
       }
+      formik.setFieldValue('tags', [...formik.values.tags, trimmed]);
+      setTag('');
+      setTagError('');
     }
   };
 
@@ -103,7 +108,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Income Category Name */}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
@@ -115,7 +120,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                 value={formik.values.name}
                 onChange={(e) => {
                   const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '')
+                    .replace(/^\s+/g, '')
+                    .trimStart()
                     .split(' ')
                     .map((word) =>
                       word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -124,25 +130,16 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                   formik.setFieldValue('name', value);
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
+                helperText={
+                  formik.touched.name && formik.errors.name
+                    ? formik.errors.name
+                    : `${formik.values.name.length}/40 characters`
+                }
+                inputProps={{ maxLength: 40 }}
               />
             </ShakingTextField>
           </Grid>
-
-          {/* Description */}
-          <Grid size={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Description"
-              name="description"
-              size="small"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-
+          {/* Tags */}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
               <TextField
@@ -150,7 +147,10 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                 size="small"
                 label="Tags *"
                 value={tag}
-                onChange={(e) => setTag(e.target.value)}
+                onChange={(e) => {
+                  setTag(e.target.value);
+                  if (tagError) setTagError('');
+                }}
                 onKeyDown={handleKeyDown}
                 InputProps={{
                   startAdornment: (
@@ -186,14 +186,28 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                     minWidth: '80px',
                   },
                 }}
-                error={formik.touched.tags && Boolean(formik.errors.tags)}
+                error={(formik.touched.tags && Boolean(formik.errors.tags)) || Boolean(tagError)}
                 helperText={
-                  formik.touched.tags && typeof formik.errors.tags === 'string'
+                  tagError ||
+                  (formik.touched.tags && typeof formik.errors.tags === 'string'
                     ? formik.errors.tags
-                    : undefined
+                    : `Press enter after typing a tag to add it`)
                 }
               />
             </ShakingTextField>
+          </Grid>
+          {/* Description */}
+          <Grid size={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Description"
+              name="description"
+              size="small"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+            />
           </Grid>
         </Grid>
       </DialogScrollContent>

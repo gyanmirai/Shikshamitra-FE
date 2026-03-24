@@ -60,6 +60,7 @@ export const reconciliationNotificationsData = [
 ];
 
 const ReconciliationNotificationManagement = ({ dialog, setIsViewMode }: any) => {
+  const [tableData, setTableData] = useState(reconciliationNotificationsData);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
 
@@ -79,7 +80,7 @@ const ReconciliationNotificationManagement = ({ dialog, setIsViewMode }: any) =>
       ) : (
         <CustomizableTable
           tableId="reconciliation-auto-notification-configuration"
-          data={reconciliationNotificationsData}
+          data={tableData}
           columns={[
             { id: 'event', label: 'Event' },
             { id: 'triggerCondition', label: 'Trigger Condition' },
@@ -102,7 +103,20 @@ const ReconciliationNotificationManagement = ({ dialog, setIsViewMode }: any) =>
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      setTableData((prev: any) =>
+                        prev.map((r: any) =>
+                          r.id === row.id
+                            ? {
+                                ...r,
+                                isActive: event.target.checked
+                                  ? NotificationStatusType.Active
+                                  : NotificationStatusType.Inactive,
+                              }
+                            : r
+                        )
+                      );
+                    }}
                   />
                 );
               },

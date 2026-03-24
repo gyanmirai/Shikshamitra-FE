@@ -187,8 +187,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-  console.log('values000000', values);
-  console.log('erroes----', errors);
   // Load boards on year change
   useEffect(() => {
     setBoards(currentYear?.boards || []);
@@ -217,8 +215,10 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container>
+              {/* Charge Details */}
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Charge Details" paperProps={{ sx: { ...cardStyle } }}>
+                  {/* Charge Category */}
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
                       error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
@@ -247,6 +247,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       </Typography>
                     )}
                   </Grid>
+                  {/* Purpose/Description */}
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
                       error={!!(touched.purposeDescription && errors.purposeDescription) || false}
@@ -258,7 +259,14 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         minRows={3}
                         fullWidth
                         value={values.purposeDescription}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          const { value } = e.target;
+                          const character = value
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            .replace(/^\s+/g, '')
+                            .trimStart();
+                          setFieldValue('purposeDescription', character);
+                        }}
                         onBlur={formik.handleBlur}
                         error={!!(touched.purposeDescription && errors.purposeDescription)}
                         helperText={
@@ -267,7 +275,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
+                  {/* Amount */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
                       <NumericFormatCustom
@@ -293,7 +301,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
+                  {/* Due Date */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
                       <DatePicker
@@ -316,7 +324,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
+                  {/* Priority */}
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
                       <CustomSelect
@@ -339,6 +347,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                   </Grid>
                 </SectionCard>
               </Grid>
+              {/* Student Information */}
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Student Information" paperProps={{ sx: { ...cardStyle } }}>
                   {/* Board */}
@@ -365,7 +374,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
                   {/* Medium */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField
@@ -393,7 +401,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
                   {/* Class */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.standardId && errors.standardId) || false}>
@@ -420,7 +427,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
                   {/* Division */}
                   <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={!!(touched.divisionId && errors.divisionId) || false}>
@@ -444,13 +450,14 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       />
                     </ShakingTextField>
                   </Grid>
-
+                  {/* Student */}
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField
                       error={!!(touched.selectedStudent && errors.selectedStudent) || false}
                     >
                       <PaginatedSearchSelect
                         key={`${values.standardId}-${values.divisionId}`}
+                        noOptionsText="No students found"
                         label="Student *"
                         disabled={!values.divisionId || isEdit}
                         fetchOptions={async (query, page) => {
@@ -487,7 +494,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                           setFieldValue('studentId', value?.id || null);
                         }}
                         debounceMs={400}
-                        placeholder="Search by name"
                         sx={{ minWidth: 250 }}
                         size="small"
                         error={!!(touched.selectedStudent && errors.selectedStudent) || false}
@@ -497,7 +503,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                   </Grid>
                 </SectionCard>
               </Grid>
-
+              {/* Additional Notes */}
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Additional Notes" paperProps={{ sx: { ...cardStyle } }}>
                   <TextField
