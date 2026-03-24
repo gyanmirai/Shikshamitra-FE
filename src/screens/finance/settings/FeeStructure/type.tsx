@@ -62,5 +62,5 @@ export interface FeeStructureCardProps {
   feeItems: IClassWiseFeeItem[];
   structureIndex: number;
   formik: FormikProps<IFeeStructure>;
-  addFeeHeadDialog: UseBooleanReturn;
+  onAddFeeHead: () => void;
 }

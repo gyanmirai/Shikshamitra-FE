@@ -16,6 +16,10 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useAddReceiptBookMutation,
+  useUpdateReceiptBookMutation,
+} from 'src/redux/finance/receiptBookApi';
+import {
   Box,
   Grid,
   Card,
@@ -26,10 +30,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useAddReceiptBookMutation,
-  useUpdateReceiptBookMutation,
-} from 'src/redux/finance/receiptBookApi';
 
 import { receiptBookValidationSchema } from '../validationSchema';
 
@@ -517,7 +517,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Receipt Book Name *"
                     value={formik.values[field]}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                      const value = e.target.value.replace(/[^a-zA-Z0-9-\s]/g, '');
                       formik.setFieldValue(field, value);
                     }}
                     error={error}

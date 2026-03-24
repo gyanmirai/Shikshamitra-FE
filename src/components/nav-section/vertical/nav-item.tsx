@@ -1,6 +1,5 @@
 import { forwardRef } from 'react';
 import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import { stylesMode } from 'src/theme/styles';
 import ButtonBase from '@mui/material/ButtonBase';
@@ -76,22 +75,13 @@ export const NavItem = forwardRef<HTMLButtonElement, NavItemProps>(
 
         {title && (
           <Box component="span" className={navSectionClasses.item.texts}>
-            <Tooltip title={title} placement="right">
-              <Box
-                component="span"
-                className={navSectionClasses.item.title}
-                // sx={{ fontSize: '12px' }}
-              >
-                {title}
-              </Box>
-            </Tooltip>
-
+            <Box component="span" className={navSectionClasses.item.title}>
+              {title}
+            </Box>
             {caption && (
-              <Tooltip title={caption} placement="top-start">
-                <Box component="span" className={navSectionClasses.item.caption}>
-                  {caption}
-                </Box>
-              </Tooltip>
+              <Box component="span" className={navSectionClasses.item.caption}>
+                {caption}
+              </Box>
             )}
           </Box>
         )}

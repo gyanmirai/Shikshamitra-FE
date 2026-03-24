@@ -28,6 +28,10 @@ const ChargesTable = ({
   onReject,
   onRemove,
   onRefetch,
+  selectedBoard,
+  setSelectedBoard,
+  selectedMedium,
+  setSelectedMedium,
 }: {
   onView: (data: IChargeData) => void;
   onEdit: (data: IChargeData) => void;
@@ -36,15 +40,16 @@ const ChargesTable = ({
   onReject: (data: IChargeData) => void;
   onRemove: (data: IChargeData) => void;
   onRefetch?: (refetchFn: () => void) => void;
+  selectedBoard: string;
+  setSelectedBoard: (value: string) => void;
+  selectedMedium: string;
+  setSelectedMedium: (value: string) => void;
 }) => {
   // Local state to store filtered boards based on academic year
   const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const tabs = useTabs(ChargesPaymentStatus.Pending);
-
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
-  const [selectedMedium, setSelectedMedium] = useState<string>('');
   // Fetch charge data using custom query hook
   const {
     data: chargesData,
@@ -64,6 +69,18 @@ const ChargesTable = ({
       skip: !selectedBoard || !selectedMedium || !currentYear?.id,
     },
   });
+
+  useEffect(() => {
+    if (currentYear?.boards) {
+      setBoards(currentYear.boards);
+      // Only set initial values if not already selected
+      if (!selectedBoard) {
+        setSelectedBoard(currentYear.boards[0].id);
+        setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear.boards]);
   // State to store the selected student concession data
   // null when no student is selected
   useEffect(() => {
@@ -88,15 +105,9 @@ const ChargesTable = ({
   // Tab Counts
   const chargeCounts = useMemo(
     () => ({
-      pending:
-        chargesData?.items?.filter((i: IChargeData) => i.status === ChargesPaymentStatus.Pending)
-          ?.length || 0,
-      approved:
-        chargesData?.items?.filter((i: IChargeData) => i.status === ChargesPaymentStatus.Approved)
-          ?.length || 0,
-      rejected:
-        chargesData?.items?.filter((i: IChargeData) => i.status === ChargesPaymentStatus.Rejected)
-          ?.length || 0,
+      pending: chargesData?.pendingCount || 0,
+      approved: chargesData?.approvedCount || 0,
+      rejected: chargesData?.rejectedCount || 0,
     }),
     [chargesData]
   );
@@ -125,7 +136,7 @@ const ChargesTable = ({
     [chargeCounts]
   );
 
-  // 🔹 Filter Table Data by Selected Tab
+  // Filter Table Data by Selected Tab
   const tableData = useMemo(
     () =>
       chargesData?.items

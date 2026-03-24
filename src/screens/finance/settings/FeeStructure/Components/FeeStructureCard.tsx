@@ -4,13 +4,10 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Grid, Button, IconButton, Typography } from '@mui/material';
-
-import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
 import type { FeeStructureCardProps } from '../type';
 
@@ -19,7 +16,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
   feeItems,
   structureIndex,
   formik,
-  addFeeHeadDialog,
+  onAddFeeHead,
 }) => {
   // State to track the index of fee head selected for deletion
   const [selectedFeeHead, setSelectedFeeHead] = useState<number>();
@@ -77,17 +74,6 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                       `feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].amount`,
                       Number(val)
                     );
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <Typography
-                        variant="caption"
-                        sx={{ mr: 0.5, color: 'text.secondary', fontWeight: 'bold' }}
-                      >
-                        ₹
-                      </Typography>
-                    ),
-                    style: { fontSize: '0.875rem', fontWeight: 600 },
                   }}
                   sx={{
                     '& .MuiInputBase-root': {
@@ -236,29 +222,16 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
           sx={{ py: 5, mb: 2 }}
           action={
             <Button
-              variant="contained"
+              variant="outlined"
               size="small"
               startIcon={<Iconify icon="lucide:plus" />}
-              onClick={() => addFeeHeadDialog.onTrue()}
+              onClick={onAddFeeHead}
             >
-              Add Fee Head
+              Fee Head
             </Button>
           }
         />
       )}
-
-      <CustomDialog
-        open={addFeeHeadDialog.value}
-        handleClose={addFeeHeadDialog.onFalse}
-        title="Add Fee Head"
-      >
-        <AddFeeHeadDialogContent
-          formik={formik}
-          className={className}
-          feeStructureIndex={structureIndex}
-          onClose={addFeeHeadDialog.onFalse}
-        />
-      </CustomDialog>
 
       <ConfirmDialog
         open={deleteFeeStructureDialog.value}

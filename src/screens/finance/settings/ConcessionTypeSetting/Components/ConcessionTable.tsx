@@ -44,22 +44,6 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         align: 'left',
       },
       {
-        id: 'basedOn',
-        label: 'Based On',
-        align: 'left',
-        render: (value) => (value === ConcessionBasedOn.Fixed ? 'Fixed' : 'Percentage'),
-      },
-      {
-        id: 'amountPercentageValue',
-        label: 'Amount/Percentage',
-        align: 'left',
-      },
-      {
-        id: 'applicableFeeHeadsValue',
-        label: 'Applicable Fee Heads',
-        align: 'left',
-      },
-      {
         id: 'isDocumentRequired',
         label: 'Documents Required',
         align: 'left',

@@ -176,7 +176,7 @@ const FeeStructure = () => {
           </Card>
         ) : !viewFeeStructureDialog.value ? (
           <FeeStructureTable
-            data={feeStructure?.items}
+            data={feeStructure?.items || []}
             isLoading={isFeeStructureLoading || isFeeStructureFetching}
             addFeeStructure={addFeeStructureDialog}
             editData={selectedFeeStructure}

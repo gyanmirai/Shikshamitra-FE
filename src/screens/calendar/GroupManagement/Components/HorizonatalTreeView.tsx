@@ -175,9 +175,9 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true, onRemov
                 <Typography component="span" sx={{ flexGrow: 1 }} fontFamily="Monospace">
                   {p.display}
                 </Typography>
-                <Typography component="span" color="text.secondary" sx={{ fontSize: 12 }}>
+                {/* <Typography component="span" color="text.secondary" sx={{ fontSize: 12 }}>
                   {p.selectedCount || 60} / {p.totalCount || 60}
-                </Typography>
+                </Typography> */}
               </Stack>
               {/* <IconButton size="small" onClick={() => setViewIndex(i)}>
                 <Icon icon="mdi:eye-outline" />

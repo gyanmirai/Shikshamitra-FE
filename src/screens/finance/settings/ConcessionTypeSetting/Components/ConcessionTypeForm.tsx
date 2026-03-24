@@ -8,13 +8,11 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -28,22 +26,19 @@ import {
   Grid,
   Chip,
   Paper,
-  Radio,
   Button,
   Switch,
   Checkbox,
   TextField,
   IconButton,
   Typography,
-  RadioGroup,
-  FormControl,
   Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
 
+import { ConcessionDocumentFormatArray } from '../type';
 import { getInitialConcessionTypeData } from './ConcessionInitialValues';
-import { ConcessionBasedOn, ConcessionDocumentFormatArray } from '../type';
 import { concessionTypeValidationSchema } from './ConcessionValidationSchema';
 
 import type { IConcessionDocument, IConcessionTypeFormProps } from '../type';
@@ -91,16 +86,6 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
         // Transform form data to match API requirements
         const payload = {
           name: values.name,
-          basedOn:
-            values.concessionType === 'fixed'
-              ? ConcessionBasedOn.Fixed
-              : ConcessionBasedOn.Percentage,
-          amount:
-            values.concessionType === 'percentage' ? values.percentage || 0 : values.amount || 0,
-          applicableFeeHeads: values.applicableFeeHeads.map((head) => ({
-            id: head,
-            name: feeHeadData?.items?.find((item: any) => item.id === head)?.name || head,
-          })),
           isDocumentRequired: values.documentRequired,
           documents: values.documentRequired
             ? (values.documents || []).map((doc) => ({
@@ -171,121 +156,6 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                 size="small"
                 error={!!(formik.touched.name && formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={!!(formik.touched.concessionType && formik.errors.concessionType)}
-            >
-              <FormControl
-                component="fieldset"
-                error={!!(formik.touched.concessionType && formik.errors.concessionType)}
-              >
-                <RadioGroup
-                  row
-                  name="concessionType"
-                  value={formik.values.concessionType}
-                  onChange={(e) => {
-                    formik.handleChange(e);
-                    formik.setFieldValue('amount', '');
-                    formik.setFieldValue('percentage', '');
-                  }}
-                >
-                  <FormControlLabel value="fixed" control={<Radio />} label="Fixed" />
-                  <FormControlLabel
-                    value="percentage"
-                    control={<Radio />}
-                    label="Percentage Based"
-                  />
-                </RadioGroup>
-
-                {formik.touched.concessionType && formik.errors.concessionType && (
-                  <Typography variant="caption" color="error">
-                    {formik.errors.concessionType}
-                  </Typography>
-                )}
-              </FormControl>
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            {formik.values.concessionType === 'fixed' ? (
-              <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
-                <NumericFormatCustom
-                  label="Amount *"
-                  name="amount"
-                  size="small"
-                  fullWidth
-                  value={formik.values.amount || ''}
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    val = val.replace(/[₹,\s]/g, '');
-                    const numVal = val === '' ? null : Number(val);
-                    formik.setFieldValue('amount', numVal);
-                  }}
-                  error={!!(formik.touched.amount && formik.errors.amount)}
-                  helperText={formik.touched.amount && formik.errors.amount}
-                  sx={{
-                    minWidth: 120,
-                    width: '100%',
-                    padding: '0',
-                    borderRadius: 1,
-                  }}
-                  FormHelperTextProps={{
-                    sx: {
-                      margin: 0,
-                      position: 'static',
-                      whiteSpace: 'normal',
-                    },
-                  }}
-                  inputProps={{ min: 0 }}
-                  disabled={formik.values.concessionType !== 'fixed'}
-                />
-              </ShakingTextField>
-            ) : (
-              <ShakingTextField error={!!(formik.touched.percentage && formik.errors.percentage)}>
-                <TextField
-                  label="Percentage *"
-                  name="percentage"
-                  type="number"
-                  size="small"
-                  fullWidth
-                  value={formik.values.percentage || ''}
-                  onChange={(e) => {
-                    formik.handleChange(e);
-                    formik.setFieldTouched('percentage', true);
-                  }}
-                  error={!!(formik.touched.percentage && formik.errors.percentage)}
-                  helperText={formik.touched.percentage && formik.errors.percentage}
-                  sx={{ minWidth: 120 }}
-                  disabled={formik.values.concessionType !== 'percentage'}
-                />
-              </ShakingTextField>
-            )}
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={!!(formik.touched.applicableFeeHeads && formik.errors.applicableFeeHeads)}
-            >
-              <CustomSelect
-                label="Applicable Fee Heads *"
-                options={feeHeadData?.items}
-                value={formik.values.applicableFeeHeads}
-                onChange={(val) => formik.setFieldValue('applicableFeeHeads', val)}
-                formControlProps={{ fullWidth: true }}
-                multiple
-                isLoading={isFeeHeadLoading}
-                labelKey="name"
-                valueKey="id"
-                error={
-                  !!(formik.touched.applicableFeeHeads && formik.errors.applicableFeeHeads) || false
-                }
-                helperText={
-                  (formik.touched.applicableFeeHeads && formik.errors.applicableFeeHeads) as string
-                }
               />
             </ShakingTextField>
           </Grid>

@@ -1,25 +1,27 @@
-import type { IConcession } from '../type';
-
-export const getInitialConcessionFormData = (
-  editData?: Partial<IConcession> | null
-): IConcession => ({
-  board: editData?.board || '',
-  medium: editData?.medium || '',
-  className: editData?.className || '',
-  division: editData?.division || '',
-  feeHead: editData?.feeHead || '',
-  studentId: editData?.studentId || '',
-  studentName: editData?.studentName || '',
-  reason: editData?.reason || '',
-  concessions: editData?.concessions?.length
-    ? editData.concessions.map((c) => ({
-        concessionType: c.concessionType || '',
-        applicableFeeHeads: c.applicableFeeHeads || [],
-        amount: c.amount || undefined,
-        percentage: c.percentage || undefined,
-        documents: c.documents || [],
-      }))
-    : [],
-  concessionTypeIds: [],
-  documents: [],
+export const getInitialConcessionFormData = () => ({
+  // Step 1
+  id: '',
+  boardId: '',
+  boardName: '',
+  mediumId: '',
+  mediumName: '',
+  standardId: '',
+  standardName: '',
+  divisionId: '',
+  divisionName: '',
+  studentId: '',
+  studentName: '',
+  selectedStudent: null,
+  // Step 2
+  concessionTypeIds: [] as string[],
+  // Step 2 response – stores { concessionTypeId, ConcessionRequestConcessionTypeId, name }[]
+  selectedConcessionTypes: [] as Array<{
+    concessionTypeId: string;
+    ConcessionRequestConcessionTypeId: string;
+    name: string;
+  }>,
+  // Step 3 – map: concessionTypeId → feeHeadId[]
+  selectedFeeHeads: {} as Record<string, string[]>,
+  // Step 4 – map: concessionTypeId → { feeHeadId → { basedOn, amount } }
+  valueEntries: {} as Record<string, Record<string, { basedOn: 0 | 1; amount: number }>>,
 });

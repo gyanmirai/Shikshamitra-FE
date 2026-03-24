@@ -5,10 +5,10 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Button, DialogActions } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Button, DialogActions, FormHelperText } from '@mui/material';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -36,17 +36,23 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
     currentQueryAndMutation: useGetFeeHeadsQuery,
     params: { academicYearId: currentYear?.id },
   });
+
+  // Get existing fee head IDs from the current fee structure
+  const classFeeStructures = formik.values.feeStructureClasses[className] || [];
+  const currentStructure = classFeeStructures[feeStructureIndex];
+  const existingFeeHeadIds = new Set(
+    (currentStructure?.feeHeads || []).map((item: any) => item.feeHeadId)
+  );
+
+  // Filter out already added fee heads from options
+  const availableFeeHeadOptions =
+    feeHeadData?.items?.filter((item: any) => !existingFeeHeadIds.has(item.id)) || [];
+
   const handleSubmit = () => {
     if (!selectedFeeHead.length) {
       setError('Please select at least one Fee Head');
       return;
     }
-
-    // Get current fee structure array for the class
-    const classFeeStructures = formik.values.feeStructureClasses[className] || [];
-
-    // Get the specific fee structure to update
-    const currentStructure = classFeeStructures[feeStructureIndex];
 
     if (!currentStructure) {
       console.error('Fee structure not found at index', feeStructureIndex);
@@ -55,16 +61,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
 
     const updatedHeads = [...(currentStructure.feeHeads || [])];
 
-    // Prevent duplicates
-    const existingHeads = new Set(updatedHeads.map((item) => item.feeHeadId));
-    const duplicates = selectedFeeHead.filter((feeHeadId) => existingHeads.has(feeHeadId));
-
-    if (duplicates.length) {
-      setError(`Some Fee Head(s) are already added.`);
-      return;
-    }
-
-    // Add only new fee heads
+    // Add new fee heads
     selectedFeeHead.forEach((feeHeadId) => {
       const selected = feeHeadData?.items?.find((opt: any) => opt.id === feeHeadId);
       if (selected) {
@@ -103,7 +100,7 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
           label="Fee Head *"
           multiple
           isLoading={isFeeHeadLoading}
-          options={feeHeadData?.items || []}
+          options={availableFeeHeadOptions}
           value={selectedFeeHead}
           labelKey="name"
           valueKey="id"
@@ -111,9 +108,10 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
             setSelectedFeeHead(value as string[]);
             if (error) setError('');
           }}
-          formControlProps={{ fullWidth: true, error: !!error }}
+          error={!!error}
+          helperText={error}
+          formControlProps={{ fullWidth: true }}
         />
-        {error && <FormHelperText error>{error}</FormHelperText>}
       </DialogScrollContent>
 
       <DialogActions>
