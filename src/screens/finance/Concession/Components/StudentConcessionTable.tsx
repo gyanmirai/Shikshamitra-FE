@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
-import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
@@ -19,15 +18,13 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { useDeleteConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
-  concessionRequestApi,
-  useDeleteConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
-
-import concessionData from '../../../../../concession.json';
+  concessionManagementApi,
+  useGetConcessionApplicationsQuery,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import type { IStudentInfo } from '../type';
-import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
 
 interface ICombinedProps {
   onRequestConcession?: (student: IStudentInfo) => void;
@@ -36,8 +33,13 @@ interface ICombinedProps {
   onAddConcession: () => void;
   // eslint-disable-next-line react/no-unused-prop-types
   onRemove?: (data: IStudentInfo) => void;
-  onViewConcession?: (student: IViewConcessionRequestProps) => void;
+  onViewConcession?: (student: IStudentInfo) => void;
+  onEditConcession?: (student: IStudentInfo) => void;
   onViewAllConcession?: (student: IStudentInfo) => void;
+  selectedBoard: string;
+  selectedMedium: string;
+  onBoardChange: (value: string) => void;
+  onMediumChange: (value: string) => void;
 }
 
 const StudentConcessionTable: React.FC<ICombinedProps> = ({
@@ -46,9 +48,14 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onAddConcession,
   onRequestConcession,
   onViewConcession,
+  onEditConcession,
   onViewAllConcession,
+  selectedBoard,
+  selectedMedium,
+  onBoardChange,
+  onMediumChange,
 }) => {
-  const tabs = useTabs(ConcessionStatusType.Pending);
+  const tabs = useTabs(ConcessionStatusType.Draft);
   const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
   const removeConcessionDialog = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -56,48 +63,63 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionRequestMutation,
   });
-  // Local state to store filtered boards based on academic year
   const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
-  const [selectedMedium, setSelectedMedium] = useState<string>('');
-
-  // State to store the selected student concession data
-  // null when no student is selected
   useEffect(() => {
-    // Filter boards based on academic year ID from edit data
-    setBoards(currentYear?.boards);
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
+    if (currentYear?.boards) {
+      setBoards(currentYear.boards);
+      // Only set initial values if not already selected
+      if (!selectedBoard) {
+        onBoardChange(currentYear.boards[0].id);
+        onMediumChange(currentYear.boards[0].educationMediums[0].id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear.boards]);
+
+  useEffect(() => {
+    const board = currentYear?.boards?.find((item: any) => item.id === selectedBoard);
+    setMediums(board?.educationMediums || []);
+  }, [selectedBoard, currentYear?.boards]);
+
+  // Fetch all concession requests for count badges (no status filter)
+  const {
+    data: allConcessionData,
+    isLoading: isLoadingConcessionData,
+    isFetching: isFetchingConcessionData,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionApplicationsQuery,
+    params: {
+      boardId: selectedBoard,
+      educationMediumId: selectedMedium,
+      status: tabs.value,
+    },
+    options: {
+      skip: !selectedMedium, // IMPORTANT
+    },
+  });
 
   const concessionCounts = useMemo(
     () => ({
-      pending:
-        concessionData?.concessionRequestData?.filter(
-          (i: any) => i?.status === ConcessionStatusType.Pending
-        )?.length || 0,
-      approved:
-        concessionData?.concessionRequestData?.filter(
-          (i: any) => i?.status === ConcessionStatusType.Approved
-        )?.length || 0,
-      rejected:
-        concessionData?.concessionRequestData?.filter(
-          (i: any) => i?.status === ConcessionStatusType.Rejected
-        )?.length || 0,
+      draft: allConcessionData?.draftCount || 0,
+      pending: allConcessionData?.pendingCount || 0,
+      approved: allConcessionData?.approvedCount || 0,
+      rejected: allConcessionData?.rejectedCount || 0,
     }),
-    []
-  );
-
-  const tableData = useMemo(
-    () => concessionData?.concessionRequestData?.filter((i: any) => i?.status === tabs.value) || [],
-    [tabs.value]
+    [allConcessionData]
   );
 
   const TABS = useMemo(
     () => [
+      {
+        label: 'Draft',
+        value: ConcessionStatusType.Draft,
+        count: concessionCounts.draft,
+        color: 'info',
+      },
       {
         label: 'Pending',
         value: ConcessionStatusType.Pending,
@@ -117,7 +139,12 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
         color: 'error',
       },
     ],
-    [concessionCounts.approved, concessionCounts.pending, concessionCounts.rejected]
+    [
+      concessionCounts.approved,
+      concessionCounts.draft,
+      concessionCounts.pending,
+      concessionCounts.rejected,
+    ]
   );
 
   const actions = useCallback(
@@ -159,8 +186,8 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
               valueKey="id"
               value={selectedBoard}
               onChange={(value) => {
-                setSelectedBoard(value as string);
-                setSelectedMedium('');
+                onBoardChange(value as string);
+                onMediumChange('');
               }}
               formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
             />
@@ -171,7 +198,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
               disabled={!selectedBoard}
               valueKey="id"
               value={selectedMedium}
-              onChange={(value) => setSelectedMedium(value as string)}
+              onChange={(value) => onMediumChange(value as string)}
               formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
             />
           </Box>
@@ -204,7 +231,65 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
       <CustomizableTable
         tableId="student-concession-table"
-        // isLoading={isLoadingConcessionData}
+        isLoading={isLoadingConcessionData || isFetchingConcessionData}
+        columns={[
+          {
+            id: 'studentName',
+            label: 'Student Name',
+            align: 'left',
+            sticky: true,
+            minWidth: 150,
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'} ({row.grNumber})
+              </Typography>
+            ),
+          },
+          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90, filterType: 'number' },
+          {
+            id: 'standardName',
+            label: 'Class/Div',
+            align: 'left',
+            minWidth: 100,
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}-{row.divisionName}
+              </Typography>
+            ),
+          },
+          {
+            id: 'totalConcessionApplication',
+            label: 'Total Concession Application',
+            align: 'left',
+            minWidth: 160,
+          },
+          { id: 'email', label: 'Email', align: 'left', minWidth: 150 },
+          { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: 120 },
+          {
+            id: 'actions',
+            label: 'Action',
+            align: 'left',
+            minWidth: 40,
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                showViewIcon
+                showEditIcon={tabs.value === ConcessionStatusType.Draft}
+                handleDeleteClick={() => {
+                  setSelectedConcession(row as IStudentInfo);
+                  removeConcessionDialog.onTrue();
+                }}
+                showThreeDots={false}
+                handleEditClick={() => onEditConcession?.(row as IStudentInfo)}
+                handleViewClick={() => onViewConcession?.(row as IStudentInfo)}
+              />
+            ),
+          },
+        ]}
+        data={allConcessionData?.items || []}
         noDataText={
           <>
             No Concessions Found{' '}
@@ -221,82 +306,6 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
             </Box>
           </>
         }
-        columns={[
-          {
-            id: 'studentName',
-            label: 'Student Name',
-            align: 'left',
-            sticky: true,
-            minWidth: 150,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'} ({row.grNo})
-              </Typography>
-            ),
-          },
-          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90, filterType: 'number' },
-          { id: 'classDivision', label: 'Class/Div', align: 'left', minWidth: 100 },
-          {
-            id: 'concessions',
-            label: 'Concession Type',
-            align: 'left',
-            minWidth: 160,
-            render: (concessions) => {
-              if (!concessions || !Array.isArray(concessions) || concessions.length === 0) {
-                return '-';
-              }
-
-              // Extract and join concession types
-              const types = concessions
-                .map((item) => item.concessionType)
-                .filter(Boolean)
-                .join(', ');
-
-              return types || '-';
-            },
-          },
-          {
-            id: 'requestDate',
-            label: 'Request Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: 130,
-            render: (value) => (
-              <Typography fontSize="13px">
-                {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
-              </Typography>
-            ),
-          },
-          { id: 'email', label: 'Email', align: 'left', minWidth: 150 },
-          { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: 120 },
-          {
-            id: 'actions',
-            label: 'Action',
-            align: 'left',
-            minWidth: 40,
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            render: (value, row) => {
-              const status = row.status as ConcessionStatusType;
-              return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={(prop) => actions({ ...prop, row })}
-                  showThreeDots={status !== ConcessionStatusType.Pending}
-                  showViewIcon={status === ConcessionStatusType.Pending}
-                  showDeleteIcon={status === ConcessionStatusType.Pending}
-                  handleDeleteClick={() => {
-                    setSelectedConcession(row as IStudentInfo);
-                    removeConcessionDialog.onTrue();
-                  }}
-                  handleViewClick={() => onViewConcession?.(row as IViewConcessionRequestProps)}
-                />
-              );
-            },
-          },
-        ]}
-        data={tableData || []}
       />
 
       <ConfirmDialog
@@ -325,16 +334,20 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
                   onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
                     // Optimistic update logic
                     dispatchFn(
-                      concessionRequestApi.util.updateQueryData(
-                        'getConcessionRequestsList',
-                        { board: selectedBoard, medium: selectedMedium, status: tabs.value },
+                      concessionManagementApi.util.updateQueryData(
+                        'getConcessionApplications',
+                        {
+                          boardId: selectedBoard,
+                          educationMediumId: selectedMedium,
+                          status: tabs.value,
+                        },
                         (draft) => {
-                          const index = draft.findIndex(
+                          const index = draft?.items?.findIndex(
                             (item: any) => item.id === selectedConcession.id
                           );
                           if (index !== -1) {
                             setDeleteIndex(index);
-                            draft.splice(index, 1);
+                            draft.items.splice(index, 1);
                           }
                         }
                       )

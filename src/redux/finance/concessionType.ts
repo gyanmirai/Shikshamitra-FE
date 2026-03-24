@@ -32,7 +32,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
     }),
     putConcessionType: builder.mutation({
       query: ({ concessionTypeId, body }) => ({
-        url: `/finance/concession-types/${concessionTypeId}`,
+        url: `/concession-types/${concessionTypeId}`,
         method: 'PUT',
         data: body,
       }),
@@ -40,7 +40,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
     }),
     deleteConcessionType: builder.mutation({
       query: ({ concessionTypeId }) => ({
-        url: `/finance/concession-types/${concessionTypeId}`,
+        url: `/concession-types/${concessionTypeId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Concession-Type'],

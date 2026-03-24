@@ -14,6 +14,7 @@ import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -119,7 +120,7 @@ const STEP_FIELDS: string[][] = [
 ];
 
 const cardStyle = {
-  p: 3,
+  p: 2,
   borderRadius: 2,
   boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
   border: '1px solid rgba(145, 158, 171, 0.08)',
@@ -214,7 +215,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       }
       return errors;
     },
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const mapFilters = (filters: any[]) =>
         (filters || []).map((f) => ({
           field: f.field,
@@ -242,12 +243,20 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
         },
       };
 
-      if (isEdit) {
-        updateGroup({ groupId: initialValues?.id, body: payload });
-      } else {
-        createGroup({ academicYearId: currentYear?.id, body: payload });
+      try {
+        if (isEdit) {
+          await updateGroup({ groupId: initialValues?.id, body: payload }).unwrap();
+          shikshaMitraToast.success({ message: 'Group updated successfully' });
+        } else {
+          await createGroup({ academicYearId: currentYear?.id, body: payload }).unwrap();
+          shikshaMitraToast.success({ message: 'Group created successfully' });
+        }
+        onClose?.(values, true);
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: isEdit ? 'Failed to update group' : 'Failed to create group',
+        });
       }
-      onClose?.(values, true);
     },
   });
 
@@ -291,10 +300,11 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     formik.setFieldValue,
   ]);
 
-  const [getUsersForSelection] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useGetUsersForSelectionMutation,
-  });
+  const [getUsersForSelection, { isLoading: loadingUsersData, isFetching: fetchingUsersData }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useGetUsersForSelectionMutation,
+    });
 
   const buildUserSearchPayload = () => ({
     maxResultCount: 10,
@@ -303,8 +313,16 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     searchTerm: formik.values.searchQuery,
     divisionFilters: extractUniqueIds(formik.values.nameBased.academicRules),
     roleFilters: formik.values.nameBased.roles || [],
-    studentFilters: formik.values.nameBased.studentFilters || [],
-    employeeFilters: formik.values.nameBased.employeeFilters || [],
+    studentFilters: (formik.values.nameBased.studentFilters || []).map((f: any) => ({
+      field: f.field,
+      operator: f.operator,
+      value: f.value,
+    })),
+    employeeFilters: (formik.values.nameBased.employeeFilters || []).map((f: any) => ({
+      field: f.field,
+      operator: f.operator,
+      value: f.value,
+    })),
   });
 
   // attach formik to ref for table render access
@@ -1045,6 +1063,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                           <CustomizableTable
                             tableId="group-selection-table"
                             noDataText="No users found matching your search."
+                            isLoading={loadingUsersData || fetchingUsersData}
                             data={usersForSelection}
                             columns={selectionColumns}
                           />
@@ -1394,11 +1413,10 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          bgcolor: 'background.neutral',
         }}
       >
         <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-          <Scrollbar sx={{ height: '100%', p: 3 }}>
+          <Scrollbar sx={{ height: '100%', p: 1 }}>
             <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
               <Stepper
                 activeStep={activeStep}
@@ -1453,6 +1471,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                         {activeStep > 0 && (
                           <Button
                             color="inherit"
+                            size="small"
                             variant="outlined"
                             onClick={gotoBack}
                             startIcon={<Iconify icon="eva:arrow-ios-back-fill" />}
@@ -1466,6 +1485,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                           <Button
                             variant="contained"
                             onClick={gotoNext}
+                            size="small"
                             endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
                             sx={{
                               px: 3,
@@ -1480,7 +1500,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                           <LoadingButton
                             variant="contained"
                             loading={isCreatingGroup || isUpdatingGroup}
-                            onClick={() => formik.handleSubmit()}
+                            onClick={(e: any) => formik.handleSubmit(e)}
                             startIcon={<Iconify icon={GlobalIcons.submit} />}
                           >
                             {isEdit ? 'Update' : 'Create'}

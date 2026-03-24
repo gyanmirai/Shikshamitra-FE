@@ -15,7 +15,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useAddReceiptBookMutation,
   useUpdateReceiptBookMutation,
@@ -135,26 +135,32 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           <Grid size={{ xs: 12 }}>
             <Card
               sx={{
-                p: 1.5,
+                p: 2,
                 borderRadius: 1.5,
                 boxShadow: 'var(--shadows-4)',
+                bgcolor: 'background.paper',
               }}
             >
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 700,
+                  letterSpacing: 1.2,
+                  textTransform: 'uppercase',
+                  display: 'block',
+                  mb: 1.5,
+                }}
+              >
                 Receipt Number Preview
               </Typography>
 
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 0.5,
-                  fontWeight: 300,
-                  letterSpacing: 0.5,
-                  wordBreak: 'break-all',
-                }}
-              >
-                {getReceiptPreview(formik.values, boards, mediums, allOrganization)}
-              </Typography>
+              <ReceiptRangePreview
+                values={formik.values}
+                boards={boards}
+                mediums={mediums}
+                allOrganization={allOrganization}
+              />
             </Card>
           </Grid>
 
@@ -261,7 +267,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Receipt Book Name *"
                     value={formik.values[field]}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                      const value = e.target.value.replace(/[^a-zA-Z0-9-\s]/g, '');
                       formik.setFieldValue(field, value);
                     }}
                     error={error}
@@ -439,12 +445,19 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
 
 export default FinanceSettingReceiptbookDialog;
 
-const getReceiptPreview = (
-  values: FormikValues,
-  boards: Board[],
-  mediums: Medium[],
-  allOrganization: Organization[]
-): string => {
+interface IReceiptRangePreviewProps {
+  values: FormikValues;
+  boards: Board[];
+  mediums: Medium[];
+  allOrganization: Organization[];
+}
+
+const ReceiptRangePreview: React.FC<IReceiptRangePreviewProps> = ({
+  values,
+  boards,
+  mediums,
+  allOrganization,
+}) => {
   const boardName = boards?.find((b: any) => b.id === values.boardId)?.name || '----';
   const mediumName = mediums?.find((m) => m.id === values.mediumId)?.name || '----';
   const orgName = allOrganization?.find((o) => o.id === values.mediumStageId)?.name || '----';
@@ -454,13 +467,70 @@ const getReceiptPreview = (
   const endNum = values.endingNumber || '';
   const suffix = values.suffix || '';
 
-  const startFormatted = `${prefix}${startNum}${suffix}` || '------';
-  const endFormatted = `${prefix}${endNum}${suffix}`;
+  const startLabel = `${boardName}-${mediumName}-${orgName}-${prefix}${startNum}${suffix}`;
+  const endLabel = `${boardName}-${mediumName}-${orgName}-${prefix}${endNum}${suffix}`;
+  const hasRange = Boolean(endNum);
 
-  // If no ending number → show single preview
-  if (!endNum) {
-    return `${boardName}-${mediumName}-${orgName}-${startFormatted}`;
-  }
-  // If both are available → show range "FROM → TO"
-  return `${boardName}-${mediumName}-${orgName}-${startFormatted}  →  ${boardName}-${mediumName}-${orgName}-${endFormatted}`;
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 1.5,
+        flexWrap: 'wrap',
+      }}
+    >
+      {/* Start box */}
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          px: 1,
+          py: 1,
+          bgcolor: 'background.neutral',
+          minWidth: 120,
+          textAlign: 'center',
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 500, wordBreak: 'break-all', color: 'text.primary' }}
+        >
+          {startLabel}
+        </Typography>
+      </Box>
+
+      {/* Arrow */}
+      {hasRange && (
+        <>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+            ⬇️
+          </Typography>
+
+          {/* End box */}
+          <Box
+            sx={{
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              px: 1,
+              py: 1,
+              bgcolor: 'background.neutral',
+              minWidth: 120,
+              textAlign: 'center',
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: 500, wordBreak: 'break-all', color: 'text.primary' }}
+            >
+              {endLabel}
+            </Typography>
+          </Box>
+        </>
+      )}
+    </Box>
+  );
 };

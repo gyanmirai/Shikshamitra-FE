@@ -19,11 +19,8 @@ import NewConcessionRequestForm from './Components/NewConcessionRequest';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
-import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
 
 const Concession = () => {
-  //   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch function for dispatching actions to update the store
@@ -37,6 +34,10 @@ const Concession = () => {
 
   const onConfirmDialg = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
+
+  // Board/medium state lifted here so it survives form open/close cycles
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
@@ -57,8 +58,9 @@ const Concession = () => {
 
   // State to store th  e selected student concession data
   // null when no student is selected
-  const [selectedConcessionForView, setSelectedConcessionForView] =
-    useState<IViewConcessionRequestProps | null>(null);
+  const [selectedConcessionForView, setSelectedConcessionForView] = useState<IStudentInfo | null>(
+    null
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -151,8 +153,20 @@ const Concession = () => {
             setSelectedConcession(data);
           }}
           onAddConcession={() => {
+            setSelectedConcession(null);
             addConcessionRequest.onTrue();
           }}
+          onEditConcession={(data) => {
+            setSelectedConcession(data);
+            addConcessionRequest.onTrue();
+          }}
+          selectedBoard={selectedBoard}
+          selectedMedium={selectedMedium}
+          onBoardChange={(val) => {
+            setSelectedBoard(val);
+            setSelectedMedium('');
+          }}
+          onMediumChange={setSelectedMedium}
         />
       )}
 
@@ -163,6 +177,7 @@ const Concession = () => {
             open={addConcessionRequest.value}
             onClose={handleClose}
             student={selectedConcession as IStudentInfo}
+            editData={selectedConcession as any}
           />
         </Card>
       )}
@@ -171,24 +186,10 @@ const Concession = () => {
       {viewConcessionRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ViewConcessionRequest
-            viewConcessionRequest={viewConcessionRequest}
+            student={selectedConcessionForView}
             onClose={() => {
               viewConcessionRequest.onFalse();
-              setSelectedConcession(null);
-            }}
-            student={selectedConcessionForView as unknown as IStudentInfo}
-            onApprove={() => {
-              onConfirmDialg.onTrue();
-              setSelectedMode('Approve');
-              // Handle approve logic
-            }}
-            onReject={() => {
-              onConfirmDialg.onTrue();
-              setSelectedMode('Reject');
-              // Handle reject logic
-            }}
-            onMismatch={() => {
-              // Handle mismatch logic
+              setSelectedConcessionForView(null);
             }}
           />
         </Card>

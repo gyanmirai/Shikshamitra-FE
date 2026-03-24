@@ -37,23 +37,23 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
       invalidatesTags: ['ConcessionRequest'],
     }),
 
-    approveConcessionRequest: builder.mutation({
-      query: ({ concessionRequestId, body }) => ({
-        url: `/finance/concessions/${concessionRequestId}/approve`,
-        method: 'POST',
-        data: body,
-      }),
-      invalidatesTags: ['ConcessionRequest'],
-    }),
+    // approveConcessionRequest: builder.mutation({
+    //   query: ({ concessionRequestId, body }) => ({
+    //     url: `/finance/concessions/${concessionRequestId}/approve`,
+    //     method: 'POST',
+    //     data: body,
+    //   }),
+    //   invalidatesTags: ['ConcessionRequest'],
+    // }),
 
-    rejectConcessionRequest: builder.mutation({
-      query: ({ concessionRequestId, body }) => ({
-        url: `/finance/concessions/${concessionRequestId}/reject`,
-        method: 'POST',
-        data: body,
-      }),
-      invalidatesTags: ['ConcessionRequest'],
-    }),
+    // rejectConcessionRequest: builder.mutation({
+    //   query: ({ concessionRequestId, body }) => ({
+    //     url: `/finance/concessions/${concessionRequestId}/reject`,
+    //     method: 'POST',
+    //     data: body,
+    //   }),
+    //   invalidatesTags: ['ConcessionRequest'],
+    // }),
 
     deleteConcessionRequest: builder.mutation({
       query: (concessionRequestId) => ({
@@ -71,7 +71,5 @@ export const {
   useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
-  useApproveConcessionRequestMutation,
-  useRejectConcessionRequestMutation,
   useDeleteConcessionRequestMutation,
 } = concessionRequestApi;

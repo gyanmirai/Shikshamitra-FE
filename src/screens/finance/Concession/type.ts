@@ -1,11 +1,15 @@
-import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
-
 export interface IConcession {
   id?: string;
   board: string;
   medium: string;
   className: string;
   division: string;
+  concessionRequestId?: string;
+  standardName?: string;
+  divisionName?: string;
+  boardName?: string;
+  mediumName?: string;
+  educationMediumName?: string;
   studentName: string;
   studentId: string;
   concessionName?: string;
@@ -26,8 +30,17 @@ export interface IConcession {
 }
 
 export interface IStudentInfo {
+  concessionRequestId?: string;
+  studentConcessionTypeRequestId?: string;
   id?: string;
+  studentId?: string;
   studentName: string;
+  name?: string;
+  standardName?: string;
+  divisionName?: string;
+  grNumber?: number;
+  boardName?: string;
+  educationMediumName?: string;
   rollNo: string;
   sibling?: string;
   contactNo: string;
@@ -84,8 +97,8 @@ export interface IStudentTableProps {
 }
 
 export interface IStudentAdminTableProps {
-  data: IViewConcessionRequestProps[];
-  onViewConcession: (student: IViewConcessionRequestProps) => void;
+  data: IStudentInfo[];
+  onViewConcession: (student: IStudentInfo) => void;
 }
 
 export interface IReasonApprovalFormProps {

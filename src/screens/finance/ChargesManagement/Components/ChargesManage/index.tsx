@@ -31,6 +31,10 @@ const ChargesManagement = () => {
   const onConfirmDialg = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
 
+  // Lifted state for board and medium selection to persist across dialog open/close
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
+
   // Ref to store the refetch function from ChargesTable
   const chargeRefetchRef = useRef<(() => void) | null>(null);
 
@@ -197,6 +201,10 @@ const ChargesManagement = () => {
       )}
       {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (
         <ChargesTable
+          selectedBoard={selectedBoard}
+          setSelectedBoard={setSelectedBoard}
+          selectedMedium={selectedMedium}
+          setSelectedMedium={setSelectedMedium}
           onView={(data) => {
             viewChargeDetailsDialog.onTrue();
             setSelectedChargeData(data);
