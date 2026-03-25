@@ -77,7 +77,16 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
       try {
         const payload = {
           name: values.name,
-          documents: values.documents || [],
+          documents:
+            values.documents?.map((doc: any) => ({
+              ...doc,
+              documentSize: doc.documentSize
+                ? Math.round(Number(doc.documentSize) * 1024 * 1024)
+                : doc.documentSize,
+              acceptedFormat: Array.isArray(doc.acceptedFormat)
+                ? doc.acceptedFormat.map(Number)
+                : [],
+            })) || [],
           description: values.description || '',
         };
 

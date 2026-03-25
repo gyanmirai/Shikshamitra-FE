@@ -85,7 +85,9 @@ const HrSetting = () => {
     () =>
       documents?.items?.map((item: any) => ({
         ...item,
-        documentTypesString: item?.documentTypes?.map((ite: any) => DocumentType[ite]).join(', '),
+        documentTypesString: (item?.documentTypes ?? [])
+          .map((ite: any) => DocumentType[ite])
+          .join(', '),
       })),
     [documents?.items]
   );

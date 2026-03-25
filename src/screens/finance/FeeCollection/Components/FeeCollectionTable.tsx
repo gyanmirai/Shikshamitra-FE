@@ -69,12 +69,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         ...item,
         nameValue: `${item.name || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
         classDivValue: `${item.className || '-'}-${item.division}`,
-        paybleFeesValue: `₹ ${formatNumber(item.paybleFees ?? 0)}`,
-        totalFeesValue: `₹ ${formatNumber(item.totalFees ?? 0)}`,
-        pendingFeesValue: `₹ ${formatNumber(item.pendingFees ?? 0)}`,
+        paybleFeesValue: item.paybleFees ?? 0,
+        totalFeesValue: item.totalFees ?? 0,
+        pendingFeesValue: item.pendingFees ?? 0,
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [feeCollectionData?.feeCollectionData]
+    []
   );
 
   return (
@@ -139,6 +138,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: true,
               filterType: 'number',
               minWidth: '120px',
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
               id: 'totalFeesValue',
@@ -147,6 +147,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: true,
               filterType: 'number',
               minWidth: '120px',
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
               id: 'pendingFeesValue',
@@ -155,6 +156,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               align: 'left',
               isFilter: true,
               minWidth: '130px',
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
               id: 'status',

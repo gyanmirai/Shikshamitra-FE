@@ -47,8 +47,8 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
       (feeStructureData?.items ?? []).map((item: IFeeStructure) => ({
         ...item,
         boardMediumValue: `${item.boardName ?? ''}/${item.mediumName ?? ''}`,
-        totalClassValue: item.totalClass ?? '-',
-        totalFeeHeadValue: item.totalFeeHead ?? '-',
+        totalClassValue: item.totalClass ?? null,
+        totalFeeHeadValue: item.totalFeeHead ?? null,
       })),
     [feeStructureData?.items]
   );
@@ -68,12 +68,14 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         label: 'Total Classes',
         align: 'left',
         filterType: 'number',
+        render: (value) => (value == null ? '-' : value),
       },
       {
         id: 'totalFeeHeadValue',
         label: 'Total Fee Heads',
         align: 'left',
         filterType: 'number',
+        render: (value) => (value == null ? '-' : value),
       },
       {
         id: 'status',

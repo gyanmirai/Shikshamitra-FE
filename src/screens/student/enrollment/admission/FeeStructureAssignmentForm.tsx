@@ -3,11 +3,10 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import { formatNumber } from 'src/utils/formate_number';
@@ -48,8 +47,6 @@ interface Props {
 }
 
 const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
-  const theme = useTheme();
-  console.log('student0000', student?.standardId);
   const [feeHeads, setFeeHeads] = useState([]);
   // Get student's assigned structure
   const {
@@ -125,8 +122,6 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     },
   });
 
-  console.log('formik----values----', formik.values);
-
   const handleToggleFeeHead = (feeHeadId: string) => {
     const currentSelected = formik.values.selectedFeeHeads;
     const updated = currentSelected.includes(feeHeadId)
@@ -134,6 +129,16 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
       : [...currentSelected, feeHeadId];
     formik.setFieldValue('selectedFeeHeads', updated);
   };
+  const feeStructureOptions = useMemo(
+    () =>
+      (financeFeeStructures?.standardFeeStructures ?? [])
+        .map((fs: any) => ({
+          ...fs,
+          name: `${fs.name}`,
+        }))
+        .filter((fs: any) => fs.status === 1),
+    [financeFeeStructures]
+  );
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -143,14 +148,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
             <CustomSelect
               fullWidth
               label="Select Fee Structure *"
-              options={
-                financeFeeStructures?.standardFeeStructures
-                  ?.map((fs: any) => ({
-                    ...fs,
-                    name: `${fs.name}`,
-                  }))
-                  .filter((fs: any) => fs.status === 1) || []
-              }
+              options={feeStructureOptions}
               disabled={!!assignedStructureData?.standardFeeStructureId}
               value={formik.values.feeStructureId}
               onChange={(value) => {
