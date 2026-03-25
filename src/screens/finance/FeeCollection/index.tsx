@@ -66,7 +66,14 @@ const FeeCollection = () => {
           description="View detailed fee information and payment history for the selected student."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Fee Collection' },
+            {
+              name: 'Fee Collection',
+              href: '/finance/fee-collection',
+              onClick() {
+                viewDialog.onFalse();
+                setSelectedStudent(null);
+              },
+            },
             { name: 'Fee Details' },
           ]}
           isBack={viewDialog.value}

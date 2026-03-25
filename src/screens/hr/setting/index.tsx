@@ -65,7 +65,11 @@ const HrSetting = () => {
     academicYearId: currentYear?.id,
   };
 
-  const { data: documents, isLoading } = useQueryAndMutation({
+  const {
+    data: documents,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDocumentConfigurationsQuery,
     params: queryParams,
@@ -79,9 +83,11 @@ const HrSetting = () => {
 
   const tableData = useMemo(
     () =>
-      documents?.items.map((item: any) => ({
+      documents?.items?.map((item: any) => ({
         ...item,
-        documentTypesString: item.documentTypes.map((ite: any) => DocumentType[ite]).join(', '),
+        documentTypesString: (item?.documentTypes ?? [])
+          .map((ite: any) => DocumentType[ite])
+          .join(', '),
       })),
     [documents?.items]
   );
@@ -230,7 +236,7 @@ const HrSetting = () => {
           </>
         }
         tableId="documents"
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         isFilter={false}
         columns={columns}
         data={tableData || []}

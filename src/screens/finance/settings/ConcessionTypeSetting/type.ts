@@ -33,8 +33,7 @@ export interface IConcessionDocument {
 export interface IConcessionTypeForm {
   id?: string; // for editing
   name: string;
-  documentRequired: boolean;
-  documents?: IConcessionDocument[]; // only if documentRequired = true
+  documents?: IConcessionDocument[];
   description?: string;
 }
 

@@ -40,8 +40,6 @@ export interface IFeeStructure {
 }
 
 export interface IFeeStructureTableProps {
-  data: IFeeStructure[];
-  isLoading: boolean;
   addFeeStructure: UseBooleanReturn;
   editData: IFeeStructure | null;
   setEditData: (data: IFeeStructure | null) => void;

@@ -176,7 +176,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <Box sx={{ display: 'flex', gap: 2 }}>
             <CustomSelect

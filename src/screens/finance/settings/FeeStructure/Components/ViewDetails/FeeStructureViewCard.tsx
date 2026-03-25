@@ -5,6 +5,8 @@ import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import { formatNumber } from 'src/utils/formate_number';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FeePaymentTypeOptions } from 'src/enums/fee-payment-type';
+import { FeeOptionalTypeOptions } from 'src/enums/fee-optional-type';
 import {
   Box,
   Chip,
@@ -77,17 +79,19 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
               id: 'amount',
               label: 'Amount',
               align: 'left',
+              filterType: 'number',
               render: (value) => (
                 <Typography variant="body2">
                   <NumericFormat value={value} displayType="text" thousandSeparator prefix="₹" />
                 </Typography>
               ),
             },
-
             {
               id: 'isOneTime',
               label: 'Payment Type',
               align: 'left',
+              filterType: 'enum',
+              enumOptions: FeePaymentTypeOptions,
               render: (value) =>
                 value ? (
                   <Label color="info" variant="soft">
@@ -103,6 +107,8 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
               id: 'isOptional',
               label: 'Status',
               align: 'left',
+              filterType: 'enum',
+              enumOptions: FeeOptionalTypeOptions,
               render: (value) =>
                 !value ? (
                   <Label color="success" variant="soft">

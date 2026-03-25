@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { financePaths } from 'src/constants/finance-menu';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -69,10 +70,10 @@ const Concession = () => {
           heading="Concession Request"
           description="View and manage student concession requests."
           links={[
-            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Finance', href: financePaths.dashboard },
             {
               name: 'Concession',
-              href: '/finance/concession/concessionRequest',
+              href: financePaths.concession,
               onClick(e) {
                 handleClose(null, false);
               },
@@ -89,10 +90,10 @@ const Concession = () => {
           heading="View Concession"
           description="View and manage student concession requests."
           links={[
-            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Finance', href: financePaths.dashboard },
             {
               name: 'Concession',
-              href: '/finance/concession/concessionRequest',
+              href: financePaths.concession,
               onClick(e) {
                 viewConcessionRequest.onFalse();
                 setSelectedConcessionForView(null);
@@ -110,8 +111,8 @@ const Concession = () => {
           heading="Concession"
           description="View and manage student concession requests."
           links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Concession', href: '/finance/concession/concessionRequest' },
+            { name: 'Finance', href: financePaths.dashboard },
+            { name: 'Concession', href: financePaths.concession },
           ]}
           action={
             <Button

@@ -16,6 +16,8 @@ coverage
 # production
 .next
 .agent/
+.agents/
+.claude/
 .swc
 _static
 out

@@ -32,7 +32,13 @@ import AddFeeHeadDialogContent from './AddFeeHeadForm';
 import AddFeeStructureDialog from './FeeStructureDialog';
 import { standardFeeStructureInitialValues } from './FeeStructureInitialValues';
 
-const FeeStructureStep = ({ formik }: { formik: any }) => {
+const FeeStructureStep = ({
+  formik,
+  classList: propClassList,
+}: {
+  formik: any;
+  classList?: any[];
+}) => {
   const [editFeeStructure, setEditFeeStructure] = useState<{
     classId: string;
     index: number;
@@ -47,7 +53,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
 
   const initializedClassesRef = useRef<Record<string, boolean>>({});
 
-  const classList = useMemo(() => formik.values.classList || [], [formik.values.classList]);
+  const classList = useMemo(() => propClassList || [], [propClassList]);
 
   const {
     data: standardFeeStructure,
@@ -306,7 +312,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                     return (
                       <EmptyContent
                         filled
-                        title="No Fee Structure Created"
+                        title="No Fee Structure Created For This Class"
                         description="Click the 'Fee Structure' button above to create a new fee structure for this class."
                         sx={{ mt: 2, py: 10 }}
                       />

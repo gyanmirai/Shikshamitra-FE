@@ -23,6 +23,7 @@ import type { IFeeStructureFormProps } from '../type';
 
 const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, editData }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const [classList, setClassList] = useState<any[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Create mutation
@@ -193,7 +194,12 @@ const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, ed
             return (
               <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
                 <Box p={2}>
-                  <StepComponent formik={formik} editData={editData} />
+                  <StepComponent
+                    formik={formik}
+                    editData={editData}
+                    classList={classList}
+                    setClassList={setClassList}
+                  />
                 </Box>
               </BackPopUpChecked>
             );

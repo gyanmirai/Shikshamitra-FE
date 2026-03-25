@@ -834,7 +834,6 @@ const FormSlider = ({ step, formik, editData }: any) => {
     params: { userId: editData?.id, academicYearId: currentYear?.id },
     options: { skip: !(editData?.id && currentYear?.id && step === 7) },
   });
-  console.log(accessControl, '============================');
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (!editData?.id) return;
@@ -972,7 +971,6 @@ const FormSlider = ({ step, formik, editData }: any) => {
     accessControl,
     step,
   ]);
-
   return (
     <Box ref={containerRef} sx={{ overflowX: 'hidden', height: '100%' }}>
       {steps.map(

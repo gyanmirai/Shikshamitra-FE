@@ -3,7 +3,6 @@ import type { IConcessionTypeForm } from '../type';
 export const getInitialConcessionTypeData = (editData?: any | null): IConcessionTypeForm => ({
   id: editData?.id,
   name: editData?.name || editData?.name || '',
-  documentRequired: editData?.isDocumentRequired ?? editData?.documentRequired ?? false,
   documents: (editData?.documents || []).map((doc: any) => ({
     ...doc,
     documentSize: doc.documentSize
