@@ -104,6 +104,8 @@ const IncomeFormFields: React.FC<IncomeFormFieldsProps> = ({
             onChange={(e) => {
               const value = e.target.value
                 .replace(/[^a-zA-Z0-9\s]/g, '')
+                .replace(/^\s+/g, '')
+                .trimStart()
                 .split(' ')
                 .map((word) =>
                   word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''

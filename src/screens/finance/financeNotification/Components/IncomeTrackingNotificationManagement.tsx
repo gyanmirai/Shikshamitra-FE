@@ -125,6 +125,7 @@ export const incomeTrackingNotificationsData = [
 ];
 
 const IncomeTrackingNotificationManagement = ({ dialog, setIsViewMode }: any) => {
+  const [tableData, setTableData] = useState(incomeTrackingNotificationsData);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
 
@@ -144,7 +145,7 @@ const IncomeTrackingNotificationManagement = ({ dialog, setIsViewMode }: any) =>
       ) : (
         <CustomizableTable
           tableId="income-tracking-auto-notification-configuration"
-          data={incomeTrackingNotificationsData}
+          data={tableData}
           columns={[
             { id: 'event', label: 'Event' },
             { id: 'triggerCondition', label: 'Trigger Condition' },
@@ -167,7 +168,20 @@ const IncomeTrackingNotificationManagement = ({ dialog, setIsViewMode }: any) =>
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      setTableData((prev: any) =>
+                        prev.map((r: any) =>
+                          r.id === row.id
+                            ? {
+                                ...r,
+                                isActive: event.target.checked
+                                  ? NotificationStatusType.Active
+                                  : NotificationStatusType.Inactive,
+                              }
+                            : r
+                        )
+                      );
+                    }}
                   />
                 );
               },

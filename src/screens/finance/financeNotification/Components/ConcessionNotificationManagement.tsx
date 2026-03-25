@@ -148,6 +148,7 @@ export const concessionNotificationsData = [
 ];
 
 const ConcessionNotificationManagement = ({ dialog, setIsViewMode }: any) => {
+  const [tableData, setTableData] = useState(concessionNotificationsData);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
 
@@ -167,7 +168,7 @@ const ConcessionNotificationManagement = ({ dialog, setIsViewMode }: any) => {
       ) : (
         <CustomizableTable
           tableId="concession-auto-notification-configuration"
-          data={concessionNotificationsData}
+          data={tableData}
           columns={[
             { id: 'event', label: 'Event' },
             { id: 'triggerCondition', label: 'Trigger Condition' },
@@ -190,7 +191,20 @@ const ConcessionNotificationManagement = ({ dialog, setIsViewMode }: any) => {
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      setTableData((prev: any) =>
+                        prev.map((r: any) =>
+                          r.id === row.id
+                            ? {
+                                ...r,
+                                isActive: event.target.checked
+                                  ? NotificationStatusType.Active
+                                  : NotificationStatusType.Inactive,
+                              }
+                            : r
+                        )
+                      );
+                    }}
                   />
                 );
               },

@@ -5,7 +5,7 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
@@ -62,18 +62,16 @@ const TABS = [
 // MAIN SCREEN
 // ----------------------------------------------------
 const FinanceNotificationScreen = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'feeCollection' });
+  const { getParam, setParam } = useCustomSearchParams();
+  const activeTab = getParam('tab') || 'feeCollection';
   const dialog = useBoolean(false);
 
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams?.tab]
+    () => TABS.find((tab) => tab.value === activeTab),
+    [activeTab]
   );
 
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
+  const currentIndex = useMemo(() => TABS.findIndex((tab) => tab.value === activeTab), [activeTab]);
 
   const [isViewMode, setIsViewMode] = useState(false);
   const [isBackClick, setIsBackClick] = useState(false);
@@ -88,7 +86,6 @@ const FinanceNotificationScreen = () => {
             { name: 'Finance', href: '/finance/dashboard' },
             {
               name: 'Notification',
-              href: '/finance/notification',
               onClick(e) {
                 dialog.onFalse();
               },
@@ -103,10 +100,7 @@ const FinanceNotificationScreen = () => {
         <CustomBreadcrumbs
           heading="Notification"
           description="Configure notifications for fee collection, charges, concessions, and financial tracking."
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Notification', href: '/finance/notification' },
-          ]}
+          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Notification' }]}
           sx={{ px: 1 }}
         />
       )}
@@ -115,15 +109,17 @@ const FinanceNotificationScreen = () => {
       <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+          mb: 1,
+          borderRadius: 2,
         }}
       >
         {!dialog.value && (
           <CustomTabs
-            value={searchParams.tab}
+            value={activeTab}
             onChange={(e, value) => {
               const newIndex = TABS.findIndex((tab) => tab.value === value);
               setIsBackClick(currentIndex > newIndex);
-              setSearchParams({ tab: value });
+              setParam('tab', String(value));
             }}
             sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
             role="tablist"

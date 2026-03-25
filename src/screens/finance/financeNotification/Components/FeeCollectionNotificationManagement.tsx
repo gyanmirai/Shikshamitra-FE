@@ -89,6 +89,7 @@ export const feeCollectionNotificationsData = [
 ];
 
 const FeeCollectionNotificationManagement = ({ dialog, setIsViewMode }: any) => {
+  const [tableData, setTableData] = useState(feeCollectionNotificationsData);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
 
@@ -108,7 +109,7 @@ const FeeCollectionNotificationManagement = ({ dialog, setIsViewMode }: any) => 
       ) : (
         <CustomizableTable
           tableId="fee-collection-auto-notification-configuration"
-          data={feeCollectionNotificationsData}
+          data={tableData}
           columns={[
             {
               id: 'event',
@@ -137,7 +138,20 @@ const FeeCollectionNotificationManagement = ({ dialog, setIsViewMode }: any) => 
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      setTableData((prev: any) =>
+                        prev.map((r: any) =>
+                          r.id === row.id
+                            ? {
+                                ...r,
+                                isActive: event.target.checked
+                                  ? NotificationStatusType.Active
+                                  : NotificationStatusType.Inactive,
+                              }
+                            : r
+                        )
+                      );
+                    }}
                   />
                 );
               },

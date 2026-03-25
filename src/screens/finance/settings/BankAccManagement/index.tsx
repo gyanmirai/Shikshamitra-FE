@@ -91,8 +91,8 @@ const BankAccountManagement: React.FC = () => {
         description="Manage bank accounts used by the school. Add, edit or delete bank account details and link payment methods or branches."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Settings', href: '/finance/setting' },
-          { name: 'Bank Accounts', href: '/finance/settings/bank-accounts' },
+          { name: 'Settings' },
+          { name: 'Bank Accounts' },
         ]}
         action={
           <Button

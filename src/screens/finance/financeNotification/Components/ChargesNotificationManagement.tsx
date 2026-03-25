@@ -168,6 +168,7 @@ export const chargesNotificationsData = [
 ];
 
 const ChargesNotificationManagement = ({ dialog, setIsViewMode }: any) => {
+  const [tableData, setTableData] = useState(chargesNotificationsData);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
 
@@ -187,7 +188,7 @@ const ChargesNotificationManagement = ({ dialog, setIsViewMode }: any) => {
       ) : (
         <CustomizableTable
           tableId="charges-auto-notification-configuration"
-          data={chargesNotificationsData}
+          data={tableData}
           columns={[
             { id: 'event', label: 'Event' },
             { id: 'triggerCondition', label: 'Trigger Condition' },
@@ -210,7 +211,20 @@ const ChargesNotificationManagement = ({ dialog, setIsViewMode }: any) => {
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {}}
+                    onChange={(event) => {
+                      setTableData((prev: any) =>
+                        prev.map((r: any) =>
+                          r.id === row.id
+                            ? {
+                                ...r,
+                                isActive: event.target.checked
+                                  ? NotificationStatusType.Active
+                                  : NotificationStatusType.Inactive,
+                              }
+                            : r
+                        )
+                      );
+                    }}
                   />
                 );
               },
