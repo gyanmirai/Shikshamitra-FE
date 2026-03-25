@@ -21,12 +21,9 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
     }),
     postConcessionType: builder.mutation({
       query: ({ academicYearId, body }) => ({
-        url: `/concession-types`,
+        url: `/${academicYearId}/concession-types`,
         method: 'POST',
         data: body,
-        params: {
-          academicYearId,
-        },
       }),
       invalidatesTags: ['Concession-Type'],
     }),

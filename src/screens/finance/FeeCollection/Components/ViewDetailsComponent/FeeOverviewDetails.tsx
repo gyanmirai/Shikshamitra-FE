@@ -90,7 +90,7 @@ export default function FeeOverview({
         flexDirection: 'column',
       }}
     >
-      <Box pb={1}>
+      <Box>
         <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
           Fee Overview
         </Typography>
@@ -99,7 +99,7 @@ export default function FeeOverview({
         </Typography>
       </Box>
 
-      <Scrollbar sx={{ flexGrow: 1, px: 1, maxHeight: 400 }}>
+      <Scrollbar sx={{ flexGrow: 1, px: 1, maxHeight: 350 }}>
         {/* Total Fee */}
         <RowCard
           icon={<Iconify icon="streamline:bag-dollar" width={24} />}

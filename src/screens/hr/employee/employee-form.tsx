@@ -972,7 +972,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
     accessControl,
     step,
   ]);
-
+  console.log('formik values----', formik.values);
   return (
     <Box ref={containerRef} sx={{ overflowX: 'hidden', height: '100%' }}>
       {steps.map(

@@ -96,7 +96,7 @@ const ViewFeeStructure = ({
                     />
                   ))
                 ) : (
-                  <EmptyContent title="No Fee Structure Created" mt={10} />
+                  <EmptyContent title="No Fee Structure Created For This Class" mt={10} />
                 )}
               </Scrollbar>
             </SectionCard>

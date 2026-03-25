@@ -14,10 +14,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  useGetFeeStructuresQuery,
-  useUpdateFeeStructureStatusMutation,
-} from 'src/redux/finance/financeFeeStructure';
+import { useUpdateFeeStructureStatusMutation } from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureTable from './Components/FeeStructureTable';
 import FeeStructureFormStepper from './Components/NewStructureForm';
@@ -32,17 +29,6 @@ const FeeStructure = () => {
   const addFeeStructureDialog = useBoolean();
   const confirmDialog = useBoolean();
   const viewFeeStructureDialog = useBoolean();
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  const {
-    data: feeStructure,
-    isLoading: isFeeStructureLoading,
-    isFetching: isFeeStructureFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeStructuresQuery,
-    params: { academicYearId: currentYear?.id },
-  });
 
   // PATCH mutation for status change
   const [patchFeeStructureStatus, { isLoading: isUpdating }] = useQueryAndMutation({
@@ -176,8 +162,6 @@ const FeeStructure = () => {
           </Card>
         ) : !viewFeeStructureDialog.value ? (
           <FeeStructureTable
-            data={feeStructure?.items || []}
-            isLoading={isFeeStructureLoading || isFeeStructureFetching}
             addFeeStructure={addFeeStructureDialog}
             editData={selectedFeeStructure}
             setEditData={setSelectedFeeStructure}

@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
-import { capitalize } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Grid, TextField } from '@mui/material';
 import React, { useState, useEffect } from 'react';
@@ -18,9 +17,10 @@ import type { IFeeStructure } from '../type';
 type Props = {
   formik: FormikProps<IFeeStructure>;
   editData?: any;
+  setClassList?: (list: any[]) => void;
 };
 
-const GeneralInfoStep = ({ formik, editData }: Props) => {
+const GeneralInfoStep = ({ formik, editData, setClassList }: Props) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // GET receipt book
   const { data: receiptBookData, isLoading: receiptBookLoading } = useQueryAndMutation({
@@ -37,9 +37,6 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
-  console.log('initalvalues values----', formik.initialValues);
-
-  console.log('formik values----', formik.values);
   // Local state
   const [boards, setBoards] = useState<any[]>([]);
 
@@ -58,13 +55,12 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
     }
   }, [formik.values.mediumId, getClassByMedium]);
 
-  // Store class list for names in formik state
+  // Store class list for use in step 2 (kept outside formik to avoid dirty-check false positives)
   useEffect(() => {
     if (classes?.length > 0) {
-      formik.setFieldValue('classList', classes);
+      setClassList?.(classes);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classes, editData]);
+  }, [classes, setClassList]);
 
   return (
     <Grid container spacing={3}>
@@ -78,8 +74,8 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
             label="Fee Structure Name *"
             value={formik?.values?.name}
             onChange={(e) => {
-              const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-              const capitalized = capitalize(onlyLetters);
+              const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+              const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
               formik.setFieldValue('name', capitalized);
             }}
             error={formik?.touched?.name && Boolean(formik?.errors?.name)}
@@ -148,7 +144,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
           <CustomSelect
             name="receiptBook"
             label="Receipt Book *"
-            options={receiptBookData?.items || []}
+            options={receiptBookData?.items.filter((item: any) => item.isActive) || []}
             labelKey="name"
             valueKey="id"
             isLoading={receiptBookLoading}
@@ -160,6 +156,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
               );
               formik.setFieldValue('receiptBookName', selectedReceiptBook?.name);
             }}
+            disabled={!formik.values.mediumId}
             error={formik?.touched?.receiptBookId && Boolean(formik?.errors?.receiptBookId)}
             helperText={(formik?.touched?.receiptBookId && formik?.errors?.receiptBookId) as string}
           />

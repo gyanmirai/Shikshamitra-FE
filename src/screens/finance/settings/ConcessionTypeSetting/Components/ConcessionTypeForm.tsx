@@ -13,7 +13,6 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -27,14 +26,12 @@ import {
   Chip,
   Paper,
   Button,
-  Switch,
   Checkbox,
   TextField,
   IconButton,
   Typography,
   Autocomplete,
   DialogActions,
-  FormControlLabel,
 } from '@mui/material';
 
 import { ConcessionDocumentFormatArray } from '../type';
@@ -59,12 +56,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
       skip: !editData?.id,
     },
   });
-  // Custom hook to fetch fee head data
-  const { data: feeHeadData, isLoading: isFeeHeadLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeHeadsQuery,
-    params: { academicYearId: currentYear?.id },
-  });
+
   const [addConcessionType, { isLoading: isCreating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostConcessionTypeMutation,
@@ -83,28 +75,18 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
     validationSchema: concessionTypeValidationSchema,
     onSubmit: async (values) => {
       try {
-        // Transform form data to match API requirements
         const payload = {
           name: values.name,
-          isDocumentRequired: values.documentRequired,
-          documents: values.documentRequired
-            ? (values.documents || []).map((doc) => ({
-                documentName: doc.documentName,
-                documentSize: Number(doc.documentSize) * 1024 * 1024, // Convert Mb to bytes
-                acceptedFormat: doc.acceptedFormat.map((fmt) => Number(fmt)),
-              }))
-            : [],
+          documents: values.documents || [],
           description: values.description || '',
         };
 
         if (concessionTypeDetails?.id) {
-          // Update existing concession type
           await updateConcessionType({
             concessionTypeId: concessionTypeDetails.id,
             body: payload,
           }).unwrap();
         } else {
-          // Create new concession type
           await addConcessionType({
             academicYearId: currentYear?.id,
             body: payload,
@@ -117,6 +99,8 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
       }
     },
   });
+  console.log('formik--->', formik.values);
+  console.log('formik errors--->', formik.errors);
   // Document add/remove handlers
   const handleAddDocument = () => {
     formik.setFieldValue('documents', [
@@ -160,23 +144,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.documentRequired}
-                    onChange={() =>
-                      formik.setFieldValue('documentRequired', !formik.values.documentRequired)
-                    }
-                  />
-                }
-                label="Document Required?"
-              />
-            </ShakingTextField>
-          </Grid>
-
-          {formik.values.documentRequired && (
+          {formik.values.documents && (
             <Grid size={{ xs: 12 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
@@ -215,8 +183,12 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                               name={`documents.${idx}.documentName`}
                               value={doc.documentName}
                               onChange={(e) => {
+                                const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                                const capitalized = onlyLetters.replace(/\b\w/g, (c) =>
+                                  c.toUpperCase()
+                                );
                                 const docs = [...(formik.values.documents ?? [])];
-                                docs[idx].documentName = e.target.value;
+                                docs[idx].documentName = capitalized;
                                 formik.setFieldValue('documents', docs);
                               }}
                               sx={{ minWidth: 180 }}
@@ -265,6 +237,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                             <TextField
                               label="Document Size (Mb) *"
                               size="small"
+                              type="number"
                               name={`documents.${idx}.documentSize`}
                               value={doc.documentSize ?? ''}
                               onChange={(e) => {
@@ -312,6 +285,9 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                     )?.documentSize
                                   : ''
                               }
+                              inputProps={{
+                                min: 0,
+                              }}
                               sx={{ minWidth: 100 }}
                             />
                           </ShakingTextField>

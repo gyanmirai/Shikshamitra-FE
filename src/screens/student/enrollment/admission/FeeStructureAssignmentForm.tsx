@@ -144,10 +144,12 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
               fullWidth
               label="Select Fee Structure *"
               options={
-                financeFeeStructures?.standardFeeStructures?.map((fs: any) => ({
-                  ...fs,
-                  name: `${fs.name}`,
-                })) || []
+                financeFeeStructures?.standardFeeStructures
+                  ?.map((fs: any) => ({
+                    ...fs,
+                    name: `${fs.name}`,
+                  }))
+                  .filter((fs: any) => fs.status === 1) || []
               }
               disabled={!!assignedStructureData?.standardFeeStructureId}
               value={formik.values.feeStructureId}

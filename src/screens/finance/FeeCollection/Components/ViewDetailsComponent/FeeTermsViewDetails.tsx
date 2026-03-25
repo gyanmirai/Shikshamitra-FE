@@ -98,7 +98,7 @@ export const ConsolidatedFeeDetails = () => {
       <Scrollbar
         sx={{
           flexGrow: 1,
-          maxHeight: 500,
+          maxHeight: 350,
           p: 2,
           bgcolor: alpha(theme.palette.background.neutral, 0.4),
         }}
