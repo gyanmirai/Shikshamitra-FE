@@ -144,7 +144,7 @@ const GeneralInfoStep = ({ formik, editData, setClassList }: Props) => {
           <CustomSelect
             name="receiptBook"
             label="Receipt Book *"
-            options={receiptBookData?.items.filter((item: any) => item.isActive) || []}
+            options={receiptBookData?.items?.filter((item: any) => item.isActive) ?? []}
             labelKey="name"
             valueKey="id"
             isLoading={receiptBookLoading}
