@@ -14,7 +14,6 @@ import { InfoItem } from 'src/screens/academic/homework-assignment-management/ho
 import type { IFeeStructure } from '../../type';
 
 const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStructure | null }) => {
-  console.log('feeStructure', feeStructure);
   return (
     <Card
       variant="outlined"
