@@ -12,22 +12,30 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   usePostChargeMutation,
   useUpdateChargeMutation,
 } from 'src/redux/finance/ChargeManagement/chargeApi';
-import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+import {
+  Box,
+  Grid,
+  Button,
+  Accordion,
+  TextField,
+  Typography,
+  DialogActions,
+  AccordionDetails,
+  AccordionSummary,
+} from '@mui/material';
 
 import type { IChargeFormProps } from './type';
 
@@ -69,6 +77,16 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     type: 'mutation',
     currentQueryAndMutation: useUpdateChargeMutation,
   });
+
+  const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({
+    chargeDetails: true,
+    studentInfo: true,
+    additionalNotes: true,
+  });
+
+  const handleAccordionToggle = useCallback((panel: string) => {
+    setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] }));
+  }, []);
 
   // Memoize initial values
   const initialValues = useMemo(() => {
@@ -187,6 +205,38 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
+
+  const handleSubmit = useCallback(() => {
+    const fieldToPanelMap: Record<string, string> = {
+      chargeCategoryId: 'chargeDetails',
+      amount: 'chargeDetails',
+      dueDate: 'chargeDetails',
+      priority: 'chargeDetails',
+      purposeDescription: 'chargeDetails',
+      boardId: 'studentInfo',
+      educationMediumId: 'studentInfo',
+      standardId: 'studentInfo',
+      divisionId: 'studentInfo',
+      studentId: 'studentInfo',
+      selectedStudent: 'studentInfo',
+      additionalNotes: 'additionalNotes',
+    };
+
+    formik.validateForm().then((validationErrors) => {
+      const errorKeys = Object.keys(validationErrors);
+      if (errorKeys.length > 0) {
+        const panelsToOpen: Record<string, boolean> = {};
+        errorKeys.forEach((key) => {
+          if (fieldToPanelMap[key]) {
+            panelsToOpen[fieldToPanelMap[key]] = true;
+          }
+        });
+        setExpandedPanels((prev) => ({ ...prev, ...panelsToOpen }));
+      }
+      formik.handleSubmit();
+    });
+  }, [formik]);
+
   // Load boards on year change
   useEffect(() => {
     setBoards(currentYear?.boards || []);
@@ -214,309 +264,372 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container>
-              {/* Charge Details */}
+            <Grid container spacing={2}>
               <Grid size={{ xs: 12 }}>
-                <SectionCard title="Charge Details" paperProps={{ sx: { ...cardStyle } }}>
-                  {/* Charge Category */}
-                  <Grid size={{ xs: 12 }}>
-                    <ShakingTextField
-                      error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
-                    >
-                      <CustomSelect
-                        name="chargeCategoryId"
-                        label="Charge Category *"
-                        isLoading={chargeCategoriesLoading}
-                        options={chargeCategories?.items || []}
-                        labelKey="name"
-                        valueKey="id"
-                        value={values.chargeCategoryId}
-                        onChange={(value) => setFieldValue('chargeCategoryId', value)}
-                        error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
-                        helperText={(touched.chargeCategoryId && errors.chargeCategoryId) || ''}
-                        formControlProps={{ fullWidth: true }}
-                      />
-                    </ShakingTextField>
-                    {values.chargeCategoryId && (
-                      <Typography variant="body2" color="text.secondary">
-                        {chargeCategories?.items?.find(
-                          (item: any) => item.id === values.chargeCategoryId
-                        )?.isApprovalRequired
-                          ? 'This charge need the approval from the authority'
-                          : 'This charge does not need the approval from the authority'}
-                      </Typography>
-                    )}
-                  </Grid>
-                  {/* Purpose/Description */}
-                  <Grid size={{ xs: 12 }}>
-                    <ShakingTextField
-                      error={!!(touched.purposeDescription && errors.purposeDescription) || false}
-                    >
-                      <TextField
-                        name="purposeDescription"
-                        label="Purpose/Description *"
-                        multiline
-                        minRows={3}
-                        fullWidth
-                        value={values.purposeDescription}
-                        onChange={(e) => {
-                          const { value } = e.target;
-                          const character = value
-                            .replace(/[^a-zA-Z0-9\s]/g, '')
-                            .replace(/^\s+/g, '')
-                            .trimStart();
-                          setFieldValue('purposeDescription', character);
-                        }}
-                        onBlur={formik.handleBlur}
-                        error={!!(touched.purposeDescription && errors.purposeDescription)}
-                        helperText={
-                          (touched.purposeDescription && errors.purposeDescription) as string
-                        }
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Amount */}
-                  <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-                      <NumericFormatCustom
-                        size="small"
-                        fullWidth
-                        label="Amount *"
-                        name="amount"
-                        value={values.amount || ''}
-                        onChange={(e) => {
-                          let val = e.target.value;
-                          val = val.replace(/\D/g, '');
-                          if (/^\d*$/.test(val)) {
-                            setFieldValue('amount', val);
+                <Accordion
+                  expanded={expandedPanels.chargeDetails}
+                  onChange={() => handleAccordionToggle('chargeDetails')}
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: '8px !important',
+                    mb: 1.5,
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Charge Details
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Grid container spacing={2}>
+                      {/* Charge Category */}
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <ShakingTextField
+                          error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
+                        >
+                          <CustomSelect
+                            name="chargeCategoryId"
+                            label="Charge Category *"
+                            isLoading={chargeCategoriesLoading}
+                            options={chargeCategories?.items || []}
+                            labelKey="name"
+                            valueKey="id"
+                            value={values.chargeCategoryId}
+                            onChange={(value) => setFieldValue('chargeCategoryId', value)}
+                            error={!!(touched.chargeCategoryId && errors.chargeCategoryId) || false}
+                            helperText={(touched.chargeCategoryId && errors.chargeCategoryId) || ''}
+                            formControlProps={{ fullWidth: true }}
+                          />
+                        </ShakingTextField>
+                        {values.chargeCategoryId && (
+                          <Typography variant="body2" color="text.secondary">
+                            {chargeCategories?.items?.find(
+                              (item: any) => item.id === values.chargeCategoryId
+                            )?.isApprovalRequired
+                              ? 'This charge need the approval from the authority'
+                              : 'This charge does not need the approval from the authority'}
+                          </Typography>
+                        )}
+                      </Grid>
+
+                      {/* Amount */}
+                      <Grid size={{ xs: 6, md: 3 }}>
+                        <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+                          <NumericFormatCustom
+                            size="small"
+                            fullWidth
+                            label="Amount *"
+                            name="amount"
+                            value={values.amount || ''}
+                            onChange={(e) => {
+                              let val = e.target.value;
+                              val = val.replace(/\D/g, '');
+                              if (/^\d*$/.test(val)) {
+                                setFieldValue('amount', val);
+                              }
+                            }}
+                            sx={{
+                              width: '100%',
+                              padding: '0',
+                              borderRadius: 1,
+                            }}
+                            error={!!(touched.amount && errors.amount)}
+                            helperText={(touched.amount && errors.amount) as string}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+
+                      {/* Due Date */}
+                      <Grid size={{ xs: 6, md: 3 }}>
+                        <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+                          <DatePicker
+                            label="Due Date *"
+                            name="dueDate"
+                            format="DD/MM/YYYY"
+                            minDate={dayjs().startOf('day')}
+                            maxDate={dayjs(currentYear?.endDate)}
+                            value={dayjs(values.dueDate) || null}
+                            onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                error: !!(touched.dueDate && errors.dueDate),
+                                helperText: (touched.dueDate && errors.dueDate) as string,
+                                onBlur: () => setFieldTouched('dueDate', true),
+                              },
+                            }}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+
+                      {/* Priority */}
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
+                          <CustomSelect
+                            name="priority"
+                            label="Priority *"
+                            options={[
+                              { id: '0', name: 'Low' },
+                              { id: '1', name: 'Medium' },
+                              { id: '2', name: 'High' },
+                            ]}
+                            labelKey="name"
+                            valueKey="id"
+                            value={values.priority}
+                            onChange={(value) => setFieldValue('priority', value)}
+                            error={!!(touched.priority && errors.priority) || false}
+                            helperText={(touched.priority && errors.priority) || ''}
+                            formControlProps={{ fullWidth: true }}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+
+                      {/* Purpose/Description */}
+                      <Grid size={{ xs: 12 }}>
+                        <ShakingTextField
+                          error={
+                            !!(touched.purposeDescription && errors.purposeDescription) || false
                           }
-                        }}
-                        sx={{
-                          width: '100%',
-                          padding: '0',
-                          borderRadius: 1,
-                        }}
-                        error={!!(touched.amount && errors.amount)}
-                        helperText={(touched.amount && errors.amount) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Due Date */}
-                  <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
-                      <DatePicker
-                        label="Due Date *"
-                        name="dueDate"
-                        format="DD/MM/YYYY"
-                        minDate={dayjs().startOf('day')}
-                        maxDate={dayjs(currentYear?.endDate)}
-                        value={dayjs(values.dueDate) || null}
-                        onChange={(newValue) => setFieldValue('dueDate', newValue)}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            fullWidth: true,
-                            error: !!(touched.dueDate && errors.dueDate),
-                            helperText: (touched.dueDate && errors.dueDate) as string,
-                            onBlur: () => setFieldTouched('dueDate', true),
-                          },
-                        }}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Priority */}
-                  <Grid size={{ xs: 12 }}>
-                    <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-                      <CustomSelect
-                        name="priority"
-                        label="Priority *"
-                        options={[
-                          { id: '0', name: 'Low' },
-                          { id: '1', name: 'Medium' },
-                          { id: '2', name: 'High' },
-                        ]}
-                        labelKey="name"
-                        valueKey="id"
-                        value={values.priority}
-                        onChange={(value) => setFieldValue('priority', value)}
-                        error={!!(touched.priority && errors.priority) || false}
-                        helperText={(touched.priority && errors.priority) || ''}
-                        formControlProps={{ fullWidth: true }}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                </SectionCard>
+                        >
+                          <TextField
+                            name="purposeDescription"
+                            label="Purpose/Description *"
+                            multiline
+                            minRows={3}
+                            fullWidth
+                            value={values.purposeDescription}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={!!(touched.purposeDescription && errors.purposeDescription)}
+                            helperText={
+                              (touched.purposeDescription && errors.purposeDescription) as string
+                            }
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    </Grid>
+                  </AccordionDetails>
+                </Accordion>
               </Grid>
               {/* Student Information */}
               <Grid size={{ xs: 12 }}>
-                <SectionCard title="Student Information" paperProps={{ sx: { ...cardStyle } }}>
-                  {/* Board */}
-                  <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
-                      <CustomSelect
-                        disabled={isEdit}
-                        label="Board *"
-                        options={boards}
-                        labelKey="name"
-                        valueKey="id"
-                        value={values.boardId}
-                        onChange={(val) => {
-                          setFieldValue('boardId', val);
-                          setFieldTouched('boardId', false);
-                          setFieldValue('educationMediumId', '');
-                          setFieldValue('standardId', '');
-                          setFieldValue('divisionId', '');
-                          setFieldValue('studentId', null);
-                          setFieldValue('selectedStudent', null);
-                        }}
-                        error={!!errors.boardId && touched.boardId}
-                        helperText={(touched.boardId && errors.boardId) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Medium */}
-                  <Grid size={{ xs: 6 }}>
-                    <ShakingTextField
-                      error={!!(touched.educationMediumId && errors.educationMediumId)}
-                    >
-                      <CustomSelect
-                        label="Medium *"
-                        disabled={!values.boardId || isEdit}
-                        options={mediums}
-                        labelKey="name"
-                        valueKey="id"
-                        value={values.educationMediumId}
-                        onChange={(val) => {
-                          setFieldValue('educationMediumId', val);
-                          setFieldTouched('educationMediumId', false);
-                          setFieldValue('standardId', '');
-                          setFieldValue('divisionId', '');
-                          setFieldValue('studentId', null);
-                          setFieldValue('selectedStudent', null);
-                        }}
-                        error={!!errors.educationMediumId && touched.educationMediumId}
-                        helperText={
-                          (touched.educationMediumId && errors.educationMediumId) as string
-                        }
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Class */}
-                  <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.standardId && errors.standardId) || false}>
-                      <CustomSelect
-                        name="standardId"
-                        label="Class *"
-                        options={classes || []}
-                        labelKey="name"
-                        valueKey="id"
-                        isLoading={classesLoading}
-                        value={values.standardId}
-                        disabled={!values.educationMediumId || isEdit}
-                        onChange={(value) => {
-                          setFieldValue('standardId', value);
-                          setFieldTouched('standardId', false);
-                          setFieldValue('divisionId', '');
-                          setFieldValue('studentId', null);
-                          setFieldValue('selectedStudent', null);
-                        }}
-                        error={!!(touched.standardId && errors.standardId) || false}
-                        helperText={(touched.standardId && errors.standardId) || ''}
-                        formControlProps={{ sx: { width: '100%' } }}
-                        multiple={false}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Division */}
-                  <Grid size={{ xs: 6 }}>
-                    <ShakingTextField error={!!(touched.divisionId && errors.divisionId) || false}>
-                      <CustomSelect
-                        name="divisionId"
-                        label="Division *"
-                        labelKey="name"
-                        valueKey="id"
-                        disabled={!values.standardId || isEdit}
-                        options={allDivision}
-                        value={values.divisionId}
-                        onChange={(value) => {
-                          setFieldValue('divisionId', value);
-                          setFieldTouched('divisionId', false);
-                          setFieldValue('studentId', null);
-                          setFieldValue('selectedStudent', null);
-                        }}
-                        formControlProps={{ sx: { width: '100%' } }}
-                        error={!!(touched.divisionId && errors.divisionId)}
-                        helperText={(touched.divisionId && errors.divisionId) as string}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  {/* Student */}
-                  <Grid size={{ xs: 12 }}>
-                    <ShakingTextField
-                      error={!!(touched.selectedStudent && errors.selectedStudent) || false}
-                    >
-                      <PaginatedSearchSelect
-                        key={`${values.standardId}-${values.divisionId}`}
-                        noOptionsText="No students found"
-                        label="Student *"
-                        disabled={!values.divisionId || isEdit}
-                        fetchOptions={async (query, page) => {
-                          if (!values.divisionId) return { data: [], hasMore: false };
+                <Accordion
+                  expanded={expandedPanels.studentInfo}
+                  onChange={() => handleAccordionToggle('studentInfo')}
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: '8px !important',
+                    mb: 1.5,
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Student Information
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Grid container spacing={2}>
+                      {/* Board */}
+                      <Grid size={{ xs: 6, md: 3 }}>
+                        <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
+                          <CustomSelect
+                            disabled={isEdit}
+                            label="Board *"
+                            options={boards}
+                            labelKey="name"
+                            valueKey="id"
+                            value={values.boardId}
+                            onChange={(val) => {
+                              setFieldValue('boardId', val);
+                              setFieldTouched('boardId', false);
+                              setFieldValue('educationMediumId', '');
+                              setFieldValue('standardId', '');
+                              setFieldValue('divisionId', '');
+                              setFieldValue('studentId', null);
+                              setFieldValue('selectedStudent', null);
+                            }}
+                            error={!!errors.boardId && touched.boardId}
+                            helperText={(touched.boardId && errors.boardId) as string}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                      {/* Medium */}
+                      <Grid size={{ xs: 6, md: 3 }}>
+                        <ShakingTextField
+                          error={!!(touched.educationMediumId && errors.educationMediumId)}
+                        >
+                          <CustomSelect
+                            label="Medium *"
+                            disabled={!values.boardId || isEdit}
+                            options={mediums}
+                            labelKey="name"
+                            valueKey="id"
+                            value={values.educationMediumId}
+                            onChange={(val) => {
+                              setFieldValue('educationMediumId', val);
+                              setFieldTouched('educationMediumId', false);
+                              setFieldValue('standardId', '');
+                              setFieldValue('divisionId', '');
+                              setFieldValue('studentId', null);
+                              setFieldValue('selectedStudent', null);
+                            }}
+                            error={!!errors.educationMediumId && touched.educationMediumId}
+                            helperText={
+                              (touched.educationMediumId && errors.educationMediumId) as string
+                            }
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                      {/* Class */}
+                      <Grid size={{ xs: 6, md: 3 }}>
+                        <ShakingTextField
+                          error={!!(touched.standardId && errors.standardId) || false}
+                        >
+                          <CustomSelect
+                            name="standardId"
+                            label="Class *"
+                            options={classes || []}
+                            labelKey="name"
+                            valueKey="id"
+                            isLoading={classesLoading}
+                            value={values.standardId}
+                            disabled={!values.educationMediumId || isEdit}
+                            onChange={(value) => {
+                              setFieldValue('standardId', value);
+                              setFieldTouched('standardId', false);
+                              setFieldValue('divisionId', '');
+                              setFieldValue('studentId', null);
+                              setFieldValue('selectedStudent', null);
+                            }}
+                            error={!!(touched.standardId && errors.standardId) || false}
+                            helperText={(touched.standardId && errors.standardId) || ''}
+                            formControlProps={{ sx: { width: '100%' } }}
+                            multiple={false}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                      {/* Division */}
+                      <Grid size={{ xs: 6, md: 3 }}>
+                        <ShakingTextField
+                          error={!!(touched.divisionId && errors.divisionId) || false}
+                        >
+                          <CustomSelect
+                            name="divisionId"
+                            label="Division *"
+                            labelKey="name"
+                            valueKey="id"
+                            disabled={!values.standardId || isEdit}
+                            options={allDivision}
+                            value={values.divisionId}
+                            onChange={(value) => {
+                              setFieldValue('divisionId', value);
+                              setFieldTouched('divisionId', false);
+                              setFieldValue('studentId', null);
+                              setFieldValue('selectedStudent', null);
+                            }}
+                            formControlProps={{ sx: { width: '100%' } }}
+                            error={!!(touched.divisionId && errors.divisionId)}
+                            helperText={(touched.divisionId && errors.divisionId) as string}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                      {/* Student */}
+                      <Grid size={{ xs: 12 }}>
+                        <ShakingTextField
+                          error={!!(touched.selectedStudent && errors.selectedStudent) || false}
+                        >
+                          <PaginatedSearchSelect
+                            key={`${values.standardId}-${values.divisionId}`}
+                            noOptionsText="No students found"
+                            label="Student *"
+                            disabled={!values.divisionId || isEdit}
+                            fetchOptions={async (query, page) => {
+                              if (!values.divisionId) return { data: [], hasMore: false };
 
-                          const res = await getFilterStudents({
-                            page,
-                            pageSize: 10,
-                            academicYearId: currentYear.id,
-                            standardId: values.standardId,
-                            divisionId: values.divisionId,
-                            search: query,
-                          }).unwrap();
+                              const res = await getFilterStudents({
+                                page,
+                                pageSize: 10,
+                                academicYearId: currentYear.id,
+                                standardId: values.standardId,
+                                divisionId: values.divisionId,
+                                search: query,
+                              }).unwrap();
 
-                          const hasMore = res.currentPage !== res.totalPages;
-                          return {
-                            data: res?.items?.map((item: any) => ({
-                              label: `${item.firstName} ${item.lastName} ${item.middleName}`,
-                              id: item.studentId,
-                            })),
-                            hasMore,
-                          };
-                        }}
-                        value={values.selectedStudent}
-                        renderOption={(prop, option: any) => (
-                          <li {...prop} key={option.id}>
-                            {option.label}
-                          </li>
-                        )}
-                        getOptionLabel={(option: any) => option?.label || ''}
-                        minChars={2}
-                        onChange={(_, value) => {
-                          setFieldValue('selectedStudent', value);
-                          setFieldValue('studentId', value?.id || null);
-                        }}
-                        debounceMs={400}
-                        sx={{ minWidth: 250 }}
-                        size="small"
-                        error={!!(touched.selectedStudent && errors.selectedStudent) || false}
-                        helperText={(touched.selectedStudent && errors.selectedStudent) || ''}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                </SectionCard>
+                              const hasMore = res.currentPage !== res.totalPages;
+                              return {
+                                data: res?.items?.map((item: any) => ({
+                                  label: `${item.firstName} ${item.lastName} ${item.middleName}`,
+                                  id: item.studentId,
+                                })),
+                                hasMore,
+                              };
+                            }}
+                            value={values.selectedStudent}
+                            renderOption={(prop, option: any) => (
+                              <li {...prop} key={option.id}>
+                                {option.label}
+                              </li>
+                            )}
+                            getOptionLabel={(option: any) => option?.label || ''}
+                            minChars={2}
+                            onChange={(_, value) => {
+                              setFieldValue('selectedStudent', value);
+                              setFieldValue('studentId', value?.id || null);
+                            }}
+                            debounceMs={400}
+                            sx={{ minWidth: 250 }}
+                            size="small"
+                            error={!!(touched.selectedStudent && errors.selectedStudent) || false}
+                            helperText={(touched.selectedStudent && errors.selectedStudent) || ''}
+                          />
+                        </ShakingTextField>
+                      </Grid>
+                    </Grid>
+                  </AccordionDetails>
+                </Accordion>
               </Grid>
               {/* Additional Notes */}
               <Grid size={{ xs: 12 }}>
-                <SectionCard title="Additional Notes" paperProps={{ sx: { ...cardStyle } }}>
-                  <TextField
-                    name="additionalNotes"
-                    label="Additional Notes"
-                    multiline
-                    minRows={3}
-                    fullWidth
-                    value={values.additionalNotes}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
-                </SectionCard>
+                <Accordion
+                  expanded={expandedPanels.additionalNotes}
+                  onChange={() => handleAccordionToggle('additionalNotes')}
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: '8px !important',
+                    mb: 1.5,
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Additional Notes
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <TextField
+                      name="additionalNotes"
+                      label="Additional Notes"
+                      multiline
+                      minRows={3}
+                      fullWidth
+                      value={values.additionalNotes}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    />
+                  </AccordionDetails>
+                </Accordion>
               </Grid>
             </Grid>
           </Scrollbar>
@@ -531,12 +644,13 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
               Cancel
             </Button>
             <LoadingButton
-              type="submit"
+              type="button"
               variant="contained"
               size="small"
               disabled={postChargeLoading || updateChargeLoading}
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               loading={postChargeLoading || updateChargeLoading}
+              onClick={handleSubmit}
             >
               {isEdit ? 'Update' : 'Submit'}
             </LoadingButton>

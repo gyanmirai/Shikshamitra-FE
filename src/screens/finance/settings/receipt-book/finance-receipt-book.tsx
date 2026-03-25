@@ -312,6 +312,7 @@ const FinanceReceiptBookSetting = () => {
               </CustomTooltip>
             </Box>
           }
+          maxWidth="sm"
         >
           <FinanceSettingReceiptbookDialog
             onSave={() => {}}

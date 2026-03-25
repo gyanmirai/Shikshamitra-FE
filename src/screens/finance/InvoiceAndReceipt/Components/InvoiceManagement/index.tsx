@@ -1,18 +1,17 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
-import { ClearIcon } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { GridSearchIcon } from '@mui/x-data-grid';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, TextField, IconButton, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Chip, TextField, Typography, Autocomplete } from '@mui/material';
 import { useGetInvoiceDataQuery } from 'src/redux/invoiceAndReceipt/invoiceApi';
 
 import InvoiceForm from './InvoiceForm';
@@ -32,9 +31,15 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
   const [searchValue, setSearchValue] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const { data: invoiceData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInvoiceDataQuery,
+  });
+
+  const [getStudents, { data: studentsData, isLoading: studentsLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
   const viewInvoiceDetailsDialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -58,6 +63,30 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
     setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
   }, [allClass, classes]);
 
+  // Fetch students when division and class are selected
+  useEffect(() => {
+    if (division && classes) {
+      const selectedClass = allClass.find((c: any) => c.name === classes);
+      const selectedDiv = allDivision.find((d: any) => d.name === division);
+      if (selectedClass?.id && selectedDiv?.id) {
+        getStudents({
+          standardId: selectedClass.id,
+          divisionId: selectedDiv.id,
+        });
+      }
+    }
+    setSelectedStudents([]);
+  }, [division, classes, allClass, allDivision, getStudents]);
+
+  const studentOptions = useMemo(
+    () =>
+      studentsData?.items?.map((item: any) => ({
+        ...item,
+        name: `${item.firstName} ${item.lastName} ${item.middleName || ''}`.trim(),
+      })) || [],
+    [studentsData?.items]
+  );
+
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
@@ -73,15 +102,16 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Search and Filter */}
       <Box
         display="flex"
         sx={{
-          borderRadius: '8px',
+          borderRadius: 2,
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
-          mb: 2,
+          mb: 1,
           p: 1,
           gap: 2,
         }}
@@ -106,34 +136,31 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!classes}
         />
-        <TextField
-          variant="outlined"
-          size="small"
-          value={searchValue}
-          onChange={() => {}}
-          InputProps={{
-            endAdornment: (
-              <>
-                {searchValue ? (
-                  <IconButton
-                    size="small"
-                    sx={{ mr: '-12px', p: 1 }}
-                    onClick={() => setSearchValue('')}
-                  >
-                    <ClearIcon />
-                  </IconButton>
-                ) : (
-                  <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
-                    <GridSearchIcon />
-                  </IconButton>
-                )}
-              </>
-            ),
-          }}
-          label="Search Student by Name, Invoice Id"
-          sx={{ minWidth: '250.6px', width: '100%' }}
+        <Autocomplete
+          loading={studentsLoading}
+          noOptionsText="No Student Found"
+          multiple
+          fullWidth
+          value={selectedStudents}
+          onChange={(_, value: any) => setSelectedStudents(value)}
+          renderTags={(tagValue, getTagProps) =>
+            tagValue.map((option, index) => (
+              <Chip label={option.name} variant="soft" size="small" {...getTagProps({ index })} />
+            ))
+          }
+          options={studentOptions}
+          getOptionLabel={(option: any) => option?.name || ''}
+          renderInput={(params) => <TextField {...params} size="small" label="Student" fullWidth />}
+          renderOption={(prop: any, option: any) => (
+            <li {...prop} key={option.id || option.studentId}>
+              {option.name}
+            </li>
+          )}
+          disabled={!division}
+          sx={{ maxWidth: '300px', width: '100%' }}
         />
       </Box>
+      {/* Invoice Table */}
       <InvoiceTable
         data={invoiceData}
         onView={(data) => {
@@ -141,6 +168,7 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
           setSelectedInvoiceData(data);
         }}
       />
+      {/* Add Invoice Dialog */}
       <CustomDialog
         open={addInvoiceDialog.value}
         handleClose={() => {
@@ -151,7 +179,7 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
       >
         <InvoiceForm open={addInvoiceDialog} onClose={handleClose} />
       </CustomDialog>
-
+      {/* View Invoice Details Dialog */}
       <CustomDialog
         open={viewInvoiceDetailsDialog.value}
         handleClose={() => {

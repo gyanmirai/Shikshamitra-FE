@@ -153,6 +153,7 @@ const BankAccountManagement: React.FC = () => {
             </CustomTooltip>
           </Box>
         }
+        maxWidth="sm"
       >
         <BankAccountForm
           open={addBankAccountDialog}

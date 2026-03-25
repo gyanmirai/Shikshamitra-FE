@@ -6,19 +6,38 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import React, { useMemo, useState, useEffect } from 'react';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import {
+  Chip,
+  Grid,
+  Button,
+  Accordion,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+  AccordionDetails,
+  AccordionSummary,
+} from '@mui/material';
 
 import type { InvoiceFormProps } from './type';
 
 const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
+  const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({
+    invoiceDetails: true,
+  });
+
+  const handleAccordionToggle = useCallback((panel: string) => {
+    setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] }));
+  }, []);
+
   const formik = useFormik({
     initialValues: {
       invoiceType: '',
@@ -43,6 +62,17 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched, initialValues } = formik;
+
+  const handleSubmit = useCallback(() => {
+    formik.validateForm().then((validationErrors) => {
+      const errorKeys = Object.keys(validationErrors);
+      if (errorKeys.length > 0) {
+        setExpandedPanels((prev) => ({ ...prev, invoiceDetails: true }));
+      }
+      formik.handleSubmit();
+    });
+  }, [formik]);
+
   // State to store list of all divisions
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   /**
@@ -118,217 +148,238 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12 }}>
-            <CustomSelect
-              name="academicYear"
-              label="Academic Year *"
-              isLoading={yearLoading}
-              options={academicYear?.items || []}
-              value={values.academicYear}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value) => {
-                const findBoards = board?.items.filter(
-                  (item: Board) => item.academicYearId === value
-                );
+        <Accordion
+          expanded={expandedPanels.invoiceDetails}
+          onChange={() => handleAccordionToggle('invoiceDetails')}
+          disableGutters
+          elevation={0}
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '8px !important',
+            mb: 1.5,
+            '&:before': { display: 'none' },
+          }}
+        >
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Invoice Details
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomSelect
+                  name="academicYear"
+                  label="Academic Year *"
+                  isLoading={yearLoading}
+                  options={academicYear?.items || []}
+                  value={values.academicYear}
+                  labelKey="name"
+                  valueKey="id"
+                  onChange={(value) => {
+                    const findBoards = board?.items.filter(
+                      (item: Board) => item.academicYearId === value
+                    );
 
-                setBoards(findBoards);
-                setFieldValue('board', '');
-                setFieldValue('medium', '');
-                setFieldValue('class', '');
-                setFieldValue('academicYear', value);
-              }}
-              error={!!(touched.academicYear && errors.academicYear) || false}
-              helperText={(touched.academicYear && errors.academicYear) || ''}
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            />
-          </Grid>
+                    setBoards(findBoards);
+                    setFieldValue('board', '');
+                    setFieldValue('medium', '');
+                    setFieldValue('class', '');
+                    setFieldValue('academicYear', value);
+                  }}
+                  error={!!(touched.academicYear && errors.academicYear) || false}
+                  helperText={(touched.academicYear && errors.academicYear) || ''}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                />
+              </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.board && errors.board) || false}>
-              <CustomSelect
-                name="board"
-                label="Board *"
-                isLoading={boardLoading}
-                options={boards || []}
-                labelKey="name"
-                valueKey="id"
-                value={values.board}
-                onChange={(value) => {
-                  setFieldValue('medium', '');
-                  setFieldValue('class', '');
-                  setFieldValue('board', value);
-                }}
-                error={!!(touched.board && errors.board) || false}
-                helperText={(touched.board && errors.board) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                disabled={!values.academicYear}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
-              <CustomSelect
-                name="medium"
-                label="Medium *"
-                disabled={!values.board}
-                options={
-                  board?.items?.find((item: Board) => item.id === values.board)?.educationMediums ||
-                  []
-                }
-                value={values.medium}
-                labelKey="name"
-                valueKey="id"
-                onChange={async (value) => {
-                  setFieldValue('medium', value);
-                  setFieldValue('class', '');
-                  setFieldTouched('medium', false);
-                  await getClassByMedium(value);
-                }}
-                error={!!(touched.medium && errors.medium) || false}
-                helperText={(touched.medium && errors.medium) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.invoiceType && errors.invoiceType) || false}>
-              <CustomSelect
-                name="invoiceType"
-                label="Invoice Type *"
-                options={[
-                  { id: 'REGULAR', name: 'Regular Invoice' },
-                  { id: 'INSTALLMENT', name: 'Installment Invoice' },
-                  { id: 'SPECIAL', name: 'Special Invoice' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={values.invoiceType}
-                onChange={(value) => {
-                  setFieldValue('invoiceType', value);
-                }}
-                error={!!(touched.invoiceType && errors.invoiceType) || false}
-                helperText={(touched.invoiceType && errors.invoiceType) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.class && errors.class) || false}>
-              <CustomSelect
-                name="class"
-                label="Class *"
-                disabled={!values.medium}
-                isLoading={classLoading}
-                labelKey="name"
-                valueKey="id"
-                options={classes || []}
-                value={values.class}
-                onChange={async (value) => {
-                  setFieldValue('class', value);
-                  setFieldValue('divisions', []);
-
-                  const selectedClass = classes?.find((c: Standards) => c.id === value);
-                  if (selectedClass?.divisions) {
-                    setAllDivision(selectedClass.divisions);
-                  }
-                }}
-                error={!!(touched.class && errors.class) || false}
-                helperText={(touched.class && errors.class) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <CustomSelect
-              options={allDivision}
-              label="Division *"
-              value={formik.values.divisions}
-              onChange={(val) => formik.setFieldValue('divisions', val)}
-              onBlur={() => formik.setFieldTouched('divisions', true)}
-              error={formik.touched.divisions && Boolean(formik.errors.divisions)}
-              helperText={(formik.touched.divisions && formik.errors.divisions) as string}
-              labelKey="name"
-              valueKey="id"
-              multiple
-              formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-              disabled={formik.values.class.length === 0}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.students && errors.students) || false}>
-              <Autocomplete
-                loading={isLoading}
-                noOptionsText="No Student Found"
-                multiple
-                fullWidth
-                value={values.students}
-                onChange={(e, value: any) => {
-                  setFieldValue('student', value);
-                }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      variant="soft"
-                      size="small"
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                options={tableData}
-                getOptionLabel={(option: any) => option?.name || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Student *"
-                    fullWidth
-                    error={!!(touched.students && errors.students)}
-                    helperText={(touched.students && errors.students) as string}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(touched.board && errors.board) || false}>
+                  <CustomSelect
+                    name="board"
+                    label="Board *"
+                    isLoading={boardLoading}
+                    options={boards || []}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.board}
+                    onChange={(value) => {
+                      setFieldValue('medium', '');
+                      setFieldValue('class', '');
+                      setFieldValue('board', value);
+                    }}
+                    error={!!(touched.board && errors.board) || false}
+                    helperText={(touched.board && errors.board) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                    disabled={!values.academicYear}
                   />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.name}
-                  </li>
-                )}
-              />
-            </ShakingTextField>
-          </Grid>
+                </ShakingTextField>
+              </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField
-              error={!!(touched.installmentName && errors.installmentName) || false}
-            >
-              <CustomSelect
-                name="installmentName"
-                label="Installment Name *"
-                options={[
-                  { id: 'FIRST', name: 'First Installment' },
-                  { id: 'SECOND', name: 'Second Installment' },
-                  { id: 'THIRD', name: 'Third Installment' },
-                  { id: 'FOURTH', name: 'Fourth Installment' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={values.installmentName}
-                onChange={(value) => {
-                  setFieldValue('installmentName', value);
-                }}
-                error={!!(touched.installmentName && errors.installmentName) || false}
-                helperText={(touched.installmentName && errors.installmentName) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
-          </Grid>
-        </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(touched.medium && errors.medium) || false}>
+                  <CustomSelect
+                    name="medium"
+                    label="Medium *"
+                    disabled={!values.board}
+                    options={
+                      board?.items?.find((item: Board) => item.id === values.board)
+                        ?.educationMediums || []
+                    }
+                    value={values.medium}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={async (value) => {
+                      setFieldValue('medium', value);
+                      setFieldValue('class', '');
+                      setFieldTouched('medium', false);
+                      await getClassByMedium(value);
+                    }}
+                    error={!!(touched.medium && errors.medium) || false}
+                    helperText={(touched.medium && errors.medium) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(touched.class && errors.class) || false}>
+                  <CustomSelect
+                    name="class"
+                    label="Class *"
+                    disabled={!values.medium}
+                    isLoading={classLoading}
+                    labelKey="name"
+                    valueKey="id"
+                    options={classes || []}
+                    value={values.class}
+                    onChange={async (value) => {
+                      setFieldValue('class', value);
+                      setFieldValue('divisions', []);
+
+                      const selectedClass = classes?.find((c: Standards) => c.id === value);
+                      if (selectedClass?.divisions) {
+                        setAllDivision(selectedClass.divisions);
+                      }
+                    }}
+                    error={!!(touched.class && errors.class) || false}
+                    helperText={(touched.class && errors.class) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomSelect
+                  options={allDivision}
+                  label="Division *"
+                  value={formik.values.divisions}
+                  onChange={(val) => formik.setFieldValue('divisions', val)}
+                  onBlur={() => formik.setFieldTouched('divisions', true)}
+                  error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                  helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                  labelKey="name"
+                  valueKey="id"
+                  multiple
+                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                  disabled={formik.values.class.length === 0}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(touched.students && errors.students) || false}>
+                  <Autocomplete
+                    loading={isLoading}
+                    noOptionsText="No Student Found"
+                    multiple
+                    fullWidth
+                    value={values.students}
+                    onChange={(e, value: any) => {
+                      setFieldValue('student', value);
+                    }}
+                    renderTags={(tagValue, getTagProps) =>
+                      tagValue.map((option, index) => (
+                        <Chip
+                          label={option.name}
+                          variant="soft"
+                          size="small"
+                          {...getTagProps({ index })}
+                        />
+                      ))
+                    }
+                    options={tableData}
+                    getOptionLabel={(option: any) => option?.name || ''}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        size="small"
+                        label="Student *"
+                        fullWidth
+                        error={!!(touched.students && errors.students)}
+                        helperText={(touched.students && errors.students) as string}
+                      />
+                    )}
+                    renderOption={(prop: any, option: any) => (
+                      <li {...prop} key={option.id}>
+                        {option.name}
+                      </li>
+                    )}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(touched.invoiceType && errors.invoiceType) || false}>
+                  <CustomSelect
+                    name="invoiceType"
+                    label="Invoice Type *"
+                    options={[
+                      { id: 'REGULAR', name: 'Regular Invoice' },
+                      { id: 'INSTALLMENT', name: 'Installment Invoice' },
+                      { id: 'SPECIAL', name: 'Special Invoice' },
+                    ]}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.invoiceType}
+                    onChange={(value) => {
+                      setFieldValue('invoiceType', value);
+                    }}
+                    error={!!(touched.invoiceType && errors.invoiceType) || false}
+                    helperText={(touched.invoiceType && errors.invoiceType) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={!!(touched.installmentName && errors.installmentName) || false}
+                >
+                  <CustomSelect
+                    name="installmentName"
+                    label="Installment Name *"
+                    options={[
+                      { id: 'FIRST', name: 'First Installment' },
+                      { id: 'SECOND', name: 'Second Installment' },
+                      { id: 'THIRD', name: 'Third Installment' },
+                      { id: 'FOURTH', name: 'Fourth Installment' },
+                    ]}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.installmentName}
+                    onChange={(value) => {
+                      setFieldValue('installmentName', value);
+                    }}
+                    error={!!(touched.installmentName && errors.installmentName) || false}
+                    helperText={(touched.installmentName && errors.installmentName) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
@@ -343,12 +394,10 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
         </Button>
         <Button
           startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
-          type="submit"
+          type="button"
           variant="contained"
           size="small"
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
+          onClick={handleSubmit}
         >
           Submit
         </Button>

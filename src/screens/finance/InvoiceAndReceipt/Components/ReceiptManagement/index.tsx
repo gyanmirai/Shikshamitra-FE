@@ -58,15 +58,15 @@ const ReceiptManagement = () => {
   }, [allClass, classes]);
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box
         display="flex"
         sx={{
-          borderRadius: '8px',
+          borderRadius: 2,
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
-          mb: 2,
+          mb: 1,
           p: 1,
           gap: 2,
         }}
@@ -119,13 +119,15 @@ const ReceiptManagement = () => {
           sx={{ minWidth: '250.6px', width: '100%' }}
         />
       </Box>
-      <ReceiptTable
-        data={receiptData}
-        onView={(data) => {
-          viewReceiptDetailsDialog.onTrue();
-          setSelectedReceiptData(data);
-        }}
-      />
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <ReceiptTable
+          data={receiptData}
+          onView={(data) => {
+            viewReceiptDetailsDialog.onTrue();
+            setSelectedReceiptData(data);
+          }}
+        />
+      </Box>
 
       <CustomDialog
         open={viewReceiptDetailsDialog.value}
