@@ -151,6 +151,8 @@ const PayrollSummary = ({ employee }: any) => {
                 <CustomizableTable
                   noDataText="No Data Found For Earning Section"
                   tableId="earning-section"
+                  isFilter={false}
+                  isSearch={false}
                   columns={[
                     { id: 'employeeType', label: 'Earning Type' },
                     {
