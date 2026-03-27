@@ -61,6 +61,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 }) => {
   const { sx, ...other } = tableContainerProps;
   const { sx: boxSx, ...boxOther } = wrapperProps;
+  const tableUniqId = `customizable-table-card-${tableId}`; // Unique ID for this table instance, used for localStorage keys
 
   // Memoize columns to ensure stability (especially if not memoized by parent)
   const memoizedColumns = useMemo(
@@ -84,7 +85,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
-  const tableRef = useRef<HTMLDivElement>(null); // For empty content width
+  const [tableRef, setTableRef] = useState<number>(0);
+
+  // For empty content width
   const fullScreenDialog = useBoolean();
 
   const { stickyMap, getStickyStyle } = useStickyColumns({
@@ -92,6 +95,21 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     columnVisibility,
     headerRefs,
   });
+
+  useEffect(() => {
+    const tableElement = document.getElementById(tableUniqId);
+
+    if (!tableElement) return;
+
+    const observer = new ResizeObserver(() => {
+      setTableRef(tableElement?.getBoundingClientRect?.()?.width);
+    });
+
+    observer.observe(tableElement);
+
+    // eslint-disable-next-line consistent-return
+    return () => observer.disconnect();
+  }, [tableUniqId]);
 
   const [filterAnchorEl, setFilterAnchorEl] = useState<IColumnFilterAnchor | null>(null);
   const [expandedRows, setExpandedRows] = useState<{ [key: number]: boolean }>({});
@@ -203,7 +221,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         {...boxOther}
       >
         <Card
-          ref={tableRef}
+          ref={(el) => setTableRef(el?.getBoundingClientRect()?.width || 0)}
+          id={tableUniqId}
           sx={{
             // boxShadow: theme.customShadows?.z20 || '0px 4px 20px rgba(0, 0, 0, 0.05)',
             borderRadius: 2,
@@ -367,11 +386,27 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 flex: 1,
                 minHeight: 0,
                 height: '100%',
+                '&:focus-visible': {
+                  outline: 'none',
+                },
+                '& .simplebar-content-wrapper:focus-visible,td:focus-visible': {
+                  outline: 'none',
+                },
                 ...sx,
               }}
               {...other}
             >
-              <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
+              <Table
+                stickyHeader
+                aria-label="customizable table"
+                size={dense ? 'small' : 'medium'}
+                sx={{
+                  height: '100%',
+                  '&:focus-visible': {
+                    outline: 'none',
+                  },
+                }}
+              >
                 <TableHeader
                   columns={memoizedColumns}
                   columnVisibility={columnVisibility}
@@ -398,7 +433,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   expandedRows={expandedRows}
                   onExpandRow={handleExpandRow}
                   noDataText={noDataText}
-                  tableRef={tableRef.current}
+                  tableRef={tableRef}
                   rowsPerPage={rowsPerPage}
                 />
               </Table>
@@ -464,6 +499,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [
       boxSx,
       boxOther,
+      tableUniqId,
       theme.palette.divider,
       theme.vars.palette.divider,
       isSearch,
@@ -496,6 +532,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       expandedRows,
       handleExpandRow,
       noDataText,
+      tableRef,
       rowsPerPage,
       isShowedDense,
       isPagination,

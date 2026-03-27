@@ -41,6 +41,9 @@ export function EmptyContent({
       sx={{
         px: 3,
         height: 1,
+        '&:focus-visible': {
+          outline: 'none',
+        },
         ...(filled && {
           borderRadius: 2,
           bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
