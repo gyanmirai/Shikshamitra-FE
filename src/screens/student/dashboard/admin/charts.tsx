@@ -119,7 +119,7 @@ const AdminCharts = () => {
         colors: theme.vars.palette.text.primary,
       },
       formatter(val, opts) {
-        return `${val} - ${opts.w.globals.series[opts.seriesIndex]}`;
+        return `${val} - ${opts?.w?.globals?.series?.[opts.seriesIndex] || 0}`;
       },
     },
     dataLabels: {

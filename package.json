@@ -76,6 +76,7 @@
     "@tiptap/react": "^3.3.0",
     "@tiptap/starter-kit": "^3.3.0",
     "@types/lodash": "^4.17.20",
+    "apexcharts": "^5.10.4",
     "autosuggest-highlight": "^3.3.4",
     "axios": "^1.11.0",
     "canvas-confetti": "^1.9.4",
