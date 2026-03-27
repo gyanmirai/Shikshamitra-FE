@@ -620,7 +620,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           } else {
             const createdId = await handleBasicInformation(values, formik);
             if (createdId) {
-              values.employeeId = createdId;
+              formik.setFieldValue('employeeId', createdId);
             }
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
