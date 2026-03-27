@@ -1,6 +1,7 @@
 import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -8,6 +9,9 @@ import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Grid, Stack, Avatar, Divider, Typography } from '@mui/material';
 
 import type { IStudentFee } from './type';
+
+const MotionBox = motion(Box);
+const MotionCard = motion(Card);
 
 export const StudentFeeSummaryCard: React.FC<{
   student: IStudentFee | null;
@@ -24,7 +28,10 @@ export const StudentFeeSummaryCard: React.FC<{
   }
 
   return (
-    <Card
+    <MotionCard
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
         borderRadius: 2,
         bgcolor: 'background.paper',
@@ -37,7 +44,6 @@ export const StudentFeeSummaryCard: React.FC<{
         boxShadow: 'var(--shadows-4)',
       }}
     >
-      {/* <Paper sx={{ p: 2, mb: 1, boxShadow: (theme) => theme.customShadows?.z4 }}> */}
       {showHeader && (
         <Grid container spacing={1} alignItems="center">
           <Grid
@@ -51,19 +57,25 @@ export const StudentFeeSummaryCard: React.FC<{
             }}
           >
             <Box display="flex" alignItems="center" gap={2}>
-              <Avatar
-                sx={{
-                  width: 50,
-                  height: 50,
-                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                  color: 'primary.main',
-                  fontSize: '1.5rem',
-                  fontWeight: 700,
-                  border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.24)}`,
-                }}
+              <motion.div
+                initial={{ scale: 0.75, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               >
-                {student.name?.charAt(0).toUpperCase()}
-              </Avatar>
+                <Avatar
+                  sx={{
+                    width: 50,
+                    height: 50,
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                    color: 'primary.main',
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.24)}`,
+                  }}
+                >
+                  {student.name?.charAt(0).toUpperCase()}
+                </Avatar>
+              </motion.div>
 
               <Box>
                 <Typography variant="h6" fontWeight={600} sx={{ lineHeight: 1, mb: 0.5 }}>
@@ -150,9 +162,20 @@ export const StudentFeeSummaryCard: React.FC<{
                   bgcolor: 'warning.lighter',
                   icon: 'solar:clock-circle-outline',
                 },
+                {
+                  label: 'Concession',
+                  value: student.concessionAmount,
+                  color: 'info.main',
+                  bgcolor: 'info.lighter',
+                  icon: 'solar:verified-check-outline',
+                },
               ].map((item, index) => (
-                <Box
+                <MotionBox
                   key={index}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
+                  whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } }}
                   sx={{
                     p: 1,
                     borderRadius: 1,
@@ -164,6 +187,7 @@ export const StudentFeeSummaryCard: React.FC<{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    cursor: 'default',
                   }}
                 >
                   <Box>
@@ -196,13 +220,13 @@ export const StudentFeeSummaryCard: React.FC<{
                         `drop-shadow(0 4px 8px ${alpha((theme.palette as any)[item.color.split('.')[0]].main, 0.24)})`,
                     }}
                   />
-                </Box>
+                </MotionBox>
               ))}
             </Box>
           </Grid>
         </Grid>
       )}
-    </Card>
+    </MotionCard>
   );
 };
 

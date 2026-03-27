@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { motion } from 'framer-motion';
 import React, { useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -46,7 +47,35 @@ export const buildValidationSchema = (currentYear: any) =>
               return value;
             })
             .required('Amount is required')
-            .positive('Amount must be positive'),
+            .positive('Amount must be positive')
+            // eslint-disable-next-line func-names
+            .test('not-exceed-total', 'Amount exceeds total payable', function (value) {
+              const rootValues = (this as any).from?.[1]?.value;
+              const totalPayable = rootValues?.totalPayableAmount || 0;
+              if (totalPayable === 0) return true;
+
+              // Individual amount exceeds total
+              if (value !== undefined && value !== null && value > totalPayable) {
+                return this.createError({
+                  message: `Amount (₹${value.toLocaleString()}) cannot exceed total payable amount (₹${totalPayable.toLocaleString()})`,
+                });
+              }
+
+              // Sum of all payment amounts exceeds total
+              const allPayments: any[] = rootValues?.payments || [];
+              const sum = allPayments.reduce((acc: number, p: any) => {
+                const parsed = Number(String(p.amount || 0).replace(/[₹,\s,]/g, ''));
+                return acc + (Number.isNaN(parsed) ? 0 : parsed);
+              }, 0);
+
+              if (sum > totalPayable) {
+                return this.createError({
+                  message: `Total payments (₹${sum.toLocaleString()}) exceed total payable amount (₹${totalPayable.toLocaleString()})`,
+                });
+              }
+
+              return true;
+            }),
           // eslint-disable-next-line func-names
           details: Yup.object().test('details-validation', function (details) {
             const { paymentMethod } = this.parent;
@@ -266,7 +295,7 @@ export default function PaymentDetailsForm({
               display: 'flex',
               flexDirection: 'column',
               p: 1,
-              borderRadius: 1,
+              borderRadius: 2,
               boxShadow: 'var(--shadows-4)',
               bgcolor: theme.vars.palette.background.paper,
               height: '100%',
@@ -333,7 +362,11 @@ export default function PaymentDetailsForm({
 
                         formik.setFieldValue('payments', filteredPayments);
                       }}
-                      error={formik.touched.payments && Boolean(formik.errors.payments)}
+                      error={
+                        formik.touched.payments &&
+                        typeof formik.errors.payments === 'string' &&
+                        Boolean(formik.errors.payments)
+                      }
                       helperText={
                         (formik.touched.payments && typeof formik.errors.payments === 'string'
                           ? formik.errors.payments
@@ -348,152 +381,159 @@ export default function PaymentDetailsForm({
 
                 {formik.values.payments?.map((payment, index) => (
                   <Grid size={{ xs: 12 }} key={payment.paymentMethod}>
-                    <Box
-                      sx={{
-                        overflow: 'hidden',
-                        mt: -2,
-                      }}
+                    <motion.div
+                      key={payment.paymentMethod}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      <Typography variant="h6" color="primary.main">
-                        {payment.paymentMethod}
-                      </Typography>
-                      <Grid container spacing={3} mt={1}>
-                        {paymentMethodsConfig[
-                          payment.paymentMethod as keyof typeof paymentMethodsConfig
-                        ]?.map((field: IPaymentFieldConfig) => {
-                          const isAmountField = field.name === 'amount';
-                          const fieldPath = isAmountField
-                            ? `payments[${index}].amount`
-                            : `payments[${index}].details.${field.name}`;
-
-                          const fieldValue = isAmountField
-                            ? payment.amount
-                            : payment.details[field.name];
-
-                          const isTouched = isAmountField
-                            ? (formik.touched.payments as any)?.[index]?.amount
-                            : (formik.touched.payments as any)?.[index]?.details?.[field.name];
-
-                          const errorMsg = isAmountField
-                            ? (formik.errors.payments as any)?.[index]?.amount
-                            : (formik.errors.payments as any)?.[index]?.details?.[field.name];
-
-                          return (
-                            <Grid size={{ xs: 6 }} key={`${payment.paymentMethod}-${field.name}`}>
-                              {field.type === 'date' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <DatePicker
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={fieldValue ? dayjs(fieldValue) : null}
-                                    format="DD/MM/YYYY"
-                                    onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                    sx={{ width: '100%' }}
-                                    slotProps={{
-                                      textField: {
-                                        size: 'small',
-                                        fullWidth: true,
-                                        error: isTouched && Boolean(errorMsg),
-                                        helperText: isTouched && errorMsg,
-                                      },
-                                    }}
-                                  />
-                                </ShakingTextField>
-                              ) : field.type === 'select' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <TextField
-                                    select
-                                    fullWidth
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    name={fieldPath}
-                                    value={fieldValue}
-                                    onChange={formik.handleChange}
-                                    size="small"
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched && errorMsg}
-                                    sx={{ width: '100%' }}
-                                  >
-                                    {field.options?.map((opt: any) => (
-                                      <MenuItem key={opt} value={opt}>
-                                        {opt}
-                                      </MenuItem>
-                                    ))}
-                                  </TextField>
-                                </ShakingTextField>
-                              ) : field.type === 'multiline' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <TextField
-                                    fullWidth
-                                    multiline
-                                    sx={{ width: '100%' }}
-                                    minRows={2}
-                                    size="small"
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    name={fieldPath}
-                                    value={fieldValue}
-                                    onChange={formik.handleChange}
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched && errorMsg}
-                                  />
-                                </ShakingTextField>
-                              ) : field.type === 'amount' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <NumericFormatCustom
-                                    size="small"
-                                    fullWidth
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    name={fieldPath}
-                                    value={fieldValue}
-                                    onChange={formik.handleChange}
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched && errorMsg}
-                                  />
-                                </ShakingTextField>
-                              ) : (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <TextField
-                                    fullWidth
-                                    type={field.type}
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    size="small"
-                                    name={fieldPath}
-                                    value={fieldValue}
-                                    onChange={(e) => {
-                                      const newValue = e.target.value;
-
-                                      if (field.pattern) {
-                                        if (newValue === '') {
-                                          formik.setFieldValue(fieldPath, newValue);
-                                          return;
-                                        }
-
-                                        const allowedChars = 'a-zA-Z0-9 ';
-                                        const typingRegex = new RegExp(`^[${allowedChars}]*$`);
-
-                                        if (!typingRegex.test(newValue)) return;
-                                      }
-                                      formik.setFieldValue(fieldPath, newValue);
-                                    }}
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched && errorMsg}
-                                    inputProps={
-                                      field.type === 'number'
-                                        ? { min: field.min, max: field.max }
-                                        : {}
-                                    }
-                                  />
-                                </ShakingTextField>
-                              )}
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                      <Divider
+                      <Box
                         sx={{
-                          mt: 2,
-                          borderWidth: 1,
+                          overflow: 'hidden',
+                          mt: -2,
                         }}
-                      />
-                    </Box>
+                      >
+                        <Typography variant="h6" color="primary.main">
+                          {payment.paymentMethod}
+                        </Typography>
+                        <Grid container spacing={3} mt={1}>
+                          {paymentMethodsConfig[
+                            payment.paymentMethod as keyof typeof paymentMethodsConfig
+                          ]?.map((field: IPaymentFieldConfig) => {
+                            const isAmountField = field.name === 'amount';
+                            const fieldPath = isAmountField
+                              ? `payments[${index}].amount`
+                              : `payments[${index}].details.${field.name}`;
+
+                            const fieldValue = isAmountField
+                              ? payment.amount
+                              : payment.details[field.name];
+
+                            const isTouched = isAmountField
+                              ? (formik.touched.payments as any)?.[index]?.amount
+                              : (formik.touched.payments as any)?.[index]?.details?.[field.name];
+
+                            const errorMsg = isAmountField
+                              ? (formik.errors.payments as any)?.[index]?.amount
+                              : (formik.errors.payments as any)?.[index]?.details?.[field.name];
+
+                            return (
+                              <Grid size={{ xs: 6 }} key={`${payment.paymentMethod}-${field.name}`}>
+                                {field.type === 'date' ? (
+                                  <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                    <DatePicker
+                                      label={`${field.label}${field.required ? ' *' : ''}`}
+                                      value={fieldValue ? dayjs(fieldValue) : null}
+                                      format="DD/MM/YYYY"
+                                      onChange={(date) => formik.setFieldValue(fieldPath, date)}
+                                      sx={{ width: '100%' }}
+                                      slotProps={{
+                                        textField: {
+                                          size: 'small',
+                                          fullWidth: true,
+                                          error: isTouched && Boolean(errorMsg),
+                                          helperText: isTouched && errorMsg,
+                                        },
+                                      }}
+                                    />
+                                  </ShakingTextField>
+                                ) : field.type === 'select' ? (
+                                  <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                    <TextField
+                                      select
+                                      fullWidth
+                                      label={`${field.label}${field.required ? ' *' : ''}`}
+                                      name={fieldPath}
+                                      value={fieldValue}
+                                      onChange={formik.handleChange}
+                                      size="small"
+                                      error={isTouched && Boolean(errorMsg)}
+                                      helperText={isTouched && errorMsg}
+                                      sx={{ width: '100%' }}
+                                    >
+                                      {field.options?.map((opt: any) => (
+                                        <MenuItem key={opt} value={opt}>
+                                          {opt}
+                                        </MenuItem>
+                                      ))}
+                                    </TextField>
+                                  </ShakingTextField>
+                                ) : field.type === 'multiline' ? (
+                                  <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                    <TextField
+                                      fullWidth
+                                      multiline
+                                      sx={{ width: '100%' }}
+                                      minRows={2}
+                                      size="small"
+                                      label={`${field.label}${field.required ? ' *' : ''}`}
+                                      name={fieldPath}
+                                      value={fieldValue}
+                                      onChange={formik.handleChange}
+                                      error={isTouched && Boolean(errorMsg)}
+                                      helperText={isTouched && errorMsg}
+                                    />
+                                  </ShakingTextField>
+                                ) : field.type === 'amount' ? (
+                                  <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                    <NumericFormatCustom
+                                      size="small"
+                                      fullWidth
+                                      label={`${field.label}${field.required ? ' *' : ''}`}
+                                      name={fieldPath}
+                                      value={fieldValue}
+                                      onChange={formik.handleChange}
+                                      error={isTouched && Boolean(errorMsg)}
+                                      helperText={isTouched && errorMsg}
+                                    />
+                                  </ShakingTextField>
+                                ) : (
+                                  <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                    <TextField
+                                      fullWidth
+                                      type={field.type}
+                                      label={`${field.label}${field.required ? ' *' : ''}`}
+                                      size="small"
+                                      name={fieldPath}
+                                      value={fieldValue}
+                                      onChange={(e) => {
+                                        const newValue = e.target.value;
+
+                                        if (field.pattern) {
+                                          if (newValue === '') {
+                                            formik.setFieldValue(fieldPath, newValue);
+                                            return;
+                                          }
+
+                                          const allowedChars = 'a-zA-Z0-9 ';
+                                          const typingRegex = new RegExp(`^[${allowedChars}]*$`);
+
+                                          if (!typingRegex.test(newValue)) return;
+                                        }
+                                        formik.setFieldValue(fieldPath, newValue);
+                                      }}
+                                      error={isTouched && Boolean(errorMsg)}
+                                      helperText={isTouched && errorMsg}
+                                      inputProps={
+                                        field.type === 'number'
+                                          ? { min: field.min, max: field.max }
+                                          : {}
+                                      }
+                                    />
+                                  </ShakingTextField>
+                                )}
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+                        <Divider
+                          sx={{
+                            mt: 2,
+                            borderWidth: 1,
+                          }}
+                        />
+                      </Box>
+                    </motion.div>
                   </Grid>
                 ))}
 

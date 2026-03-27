@@ -3,6 +3,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
@@ -181,10 +182,18 @@ const FeeStructureStep = ({
             {selectedClassId && (
               <>
                 {isFetching ? (
-                  <Stack spacing={2} mt={2}>
-                    <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1.5 }} />
-                    <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1.5 }} />
-                  </Stack>
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <Stack spacing={2} mt={2}>
+                      <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1.5 }} />
+                      <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1.5 }} />
+                    </Stack>
+                  </motion.div>
                 ) : (
                   (() => {
                     const feeStructures = formik.values.feeStructureClasses[selectedClassId] || [];
@@ -193,129 +202,144 @@ const FeeStructureStep = ({
                     if (feeStructures.length > 0) {
                       return (
                         <Box>
-                          {feeStructures.map((structure: any, idx: number) => {
-                            const totalFeeAmount =
-                              structure.feeHeads?.reduce(
-                                (sum: number, item: any) => sum + (item.amount || 0),
-                                0
-                              ) || 0;
+                          <AnimatePresence>
+                            {feeStructures.map((structure: any, idx: number) => {
+                              const totalFeeAmount =
+                                structure.feeHeads?.reduce(
+                                  (sum: number, item: any) => sum + (item.amount || 0),
+                                  0
+                                ) || 0;
 
-                            return (
-                              <Card
-                                key={idx}
-                                sx={{
-                                  borderRadius: 1.5,
-                                  mb: 2,
-                                  border: (theme) =>
-                                    `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
-                                  boxShadow: (theme) =>
-                                    `0 2px 8px ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
-                                  overflow: 'visible',
-                                }}
-                                elevation={0}
-                              >
-                                <Box
-                                  sx={{
-                                    p: 1.5,
-                                    pb: 1.5,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    borderBottom: (theme) =>
-                                      `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.1)}`,
-                                    bgcolor: (theme) =>
-                                      varAlpha(theme.palette.background.neutralChannel, 0.4),
-                                  }}
+                              return (
+                                <motion.div
+                                  key={structure.name || idx}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.97 }}
+                                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                  <Box display="flex" alignItems="center" gap={2}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                                      {structure.name || `Fee Structure ${idx + 1}`}
-                                    </Typography>
-                                    <Chip
-                                      label={`Total: ${formatNumber(totalFeeAmount, 'INR')}`}
-                                      color="success"
-                                      size="small"
-                                      variant="soft"
-                                      sx={{ fontWeight: 600, borderRadius: 1 }}
-                                    />
-                                  </Box>
-
-                                  <Box display="flex" alignItems="center" gap={1}>
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      startIcon={<Iconify icon="lucide:plus" />}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedFeeStructureIndex(idx);
-                                        addFeeHeadDialog.onTrue();
+                                  <Card
+                                    sx={{
+                                      borderRadius: 1.5,
+                                      mb: 2,
+                                      border: (theme) =>
+                                        `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+                                      boxShadow: (theme) =>
+                                        `0 2px 8px ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
+                                      overflow: 'visible',
+                                    }}
+                                    elevation={0}
+                                  >
+                                    <Box
+                                      sx={{
+                                        p: 1.5,
+                                        pb: 1.5,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        borderBottom: (theme) =>
+                                          `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.1)}`,
+                                        bgcolor: (theme) =>
+                                          varAlpha(theme.palette.background.neutralChannel, 0.4),
                                       }}
                                     >
-                                      Fee Head
-                                    </Button>
-
-                                    <Tooltip title="Update Fee Structure">
-                                      <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setEditFeeStructure({
-                                            classId: selectedClassId,
-                                            index: idx,
-                                          });
-                                        }}
-                                      >
-                                        <Iconify icon={GlobalIcons.edit} width={18} />
-                                      </IconButton>
-                                    </Tooltip>
-
-                                    <Tooltip title="Delete Fee Structure">
-                                      <IconButton
-                                        size="small"
-                                        color="error"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteFeeStructureDialog.onTrue();
-                                          setSelectedFeeStrcture(structure);
-                                        }}
-                                      >
-                                        <Iconify
-                                          icon={GlobalIcons.delete}
-                                          color="error"
-                                          width={18}
+                                      <Box display="flex" alignItems="center" gap={2}>
+                                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                                          {structure.name || `Fee Structure ${idx + 1}`}
+                                        </Typography>
+                                        <Chip
+                                          label={`Total: ${formatNumber(totalFeeAmount, 'INR')}`}
+                                          color="success"
+                                          size="small"
+                                          variant="soft"
+                                          sx={{ fontWeight: 600, borderRadius: 1 }}
                                         />
-                                      </IconButton>
-                                    </Tooltip>
-                                  </Box>
-                                </Box>
+                                      </Box>
 
-                                <Box sx={{ p: 0 }}>
-                                  <FeeStructureCard
-                                    className={selectedClassId}
-                                    feeItems={structure.feeHeads || []}
-                                    structureIndex={idx}
-                                    formik={formik}
-                                    onAddFeeHead={() => {
-                                      setSelectedFeeStructureIndex(idx);
-                                      addFeeHeadDialog.onTrue();
-                                    }}
-                                  />
-                                </Box>
-                              </Card>
-                            );
-                          })}
+                                      <Box display="flex" alignItems="center" gap={1}>
+                                        <Button
+                                          variant="outlined"
+                                          size="small"
+                                          startIcon={<Iconify icon="lucide:plus" />}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedFeeStructureIndex(idx);
+                                            addFeeHeadDialog.onTrue();
+                                          }}
+                                        >
+                                          Fee Head
+                                        </Button>
+
+                                        <Tooltip title="Update Fee Structure">
+                                          <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setEditFeeStructure({
+                                                classId: selectedClassId,
+                                                index: idx,
+                                              });
+                                            }}
+                                          >
+                                            <Iconify icon={GlobalIcons.edit} width={18} />
+                                          </IconButton>
+                                        </Tooltip>
+
+                                        <Tooltip title="Delete Fee Structure">
+                                          <IconButton
+                                            size="small"
+                                            color="error"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteFeeStructureDialog.onTrue();
+                                              setSelectedFeeStrcture(structure);
+                                            }}
+                                          >
+                                            <Iconify
+                                              icon={GlobalIcons.delete}
+                                              color="error"
+                                              width={18}
+                                            />
+                                          </IconButton>
+                                        </Tooltip>
+                                      </Box>
+                                    </Box>
+
+                                    <Box sx={{ p: 0 }}>
+                                      <FeeStructureCard
+                                        className={selectedClassId}
+                                        feeItems={structure.feeHeads || []}
+                                        structureIndex={idx}
+                                        formik={formik}
+                                        onAddFeeHead={() => {
+                                          setSelectedFeeStructureIndex(idx);
+                                          addFeeHeadDialog.onTrue();
+                                        }}
+                                      />
+                                    </Box>
+                                  </Card>
+                                </motion.div>
+                              );
+                            })}
+                          </AnimatePresence>
                         </Box>
                       );
                     }
 
                     // CASE 2: No fee structures match → show EmptyContent
                     return (
-                      <EmptyContent
-                        filled
-                        title="No Fee Structure Created For This Class"
-                        description="Click the 'Fee Structure' button above to create a new fee structure for this class."
-                        sx={{ mt: 2, py: 10 }}
-                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        <EmptyContent
+                          filled
+                          title="No Fee Structure Created For This Class"
+                          description="Click the 'Fee Structure' button above to create a new fee structure for this class."
+                          sx={{ mt: 2, py: 10 }}
+                        />
+                      </motion.div>
                     );
                   })()
                 )}
