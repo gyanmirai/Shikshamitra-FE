@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -84,7 +84,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     serverSidePagination,
   });
 
-  const headerRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const [headerRefs, setHeaderRefs] = useState<number[]>([]);
   const [tableRef, setTableRef] = useState<number>(0);
 
   // For empty content width
@@ -418,6 +418,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     setFilterAnchorEl({ element: e.currentTarget as HTMLElement, column: col });
                   }}
                   headerRefs={headerRefs}
+                  setHeaderRef={setHeaderRefs}
                   stickyMap={stickyMap}
                   getStickyStyle={getStickyStyle}
                 />
@@ -523,6 +524,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       dense,
       sorts,
       handleSort,
+      headerRefs,
       stickyMap,
       getStickyStyle,
       isLoading,
