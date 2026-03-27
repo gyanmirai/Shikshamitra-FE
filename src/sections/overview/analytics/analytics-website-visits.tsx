@@ -1,5 +1,6 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
+import type { Props as ApexProps } from 'react-apexcharts';
 
 import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
@@ -16,7 +17,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: ApexAxisChartSeries | ApexNonAxisChartSeries | undefined;
+    series: ApexProps['series'];
     options?: ChartOptions;
   };
   firstDropdownOptions?: { value: string; label: string }[];

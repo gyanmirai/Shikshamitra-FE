@@ -1,10 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { jwtDecode } from 'jwt-decode';
-import { User } from 'oidc-client-ts';
-import { oidcService } from 'src/utils/oidcClient';
 
 interface AuthState {
-  user: User | null;
+  user: any | null;
   isAuthenticated: boolean;
   loading: boolean;
   employee: any;
@@ -55,19 +52,6 @@ export const loadUser = createAsyncThunk(
   }
 );
 
-export const refreshToken = createAsyncThunk(
-  'auth/refreshToken',
-  async (_, { rejectWithValue }) => {
-    try {
-      const user = await oidcService.renewToken();
-      return JSON.parse(JSON.stringify(user));
-    } catch (error) {
-      console.error('Refresh token failed:', error);
-      return rejectWithValue(error);
-    }
-  }
-);
-
 export const getEmployee = createAsyncThunk(
   'auth/getEmployee',
   async (userData: any, { rejectWithValue }) => {
@@ -103,7 +87,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<User | null>) => {
+    setUser: (state, action: PayloadAction<any | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
     },
@@ -132,17 +116,6 @@ const authSlice = createSlice({
       .addCase(loadUser.rejected, (state) => {
         // state.error = action.payload;
         state.loading = false;
-      })
-      .addCase(refreshToken.pending, (state) => {
-        // state.loading = true;
-      })
-      .addCase(refreshToken.fulfilled, (state, action) => {
-        state.user = action.payload;
-        // state.loading = false;
-      })
-      .addCase(refreshToken.rejected, (state) => {
-        // state.error = action.payload;
-        // state.loading = false;
       })
       .addCase(getEmployee.pending, (state) => {
         // state.loading = true;
