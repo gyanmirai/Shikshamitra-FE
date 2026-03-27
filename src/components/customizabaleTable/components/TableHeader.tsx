@@ -1,5 +1,3 @@
-import type { MutableRefObject } from 'react';
-
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, TableRow, TableHead, TableCell, IconButton } from '@mui/material';
@@ -19,7 +17,8 @@ interface TableHeaderProps {
   onSort: (column: string, originalId?: string) => void;
   filters: IParams['filters'];
   onColumnFilterClick: (event: React.MouseEvent, column: IColumn) => void;
-  headerRefs: MutableRefObject<(HTMLTableCellElement | null)[]>;
+  headerRefs: (number | null)[];
+  setHeaderRef: React.Dispatch<React.SetStateAction<number[]>>;
   stickyMap: { left: Record<string, number>; right: Record<string, number> };
   getStickyStyle: (col: IColumn, isHeader: boolean) => React.CSSProperties;
 }
@@ -33,6 +32,7 @@ export const TableHeader = React.memo(
     filters,
     onColumnFilterClick,
     headerRefs,
+    setHeaderRef,
     stickyMap,
     getStickyStyle,
   }: TableHeaderProps) => {
@@ -48,8 +48,11 @@ export const TableHeader = React.memo(
                 <TableCell
                   key={column.id}
                   align={column.align || 'center'}
-                  ref={(el) => {
-                    headerRefs.current[index] = el as HTMLTableCellElement;
+                  ref={(el: HTMLTableCellElement) => {
+                    setHeaderRef((pre: number[]) => {
+                      pre[index] = el?.getBoundingClientRect?.()?.width ?? null;
+                      return pre;
+                    });
                   }}
                   sx={{
                     fontSize: '13px',
@@ -89,7 +92,7 @@ export const TableHeader = React.memo(
                     },
                     zIndex: 100,
                     ...getStickyStyle(column, true),
-                    position: 'sticky', // Redundant with getStickyStyle but harmless
+                    position: 'sticky',
                   }}
                 >
                   <Box

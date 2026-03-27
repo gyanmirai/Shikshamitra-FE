@@ -89,7 +89,7 @@ export const TableBody = ({
             <EmptyContent
               title={noDataText}
               sx={{
-                width: tableRef?.getBoundingClientRect?.()?.width,
+                width: tableRef,
                 position: 'sticky',
                 left: '0',
                 padding: '0',

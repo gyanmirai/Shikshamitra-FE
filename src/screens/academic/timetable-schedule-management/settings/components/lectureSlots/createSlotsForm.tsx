@@ -585,7 +585,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                               tableContainerProps={{
                                 sx: { maxHeight: '300px', minWidth: '800px' },
                               }}
-                              tableId={`time-schedule-${config.id}`}
+                              tableId={`time-schedule-${String(config.id)}`}
                               isSearch={false}
                               isFilter={false}
                               isPagination
