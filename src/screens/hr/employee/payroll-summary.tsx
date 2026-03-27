@@ -10,7 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Card, Grid, Stack, Button, Avatar, CardHeader } from '@mui/material';
-import { DashboardCard } from 'src/screens/classManagement/dashboard/components/dashboard-card';
+import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
 
 // ── Animation variants ──────────────────────
 const enterCurve = [0.22, 1, 0.36, 1] as const;
