@@ -304,8 +304,8 @@ const HrEmployee = () => {
             heading={`${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
             links={[
               { name: 'HR/Staff', href: hrPaths.dashboard },
-              { name: 'Employee', href: hrPaths.employee.list },
-              { name: 'Employee List', href: hrPaths.employee.list },
+              { name: 'Employee', onClick: () => handleClose() },
+              { name: 'Employee List', onClick: () => handleClose() },
               {
                 name: `${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`,
               },

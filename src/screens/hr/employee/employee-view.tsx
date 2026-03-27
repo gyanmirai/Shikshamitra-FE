@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import { Icon } from '@iconify/react';
+import { motion } from 'framer-motion';
 import { useTabs } from 'src/hooks/use-tabs';
 import { hrPaths } from 'src/constants/hr-menus';
 import React, { useMemo, useEffect } from 'react';
@@ -25,6 +26,29 @@ import EmployeeCommunication from './employee-communication';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
+
+// ── Animation variants ──────────────────────
+const enterCurve = [0.22, 1, 0.36, 1] as const;
+
+const fadeSlideUp = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: enterCurve } },
+};
+
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
+};
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.24, ease: enterCurve } },
+};
+
+const avatarVariant = {
+  hidden: { opacity: 0, scale: 0.88 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.28, ease: enterCurve } },
+};
 
 export const TABS = [
   {
@@ -111,114 +135,141 @@ export function EmployeeCard({ employee }: any) {
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
     <>
-      <Paper
-        sx={{
-          mb: 1,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          boxShadow: 'var(--shadows-4)',
-        }}
-      >
+      <motion.div variants={fadeSlideUp} initial="hidden" animate="show">
         <Paper
           sx={{
-            p: 1,
-            // borderBottom: '1px dashed',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderLeft: (theme) =>
-              employee?.status === EmployeeStatusType.Active
-                ? `4px solid ${theme.vars.palette.success.main}`
-                : `4px solid ${theme.palette.error.main}`,
-            borderRadius: 1,
+            mb: 1,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            boxShadow: 'var(--shadows-4)',
           }}
         >
-          <Box display="flex" gap={2} alignItems="center">
-            <Avatar
-              src={
-                employee?.profilePicture
-                  ? convertBase64Format(employee?.profilePicture)
-                  : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
-              }
-              sx={{
-                width: 64,
-                height: 64,
-                border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
-              }}
-            />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Name
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {employee?.fullName}
-              </Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Employee Code
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {employee?.employeeIdentifier}
-              </Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Role
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {employee?.roleName}
-              </Typography>
-            </Box>
-          </Box>
+          <Paper
+            sx={{
+              p: 1,
+              // borderBottom: '1px dashed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderLeft: (theme) =>
+                employee?.status === EmployeeStatusType.Active
+                  ? `4px solid ${theme.vars.palette.success.main}`
+                  : `4px solid ${theme.palette.error.main}`,
+              borderRadius: 1,
+            }}
+          >
+            <motion.div variants={staggerContainer} initial="hidden" animate="show">
+              <Box display="flex" gap={2} alignItems="center">
+                <motion.div variants={avatarVariant}>
+                  <Avatar
+                    src={
+                      employee?.profilePicture
+                        ? convertBase64Format(employee?.profilePicture)
+                        : 'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp'
+                    }
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
+                    }}
+                  />
+                </motion.div>
+                <motion.div variants={staggerItem}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Name
+                    </Typography>
+                    <Typography fontWeight={500} variant="body2">
+                      {employee?.fullName}
+                    </Typography>
+                  </Box>
+                </motion.div>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <motion.div variants={staggerItem}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Employee Code
+                    </Typography>
+                    <Typography fontWeight={500} variant="body2">
+                      {employee?.employeeIdentifier}
+                    </Typography>
+                  </Box>
+                </motion.div>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <motion.div variants={staggerItem}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Role
+                    </Typography>
+                    <Typography fontWeight={500} variant="body2">
+                      {employee?.roleName}
+                    </Typography>
+                  </Box>
+                </motion.div>
+              </Box>
+            </motion.div>
+          </Paper>
         </Paper>
-      </Paper>
-      <Paper elevation={2} sx={{ mb: 1 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={(...rest) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
-            if (currentIndex > newIndex) {
-              setIsBackClick(true);
-            } else {
-              setIsBackClick(false);
-            }
-            tabs.onChange(...rest);
-          }}
-          sx={{
-            px: 1.5,
+      </motion.div>
 
-            '& .MuiTabs-flexContainer': { gap: 1.5 },
-          }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              value={tab.value}
-              icon={tab.icon}
-              label={tab.label}
-              role="tab"
-            />
-          ))}
-        </Tabs>
-      </Paper>
-
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{ sx: { p: 0, minHeight: 0 } }}
+      <motion.div
+        variants={fadeSlideUp}
+        initial="hidden"
+        animate="show"
+        style={{ transitionDelay: '80ms' }}
       >
-        <Box sx={{ height: '100%' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component tabs={tabs} employee={employee} />
-          )}
-        </Box>
-      </FormSlider>
+        <Paper elevation={2} sx={{ mb: 1 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={(...rest) => {
+              const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
+              if (currentIndex > newIndex) {
+                setIsBackClick(true);
+              } else {
+                setIsBackClick(false);
+              }
+              tabs.onChange(...rest);
+            }}
+            sx={{
+              px: 1.5,
+
+              '& .MuiTabs-flexContainer': { gap: 1.5 },
+            }}
+            role="tablist"
+          >
+            {TABS.map((tab) => (
+              <Tab
+                sx={{ fontSize: '12px' }}
+                key={tab.value}
+                value={tab.value}
+                icon={tab.icon}
+                label={tab.label}
+                role="tab"
+              />
+            ))}
+          </Tabs>
+        </Paper>
+      </motion.div>
+
+      <motion.div
+        variants={fadeSlideUp}
+        initial="hidden"
+        animate="show"
+        style={{ transitionDelay: '160ms' }}
+      >
+        <FormSlider
+          steps={TABS}
+          isBackClick={isBackClick}
+          step={currentIndex}
+          containerProps={{ sx: { p: 0, minHeight: 0 } }}
+        >
+          <Box sx={{ height: '100%' }}>
+            {currentActiveComponent?.component && (
+              <currentActiveComponent.component tabs={tabs} employee={employee} />
+            )}
+          </Box>
+        </FormSlider>
+      </motion.div>
     </>
   );
 }
@@ -244,13 +295,14 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   ) : (
     <>
       <CustomBreadcrumbs
-        heading="Employee Profile"
+        heading={`${employee?.fullName} Profile`}
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Employee', href: hrPaths.employee.list },
-          { name: 'Employee Profile' },
+          { name: 'Employee', onClick: () => setSearchParams('employee', '') },
+          { name: 'Employee List', onClick: () => setSearchParams('employee', '') },
+          { name: `${employee?.fullName} Profile` },
         ]}
-        description="View and manage employee information including personal details, documents, payroll, transportation, academic records and communications"
+        description={`View and manage ${employee?.fullName} information including personal details, documents, payroll, transportation, academic records and communications`}
         isBack
         onBack={() => {
           if (isChanges && window.confirm('Are you sure you want to leave this page?')) {

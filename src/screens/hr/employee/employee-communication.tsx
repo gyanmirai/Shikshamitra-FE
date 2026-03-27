@@ -5,9 +5,29 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyContent } from 'src/components/empty-content';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
 import { Box, Card, Chip, Stack, Button, Avatar, Divider, Typography } from '@mui/material';
+
+// ── Animation variants ──────────────────────
+const enterCurve = [0.22, 1, 0.36, 1] as const;
+
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
+};
+
+const slideUpItem = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.26, ease: enterCurve } },
+};
+
+const cardVariant = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.24, ease: enterCurve } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.15, ease: 'easeIn' as const } },
+};
 
 // ─────────────────────────────────────────────
 // Types
@@ -397,36 +417,44 @@ const EmployeeCommunication = ({ employee }: any) => {
   return (
     <Box sx={{ pb: 1 }}>
       {/* ── Top 3 Summary Cards ── */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-          gap: 1,
-          mb: 1,
-        }}
-      >
-        <DashboardCard
-          title="Unread messages"
-          value={unreadCount}
-          icon="solar:letter-linear"
-          color="primary.main"
-          bgColor="primary.lighter"
-        />
-        <DashboardCard
-          title="Pending acknowledgements"
-          value={pendingAckCount}
-          icon="solar:clock-circle-linear"
-          color="warning.main"
-          bgColor="warning.lighter"
-        />
-        <DashboardCard
-          title="Today's events"
-          value={todayEventsCount}
-          icon="solar:calendar-linear"
-          color="info.main"
-          bgColor="info.lighter"
-        />
-      </Box>
+      <motion.div variants={staggerContainer} initial="hidden" animate="show">
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+            gap: 1,
+            mb: 1,
+          }}
+        >
+          <motion.div variants={slideUpItem}>
+            <DashboardCard
+              title="Unread messages"
+              value={unreadCount}
+              icon="solar:letter-linear"
+              color="primary.main"
+              bgColor="primary.lighter"
+            />
+          </motion.div>
+          <motion.div variants={slideUpItem}>
+            <DashboardCard
+              title="Pending acknowledgements"
+              value={pendingAckCount}
+              icon="solar:clock-circle-linear"
+              color="warning.main"
+              bgColor="warning.lighter"
+            />
+          </motion.div>
+          <motion.div variants={slideUpItem}>
+            <DashboardCard
+              title="Today's events"
+              value={todayEventsCount}
+              icon="solar:calendar-linear"
+              color="info.main"
+              bgColor="info.lighter"
+            />
+          </motion.div>
+        </Box>
+      </motion.div>
 
       {/* ── Filter Tabs ── */}
       <Box
@@ -492,9 +520,20 @@ const EmployeeCommunication = ({ employee }: any) => {
           >
             Action Required
           </Typography>
-          {actionRequired.map((item) => (
-            <CommunicationCard key={item.id} item={item} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {actionRequired.map((item, i) => (
+              <motion.div
+                key={item.id}
+                variants={cardVariant}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                style={{ transitionDelay: `${i * 50}ms` }}
+              >
+                <CommunicationCard item={item} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </Box>
       )}
 
@@ -515,21 +554,38 @@ const EmployeeCommunication = ({ employee }: any) => {
               All Communications
             </Typography>
           )}
-          {rest.map((item) => (
-            <CommunicationCard key={item.id} item={item} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {rest.map((item, i) => (
+              <motion.div
+                key={item.id}
+                variants={cardVariant}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                style={{ transitionDelay: `${i * 50}ms` }}
+              >
+                <CommunicationCard item={item} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </Box>
       )}
 
       {/* ── Empty State ── */}
       {filtered.length === 0 && (
-        <Box sx={{ mt: 6 }}>
-          <EmptyContent
-            title="No communications found"
-            imgUrl="/assets/icons/empty/ic_content.svg"
-            description="Try a different filter or check back later."
-          />
-        </Box>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: enterCurve }}
+        >
+          <Box sx={{ mt: 6 }}>
+            <EmptyContent
+              title="No communications found"
+              imgUrl="/assets/icons/empty/ic_content.svg"
+              description="Try a different filter or check back later."
+            />
+          </Box>
+        </motion.div>
       )}
     </Box>
   );

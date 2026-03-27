@@ -2,9 +2,10 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
 import {
   useGetEarningComponentsQuery,
   useGetDeductionComponentsQuery,
@@ -39,7 +40,7 @@ export default function PayrollComponentDialog({
       selectedComponents: componentValues || [],
     },
     validationSchema: Yup.object({
-      selectedComponents: Yup.array().min(1, 'Please select at least one component'),
+      selectedComponents: Yup.array().min(1, 'Please select at least one Component'),
     }),
     onSubmit: (values, { resetForm }) => {
       onAdd(values.selectedComponents);
@@ -57,7 +58,21 @@ export default function PayrollComponentDialog({
     <CustomDialog
       open={open}
       handleClose={handleClose}
-      title={`Add ${type === 'earning' ? 'Earning' : 'Deduction'} Components`}
+      title={
+        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+          <Typography variant="h5">
+            Add {type === 'earning' ? 'Earning' : 'Deduction'} Components
+          </Typography>
+          <CustomTooltip
+            sx={{ textAlign: 'justify' }}
+            arrow
+            placement="right"
+            title={`Add ${type === 'earning' ? 'Earning' : 'Deduction'} Components to the employee's payroll`}
+          >
+            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+          </CustomTooltip>
+        </Box>
+      }
       maxWidth="sm"
     >
       <DialogScrollContent>
@@ -79,8 +94,7 @@ export default function PayrollComponentDialog({
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Select Components"
-              placeholder="Choose components"
+              label="Components *"
               error={formik.touched.selectedComponents && Boolean(formik.errors.selectedComponents)}
               helperText={
                 formik.touched.selectedComponents && (formik.errors.selectedComponents as string)
@@ -95,7 +109,7 @@ export default function PayrollComponentDialog({
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleClose}
-          color="inherit"
+          variant="outlined"
         >
           Cancel
         </Button>

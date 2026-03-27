@@ -47,7 +47,7 @@ import type {
   IAdditionalInformationResponse,
 } from './types';
 
-const toRawMobile = (value: string | null | undefined) => {
+export const toRawMobile = (value: string | null | undefined) => {
   if (!value) return '';
   return value.replace(/\s/g, '').replace(/^\+91/, '');
 };
@@ -390,7 +390,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
         const resp = await addEmployee({ body }).unwrap();
         formik.setFieldValue('employeeId', resp.id);
+        return resp.id;
       }
+      return values.employeeId;
     },
     [addEmployee]
   );
@@ -616,7 +618,10 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            await handleBasicInformation(values, formik);
+            const createdId = await handleBasicInformation(values, formik);
+            if (createdId) {
+              values.employeeId = createdId;
+            }
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }

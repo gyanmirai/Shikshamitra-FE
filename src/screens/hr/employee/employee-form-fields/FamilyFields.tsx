@@ -4,7 +4,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
-import { Box, Grid, Stack, Checkbox, TextField, FormControlLabel } from '@mui/material';
+import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
 import { CardActions, SectionCard } from './InformationFields';
 
@@ -658,29 +658,27 @@ function RenderFamilyInformation(props: any) {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Stack spacing={3}>
-        <FamilyMemberSection
-          type="father"
-          title="Father Details"
-          formik={formik}
-          isMainForm={isMainForm}
-          editData={editData}
-        />
-        <FamilyMemberSection
-          type="mother"
-          title="Mother Details"
-          formik={formik}
-          isMainForm={isMainForm}
-          editData={editData}
-        />
-        <FamilyMemberSection
-          type="spouse"
-          title="Spouse Details"
-          formik={formik}
-          isMainForm={isMainForm}
-          editData={editData}
-        />
-      </Stack>
+      <FamilyMemberSection
+        type="father"
+        title="Father Details"
+        formik={formik}
+        isMainForm={isMainForm}
+        editData={editData}
+      />
+      <FamilyMemberSection
+        type="mother"
+        title="Mother Details"
+        formik={formik}
+        isMainForm={isMainForm}
+        editData={editData}
+      />
+      <FamilyMemberSection
+        type="spouse"
+        title="Spouse Details"
+        formik={formik}
+        isMainForm={isMainForm}
+        editData={editData}
+      />
     </Box>
   );
 }

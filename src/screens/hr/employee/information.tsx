@@ -39,14 +39,11 @@ import {
 //   FamilyFields,
 //   PayrollFields,
 
-import type { RootState } from 'src/redux/store';
-
-import { useSelector } from 'react-redux';
+import { ReligionType } from 'src/enums/religion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { infoValidations } from './employee-form-validation';
-//   WorkExperienceFields,
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { InformationFields } from './employee-form-fields/InformationFields';
@@ -54,15 +51,6 @@ import { WorkExperienceFields } from './employee-form-fields/WorkExperienceField
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
 import { AdditionalDetailsFields } from './employee-form-fields/AdditionalDetailsFields';
 import { AcademicPermissionFields } from './employee-form-fields/AcademicPermissionFields';
-// } from './employee-form-fields';
-import {
-  payrollInitialValues,
-  workExperienceInitialValues,
-  familyInformationInitialValues,
-  additionalDetailsInitialValues,
-  personalInformationInitialValues,
-  assignReportingManagerInitialValues,
-} from './employee-form';
 import {
   PayrollSkeleton,
   WorkExperienceSkeleton,
@@ -72,6 +60,15 @@ import {
   AcademicPermissionSkeleton,
   PersonalInformationSkeleton,
 } from './employee-form-skeleton';
+import {
+  toRawMobile,
+  payrollInitialValues,
+  workExperienceInitialValues,
+  familyInformationInitialValues,
+  additionalDetailsInitialValues,
+  personalInformationInitialValues,
+  assignReportingManagerInitialValues,
+} from './employee-form';
 
 //   InformationFields,
 import type { FieldsType } from './employee-form-fields/types';
@@ -143,7 +140,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
   // State to control edit mode
   const [isEdit, setIsEdit] = useState(false);
-  useSelector((state: RootState) => state.confirmPopup);
 
   const [isBackClick, setIsBackClick] = useState(false);
 
@@ -189,10 +185,11 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       const res = await updateFamilyInfo({
         employeeId: values.employeeId,
         body: {
+          id: values.employeeId,
           fatherDetails: {
             name: values.fatherName,
             occupation: values.fatherOccupation,
-            mobileNo: values.fatherContactNo,
+            mobileNo: toRawMobile(values.fatherContactNo) || null,
             address1: values.fatherAddress1,
             address2: values.fatherAddress2,
             address3: values.fatherAddress3,
@@ -204,7 +201,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           motherDetails: {
             name: values.motherName,
             occupation: values.motherOccupation,
-            mobileNo: values.motherContactNo,
+            mobileNo: toRawMobile(values.motherContactNo) || null,
             address1: values.motherAddress1,
             address2: values.motherAddress2,
             address3: values.motherAddress3,
@@ -218,7 +215,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           spouseDetails: {
             name: values.spouseName,
             occupation: values.spouseOccupation,
-            mobileNo: values.spouseContactNo,
+            mobileNo: toRawMobile(values.spouseContactNo) || null,
             address1: values.spouseAddress1,
             address2: values.spouseAddress2,
             address3: values.spouseAddress3,
@@ -235,43 +232,46 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
 
   // Handler for updateEmployee
-  const handelUpdateEmployee = useCallback(
+  const handleUpdateEmployee = useCallback(
     async (values: any, formik: any, id: any) => {
       try {
+        const body: Record<string, any> = {
+          lastName: values.lastName,
+          firstName: values.firstName,
+          middleName: values.middleName || '',
+          shortName: values.shortName || '',
+          dob: dateConvertor(values.dob.format(dateFormat)),
+          familyCaste: values.familyCast,
+          casteType: values.castType,
+          gender: values.gender,
+          religion: ReligionType[values.religion],
+          maritalStatus: values.maritalStatus,
+          bloodGroup: values.bloodGroup,
+          mobileNo: toRawMobile(values.mobileNo),
+          email: values.email,
+          department: values.department,
+          doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
+          isTeaching: values.employeeGroup === 0,
+          roleId: values.role,
+          address1: values.addressLine1,
+          address2: values.addressLine2,
+          country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+          state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+          city: values?.city?.name,
+          pinCode: String(values.pincode),
+          shiftId: values.shift,
+        };
+
+        if (values.secondaryMobileNo) {
+          body.secondaryMobileNo = toRawMobile(values.secondaryMobileNo);
+        }
+        if (values.addressLine3) {
+          body.address3 = values.addressLine3;
+        }
+
         const res = await updateEmployee({
           id,
-          body: {
-            lastName: values.lastName,
-            firstName: values.firstName,
-            middleName: values.middleName,
-            shortName: values.shortName,
-            employeeStatusType: values.employeeStatusType,
-            dob: dateConvertor(values.dob.format(dateFormat)),
-            familyCaste: values.familyCast,
-            casteType: values.castType,
-            gender: values.gender,
-            religion: values.religion,
-            maritalStatus: values.maritalStatus,
-            bloodGroup: values.bloodGroup,
-            mobileNo: values.mobileNo,
-            secondaryMobileNo: values.secondaryMobileNo,
-            email: values.email,
-            department: values.department,
-            doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
-            isTeaching: values.employeeGroup === 0,
-            // qualification: values.qualification,
-            roleId: values.role,
-            // identificationMark1: values.identificationMark1,
-            address1: values.addressLine1,
-            address2: values.addressLine2,
-            address3: values.addressLine3,
-            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-            city: values?.city?.name,
-            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-            pincode: `${values.pincode}`,
-            // educationMediumStageId: values.organization,
-            shiftId: values.shift,
-          },
+          body,
         }).unwrap();
 
         return res;
@@ -290,7 +290,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     } else {
       setIsBackClick(false);
     }
-    formik.resetForm();
     setIsEdit(false);
     tabs.setValue(newValue);
   };
@@ -302,18 +301,18 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
         employeeId: values.employeeId,
         body: values.experiences.map((i: any) => ({
           ...i,
-          mediumStageName: i.mediumStageName,
+          mediumStageName: i.mediumStageName ?? '',
           designation: i.designation,
           department: i.department,
           country: {
-            name: i.country.name,
-            isoCode: i.country.isoCode,
+            name: i.country?.name ?? '',
+            isoCode: i.country?.isoCode ?? '',
           },
           state: {
-            name: i.state.name,
-            isoCode: i.state.isoCode,
+            name: i.state?.name ?? '',
+            isoCode: i.state?.isoCode ?? '',
           },
-          city: i.city.name,
+          city: i.city?.name ?? '',
           startDate: i.startDate ? dateConvertor(i.startDate.format(dateFormat)) : null,
           endDate: i.endDate ? dateConvertor(i.endDate.format(dateFormat)) : null,
         })),
@@ -338,13 +337,11 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           },
 
           salaryDetails: {
-            pfRuleId: values.pfRuleId,
+            pfRuleId: values.pfRule,
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
-            basicSalary: values.basicSalary,
             punchId: values.punchId,
-            tdsPercentage: values.tdsPercentage,
-            tdsAmount: values.tdsAmount,
+            totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
           },
 
           earningComponents: values.earningComponents,
@@ -378,7 +375,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       const res = await updateReportingManager({
         id: values.employeeId,
         body: {
-          reportingManagerId: values?.reportingManager?.id,
+          reportingManagerId: values?.reportingManager,
         },
       }).unwrap();
       return res;
@@ -390,7 +387,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   const onSubmit = async (_val: any) => {
     try {
       if (activeTabIndex === 0) {
-        await handelUpdateEmployee(formik.values, formik, editData?.id);
+        await handleUpdateEmployee(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Employee Details updated successfully' });
       } else if (activeTabIndex === 1) {
         await handleFamilyInformation(formik.values, formik);

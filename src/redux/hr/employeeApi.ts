@@ -117,18 +117,15 @@ export const employeeApi = createApi({
     }),
     getWorkExperience: builder.query({
       query: ({ id }) => ({
-        url: `/app/employee-work-experience`,
+        url: `/employees/${id}/work-experience`,
         method: 'GET',
-        params: {
-          employeeId: id,
-        },
       }),
       providesTags: ['Employee'],
     }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee-work-experience/upsert/${employeeId}`,
-        method: 'POST',
+        url: `/employees/${employeeId}/work-experience`,
+        method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
@@ -268,6 +265,7 @@ export const employeeApi = createApi({
         method: 'POST',
         data: body,
       }),
+      invalidatesTags: ['Employee-Document-Config'],
     }),
     updateDocumentConfiguration: builder.mutation({
       query: ({ id, body }) => ({
@@ -275,6 +273,7 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
+      invalidatesTags: ['Employee-Document-Config'],
     }),
     deleteDocumentConfiguration: builder.mutation({
       query: (id) => ({

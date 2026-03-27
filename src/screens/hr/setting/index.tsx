@@ -330,7 +330,7 @@ const DocumentForm = ({
     }),
     onSubmit: async (formikValues) => {
       if (editData) {
-        const updatedDoc = await updateDocumentConfiguration({
+        await updateDocumentConfiguration({
           id: editData.id,
           body: {
             title: formikValues.title,
@@ -338,21 +338,12 @@ const DocumentForm = ({
             documentSize: formikValues.documentSize,
           },
         }).unwrap();
-        dispatch(
-          employeeApi.util.updateQueryData(
-            'getDocumentConfigurations',
-            queryParams,
-            (draft: any) => {
-              const idx = draft.items?.findIndex((b: any) => b.id === editData.id);
-              if (idx !== -1) draft.items[idx] = updatedDoc;
-            }
-          )
-        );
+
         shikshaMitraToast.success({ message: 'Document updated successfully' });
         handleClose?.();
         return;
       }
-      const newDoc = await createDocumentConfiguration({
+      await createDocumentConfiguration({
         academicYearId: currentYear?.id,
         body: {
           title: formikValues.title,
@@ -360,14 +351,6 @@ const DocumentForm = ({
           documentSize: formikValues.documentSize,
         },
       }).unwrap();
-      dispatch(
-        employeeApi.util.updateQueryData('getDocumentConfigurations', queryParams, (draft: any) => {
-          if (draft.items) {
-            draft.items.push(newDoc);
-            if (draft.totalCount !== undefined) draft.totalCount += 1;
-          }
-        })
-      );
       shikshaMitraToast.success({ message: 'Document added successfully' });
       handleClose?.();
     },
