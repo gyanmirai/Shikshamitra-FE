@@ -1,7 +1,11 @@
+import type { LabelColor } from 'src/components/label';
+
 import React from 'react';
 import { Box } from '@mui/material';
+import { Label } from 'src/components/label';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { ReceiptStatusColors, ReceiptStatusOptions } from 'src/enums/finance-receipt-status';
 
 import type { IFeeReceipt } from '../type';
 
@@ -12,14 +16,14 @@ const ReceiptTable = ({
   data: IFeeReceipt[];
   onView: (data: IFeeReceipt) => void;
 }) => (
-  <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+  <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
     <CustomizableTable
+      tableTitle="Receipts"
       tableId="fees-status-table"
       noDataText={<>No Fees Data Found</>}
       columns={[
         { id: 'student', label: 'Student Name', align: 'left', minWidth: '12vw', sticky: true },
         { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '6vw' },
-        { id: 'division', label: 'Division', align: 'left', minWidth: '6vw' },
         {
           id: 'totalPaidFees',
           label: 'Total Paid Fees',
@@ -43,6 +47,20 @@ const ReceiptTable = ({
           align: 'left',
           minWidth: '10vw',
           filterType: 'date',
+        },
+        {
+          id: 'status',
+          label: 'Status',
+          align: 'left',
+          minWidth: '6vw',
+          filterType: 'enum',
+          sticky: true,
+          enumOptions: ReceiptStatusOptions,
+          isSort: false,
+          render(value: string) {
+            const color = (ReceiptStatusColors[value] || 'default') as LabelColor;
+            return <Label color={color}>{value}</Label>;
+          },
         },
         {
           id: 'actions',

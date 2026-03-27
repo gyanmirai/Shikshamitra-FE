@@ -1,17 +1,16 @@
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { LabelColor } from 'src/components/label';
+import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { ClearIcon } from '@mui/x-date-pickers';
-import { Iconify } from 'src/components/iconify';
-import { GridSearchIcon } from '@mui/x-data-grid';
-import React, { useState, useEffect } from 'react';
+import { useTabs } from 'src/hooks/use-tabs';
+import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
+import React, { useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, TextField, IconButton, Typography } from '@mui/material';
 import { useGetReceiptDataQuery } from 'src/redux/invoiceAndReceipt/receiptApi';
 
 import ReceiptTable from './Components/receiptTable';
@@ -19,42 +18,168 @@ import StudentTableView from './Components/StudentReceiptTable';
 
 import type { IFeeReceipt } from './type';
 
+const STATIC_RECEIPTS: IFeeReceipt[] = [
+  {
+    student: 'Dharmik Jinjala',
+    rollNo: '101',
+    class: '10',
+    division: 'A',
+    totalPaidFees: 10000,
+    totalPendingFees: 5000,
+    grNo: 111,
+    lastPaymentDate: '10-08-2025',
+    paymentTerm: 'Monthly',
+    status: 'Partial',
+  },
+  {
+    student: 'Prerna Atre',
+    rollNo: '102',
+    class: '10',
+    division: 'A',
+    totalPaidFees: 13500,
+    totalPendingFees: 0,
+    grNo: 112,
+    lastPaymentDate: '12-08-2025',
+    paymentTerm: 'Quarterly',
+    status: 'Paid',
+  },
+  {
+    student: 'Aarav Mehta',
+    rollNo: '103',
+    class: '10',
+    division: 'B',
+    totalPaidFees: 9500,
+    totalPendingFees: 5500,
+    grNo: 113,
+    lastPaymentDate: '15-08-2025',
+    paymentTerm: 'Half-Yearly',
+    status: 'Partial',
+  },
+  {
+    student: 'Siya Patel',
+    rollNo: '104',
+    class: '10',
+    division: 'A',
+    totalPaidFees: 15000,
+    totalPendingFees: 0,
+    grNo: 114,
+    lastPaymentDate: '17-08-2025',
+    paymentTerm: 'Annually',
+    status: 'Paid',
+  },
+  {
+    student: 'Rohan Sharma',
+    rollNo: '105',
+    class: '10',
+    division: 'B',
+    totalPaidFees: 8000,
+    totalPendingFees: 7000,
+    grNo: 115,
+    lastPaymentDate: '18-08-2025',
+    paymentTerm: 'Monthly',
+    status: 'Partial',
+  },
+  {
+    student: 'Ananya Desai',
+    rollNo: '106',
+    class: '9',
+    division: 'A',
+    totalPaidFees: 12000,
+    totalPendingFees: 0,
+    grNo: 116,
+    lastPaymentDate: '20-08-2025',
+    paymentTerm: 'Quarterly',
+    status: 'Paid',
+  },
+  {
+    student: 'Vivaan Shah',
+    rollNo: '107',
+    class: '9',
+    division: 'B',
+    totalPaidFees: 0,
+    totalPendingFees: 11000,
+    grNo: 117,
+    lastPaymentDate: '-',
+    paymentTerm: 'Half-Yearly',
+    status: 'Pending',
+  },
+];
+
 const ReceiptManagement = () => {
-  // State to store all classes/standards for the selected organization
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
   const [classes, setClass] = useState<string>('');
-  // State to store all divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-  // State to store search input value for filtering students/invoices
-  const [searchValue, setSearchValue] = useState('');
   const viewReceiptDetailsDialog = useBoolean();
   const [selectedReceiptData, setSelectedReceiptData] = useState<IFeeReceipt | null>(null);
 
-  // Query hook to fetch invoice data from the API
-  // Returns invoice data and loading state
   const { data: receiptData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReceiptDataQuery,
   });
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
+  const tableData = receiptData?.length ? receiptData : STATIC_RECEIPTS;
+
+  const statusTabs = useTabs('All');
+
+  const getPaymentStatus = (row: IFeeReceipt) => {
+    if (row.totalPendingFees <= 0) return 'Paid';
+    if (row.totalPaidFees > 0) return 'Partial';
+    return 'Pending';
+  };
+
+  const statusCounts = useMemo(() => {
+    const list = tableData || [];
+    return {
+      All: list.length,
+      Paid: list.filter((i: IFeeReceipt) => getPaymentStatus(i) === 'Paid').length,
+      Partial: list.filter((i: IFeeReceipt) => getPaymentStatus(i) === 'Partial').length,
+      Pending: list.filter((i: IFeeReceipt) => getPaymentStatus(i) === 'Pending').length,
+    };
+  }, [tableData]);
+
+  const STATUS_TABS = useMemo(
+    () => [
+      { value: 'All', label: 'All', count: statusCounts.All, color: 'default' },
+      { value: 'Paid', label: 'Paid', count: statusCounts.Paid, color: 'success' },
+      { value: 'Partial', label: 'Partial', count: statusCounts.Partial, color: 'info' },
+      { value: 'Pending', label: 'Pending', count: statusCounts.Pending, color: 'warning' },
+    ],
+    [statusCounts]
+  );
+
+  const filteredReceiptData = useMemo(() => {
+    const list = tableData || [];
+    if (statusTabs.value === 'All') return list;
+    return list.filter((i: IFeeReceipt) => getPaymentStatus(i) === statusTabs.value);
+  }, [tableData, statusTabs.value]);
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  // Board → Medium cascade
   useEffect(() => {
-    // Flatten the list of standards from all stages
+    setBoards(currentYear?.boards || []);
+    const board = boards?.find((item: Board) => item.id === selectedBoard);
+    setMediums(board?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
+
+  // Medium → Class cascade
+  useEffect(() => {
+    const medium = mediums?.find((item: Medium) => item.id === selectedMedium);
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
     setAllClass(allClasses);
-    setClass(allClasses[0]?.name || '');
-  }, [medium]);
+    setClass('');
+  }, [mediums, selectedMedium]);
 
-  // Update divisions when class changes
+  // Class → Division cascade
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
+    setDivision('');
   }, [allClass, classes]);
 
   return (
@@ -68,67 +193,88 @@ const ReceiptManagement = () => {
           mt: 1,
           mb: 1,
           p: 1,
+          pb: 0,
           gap: 2,
         }}
       >
-        {' '}
         <CustomSelect
-          options={allClass}
+          options={boards || []}
+          label="Board"
+          value={selectedBoard}
+          onChange={(val) => {
+            setSelectedBoard(val as string);
+            setSelectedMedium('');
+            setClass('');
+            setDivision('');
+          }}
+          labelKey="name"
+          valueKey="id"
+          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
+        />
+        <CustomSelect
+          options={mediums || []}
+          label="Medium"
+          value={selectedMedium}
+          onChange={(val) => {
+            setSelectedMedium(val as string);
+            setClass('');
+            setDivision('');
+          }}
+          labelKey="name"
+          valueKey="id"
+          disabled={!selectedBoard}
+          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
+        />
+        <CustomSelect
+          options={allClass || []}
           label="Class"
           value={classes}
           onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="name"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          disabled={!selectedMedium}
+          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
         />
         <CustomSelect
-          options={allDivision}
+          options={allDivision || []}
           label="Division"
           value={division}
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="name"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!classes}
+          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
         />
-        <TextField
-          variant="outlined"
-          size="small"
-          value={searchValue}
-          onChange={() => {}}
-          InputProps={{
-            endAdornment: (
-              <>
-                {searchValue ? (
-                  <IconButton
-                    size="small"
-                    sx={{ mr: '-12px', p: 1 }}
-                    onClick={() => setSearchValue('')}
-                  >
-                    <ClearIcon />
-                  </IconButton>
-                ) : (
-                  <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
-                    <GridSearchIcon />
-                  </IconButton>
-                )}
-              </>
-            ),
-          }}
-          label="Search Student by Name, Invoice Id"
-          sx={{ minWidth: '250.6px', width: '100%' }}
-        />
-      </Box>
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <ReceiptTable
-          data={receiptData}
-          onView={(data) => {
-            viewReceiptDetailsDialog.onTrue();
-            setSelectedReceiptData(data);
-          }}
-        />
+        <Tabs
+          value={statusTabs.value}
+          onChange={statusTabs.onChange}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' }, flexGrow: 1 }}
+        >
+          {STATUS_TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              sx={{ fontSize: '12px' }}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label variant="soft" color={(tab.color as LabelColor) || 'default'}>
+                    {tab.count}
+                  </Label>
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
       </Box>
 
+      <ReceiptTable
+        data={filteredReceiptData}
+        onView={(data) => {
+          viewReceiptDetailsDialog.onTrue();
+          setSelectedReceiptData(data);
+        }}
+      />
       <CustomDialog
         open={viewReceiptDetailsDialog.value}
         handleClose={() => {
@@ -136,16 +282,15 @@ const ReceiptManagement = () => {
           setSelectedReceiptData(null);
         }}
         title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Receipt Details</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal displays all fee receipts of a particular student, with options to view, download."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>
+              Receipt Details
+            </Typography>
+            {selectedReceiptData && (
+              <Typography variant="caption" color="text.secondary">
+                {selectedReceiptData.student}
+              </Typography>
+            )}
           </Box>
         }
         maxWidth="sm"

@@ -1,26 +1,26 @@
 export enum InvoiceStatusType {
-  Sent,
-  Paid,
-  Overdue,
+  Pending = 'Pending',
+  Partial = 'Partial',
+  Paid = 'Paid',
 }
 
 export const InvoiceStatusOptions = [
   {
-    label: 'Sent',
-    value: InvoiceStatusType.Sent,
+    label: 'Pending',
+    value: InvoiceStatusType.Pending,
+  },
+  {
+    label: 'Partial',
+    value: InvoiceStatusType.Partial,
   },
   {
     label: 'Paid',
     value: InvoiceStatusType.Paid,
   },
-  {
-    label: 'Overdue',
-    value: InvoiceStatusType.Overdue,
-  },
 ];
 
-export const InvoiceStatusColors = {
-  [InvoiceStatusType.Sent]: 'info',
+export const InvoiceStatusColors: Record<string, string> = {
+  [InvoiceStatusType.Pending]: 'warning',
+  [InvoiceStatusType.Partial]: 'info',
   [InvoiceStatusType.Paid]: 'success',
-  [InvoiceStatusType.Overdue]: 'error',
 };
