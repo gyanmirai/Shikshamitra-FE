@@ -181,7 +181,7 @@ const FeeStructureStep = ({
           <>
             {selectedClassId && (
               <>
-                {isFetching ? (
+                {isFetching || isLoading ? (
                   <motion.div
                     key="loading"
                     initial={{ opacity: 0 }}
@@ -212,7 +212,7 @@ const FeeStructureStep = ({
 
                               return (
                                 <motion.div
-                                  key={structure.name || idx}
+                                  key={structure._id ?? `${selectedClassId}-${idx}`}
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, scale: 0.97 }}

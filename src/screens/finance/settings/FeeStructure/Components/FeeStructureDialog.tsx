@@ -49,6 +49,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
     } else {
       // Add mode
       updated.push({
+        _id: crypto.randomUUID(),
         name: feeStructureName || `Fee Structure ${updated.length + 1}`,
         status: FeeStructureClassStatusType.Current,
         feeHeads: [],

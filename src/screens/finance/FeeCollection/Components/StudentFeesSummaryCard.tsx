@@ -10,9 +10,6 @@ import { Box, Card, Grid, Stack, Avatar, Divider, Typography } from '@mui/materi
 
 import type { IStudentFee } from './type';
 
-const MotionBox = motion(Box);
-const MotionCard = motion(Card);
-
 export const StudentFeeSummaryCard: React.FC<{
   student: IStudentFee | null;
   showHeader?: boolean;
@@ -28,7 +25,8 @@ export const StudentFeeSummaryCard: React.FC<{
   }
 
   return (
-    <MotionCard
+    <Card
+      component={motion.div}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
@@ -170,7 +168,8 @@ export const StudentFeeSummaryCard: React.FC<{
                   icon: 'solar:verified-check-outline',
                 },
               ].map((item, index) => (
-                <MotionBox
+                <Box
+                  component={motion.div}
                   key={index}
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -220,13 +219,13 @@ export const StudentFeeSummaryCard: React.FC<{
                         `drop-shadow(0 4px 8px ${alpha((theme.palette as any)[item.color.split('.')[0]].main, 0.24)})`,
                     }}
                   />
-                </MotionBox>
+                </Box>
               ))}
             </Box>
           </Grid>
         </Grid>
       )}
-    </MotionCard>
+    </Card>
   );
 };
 
