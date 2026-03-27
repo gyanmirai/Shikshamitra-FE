@@ -114,8 +114,8 @@ const WorkExperiences = (props: any) => {
                     label="Organization Name *"
                     value={experience.organizationName}
                     onChange={(e) => {
-                      const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
-                      const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
+                      const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
+                      const capitalized = sanitizedValue.replace(/\b\w/g, (c) => c.toUpperCase());
                       formik.setFieldValue(`experiences.${index}.organizationName`, capitalized);
                     }}
                     error={
