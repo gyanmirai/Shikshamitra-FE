@@ -50,7 +50,7 @@ export const buildValidationSchema = (currentYear: any) =>
             .positive('Amount must be positive')
             // eslint-disable-next-line func-names
             .test('not-exceed-total', 'Amount exceeds total payable', function (value) {
-              const rootValues = (this as any).from?.[1]?.value;
+              const rootValues = (this.options as any).from?.[1]?.value;
               const totalPayable = rootValues?.totalPayableAmount || 0;
               if (totalPayable === 0) return true;
 
