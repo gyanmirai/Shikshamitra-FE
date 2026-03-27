@@ -473,7 +473,7 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
     }
   }, [getEmployById, searchParams?.employee]);
 
-  return isLoading ? (
+  return isLoading || (!employee && !!searchParams?.employee) ? (
     <EmployeeViewSkeleton />
   ) : isError ? (
     <EmptyContent title="Employee not found" />
