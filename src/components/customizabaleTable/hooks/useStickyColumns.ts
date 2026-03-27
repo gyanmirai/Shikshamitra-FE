@@ -1,5 +1,3 @@
-import type { MutableRefObject } from 'react';
-
 import { useTheme } from '@mui/material/styles';
 import { useState, useCallback, useLayoutEffect } from 'react';
 
@@ -8,7 +6,7 @@ import type { IColumn } from '../types';
 interface UseStickyColumnsProps {
   columns: IColumn[];
   columnVisibility: Record<string, boolean>;
-  headerRefs: MutableRefObject<(HTMLTableCellElement | null)[]>;
+  headerRefs: (number | null)[];
 }
 
 export const useStickyColumns = ({
@@ -28,10 +26,10 @@ export const useStickyColumns = ({
 
     // Divide sticky columns into left and right halves
     const stickyCols = columns.filter((col) => col.sticky);
-    const half = Math.ceil(stickyCols.length / 2);
+    const half = Math.ceil(columns.length / 2);
 
     columns.forEach((col, idx) => {
-      if (col.sticky && columnVisibility[col.id]) {
+      if (col.sticky) {
         if (idx < half) {
           leftSticky.push({ col, idx });
         } else {
@@ -43,8 +41,9 @@ export const useStickyColumns = ({
     const leftOffsets: Record<string, number> = {};
     let left = 0;
     leftSticky.forEach(({ col, idx }) => {
-      const el = headerRefs.current[idx];
-      const width = el?.offsetWidth ?? 100;
+      const el = headerRefs[idx];
+      const width = el ?? 100;
+      console.log('Calculating left offset for column:', col.id, 'Element:', el, 'Width:', width);
       leftOffsets[col.id as string] = left;
       left += width;
     });
@@ -52,8 +51,8 @@ export const useStickyColumns = ({
     const rightOffsets: Record<string, number> = {};
     let right = 0;
     [...rightSticky].reverse().forEach(({ col, idx }) => {
-      const el = headerRefs.current[idx];
-      const width = el?.offsetWidth ?? 100;
+      const el = headerRefs[idx];
+      const width = el ?? 100;
       rightOffsets[col.id as string] = right;
       right += width;
     });
