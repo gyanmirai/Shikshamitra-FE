@@ -1,4 +1,3 @@
-import { capitalize } from 'lodash';
 import React, { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,8 +17,7 @@ const WorkExperiences = (props: any) => {
   const [selectedExperience, setSelectedExperience] = useState<number | null>();
   const { formik, isMainForm } = props;
   const { values, setFieldValue } = formik;
-  console.log('values====', values);
-  console.log('validations----', formik.errors);
+
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -116,11 +114,9 @@ const WorkExperiences = (props: any) => {
                     label="Organization Name *"
                     value={experience.organizationName}
                     onChange={(e) => {
-                      const val = e.target.value;
-                      const newName = val ? val.charAt(0).toUpperCase() + val.slice(1) : '';
-                      if (/^[A-Za-z ]*$/.test(newName)) {
-                        formik.setFieldValue(`experiences.${index}.organizationName`, newName);
-                      }
+                      const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
+                      const capitalized = sanitizedValue.replace(/\b\w/g, (c) => c.toUpperCase());
+                      formik.setFieldValue(`experiences.${index}.organizationName`, capitalized);
                     }}
                     error={
                       formik?.touched?.experiences?.[index]?.organizationName &&
@@ -189,11 +185,10 @@ const WorkExperiences = (props: any) => {
                   label="Department"
                   value={experience.department}
                   disabled={!isEditable.value}
-                  onChange={(event) => {
-                    const val = capitalize(event.target.value);
-                    if (/^[A-Za-z ]*$/.test(val)) {
-                      setFieldValue(`experiences.${index}.department`, val);
-                    }
+                  onChange={(e) => {
+                    const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
+                    const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
+                    formik.setFieldValue(`experiences.${index}.department`, capitalized);
                   }}
                   FormHelperTextProps={{
                     sx: {

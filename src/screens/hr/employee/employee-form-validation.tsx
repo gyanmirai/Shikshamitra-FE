@@ -83,6 +83,10 @@ const personalInformationValidationSchema = Yup.object({
       'Date of Joining is required',
       (value) => value && dayjs(value as any).isValid()
     )
+    .test('is-not-future', 'Date of Joining cannot be in the future', (value) => {
+      if (!value) return true;
+      return dayjs(value as any).isBefore(dayjs());
+    })
     .required('Date of Joining is required'),
   employeeGroup: Yup.string().required('Employee Group is required'),
   // qualification: Yup.string(),
