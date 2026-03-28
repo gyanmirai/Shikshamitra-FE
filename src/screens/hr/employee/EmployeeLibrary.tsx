@@ -6,6 +6,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Tab, Card } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -211,7 +212,19 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
       </Card>
 
       {/* Tab Content */}
-      <Scrollbar sx={{ pt: 1 }}>{renderTabContent()}</Scrollbar>
+      <Scrollbar sx={{ pt: 1 }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tabs.value}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {renderTabContent()}
+          </motion.div>
+        </AnimatePresence>
+      </Scrollbar>
     </Box>
   );
 };

@@ -1,5 +1,6 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import { motion } from 'framer-motion';
 import { Box, Grid } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -12,6 +13,12 @@ import { ConsolidatedFeeDetails } from './ViewDetailsComponent/FeeTermsViewDetai
 import { StudentFeesSummaryView } from './ViewDetailsComponent/StudentFeesSummaryView';
 
 import type { IStudentFee } from './type';
+
+const slideUp = (delay: number) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, delay, ease: [0.22, 1, 0.36, 1] as const },
+});
 
 const ViewFeeDetails = ({
   student,
@@ -32,36 +39,46 @@ const ViewFeeDetails = ({
   });
   return (
     <Box display="flex" flexDirection="column" height="100%" pb={1}>
-      <Scrollbar sx={{ height: '100%', p: 1 }}>
+      <Scrollbar sx={{ height: '100%' }}>
         <Grid container spacing={1}>
           {/* Row 1 */}
           {/* Left Side: Student Info & Fee Terms */}
           <Grid size={{ xs: 12 }}>
-            <StudentFeesSummaryView student={student} />
+            <motion.div {...slideUp(0)}>
+              <StudentFeesSummaryView student={student} />
+            </motion.div>
           </Grid>
 
           <Grid size={{ xs: 12, md: 8 }}>
-            <ConsolidatedFeeDetails />
+            <motion.div {...slideUp(0.08)} style={{ height: '100%' }}>
+              <ConsolidatedFeeDetails />
+            </motion.div>
           </Grid>
 
           {/* Right Side: Overview */}
           <Grid size={{ xs: 12, md: 4 }}>
-            <FeeOverview
-              total={50000}
-              paid={30000}
-              pending={15000}
-              overdue={5000}
-              concession={2000}
-            />
+            <motion.div {...slideUp(0.13)} style={{ height: '100%' }}>
+              <FeeOverview
+                total={50000}
+                paid={30000}
+                pending={15000}
+                overdue={5000}
+                concession={2000}
+              />
+            </motion.div>
           </Grid>
 
           {/* Row 2: Payment History & Concessions */}
           <Grid size={{ xs: 12, md: 8 }}>
-            <PaymentHistory student={student} />
+            <motion.div {...slideUp(0.18)}>
+              <PaymentHistory student={student} />
+            </motion.div>
           </Grid>
 
           <Grid size={{ xs: 12, md: 4 }}>
-            <ConcessionsCard />
+            <motion.div {...slideUp(0.23)} style={{ height: '100%' }}>
+              <ConcessionsCard />
+            </motion.div>
           </Grid>
         </Grid>
       </Scrollbar>

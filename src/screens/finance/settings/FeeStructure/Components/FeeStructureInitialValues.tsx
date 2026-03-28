@@ -25,6 +25,7 @@ export const getInitialFeeStructureData = (
 export const standardFeeStructureInitialValues = (data: any) => ({
   standardFeeStructures:
     data?.standardFeeStructures?.map((fs: any) => ({
+      _id: crypto.randomUUID(),
       name: fs.name,
       feeHeads:
         fs.feeHeads?.map((fh: any) => ({

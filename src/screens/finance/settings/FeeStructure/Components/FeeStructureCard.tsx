@@ -38,9 +38,15 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 borderRadius: 1,
                 alignItems: 'center',
                 px: 1.5,
-                py: 0.5, // Reduced padding
-                mb: 1, // Reduced margin
-                transition: 'all 0.2s',
+                py: 0.5,
+                mb: 1,
+                transition:
+                  'border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
+                animation: 'feeHeadRowIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both',
+                '@keyframes feeHeadRowIn': {
+                  from: { opacity: 0, transform: 'translateX(-10px)' },
+                  to: { opacity: 1, transform: 'translateX(0)' },
+                },
                 '&:hover': {
                   bgcolor: 'action.hover',
                   borderColor: 'primary.main',

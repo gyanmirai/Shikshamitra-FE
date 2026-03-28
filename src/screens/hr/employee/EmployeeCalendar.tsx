@@ -2,6 +2,7 @@
 
 import type { EventClickArg } from '@fullcalendar/core';
 
+import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -142,95 +143,104 @@ const EmployeeCalendar = ({ employee }: EmployeeCalendarProps) => {
   const hasActiveFilters = Object.values(filters).some((filterArray) => filterArray.length > 0);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', pb: 2 }}>
-      {/* Display active filters - grouped blocks */}
-      {hasActiveFilters && (
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1.5,
-            mb: 2,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}
-        >
-          {filters.eventType.length > 0 && (
-            <FilterGroupBlock
-              title="Events"
-              color="primary"
-              items={filters.eventType}
-              onDelete={(v) => handleRemoveFilter('eventType', v)}
-              chipColor="primary"
-            />
-          )}
-          {filters.holidayType.length > 0 && (
-            <FilterGroupBlock
-              title="Holidays"
-              color="error"
-              items={filters.holidayType}
-              onDelete={(v) => handleRemoveFilter('holidayType', v)}
-              chipColor="error"
-            />
-          )}
-          {filters.status.length > 0 && (
-            <FilterGroupBlock
-              title="Status"
-              color="info"
-              items={filters.status}
-              onDelete={(v) => handleRemoveFilter('status', v)}
-              chipColor="info"
-            />
-          )}
-          <Box>
-            <Button
-              size="small"
-              color="error"
-              startIcon={
-                <Iconify icon="solar:trash-bin-trash-bold" sx={{ width: '20px', height: '20px' }} />
-              }
-              onClick={() => setFilters({ eventType: [], holidayType: [], status: [] })}
-            >
-              Clear All (
-              {filters.eventType.length + filters.holidayType.length + filters.status.length})
-            </Button>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', pb: 2 }}>
+        {/* Display active filters - grouped blocks */}
+        {hasActiveFilters && (
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1.5,
+              mb: 2,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            {filters.eventType.length > 0 && (
+              <FilterGroupBlock
+                title="Events"
+                color="primary"
+                items={filters.eventType}
+                onDelete={(v) => handleRemoveFilter('eventType', v)}
+                chipColor="primary"
+              />
+            )}
+            {filters.holidayType.length > 0 && (
+              <FilterGroupBlock
+                title="Holidays"
+                color="error"
+                items={filters.holidayType}
+                onDelete={(v) => handleRemoveFilter('holidayType', v)}
+                chipColor="error"
+              />
+            )}
+            {filters.status.length > 0 && (
+              <FilterGroupBlock
+                title="Status"
+                color="info"
+                items={filters.status}
+                onDelete={(v) => handleRemoveFilter('status', v)}
+                chipColor="info"
+              />
+            )}
+            <Box>
+              <Button
+                size="small"
+                color="error"
+                startIcon={
+                  <Iconify
+                    icon="solar:trash-bin-trash-bold"
+                    sx={{ width: '20px', height: '20px' }}
+                  />
+                }
+                onClick={() => setFilters({ eventType: [], holidayType: [], status: [] })}
+              >
+                Clear All (
+                {filters.eventType.length + filters.holidayType.length + filters.status.length})
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      )}
+        )}
 
-      <CommonCalender
-        data={calendarData}
-        showCalendarToolbar
-        onDateClick={(e) => {
-          handleEventClick(e);
-        }}
-        showCalendarFilter
-        onOPenFiler={() => {
-          filterDialog.onTrue();
-        }}
-        containerProps={{
-          sx: {
-            height: '100%',
-          },
-        }}
-        canReset={hasActiveFilters}
-        nowIndicator
-      />
+        <CommonCalender
+          data={calendarData}
+          showCalendarToolbar
+          onDateClick={(e) => {
+            handleEventClick(e);
+          }}
+          showCalendarFilter
+          onOPenFiler={() => {
+            filterDialog.onTrue();
+          }}
+          containerProps={{
+            sx: {
+              height: '100%',
+            },
+          }}
+          canReset={hasActiveFilters}
+          nowIndicator
+        />
 
-      {/* View Dialog - You'll need to create this component or import from student version */}
-      {/* <CalendarViewDialog
+        {/* View Dialog - You'll need to create this component or import from student version */}
+        {/* <CalendarViewDialog
         open={Boolean(currentDateClick)}
         onClose={() => setCurrentDateClick(null)}
         data={currentDateClick}
       /> */}
 
-      {/* Filter Dialog - You'll need to create this component or import from student version */}
-      {/* <FilterDialog
+        {/* Filter Dialog - You'll need to create this component or import from student version */}
+        {/* <FilterDialog
         open={filterDialog.value}
         onClose={() => filterDialog.onFalse()}
         handleApply={handleApply}
         filters={filters}
       /> */}
-    </Box>
+      </Box>
+    </motion.div>
   );
 };
 

@@ -21,9 +21,10 @@ const ProfileDashboardAttendance = () => {
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
+        p: 2,
       }}
     >
-      <Box sx={{ p: 3, pb: 0 }}>
+      <Box sx={{ pb: 0 }}>
         <Typography variant="h6">Attendance Calendar</Typography>
       </Box>
 

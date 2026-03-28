@@ -74,6 +74,7 @@ export interface IStudentFee {
   grNumber?: string;
   parentName?: string;
   email?: string;
+  concessionAmount?: number;
 }
 
 export interface IFeeHead {

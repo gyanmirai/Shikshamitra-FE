@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Stack, Skeleton } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -142,71 +143,101 @@ const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, ed
   };
 
   return (
-    <>
+    <AnimatePresence mode="wait">
       {feeStructureLoading ? (
-        <Box p={3}>
-          <Stack spacing={3}>
-            {/* Stepper Header Skeleton */}
-            <Skeleton variant="text" width="40%" height={32} />
-            <Skeleton variant="rectangular" height={2} width="100%" />
+        <motion.div
+          key="skeleton"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Box p={3}>
+            <Stack spacing={3}>
+              {/* Stepper Header Skeleton */}
+              <Skeleton variant="text" width="40%" height={32} />
+              <Skeleton variant="rectangular" height={2} width="100%" />
 
-            <Grid container spacing={3}>
-              {[...Array(4)].map((_, index) => (
-                <Grid key={index} size={{ xs: 12, md: 4 }}>
-                  <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 1 }} />
-                </Grid>
-              ))}
-            </Grid>
+              <Grid container spacing={3}>
+                {[...Array(4)].map((_, index) => (
+                  <Grid key={index} size={{ xs: 12, md: 4 }}>
+                    <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 1 }} />
+                  </Grid>
+                ))}
+              </Grid>
 
-            {/* Content Area Skeleton */}
-            <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 1 }} />
+              {/* Content Area Skeleton */}
+              <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 1 }} />
 
-            {/* Footer Buttons Skeleton */}
-            <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 2 }}>
-              <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: 1 }} />
+              {/* Footer Buttons Skeleton */}
+              <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 2 }}>
+                <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: 1 }} />
+                <Skeleton variant="rectangular" width={100} height={36} sx={{ borderRadius: 1 }} />
+              </Stack>
             </Stack>
-          </Stack>
-        </Box>
+          </Box>
+        </motion.div>
       ) : (
-        <CustomStepperWithFormik
-          scrollbarHeight="400px"
-          initialValues={feeStructureInitialValues}
-          steps={['General Information', 'Class Fee Structure']}
-          activeStep={activeStep}
-          handleBack={() => setActiveStep(activeStep - 1)}
-          handleNext={(
-            isLastStep: boolean,
-            value: any,
-            formik: any,
-            setIsLoading: (val: boolean) => void
-          ) => handleSave(isLastStep, value, formik, setIsLoading)}
-          onSave={(
-            isLastStep: boolean,
-            value: any,
-            formik: any,
-            setIsLoading: (val: boolean) => void
-          ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
-          validateOnChange
-          validationSchema={finaceFeeStructureValidationSchema[activeStep]} // pass schema step-wise
-          renderItem={({ formik, activeStep: step }) => {
-            const StepComponent = allSteps[step];
-            return (
-              <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-                <Box p={2}>
-                  <StepComponent
-                    formik={formik}
-                    editData={editData}
-                    classList={classList}
-                    setClassList={setClassList}
-                  />
-                </Box>
-              </BackPopUpChecked>
-            );
-          }}
-        />
+        <motion.div
+          key="form"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          style={{ height: '100%' }}
+        >
+          <CustomStepperWithFormik
+            initialValues={feeStructureInitialValues}
+            steps={['General Information', 'Class Fee Structure']}
+            activeStep={activeStep}
+            handleBack={() => setActiveStep(activeStep - 1)}
+            handleNext={(
+              isLastStep: boolean,
+              value: any,
+              formik: any,
+              setIsLoading: (val: boolean) => void
+            ) => handleSave(isLastStep, value, formik, setIsLoading)}
+            onSave={(
+              isLastStep: boolean,
+              value: any,
+              formik: any,
+              setIsLoading: (val: boolean) => void
+            ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
+            validateOnChange
+            validationSchema={finaceFeeStructureValidationSchema[activeStep]} // pass schema step-wise
+            renderItem={({ formik, activeStep: step }) => {
+              const StepComponent = allSteps[step];
+              return (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <BackPopUpChecked
+                      initialValues={formik.initialValues}
+                      currentValues={formik.values}
+                    >
+                      <Box p={2}>
+                        <StepComponent
+                          formik={formik}
+                          editData={editData}
+                          classList={classList}
+                          setClassList={setClassList}
+                        />
+                      </Box>
+                    </BackPopUpChecked>
+                  </motion.div>
+                </AnimatePresence>
+              );
+            }}
+          />
+        </motion.div>
       )}
-    </>
+    </AnimatePresence>
   );
 };
 
