@@ -378,14 +378,16 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     >
       <Scrollbar
         sx={{
-          height: '100%',
+          flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
-          ...(scrollbarHeight !== 'auto' && scrollbarHeight ? { height: scrollbarHeight } : {}),
+          ...(scrollbarHeight !== 'auto' && scrollbarHeight
+            ? { flex: 'none', height: scrollbarHeight }
+            : {}),
           '& .simplebar-content': {
             display: 'flex',
             flexDirection: 'column',
             minHeight: '100%',
-            height: '100%',
           },
         }}
       >

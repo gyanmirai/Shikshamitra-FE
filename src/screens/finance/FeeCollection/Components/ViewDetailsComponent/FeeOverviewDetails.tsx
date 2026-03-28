@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -5,6 +6,12 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Typography } from '@mui/material';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
+const rowVariant = (i: number) => ({
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.3, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] as const },
+});
 
 type FeeOverviewProps = {
   total: number;
@@ -101,48 +108,58 @@ export default function FeeOverview({
 
       <Scrollbar sx={{ flexGrow: 1, px: 1, maxHeight: 350 }}>
         {/* Total Fee */}
-        <RowCard
-          icon={<Iconify icon="streamline:bag-dollar" width={24} />}
-          label="Total Fee"
-          value={total}
-          bgcolor={`${theme.palette.secondary.light}33`}
-          color={theme.vars.palette.text.primary}
-        />
+        <motion.div {...rowVariant(0)}>
+          <RowCard
+            icon={<Iconify icon="streamline:bag-dollar" width={24} />}
+            label="Total Fee"
+            value={total}
+            bgcolor={`${theme.palette.secondary.light}33`}
+            color={theme.vars.palette.text.primary}
+          />
+        </motion.div>
         {/* Paid Fee */}
-        <RowCard
-          icon={<CheckCircleIcon sx={{ fontSize: 24 }} />}
-          label="Paid Fee"
-          value={paid}
-          bgcolor={`${theme.palette.success.light}33`}
-          color={theme.palette.success.main}
-        />
+        <motion.div {...rowVariant(1)}>
+          <RowCard
+            icon={<CheckCircleIcon sx={{ fontSize: 24 }} />}
+            label="Paid Fee"
+            value={paid}
+            bgcolor={`${theme.palette.success.light}33`}
+            color={theme.palette.success.main}
+          />
+        </motion.div>
 
         {/* Pending Fee */}
-        <RowCard
-          icon={<Iconify icon="game-icons:sands-of-time" width={24} />}
-          label="Pending Fee"
-          value={pending}
-          bgcolor={`${theme.palette.warning.light}33`}
-          color={theme.palette.warning.main}
-        />
+        <motion.div {...rowVariant(2)}>
+          <RowCard
+            icon={<Iconify icon="game-icons:sands-of-time" width={24} />}
+            label="Pending Fee"
+            value={pending}
+            bgcolor={`${theme.palette.warning.light}33`}
+            color={theme.palette.warning.main}
+          />
+        </motion.div>
 
         {/* Overdue Fee */}
-        <RowCard
-          icon={<ErrorIcon sx={{ fontSize: 24 }} />}
-          label="Overdue Fee"
-          value={overdue}
-          bgcolor={`${theme.palette.error.light}33`}
-          color={theme.palette.error.main}
-        />
+        <motion.div {...rowVariant(3)}>
+          <RowCard
+            icon={<ErrorIcon sx={{ fontSize: 24 }} />}
+            label="Overdue Fee"
+            value={overdue}
+            bgcolor={`${theme.palette.error.light}33`}
+            color={theme.palette.error.main}
+          />
+        </motion.div>
 
         {/* Concession */}
-        <RowCard
-          icon={<CreditCardIcon sx={{ fontSize: 24 }} />}
-          label="Concession"
-          value={concession}
-          bgcolor={`${theme.palette.info.light}33`}
-          color={theme.palette.info.main}
-        />
+        <motion.div {...rowVariant(4)}>
+          <RowCard
+            icon={<CreditCardIcon sx={{ fontSize: 24 }} />}
+            label="Concession"
+            value={concession}
+            bgcolor={`${theme.palette.info.light}33`}
+            color={theme.palette.info.main}
+          />
+        </motion.div>
       </Scrollbar>
 
       {/* Progress Bar (Preserved commented code) */}

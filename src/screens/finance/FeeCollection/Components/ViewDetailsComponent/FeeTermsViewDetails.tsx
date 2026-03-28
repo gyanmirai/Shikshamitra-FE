@@ -1,4 +1,5 @@
 // import { useTheme } from '@mui/material/styles';
+import { motion } from 'framer-motion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
@@ -69,128 +70,54 @@ export const ConsolidatedFeeDetails = () => {
   };
 
   return (
-    <Card
-      sx={{
-        p: 0,
-        borderRadius: 2,
-        boxShadow: theme.shadows[2],
-        border: 'none',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      style={{ height: '100%' }}
     >
-      <Box
+      <Card
         sx={{
-          p: 1.5,
+          p: 0,
+          borderRadius: 2,
+          boxShadow: theme.shadows[2],
+          border: 'none',
+          height: '100%',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: `1px dashed ${theme.palette.divider}`,
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          Fee Breakdown
-        </Typography>
-      </Box>
+        <Box
+          sx={{
+            p: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: `1px dashed ${theme.palette.divider}`,
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            Fee Breakdown
+          </Typography>
+        </Box>
 
-      <Scrollbar
-        sx={{
-          flexGrow: 1,
-          maxHeight: 350,
-          p: 2,
-          bgcolor: alpha(theme.palette.background.neutral, 0.4),
-        }}
-      >
-        <Stack spacing={3}>
-          {/* FEE HEADS TABLE */}
-          <Box>
-            <Typography
-              variant="subtitle2"
-              sx={{ mb: 1.5, fontWeight: 700, color: 'text.secondary' }}
-            >
-              Fee Head Maintenance
-            </Typography>
-
-            <TableContainer
-              component={Paper}
-              elevation={0}
-              sx={{
-                borderRadius: 1.5,
-                border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
-                overflow: 'hidden',
-              }}
-            >
-              <Table size="small">
-                <TableHead sx={{ bgcolor: 'background.neutral' }}>
-                  <TableRow>
-                    <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Fee Head
-                    </TableCell>
-                    <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Category
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Total
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Paid
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Pending
-                    </TableCell>
-                    <TableCell align="center" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Status
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-
-                <TableBody>
-                  {feeHeadList.map((head: any, index: number) => {
-                    const status = getStatus(head.paid, head.total);
-                    return (
-                      <TableRow
-                        key={index}
-                        hover
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                      >
-                        <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
-                        <TableCell sx={{ color: 'text.secondary' }}>{head.category}</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 600 }}>
-                          ₹ {formatNumber(head.total)}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                          ₹ {formatNumber(head.paid)}
-                        </TableCell>
-                        <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                          ₹ {formatNumber(head.total - head.paid)}
-                        </TableCell>
-                        <TableCell align="center">
-                          <Label
-                            variant="soft"
-                            color={FeeCollectionStatusTypeColors[status] as LabelColor}
-                            sx={{ fontSize: 11, height: 20 }}
-                          >
-                            {FeeCollectionStatusType[status]}
-                          </Label>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          {/* ADDITIONAL CHARGES TABLE */}
-          {chargeList.length > 0 && (
+        <Scrollbar
+          sx={{
+            flexGrow: 1,
+            maxHeight: 350,
+            p: 2,
+            bgcolor: alpha(theme.palette.background.neutral, 0.4),
+          }}
+        >
+          <Stack spacing={3}>
+            {/* FEE HEADS TABLE */}
             <Box>
               <Typography
                 variant="subtitle2"
                 sx={{ mb: 1.5, fontWeight: 700, color: 'text.secondary' }}
               >
-                Additional Charges
+                Fee Head Maintenance
               </Typography>
 
               <TableContainer
@@ -206,7 +133,7 @@ export const ConsolidatedFeeDetails = () => {
                   <TableHead sx={{ bgcolor: 'background.neutral' }}>
                     <TableRow>
                       <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        Charge Name
+                        Fee Head
                       </TableCell>
                       <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
                         Category
@@ -227,24 +154,24 @@ export const ConsolidatedFeeDetails = () => {
                   </TableHead>
 
                   <TableBody>
-                    {chargeList.map((charge: any, index: number) => {
-                      const status = getStatus(charge.paid, charge.total);
+                    {feeHeadList.map((head: any, index: number) => {
+                      const status = getStatus(head.paid, head.total);
                       return (
                         <TableRow
                           key={index}
                           hover
                           sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         >
-                          <TableCell sx={{ fontWeight: 500 }}>{charge.name}</TableCell>
-                          <TableCell sx={{ color: 'text.secondary' }}>{charge.category}</TableCell>
+                          <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
+                          <TableCell sx={{ color: 'text.secondary' }}>{head.category}</TableCell>
                           <TableCell align="right" sx={{ fontWeight: 600 }}>
-                            ₹ {formatNumber(charge.total)}
+                            ₹ {formatNumber(head.total)}
                           </TableCell>
                           <TableCell align="right" sx={{ color: 'success.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(charge.paid)}
+                            ₹ {formatNumber(head.paid)}
                           </TableCell>
                           <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(charge.total - charge.paid)}
+                            ₹ {formatNumber(head.total - head.paid)}
                           </TableCell>
                           <TableCell align="center">
                             <Label
@@ -262,9 +189,98 @@ export const ConsolidatedFeeDetails = () => {
                 </Table>
               </TableContainer>
             </Box>
-          )}
-        </Stack>
-      </Scrollbar>
-    </Card>
+
+            {/* ADDITIONAL CHARGES TABLE */}
+            {chargeList.length > 0 && (
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1.5, fontWeight: 700, color: 'text.secondary' }}
+                >
+                  Additional Charges
+                </Typography>
+
+                <TableContainer
+                  component={Paper}
+                  elevation={0}
+                  sx={{
+                    borderRadius: 1.5,
+                    border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead sx={{ bgcolor: 'background.neutral' }}>
+                      <TableRow>
+                        <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          Charge Name
+                        </TableCell>
+                        <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          Category
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          Total
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          Paid
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          Pending
+                        </TableCell>
+                        <TableCell align="center" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                          Status
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                      {chargeList.map((charge: any, index: number) => {
+                        const status = getStatus(charge.paid, charge.total);
+                        return (
+                          <TableRow
+                            key={index}
+                            hover
+                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                          >
+                            <TableCell sx={{ fontWeight: 500 }}>{charge.name}</TableCell>
+                            <TableCell sx={{ color: 'text.secondary' }}>
+                              {charge.category}
+                            </TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>
+                              ₹ {formatNumber(charge.total)}
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ color: 'success.dark', fontWeight: 600 }}
+                            >
+                              ₹ {formatNumber(charge.paid)}
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ color: 'warning.dark', fontWeight: 600 }}
+                            >
+                              ₹ {formatNumber(charge.total - charge.paid)}
+                            </TableCell>
+                            <TableCell align="center">
+                              <Label
+                                variant="soft"
+                                color={FeeCollectionStatusTypeColors[status] as LabelColor}
+                                sx={{ fontSize: 11, height: 20 }}
+                              >
+                                {FeeCollectionStatusType[status]}
+                              </Label>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+          </Stack>
+        </Scrollbar>
+      </Card>
+    </motion.div>
   );
 };

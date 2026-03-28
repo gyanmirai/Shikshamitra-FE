@@ -3,6 +3,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Paper, Divider, Checkbox, Typography } from '@mui/material';
 import {
@@ -11,6 +12,8 @@ import {
 } from 'src/enums/fee-collection-type';
 
 import type { IFeeHead, IFeeCharge, ITermsToCollectProps } from './type';
+
+const MotionCard = motion(Card);
 
 const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   formik,
@@ -67,41 +70,39 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       {/* HEADER SECTION */}
       <Box
         sx={{
-          p: 1.5,
+          p: 1,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           borderBottom: `1px dashed ${theme.palette.divider}`,
         }}
       >
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            General Fee Structure
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            Select items to pay
-          </Typography>
-        </Box>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          General Fee Structure
+        </Typography>
       </Box>
 
       {/* LIST SECTION */}
       <Scrollbar sx={{ flexGrow: 1, p: 1.5, height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} pb={2}>
+        <Box display="flex" flexDirection="column" gap={2} pb={1}>
           {/* Fee Heads Section */}
           <Box>
-            <Typography variant="h6" color="primary" sx={{ mb: 1.5 }}>
+            <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
               Fee Heads
             </Typography>
             <Box display="flex" flexDirection="column" gap={1}>
-              {feeHeads.map((head) => {
+              {feeHeads.map((head, i) => {
                 const isSelected = formik.values.selectedFeeHeads.some(
                   (fh) => fh.feeHeadId === head.feeHeadId
                 );
                 const isPaid = head.pendingAmount === 0;
 
                 return (
-                  <Card
+                  <MotionCard
                     key={head.feeHeadId}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: i * 0.05 }}
                     sx={{
                       p: 1,
                       borderRadius: 1,
@@ -110,6 +111,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                         ? alpha(theme.palette.primary.main, 0.04)
                         : 'background.default',
                       ...(isPaid && { opacity: 0.7, bgcolor: 'action.disabledBackground' }),
+                      transition:
+                        'border-color 200ms ease, background-color 200ms ease, opacity 200ms ease',
                     }}
                   >
                     <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -138,7 +141,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                         </Label>
                       </Box>
                     </Box>
-                  </Card>
+                  </MotionCard>
                 );
               })}
             </Box>
@@ -152,14 +155,17 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
               Additional Charges
             </Typography>
             <Box display="flex" flexDirection="column" gap={1}>
-              {charges.map((charge) => {
+              {charges.map((charge, i) => {
                 const isSelected = formik.values.selectedCharges.some(
                   (ch) => ch.chargeId === charge.chargeId
                 );
 
                 return (
-                  <Card
+                  <MotionCard
                     key={charge.chargeId}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1], delay: i * 0.05 }}
                     sx={{
                       p: 1,
                       borderRadius: 1,
@@ -167,6 +173,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                       bgcolor: isSelected
                         ? alpha(theme.palette.error.main, 0.04)
                         : 'background.default',
+                      transition: 'border-color 200ms ease, background-color 200ms ease',
                     }}
                   >
                     <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -185,30 +192,40 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                         ₹{formatNumber(charge.amount)}
                       </Typography>
                     </Box>
-                  </Card>
+                  </MotionCard>
                 );
               })}
             </Box>
           </Box>
 
-          {showError && errorMessage && (
-            <Paper
-              sx={{
-                p: 1.5,
-                borderRadius: 1,
-                bgcolor: alpha(theme.palette.error.main, 0.08),
-                border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-              }}
-            >
-              <Iconify icon="solar:danger-circle-bold" color="error.main" width={20} />
-              <Typography variant="subtitle2" color="error.main">
-                {errorMessage}
-              </Typography>
-            </Paper>
-          )}
+          <AnimatePresence>
+            {showError && errorMessage && (
+              <motion.div
+                key="fee-error"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Paper
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    bgcolor: alpha(theme.palette.error.main, 0.08),
+                    border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  <Iconify icon="solar:danger-circle-bold" color="error.main" width={20} />
+                  <Typography variant="subtitle2" color="error.main">
+                    {errorMessage}
+                  </Typography>
+                </Paper>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Box>
       </Scrollbar>
     </Card>

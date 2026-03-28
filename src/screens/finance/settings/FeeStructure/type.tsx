@@ -12,6 +12,7 @@ export interface IClassWiseFeeItem {
 }
 
 export interface IClassWiseFeeData {
+  _id?: string; // stable client-side key for AnimatePresence / list rendering
   name: string; // class-level fee structure name
   status: FeeStructureClassStatusType;
   feeHeads: IClassWiseFeeItem[];
