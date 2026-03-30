@@ -242,12 +242,16 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   // Get current year from global state to derive boards
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Update boards and mediums when currentYear or selectedBoard changes
+  // Sync boards from current year
   useEffect(() => {
     setBoards(currentYear?.boards || []);
-    const board = boards?.find((item: Board) => item.id === selectedBoard);
+  }, [currentYear?.boards]);
+
+  // Update mediums when selectedBoard changes
+  useEffect(() => {
+    const board = boards.find((item: Board) => item.id === selectedBoard);
     setMediums(board?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
+  }, [boards, selectedBoard]);
 
   // Update classes when medium changes
   useEffect(() => {

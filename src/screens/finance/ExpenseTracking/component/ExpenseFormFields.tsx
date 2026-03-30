@@ -38,7 +38,6 @@ const ExpenseFormFields = ({
   onAccordionToggle,
 }: ExpenseFormFieldsProps) => {
   const [tags, setTags] = useState<{ name: string; id: string }[]>([]);
-  console.log('tags0000', tags);
   // Update tags when categoryId changes or initially if editData is present
   useEffect(() => {
     if (formik.values.categoryId) {

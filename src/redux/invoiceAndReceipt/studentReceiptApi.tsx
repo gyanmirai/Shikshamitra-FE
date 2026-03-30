@@ -12,7 +12,7 @@ export const studentReceiptApi = createApi({
     : async ({ url }) => {
         // Handle mock route
         if (url === '/studentReceiptData') {
-          return { data: receiptData.receiptData };
+          return { data: receiptData.studentReceiptData };
         }
         return {
           error: {

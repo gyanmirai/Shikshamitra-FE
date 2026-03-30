@@ -85,7 +85,6 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
   const handleAccordionToggle = useCallback((panel: string) => {
     setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] }));
   }, []);
-
   const formik = useFormik({
     initialValues: {
       academicYear: '',
@@ -102,6 +101,8 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
       board: Yup.string().required('Board is required'),
       medium: Yup.string().required('Medium is required'),
       class: Yup.string().required('Class is required'),
+      divisions: Yup.array().min(1, 'Select at least one division'),
+      students: Yup.array().min(1, 'Select at least one student'),
       billingCycle: Yup.string().required('Billing Cycle is required'),
     }),
     onSubmit: (_values) => {
@@ -515,30 +516,32 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
             <Grid container spacing={2}>
               {/* Academic Year */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <CustomSelect
-                  name="academicYear"
-                  label="Academic Year *"
-                  isLoading={yearLoading}
-                  options={academicYear?.items || []}
-                  value={values.academicYear}
-                  labelKey="name"
-                  valueKey="id"
-                  onChange={(value) => {
-                    const findBoards = board?.items.filter(
-                      (item: Board) => item.academicYearId === value
-                    );
-                    setBoards(findBoards);
-                    setFieldValue('board', '');
-                    setFieldValue('medium', '');
-                    setFieldValue('class', '');
-                    setFieldValue('divisions', []);
-                    setFieldValue('students', []);
-                    setFieldValue('academicYear', value);
-                  }}
-                  error={!!(touched.academicYear && errors.academicYear)}
-                  helperText={(touched.academicYear && errors.academicYear) || ''}
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                />
+                <ShakingTextField error={!!(touched.academicYear && errors.academicYear)}>
+                  <CustomSelect
+                    name="academicYear"
+                    label="Academic Year *"
+                    isLoading={yearLoading}
+                    options={academicYear?.items || []}
+                    value={values.academicYear}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={(value) => {
+                      const findBoards = board?.items.filter(
+                        (item: Board) => item.academicYearId === value
+                      );
+                      setBoards(findBoards);
+                      setFieldValue('board', '');
+                      setFieldValue('medium', '');
+                      setFieldValue('class', '');
+                      setFieldValue('divisions', []);
+                      setFieldValue('students', []);
+                      setFieldValue('academicYear', value);
+                    }}
+                    error={!!(touched.academicYear && errors.academicYear)}
+                    helperText={(touched.academicYear && errors.academicYear) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
               </Grid>
 
               {/* Board */}
@@ -626,56 +629,68 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
 
               {/* Division (multi) */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <CustomSelect
-                  options={allDivision}
-                  label="Division *"
-                  value={values.divisions}
-                  onChange={(val) => {
-                    setFieldValue('divisions', val);
-                    setFieldValue('students', []);
-                  }}
-                  onBlur={() => setFieldTouched('divisions', true)}
-                  error={touched.divisions && Boolean(errors.divisions)}
-                  helperText={(touched.divisions && errors.divisions) as string}
-                  labelKey="name"
-                  valueKey="id"
-                  multiple
-                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  disabled={!values.class}
-                />
+                <ShakingTextField error={!!(touched.divisions && errors.divisions)}>
+                  <CustomSelect
+                    options={allDivision}
+                    label="Division *"
+                    value={values.divisions}
+                    onChange={(val) => {
+                      setFieldValue('divisions', val);
+                      setFieldValue('students', []);
+                    }}
+                    onBlur={() => setFieldTouched('divisions', true)}
+                    error={touched.divisions && Boolean(errors.divisions)}
+                    helperText={(touched.divisions && errors.divisions) as string}
+                    labelKey="name"
+                    valueKey="id"
+                    multiple
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    disabled={!values.class}
+                  />
+                </ShakingTextField>
               </Grid>
 
               {/* Student (multi autocomplete) */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Autocomplete
-                  loading={isLoading}
-                  noOptionsText={<Typography variant="caption">No students found</Typography>}
-                  multiple
-                  fullWidth
-                  value={values.students}
-                  onChange={(_e, value: any) => setFieldValue('students', value)}
-                  renderTags={(tagValue, getTagProps) =>
-                    tagValue.map((option, index) => (
-                      <Chip
-                        label={option.name}
-                        variant="soft"
+                <ShakingTextField error={!!(touched.students && errors.students)}>
+                  <Autocomplete
+                    loading={isLoading}
+                    noOptionsText={<Typography variant="caption">No students found</Typography>}
+                    multiple
+                    fullWidth
+                    value={values.students}
+                    onChange={(_e, value: any) => setFieldValue('students', value)}
+                    onBlur={() => setFieldTouched('students', true)}
+                    renderTags={(tagValue, getTagProps) =>
+                      tagValue.map((option, index) => (
+                        <Chip
+                          label={option.name}
+                          variant="soft"
+                          size="small"
+                          {...getTagProps({ index })}
+                        />
+                      ))
+                    }
+                    options={tableData}
+                    getOptionLabel={(option: any) => option?.name || ''}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
                         size="small"
-                        {...getTagProps({ index })}
+                        label="Student *"
+                        fullWidth
+                        error={!!(touched.students && errors.students)}
+                        helperText={(touched.students && errors.students) as string}
                       />
-                    ))
-                  }
-                  options={tableData}
-                  getOptionLabel={(option: any) => option?.name || ''}
-                  renderInput={(params) => (
-                    <TextField {...params} size="small" label="Student *" fullWidth />
-                  )}
-                  renderOption={(prop: any, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.name}
-                    </li>
-                  )}
-                  disabled={values.divisions.length === 0}
-                />
+                    )}
+                    renderOption={(prop: any, option: any) => (
+                      <li {...prop} key={option.id}>
+                        {option.name}
+                      </li>
+                    )}
+                    disabled={values.divisions.length === 0}
+                  />
+                </ShakingTextField>
               </Grid>
 
               {/* Billing Cycle */}

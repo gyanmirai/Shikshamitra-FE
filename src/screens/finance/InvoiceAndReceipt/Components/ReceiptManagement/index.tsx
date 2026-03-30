@@ -160,12 +160,16 @@ const ReceiptManagement = () => {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Board → Medium cascade
+  // Sync boards from current year
   useEffect(() => {
     setBoards(currentYear?.boards || []);
-    const board = boards?.find((item: Board) => item.id === selectedBoard);
+  }, [currentYear?.boards]);
+
+  // Board → Medium cascade
+  useEffect(() => {
+    const board = boards.find((item: Board) => item.id === selectedBoard);
     setMediums(board?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
+  }, [boards, selectedBoard]);
 
   // Medium → Class cascade
   useEffect(() => {
