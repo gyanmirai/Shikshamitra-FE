@@ -432,7 +432,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                       formik.setFieldValue('mediumId', '');
                       formik.setFieldValue('mediumStageId', '');
                     }}
-                    formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+                    formControlProps={{ sx: { maxWidth: '100%', width: '100%' } }}
                     error={error}
                     helperText={helperText}
                   />
@@ -463,7 +463,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                       setAllOrganization(selectedMedium?.educationMediumStages || []);
                       formik.setFieldValue('organization', '');
                     }}
-                    formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+                    formControlProps={{ sx: { maxWidth: '100%', width: '100%' } }}
                     error={error}
                     helperText={helperText}
                   />
@@ -490,7 +490,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     }}
                     labelKey="name"
                     valueKey="id"
-                    formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                    formControlProps={{ sx: { maxWidth: '100%', width: '100%' } }}
                     error={error}
                     helperText={helperText}
                   />
@@ -544,7 +544,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Prefix"
                     value={formik.values[field]}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                      const value = e.target.value.replace(/[^a-zA-Z0-9/-]/g, '');
                       formik.setFieldValue(field, value);
                     }}
                     error={error}
@@ -570,7 +570,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Suffix"
                     value={formik.values[field]}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                      const value = e.target.value.replace(/[^a-zA-Z0-9/-]/g, '');
                       formik.setFieldValue(field, value);
                     }}
                     error={error}

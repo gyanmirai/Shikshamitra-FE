@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { useSearchParam } from 'src/hooks/use-search-param';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import InvoiceManagement from './Components/InvoiceManagement';
 import ReceiptManagement from './Components/ReceiptManagement';
@@ -29,8 +29,12 @@ const TABS = [
 ];
 
 const InvoiceAndReceipt = () => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'invoice' });
+  const { getParam, setParam } = useCustomSearchParams();
+  const activeTab = getParam('tab') || 'invoice';
   const addInvoiceDialog = useBoolean(false);
+  const [isBackClick, setIsBackClick] = useState(false);
+
+  const currentIndex = useMemo(() => TABS.findIndex((tab) => tab.value === activeTab), [activeTab]);
 
   const renderButton = useMemo(
     () => ({
@@ -50,26 +54,31 @@ const InvoiceAndReceipt = () => {
   );
 
   const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
+    () => TABS.find((tab) => tab.value === activeTab),
+    [activeTab]
   );
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Invoice & Receipt"
         description="View and manage all generated student invoices, with options to preview, download, and share with parents."
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Invoice & Receipt' }]}
-        action={searchParams.tab === 'invoice' && renderButton[searchParams.tab]}
+        action={activeTab === 'invoice' && renderButton.invoice}
       />
       <Card
         sx={{
+          pb: 1,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
         <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => setSearchParams({ tab: value })}
+          value={activeTab}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            setIsBackClick(currentIndex > newIndex);
+            setParam('tab', String(value));
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
           role="tablist"
         >
@@ -78,11 +87,20 @@ const InvoiceAndReceipt = () => {
           ))}
         </CustomTabs>
       </Card>
-      <Scrollbar sx={{ p: 1 }}>
-        {currentActiveComponent?.component && (
-          <currentActiveComponent.component addInvoiceDialog={addInvoiceDialog} />
-        )}
-      </Scrollbar>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: { p: 0, minHeight: 0, display: 'flex', flexDirection: 'column', flexGrow: 1 },
+        }}
+      >
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {currentActiveComponent?.component && (
+            <currentActiveComponent.component addInvoiceDialog={addInvoiceDialog} />
+          )}
+        </Box>
+      </FormSlider>
     </Box>
   );
 };
