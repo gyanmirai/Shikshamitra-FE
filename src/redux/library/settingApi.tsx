@@ -1,13 +1,8 @@
-﻿import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
-import { librarySettingsType } from 'src/redux/tagTypes';
+﻿import { librarySettingsType } from 'src/redux/tagTypes';
 
-export const librarySettingsApi = createApi({
-  reducerPath: 'LibrarySettingsApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}`,
-  }),
-  tagTypes: [librarySettingsType.librarySettings],
+import { api } from '../service';
+
+export const librarySettingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLibrarySettings: builder.query({
       query: ({ academicYearId, ...params }) => ({

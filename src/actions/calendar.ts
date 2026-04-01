@@ -2,7 +2,7 @@ import type { ICalendarEvent } from 'src/types/calendar';
 
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
-import axios, { fetcher, endpoints } from 'src/utils/axios';
+import fetch, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
@@ -55,7 +55,7 @@ export async function createEvent(eventData: ICalendarEvent) {
    */
   if (enableServer) {
     const data = { eventData };
-    await axios.post(CALENDAR_ENDPOINT, data);
+    await fetch.post(CALENDAR_ENDPOINT, data);
   }
 
   /**
@@ -82,7 +82,7 @@ export async function updateEvent(eventData: Partial<ICalendarEvent>) {
    */
   if (enableServer) {
     const data = { eventData };
-    await axios.put(CALENDAR_ENDPOINT, data);
+    await fetch.put(CALENDAR_ENDPOINT, data);
   }
 
   /**
@@ -111,7 +111,7 @@ export async function deleteEvent(eventId: string) {
    */
   if (enableServer) {
     const data = { eventId };
-    await axios.patch(CALENDAR_ENDPOINT, data);
+    await fetch.patch(CALENDAR_ENDPOINT, data);
   }
 
   /**

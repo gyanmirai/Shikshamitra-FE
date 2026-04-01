@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from './financeModuleApi';
-import { financeModuleType } from 'src/redux/tagTypes';
+﻿import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from './financeModuleApi';
 
 export const receiptBookApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
