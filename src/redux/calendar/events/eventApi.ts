@@ -1,4 +1,6 @@
-import { calendarModuleApi } from '../calendarApi';
+﻿import { calendarModuleApi } from '../calendarApi';
+import { calendarModuleType } from 'src/redux/tagTypes';
+
 
 export const eventApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const eventApi = calendarModuleApi.injectEndpoints({
         method: 'GET',
         parama: params,
       }),
-      providesTags: ['Events'],
+      providesTags: [calendarModuleType.events],
     }),
 
     createEvent: builder.mutation({
@@ -18,7 +20,7 @@ export const eventApi = calendarModuleApi.injectEndpoints({
         data,
         params,
       }),
-      invalidatesTags: ['Events'],
+      invalidatesTags: [calendarModuleType.events],
     }),
 
     getEventById: builder.query({
@@ -26,7 +28,7 @@ export const eventApi = calendarModuleApi.injectEndpoints({
         url: `/calendar/events/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [{ type: 'Events', id: arg }],
+      providesTags: (result, error, arg) => [{ type: calendarModuleType.events, id: arg }],
     }),
 
     updateEvent: builder.mutation({
@@ -35,7 +37,7 @@ export const eventApi = calendarModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: (result, error, arg) => ['Events', { type: 'Events', id: arg.eventId }],
+      invalidatesTags: (result, error, arg) => [calendarModuleType.events, { type: calendarModuleType.events, id: arg.eventId }],
     }),
 
     deleteEvent: builder.mutation({
@@ -43,7 +45,7 @@ export const eventApi = calendarModuleApi.injectEndpoints({
         url: `/calendar/events/${eventId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Events'],
+      invalidatesTags: [calendarModuleType.events],
     }),
   }),
   overrideExisting: false,

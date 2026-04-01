@@ -1,22 +1,17 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { mediumType } from 'src/redux/tagTypes';
 
 import { boardApi } from '../board/boardApi';
 
-export const mediumApi = createApi({
-  reducerPath: 'mediumApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Medium', 'Board'],
+export const mediumApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getMedium: builder.query({
       query: () => ({ url: '/app/education-medium', redirect: 'follow' }),
-      providesTags: ['Medium'],
+      providesTags: [mediumType.medium],
     }),
     getMediumById: builder.query({
       query: (id) => ({ url: `/app/education-medium/${id}`, redirect: 'follow' }),
-      providesTags: ['Medium'],
+      providesTags: [mediumType.medium],
     }),
     addMedium: builder.mutation({
       query: (body) => ({
@@ -24,13 +19,13 @@ export const mediumApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Medium', 'Board'],
+      invalidatesTags: [mediumType.medium, mediumType.board],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
 
           // ✅ Example: Refetch user list after adding a user
-          dispatch(boardApi.util.invalidateTags(['Board']));
+          dispatch(boardApi.util.invalidateTags([mediumType.board]));
         } catch (error) {
           console.error('Mutation failed', error);
         }
@@ -42,13 +37,13 @@ export const mediumApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Medium'],
+      invalidatesTags: [mediumType.medium],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
 
           // ✅ Example: Refetch user list after adding a user
-          dispatch(boardApi.util.invalidateTags(['Board']));
+          dispatch(boardApi.util.invalidateTags([mediumType.board]));
         } catch (error) {
           console.error('Mutation failed', error);
         }
@@ -59,13 +54,13 @@ export const mediumApi = createApi({
         url: `/app/education-medium/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Medium'],
+      invalidatesTags: [mediumType.medium],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
 
           // ✅ Example: Refetch user list after adding a user
-          dispatch(boardApi.util.invalidateTags(['Board']));
+          dispatch(boardApi.util.invalidateTags([mediumType.board]));
         } catch (error) {
           console.error('Mutation failed', error);
         }

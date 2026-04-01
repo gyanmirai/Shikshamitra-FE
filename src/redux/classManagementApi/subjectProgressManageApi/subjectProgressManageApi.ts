@@ -1,4 +1,6 @@
-import { classManagementApi } from '../classManagementApi';
+﻿import { classManagementApi } from '../classManagementApi';
+import { classManagementType } from 'src/redux/tagTypes';
+
 
 export const subjectProgressManageApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['SubjectProgress'],
+      providesTags: [classManagementType.subjectProgress],
     }),
     getChaptersProgress: builder.query<
       any,
@@ -25,7 +27,7 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['SubjectProgress'],
+      providesTags: [classManagementType.subjectProgress],
     }),
     updateChapterProgress: builder.mutation<any, { chapterId: string; data: any }>({
       query: ({ chapterId, data }) => ({
@@ -33,7 +35,7 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: ['SubjectProgress'],
+      invalidatesTags: [classManagementType.subjectProgress],
     }),
   }),
 });

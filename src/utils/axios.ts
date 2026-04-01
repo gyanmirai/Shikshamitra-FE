@@ -1,26 +1,63 @@
-import type { AxiosRequestConfig } from 'axios';
-
-import axios from 'axios';
 import { CONFIG } from 'src/config-global';
 
 // ----------------------------------------------------------------------
 
-const axiosInstance = axios.create({ baseURL: CONFIG.site.serverUrl });
+const baseURL = CONFIG.site.serverUrl;
 
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong!')
-);
+type FetchConfig = Omit<RequestInit, 'method'> & { params?: Record<string, string> };
 
-export default axiosInstance;
+async function request(method: string, url: string, config?: FetchConfig) {
+  const { params, ...init } = config ?? {};
+  const fullUrl = params ? `${baseURL}${url}?${new URLSearchParams(params)}` : `${baseURL}${url}`;
+
+  const response = await fetch(fullUrl, { ...init, method });
+
+  if (!response.ok) {
+    let errorData: any;
+    try {
+      errorData = await response.json();
+    } catch {
+      // ignore parse errors
+    }
+    return Promise.reject(errorData || 'Something went wrong!');
+  }
+
+  const data = await response.json();
+  return { data };
+}
+
+const fetchInstance = {
+  get: (url: string, config?: FetchConfig) => request('GET', url, config),
+  post: (url: string, body?: any, config?: FetchConfig) =>
+    request('POST', url, {
+      ...config,
+      headers: { 'Content-Type': 'application/json', ...config?.headers },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  put: (url: string, body?: any, config?: FetchConfig) =>
+    request('PUT', url, {
+      ...config,
+      headers: { 'Content-Type': 'application/json', ...config?.headers },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  patch: (url: string, body?: any, config?: FetchConfig) =>
+    request('PATCH', url, {
+      ...config,
+      headers: { 'Content-Type': 'application/json', ...config?.headers },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  delete: (url: string, config?: FetchConfig) => request('DELETE', url, config),
+};
+
+export default fetchInstance;
 
 // ----------------------------------------------------------------------
 
-export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
+export const fetcher = async (args: string | [string, FetchConfig]) => {
   try {
     const [url, config] = Array.isArray(args) ? args : [args];
 
-    const res = await axiosInstance.get(url, { ...config });
+    const res = await fetchInstance.get(url, config);
 
     return res.data;
   } catch (error) {

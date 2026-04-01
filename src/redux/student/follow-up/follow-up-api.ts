@@ -1,26 +1,21 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { followUpType } from 'src/redux/tagTypes';
 
-export const FollowUpApi = createApi({
-  reducerPath: 'FollowUpApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Follow-Up'],
+export const FollowUpApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getFollowUp: builder.query({
       query: (studentId) => ({
         url: `/student/enrollment/${studentId}/notes`,
         method: 'GET',
       }),
-      providesTags: ['Follow-Up'],
+      providesTags: [followUpType.followUp],
     }),
     getAllFollowUp: builder.query({
       query: () => ({
         url: `/student-enrollment/follow-ups`,
         method: 'GET',
       }),
-      providesTags: ['Follow-Up'],
+      providesTags: [followUpType.followUp],
     }),
     addFollowUp: builder.mutation({
       query: ({ studentId, body }) => ({
@@ -28,7 +23,7 @@ export const FollowUpApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Follow-Up'],
+      invalidatesTags: [followUpType.followUp],
     }),
   }),
 });

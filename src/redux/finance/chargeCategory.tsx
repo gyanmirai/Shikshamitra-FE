@@ -1,4 +1,6 @@
-import { financeModuleApi } from './financeModuleApi';
+﻿import { financeModuleApi } from './financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const chargeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,7 +16,7 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Charge-Category'],
+      providesTags: [financeModuleType.chargeCategory],
     }),
 
     // Get charge category by id
@@ -23,7 +25,7 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
         url: `/charge-categories/${chargeCategoryId}`,
         method: 'GET',
       }),
-      providesTags: ['Charge-Category'],
+      providesTags: [financeModuleType.chargeCategory],
     }),
 
     // Post charge category
@@ -36,7 +38,7 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['Charge-Category'],
+      invalidatesTags: [financeModuleType.chargeCategory],
     }),
 
     // Put charge category
@@ -46,7 +48,7 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Charge-Category'],
+      invalidatesTags: [financeModuleType.chargeCategory],
     }),
 
     // Delete charge category
@@ -55,7 +57,7 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
         url: `/charge-categories/${chargeCategoryId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Charge-Category'],
+      invalidatesTags: [financeModuleType.chargeCategory],
     }),
   }),
   overrideExisting: false,

@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { inquiryPreferenceType } from 'src/redux/tagTypes';
 
-export const inquiryPreferenceApi = createApi({
-  reducerPath: 'inquiryPreferenceApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Document-Type'],
+export const inquiryPreferenceApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getInquiryPreference: builder.query({
       query: ({ academicYearId }) => ({
         url: `/student-enrollment/${academicYearId}/settings/inquiry-preferences`,
         method: 'GET',
       }),
-      providesTags: ['Student-Document-Type'],
+      providesTags: [inquiryPreferenceType.studentDocumentType],
     }),
     addInquiryPreference: builder.mutation({
       query: ({ academicYearId, data }) => ({
@@ -21,7 +16,7 @@ export const inquiryPreferenceApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [inquiryPreferenceType.studentDocumentType],
     }),
     updateInquiryPreference: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,14 +24,14 @@ export const inquiryPreferenceApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [inquiryPreferenceType.studentDocumentType],
     }),
     deleteInquiryPreference: builder.mutation({
       query: (id) => ({
         url: `/student-enrollment/settings/inquiry-preferences/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [inquiryPreferenceType.studentDocumentType],
     }),
   }),
 });

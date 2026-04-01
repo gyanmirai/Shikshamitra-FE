@@ -1,4 +1,6 @@
-import { financeModuleApi } from './financeModuleApi';
+﻿import { financeModuleApi } from './financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['FeeStructure'],
+      providesTags: [financeModuleType.feeStructure],
     }),
 
     createFeeStructure: builder.mutation({
@@ -20,7 +22,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['FeeStructure'],
+      invalidatesTags: [financeModuleType.feeStructure],
     }),
     updateFeeStructure: builder.mutation({
       query: ({ feeStructureId, body }) => ({
@@ -28,7 +30,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['FeeStructure'],
+      invalidatesTags: [financeModuleType.feeStructure],
     }),
 
     getFeeStructureDetails: builder.query({
@@ -36,7 +38,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         url: `/fee-structures/${feeStructureId}`,
         method: 'GET',
       }),
-      providesTags: ['FeeStructure'],
+      providesTags: [financeModuleType.feeStructure],
     }),
 
     updateFeeStructureStatus: builder.mutation({
@@ -45,7 +47,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['FeeStructure'],
+      invalidatesTags: [financeModuleType.feeStructure],
     }),
 
     saveStandardFeeStructures: builder.mutation({
@@ -54,7 +56,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['FeeStructure'],
+      invalidatesTags: [financeModuleType.feeStructure],
     }),
 
     getStandardFeeStructure: builder.query({
@@ -62,7 +64,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         url: `/fee-structures/standards/${standardId}`,
         method: 'GET',
       }),
-      providesTags: ['FeeStructure'],
+      providesTags: [financeModuleType.feeStructure],
     }),
   }),
   overrideExisting: false,

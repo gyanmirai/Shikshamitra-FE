@@ -1,34 +1,15 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { bookManagementType } from 'src/redux/tagTypes';
 
-import reservationData from '../../../issueReturnData.json';
+import { api } from '../service';
 
-const isDev = process.env.NODE_ENV === 'development';
-
-export const bookManagementApi = createApi({
-  reducerPath: 'BookManagementApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/bookTitleData') {
-          return { data: reservationData.bookTitleData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['BookManagement'],
+export const bookManagementApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBooks: builder.query({
       query: () => ({
         url: '/bookTitleData',
         method: 'GET',
       }),
-      providesTags: ['BookManagement'],
+      providesTags: [bookManagementType.bookManagement],
     }),
   }),
 });

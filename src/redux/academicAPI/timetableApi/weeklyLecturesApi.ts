@@ -1,3 +1,5 @@
+﻿import { academicType } from 'src/redux/tagTypes';
+
 import { academicApi } from '../academicApi';
 
 export const weeklyLecturesApi = academicApi.injectEndpoints({
@@ -8,7 +10,7 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
         method: 'GET',
         params: params || {},
       }),
-      providesTags: ['WeeklyLectureSlot'],
+      providesTags: [academicType.weeklyLectureSlot],
     }),
 
     createWeeklyLectureSlot: builder.mutation({
@@ -17,7 +19,7 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['WeeklyLectureSlot'],
+      invalidatesTags: [academicType.weeklyLectureSlot],
     }),
 
     getStandardsByEducationMedium: builder.query({
@@ -25,7 +27,7 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
         url: `standards/${educationMediumId}`,
         method: 'GET',
       }),
-      providesTags: ['Standard'],
+      providesTags: [academicType.standard],
     }),
 
     getWeeklyLectureSlotById: builder.query({
@@ -33,7 +35,7 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
         url: `weekly-lecture-slots/${lectureSlotId}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'WeeklyLectureSlot', id }],
+      providesTags: (result, error, id) => [{ type: academicType.weeklyLectureSlot, id }],
     }),
 
     updateWeeklyLectureSlot: builder.mutation({
@@ -43,8 +45,8 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
         data: body,
       }),
       invalidatesTags: (result, error, { lectureSlotId }) => [
-        'WeeklyLectureSlot',
-        { type: 'WeeklyLectureSlot', id: lectureSlotId },
+        academicType.weeklyLectureSlot,
+        { type: academicType.weeklyLectureSlot, id: lectureSlotId },
       ],
     }),
   }),

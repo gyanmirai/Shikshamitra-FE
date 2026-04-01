@@ -1,20 +1,15 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { organizationType } from 'src/redux/tagTypes';
 
-export const organizationApi = createApi({
-  reducerPath: 'organizationApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Organization'],
+export const organizationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getOrganization: builder.query({
       query: () => ({ url: '/app/education-medium-stage' }),
-      providesTags: ['Organization'],
+      providesTags: [organizationType.organization],
     }),
     getOrganizationById: builder.query({
       query: (id) => ({ url: `/app/education-medium-stage/${id}` }),
-      providesTags: ['Organization'],
+      providesTags: [organizationType.organization],
     }),
     addOrganization: builder.mutation({
       query: (body) => ({
@@ -22,7 +17,7 @@ export const organizationApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Organization'],
+      invalidatesTags: [organizationType.organization],
     }),
     updateOrganization: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +25,14 @@ export const organizationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Organization'],
+      invalidatesTags: [organizationType.organization],
     }),
     deleteOrganization: builder.mutation({
       query: (id) => ({
         url: `/app/education-medium-stage/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Organization'],
+      invalidatesTags: [organizationType.organization],
     }),
   }),
 });

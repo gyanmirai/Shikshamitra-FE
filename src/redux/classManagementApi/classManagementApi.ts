@@ -1,23 +1,5 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { api } from '../service';
 
-export const classManagementApi = createApi({
-  reducerPath: 'classManagementApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/`, // keep same base url
-  }),
-  tagTypes: [
-    'Class',
-    'Division',
-    'Standard',
-    'Teacher',
-    'Student',
-    'Room',
-    'Timetable',
-    'StudentElectiveAssignment',
-    'SubjectProgress',
-    'ClassTeacherAssignment',
-    'TeacherAssignment',
-  ],
+export const classManagementApi = api.injectEndpoints({
   endpoints: () => ({}), // endpoints will be injected in other files
 });

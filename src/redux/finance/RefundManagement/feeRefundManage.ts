@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const feeRefundApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         url: '/feeRefundData',
         method: 'GET',
       }),
-      providesTags: ['FeeRefund'],
+      providesTags: [financeModuleType.feeRefund],
     }),
   }),
   overrideExisting: false,

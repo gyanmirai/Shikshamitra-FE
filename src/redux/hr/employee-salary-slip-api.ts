@@ -1,4 +1,5 @@
 import { employeeApi } from './employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
 
 export const employeePayrollApi = employeeApi.injectEndpoints({
   // tagTypes: ['Deduction-Components', 'Employee-Payroll', 'Earning-Components'],
@@ -8,7 +9,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         url: `/payroll/salary-slips?employeeId=${employeeId}&monthYear=${monthYear}&academicYearId=${academicYearId}`,
         method: 'GET',
       }),
-      providesTags: ['Salary-Slip'],
+      providesTags: [employeeType.salarySlip],
     }),
   }),
 });

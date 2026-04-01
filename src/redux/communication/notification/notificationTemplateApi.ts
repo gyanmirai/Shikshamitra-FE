@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const notificationTemplateApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +12,7 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['NotificationTemplates'],
+      providesTags: [communicationType.notificationTemplates],
     }),
     addNotificationTemplate: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -21,7 +23,7 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['NotificationTemplates'],
+      invalidatesTags: [communicationType.notificationTemplates],
     }),
     updateNotificationTemplate: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -32,7 +34,7 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['NotificationTemplates'],
+      invalidatesTags: [communicationType.notificationTemplates],
     }),
     deleteNotificationTemplate: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -43,7 +45,7 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['NotificationTemplates'],
+      invalidatesTags: [communicationType.notificationTemplates],
     }),
     getNotificationTemplateById: builder.query({
       query: ({ academicMediumId, id }) => ({
@@ -53,7 +55,7 @@ export const notificationTemplateApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['NotificationTemplates'],
+      providesTags: [communicationType.notificationTemplates],
     }),
   }),
   overrideExisting: false,

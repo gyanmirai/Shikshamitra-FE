@@ -1,4 +1,5 @@
-import { libraryModuleApi } from '../libraryModuleApi';
+﻿import { libraryModuleApi } from '../libraryModuleApi';
+import { libraryModuleType } from 'src/redux/tagTypes';
 
 export const booksApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +9,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Books'],
+      providesTags: [libraryModuleType.books],
     }),
 
     addBook: builder.mutation({
@@ -18,7 +19,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['Books'],
+      invalidatesTags: [libraryModuleType.books],
     }),
 
     updateBookCopyStatus: builder.mutation({
@@ -27,7 +28,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Copies'],
+      invalidatesTags: [libraryModuleType.copies],
     }),
 
     getBookById: builder.query({
@@ -35,7 +36,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         url: `/library/books/${bookId}`,
         method: 'GET',
       }),
-      providesTags: (result, error, { bookId }) => [{ type: 'Books', id: bookId }],
+      providesTags: (result, error, { bookId }) => [{ type: libraryModuleType.books, id: bookId }],
     }),
 
     updateBook: builder.mutation({
@@ -44,7 +45,10 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: (result, error, { bookId }) => ['Books', { type: 'Books', id: bookId }],
+      invalidatesTags: (result, error, { bookId }) => [
+        libraryModuleType.books,
+        { type: libraryModuleType.books, id: bookId },
+      ],
     }),
 
     deleteBook: builder.mutation({
@@ -52,7 +56,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         url: `/library/books/${bookId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Books'],
+      invalidatesTags: [libraryModuleType.books],
     }),
 
     getReservationTableView: builder.query({
@@ -85,7 +89,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: (result, error, { bookId }) => [{ type: 'Copies', id: bookId }],
+      providesTags: (result, error, { bookId }) => [{ type: libraryModuleType.copies, id: bookId }],
     }),
 
     updateBookCopies: builder.mutation({
@@ -95,7 +99,9 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: (result, error, { bookId }) => [{ type: 'Copies', id: bookId }],
+      invalidatesTags: (result, error, { bookId }) => [
+        { type: libraryModuleType.copies, id: bookId },
+      ],
     }),
 
     viewBookDetails: builder.query({
@@ -119,7 +125,10 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: (result, error, { bookId }) => ['Books', { type: 'Books', id: bookId }],
+      invalidatesTags: (result, error, { bookId }) => [
+        libraryModuleType.books,
+        { type: libraryModuleType.books, id: bookId },
+      ],
     }),
   }),
   overrideExisting: false,

@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentRegistrationType } from 'src/redux/tagTypes';
 
-export const StudentRegistrationApi = createApi({
-  reducerPath: 'StudentRegistrationApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Registration', 'Student-Document'],
+export const StudentRegistrationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentRegistration: builder.query({
       query: (params) => ({
         url: `/student/enrollment/registrations?academicMediumId=${params.academicMediumId}`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     addStudentRegistration: builder.mutation({
       query: (body) => ({
@@ -21,7 +16,7 @@ export const StudentRegistrationApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     updateStudentRegistration: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,7 +24,7 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
 
     deleteStudentRegistration: builder.mutation({
@@ -37,28 +32,28 @@ export const StudentRegistrationApi = createApi({
         url: `/app/student-enrollment/student-registration/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     moveToRegistration: builder.mutation({
       query: (enrollmentId) => ({
         url: `/app/student-enrollment/move-to-registration/${enrollmentId}`,
         method: 'POST',
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     moveToAdmission: builder.mutation({
       query: (studentId) => ({
         url: `/student-enrollment/entrance-exam/${studentId}/move-to-admission`,
         method: 'POST',
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getBasicDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/general-details`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updateBasicDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -66,14 +61,14 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getFamilyDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/family-details`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updateFamilyDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -81,14 +76,14 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getParentBankDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/bank-details`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updateParentBankDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -96,14 +91,14 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getPreviousSchoolDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/previous-school-details`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updatePreviousSchoolDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -111,14 +106,14 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getStudentAdditionalDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/additional-details`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updateStudentAdditionalDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -126,14 +121,14 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getStudentCommunicationDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/communication-details`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updateStudentCommunicationDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -141,14 +136,14 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
     getStudentMedicalDetails: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/registrations/${studentId}/medical-records`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration'],
+      providesTags: [studentRegistrationType.studentRegistration],
     }),
     updateStudentMedicalDetails: builder.mutation({
       query: ({ id, body }) => ({
@@ -156,7 +151,7 @@ export const StudentRegistrationApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration'],
+      invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
 
     // document
@@ -166,7 +161,7 @@ export const StudentRegistrationApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student-Document'],
+      invalidatesTags: [studentRegistrationType.studentDocument],
     }),
     studentUpdateDocument: builder.mutation({
       query: ({ studentId, documentId, body }) => ({
@@ -177,25 +172,25 @@ export const StudentRegistrationApi = createApi({
         },
         data: body,
       }),
-      invalidatesTags: ['Student-Document'],
+      invalidatesTags: [studentRegistrationType.studentDocument],
     }),
     getStudentDocuments: builder.query({
       query: ({ studentId }) => ({
         url: `/app/student-document/required-documents-status/${studentId}`,
       }),
-      providesTags: ['Student-Document'],
+      providesTags: [studentRegistrationType.studentDocument],
     }),
     getStudentDocumentList: builder.query({
       query: ({ studentId }) => ({
         url: `/app/student-document/document-list/${studentId}`,
       }),
-      providesTags: ['Student-Document'],
+      providesTags: [studentRegistrationType.studentDocument],
     }),
     getStudentDocumentById: builder.query({
       query: ({ studentId, documentId }) => ({
         url: `/app/student-document/document?studentId=${studentId}&documentId=${documentId}`,
       }),
-      providesTags: ['Student-Document'],
+      providesTags: [studentRegistrationType.studentDocument],
     }),
   }),
 });

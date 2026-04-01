@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const assignmentApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,7 +16,7 @@ export const assignmentApi = academicApi.injectEndpoints({
           assignmentDate,
         },
       }),
-      providesTags: ['Assignment'],
+      providesTags: [academicType.assignment],
     }),
 
     // GET assignment by id
@@ -23,7 +25,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         url: `app/assignment/${assignmentId}`,
         method: 'GET',
       }),
-      providesTags: ['Assignment'],
+      providesTags: [academicType.assignment],
     }),
 
     // CREATE assignment
@@ -36,7 +38,7 @@ export const assignmentApi = academicApi.injectEndpoints({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['Assignment'],
+      invalidatesTags: [academicType.assignment],
     }),
 
     // UPDATE assignment
@@ -49,7 +51,7 @@ export const assignmentApi = academicApi.injectEndpoints({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['Assignment'],
+      invalidatesTags: [academicType.assignment],
     }),
 
     // DELETE assignment
@@ -58,7 +60,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         url: `app/assignment/${assignmentId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Assignment'],
+      invalidatesTags: [academicType.assignment],
     }),
 
     // PUBLISH assignment
@@ -68,7 +70,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         method: 'POST',
         data: { status },
       }),
-      invalidatesTags: ['Assignment'],
+      invalidatesTags: [academicType.assignment],
     }),
   }),
 

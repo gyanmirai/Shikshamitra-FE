@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { shiftManagementType } from 'src/redux/tagTypes';
 
-export const shiftManagementApi = createApi({
-  reducerPath: 'shiftManagementApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Shift'],
+export const shiftManagementApi = api.injectEndpoints({
   endpoints: (builder) => ({
     addShift: builder.mutation({
       query: (body) => ({
@@ -14,13 +9,13 @@ export const shiftManagementApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Shift'],
+      invalidatesTags: [shiftManagementType.shift],
     }),
     getShiftById: builder.query({
       query: (id) => ({
         url: `/app/shift-management/${id}`,
       }),
-      providesTags: ['Shift'],
+      providesTags: [shiftManagementType.shift],
     }),
     updateShift: builder.mutation({
       query: ({ id, body }) => ({
@@ -28,20 +23,20 @@ export const shiftManagementApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Shift'],
+      invalidatesTags: [shiftManagementType.shift],
     }),
     deleteShift: builder.mutation({
       query: (id) => ({
         url: `/app/shift-management/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Shift'],
+      invalidatesTags: [shiftManagementType.shift],
     }),
     getShifts: builder.query({
       query: () => ({
         url: `/app/shift-management`,
       }),
-      providesTags: ['Shift'],
+      providesTags: [shiftManagementType.shift],
     }),
   }),
 });

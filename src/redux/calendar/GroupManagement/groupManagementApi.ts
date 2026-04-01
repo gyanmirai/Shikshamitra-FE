@@ -1,4 +1,6 @@
-import { calendarModuleApi } from '../calendarApi';
+﻿import { calendarModuleApi } from '../calendarApi';
+import { calendarModuleType } from 'src/redux/tagTypes';
+
 
 export const groupManagementApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -26,7 +28,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Groups'],
+      providesTags: [calendarModuleType.groups],
     }),
     createGroup: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -35,7 +37,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['Groups'],
+      invalidatesTags: [calendarModuleType.groups],
     }),
     updateGroup: builder.mutation({
       query: ({ groupId, body }) => ({
@@ -43,14 +45,14 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Groups', 'GroupDetails'],
+      invalidatesTags: [calendarModuleType.groups, calendarModuleType.groupDetails],
     }),
     deleteGroup: builder.mutation({
       query: (groupId) => ({
         url: `/groups/${groupId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Groups'],
+      invalidatesTags: [calendarModuleType.groups],
     }),
     previewGroupAudience: builder.query({
       query: (groupId) => ({
@@ -70,7 +72,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
         url: `/groups/${id}`,
         method: 'GET',
       }),
-      providesTags: ['GroupDetails'],
+      providesTags: [calendarModuleType.groupDetails],
     }),
     getUsersForSelection: builder.mutation({
       query: (body) => ({

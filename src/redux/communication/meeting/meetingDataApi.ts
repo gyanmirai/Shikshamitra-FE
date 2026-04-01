@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const meetingApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const meetingApi = communicationApi.injectEndpoints({
         url: '/meetingData',
         method: 'GET',
       }),
-      providesTags: ['MeetingDetails'],
+      providesTags: [communicationType.meetingDetails],
     }),
   }),
   overrideExisting: false,

@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { enrollmentReportType } from 'src/redux/tagTypes';
 
-export const EnrollmentReportApi = createApi({
-  reducerPath: 'EnrollmentReportApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Enrollment-Report-Api'],
+export const EnrollmentReportApi = api.injectEndpoints({
   endpoints: (builder) => ({
     generateReport: builder.mutation({
       query: (reportType) => ({
         url: `/app/student-enrollment/generate-report?reportType=${reportType}`,
         method: 'POST',
       }),
-      invalidatesTags: ['Enrollment-Report-Api'],
+      invalidatesTags: [enrollmentReportType.enrollmentReportApi],
     }),
   }),
 });

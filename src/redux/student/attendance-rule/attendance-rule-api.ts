@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentAttendanceRuleType } from 'src/redux/tagTypes';
 
-export const StudentAttendanceRuleApi = createApi({
-  reducerPath: 'StudentAttendanceRuleApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Attendance-Rule'],
+export const StudentAttendanceRuleApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentAttendanceRule: builder.query({
       query: () => ({
         url: '/app/student-attendance-rule',
         method: 'GET',
       }),
-      providesTags: ['Student-Attendance-Rule'],
+      providesTags: [studentAttendanceRuleType.studentAttendanceRule],
     }),
     addStudentAttendanceRule: builder.mutation({
       query: (data) => ({
@@ -21,7 +16,7 @@ export const StudentAttendanceRuleApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Attendance-Rule'],
+      invalidatesTags: [studentAttendanceRuleType.studentAttendanceRule],
     }),
     updateStudentAttendanceRule: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,14 +24,14 @@ export const StudentAttendanceRuleApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Attendance-Rule'],
+      invalidatesTags: [studentAttendanceRuleType.studentAttendanceRule],
     }),
     deleteStudentAttendanceRule: builder.mutation({
       query: (id) => ({
         url: `/app/student-attendance-rule/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Attendance-Rule'],
+      invalidatesTags: [studentAttendanceRuleType.studentAttendanceRule],
     }),
   }),
 });

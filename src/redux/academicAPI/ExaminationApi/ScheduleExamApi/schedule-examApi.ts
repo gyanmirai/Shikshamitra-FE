@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const scheduleExamApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: [academicType.exam],
     }),
 
     updateExamBasicDetails: builder.mutation({
@@ -18,7 +20,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: [academicType.exam],
     }),
 
     getExamBasicDetails: builder.query({
@@ -26,7 +28,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         url: `exams/${examId}/basic-details`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+      providesTags: (result, error, arg) => [{ type: academicType.exam, id: arg.examId }],
     }),
 
     // Step 2: Exam Schedule
@@ -35,7 +37,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         url: `exams/${examId}/schedule`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+      providesTags: (result, error, arg) => [{ type: academicType.exam, id: arg.examId }],
     }),
 
     updateExamSchedule: builder.mutation({
@@ -44,7 +46,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: [academicType.exam],
     }),
 
     // Step 3: Room Assignment
@@ -53,7 +55,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         url: `exams/${examId}/rooms`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+      providesTags: (result, error, arg) => [{ type: academicType.exam, id: arg.examId }],
     }),
 
     updateExamRoomAssignment: builder.mutation({
@@ -62,7 +64,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: [academicType.exam],
     }),
 
     // Get All Exams
@@ -72,7 +74,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Exam'],
+      providesTags: [academicType.exam],
     }),
 
     // Get Subjects of Exam
@@ -81,7 +83,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         url: `exams/${examId}/subjects`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+      providesTags: (result, error, arg) => [{ type: academicType.exam, id: arg.examId }],
     }),
 
     // Delete Exam
@@ -90,7 +92,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         url: `exams/${examId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: [academicType.exam],
     }),
 
     publishExam: builder.mutation({
@@ -99,7 +101,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: [academicType.exam],
     }),
   }),
   overrideExisting: false,

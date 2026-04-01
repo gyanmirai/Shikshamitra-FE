@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const gradeScalingApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: ['GradeScaling'],
+      providesTags: [academicType.gradeScaling],
     }),
 
     // Get specific grade scaling under academic medium
@@ -19,7 +21,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: ['GradeScaling'],
+      providesTags: [academicType.gradeScaling],
     }),
 
     // Add new grade scaling under medium
@@ -30,7 +32,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['GradeScaling'],
+      invalidatesTags: [academicType.gradeScaling],
     }),
 
     // Update grade scaling in medium
@@ -41,7 +43,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['GradeScaling'],
+      invalidatesTags: [academicType.gradeScaling],
     }),
 
     // Delete grade scaling under medium
@@ -51,7 +53,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         method: 'DELETE',
         params: { academicMediumId },
       }),
-      invalidatesTags: ['GradeScaling'],
+      invalidatesTags: [academicType.gradeScaling],
     }),
   }),
   overrideExisting: false,

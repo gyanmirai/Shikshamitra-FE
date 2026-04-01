@@ -1,12 +1,8 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { bookCategoryType } from 'src/redux/tagTypes';
 
-export const bookCategoryApi = createApi({
-  reducerPath: 'BookCategoryApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['BookCategory'],
+import { api } from '../service';
+
+export const bookCategoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBookCategories: builder.query({
       query: (params) => ({
@@ -14,7 +10,7 @@ export const bookCategoryApi = createApi({
         method: 'GET',
         params,
       }),
-      providesTags: ['BookCategory'],
+      providesTags: [bookCategoryType.bookCategory],
     }),
     addBookCategory: builder.mutation({
       query: (data) => {
@@ -26,7 +22,7 @@ export const bookCategoryApi = createApi({
           params: { academicYearId },
         };
       },
-      invalidatesTags: ['BookCategory'],
+      invalidatesTags: [bookCategoryType.bookCategory],
     }),
     updateBookCategory: builder.mutation({
       query: ({ categoryId, data }) => ({
@@ -34,14 +30,14 @@ export const bookCategoryApi = createApi({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: ['BookCategory'],
+      invalidatesTags: [bookCategoryType.bookCategory],
     }),
     deleteBookCategory: builder.mutation({
       query: ({ categoryId }) => ({
         url: `/book-categories/${categoryId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['BookCategory'],
+      invalidatesTags: [bookCategoryType.bookCategory],
     }),
   }),
 });

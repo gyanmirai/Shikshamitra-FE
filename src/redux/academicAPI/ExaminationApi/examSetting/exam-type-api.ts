@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const examinationTypeApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: ['ExaminationType'],
+      providesTags: [academicType.examinationType],
     }),
 
     // Get specific examination type under academic medium
@@ -19,7 +21,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: ['ExaminationType'],
+      providesTags: [academicType.examinationType],
     }),
 
     // Add new examination type under medium
@@ -30,7 +32,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
         data: body,
         params: { academicMediumId },
       }),
-      invalidatesTags: ['ExaminationType'],
+      invalidatesTags: [academicType.examinationType],
     }),
 
     // Update examination type in medium
@@ -41,7 +43,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
         data: body,
         params: { academicMediumId },
       }),
-      invalidatesTags: ['ExaminationType'],
+      invalidatesTags: [academicType.examinationType],
     }),
 
     // Delete examination type under medium
@@ -51,7 +53,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
         method: 'DELETE',
         params: { academicMediumId },
       }),
-      invalidatesTags: ['ExaminationType'],
+      invalidatesTags: [academicType.examinationType],
     }),
   }),
   overrideExisting: false,

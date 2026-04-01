@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const memberManageApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const memberManageApi = transportApi.injectEndpoints({
         url: '/transport/applications',
         method: 'GET',
       }),
-      providesTags: ['Member'],
+      providesTags: [transportType.member],
     }),
     addTransportMember: builder.mutation({
       query: (body: any) => ({
@@ -15,7 +17,7 @@ export const memberManageApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Member'],
+      invalidatesTags: [transportType.member],
     }),
   }),
   overrideExisting: false,

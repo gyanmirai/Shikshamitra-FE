@@ -1,4 +1,3 @@
-import axios from 'axios';
 import NextAuth from 'next-auth';
 import { jwtDecode } from 'jwt-decode';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -12,40 +11,49 @@ async function signInFn({
   password: string;
   organizationName: string;
 }) {
-  try {
-    const body = new URLSearchParams();
-    body.append('grant_type', 'password');
-    body.append('username', email as string);
-    body.append('password', password as string);
-    body.append('client_id', process.env.NEXT_PUBLIC_CLIENT_ID!);
-    body.append('client_secret', process.env.NEXT_PUBLIC_CLIENT_SECRET!);
-    body.append('scope', process.env.NEXT_PUBLIC_SCOPE!);
-    const resp = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/connect/token`, body, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        __tenant: organizationName as string,
-      },
-    });
+  const body = new URLSearchParams();
+  body.append('grant_type', 'password');
+  body.append('username', email as string);
+  body.append('password', password as string);
+  body.append('client_id', process.env.NEXT_PUBLIC_CLIENT_ID!);
+  body.append('client_secret', process.env.NEXT_PUBLIC_CLIENT_SECRET!);
+  body.append('scope', process.env.NEXT_PUBLIC_SCOPE!);
 
-    return {
-      id: email as string,
-      email,
-      accessToken: resp.data.access_token,
-      refreshToken: resp.data.refresh_token,
-      idToken: resp.data.id_token,
-      tokenType: resp.data.token_type,
-      expiresAt: Date.now() + resp.data.expires_in * 1000,
-      organizationName: organizationName as string,
-    };
-  } catch (error: any) {
-    const apiError = error?.response?.data?.error;
+  const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/connect/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      __tenant: organizationName as string,
+    },
+    body,
+  });
 
+  if (!resp.ok) {
+    let apiError: string | undefined;
+    try {
+      const errorData = await resp.json();
+      apiError = errorData?.error;
+    } catch {
+      // ignore parse errors
+    }
     if (apiError === 'invalid_grant') {
       throw new Error('INVALID_CREDENTIALS');
     }
-
     throw new Error('AUTH_FAILED');
   }
+
+  const data = await resp.json();
+
+  return {
+    id: email as string,
+    email,
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    idToken: data.id_token,
+    tokenType: data.token_type,
+    expiresAt: Date.now() + data.expires_in * 1000,
+    organizationName: organizationName as string,
+  };
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

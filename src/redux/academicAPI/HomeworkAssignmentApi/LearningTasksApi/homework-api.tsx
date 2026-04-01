@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const homeworkApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,7 +16,7 @@ export const homeworkApi = academicApi.injectEndpoints({
           homeworkDate,
         },
       }),
-      providesTags: ['Homework'],
+      providesTags: [academicType.homework],
     }),
 
     // GET homework by id
@@ -23,7 +25,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `app/homework/${homeworkId}`,
         method: 'GET',
       }),
-      providesTags: ['Homework'],
+      providesTags: [academicType.homework],
     }),
 
     // CREATE homework
@@ -36,7 +38,7 @@ export const homeworkApi = academicApi.injectEndpoints({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['Homework'],
+      invalidatesTags: [academicType.homework],
     }),
 
     // UPDATE homework
@@ -52,7 +54,7 @@ export const homeworkApi = academicApi.injectEndpoints({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['Homework'],
+      invalidatesTags: [academicType.homework],
     }),
 
     // DELETE homework
@@ -61,7 +63,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `app/homework/${homeworkId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Homework'],
+      invalidatesTags: [academicType.homework],
     }),
 
     // PUBLISH homework
@@ -71,7 +73,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         method: 'POST',
         data: { status },
       }),
-      invalidatesTags: ['Homework'],
+      invalidatesTags: [academicType.homework],
     }),
   }),
 

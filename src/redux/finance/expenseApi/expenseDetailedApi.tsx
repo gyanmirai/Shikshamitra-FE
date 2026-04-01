@@ -1,4 +1,5 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
 
 export const expenseTrackingApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,14 +9,14 @@ export const expenseTrackingApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['ExpenseDetails'],
+      providesTags: [financeModuleType.expenseDetails],
     }),
     getExpenseById: builder.query({
       query: (expenseId: string) => ({
         url: `/expenses/${expenseId}`,
         method: 'GET',
       }),
-      providesTags: ['ExpenseDetails'],
+      providesTags: [financeModuleType.expenseDetails],
     }),
     postExpenseDetails: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -24,7 +25,7 @@ export const expenseTrackingApi = financeModuleApi.injectEndpoints({
         data: body,
         params: { academicYearId },
       }),
-      invalidatesTags: ['ExpenseDetails'],
+      invalidatesTags: [financeModuleType.expenseDetails],
     }),
     putExpenseDetails: builder.mutation({
       query: ({ expenseId, academicYearId, body }) => ({
@@ -33,35 +34,35 @@ export const expenseTrackingApi = financeModuleApi.injectEndpoints({
         data: body,
         params: { academicYearId },
       }),
-      invalidatesTags: ['ExpenseDetails'],
+      invalidatesTags: [financeModuleType.expenseDetails],
     }),
     deleteExpenseDetails: builder.mutation({
       query: (expenseId: string) => ({
         url: `/expenses/${expenseId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ExpenseDetails'],
+      invalidatesTags: [financeModuleType.expenseDetails],
     }),
     getExpenseList: builder.query({
       query: () => ({
         url: '/expenseListData',
         method: 'GET',
       }),
-      providesTags: ['ExpenseDetails'],
+      providesTags: [financeModuleType.expenseDetails],
     }),
     getExpenseOptions: builder.query({
       query: () => ({
         url: '/expenseOptions',
         method: 'GET',
       }),
-      providesTags: ['ExpenseOptions'],
+      providesTags: [financeModuleType.expenseOptions],
     }),
     getPaymentMethodsConfig: builder.query({
       query: () => ({
         url: '/paymentMethodsConfig',
         method: 'GET',
       }),
-      providesTags: ['paymentMethodsConfig'],
+      providesTags: [financeModuleType.paymentMethodsConfig],
     }),
   }),
   overrideExisting: false,

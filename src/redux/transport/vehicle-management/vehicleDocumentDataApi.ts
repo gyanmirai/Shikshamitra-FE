@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const vehicleDocumentDataApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,84 +9,84 @@ export const vehicleDocumentDataApi = transportApi.injectEndpoints({
         url: '/documentRows',
         method: 'GET',
       }),
-      providesTags: ['DocumentRows'],
+      providesTags: [transportType.documentRows],
     }),
     getvehicleTypeOptions: builder.query({
       query: () => ({
         url: '/vehicleTypeOptions',
         method: 'GET',
       }),
-      providesTags: ['VehicleTypeOptions'],
+      providesTags: [transportType.vehicleTypeOptions],
     }),
     getfuelTypeOptions: builder.query({
       query: () => ({
         url: '/fuelTypeOptions',
         method: 'GET',
       }),
-      providesTags: ['FuelTypeOptions'],
+      providesTags: [transportType.fuelTypeOptions],
     }),
     getinsurance: builder.query({
       query: () => ({
         url: '/insurance',
         method: 'GET',
       }),
-      providesTags: ['Insurance'],
+      providesTags: [transportType.insurance],
     }),
     getdriver: builder.query({
       query: () => ({
         url: '/driver',
         method: 'GET',
       }),
-      providesTags: ['Driver'],
+      providesTags: [transportType.driver],
     }),
     getdocuments: builder.query({
       query: () => ({
         url: '/documents',
         method: 'GET',
       }),
-      providesTags: ['Documents'],
+      providesTags: [transportType.documents],
     }),
     getmaintenanceHistoryData: builder.query({
       query: () => ({
         url: '/maintenanceHistoryData',
         method: 'GET',
       }),
-      providesTags: ['MaintenanceHistory'],
+      providesTags: [transportType.maintenanceHistory],
     }),
     getvehicleInformation: builder.query({
       query: () => ({
         url: '/vehicleInformation',
         method: 'GET',
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
     getrouteHistoryData: builder.query({
       query: () => ({
         url: '/routeHistoryData',
         method: 'GET',
       }),
-      providesTags: ['routeHistoryData'],
+      providesTags: [transportType.routeHistoryData],
     }),
     getdriverHistoryData: builder.query({
       query: () => ({
         url: '/driverHistoryData',
         method: 'GET',
       }),
-      providesTags: ['DriverHistory'],
+      providesTags: [transportType.driverHistory],
     }),
     getmaintenanceData: builder.query({
       query: () => ({
         url: '/maintenanceData',
         method: 'GET',
       }),
-      providesTags: ['MaintenanceData'],
+      providesTags: [transportType.maintenanceData],
     }),
     getdocumentDetailsData: builder.query({
       query: () => ({
         url: '/documentDetailsData',
         method: 'GET',
       }),
-      providesTags: ['documentDetailsData'],
+      providesTags: [transportType.documentDetailsData],
     }),
   }),
   overrideExisting: false,

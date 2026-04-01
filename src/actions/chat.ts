@@ -3,7 +3,7 @@ import type { IChatMessage, IChatParticipant, IChatConversation } from 'src/type
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 import { keyBy } from 'src/utils/helper';
-import axios, { fetcher, endpoints } from 'src/utils/axios';
+import fetch, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
@@ -118,7 +118,7 @@ export async function sendMessage(conversationId: string, messageData: IChatMess
    */
   if (enableServer) {
     const data = { conversationId, messageData };
-    await axios.put(CHART_ENDPOINT, data);
+    await fetch.put(CHART_ENDPOINT, data);
   }
 
   /**
@@ -166,7 +166,7 @@ export async function createConversation(conversationData: IChatConversation) {
    * Work on server
    */
   const data = { conversationData };
-  const res = await axios.post(CHART_ENDPOINT, data);
+  const res = await fetch.post(CHART_ENDPOINT, data);
 
   /**
    * Work in local
@@ -193,7 +193,7 @@ export async function clickConversation(conversationId: string) {
    * Work on server
    */
   if (enableServer) {
-    await axios.get(CHART_ENDPOINT, { params: { conversationId, endpoint: 'mark-as-seen' } });
+    await fetch.get(CHART_ENDPOINT, { params: { conversationId, endpoint: 'mark-as-seen' } });
   }
 
   /**

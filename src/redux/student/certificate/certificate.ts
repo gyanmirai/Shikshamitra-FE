@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentCertificateType } from 'src/redux/tagTypes';
 
-export const StudentCertificateApi = createApi({
-  reducerPath: 'StudentCertificateApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Enrollment-Report-Api'],
+export const StudentCertificateApi = api.injectEndpoints({
   endpoints: (builder) => ({
     uploadCertificate: builder.mutation({
       query: ({ studentId, body }) => ({
@@ -17,7 +12,7 @@ export const StudentCertificateApi = createApi({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['Enrollment-Report-Api'],
+      invalidatesTags: [studentCertificateType.enrollmentReportApi],
     }),
   }),
 });

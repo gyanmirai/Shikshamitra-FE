@@ -1,4 +1,6 @@
-import { instituteSetupApi } from '../instituteSetupApi';
+﻿import { instituteSetupApi } from '../instituteSetupApi';
+import { instituteSetupType } from 'src/redux/tagTypes';
+
 
 export const roomsApi = instituteSetupApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         url: '/rooms',
         method: 'GET',
       }),
-      providesTags: ['Rooms'],
+      providesTags: [instituteSetupType.rooms],
     }),
 
     addRoom: builder.mutation({
@@ -16,7 +18,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Rooms'],
+      invalidatesTags: [instituteSetupType.rooms],
     }),
 
     getRoomById: builder.query({
@@ -24,7 +26,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         url: `/rooms/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Rooms'],
+      providesTags: [instituteSetupType.rooms],
     }),
 
     updateRoom: builder.mutation({
@@ -33,7 +35,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Rooms'],
+      invalidatesTags: [instituteSetupType.rooms],
     }),
 
     deleteRoom: builder.mutation({
@@ -41,7 +43,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
         url: `/rooms/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Rooms'],
+      invalidatesTags: [instituteSetupType.rooms],
     }),
   }),
   overrideExisting: false,

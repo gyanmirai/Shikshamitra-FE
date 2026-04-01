@@ -1,3 +1,5 @@
+﻿import { financeModuleType } from 'src/redux/tagTypes';
+
 import { financeModuleApi } from './financeModuleApi';
 
 export const receiptBookApi = financeModuleApi.injectEndpoints({
@@ -8,7 +10,7 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['ReceiptBook'],
+      providesTags: [financeModuleType.receiptBook],
     }),
     addReceiptBook: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -19,7 +21,7 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['ReceiptBook'],
+      invalidatesTags: [financeModuleType.receiptBook],
     }),
     updateReceiptBook: builder.mutation({
       query: ({ id, body }) => ({
@@ -27,14 +29,14 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['ReceiptBook'],
+      invalidatesTags: [financeModuleType.receiptBook],
     }),
     deleteReceiptBook: builder.mutation({
       query: ({ id }) => ({
         url: `/receipt-books/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ReceiptBook'],
+      invalidatesTags: [financeModuleType.receiptBook],
     }),
     patchReceiptBook: builder.mutation({
       query: ({ receiptBookId, body }) => ({
@@ -42,7 +44,7 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['ReceiptBook'],
+      invalidatesTags: [financeModuleType.receiptBook],
     }),
   }),
   overrideExisting: false,

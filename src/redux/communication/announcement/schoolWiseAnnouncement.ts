@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +12,7 @@ export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['SchoolWiseAnnouncement'],
+      providesTags: [communicationType.schoolWiseAnnouncement],
     }),
     addAnnouncement: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -21,7 +23,7 @@ export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['SchoolWiseAnnouncement'],
+      invalidatesTags: [communicationType.schoolWiseAnnouncement],
     }),
     updateAnnouncement: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -32,7 +34,7 @@ export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['SchoolWiseAnnouncement'],
+      invalidatesTags: [communicationType.schoolWiseAnnouncement],
     }),
     deleteAnnouncement: builder.mutation({
       query: ({ academicMediumId, id }) => ({
@@ -42,7 +44,7 @@ export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['SchoolWiseAnnouncement'],
+      invalidatesTags: [communicationType.schoolWiseAnnouncement],
     }),
     getAnnouncementById: builder.query({
       query: ({ academicMediumId, id }) => ({
@@ -52,7 +54,7 @@ export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['SchoolWiseAnnouncement'],
+      providesTags: [communicationType.schoolWiseAnnouncement],
     }),
     publishAnnouncement: builder.mutation({
       query: ({ academicMediumId, id }) => ({
@@ -62,7 +64,7 @@ export const schoolWiseAnnouncementApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['SchoolWiseAnnouncement'],
+      invalidatesTags: [communicationType.schoolWiseAnnouncement],
     }),
   }),
   overrideExisting: false,

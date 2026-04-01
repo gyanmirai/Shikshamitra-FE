@@ -1,20 +1,16 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { classType } from 'src/redux/tagTypes';
 
-export const classApi = createApi({
-  reducerPath: 'classApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Class'],
+import { api } from '../service';
+
+export const classApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getClass: builder.query({
       query: () => ({ url: '/app/standard?Sorting=name asc', redirect: 'follow' }),
-      providesTags: ['Class'],
+      providesTags: [classType.class],
     }),
     getClassById: builder.query({
       query: (id) => ({ url: `/app/standard/${id}` }),
-      providesTags: ['Class'],
+      providesTags: [classType.class],
     }),
     addClass: builder.mutation({
       query: (body) => ({
@@ -22,7 +18,7 @@ export const classApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Class'],
+      invalidatesTags: [classType.class],
     }),
     updateClass: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,22 +26,22 @@ export const classApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Class'],
+      invalidatesTags: [classType.class],
     }),
     deleteClass: builder.mutation({
       query: (id) => ({
         url: `/app/standard/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Class'],
+      invalidatesTags: [classType.class],
     }),
     getClassByOrganizationId: builder.query({
       query: (id) => ({ url: `/education-medium/${id}/standards` }),
-      providesTags: ['Class'],
+      providesTags: [classType.class],
     }),
     getClassByMedium: builder.query({
       query: (educationMediumId) => ({ url: `/education-medium/${educationMediumId}/standards` }),
-      providesTags: ['Class'],
+      providesTags: [classType.class],
     }),
   }),
 });

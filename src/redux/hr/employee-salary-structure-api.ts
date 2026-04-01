@@ -1,4 +1,6 @@
-import { employeeApi } from './employeeApi';
+﻿import { employeeApi } from './employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
+
 
 export interface EmployeeSalaryComponent {
   id?: string | null;
@@ -27,7 +29,7 @@ export const employeeSalaryStructureApi = employeeApi.injectEndpoints({
         url: `/payroll/employees/${employeeId}/salary-structure`,
         method: 'GET',
       }),
-      providesTags: ['Salary-Structure'],
+      providesTags: [employeeType.salaryStructure],
     }),
     updateEmployeeSalaryStructure: builder.mutation({
       query: ({ employeeId, data }) => ({
@@ -35,7 +37,7 @@ export const employeeSalaryStructureApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: ['Salary-Structure'],
+      invalidatesTags: [employeeType.salaryStructure],
     }),
   }),
 });

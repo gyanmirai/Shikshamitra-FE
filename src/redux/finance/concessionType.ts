@@ -1,4 +1,6 @@
-import { financeModuleApi } from './financeModuleApi';
+﻿import { financeModuleApi } from './financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const concessionTypeApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,14 +12,14 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      providesTags: ['Concession-Type'],
+      providesTags: [financeModuleType.concessionType],
     }),
     getConcessionTypeById: builder.query({
       query: ({ concessionTypeId }) => ({
         url: `/concession-types/${concessionTypeId}`,
         method: 'GET',
       }),
-      providesTags: ['Concession-Type'],
+      providesTags: [financeModuleType.concessionType],
     }),
     postConcessionType: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -25,7 +27,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Concession-Type'],
+      invalidatesTags: [financeModuleType.concessionType],
     }),
     putConcessionType: builder.mutation({
       query: ({ concessionTypeId, body }) => ({
@@ -33,14 +35,14 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Concession-Type'],
+      invalidatesTags: [financeModuleType.concessionType],
     }),
     deleteConcessionType: builder.mutation({
       query: ({ concessionTypeId }) => ({
         url: `/concession-types/${concessionTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Concession-Type'],
+      invalidatesTags: [financeModuleType.concessionType],
     }),
   }),
   overrideExisting: false,

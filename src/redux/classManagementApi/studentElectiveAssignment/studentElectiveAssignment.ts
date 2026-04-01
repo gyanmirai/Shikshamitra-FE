@@ -1,4 +1,6 @@
-import { classManagementApi } from '../classManagementApi';
+﻿import { classManagementApi } from '../classManagementApi';
+import { classManagementType } from 'src/redux/tagTypes';
+
 
 export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['StudentElectiveAssignment'],
+      providesTags: [classManagementType.studentElectiveAssignment],
     }),
     updateStudentElectiveAssignments: builder.mutation({
       query: (body) => ({
@@ -16,7 +18,7 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['StudentElectiveAssignment'],
+      invalidatesTags: [classManagementType.studentElectiveAssignment],
     }),
   }),
   overrideExisting: false,

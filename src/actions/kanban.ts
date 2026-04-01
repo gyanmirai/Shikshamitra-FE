@@ -3,7 +3,7 @@ import type { IKanban, IKanbanTask, IKanbanColumn } from 'src/types/kanban';
 
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
-import axios, { fetcher, endpoints } from 'src/utils/axios';
+import fetch, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ export async function createColumn(columnData: IKanbanColumn) {
    */
   if (enableServer) {
     const data = { columnData };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'create-column' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'create-column' } });
   }
 
   /**
@@ -85,7 +85,7 @@ export async function updateColumn(columnId: UniqueIdentifier, columnName: strin
    */
   if (enableServer) {
     const data = { columnId, columnName };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'update-column' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'update-column' } });
   }
 
   /**
@@ -133,7 +133,7 @@ export async function moveColumn(updateColumns: IKanbanColumn[]) {
    */
   if (enableServer) {
     const data = { updateColumns };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'move-column' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'move-column' } });
   }
 }
 
@@ -145,7 +145,7 @@ export async function clearColumn(columnId: UniqueIdentifier) {
    */
   if (enableServer) {
     const data = { columnId };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'clear-column' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'clear-column' } });
   }
 
   /**
@@ -173,7 +173,7 @@ export async function deleteColumn(columnId: UniqueIdentifier) {
    */
   if (enableServer) {
     const data = { columnId };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'delete-column' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'delete-column' } });
   }
 
   /**
@@ -209,7 +209,7 @@ export async function createTask(columnId: UniqueIdentifier, taskData: IKanbanTa
    */
   if (enableServer) {
     const data = { columnId, taskData };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'create-task' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'create-task' } });
   }
 
   /**
@@ -237,7 +237,7 @@ export async function updateTask(columnId: UniqueIdentifier, taskData: IKanbanTa
    */
   if (enableServer) {
     const data = { columnId, taskData };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'update-task' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'update-task' } });
   }
 
   /**
@@ -294,7 +294,7 @@ export async function moveTask(updateTasks: IKanban['tasks']) {
    */
   if (enableServer) {
     const data = { updateTasks };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'move-task' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'move-task' } });
   }
 }
 
@@ -306,7 +306,7 @@ export async function deleteTask(columnId: UniqueIdentifier, taskId: UniqueIdent
    */
   if (enableServer) {
     const data = { columnId, taskId };
-    await axios.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'delete-task' } });
+    await fetch.post(KANBAN_ENDPOINT, data, { params: { endpoint: 'delete-task' } });
   }
 
   /**

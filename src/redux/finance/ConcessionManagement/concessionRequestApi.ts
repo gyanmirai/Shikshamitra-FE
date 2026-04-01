@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const concessionRequestApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['ConcessionRequest'],
+      providesTags: [financeModuleType.concessionRequest],
     }),
 
     getConcessionRequestById: builder.query({
@@ -16,7 +18,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
         url: `/finance/concessions/${concessionRequestId}`,
         method: 'GET',
       }),
-      providesTags: ['ConcessionRequest'],
+      providesTags: [financeModuleType.concessionRequest],
     }),
 
     createConcessionRequest: builder.mutation({
@@ -25,7 +27,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['ConcessionRequest'],
+      invalidatesTags: [financeModuleType.concessionRequest],
     }),
 
     updateConcessionRequest: builder.mutation({
@@ -34,7 +36,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['ConcessionRequest'],
+      invalidatesTags: [financeModuleType.concessionRequest],
     }),
 
     // approveConcessionRequest: builder.mutation({
@@ -43,7 +45,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
     //     method: 'POST',
     //     data: body,
     //   }),
-    //   invalidatesTags: ['ConcessionRequest'],
+    //   invalidatesTags: [financeModuleType.concessionRequest],
     // }),
 
     // rejectConcessionRequest: builder.mutation({
@@ -52,7 +54,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
     //     method: 'POST',
     //     data: body,
     //   }),
-    //   invalidatesTags: ['ConcessionRequest'],
+    //   invalidatesTags: [financeModuleType.concessionRequest],
     // }),
 
     deleteConcessionRequest: builder.mutation({
@@ -60,7 +62,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
         url: `/finance/concessions/${concessionRequestId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ConcessionRequest'],
+      invalidatesTags: [financeModuleType.concessionRequest],
     }),
   }),
   overrideExisting: false,

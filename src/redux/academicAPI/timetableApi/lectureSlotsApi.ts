@@ -1,3 +1,5 @@
+﻿import { academicType } from 'src/redux/tagTypes';
+
 import { academicApi } from '../academicApi';
 
 export const lectureSlotsApi = academicApi.injectEndpoints({
@@ -7,7 +9,7 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
         url: `academics/timetable/lecture-slots/by-medium/${mediumId}`,
         method: 'GET',
       }),
-      providesTags: ['LectureSlot'],
+      providesTags: [academicType.lectureSlot],
     }),
 
     addLectureSlot: builder.mutation({
@@ -16,7 +18,7 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['LectureSlot'],
+      invalidatesTags: [academicType.lectureSlot],
     }),
 
     getLectureSlotById: builder.query({
@@ -24,7 +26,7 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
         url: `academics/timetable/lecture-slots/${lectureSlotId}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'LectureSlot', id }],
+      providesTags: (result, error, id) => [{ type: academicType.lectureSlot, id }],
     }),
 
     updateLectureSlot: builder.mutation({
@@ -34,8 +36,8 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
         data: body,
       }),
       invalidatesTags: (result, error, { lectureSlotId }) => [
-        'LectureSlot',
-        { type: 'LectureSlot', id: lectureSlotId },
+        academicType.lectureSlot,
+        { type: academicType.lectureSlot, id: lectureSlotId },
       ],
     }),
 
@@ -45,7 +47,7 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['LectureSlot'],
+      invalidatesTags: [academicType.lectureSlot],
     }),
   }),
   overrideExisting: false,

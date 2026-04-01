@@ -1,16 +1,11 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { documentType } from 'src/redux/tagTypes';
 
-export const documentApi = createApi({
-  reducerPath: 'documentApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Document'],
+export const documentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getDocuments: builder.query({
       query: () => ({ url: '/employees/documents' }),
-      providesTags: ['Document'],
+      providesTags: [documentType.document],
     }),
     addDocument: builder.mutation({
       query: (body) => ({
@@ -18,7 +13,7 @@ export const documentApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Document'],
+      invalidatesTags: [documentType.document],
     }),
     updateDocument: builder.mutation({
       query: ({ id, body }) => ({
@@ -26,14 +21,14 @@ export const documentApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Document'],
+      invalidatesTags: [documentType.document],
     }),
     deleteDocument: builder.mutation({
       query: (id) => ({
         url: `/employees/documents/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Document'],
+      invalidatesTags: [documentType.document],
     }),
   }),
 });

@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentRollNumberType } from 'src/redux/tagTypes';
 
-export const studentRollNumberApi = createApi({
-  reducerPath: 'studentRollNumberApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['studentRollNumber'],
+export const studentRollNumberApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getRollNumberProjections: builder.query({
       query: ({ divisionId, arrangementType, arrangementBy }) => ({
@@ -17,7 +12,7 @@ export const studentRollNumberApi = createApi({
           arrangementBy,
         },
       }),
-      providesTags: ['studentRollNumber'],
+      providesTags: [studentRollNumberType.studentRollNumber],
     }),
     updateStudentRollNumber: builder.mutation({
       query: ({ divisionId, body }) => ({
@@ -25,7 +20,7 @@ export const studentRollNumberApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['studentRollNumber'],
+      invalidatesTags: [studentRollNumberType.studentRollNumber],
     }),
   }),
 });

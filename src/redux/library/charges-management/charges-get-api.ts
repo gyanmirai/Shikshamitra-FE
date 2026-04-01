@@ -1,34 +1,17 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { libraryChargeType } from 'src/redux/tagTypes';
 
 import libraryChargesData from '../../../../issueReturnData.json';
 
-const isDev = process.env.NODE_ENV === 'development';
 
-export const LibraryChargeApi = createApi({
-  reducerPath: 'LibraryChargeApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/libraryChargesData') {
-          return { data: libraryChargesData.libraryChargesData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['LibraryCharge'],
+export const LibraryChargeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLibraryCharges: builder.query({
       query: () => ({
         url: '/library/charges',
         method: 'GET',
       }),
-      providesTags: ['LibraryCharge'],
+      providesTags: [libraryChargeType.libraryCharge],
     }),
     addLibraryCharge: builder.mutation({
       query: (data) => ({
@@ -36,7 +19,7 @@ export const LibraryChargeApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['LibraryCharge'],
+      invalidatesTags: [libraryChargeType.libraryCharge],
     }),
     updateLibraryCharge: builder.mutation({
       query: ({ data, chargeId, academicYearId }) => ({
@@ -44,21 +27,21 @@ export const LibraryChargeApi = createApi({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: ['LibraryCharge'],
+      invalidatesTags: [libraryChargeType.libraryCharge],
     }),
     deleteLibraryCharge: builder.mutation({
       query: ({ chargeId, academicYearId }) => ({
         url: `/library/charges/${chargeId}?academicYearId=${academicYearId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['LibraryCharge'],
+      invalidatesTags: [libraryChargeType.libraryCharge],
     }),
     getDetailedCharge: builder.query({
       query: ({ chargeId, academicYearId }) => ({
         url: `/library/charges/details/${chargeId}?academicYearId=${academicYearId}`,
         method: 'GET',
       }),
-      providesTags: ['LibraryCharge'],
+      providesTags: [libraryChargeType.libraryCharge],
     }),
   }),
 });

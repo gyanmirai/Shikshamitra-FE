@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentInquiryType } from 'src/redux/tagTypes';
 
-export const StudentInquiryApi = createApi({
-  reducerPath: 'StudentInquiryApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Inquiry'],
+export const StudentInquiryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentInquiry: builder.query({
       query: ({ academicMediumId }) => ({
         url: `/student/enrollment/${academicMediumId}/inquiries`,
         method: 'GET',
       }),
-      providesTags: ['Student-Inquiry'],
+      providesTags: [studentInquiryType.studentInquiry],
     }),
     addStudentInquiry: builder.mutation({
       query: (body) => ({
@@ -21,14 +16,14 @@ export const StudentInquiryApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student-Inquiry'],
+      invalidatesTags: [studentInquiryType.studentInquiry],
     }),
     getStudentInquiryById: builder.query({
       query: ({ studentId }) => ({
         url: `/student/enrollment/inquiries/${studentId}`,
         method: 'GET',
       }),
-      providesTags: ['Student-Inquiry'],
+      providesTags: [studentInquiryType.studentInquiry],
     }),
     updateStudentInquiry: builder.mutation({
       query: ({ id, body }) => ({
@@ -36,7 +31,7 @@ export const StudentInquiryApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Inquiry'],
+      invalidatesTags: [studentInquiryType.studentInquiry],
     }),
 
     deleteStudentInquiry: builder.mutation({
@@ -44,7 +39,7 @@ export const StudentInquiryApi = createApi({
         url: `/app/student-enrollment/student-inquiry/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Inquiry'],
+      invalidatesTags: [studentInquiryType.studentInquiry],
     }),
 
     registrationFormDetails: builder.mutation({
@@ -53,7 +48,7 @@ export const StudentInquiryApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student-Inquiry'],
+      invalidatesTags: [studentInquiryType.studentInquiry],
     }),
   }),
 });

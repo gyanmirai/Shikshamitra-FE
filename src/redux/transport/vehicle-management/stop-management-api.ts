@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 // ----------------------------------------------------------------------
 
@@ -11,7 +13,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { pageNumber, pageSize, search, zoneId, status, academicMediumId },
       }),
-      providesTags: ['StopManagement'],
+      providesTags: [transportType.stopManagement],
     }),
 
     // Create stop
@@ -22,7 +24,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['StopManagement'],
+      invalidatesTags: [transportType.stopManagement],
     }),
 
     // Update stop
@@ -33,7 +35,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['StopManagement'],
+      invalidatesTags: [transportType.stopManagement],
     }),
 
     // Change stop status
@@ -44,7 +46,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['StopManagement'],
+      invalidatesTags: [transportType.stopManagement],
     }),
   }),
   overrideExisting: false,

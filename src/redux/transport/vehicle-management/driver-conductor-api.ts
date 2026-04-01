@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const driverConductorApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const driverConductorApi = transportApi.injectEndpoints({
         url: '/transport/staff',
         method: 'GET',
       }),
-      providesTags: ['DriverConductorData'],
+      providesTags: [transportType.driverConductorData],
     }),
 
     getDriverConductorById: builder.query({
@@ -15,7 +17,7 @@ export const driverConductorApi = transportApi.injectEndpoints({
         url: `/transport/staff/${staffId}`,
         method: 'GET',
       }),
-      providesTags: ['DriverConductorData'],
+      providesTags: [transportType.driverConductorData],
     }),
 
     addDriverConductor: builder.mutation({
@@ -24,7 +26,7 @@ export const driverConductorApi = transportApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['DriverConductorData'],
+      invalidatesTags: [transportType.driverConductorData],
     }),
 
     getAvailableRoutes: builder.query({
@@ -32,7 +34,7 @@ export const driverConductorApi = transportApi.injectEndpoints({
         url: '/availableRoutes',
         method: 'GET',
       }),
-      providesTags: ['AvailableRoutes'],
+      providesTags: [transportType.availableRoutes],
     }),
   }),
   overrideExisting: false,

@@ -1,4 +1,6 @@
-import { classManagementApi } from '../classManagementApi';
+﻿import { classManagementApi } from '../classManagementApi';
+import { classManagementType } from 'src/redux/tagTypes';
+
 
 // Teacher Assignment APIs (reference: StudentElectiveAssignment)
 // GET /api/teachers/assignments?academicMediumId={uuid}&classId={uuid}
@@ -23,7 +25,7 @@ export const teacherAssignmentApi = classManagementApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['TeacherAssignment'],
+      providesTags: [classManagementType.teacherAssignment],
     }),
     updateTeacherAssignments: builder.mutation<
       any,
@@ -42,7 +44,7 @@ export const teacherAssignmentApi = classManagementApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['TeacherAssignment'],
+      invalidatesTags: [classManagementType.teacherAssignment],
     }),
   }),
   overrideExisting: false,

@@ -1,4 +1,6 @@
-import { libraryModuleApi } from '../libraryModuleApi';
+﻿import { libraryModuleApi } from '../libraryModuleApi';
+import { libraryModuleType } from 'src/redux/tagTypes';
+
 
 export const membersApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const membersApi = libraryModuleApi.injectEndpoints({
         url: '/libraryMemberManagementData', // endpoint for fetching member list
         method: 'GET',
       }),
-      providesTags: ['Members'],
+      providesTags: [libraryModuleType.members],
     }),
   }),
   overrideExisting: false,

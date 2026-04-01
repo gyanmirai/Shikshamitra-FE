@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const chargesApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Charges'],
+      providesTags: [financeModuleType.charges],
     }),
     postCharge: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -17,7 +19,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         data: body,
         params: { academicYearId },
       }),
-      invalidatesTags: ['Charges'],
+      invalidatesTags: [financeModuleType.charges],
     }),
     updateCharge: builder.mutation({
       query: ({ id, body }) => ({
@@ -25,14 +27,14 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Charges'],
+      invalidatesTags: [financeModuleType.charges],
     }),
     deleteCharge: builder.mutation({
       query: (id) => ({
         url: `/charges/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Charges'],
+      invalidatesTags: [financeModuleType.charges],
     }),
     approveCharge: builder.mutation({
       query: ({ id, body }) => ({
@@ -40,7 +42,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Charges'],
+      invalidatesTags: [financeModuleType.charges],
     }),
     rejectCharge: builder.mutation({
       query: ({ id, body }) => ({
@@ -48,14 +50,14 @@ export const chargesApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Charges'],
+      invalidatesTags: [financeModuleType.charges],
     }),
     getChargeById: builder.query({
       query: (id) => ({
         url: `/charges/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Charges'],
+      providesTags: [financeModuleType.charges],
     }),
   }),
   overrideExisting: false,

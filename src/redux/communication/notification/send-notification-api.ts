@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const sendNotificationApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,7 +16,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           pageSize,
         },
       }),
-      providesTags: ['Notifications'],
+      providesTags: [communicationType.notifications],
     }),
     createNotificationDraft: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -25,7 +27,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['Notifications'],
+      invalidatesTags: [communicationType.notifications],
     }),
     getNotificationById: builder.query({
       query: ({ academicMediumId, id }) => ({
@@ -35,7 +37,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['Notifications'],
+      providesTags: [communicationType.notifications],
     }),
     getNotificationStepOne: builder.query({
       query: ({ academicMediumId, id }) => ({
@@ -45,7 +47,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['Notifications'],
+      providesTags: [communicationType.notifications],
     }),
     getNotificationStepTwo: builder.query({
       query: ({ academicMediumId, id }) => ({
@@ -55,7 +57,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['Notifications'],
+      providesTags: [communicationType.notifications],
     }),
     getNotificationStepThree: builder.query({
       query: ({ academicMediumId, id }) => ({
@@ -65,7 +67,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['Notifications'],
+      providesTags: [communicationType.notifications],
     }),
     updateNotificationChannels: builder.mutation({
       query: ({ academicMediumId, id, data }) => ({
@@ -76,7 +78,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['Notifications'],
+      invalidatesTags: [communicationType.notifications],
     }),
     composeMessageAndPublish: builder.mutation({
       query: ({ academicMediumId, id, data }) => ({
@@ -87,7 +89,7 @@ export const sendNotificationApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['Notifications'],
+      invalidatesTags: [communicationType.notifications],
     }),
   }),
   overrideExisting: false,

@@ -1,11 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
 
-export const permissionApi = createApi({
-  reducerPath: 'permissionApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
+export const permissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getPermissions: builder.query<any, { providerName: string; providerKey: string }>({
       query: ({ providerName, providerKey }) => ({

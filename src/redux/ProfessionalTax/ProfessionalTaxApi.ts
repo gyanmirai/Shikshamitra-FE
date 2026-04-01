@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { professionalType } from 'src/redux/tagTypes';
 
-export const ProfessionalApi = createApi({
-  reducerPath: 'ProfessionalApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['PF'],
+export const ProfessionalApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getProfessionalTax: builder.query({
       query: () => ({
         url: '/app/professional-tax',
         method: 'GET',
       }),
-      providesTags: ['PF'],
+      providesTags: [professionalType.pf],
     }),
     addProfessionalTax: builder.mutation({
       query: (data) => ({
@@ -21,7 +16,7 @@ export const ProfessionalApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['PF'],
+      invalidatesTags: [professionalType.pf],
     }),
     updateProfessionalTax: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,14 +24,14 @@ export const ProfessionalApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['PF'],
+      invalidatesTags: [professionalType.pf],
     }),
     deleteProfessionalTax: builder.mutation({
       query: (id) => ({
         url: `/app/professional-tax/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['PF'],
+      invalidatesTags: [professionalType.pf],
     }),
   }),
 });

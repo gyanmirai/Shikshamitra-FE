@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -13,7 +15,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
           subjectId,
         },
       }),
-      providesTags: ['AssignmentSubmissions'],
+      providesTags: [academicType.assignmentSubmissions],
     }),
 
     // Bulk update assessment status and feedback
@@ -27,7 +29,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
           assignmentId,
         },
       }),
-      invalidatesTags: ['AssignmentSubmissions'],
+      invalidatesTags: [academicType.assignmentSubmissions],
     }),
 
     // UPDATE assignment assessment (feedback and marks)
@@ -42,7 +44,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
           status,
         },
       }),
-      invalidatesTags: ['AssignmentSubmissions'],
+      invalidatesTags: [academicType.assignmentSubmissions],
     }),
 
     // UPDATE submission feedback
@@ -52,7 +54,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['AssignmentSubmissions'],
+      invalidatesTags: [academicType.assignmentSubmissions],
     }),
 
     // UPDATE submission status
@@ -62,7 +64,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['AssignmentSubmissions'],
+      invalidatesTags: [academicType.assignmentSubmissions],
     }),
   }),
   overrideExisting: false,

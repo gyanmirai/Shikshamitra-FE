@@ -1,12 +1,8 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { librarySettingsType } from 'src/redux/tagTypes';
 
-export const librarySettingsApi = createApi({
-  reducerPath: 'LibrarySettingsApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}`,
-  }),
-  tagTypes: ['LibrarySettings'],
+import { api } from '../service';
+
+export const librarySettingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLibrarySettings: builder.query({
       query: ({ academicYearId, ...params }) => ({
@@ -14,7 +10,7 @@ export const librarySettingsApi = createApi({
         method: 'GET',
         params: { academicYearId, ...params },
       }),
-      providesTags: ['LibrarySettings'],
+      providesTags: [librarySettingsType.librarySettings],
     }),
 
     getBookCategory: builder.query({
@@ -23,7 +19,7 @@ export const librarySettingsApi = createApi({
         method: 'GET',
         params: { academicYearId, ...params },
       }),
-      providesTags: ['LibrarySettings'],
+      providesTags: [librarySettingsType.librarySettings],
     }),
 
     addChargeCategory: builder.mutation({
@@ -36,7 +32,7 @@ export const librarySettingsApi = createApi({
           params: { academicYearId },
         };
       },
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
 
     updateChargeCategory: builder.mutation({
@@ -45,7 +41,7 @@ export const librarySettingsApi = createApi({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
 
     deleteChargeCategory: builder.mutation({
@@ -53,7 +49,7 @@ export const librarySettingsApi = createApi({
         url: `/api/library/charge-categories/${categoryId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
 
     getLibraryTiming: builder.query({
@@ -62,7 +58,7 @@ export const librarySettingsApi = createApi({
         method: 'GET',
         params,
       }),
-      providesTags: ['LibrarySettings'],
+      providesTags: [librarySettingsType.librarySettings],
     }),
 
     addLibraryTiming: builder.mutation({
@@ -75,7 +71,7 @@ export const librarySettingsApi = createApi({
           params: { academicYearId },
         };
       },
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
 
     getBorrowingReturnRules: builder.query({
@@ -84,7 +80,7 @@ export const librarySettingsApi = createApi({
         method: 'GET',
         params,
       }),
-      providesTags: ['LibrarySettings'],
+      providesTags: [librarySettingsType.librarySettings],
     }),
     addBorrowingReturnRules: builder.mutation({
       query: ({ data, academicYearId }) => ({
@@ -93,7 +89,7 @@ export const librarySettingsApi = createApi({
         data,
         params: { academicYearId },
       }),
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
     getSectionManagement: builder.query({
       query: ({ academicYearId, ...params }) => ({
@@ -101,7 +97,7 @@ export const librarySettingsApi = createApi({
         method: 'GET',
         params: { academicYearId, ...params },
       }),
-      providesTags: ['LibrarySettings'],
+      providesTags: [librarySettingsType.librarySettings],
     }),
     getSectionManagementById: builder.query({
       query: ({ sectionId, academicYearId }) => ({
@@ -109,7 +105,7 @@ export const librarySettingsApi = createApi({
         method: 'GET',
         params: { academicYearId },
       }),
-      providesTags: ['LibrarySettings'],
+      providesTags: [librarySettingsType.librarySettings],
     }),
     addSectionManagement: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -118,7 +114,7 @@ export const librarySettingsApi = createApi({
         data: body,
         params: { academicYearId },
       }),
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
     updateSectionManagement: builder.mutation({
       query: ({ data, sectionId, academicYearId }) => ({
@@ -127,14 +123,14 @@ export const librarySettingsApi = createApi({
         data,
         params: { academicYearId },
       }),
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
     deleteSectionManagement: builder.mutation({
       query: ({ sectionId }) => ({
         url: `/library/sections/${sectionId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['LibrarySettings'],
+      invalidatesTags: [librarySettingsType.librarySettings],
     }),
   }),
 });

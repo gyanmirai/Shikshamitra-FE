@@ -1,27 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { employeeType } from 'src/redux/tagTypes';
 
-export const employeeApi = createApi({
-  reducerPath: 'employeeApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: [
-    'Employee',
-    'EmployeeDocument',
-    'Employee-Type',
-    'Deduction-Components',
-    'Employee-Payroll',
-    'Earning-Components',
-    'Salary-Slip',
-    'PF',
-    'Run-Payroll',
-    'Salary-Structure',
-    'Employee-Document-Config',
-    'Employee-Leave-Policy',
-    'AttendanceRule',
-    'Attendance',
-  ],
+export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
@@ -32,11 +12,11 @@ export const employeeApi = createApi({
           search,
         },
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     getEmployeeById: builder.query({
       query: (id) => ({ url: `/employees/${id}`, redirect: 'follow' }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     // addEmployee: builder.mutation({
     //   query: (body) => ({
@@ -44,21 +24,21 @@ export const employeeApi = createApi({
     //     method: 'POST',
     //     data: body,
     //   }),
-    //   invalidatesTags: ['Employee'],
+    //   invalidatesTags: [employeeType.employee],
     // }),
     // deleteEmployee: builder.mutation({
     //   query: (id) => ({
     //     url: `/app/employee/${id}`,
     //     method: 'DELETE',
     //   }),
-    //   invalidatesTags: ['Employee'],
+    //   invalidatesTags: [employeeType.employee],
     // }),
     // getEmployeeByUserId: builder.query({
     //   query: (userId) => ({
     //     url: `/app/employee/employee-by-user-id?userId=${userId}`,
     //     redirect: 'follow',
     //   }),
-    //   providesTags: ['Employee'],
+    //   providesTags: [employeeType.employee],
     // }),
 
     // Employee Information Management
@@ -68,7 +48,7 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     addBasicInformation: builder.mutation({
       query: ({ body }) => ({
@@ -76,21 +56,21 @@ export const employeeApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getBasicInformation: builder.query({
       query: (id) => ({
         url: `/employees/${id}/personal-info`,
         redirect: 'follow',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     getFamilyInformation: builder.query({
       query: (id) => ({
         url: `/employees/${id}/family-info`,
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     updateFamilyInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
@@ -98,14 +78,14 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getAdditionalInformation: builder.query({
       query: (id) => ({
         url: `/employees/${id}/additional-info`,
         redirect: 'follow',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
@@ -113,14 +93,14 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getWorkExperience: builder.query({
       query: ({ id }) => ({
         url: `/employees/${id}/work-experience`,
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
@@ -128,14 +108,14 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getBankDetails: builder.query({
       query: (id) => ({
         url: `/employees/${id}/payroll`,
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     updateBankDetails: builder.mutation({
       query: ({ employeeId, body }) => ({
@@ -143,7 +123,7 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
 
     updateEmployeeStatus: builder.mutation({
@@ -154,7 +134,7 @@ export const employeeApi = createApi({
           employeeStatusType,
         },
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
 
     // Document Management
@@ -167,7 +147,7 @@ export const employeeApi = createApi({
         },
         data: body,
       }),
-      invalidatesTags: ['EmployeeDocument'],
+      invalidatesTags: [employeeType.employeeDocument],
     }),
     employeeUpdateDocument: builder.mutation({
       query: ({ employeeId, documentId, body }) => ({
@@ -178,7 +158,7 @@ export const employeeApi = createApi({
         },
         data: body,
       }),
-      invalidatesTags: ['EmployeeDocument'],
+      invalidatesTags: [employeeType.employeeDocument],
     }),
     getEmployeeDocuments: builder.query({
       query: ({ id, page = 1, pageSize = 20, search }) => ({
@@ -189,13 +169,13 @@ export const employeeApi = createApi({
           search,
         },
       }),
-      providesTags: ['EmployeeDocument'],
+      providesTags: [employeeType.employeeDocument],
     }),
     getEmployeeDocumentById: builder.query({
       query: ({ employeeId, documentId }) => ({
         url: `/employees/${employeeId}/documents/${documentId}`,
       }),
-      providesTags: ['EmployeeDocument'],
+      providesTags: [employeeType.employeeDocument],
     }),
 
     // Access Control & Notifications
@@ -205,21 +185,21 @@ export const employeeApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getAccessControl: builder.query({
       query: ({ userId, academicYearId }) => ({
         url: `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`,
         redirect: 'follow',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     getEmployeeNotificationHistory: builder.query({
       query: () => ({
         url: `/app/notification-info`,
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
 
     getReportingManagerByEmployeeId: builder.query({
@@ -227,7 +207,7 @@ export const employeeApi = createApi({
         url: `/employees/${id}/reporting-manager`,
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
 
     updateReportingManagerByEmployeeId: builder.mutation({
@@ -236,14 +216,14 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getEmployeesUnderManager: builder.query({
       query: (managerId) => ({
         url: `/employees/reporting-manager/${managerId}/employees`,
         redirect: 'follow',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
 
     // Employee Document configuration
@@ -257,7 +237,7 @@ export const employeeApi = createApi({
           academicYearId,
         },
       }),
-      providesTags: ['Employee-Document-Config'],
+      providesTags: [employeeType.employeeDocumentConfig],
     }),
     createDocumentConfiguration: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -265,7 +245,7 @@ export const employeeApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Employee-Document-Config'],
+      invalidatesTags: [employeeType.employeeDocumentConfig],
     }),
     updateDocumentConfiguration: builder.mutation({
       query: ({ id, body }) => ({
@@ -273,7 +253,7 @@ export const employeeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee-Document-Config'],
+      invalidatesTags: [employeeType.employeeDocumentConfig],
     }),
     deleteDocumentConfiguration: builder.mutation({
       query: (id) => ({
@@ -286,7 +266,7 @@ export const employeeApi = createApi({
         url: `/employees/documents/${id}`,
         redirect: 'follow',
       }),
-      providesTags: ['Employee-Document-Config'],
+      providesTags: [employeeType.employeeDocumentConfig],
     }),
   }),
 });

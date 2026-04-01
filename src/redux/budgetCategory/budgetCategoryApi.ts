@@ -1,20 +1,16 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { budgetCategoryType } from 'src/redux/tagTypes';
 
-export const budgetCategoryApi = createApi({
-  reducerPath: 'budgetCategoryApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['budgetCategory'],
+import { api } from '../service';
+
+export const budgetCategoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getbudgetCategory: builder.query({
       query: () => ({ url: '/app/budget-category', redirect: 'follow' }),
-      providesTags: ['budgetCategory'],
+      providesTags: [budgetCategoryType.budgetCategoryData],
     }),
     getbudgetCategoryById: builder.query({
       query: (id) => ({ url: `/app/budget-category/${id}`, redirect: 'follow' }),
-      providesTags: ['budgetCategory'],
+      providesTags: [budgetCategoryType.budgetCategoryData],
     }),
     addbudgetCategory: builder.mutation({
       query: (body) => ({
@@ -22,7 +18,7 @@ export const budgetCategoryApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['budgetCategory'],
+      invalidatesTags: [budgetCategoryType.budgetCategoryData],
     }),
     updatebudgetCategory: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +26,14 @@ export const budgetCategoryApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['budgetCategory'],
+      invalidatesTags: [budgetCategoryType.budgetCategoryData],
     }),
     deletebudgetCategory: builder.mutation({
       query: (id) => ({
         url: `/app/budget-category/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['budgetCategory'],
+      invalidatesTags: [budgetCategoryType.budgetCategoryData],
     }),
   }),
 });

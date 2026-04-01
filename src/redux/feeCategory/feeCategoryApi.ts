@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../finance/financeModuleApi';
+﻿import { financeModuleApi } from '../finance/financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const feeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['FeeCategory'],
+      providesTags: [financeModuleType.feeCategory],
     }),
 
     // Create fee category
@@ -22,7 +24,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['FeeCategory'],
+      invalidatesTags: [financeModuleType.feeCategory],
     }),
 
     // Update fee category
@@ -32,7 +34,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['FeeCategory'],
+      invalidatesTags: [financeModuleType.feeCategory],
     }),
 
     // Delete fee category
@@ -41,7 +43,7 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         url: `/fee-categories/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['FeeCategory'],
+      invalidatesTags: [financeModuleType.feeCategory],
     }),
   }),
 });

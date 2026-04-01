@@ -1,4 +1,6 @@
-import { employeeApi } from '../hr/employeeApi';
+﻿import { employeeApi } from '../hr/employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
+
 
 export const pfApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const pfApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { academicYearId, ...params },
       }),
-      providesTags: ['PF'],
+      providesTags: [employeeType.pf],
     }),
 
     addPF: builder.mutation({
@@ -18,7 +20,7 @@ export const pfApi = employeeApi.injectEndpoints({
         data: body,
         params: { academicYearId },
       }),
-      invalidatesTags: ['PF'],
+      invalidatesTags: [employeeType.pf],
     }),
 
     updatePF: builder.mutation({
@@ -27,7 +29,7 @@ export const pfApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['PF'],
+      invalidatesTags: [employeeType.pf],
     }),
 
     deletePF: builder.mutation({
@@ -35,7 +37,7 @@ export const pfApi = employeeApi.injectEndpoints({
         url: `/payroll/pf-rules/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['PF'],
+      invalidatesTags: [employeeType.pf],
     }),
   }),
 });

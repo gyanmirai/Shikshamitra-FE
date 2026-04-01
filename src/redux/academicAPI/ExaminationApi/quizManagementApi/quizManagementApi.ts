@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const quizManagementApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Quiz'],
+      providesTags: [academicType.quiz],
     }),
 
     // Create Quiz (Step 1)
@@ -20,7 +22,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['Quiz'],
+      invalidatesTags: [academicType.quiz],
     }),
 
     // Update Quiz (Step 1)
@@ -31,7 +33,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['Quiz'],
+      invalidatesTags: [academicType.quiz],
     }),
 
     // Get Quiz (Step 1)
@@ -41,7 +43,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: (result, error, { quizId }) => [{ type: 'Quiz', id: quizId }],
+      providesTags: (result, error, { quizId }) => [{ type: academicType.quiz, id: quizId }],
     }),
 
     // Update Quiz Questions (Step 2)
@@ -51,7 +53,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: (result, error, { quizId }) => [{ type: 'Quiz', id: quizId }],
+      invalidatesTags: (result, error, { quizId }) => [{ type: academicType.quiz, id: quizId }],
     }),
 
     // Get Quiz Questions (Step 2)
@@ -60,7 +62,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         url: `quizzes/${quizId}/questions`,
         method: 'GET',
       }),
-      providesTags: (result, error, quizId) => [{ type: 'Quiz', id: quizId }],
+      providesTags: (result, error, quizId) => [{ type: academicType.quiz, id: quizId }],
     }),
 
     // Get Quiz Students Result
@@ -69,7 +71,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         url: `quizzes/${quizId}/students`,
         method: 'GET',
       }),
-      providesTags: (result, error, quizId) => [{ type: 'Quiz', id: quizId }],
+      providesTags: (result, error, quizId) => [{ type: academicType.quiz, id: quizId }],
     }),
 
     // Get Student Quiz Submission
@@ -79,7 +81,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: (result, error, { quizId, studentId }) => [
-        { type: 'Quiz', id: `${quizId}-${studentId}` },
+        { type: academicType.quiz, id: `${quizId}-${studentId}` },
       ],
     }),
 
@@ -92,8 +94,8 @@ export const quizManagementApi = academicApi.injectEndpoints({
         data: body,
       }),
       invalidatesTags: (result, error, { quizId, studentId }) => [
-        { type: 'Quiz', id: quizId },
-        { type: 'Quiz', id: `${quizId}-${studentId}` },
+        { type: academicType.quiz, id: quizId },
+        { type: academicType.quiz, id: `${quizId}-${studentId}` },
       ],
     }),
 
@@ -105,8 +107,8 @@ export const quizManagementApi = academicApi.injectEndpoints({
         data: body,
       }),
       invalidatesTags: (result, error, { quizId, studentId }) => [
-        { type: 'Quiz', id: quizId },
-        { type: 'Quiz', id: `${quizId}-${studentId}` },
+        { type: academicType.quiz, id: quizId },
+        { type: academicType.quiz, id: `${quizId}-${studentId}` },
       ],
     }),
 
@@ -116,7 +118,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         url: `quizzes/${quizId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Quiz'],
+      invalidatesTags: [academicType.quiz],
     }),
   }),
   overrideExisting: false,

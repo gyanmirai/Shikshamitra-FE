@@ -1,4 +1,6 @@
-import { financeModuleApi } from './financeModuleApi';
+﻿import { financeModuleApi } from './financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const expenseCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +12,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      providesTags: ['expense-category'],
+      providesTags: [financeModuleType.expenseCategory],
     }),
 
     postExpenseCategory: builder.mutation({
@@ -22,7 +24,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['expense-category'],
+      invalidatesTags: [financeModuleType.expenseCategory],
     }),
 
     putExpenseCategory: builder.mutation({
@@ -31,7 +33,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['expense-category'],
+      invalidatesTags: [financeModuleType.expenseCategory],
     }),
 
     deleteExpenseCategory: builder.mutation({
@@ -39,12 +41,12 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
         url: `/expense-categories/${expenseCategoryId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['expense-category'],
+      invalidatesTags: [financeModuleType.expenseCategory],
     }),
 
     getBudgetOptions: builder.query({
       query: () => ({ url: '/expenseOptions', method: 'GET' }),
-      providesTags: ['expense-category'],
+      providesTags: [financeModuleType.expenseCategory],
     }),
   }),
   overrideExisting: false,

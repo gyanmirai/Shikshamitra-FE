@@ -1,34 +1,17 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { reservationRequestType } from 'src/redux/tagTypes';
 
 import issueReturnData from '../../../issueReturnData.json';
 
-const isDev = process.env.NODE_ENV === 'development';
 
-export const reservationRequestApi = createApi({
-  reducerPath: 'ReservationRequestApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/reservationRequestData') {
-          return { data: issueReturnData.reservationRequestData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['ReservationRequest'],
+export const reservationRequestApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getReservationRequestData: builder.query({
       query: () => ({
         url: '/reservationRequestData',
         method: 'GET',
       }),
-      providesTags: ['ReservationRequest'],
+      providesTags: [reservationRequestType.reservationRequest],
     }),
   }),
 });

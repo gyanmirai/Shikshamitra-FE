@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const concessionApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const concessionApi = financeModuleApi.injectEndpoints({
         url: '/concessionData',
         method: 'GET',
       }),
-      providesTags: ['Concession'],
+      providesTags: [financeModuleType.concession],
     }),
   }),
   overrideExisting: false,

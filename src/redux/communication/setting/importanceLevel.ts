@@ -1,4 +1,5 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
 
 export const importanceLevelOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,14 +8,14 @@ export const importanceLevelOptionsApi = communicationApi.injectEndpoints({
         url: '/importanceLevelData',
         method: 'GET',
       }),
-      providesTags: ['ImportanceLevelOptions'],
+      providesTags: [communicationType.importanceLevelOptions],
     }),
     getSentNotificationHistory: builder.query({
       query: () => ({
         url: '/sentNotificationData',
         method: 'GET',
       }),
-      providesTags: ['SentNotificationHistory'],
+      providesTags: [communicationType.sentNotificationHistory],
     }),
   }),
   overrideExisting: false,

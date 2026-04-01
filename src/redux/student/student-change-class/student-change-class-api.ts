@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentChangeClassType } from 'src/redux/tagTypes';
 
-export const studentChangeClassApi = createApi({
-  reducerPath: 'studentChangeClassApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['studentChangeClass'],
+export const studentChangeClassApi = api.injectEndpoints({
   endpoints: (builder) => ({
     changeStudentClass: builder.mutation({
       query: (body) => ({
@@ -14,7 +9,7 @@ export const studentChangeClassApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['studentChangeClass'],
+      invalidatesTags: [studentChangeClassType.studentChangeClass],
     }),
   }),
 });

@@ -1,37 +1,32 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { organizationUnitType } from 'src/redux/tagTypes';
 
-export const organizationUnitApi = createApi({
-  reducerPath: 'organizationUnitApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['OrganizationUnit'],
+export const organizationUnitApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getOrganizationUnits: builder.query({
       query: () => ({ url: '/organization-units/tree' }),
-      providesTags: ['OrganizationUnit'],
+      providesTags: [organizationUnitType.organizationUnit],
     }),
     addOrganizationUnit: builder.mutation({
       query: ({ title, parentId }) => ({
         url: `/organization-units/create?DisplayName=${title}${parentId ? `&ParentId=${parentId}` : ''}`,
         method: 'POST',
       }),
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     updateOrganizationUnit: builder.mutation({
       query: ({ title, id }) => ({
         url: `/organization-units/update?DisplayName=${title}${id ? `&id=${id}` : ''}`,
         method: 'PUT',
       }),
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     deleteOrganizationUnit: builder.mutation({
       query: (id) => ({
         url: `/organization-units/delete/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     addRoleToOrganizationUnit: builder.mutation({
       query: ({ roleId, organizationUnitId }) => {
@@ -44,14 +39,14 @@ export const organizationUnitApi = createApi({
           method: 'POST',
         };
       },
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     removeRoleFromOrganizationUnit: builder.mutation({
       query: ({ roleId, organizationUnitId }) => ({
         url: `/organization-units/roles/remove?RoleId=${roleId}&OrganizationUnitId=${organizationUnitId}`,
         method: 'POST',
       }),
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     addUserToOrganizationUnit: builder.mutation({
       query: ({ userId, organizationUnitId }) => {
@@ -64,28 +59,28 @@ export const organizationUnitApi = createApi({
           method: 'POST',
         };
       },
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     removeUserFromOrganizationUnit: builder.mutation({
       query: ({ userId, organizationUnitId }) => ({
         url: `/organization-units/users/remove?UserId=${userId}&OrganizationUnitId=${organizationUnitId}`,
         method: 'POST',
       }),
-      invalidatesTags: ['OrganizationUnit'],
+      invalidatesTags: [organizationUnitType.organizationUnit],
     }),
     getOrganizationUnitUser: builder.query({
       query: (id) => ({
         url: `/organization-units/users?OrganizationUnitId=${id}`,
         method: 'GET',
       }),
-      providesTags: ['OrganizationUnit'],
+      providesTags: [organizationUnitType.organizationUnit],
     }),
     getOrganizationUnitRole: builder.query({
       query: (id) => ({
         url: `/organization-units/roles?OrganizationUnitId=${id}`,
         method: 'GET',
       }),
-      providesTags: ['OrganizationUnit'],
+      providesTags: [organizationUnitType.organizationUnit],
     }),
   }),
 });

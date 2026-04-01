@@ -1,16 +1,11 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { earningComponentType } from 'src/redux/tagTypes';
 
-export const earningComponentApi = createApi({
-  reducerPath: 'earningComponentApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['EarningComponent'],
+export const earningComponentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getEarningComponents: builder.query({
       query: () => ({ url: '/payroll/earning-components' }),
-      providesTags: ['EarningComponent'],
+      providesTags: [earningComponentType.earningComponent],
     }),
 
     createEarningComponent: builder.mutation({
@@ -19,7 +14,7 @@ export const earningComponentApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['EarningComponent'],
+      invalidatesTags: [earningComponentType.earningComponent],
     }),
 
     updateEarningComponent: builder.mutation({
@@ -28,7 +23,7 @@ export const earningComponentApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['EarningComponent'],
+      invalidatesTags: [earningComponentType.earningComponent],
     }),
 
     deleteEarningComponent: builder.mutation({
@@ -36,7 +31,7 @@ export const earningComponentApi = createApi({
         url: `/payroll/earning-components/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['EarningComponent'],
+      invalidatesTags: [earningComponentType.earningComponent],
     }),
   }),
 });
