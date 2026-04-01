@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +12,7 @@ export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      providesTags: ['AnnouncementTypeOptions'],
+      providesTags: [communicationType.announcementTypeOptions],
     }),
     addAnnouncementType: builder.mutation({
       query: ({ academicMediumId, data }) => ({
@@ -21,7 +23,7 @@ export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
           academicMediumId,
         },
       }),
-      invalidatesTags: ['AnnouncementTypeOptions'],
+      invalidatesTags: [communicationType.announcementTypeOptions],
     }),
     updateAnnouncementType: builder.mutation({
       query: ({ data }) => ({
@@ -29,14 +31,14 @@ export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: ['AnnouncementTypeOptions'],
+      invalidatesTags: [communicationType.announcementTypeOptions],
     }),
     deleteAnnouncementType: builder.mutation({
       query: ({ data }) => ({
         url: `/announcement-types/${data.id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['AnnouncementTypeOptions'],
+      invalidatesTags: [communicationType.announcementTypeOptions],
     }),
   }),
   overrideExisting: false,

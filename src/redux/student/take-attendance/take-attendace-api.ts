@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentTakeAttendanceType } from 'src/redux/tagTypes';
 
-export const StudentTakeAttendanceApi = createApi({
-  reducerPath: 'StudentTakeAttendanceApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Take-Attendance'],
+export const StudentTakeAttendanceApi = api.injectEndpoints({
   endpoints: (builder) => ({
     /** GET /students/attendance/students
      *  Returns attendance day info + student list for a given class/date.
@@ -23,7 +18,7 @@ export const StudentTakeAttendanceApi = createApi({
           method: 'GET',
         };
       },
-      providesTags: ['Student-Take-Attendance'],
+      providesTags: [studentTakeAttendanceType.studentTakeAttendance],
     }),
 
     /** POST /students/attendance/mark
@@ -36,7 +31,7 @@ export const StudentTakeAttendanceApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Take-Attendance'],
+      invalidatesTags: [studentTakeAttendanceType.studentTakeAttendance],
     }),
 
     /** POST /students/attendance/lock
@@ -49,7 +44,7 @@ export const StudentTakeAttendanceApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Take-Attendance'],
+      invalidatesTags: [studentTakeAttendanceType.studentTakeAttendance],
     }),
 
     /** POST /students/attendance/unlock
@@ -62,7 +57,7 @@ export const StudentTakeAttendanceApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Take-Attendance'],
+      invalidatesTags: [studentTakeAttendanceType.studentTakeAttendance],
     }),
   }),
 });

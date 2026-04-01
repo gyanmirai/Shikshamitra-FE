@@ -1,5 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
+﻿import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { expenseType } from 'src/redux/tagTypes';
 
 import expenseData from '../../../json/finance/expense/expenseTrackingData.json';
 
@@ -21,14 +22,14 @@ export const expenseApi = createApi({
           },
         };
       },
-  tagTypes: ['Expense'],
+  tagTypes: [expenseType.expense],
   endpoints: (builder) => ({
     getExpenses: builder.query({
       query: () => ({
         url: '/detailedExpenseTableData',
         method: 'GET',
       }),
-      providesTags: ['Expense'],
+      providesTags: [expenseType.expense],
     }),
   }),
 });

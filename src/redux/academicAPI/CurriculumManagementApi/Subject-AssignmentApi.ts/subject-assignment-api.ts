@@ -1,4 +1,5 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
 
 export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +9,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         url: `/academics/curriculum/${standardId}/subject-assignments`,
         method: 'GET',
       }),
-      providesTags: ['SubjectAssignment'],
+      providesTags: [academicType.subjectAssignment],
     }),
 
     // Get one assignment - academicMediumId also optional in query param
@@ -17,7 +18,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'GET',
       }),
-      providesTags: ['SubjectAssignment'],
+      providesTags: [academicType.subjectAssignment],
     }),
 
     // Create assignment
@@ -27,7 +28,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['SubjectAssignment'],
+      invalidatesTags: [academicType.subjectAssignment],
     }),
 
     // Update assignment
@@ -37,7 +38,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['SubjectAssignment'],
+      invalidatesTags: [academicType.subjectAssignment],
     }),
 
     // Delete assignment
@@ -46,7 +47,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['SubjectAssignment'],
+      invalidatesTags: [academicType.subjectAssignment],
     }),
 
     // Publish assignment
@@ -56,7 +57,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         method: 'PATCH',
         data: { status },
       }),
-      invalidatesTags: ['SubjectAssignment'],
+      invalidatesTags: [academicType.subjectAssignment],
     }),
 
     // Upload Curriculum File
@@ -69,7 +70,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['CurriculumFile'],
+      invalidatesTags: [academicType.curriculumFile],
     }),
 
     // Get subject assignment documents
@@ -78,7 +79,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         url: `/subject-assignments/${subjectAssignmentId}/subjects/${subjectId}/documents`,
         method: 'GET',
       }),
-      providesTags: ['CurriculumFile'],
+      providesTags: [academicType.curriculumFile],
     }),
     // Get core-elective subjects by academicMediumId
     getCoreElectiveSubjects: builder.query({
@@ -86,7 +87,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         url: `/academics/curriculum/${academicMediumId}/core-elective-subjects`,
         method: 'GET',
       }),
-      providesTags: ['SubjectAssignment'],
+      providesTags: [academicType.subjectAssignment],
     }),
   }),
 

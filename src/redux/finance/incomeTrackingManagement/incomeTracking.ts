@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const incomeTrackingApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const incomeTrackingApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params: { academicYearId, page, pageSize, search },
       }),
-      providesTags: ['IncomeTracking'],
+      providesTags: [financeModuleType.incomeTracking],
     }),
 
     getIncomeTrackingById: builder.query({
@@ -16,7 +18,7 @@ export const incomeTrackingApi = financeModuleApi.injectEndpoints({
         url: `/incomes/${incomeId}`,
         method: 'GET',
       }),
-      providesTags: ['IncomeTracking'],
+      providesTags: [financeModuleType.incomeTracking],
     }),
 
     addIncomeTracking: builder.mutation({
@@ -26,7 +28,7 @@ export const incomeTrackingApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['IncomeTracking'],
+      invalidatesTags: [financeModuleType.incomeTracking],
     }),
     updateIncomeTracking: builder.mutation({
       query: ({
@@ -43,14 +45,14 @@ export const incomeTrackingApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['IncomeTracking'],
+      invalidatesTags: [financeModuleType.incomeTracking],
     }),
     deleteIncomeTracking: builder.mutation({
       query: (incomeId) => ({
         url: `/incomes/${incomeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['IncomeTracking'],
+      invalidatesTags: [financeModuleType.incomeTracking],
     }),
   }),
   overrideExisting: false,

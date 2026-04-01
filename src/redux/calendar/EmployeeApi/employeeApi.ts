@@ -1,4 +1,6 @@
-import { calendarModuleApi } from '../calendarApi';
+﻿import { calendarModuleApi } from '../calendarApi';
+import { calendarModuleType } from 'src/redux/tagTypes';
+
 
 export const employeeApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const employeeApi = calendarModuleApi.injectEndpoints({
         url: '/employeeData',
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [calendarModuleType.employee],
     }),
   }),
   overrideExisting: false,

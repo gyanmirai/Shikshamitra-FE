@@ -1,20 +1,16 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { boardType } from 'src/redux/tagTypes';
 
-export const boardApi = createApi({
-  reducerPath: 'boardApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Board'],
+import { api } from '../service';
+
+export const boardApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBoards: builder.query({
       query: () => ({ url: '/app/education-board', redirect: 'follow' }),
-      providesTags: ['Board'],
+      providesTags: [boardType.board],
     }),
     getBoardById: builder.query({
       query: (id) => ({ url: `/app/education-board/${id}` }),
-      providesTags: ['Board'],
+      providesTags: [boardType.board],
     }),
     addBoard: builder.mutation({
       query: (body) => ({
@@ -22,7 +18,7 @@ export const boardApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Board'],
+      invalidatesTags: [boardType.board],
     }),
     updateBoard: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +26,14 @@ export const boardApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Board'],
+      invalidatesTags: [boardType.board],
     }),
     deleteBoard: builder.mutation({
       query: (id) => ({
         url: `/app/education-board/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Board'],
+      invalidatesTags: [boardType.board],
     }),
   }),
 });

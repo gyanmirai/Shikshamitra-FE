@@ -1,4 +1,5 @@
-import { employeeApi } from './employeeApi';
+﻿import { employeeApi } from './employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
 
 export const leaveApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +10,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { page, pageSize, academicYearId, search },
       }),
-      providesTags: ['Employee-Type'],
+      providesTags: [employeeType.employeeType],
     }),
     createLeaveType: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -18,14 +19,14 @@ export const leaveApi = employeeApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['Employee-Type'],
+      invalidatesTags: [employeeType.employeeType],
     }),
     getLeaveTypeById: builder.query({
       query: (id) => ({
         url: `/hr-leave-types/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Employee-Type'],
+      providesTags: [employeeType.employeeType],
     }),
     updateLeaveType: builder.mutation({
       query: ({ id, body }) => ({
@@ -33,14 +34,14 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee-Type'],
+      invalidatesTags: [employeeType.employeeType],
     }),
     deleteLeaveType: builder.mutation({
       query: (id) => ({
         url: `/hr-leave-types/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Employee-Type'],
+      invalidatesTags: [employeeType.employeeType],
     }),
 
     // Leave Policies
@@ -50,7 +51,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { academicYearId, page, pageSize, search },
       }),
-      providesTags: ['Employee-Leave-Policy'],
+      providesTags: [employeeType.employeeLeavePolicy],
     }),
     createLeavePolicy: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -59,14 +60,14 @@ export const leaveApi = employeeApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['Employee-Leave-Policy'],
+      invalidatesTags: [employeeType.employeeLeavePolicy],
     }),
     getLeavePolicyById: builder.query({
       query: (id) => ({
         url: `/leave-policies/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Employee-Leave-Policy'],
+      providesTags: [employeeType.employeeLeavePolicy],
     }),
     updateLeavePolicy: builder.mutation({
       query: ({ id, body }) => ({
@@ -74,14 +75,14 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Employee-Leave-Policy'],
+      invalidatesTags: [employeeType.employeeLeavePolicy],
     }),
     deleteLeavePolicy: builder.mutation({
       query: (id) => ({
         url: `/leave-policies/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Employee-Leave-Policy'],
+      invalidatesTags: [employeeType.employeeLeavePolicy],
     }),
 
     // Leave Management
@@ -91,7 +92,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { academicYearId, 'month-year': monthYear, page, pageSize, search },
       }),
-      providesTags: ['Employee'], // Following existing pattern in employeeApi
+      providesTags: [employeeType.employee], // Following existing pattern in employeeApi
     }),
     createLeaveRequest: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -103,21 +104,21 @@ export const leaveApi = employeeApi.injectEndpoints({
           'Content-Type': 'multipart/form-data',
         },
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     getLeaveRequestById: builder.query({
       query: (id) => ({
         url: `/leave-management/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Employee'],
+      providesTags: [employeeType.employee],
     }),
     cancelLeaveRequest: builder.mutation({
       query: (id) => ({
         url: `/leave-management/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     approveLeaveRequest: builder.mutation({
       query: ({ id, body }) => ({
@@ -125,7 +126,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
     rejectLeaveRequest: builder.mutation({
       query: ({ id, body }) => ({
@@ -133,7 +134,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['Employee'],
+      invalidatesTags: [employeeType.employee],
     }),
   }),
 });

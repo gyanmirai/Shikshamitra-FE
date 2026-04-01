@@ -1,4 +1,6 @@
-import { libraryModuleApi } from '../libraryModuleApi';
+﻿import { libraryModuleApi } from '../libraryModuleApi';
+import { libraryModuleType } from 'src/redux/tagTypes';
+
 
 export const copiesApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const copiesApi = libraryModuleApi.injectEndpoints({
         url: '/copies',
         method: 'GET',
       }),
-      providesTags: ['Copies'],
+      providesTags: [libraryModuleType.copies],
     }),
 
     getCopiesByBookId: builder.query({
@@ -15,7 +17,7 @@ export const copiesApi = libraryModuleApi.injectEndpoints({
         url: `/copies?bookId=${bookId}`, // endpoint with query param
         method: 'GET',
       }),
-      providesTags: (result, error, bookId) => [{ type: 'Copies', id: bookId }],
+      providesTags: (result, error, bookId) => [{ type: libraryModuleType.copies, id: bookId }],
     }),
   }),
   overrideExisting: false,

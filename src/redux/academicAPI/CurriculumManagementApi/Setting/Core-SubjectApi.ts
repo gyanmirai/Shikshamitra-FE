@@ -1,3 +1,5 @@
+﻿import { academicType } from 'src/redux/tagTypes';
+
 import { academicApi } from '../../academicApi';
 
 export const subjectsApi = academicApi.injectEndpoints({
@@ -8,7 +10,7 @@ export const subjectsApi = academicApi.injectEndpoints({
         url: `/academic-mediums/${academicMediumId}/subjects`,
         method: 'GET',
       }),
-      providesTags: ['Subject'],
+      providesTags: [academicType.subject],
     }),
 
     // Get specific subject under academic medium
@@ -17,7 +19,7 @@ export const subjectsApi = academicApi.injectEndpoints({
         url: `/academic-mediums/${academicMediumId}/subjects/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Subject'],
+      providesTags: [academicType.subject],
     }),
 
     // Add new subject under medium
@@ -27,7 +29,7 @@ export const subjectsApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Subject'],
+      invalidatesTags: [academicType.subject],
     }),
 
     // Update subject in medium
@@ -37,7 +39,7 @@ export const subjectsApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Subject'],
+      invalidatesTags: [academicType.subject],
     }),
 
     // Delete subject under medium
@@ -46,7 +48,7 @@ export const subjectsApi = academicApi.injectEndpoints({
         url: `/academic-mediums/${academicMediumId}/subjects/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Subject'],
+      invalidatesTags: [academicType.subject],
     }),
   }),
   overrideExisting: false,

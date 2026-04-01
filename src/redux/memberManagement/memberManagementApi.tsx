@@ -1,5 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
+﻿import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { memberManagementType } from 'src/redux/tagTypes';
 
 import memberManagementData from '../../../issueReturnData.json';
 
@@ -56,15 +57,15 @@ export const memberManagementApi = createApi({
         };
       },
   tagTypes: [
-    'MemberManagement',
-    'MemberOptions',
-    'RoleOptions',
-    'ClassOptions',
-    'DivisionOptions',
-    'StudentOptions',
-    'StatusOptions',
-    'BookCategoryOptions',
-    'BookTitleOptions',
+    memberManagementType.memberManagement,
+    memberManagementType.memberOptions,
+    memberManagementType.roleOptions,
+    memberManagementType.classOptions,
+    memberManagementType.divisionOptions,
+    memberManagementType.studentOptions,
+    memberManagementType.statusOptions,
+    memberManagementType.bookCategoryOptions,
+    memberManagementType.bookTitleOptions,
   ],
   endpoints: (builder) => ({
     getMembers: builder.query({
@@ -72,91 +73,91 @@ export const memberManagementApi = createApi({
         url: '/memberManagementData',
         method: 'GET',
       }),
-      providesTags: ['MemberManagement'],
+      providesTags: [memberManagementType.memberManagement],
     }),
     getMemberOptions: builder.query({
       query: () => ({
         url: '/memberManagementOptions',
         method: 'GET',
       }),
-      providesTags: ['MemberOptions'],
+      providesTags: [memberManagementType.memberOptions],
     }),
     getRoleOptions: builder.query({
       query: () => ({
         url: '/roleOptions',
         method: 'GET',
       }),
-      providesTags: ['RoleOptions'],
+      providesTags: [memberManagementType.roleOptions],
     }),
     getClassOptions: builder.query({
       query: () => ({
         url: '/classOptions',
         method: 'GET',
       }),
-      providesTags: ['ClassOptions'],
+      providesTags: [memberManagementType.classOptions],
     }),
     getDivisionOptions: builder.query({
       query: () => ({
         url: '/divisionOptions',
         method: 'GET',
       }),
-      providesTags: ['DivisionOptions'],
+      providesTags: [memberManagementType.divisionOptions],
     }),
     getStudentOptions: builder.query({
       query: () => ({
         url: '/studentOptions',
         method: 'GET',
       }),
-      providesTags: ['StudentOptions'],
+      providesTags: [memberManagementType.studentOptions],
     }),
     getStatusOptions: builder.query({
       query: () => ({
         url: '/statusOptions',
         method: 'GET',
       }),
-      providesTags: ['StatusOptions'],
+      providesTags: [memberManagementType.statusOptions],
     }),
     getBookCategoryOptions: builder.query({
       query: () => ({
         url: '/bookCategoryOptions',
         method: 'GET',
       }),
-      providesTags: ['BookCategoryOptions'],
+      providesTags: [memberManagementType.bookCategoryOptions],
     }),
     getBookTitleOptions: builder.query({
       query: () => ({
         url: '/bookTitleOptions',
         method: 'GET',
       }),
-      providesTags: ['BookTitleOptions'],
+      providesTags: [memberManagementType.bookTitleOptions],
     }),
     getSelectStatusOptions: builder.query({
       query: () => ({
         url: '/selectStatusOptions',
         method: 'GET',
       }),
-      providesTags: ['StatusOptions'],
+      providesTags: [memberManagementType.statusOptions],
     }),
     getIssuedBooks: builder.query({
       query: () => ({
         url: '/mockIssuedBooks',
         method: 'GET',
       }),
-      providesTags: ['MemberManagement'],
+      providesTags: [memberManagementType.memberManagement],
     }),
     getReservedBooks: builder.query({
       query: () => ({
         url: '/mockReservedBooks',
         method: 'GET',
       }),
-      providesTags: ['MemberManagement'],
+      providesTags: [memberManagementType.memberManagement],
     }),
     getFinesCharges: builder.query({
       query: () => ({
         url: '/mockFinesCharges',
         method: 'GET',
       }),
-      providesTags: ['MemberManagement'],
+      providesTags: [memberManagementType.memberManagement],
     }),
   }),
 });

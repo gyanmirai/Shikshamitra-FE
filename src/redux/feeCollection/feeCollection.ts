@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../finance/financeModuleApi';
+﻿import { financeModuleApi } from '../finance/financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const feeCollectionApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['FeeCollection'],
+      providesTags: [financeModuleType.feeCollection],
     }),
 
     // Get fee collection details for a student
@@ -18,7 +20,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         url: `/v1/finance/fee-collection/${studentFeeId}`,
         method: 'GET',
       }),
-      providesTags: ['FeeCollection'],
+      providesTags: [financeModuleType.feeCollection],
     }),
 
     // Get student fee details
@@ -28,7 +30,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params: { academicYearId },
       }),
-      providesTags: ['FeeDetails'],
+      providesTags: [financeModuleType.feeDetails],
     }),
 
     // Collect fee with multiple payment methods
@@ -38,7 +40,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['FeeCollection', 'FeeDetails'],
+      invalidatesTags: [financeModuleType.feeCollection, financeModuleType.feeDetails],
     }),
   }),
 });

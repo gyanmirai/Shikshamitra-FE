@@ -1,20 +1,15 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { yearType } from 'src/redux/tagTypes';
 
-export const yearApi = createApi({
-  reducerPath: 'yearApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Year'],
+export const yearApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getYear: builder.query({
       query: () => ({ url: '/app/academic-year?Sorting=name' }),
-      providesTags: ['Year'],
+      providesTags: [yearType.year],
     }),
     getYearById: builder.query({
       query: (id) => ({ url: `/app/academic-year/${id}` }),
-      providesTags: ['Year'],
+      providesTags: [yearType.year],
     }),
     addYear: builder.mutation({
       query: (body) => ({
@@ -22,7 +17,7 @@ export const yearApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Year'],
+      invalidatesTags: [yearType.year],
     }),
     updateYear: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +25,14 @@ export const yearApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Year'],
+      invalidatesTags: [yearType.year],
     }),
     deleteYear: builder.mutation({
       query: (id) => ({
         url: `/app/academic-year/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Year'],
+      invalidatesTags: [yearType.year],
     }),
   }),
 });

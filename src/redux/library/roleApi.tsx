@@ -1,5 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
+﻿import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { roleOptionsType } from 'src/redux/tagTypes';
 
 import libraryData from '../../../issueReturnData.json';
 
@@ -21,14 +22,14 @@ export const roleOptionsApi = createApi({
           },
         };
       },
-  tagTypes: ['RoleOptions'],
+  tagTypes: [roleOptionsType.roleOptions],
   endpoints: (builder) => ({
     getRoleOptions: builder.query({
       query: () => ({
         url: '/rolesData',
         method: 'GET',
       }),
-      providesTags: ['RoleOptions'],
+      providesTags: [roleOptionsType.roleOptions],
     }),
   }),
 });

@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const routeStopApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const routeStopApi = transportApi.injectEndpoints({
         url: `/transport/applications/${applicationId}`,
         method: 'GET',
       }),
-      providesTags: ['RouteStop'],
+      providesTags: [transportType.routeStop],
     }),
     postRouteStopData: builder.mutation({
       query: ({ applicationId, body }: { applicationId: string; body: any }) => ({
@@ -15,21 +17,21 @@ export const routeStopApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['RouteStop'],
+      invalidatesTags: [transportType.routeStop],
     }),
     statusRouteStopData: builder.mutation({
       query: (applicationId: string) => ({
         url: `/transport/applications/${applicationId}/approve`,
         method: 'POST',
       }),
-      invalidatesTags: ['RouteStop'],
+      invalidatesTags: [transportType.routeStop],
     }),
     getSuggestedRouteData: builder.query({
       query: (applicationId: string) => ({
         url: `/transport/applications/${applicationId}/suggested-routes`,
         method: 'GET',
       }),
-      providesTags: ['RouteStop'],
+      providesTags: [transportType.routeStop],
     }),
   }),
   overrideExisting: false,

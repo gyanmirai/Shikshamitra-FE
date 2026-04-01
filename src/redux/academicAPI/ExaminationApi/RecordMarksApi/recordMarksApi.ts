@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const recordMarksApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['RecordMarks'],
+      providesTags: [academicType.recordMarks],
     }),
 
     // Assign / Update Student Marks
@@ -19,7 +21,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['RecordMarks'],
+      invalidatesTags: [academicType.recordMarks],
     }),
 
     // Publish Exam Marks (Division-wise)
@@ -29,7 +31,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
         method: 'PATCH',
         params: { divisionId },
       }),
-      invalidatesTags: ['RecordMarks'],
+      invalidatesTags: [academicType.recordMarks],
     }),
   }),
   overrideExisting: false,

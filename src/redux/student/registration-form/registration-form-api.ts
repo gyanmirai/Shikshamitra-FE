@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentRegistrationFormType } from 'src/redux/tagTypes';
 
-export const StudentRegistrationFormApi = createApi({
-  reducerPath: 'StudentRegistrationFormApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Registration-Form'],
+export const StudentRegistrationFormApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentRegistrationForm: builder.query({
       query: ({ academicMediumId }) => ({
         url: `/student/enrollment/registrations/forms?academicMediumId=${academicMediumId}`,
         method: 'GET',
       }),
-      providesTags: ['Student-Registration-Form'],
+      providesTags: [studentRegistrationFormType.studentRegistrationForm],
     }),
     addStudentRegistrationForm: builder.mutation({
       query: (body) => ({
@@ -21,7 +16,7 @@ export const StudentRegistrationFormApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration-Form'],
+      invalidatesTags: [studentRegistrationFormType.studentRegistrationForm],
     }),
     updateStudentRegistrationForm: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,7 +24,7 @@ export const StudentRegistrationFormApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Registration-Form'],
+      invalidatesTags: [studentRegistrationFormType.studentRegistrationForm],
     }),
 
     deleteStudentRegistrationForm: builder.mutation({
@@ -37,7 +32,7 @@ export const StudentRegistrationFormApi = createApi({
         url: `/app/student-enrollment/student-registration-form/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Registration-Form'],
+      invalidatesTags: [studentRegistrationFormType.studentRegistrationForm],
     }),
   }),
 });

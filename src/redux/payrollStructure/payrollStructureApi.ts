@@ -1,16 +1,11 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { payrollStructureType } from 'src/redux/tagTypes';
 
-export const payrollStructureApi = createApi({
-  reducerPath: 'payrollStructureApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['PayrollStructure'],
+export const payrollStructureApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getPayrollStructures: builder.query({
       query: () => ({ url: '/app/payroll-structure' }),
-      providesTags: ['PayrollStructure'],
+      providesTags: [payrollStructureType.payrollStructure],
     }),
     addPayrollStructure: builder.mutation({
       query: (body) => ({
@@ -18,7 +13,7 @@ export const payrollStructureApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['PayrollStructure'],
+      invalidatesTags: [payrollStructureType.payrollStructure],
     }),
     updatePayrollStructure: builder.mutation({
       query: ({ id, body }) => ({
@@ -26,20 +21,20 @@ export const payrollStructureApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['PayrollStructure'],
+      invalidatesTags: [payrollStructureType.payrollStructure],
     }),
     deletePayrollStructure: builder.mutation({
       query: (id) => ({
         url: `/app/payroll-structure/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['PayrollStructure'],
+      invalidatesTags: [payrollStructureType.payrollStructure],
     }),
     getPayrollStructureByOrganization: builder.query({
       query: (organization) => ({
         url: `/education-medium-stage/${organization}/payroll-structure`,
       }),
-      providesTags: ['PayrollStructure'],
+      providesTags: [payrollStructureType.payrollStructure],
     }),
   }),
 });

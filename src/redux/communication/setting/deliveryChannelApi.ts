@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const deliveryChannelTypeOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const deliveryChannelTypeOptionsApi = communicationApi.injectEndpoints({
         url: '/deliveryChannelTypeData',
         method: 'GET',
       }),
-      providesTags: ['DeliveryChannelTypeOptions'],
+      providesTags: [communicationType.deliveryChannelTypeOptions],
     }),
   }),
   overrideExisting: false,

@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const seatAllocationApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { divisionId, roomId },
       }),
-      providesTags: ['SeatAllocation'],
+      providesTags: [academicType.seatAllocation],
     }),
 
     // Save Seat Allocation (Bulk)
@@ -20,7 +22,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['SeatAllocation'],
+      invalidatesTags: [academicType.seatAllocation],
     }),
 
     // Get Division for Exam
@@ -30,7 +32,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId, classId },
       }),
-      providesTags: ['SeatAllocation'],
+      providesTags: [academicType.seatAllocation],
     }),
 
     // Get Rooms for Exam and Division
@@ -39,7 +41,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         url: `exams/${examId}/divisions/${divisionId}/rooms`,
         method: 'GET',
       }),
-      providesTags: ['SeatAllocation'],
+      providesTags: [academicType.seatAllocation],
     }),
 
     // Get Seat Allocation Table (Dashboard)
@@ -49,7 +51,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId, classId, page, pageSize },
       }),
-      providesTags: ['SeatAllocation'],
+      providesTags: [academicType.seatAllocation],
     }),
 
     // Get Students for Seat Allocation (Details/Drag & Drop)
@@ -59,7 +61,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId, classNameId },
       }),
-      providesTags: ['SeatAllocation'],
+      providesTags: [academicType.seatAllocation],
     }),
   }),
   overrideExisting: false,

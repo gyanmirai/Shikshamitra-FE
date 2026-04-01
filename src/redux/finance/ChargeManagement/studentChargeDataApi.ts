@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const studentChargeDataApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const studentChargeDataApi = financeModuleApi.injectEndpoints({
         url: '/studentChargeData', // replace with your actual endpoint
         method: 'GET',
       }),
-      providesTags: ['StudentCharges'],
+      providesTags: [financeModuleType.studentCharges],
     }),
   }),
   overrideExisting: false,

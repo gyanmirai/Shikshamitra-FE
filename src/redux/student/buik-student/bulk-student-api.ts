@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { bulkStudentType } from 'src/redux/tagTypes';
 
-export const BulkStudentApi = createApi({
-  reducerPath: 'BulkStudentApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Document-Type'],
+export const BulkStudentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     addBulkStudent: builder.mutation({
       query: (data) => ({
@@ -17,7 +12,7 @@ export const BulkStudentApi = createApi({
         },
         data,
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [bulkStudentType.studentDocumentType],
     }),
   }),
 });

@@ -1,4 +1,5 @@
-import { employeeApi } from './employeeApi';
+﻿import { employeeApi } from './employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
 
 export const attendanceApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +11,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['AttendanceRule'],
+      invalidatesTags: [employeeType.attendanceRule],
     }),
 
     // Attendance Tracking
@@ -20,7 +21,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { attendanceDate, status, page, pageSize, academicYearId, search },
       }),
-      providesTags: ['Attendance'],
+      providesTags: [employeeType.attendance],
     }),
     getAttendanceEmployeeWise: builder.query({
       query: ({
@@ -37,7 +38,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { employeeId, startDate, endDate, status, page, pageSize, academicYearId, search },
       }),
-      providesTags: ['Attendance'],
+      providesTags: [employeeType.attendance],
     }),
 
     // Attendance Management
@@ -47,7 +48,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { date, page, pageSize, search },
       }),
-      providesTags: ['Attendance'],
+      providesTags: [employeeType.attendance],
     }),
     updateAttendance: builder.mutation({
       query: (body) => ({
@@ -55,7 +56,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Attendance'],
+      invalidatesTags: [employeeType.attendance],
     }),
     importAttendance: builder.mutation({
       query: (body) => ({
@@ -66,7 +67,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         },
         data: body,
       }),
-      invalidatesTags: ['Attendance'],
+      invalidatesTags: [employeeType.attendance],
     }),
   }),
 });

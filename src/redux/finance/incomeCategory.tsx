@@ -1,4 +1,6 @@
-import { financeModuleApi } from './financeModuleApi';
+﻿import { financeModuleApi } from './financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const incomeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +12,7 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      providesTags: ['incomeCategoryData'],
+      providesTags: [financeModuleType.incomeCategoryData],
     }),
 
     postIncomeCategory: builder.mutation({
@@ -22,7 +24,7 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['incomeCategoryData'],
+      invalidatesTags: [financeModuleType.incomeCategoryData],
     }),
 
     putIncomeCategory: builder.mutation({
@@ -31,7 +33,7 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['incomeCategoryData'],
+      invalidatesTags: [financeModuleType.incomeCategoryData],
     }),
 
     deleteIncomeCategory: builder.mutation({
@@ -39,11 +41,11 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
         url: `/income-categories/${incomeCategoryId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['incomeCategoryData'],
+      invalidatesTags: [financeModuleType.incomeCategoryData],
     }),
     getBudgetOptions: builder.query({
       query: () => ({ url: '/incomeOptions', method: 'GET' }),
-      providesTags: ['incomeCategoryData'],
+      providesTags: [financeModuleType.incomeCategoryData],
     }),
   }),
   overrideExisting: false,

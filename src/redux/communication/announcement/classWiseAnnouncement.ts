@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const classWiseAnnouncementApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const classWiseAnnouncementApi = communicationApi.injectEndpoints({
         url: '/classWiseAnnouncementData',
         method: 'GET',
       }),
-      providesTags: ['ClassWiseAnnouncement'],
+      providesTags: [communicationType.classWiseAnnouncement],
     }),
   }),
   overrideExisting: false,

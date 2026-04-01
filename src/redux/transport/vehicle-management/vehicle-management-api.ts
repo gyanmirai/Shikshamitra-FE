@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const vehicleManagementApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         url: '/vehicleManagementData',
         method: 'GET',
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
     addVehicle: builder.mutation({
       query: (body) => ({
@@ -15,7 +17,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     uploadVehicleDocument: builder.mutation({
       query: ({ vehicleId, body }) => ({
@@ -23,7 +25,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     vehicleMantenceDetails: builder.mutation({
       query: ({ vehicleId, body }) => ({
@@ -31,7 +33,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     updateVehicle: builder.mutation({
       query: ({ vehicleId, body }) => ({
@@ -39,7 +41,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     updateVehicleDocument: builder.mutation({
       query: ({ vehicleId, documentId, body }) => ({
@@ -47,7 +49,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     updateVehicleMaintenance: builder.mutation({
       query: ({ vehicleId, body }) => ({
@@ -55,7 +57,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     addMaintenanceRecord: builder.mutation({
       query: ({ vehicleId, body }) => ({
@@ -63,7 +65,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     changeVehicleStatus: builder.mutation({
       query: ({ vehicleId, body }) => ({
@@ -71,7 +73,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['VehicleManagement'],
+      invalidatesTags: [transportType.vehicleManagement],
     }),
     // GET endpoints for vehicle history
     getVehicleDocuments: builder.query({
@@ -79,7 +81,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         url: `/vehicles/${vehicleId}/documents`,
         method: 'GET',
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
     getDriverHistory: builder.query({
       query: ({ vehicleId, page = 1, pageSize = 10 }) => ({
@@ -87,7 +89,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { page, pageSize },
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
     getRouteHistory: builder.query({
       query: ({ vehicleId, page = 1, pageSize = 10 }) => ({
@@ -95,7 +97,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { page, pageSize },
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
     getMaintenanceRecords: builder.query({
       query: ({ vehicleId, page = 1, pageSize = 10 }) => ({
@@ -103,14 +105,14 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { page, pageSize },
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
     getVehicleDetails: builder.query({
       query: (vehicleId) => ({
         url: `/vehicles/${vehicleId}`,
         method: 'GET',
       }),
-      providesTags: ['VehicleManagement'],
+      providesTags: [transportType.vehicleManagement],
     }),
   }),
   overrideExisting: false,

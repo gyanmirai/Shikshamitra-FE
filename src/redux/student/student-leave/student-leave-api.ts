@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentLeaveType } from 'src/redux/tagTypes';
 
-export const StudentLeaveApi = createApi({
-  reducerPath: 'StudentLeaveApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Leave'],
+export const StudentLeaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentLeave: builder.query({
       query: () => ({
         url: `/app/student-leave`,
         method: 'GET',
       }),
-      providesTags: ['Student-Leave'],
+      providesTags: [studentLeaveType.studentLeave],
     }),
     addStudentLeave: builder.mutation({
       query: (data) => ({
@@ -21,7 +16,7 @@ export const StudentLeaveApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Leave'],
+      invalidatesTags: [studentLeaveType.studentLeave],
     }),
     changeLeaveStatus: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,7 +24,7 @@ export const StudentLeaveApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Leave'],
+      invalidatesTags: [studentLeaveType.studentLeave],
     }),
   }),
 });

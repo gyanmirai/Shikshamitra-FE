@@ -1,16 +1,11 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { coreSubjectType } from 'src/redux/tagTypes';
 
-export const CoreSubjectApi = createApi({
-  reducerPath: 'coreSubjectApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Subject'],
+export const CoreSubjectApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getSubjects: builder.query({
       query: () => ({ url: '/academic-mediums/{academicMediumId}/subjects' }),
-      providesTags: ['Subject'],
+      providesTags: [coreSubjectType.subject],
     }),
     addSubject: builder.mutation({
       query: (body) => ({
@@ -18,7 +13,7 @@ export const CoreSubjectApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Subject'],
+      invalidatesTags: [coreSubjectType.subject],
     }),
     updateSubject: builder.mutation({
       query: ({ id, body }) => ({
@@ -26,14 +21,14 @@ export const CoreSubjectApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Subject'],
+      invalidatesTags: [coreSubjectType.subject],
     }),
     deleteSubject: builder.mutation({
       query: ({ id }) => ({
         url: `/subject/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Subject'],
+      invalidatesTags: [coreSubjectType.subject],
     }),
   }),
 });

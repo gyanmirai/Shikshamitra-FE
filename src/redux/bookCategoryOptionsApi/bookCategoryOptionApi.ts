@@ -1,34 +1,17 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { bookCategoryOptionsType } from 'src/redux/tagTypes';
 
-import issueReturnData from '../../../issueReturnData.json';
+import { api } from '../service';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-export const bookCategoryOptionsApi = createApi({
-  reducerPath: 'BookCategoryOptionsApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/bookCategoryOptionsData') {
-          return { data: issueReturnData.bookCategoryOptionsData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['BookCategoryOptions'],
+export const bookCategoryOptionsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBookCategoryOptions: builder.query({
       query: () => ({
         url: '/bookCategoryOptionsData',
         method: 'GET',
       }),
-      providesTags: ['BookCategoryOptions'],
+      providesTags: [bookCategoryOptionsType.bookCategoryOptions],
     }),
   }),
 });

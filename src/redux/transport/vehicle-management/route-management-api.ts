@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const routeManagementApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { pageNumber, pageSize, academicMediumId },
       }),
-      providesTags: ['RouteManagement'],
+      providesTags: [transportType.routeManagement],
     }),
 
     // Create route (Step 1)
@@ -20,7 +22,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['RouteManagement'],
+      invalidatesTags: [transportType.routeManagement],
     }),
 
     // Get route by ID (Full details)
@@ -30,7 +32,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: (result, error, { routeId }) => [{ type: 'RouteManagement', id: routeId }],
+      providesTags: (result, error, { routeId }) => [{ type: transportType.routeManagement, id: routeId }],
     }),
 
     // Update route (Step 1)
@@ -42,8 +44,8 @@ export const routeManagementApi = transportApi.injectEndpoints({
         data: body,
       }),
       invalidatesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: routeId },
-        'RouteManagement',
+        { type: transportType.routeManagement, id: routeId },
+        transportType.routeManagement,
       ],
     }),
 
@@ -55,7 +57,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         params: { page, academicMediumId },
       }),
       providesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: `${routeId}-stops` },
+        { type: transportType.routeManagement, id: `${routeId}-stops` },
       ],
     }),
 
@@ -68,8 +70,8 @@ export const routeManagementApi = transportApi.injectEndpoints({
         data: { stops },
       }),
       invalidatesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: `${routeId}-stops` },
-        { type: 'RouteManagement', id: routeId },
+        { type: transportType.routeManagement, id: `${routeId}-stops` },
+        { type: transportType.routeManagement, id: routeId },
       ],
     }),
 
@@ -81,7 +83,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         params: { academicMediumId },
       }),
       providesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: `${routeId}-vehicle` },
+        { type: transportType.routeManagement, id: `${routeId}-vehicle` },
       ],
     }),
 
@@ -94,8 +96,8 @@ export const routeManagementApi = transportApi.injectEndpoints({
         data: body,
       }),
       invalidatesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: `${routeId}-vehicle` },
-        { type: 'RouteManagement', id: routeId },
+        { type: transportType.routeManagement, id: `${routeId}-vehicle` },
+        { type: transportType.routeManagement, id: routeId },
       ],
     }),
 
@@ -107,7 +109,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         params: { ...params, academicMediumId },
       }),
       providesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: `${routeId}-vehicle-history` },
+        { type: transportType.routeManagement, id: `${routeId}-vehicle-history` },
       ],
     }),
 
@@ -119,7 +121,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         params: { ...params, academicMediumId },
       }),
       providesTags: (result, error, { routeId }) => [
-        { type: 'RouteManagement', id: `${routeId}-staff-history` },
+        { type: transportType.routeManagement, id: `${routeId}-staff-history` },
       ],
     }),
   }),

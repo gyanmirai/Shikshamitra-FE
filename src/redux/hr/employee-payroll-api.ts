@@ -1,4 +1,6 @@
-import { employeeApi } from './employeeApi';
+﻿import { employeeApi } from './employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
+
 
 export interface DayCalculationRequest {
   dayCalculationType: 'working-days' | 'total-days';
@@ -19,14 +21,14 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { page, pageSize, academicYearId, search },
       }),
-      providesTags: ['Deduction-Components'],
+      providesTags: [employeeType.deductionComponents],
     }),
     getDeductionComponentById: builder.query({
       query: (id) => ({
         url: `/payroll/deduction-components/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Deduction-Components'],
+      providesTags: [employeeType.deductionComponents],
     }),
     addDeductionComponent: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -35,7 +37,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['Deduction-Components'],
+      invalidatesTags: [employeeType.deductionComponents],
     }),
     updateDeductionComponent: builder.mutation({
       query: ({ id, body }) => ({
@@ -43,14 +45,14 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Deduction-Components'],
+      invalidatesTags: [employeeType.deductionComponents],
     }),
     deleteDeductionComponent: builder.mutation({
       query: (id) => ({
         url: `/payroll/deduction-components/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Deduction-Components'],
+      invalidatesTags: [employeeType.deductionComponents],
     }),
     addEarningComponent: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -59,7 +61,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         params: { academicYearId },
         data: body,
       }),
-      invalidatesTags: ['Earning-Components'],
+      invalidatesTags: [employeeType.earningComponents],
     }),
     updateEarningComponent: builder.mutation({
       query: ({ id, body }) => ({
@@ -67,7 +69,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Earning-Components'],
+      invalidatesTags: [employeeType.earningComponents],
     }),
     getEarningComponents: builder.query({
       query: ({ page = 1, pageSize = 20, academicYearId, search }) => ({
@@ -75,21 +77,21 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         method: 'GET',
         params: { page, pageSize, academicYearId, search },
       }),
-      providesTags: ['Earning-Components'],
+      providesTags: [employeeType.earningComponents],
     }),
     getEarningComponentById: builder.query({
       query: (id) => ({
         url: `/payroll/earning-components/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Earning-Components'],
+      providesTags: [employeeType.earningComponents],
     }),
     deleteEarningComponent: builder.mutation({
       query: (id) => ({
         url: `/payroll/earning-components/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Earning-Components'],
+      invalidatesTags: [employeeType.earningComponents],
     }),
     saveDayCalculationSettings: builder.mutation({
       query: ({ body, academicYearId }) => ({

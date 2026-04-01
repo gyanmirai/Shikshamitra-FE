@@ -1,20 +1,16 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { divisionType } from 'src/redux/tagTypes';
 
-export const divisionApi = createApi({
-  reducerPath: 'divisionApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Division'],
+import { api } from '../service';
+
+export const divisionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getDivision: builder.query({
       query: () => ({ url: '/app/division', redirect: 'follow' }),
-      providesTags: ['Division'],
+      providesTags: [divisionType.division],
     }),
     getDivisionById: builder.query({
       query: (id) => ({ url: `/app/division/${id}` }),
-      providesTags: ['Division'],
+      providesTags: [divisionType.division],
     }),
     addDivision: builder.mutation({
       query: (body) => ({
@@ -22,7 +18,7 @@ export const divisionApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Division'],
+      invalidatesTags: [divisionType.division],
     }),
     updateDivision: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +26,14 @@ export const divisionApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Division'],
+      invalidatesTags: [divisionType.division],
     }),
     deleteDivision: builder.mutation({
       query: (id) => ({
         url: `/app/division/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Division'],
+      invalidatesTags: [divisionType.division],
     }),
   }),
 });

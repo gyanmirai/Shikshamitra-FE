@@ -1,4 +1,6 @@
-import { employeeApi } from '../hr/employeeApi';
+﻿import { employeeApi } from '../hr/employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
+
 
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const runPayrollApi = employeeApi.injectEndpoints({
         url: `/payroll/run?month=${month}&academicYearId=${academicYearId}`,
         method: 'GET',
       }),
-      providesTags: ['Run-Payroll'],
+      providesTags: [employeeType.runPayroll],
     }),
 
     generateAndLockPayroll: builder.mutation({
@@ -15,7 +17,7 @@ export const runPayrollApi = employeeApi.injectEndpoints({
         url: `/payroll/run?month=${month}&academicYearId=${academicYearId}`,
         method: 'POST',
       }),
-      invalidatesTags: ['Run-Payroll'],
+      invalidatesTags: [employeeType.runPayroll],
     }),
 
     getEmployeeSalarySlip: builder.query({
@@ -24,7 +26,7 @@ export const runPayrollApi = employeeApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Salary-Slip'],
+      providesTags: [employeeType.salarySlip],
     }),
   }),
 });

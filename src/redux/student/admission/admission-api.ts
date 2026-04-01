@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentAdmissionType } from 'src/redux/tagTypes';
 
-export const StudentAdmissionApi = createApi({
-  reducerPath: 'StudentAdmissionApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Admission', 'Student-Document'],
+export const StudentAdmissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentAdmission: builder.query({
       query: ({ AcademicMediumId, approvalStatus, sorting, skipCount, maxResultCount }) => {
@@ -22,7 +17,7 @@ export const StudentAdmissionApi = createApi({
           method: 'GET',
         };
       },
-      providesTags: ['Student-Admission'],
+      providesTags: [studentAdmissionType.studentAdmission],
     }),
     changeAdmissionStatus: builder.mutation({
       query: ({ body }) => ({
@@ -30,7 +25,7 @@ export const StudentAdmissionApi = createApi({
         method: 'POST',
         data: { items: body },
       }),
-      invalidatesTags: ['Student-Admission'],
+      invalidatesTags: [studentAdmissionType.studentAdmission],
     }),
     assignDivisionTOStudent: builder.mutation({
       query: ({ studentId, body }) => ({
@@ -38,7 +33,7 @@ export const StudentAdmissionApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Admission'],
+      invalidatesTags: [studentAdmissionType.studentAdmission],
     }),
 
     getDivisionForStandard: builder.query({
@@ -46,14 +41,14 @@ export const StudentAdmissionApi = createApi({
         url: `/app/standard/${standardId}`,
         method: 'GET',
       }),
-      providesTags: ['Student-Admission'],
+      providesTags: [studentAdmissionType.studentAdmission],
     }),
     getStandardFeeStructure: builder.query({
       query: (studentId) => ({
         url: `/student-fee-structure/student/${studentId}`,
         method: 'GET',
       }),
-      providesTags: ['Student-Admission'],
+      providesTags: [studentAdmissionType.studentAdmission],
     }),
     assignFeeStructure: builder.mutation({
       query: ({ body }) => ({
@@ -61,7 +56,7 @@ export const StudentAdmissionApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student-Admission'],
+      invalidatesTags: [studentAdmissionType.studentAdmission],
     }),
   }),
 });

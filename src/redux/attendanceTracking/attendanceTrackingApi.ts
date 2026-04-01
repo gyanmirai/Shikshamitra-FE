@@ -1,4 +1,6 @@
-import { employeeApi } from '../hr/employeeApi';
+﻿import { employeeApi } from '../hr/employeeApi';
+import { employeeType } from 'src/redux/tagTypes';
+
 
 export const attendanceTrackingApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const attendanceTrackingApi = employeeApi.injectEndpoints({
         method: 'GET',
         params, // { employeeId, startDate, endDate, status }
       }),
-      providesTags: ['Attendance'],
+      providesTags: [employeeType.attendance],
     }),
 
     // Date-wise attendance (with pagination)
@@ -19,7 +21,7 @@ export const attendanceTrackingApi = employeeApi.injectEndpoints({
         method: 'GET',
         params, // { attendanceDate, status, page, pageSize }
       }),
-      providesTags: ['Attendance'],
+      providesTags: [employeeType.attendance],
     }),
   }),
 });

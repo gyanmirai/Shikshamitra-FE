@@ -1,16 +1,11 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { roleType } from 'src/redux/tagTypes';
 
-export const roleApi = createApi({
-  reducerPath: 'roleApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Role'],
+export const roleApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getRoles: builder.query({
       query: () => ({ url: '/identity/roles/all' }),
-      providesTags: ['Role'],
+      providesTags: [roleType.role],
     }),
     addRole: builder.mutation({
       query: (body) => ({
@@ -18,7 +13,7 @@ export const roleApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [roleType.role],
     }),
     updateRole: builder.mutation({
       query: ({ id, body }) => ({
@@ -26,14 +21,14 @@ export const roleApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [roleType.role],
     }),
     deleteRole: builder.mutation({
       query: (id) => ({
         url: `/identity/roles/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Role'],
+      invalidatesTags: [roleType.role],
     }),
   }),
 });

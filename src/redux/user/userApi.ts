@@ -1,11 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
 
-export const userApi = createApi({
-  reducerPath: 'userApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
+export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
     changePassword: builder.mutation({
       query: ({ data }) => ({

@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentAttendanceType } from 'src/redux/tagTypes';
 
-export const StudentAttendanceTypeApi = createApi({
-  reducerPath: 'StudentAttendanceTypeApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Attendance-Type'],
+export const StudentAttendanceTypeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentAttendanceType: builder.query({
       query: () => ({
         url: '/students/attendance/settings/leave-types',
         method: 'GET',
       }),
-      providesTags: ['Student-Attendance-Type'],
+      providesTags: [studentAttendanceType.studentAttendanceType],
     }),
     addStudentAttendanceType: builder.mutation({
       query: (data) => ({
@@ -21,7 +16,7 @@ export const StudentAttendanceTypeApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Attendance-Type'],
+      invalidatesTags: [studentAttendanceType.studentAttendanceType],
     }),
     updateStudentAttendanceType: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,14 +24,14 @@ export const StudentAttendanceTypeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Attendance-Type'],
+      invalidatesTags: [studentAttendanceType.studentAttendanceType],
     }),
     deleteStudentAttendanceType: builder.mutation({
       query: (id) => ({
         url: `/students/attendance/settings/leave-types/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Attendance-Type'],
+      invalidatesTags: [studentAttendanceType.studentAttendanceType],
     }),
   }),
 });

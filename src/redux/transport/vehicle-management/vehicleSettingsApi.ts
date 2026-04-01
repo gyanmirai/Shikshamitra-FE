@@ -1,4 +1,6 @@
-import { transportApi } from '../transportApi';
+﻿import { transportApi } from '../transportApi';
+import { transportType } from 'src/redux/tagTypes';
+
 
 export const vehicleSettingsApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: '/vehicle-types',
         method: 'GET',
       }),
-      providesTags: ['VehicleTypes'],
+      providesTags: [transportType.vehicleTypes],
     }),
 
     addVehicleType: builder.mutation({
@@ -17,7 +19,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['VehicleTypes'],
+      invalidatesTags: [transportType.vehicleTypes],
     }),
 
     updateVehicleType: builder.mutation({
@@ -26,7 +28,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['VehicleTypes'],
+      invalidatesTags: [transportType.vehicleTypes],
     }),
 
     deleteVehicleType: builder.mutation({
@@ -34,7 +36,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: `/vehicle-types/${vehicleTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['VehicleTypes'],
+      invalidatesTags: [transportType.vehicleTypes],
     }),
 
     // Vehicle Document
@@ -43,7 +45,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: '/required-vehicle-documents',
         method: 'GET',
       }),
-      providesTags: ['VehicleDocuments'],
+      providesTags: [transportType.vehicleDocuments],
     }),
 
     addVehicleDocument: builder.mutation({
@@ -52,7 +54,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['VehicleDocuments'],
+      invalidatesTags: [transportType.vehicleDocuments],
     }),
 
     updateVehicleDocument: builder.mutation({
@@ -61,7 +63,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['VehicleDocuments'],
+      invalidatesTags: [transportType.vehicleDocuments],
     }),
 
     deleteVehicleDocument: builder.mutation({
@@ -69,7 +71,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: `/required-vehicle-documents/${documentId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['VehicleDocuments'],
+      invalidatesTags: [transportType.vehicleDocuments],
     }),
 
     // Service Type
@@ -78,7 +80,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: '/servicing-types',
         method: 'GET',
       }),
-      providesTags: ['ServiceTypes'],
+      providesTags: [transportType.serviceTypes],
     }),
     addServiceType: builder.mutation({
       query: (body) => ({
@@ -86,7 +88,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['ServiceTypes'],
+      invalidatesTags: [transportType.serviceTypes],
     }),
     updateServiceType: builder.mutation({
       query: ({ servicingTypeId, body }) => ({
@@ -94,28 +96,28 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['ServiceTypes'],
+      invalidatesTags: [transportType.serviceTypes],
     }),
     deleteServiceType: builder.mutation({
       query: (servicingTypeId) => ({
         url: `/servicing-types/${servicingTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ServiceTypes'],
+      invalidatesTags: [transportType.serviceTypes],
     }),
     getLicenceTypes: builder.query({
       query: () => ({
         url: '/licenceTypes',
         method: 'GET',
       }),
-      providesTags: ['LicenceTypes'],
+      providesTags: [transportType.licenceTypes],
     }),
     getFuelTypes: builder.query({
       query: () => ({
         url: '/fuelTypes',
         method: 'GET',
       }),
-      providesTags: ['FuelTypeOptions'],
+      providesTags: [transportType.fuelTypeOptions],
     }),
 
     // Fee Configuration
@@ -124,7 +126,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: '/fee-configuration',
         method: 'GET',
       }),
-      providesTags: ['FeeConfiguration'],
+      providesTags: [transportType.feeConfiguration],
     }),
     addFeeConfiguration: builder.mutation({
       query: (body) => ({
@@ -132,7 +134,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['FeeConfiguration'],
+      invalidatesTags: [transportType.feeConfiguration],
     }),
     updateFeeConfiguration: builder.mutation({
       query: (body) => ({
@@ -140,7 +142,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['FeeConfiguration'],
+      invalidatesTags: [transportType.feeConfiguration],
     }),
 
     getDistanceCalculationOptions: builder.query({
@@ -148,28 +150,28 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: '/distanceCalculationOptions',
         method: 'GET',
       }),
-      providesTags: ['DistanceCalculationOptions'],
+      providesTags: [transportType.distanceCalculationOptions],
     }),
     getFrequencyOptions: builder.query({
       query: () => ({
         url: '/frequencyOptions',
         method: 'GET',
       }),
-      providesTags: ['FrequencyOptions'],
+      providesTags: [transportType.frequencyOptions],
     }),
     getZoneBasedFeeData: builder.query({
       query: () => ({
         url: '/zoneBasedFeeData',
         method: 'GET',
       }),
-      providesTags: ['ZoneBasedFeeData'],
+      providesTags: [transportType.zoneBasedFeeData],
     }),
     getAvailableStopsOptions: builder.query({
       query: () => ({
         url: '/availableStopsOptions',
         method: 'GET',
       }),
-      providesTags: ['AvailableStopsOptions'],
+      providesTags: [transportType.availableStopsOptions],
     }),
 
     getZoneAreaOptions: builder.query({
@@ -177,7 +179,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         url: '/zones-areas',
         method: 'GET',
       }),
-      providesTags: ['ZoneAreaOptions'],
+      providesTags: [transportType.zoneAreaOptions],
     }),
     addZoneAreaOptions: builder.mutation({
       query: (body) => ({
@@ -185,7 +187,7 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['ZoneAreaOptions'],
+      invalidatesTags: [transportType.zoneAreaOptions],
     }),
     updateZoneAreaOptions: builder.mutation({
       query: ({ zoneAreaId, body }) => ({
@@ -193,14 +195,14 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['ZoneAreaOptions'],
+      invalidatesTags: [transportType.zoneAreaOptions],
     }),
     deleteZoneAreaOptions: builder.mutation({
       query: (zoneAreaId) => ({
         url: `/zones-areas/${zoneAreaId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ZoneAreaOptions'],
+      invalidatesTags: [transportType.zoneAreaOptions],
     }),
   }),
 });

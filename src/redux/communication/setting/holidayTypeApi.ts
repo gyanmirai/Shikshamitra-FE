@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const holidayTypeOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const holidayTypeOptionsApi = communicationApi.injectEndpoints({
         url: '/calendar/holiday-types',
         method: 'GET',
       }),
-      providesTags: ['HolidayTypeOptions'],
+      providesTags: [communicationType.holidayTypeOptions],
     }),
 
     addHolidayType: builder.mutation({
@@ -16,7 +18,7 @@ export const holidayTypeOptionsApi = communicationApi.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['HolidayTypeOptions'],
+      invalidatesTags: [communicationType.holidayTypeOptions],
     }),
 
     updateHolidayType: builder.mutation({
@@ -25,7 +27,7 @@ export const holidayTypeOptionsApi = communicationApi.injectEndpoints({
         method: 'PUT',
         data,
       }),
-      invalidatesTags: ['HolidayTypeOptions'],
+      invalidatesTags: [communicationType.holidayTypeOptions],
     }),
 
     deleteHolidayType: builder.mutation({
@@ -33,7 +35,7 @@ export const holidayTypeOptionsApi = communicationApi.injectEndpoints({
         url: `/calendar/holiday-types/${holidayTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['HolidayTypeOptions'],
+      invalidatesTags: [communicationType.holidayTypeOptions],
     }),
   }),
   overrideExisting: false,

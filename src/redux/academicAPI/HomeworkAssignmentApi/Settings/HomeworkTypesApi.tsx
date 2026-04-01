@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const homeworkTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         url: `/homework-type`,
         method: 'GET',
       }),
-      providesTags: ['HomeworkType'],
+      providesTags: [academicType.homeworkType],
     }),
 
     // Get specific homework type by ID
@@ -18,7 +20,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: ['HomeworkType'],
+      providesTags: [academicType.homeworkType],
     }),
 
     // Add new homework type
@@ -28,7 +30,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         method: 'POST',
         params: { name },
       }),
-      invalidatesTags: ['HomeworkType'],
+      invalidatesTags: [academicType.homeworkType],
     }),
 
     // Update homework type
@@ -38,7 +40,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         method: 'PUT',
         params: { name },
       }),
-      invalidatesTags: ['HomeworkType'],
+      invalidatesTags: [academicType.homeworkType],
     }),
 
     // Delete homework type
@@ -47,7 +49,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         url: `/homework-type/${homeworkTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['HomeworkType'],
+      invalidatesTags: [academicType.homeworkType],
     }),
   }),
   overrideExisting: false,

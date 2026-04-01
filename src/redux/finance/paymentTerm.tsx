@@ -1,5 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
+﻿import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { paymentTermType } from 'src/redux/tagTypes';
 
 import financeData from '../../../financeData.json';
 
@@ -21,21 +22,21 @@ export const PaymentTermApi = createApi({
           },
         };
       },
-  tagTypes: ['Payment-Term'],
+  tagTypes: [paymentTermType.paymentTerm],
   endpoints: (builder) => ({
     getPaymentTerm: builder.query({
       query: () => ({
         url: '/paymentTerms',
         method: 'GET',
       }),
-      providesTags: ['Payment-Term'],
+      providesTags: [paymentTermType.paymentTerm],
     }),
     deletePaymentTerm: builder.mutation({
       query: (id) => ({
         url: `/paymentTerms/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Payment-Term'],
+      invalidatesTags: [paymentTermType.paymentTerm],
     }),
   }),
 });

@@ -1,4 +1,6 @@
-import { communicationApi } from '../communicationApi';
+﻿import { communicationApi } from '../communicationApi';
+import { communicationType } from 'src/redux/tagTypes';
+
 
 export const notificationHistoryApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -7,7 +9,7 @@ export const notificationHistoryApi = communicationApi.injectEndpoints({
         url: '/notificationHistoryData', // <-- update with your backend endpoint
         method: 'GET',
       }),
-      providesTags: ['NotificationHistory'],
+      providesTags: [communicationType.notificationHistory],
     }),
   }),
   overrideExisting: false,

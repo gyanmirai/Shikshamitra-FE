@@ -1,20 +1,15 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { paymentStatusOptionType } from 'src/redux/tagTypes';
 
-export const paymentStatusOptionApi = createApi({
-  reducerPath: 'paymentStatusOptionApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['paymentStatusOption'],
+export const paymentStatusOptionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getpaymentOption: builder.query({
       query: () => ({ url: '/app/payment-status-option', redirect: 'follow' }),
-      providesTags: ['paymentStatusOption'],
+      providesTags: [paymentStatusOptionType.paymentStatusOption],
     }),
     getpaymentOptionById: builder.query({
       query: (id) => ({ url: `/app/payment-status-option/${id}`, redirect: 'follow' }),
-      providesTags: ['paymentStatusOption'],
+      providesTags: [paymentStatusOptionType.paymentStatusOption],
     }),
     addpaymentOption: builder.mutation({
       query: (body) => ({
@@ -22,7 +17,7 @@ export const paymentStatusOptionApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['paymentStatusOption'],
+      invalidatesTags: [paymentStatusOptionType.paymentStatusOption],
     }),
     updatepaymentOption: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +25,14 @@ export const paymentStatusOptionApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['paymentStatusOption'],
+      invalidatesTags: [paymentStatusOptionType.paymentStatusOption],
     }),
     deletepaymentOption: builder.mutation({
       query: (id) => ({
         url: `/app/payment-status-option/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['paymentStatusOption'],
+      invalidatesTags: [paymentStatusOptionType.paymentStatusOption],
     }),
   }),
 });

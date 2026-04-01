@@ -1,20 +1,15 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { eventHolidayType } from 'src/redux/tagTypes';
 
-export const EventHolidayApi = createApi({
-  reducerPath: 'EventHolidayApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['EventHoliday'],
+export const EventHolidayApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getEventHoliday: builder.query({
       query: () => ({ url: '/app/event-and-holiday' }),
-      providesTags: ['EventHoliday'],
+      providesTags: [eventHolidayType.eventHoliday],
     }),
     getEventHolidayByDate: builder.query({
       query: (date) => ({ url: `/app/event-and-holiday/event-and-holiday-by-month?date=${date}` }),
-      providesTags: ['EventHoliday'],
+      providesTags: [eventHolidayType.eventHoliday],
     }),
     addEventHoliday: builder.mutation({
       query: (body) => ({
@@ -22,7 +17,7 @@ export const EventHolidayApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['EventHoliday'],
+      invalidatesTags: [eventHolidayType.eventHoliday],
     }),
     updateEventHoliday: builder.mutation({
       query: ({ id, body }) => ({
@@ -30,14 +25,14 @@ export const EventHolidayApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['EventHoliday'],
+      invalidatesTags: [eventHolidayType.eventHoliday],
     }),
     deleteEventHoliday: builder.mutation({
       query: (id) => ({
         url: `/app/event-and-holiday/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['EventHoliday'],
+      invalidatesTags: [eventHolidayType.eventHoliday],
     }),
   }),
 });

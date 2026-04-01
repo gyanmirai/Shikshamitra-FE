@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { tenantType } from 'src/redux/tagTypes';
 
-export const tenantApi = createApi({
-  reducerPath: 'tenantApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Tenant'],
+export const tenantApi = api.injectEndpoints({
   endpoints: (builder) => ({
     addTenant: builder.mutation({
       query: (body) => ({
@@ -14,19 +9,19 @@ export const tenantApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Tenant'],
+      invalidatesTags: [tenantType.tenant],
     }),
     getTenantById: builder.query({
       query: (id) => ({
         url: `/multi-tenancy/tenants/${id}`,
       }),
-      providesTags: ['Tenant'],
+      providesTags: [tenantType.tenant],
     }),
     getAllTenants: builder.query({
       query: () => ({
         url: '/multi-tenancy/tenants',
       }),
-      providesTags: ['Tenant'],
+      providesTags: [tenantType.tenant],
     }),
     updateTenant: builder.mutation({
       query: ({ id, body }) => ({
@@ -34,7 +29,7 @@ export const tenantApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Tenant'],
+      invalidatesTags: [tenantType.tenant],
     }),
   }),
 });

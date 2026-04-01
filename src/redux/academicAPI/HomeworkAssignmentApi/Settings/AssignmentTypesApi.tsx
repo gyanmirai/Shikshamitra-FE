@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const assignmentTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         url: `/assignment-type`,
         method: 'GET',
       }),
-      providesTags: ['AssignmentType'],
+      providesTags: [academicType.assignmentType],
     }),
 
     // Get specific assignment type by ID
@@ -17,7 +19,7 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         url: `/assignment-type/${id}`,
         method: 'GET',
       }),
-      providesTags: ['AssignmentType'],
+      providesTags: [academicType.assignmentType],
     }),
 
     // Add new assignment type
@@ -27,7 +29,7 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         method: 'POST',
         params: { name },
       }),
-      invalidatesTags: ['AssignmentType'],
+      invalidatesTags: [academicType.assignmentType],
     }),
 
     // Update assignment type
@@ -37,7 +39,7 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         method: 'PUT',
         params: { name },
       }),
-      invalidatesTags: ['AssignmentType'],
+      invalidatesTags: [academicType.assignmentType],
     }),
 
     // Delete assignment type
@@ -46,7 +48,7 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
         url: `/assignment-type/${assignmentTypeId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['AssignmentType'],
+      invalidatesTags: [academicType.assignmentType],
     }),
   }),
   overrideExisting: false,

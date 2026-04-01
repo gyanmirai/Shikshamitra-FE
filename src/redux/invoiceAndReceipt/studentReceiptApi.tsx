@@ -1,5 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
+﻿import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { studentReceiptType } from 'src/redux/tagTypes';
 
 import receiptData from '../../../invoiceAndReceipt.json';
 
@@ -21,14 +22,14 @@ export const studentReceiptApi = createApi({
           },
         };
       },
-  tagTypes: ['StudentReceipt'],
+  tagTypes: [studentReceiptType.studentReceipt],
   endpoints: (builder) => ({
     getStudentReceiptData: builder.query({
       query: () => ({
         url: '/studentReceiptData',
         method: 'GET',
       }),
-      providesTags: ['StudentReceipt'],
+      providesTags: [studentReceiptType.studentReceipt],
     }),
   }),
 });

@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentType } from 'src/redux/tagTypes';
 
-export const StudentApi = createApi({
-  reducerPath: 'StudentApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student'],
+export const StudentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getFilterStudents: builder.query({
       query: ({ academicYearId, academicMediumId, standardId, divisionId }) => {
@@ -30,7 +25,7 @@ export const StudentApi = createApi({
           method: 'GET',
         };
       },
-      providesTags: ['Student'],
+      providesTags: [studentType.student],
     }),
     changeDivision: builder.mutation({
       query: (body) => ({
@@ -38,21 +33,21 @@ export const StudentApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Student'],
+      invalidatesTags: [studentType.student],
     }),
     getAllStudents: builder.query({
       query: () => ({
         url: `/app/student`,
         method: 'GET',
       }),
-      providesTags: ['Student'],
+      providesTags: [studentType.student],
     }),
     getStudentById: builder.query({
       query: (id) => ({
         url: `/app/student/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Student'],
+      providesTags: [studentType.student],
     }),
   }),
 });

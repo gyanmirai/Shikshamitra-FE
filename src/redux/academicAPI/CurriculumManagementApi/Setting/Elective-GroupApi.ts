@@ -1,4 +1,6 @@
-import { academicApi } from '../../academicApi';
+﻿import { academicApi } from '../../academicApi';
+import { academicType } from 'src/redux/tagTypes';
+
 
 export const electiveGroupsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +10,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
         url: `/academic-mediums/${academicMediumId}/elective-groups`,
         method: 'GET',
       }),
-      providesTags: ['ElectiveGroup'],
+      providesTags: [academicType.electiveGroup],
     }),
 
     // Get specific elective group under academic medium
@@ -17,7 +19,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
         url: `/academic-mediums/${academicMediumId}/elective-groups/${id}`,
         method: 'GET',
       }),
-      providesTags: ['ElectiveGroup'],
+      providesTags: [academicType.electiveGroup],
     }),
 
     // Add new elective group under medium
@@ -27,7 +29,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['ElectiveGroup'],
+      invalidatesTags: [academicType.electiveGroup],
     }),
 
     // Update elective group under medium
@@ -37,7 +39,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['ElectiveGroup'],
+      invalidatesTags: [academicType.electiveGroup],
     }),
 
     // Delete elective group under medium
@@ -46,7 +48,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
         url: `/academic-mediums/${academicMediumId}/elective-groups/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ElectiveGroup'],
+      invalidatesTags: [academicType.electiveGroup],
     }),
   }),
   overrideExisting: false,

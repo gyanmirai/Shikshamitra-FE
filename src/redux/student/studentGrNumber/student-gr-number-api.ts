@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentGrNumberType } from 'src/redux/tagTypes';
 
-export const studentGrNumberApi = createApi({
-  reducerPath: 'studentGrNumberApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['studentGrNumber'],
+export const studentGrNumberApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentForGrNumber: builder.query({
       query: (divisionId) => ({
@@ -14,7 +9,7 @@ export const studentGrNumberApi = createApi({
         method: 'GET',
       }),
 
-      providesTags: ['studentGrNumber'],
+      providesTags: [studentGrNumberType.studentGrNumber],
     }),
 
     updateStudentGrNumber: builder.mutation({
@@ -23,7 +18,7 @@ export const studentGrNumberApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['studentGrNumber'],
+      invalidatesTags: [studentGrNumberType.studentGrNumber],
     }),
   }),
 });

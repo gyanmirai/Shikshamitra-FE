@@ -1,12 +1,7 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { studentDocumentType } from 'src/redux/tagTypes';
 
-export const StudentDocumentTypeApi = createApi({
-  reducerPath: 'StudentDocumentTypeApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Student-Document-Type'],
+export const StudentDocumentTypeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentDocumentType: builder.query({
       query: ({ sorting, skipCount, maxResultCount }) => {
@@ -27,7 +22,7 @@ export const StudentDocumentTypeApi = createApi({
           method: 'GET',
         };
       },
-      providesTags: ['Student-Document-Type'],
+      providesTags: [studentDocumentType.studentDocumentType],
     }),
     addStudentDocumentType: builder.mutation({
       query: (data) => ({
@@ -35,7 +30,7 @@ export const StudentDocumentTypeApi = createApi({
         method: 'POST',
         data,
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [studentDocumentType.studentDocumentType],
     }),
     updateStudentDocumentType: builder.mutation({
       query: ({ id, body }) => ({
@@ -43,14 +38,14 @@ export const StudentDocumentTypeApi = createApi({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [studentDocumentType.studentDocumentType],
     }),
     deleteStudentDocumentType: builder.mutation({
       query: (id) => ({
         url: `/student-enrollment/settings/document-types/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Student-Document-Type'],
+      invalidatesTags: [studentDocumentType.studentDocumentType],
     }),
   }),
 });

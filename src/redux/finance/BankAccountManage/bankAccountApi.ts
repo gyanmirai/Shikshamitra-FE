@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../financeModuleApi';
+﻿import { financeModuleApi } from '../financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const bankAccountApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,7 +12,7 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      providesTags: ['bank-account'],
+      providesTags: [financeModuleType.bankAccount],
     }),
     postBankAccount: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -21,7 +23,7 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['bank-account'],
+      invalidatesTags: [financeModuleType.bankAccount],
     }),
     putBankAccount: builder.mutation({
       query: ({ bankAccountId, body }: { bankAccountId: string; body: any }) => ({
@@ -29,14 +31,14 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['bank-account'],
+      invalidatesTags: [financeModuleType.bankAccount],
     }),
     deleteBankAccount: builder.mutation({
       query: (bankAccountId: string) => ({
         url: `/bank-accounts/${bankAccountId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['bank-account'],
+      invalidatesTags: [financeModuleType.bankAccount],
     }),
   }),
   overrideExisting: false,

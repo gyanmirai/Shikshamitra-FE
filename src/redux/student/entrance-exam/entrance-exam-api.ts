@@ -1,19 +1,14 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { entranceExamType } from 'src/redux/tagTypes';
 
-export const EntranceExamApi = createApi({
-  reducerPath: 'EntranceExamApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['Entrance-Exam'],
+export const EntranceExamApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getEntranceExam: builder.query({
       query: ({ startDate, endDate, educationMediumId }) => ({
         url: `/student-enrollment/entrance-exam?StartDate=${startDate}&EndDate=${endDate}&EducationMediumId=${educationMediumId}`,
         method: 'GET',
       }),
-      providesTags: ['Entrance-Exam'],
+      providesTags: [entranceExamType.entranceExam],
     }),
     addEntranceExam: builder.mutation({
       query: ({ body, studentId }) => ({
@@ -21,7 +16,7 @@ export const EntranceExamApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Entrance-Exam'],
+      invalidatesTags: [entranceExamType.entranceExam],
     }),
     updateEntranceExam: builder.mutation({
       query: ({ id, body }) => ({
@@ -29,28 +24,28 @@ export const EntranceExamApi = createApi({
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['Entrance-Exam'],
+      invalidatesTags: [entranceExamType.entranceExam],
     }),
     deleteEntranceExam: builder.mutation({
       query: (id) => ({
         url: `/app/entrance-exam/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Entrance-Exam'],
+      invalidatesTags: [entranceExamType.entranceExam],
     }),
     getEntranceExamByStudentId: builder.query({
       query: (id) => ({
         url: `/app/entrance-exam/by-student-enrollment-id/${id}`,
         method: 'GET',
       }),
-      providesTags: ['Entrance-Exam'],
+      providesTags: [entranceExamType.entranceExam],
     }),
     getStudentForSlotByDate: builder.query({
       query: ({ slotId, examDate }) => ({
         url: `/app/entrance-exam/student-count-for-slot-by-date/${slotId}?examDate=${examDate}`,
         method: 'GET',
       }),
-      providesTags: ['Entrance-Exam'],
+      providesTags: [entranceExamType.entranceExam],
     }),
   }),
 });

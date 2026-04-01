@@ -1,34 +1,17 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+﻿import { api } from 'src/redux/service';
+import { libraryChargeCategoryOptionsType } from 'src/redux/tagTypes';
 
 import libraryData from '../../../../issueReturnData.json';
 
-const isDev = process.env.NODE_ENV === 'development';
 
-export const libraryChargeCategoryOptionsApi = createApi({
-  reducerPath: 'LibraryChargeCategoryOptionsApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/libraryChargeCategory') {
-          return { data: libraryData.libraryChargeCategory };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['LibraryChargeCategoryOptions'],
+export const libraryChargeCategoryOptionsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getLibraryChargeCategoryOptions: builder.query({
       query: () => ({
         url: '/libraryChargeCategory',
         method: 'GET',
       }),
-      providesTags: ['LibraryChargeCategoryOptions'],
+      providesTags: [libraryChargeCategoryOptionsType.libraryChargeCategoryOptions],
     }),
   }),
 });

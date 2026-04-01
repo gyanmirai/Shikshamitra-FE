@@ -1,4 +1,6 @@
-import { financeModuleApi } from '../finance/financeModuleApi';
+﻿import { financeModuleApi } from '../finance/financeModuleApi';
+import { financeModuleType } from 'src/redux/tagTypes';
+
 
 export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +11,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['FeeHead'],
+      providesTags: [financeModuleType.feeHead],
     }),
 
     // Add fee head
@@ -22,7 +24,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: ['FeeHead'],
+      invalidatesTags: [financeModuleType.feeHead],
     }),
 
     // Update fee head
@@ -32,7 +34,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['FeeHead'],
+      invalidatesTags: [financeModuleType.feeHead],
     }),
 
     // Delete fee head
@@ -41,7 +43,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         url: `/fee-heads/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['FeeHead'],
+      invalidatesTags: [financeModuleType.feeHead],
     }),
     patchFeeHead: builder.mutation({
       query: ({ feeHeadId, body }) => ({
@@ -49,7 +51,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         method: 'PATCH',
         data: body,
       }),
-      invalidatesTags: ['FeeHead'],
+      invalidatesTags: [financeModuleType.feeHead],
     }),
   }),
 });
