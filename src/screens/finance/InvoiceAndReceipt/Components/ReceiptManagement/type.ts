@@ -6,7 +6,8 @@ export interface IFeeReceipt {
   totalPaidFees: number;
   totalPendingFees: number;
   grNo: number;
-  lastPaymentDate: string; // format: 'dd-mm-yyyy'
+  lastPaymentDate: string;
+  status: 'Paid' | 'Partial' | 'Pending';
   paymentTerm: string;
 }
 
@@ -15,5 +16,6 @@ export interface IReceipt {
   invoiceId: string;
   amount: number;
   paymentMethod: string;
-  paymentDate: string; // format: 'dd-mm-yyyy'
+  paymentDate: string;
+  remarks?: string;
 }

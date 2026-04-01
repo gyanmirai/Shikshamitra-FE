@@ -2,23 +2,32 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   usePutBankAccountMutation,
   usePostBankAccountMutation,
 } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import {
+  Grid,
+  Button,
+  Accordion,
+  TextField,
+  Typography,
+  DialogActions,
+  AccordionDetails,
+  AccordionSummary,
+} from '@mui/material';
 
 import { getBankAccountInitialValues } from './bankInitialValues';
 import { BankAccountType, type IBankAccountFormProps } from './type';
@@ -38,6 +47,16 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     type: 'mutation',
     currentQueryAndMutation: usePutBankAccountMutation,
   });
+
+  const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({
+    bankDetails: true,
+    accountDetails: true,
+    paymentInfo: true,
+  });
+
+  const handleAccordionToggle = useCallback((panel: string) => {
+    setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] }));
+  }, []);
 
   const formik = useFormik({
     initialValues: getBankAccountInitialValues(editData),
@@ -84,187 +103,296 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     },
   });
 
+  const handleSubmit = useCallback(() => {
+    const fieldToPanelMap: Record<string, string> = {
+      bankName: 'bankDetails',
+      branchName: 'bankDetails',
+      branchAddress: 'bankDetails',
+      accountHolderName: 'accountDetails',
+      accountType: 'accountDetails',
+      accountNumber: 'accountDetails',
+      purpose: 'accountDetails',
+      ifscCode: 'paymentInfo',
+      upiId: 'paymentInfo',
+    };
+
+    formik.validateForm().then((errors) => {
+      const errorKeys = Object.keys(errors);
+      if (errorKeys.length > 0) {
+        const panelsToOpen: Record<string, boolean> = {};
+        errorKeys.forEach((key) => {
+          if (fieldToPanelMap[key]) {
+            panelsToOpen[fieldToPanelMap[key]] = true;
+          }
+        });
+        setExpandedPanels((prev) => ({ ...prev, ...panelsToOpen }));
+      }
+      formik.handleSubmit();
+    });
+  }, [formik]);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={3}>
-          {/* Bank Name */}
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={formik.touched.bankName && Boolean(formik.errors.bankName)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Bank Name *"
-                name="bankName"
-                value={formik.values.bankName}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '') // Allow only letters and spaces
-                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                    .trimStart(); // Remove leading spaces
-                  formik.setFieldValue('bankName', value);
-                }}
-                error={formik.touched.bankName && Boolean(formik.errors.bankName)}
-                helperText={formik.touched.bankName && formik.errors.bankName}
-              />
-            </ShakingTextField>
-          </Grid>
+        {/* Section: Bank Details */}
+        <Accordion
+          expanded={expandedPanels.bankDetails}
+          onChange={() => handleAccordionToggle('bankDetails')}
+          disableGutters
+          elevation={0}
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '8px !important',
+            mb: 1.5,
+            '&:before': { display: 'none' },
+          }}
+        >
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Bank Details
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              {/* Bank Name */}
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField
+                  error={formik.touched.bankName && Boolean(formik.errors.bankName)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Bank Name *"
+                    name="bankName"
+                    value={formik.values.bankName}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trimStart();
+                      formik.setFieldValue('bankName', value);
+                    }}
+                    error={formik.touched.bankName && Boolean(formik.errors.bankName)}
+                    helperText={formik.touched.bankName && formik.errors.bankName}
+                    inputProps={{ maxLength: 100 }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* Branch Name */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={formik.touched.branchName && Boolean(formik.errors.branchName)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                label="Branch Name *"
-                name="branchName"
-                value={formik.values.branchName}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, and spaces
-                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                    .trimStart(); // Remove leading spaces
-                  formik.setFieldValue('branchName', value);
-                }}
-                error={formik.touched.branchName && Boolean(formik.errors.branchName)}
-                helperText={formik.touched.branchName && formik.errors.branchName}
-              />
-            </ShakingTextField>
-          </Grid>
+              {/* Branch Name */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.branchName && Boolean(formik.errors.branchName)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Branch Name *"
+                    name="branchName"
+                    value={formik.values.branchName}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/[^a-zA-Z0-9\s]/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trimStart();
+                      formik.setFieldValue('branchName', value);
+                    }}
+                    error={formik.touched.branchName && Boolean(formik.errors.branchName)}
+                    helperText={formik.touched.branchName && formik.errors.branchName}
+                    inputProps={{ maxLength: 100 }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* Branch Address */}
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              size="small"
-              label="Branch Address"
-              name="branchAddress"
-              value={formik.values.branchAddress}
-              onChange={formik.handleChange}
-            />
-          </Grid>
+              {/* Branch Address */}
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  size="small"
+                  label="Branch Address"
+                  name="branchAddress"
+                  value={formik.values.branchAddress}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
 
-          {/* Account Name */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                label="Account Holder Name *"
-                name="accountHolderName"
-                value={formik.values.accountHolderName}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '') // Allow only letters and spaces
-                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                    .trimStart(); // Remove leading spaces
-                  formik.setFieldValue('accountHolderName', value);
-                }}
-                error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
-                helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
-              />
-            </ShakingTextField>
-          </Grid>
+        {/* Section: Account Details */}
+        <Accordion
+          expanded={expandedPanels.accountDetails}
+          onChange={() => handleAccordionToggle('accountDetails')}
+          disableGutters
+          elevation={0}
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '8px !important',
+            mb: 1.5,
+            '&:before': { display: 'none' },
+          }}
+        >
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Account Details
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              {/* Account Name */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={
+                    formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)
+                  }
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Account Holder Name *"
+                    name="accountHolderName"
+                    value={formik.values.accountHolderName}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .replace(/[^a-zA-Z\s]/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trimStart();
+                      formik.setFieldValue('accountHolderName', value);
+                    }}
+                    error={
+                      formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)
+                    }
+                    helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
+                    inputProps={{ maxLength: 100 }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* Account Type */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={formik.touched.accountType && Boolean(formik.errors.accountType)}
-            >
-              <CustomSelect
-                label="Account Type *"
-                options={[
-                  { value: BankAccountType.Saving, label: 'Saving' },
-                  { value: BankAccountType.Current, label: 'Current' },
-                ]}
-                value={formik.values.accountType}
-                onChange={(val) => formik.setFieldValue('accountType', val)}
-                formControlProps={{ fullWidth: true, size: 'small' }}
-                error={formik.touched.accountType && Boolean(formik.errors.accountType)}
-                helperText={(formik.touched.accountType && formik.errors.accountType) as string}
-              />
-            </ShakingTextField>
-          </Grid>
+              {/* Account Type */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.accountType && Boolean(formik.errors.accountType)}
+                >
+                  <CustomSelect
+                    label="Account Type *"
+                    options={[
+                      { value: BankAccountType.Saving, label: 'Saving' },
+                      { value: BankAccountType.Current, label: 'Current' },
+                    ]}
+                    value={formik.values.accountType}
+                    onChange={(val) => formik.setFieldValue('accountType', val)}
+                    formControlProps={{ fullWidth: true, size: 'small' }}
+                    error={formik.touched.accountType && Boolean(formik.errors.accountType)}
+                    helperText={(formik.touched.accountType && formik.errors.accountType) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* Account Number */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Account Number *"
-                name="accountNumber"
-                value={formik.values.accountNumber}
-                onChange={formik.handleChange}
-                error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
-                helperText={formik.touched.accountNumber && formik.errors.accountNumber}
-              />
-            </ShakingTextField>
-          </Grid>
+              {/* Account Number */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Account Number *"
+                    name="accountNumber"
+                    value={formik.values.accountNumber}
+                    onChange={formik.handleChange}
+                    error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+                    helperText={formik.touched.accountNumber && formik.errors.accountNumber}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* Account Purpose */}
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              size="small"
-              multiline
-              rows={3}
-              label="Account Purpose"
-              name="purpose"
-              value={formik.values.purpose}
-              onChange={formik.handleChange}
-            />
-          </Grid>
+              {/* Account Purpose */}
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  multiline
+                  rows={3}
+                  label="Account Purpose"
+                  name="purpose"
+                  value={formik.values.purpose}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
 
-          {/* IFSC Code */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="IFSC Code *"
-                name="ifscCode"
-                value={formik.values.ifscCode}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .toUpperCase()
-                    .replace(/[^A-Z0-9]/g, '')
-                    .slice(0, 11);
-                  formik.setFieldValue('ifscCode', value);
-                }}
-                error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
-                helperText={formik.touched.ifscCode && formik.errors.ifscCode}
-              />
-            </ShakingTextField>
-          </Grid>
+        {/* Section: Payment Info */}
+        <Accordion
+          expanded={expandedPanels.paymentInfo}
+          onChange={() => handleAccordionToggle('paymentInfo')}
+          disableGutters
+          elevation={0}
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: '8px !important',
+            mb: 1.5,
+            '&:before': { display: 'none' },
+          }}
+        >
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Payment Info
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              {/* IFSC Code */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="IFSC Code *"
+                    name="ifscCode"
+                    value={formik.values.ifscCode}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '')
+                        .slice(0, 11);
+                      formik.setFieldValue('ifscCode', value);
+                    }}
+                    error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
+                    helperText={formik.touched.ifscCode && formik.errors.ifscCode}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* UPI ID */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="UPI ID"
-              name="upiId"
-              value={formik.values.upiId}
-              onChange={(e) => {
-                const value = e.target.value
-                  .toLowerCase()
-                  .replace(/[^a-z0-9@._-]/g, '')
-                  .slice(0, 50);
-                formik.setFieldValue('upiId', value);
-              }}
-            />
-          </Grid>
-        </Grid>
+              {/* UPI ID */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="UPI ID"
+                  name="upiId"
+                  value={formik.values.upiId}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9@._-]/g, '')
+                      .slice(0, 50);
+                    formik.setFieldValue('upiId', value);
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
@@ -284,12 +412,12 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               height={editData ? 16 : 20}
             />
           }
-          type="submit"
+          type="button"
           variant="contained"
           size="small"
           loading={isAddLoading || isUpdateLoading}
           disabled={isAddLoading || isUpdateLoading}
-          onClick={(e: any) => formik.handleSubmit(e)}
+          onClick={handleSubmit}
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>

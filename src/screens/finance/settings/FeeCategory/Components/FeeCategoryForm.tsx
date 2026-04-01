@@ -82,8 +82,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                   let value = e.target.value
                     .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
                     .replace(/^\s+/g, '') // Remove leading spaces
-                    .replace(/^\d+/, '') // Remove leading numbers
-                    .trimStart(); // Remove leading spaces
+                    .replace(/^\d+/, ''); // Remove leading numbers
                   value = value
                     .split(' ')
                     .map((word) =>

@@ -8,9 +8,15 @@ interface IncomeFormActionsProps {
   onClose: (e: any, isSubmit?: boolean) => void;
   isLoading: boolean;
   isEdit: boolean;
+  onSubmit: () => void;
 }
 
-const IncomeFormActions: React.FC<IncomeFormActionsProps> = ({ onClose, isLoading, isEdit }) => (
+const IncomeFormActions: React.FC<IncomeFormActionsProps> = ({
+  onClose,
+  isLoading,
+  isEdit,
+  onSubmit,
+}) => (
   <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
     <Button
       variant="outlined"
@@ -24,11 +30,12 @@ const IncomeFormActions: React.FC<IncomeFormActionsProps> = ({ onClose, isLoadin
       startIcon={
         <Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} width={16} height={16} />
       }
-      type="submit"
+      type="button"
       size="small"
       variant="contained"
       loading={isLoading}
       disabled={isLoading}
+      onClick={onSubmit}
     >
       {isEdit ? 'Update' : 'Submit'}
     </LoadingButton>
