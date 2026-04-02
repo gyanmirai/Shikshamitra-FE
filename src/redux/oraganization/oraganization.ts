@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { organizationType } from 'src/redux/tagTypes';
 
 export const organizationApi = api.injectEndpoints({
@@ -15,7 +15,7 @@ export const organizationApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/education-medium-stage',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [organizationType.organization],
     }),
@@ -23,7 +23,7 @@ export const organizationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/education-medium-stage/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [organizationType.organization],
     }),

@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentType } from 'src/redux/tagTypes';
 
 export const StudentApi = api.injectEndpoints({
@@ -31,7 +31,7 @@ export const StudentApi = api.injectEndpoints({
       query: (body) => ({
         url: `/students/records/divisions`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentType.student],
     }),

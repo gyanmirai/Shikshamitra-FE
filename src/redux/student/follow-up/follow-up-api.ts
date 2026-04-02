@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { followUpType } from 'src/redux/tagTypes';
 
 export const FollowUpApi = api.injectEndpoints({
@@ -21,7 +21,7 @@ export const FollowUpApi = api.injectEndpoints({
       query: ({ studentId, body }) => ({
         url: `/student/enrollment/${studentId}/notes`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [followUpType.followUp],
     }),

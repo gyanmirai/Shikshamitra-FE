@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { earningComponentType } from 'src/redux/tagTypes';
 
 export const earningComponentApi = api.injectEndpoints({
@@ -12,7 +12,7 @@ export const earningComponentApi = api.injectEndpoints({
       query: (body) => ({
         url: '/payroll/earning-components',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [earningComponentType.earningComponent],
     }),
@@ -21,7 +21,7 @@ export const earningComponentApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/payroll/earning-components/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [earningComponentType.earningComponent],
     }),

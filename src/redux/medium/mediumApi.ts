@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { mediumType } from 'src/redux/tagTypes';
 
 import { boardApi } from '../board/boardApi';
@@ -17,7 +17,7 @@ export const mediumApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/education-medium',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [mediumType.medium, mediumType.board],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
@@ -35,7 +35,7 @@ export const mediumApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/education-medium/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [mediumType.medium],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {

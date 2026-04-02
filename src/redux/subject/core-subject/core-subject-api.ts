@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { coreSubjectType } from 'src/redux/tagTypes';
 
 export const CoreSubjectApi = api.injectEndpoints({
@@ -11,7 +11,7 @@ export const CoreSubjectApi = api.injectEndpoints({
       query: (body) => ({
         url: '/subject/',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [coreSubjectType.subject],
     }),
@@ -19,7 +19,7 @@ export const CoreSubjectApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/subject/${id}`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [coreSubjectType.subject],
     }),

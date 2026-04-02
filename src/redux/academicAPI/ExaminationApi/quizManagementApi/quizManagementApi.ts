@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const quizManagementApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -20,7 +20,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         url: 'quizzes',
         method: 'POST',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.quiz],
     }),
@@ -31,7 +31,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         url: `quizzes/${quizId}`,
         method: 'PUT',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.quiz],
     }),
@@ -51,7 +51,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
       query: ({ quizId, body }) => ({
         url: `quizzes/${quizId}/questions`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { quizId }) => [{ type: academicType.quiz, id: quizId }],
     }),
@@ -91,7 +91,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
         url: `quizzes/${quizId}/submit`,
         method: 'POST',
         params: { studentId },
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { quizId, studentId }) => [
         { type: academicType.quiz, id: quizId },
@@ -104,7 +104,7 @@ export const quizManagementApi = academicApi.injectEndpoints({
       query: ({ quizId, studentId, body }) => ({
         url: `quizzes/${quizId}/submissions/${studentId}/marks`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { quizId, studentId }) => [
         { type: academicType.quiz, id: quizId },

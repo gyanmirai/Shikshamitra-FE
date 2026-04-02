@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { employeeType } from 'src/redux/tagTypes';
 
 export const employeeApi = api.injectEndpoints({
@@ -22,7 +22,7 @@ export const employeeApi = api.injectEndpoints({
     //   query: (body) => ({
     //     url: '/app/employee',
     //     method: 'POST',
-    //     data: body,
+    //     body,
     //   }),
     //   invalidatesTags: [employeeType.employee],
     // }),
@@ -46,7 +46,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/employees/${id}/personal-info`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -54,7 +54,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ body }) => ({
         url: `/employees/personal-info`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -76,7 +76,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ employeeId, body }) => ({
         url: `/employees/${employeeId}/family-info`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -91,7 +91,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ employeeId, body }) => ({
         url: `/employees/${employeeId}/additional-info`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -106,7 +106,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ employeeId, body }) => ({
         url: `/employees/${employeeId}/work-experience`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -121,7 +121,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ employeeId, body }) => ({
         url: `/employees/${employeeId}/payroll`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -145,7 +145,7 @@ export const employeeApi = api.injectEndpoints({
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeDocument],
     }),
@@ -156,7 +156,7 @@ export const employeeApi = api.injectEndpoints({
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeDocument],
     }),
@@ -183,7 +183,7 @@ export const employeeApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/user-scope/bulk-assign',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -214,7 +214,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/employees/${id}/reporting-manager`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -243,7 +243,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: `/employees/documents?academicYearId=${academicYearId}`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeDocumentConfig],
     }),
@@ -251,7 +251,7 @@ export const employeeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/employees/documents/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeDocumentConfig],
     }),

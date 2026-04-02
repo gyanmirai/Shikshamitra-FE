@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentGroupType } from 'src/redux/tagTypes';
 
 export const studentGroupApi = api.injectEndpoints({
@@ -21,7 +21,7 @@ export const studentGroupApi = api.injectEndpoints({
       query: ({ academicMediumId, body }) => ({
         url: `/students/records/academic-mediums/${academicMediumId}/house-settings`,
         method: 'POST',
-        data: body,
+        body,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -32,7 +32,7 @@ export const studentGroupApi = api.injectEndpoints({
       query: ({ body, houseSettingId }) => ({
         url: `/students/records/house-settings/${houseSettingId}`,
         method: 'PUT',
-        data: body,
+        body,
         headers: {
           'Content-Type': 'application/json',
         },

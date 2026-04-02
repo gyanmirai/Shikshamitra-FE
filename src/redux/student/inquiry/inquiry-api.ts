@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentInquiryType } from 'src/redux/tagTypes';
 
 export const StudentInquiryApi = api.injectEndpoints({
@@ -14,7 +14,7 @@ export const StudentInquiryApi = api.injectEndpoints({
       query: (body) => ({
         url: '/student/enrollment/inquiries',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentInquiryType.studentInquiry],
     }),
@@ -29,7 +29,7 @@ export const StudentInquiryApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/inquiries/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentInquiryType.studentInquiry],
     }),
@@ -46,7 +46,7 @@ export const StudentInquiryApi = api.injectEndpoints({
       query: ({ studentId, body }) => ({
         url: `/student/enrollment/registrations/${studentId}/forms`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentInquiryType.studentInquiry],
     }),

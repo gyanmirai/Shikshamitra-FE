@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 
 export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -13,7 +13,7 @@ export const userApi = api.injectEndpoints({
       query: (body) => ({
         url: `/identity/users`,
         method: 'POST',
-        data: body,
+        body,
       }),
     }),
     getUser: builder.query({

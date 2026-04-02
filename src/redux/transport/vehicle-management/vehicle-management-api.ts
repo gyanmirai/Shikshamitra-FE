@@ -1,6 +1,6 @@
-﻿import { transportApi } from '../transportApi';
 import { transportType } from 'src/redux/tagTypes';
 
+import { transportApi } from '../transportApi';
 
 export const vehicleManagementApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -15,7 +15,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: (body) => ({
         url: '/vehicles',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -23,7 +23,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, body }) => ({
         url: `/vehicles/${vehicleId}/documents`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -31,7 +31,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, body }) => ({
         url: `/vehicles/${vehicleId}/maintenance`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -39,7 +39,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, body }) => ({
         url: `/vehicles/${vehicleId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -47,7 +47,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, documentId, body }) => ({
         url: `/vehicles/${vehicleId}/documents/${documentId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -55,7 +55,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, body }) => ({
         url: `/vehicles/${vehicleId}/maintenance`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -63,7 +63,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, body }) => ({
         url: `/vehicles/${vehicleId}/maintenance`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),
@@ -71,7 +71,7 @@ export const vehicleManagementApi = transportApi.injectEndpoints({
       query: ({ vehicleId, body }) => ({
         url: `/vehicles/${vehicleId}/change-status`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.vehicleManagement],
     }),

@@ -1,4 +1,4 @@
-﻿import { divisionType } from 'src/redux/tagTypes';
+import { divisionType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -16,7 +16,7 @@ export const divisionApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/division',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [divisionType.division],
     }),
@@ -24,7 +24,7 @@ export const divisionApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/division/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [divisionType.division],
     }),

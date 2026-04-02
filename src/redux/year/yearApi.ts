@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { yearType } from 'src/redux/tagTypes';
 
 export const yearApi = api.injectEndpoints({
@@ -15,7 +15,7 @@ export const yearApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/academic-year',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [yearType.year],
     }),
@@ -23,7 +23,7 @@ export const yearApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/academic-year/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [yearType.year],
     }),

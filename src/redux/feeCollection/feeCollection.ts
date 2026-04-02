@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from '../finance/financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from '../finance/financeModuleApi';
 
 export const feeCollectionApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -38,7 +38,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
       query: (body) => ({
         url: '/v1/finance/fee-collections',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.feeCollection, financeModuleType.feeDetails],
     }),

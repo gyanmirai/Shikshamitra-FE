@@ -1,6 +1,6 @@
-﻿import { employeeApi } from './employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
 
+import { employeeApi } from './employeeApi';
 
 export interface DayCalculationRequest {
   dayCalculationType: 'working-days' | 'total-days';
@@ -35,7 +35,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         url: '/payroll/deduction-components',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.deductionComponents],
     }),
@@ -43,7 +43,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/payroll/deduction-components/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.deductionComponents],
     }),
@@ -59,7 +59,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         url: '/payroll/earning-components',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.earningComponents],
     }),
@@ -67,7 +67,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/payroll/earning-components/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.earningComponents],
     }),
@@ -98,7 +98,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         url: '/payroll/day-calculation',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
     }),
   }),

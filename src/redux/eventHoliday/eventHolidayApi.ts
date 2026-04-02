@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { eventHolidayType } from 'src/redux/tagTypes';
 
 export const EventHolidayApi = api.injectEndpoints({
@@ -15,7 +15,7 @@ export const EventHolidayApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/event-and-holiday',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [eventHolidayType.eventHoliday],
     }),
@@ -23,7 +23,7 @@ export const EventHolidayApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/event-and-holiday/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [eventHolidayType.eventHoliday],
     }),

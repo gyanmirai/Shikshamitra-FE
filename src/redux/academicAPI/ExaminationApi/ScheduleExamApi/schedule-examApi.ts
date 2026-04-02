@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const scheduleExamApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +9,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       query: ({ body }) => ({
         url: `exams/basic-details`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.exam],
     }),
@@ -18,7 +18,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       query: ({ examId, body }) => ({
         url: `exams/${examId}/basic-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.exam],
     }),
@@ -44,7 +44,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       query: ({ examId, body }) => ({
         url: `exams/${examId}/schedule`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.exam],
     }),
@@ -62,7 +62,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       query: ({ examId, body }) => ({
         url: `exams/${examId}/rooms`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.exam],
     }),
@@ -99,7 +99,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       query: ({ examId, body }) => ({
         url: `exams/${examId}/publish`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.exam],
     }),

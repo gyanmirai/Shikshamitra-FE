@@ -1,6 +1,6 @@
-﻿import { calendarModuleApi } from '../calendarApi';
 import { calendarModuleType } from 'src/redux/tagTypes';
 
+import { calendarModuleApi } from '../calendarApi';
 
 export const groupManagementApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -35,7 +35,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
         url: '/groups',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [calendarModuleType.groups],
     }),
@@ -43,7 +43,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
       query: ({ groupId, body }) => ({
         url: `/groups/${groupId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [calendarModuleType.groups, calendarModuleType.groupDetails],
     }),
@@ -78,7 +78,7 @@ export const groupManagementApi = calendarModuleApi.injectEndpoints({
       query: (body) => ({
         url: '/groups/users-for-selection',
         method: 'POST',
-        data: body,
+        body,
       }),
     }),
   }),

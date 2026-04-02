@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const gradeScalingApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -30,7 +30,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         url: `/academics/examination/settings/grading-scales`,
         method: 'POST',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.gradeScaling],
     }),
@@ -41,7 +41,7 @@ export const gradeScalingApi = academicApi.injectEndpoints({
         url: `/academics/examination/settings/grading-scales/${id}`,
         method: 'PUT',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.gradeScaling],
     }),

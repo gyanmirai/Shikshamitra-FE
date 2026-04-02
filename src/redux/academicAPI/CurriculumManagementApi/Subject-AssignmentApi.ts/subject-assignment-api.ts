@@ -1,5 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
+
+import { academicApi } from '../../academicApi';
 
 export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -26,7 +27,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       query: ({ body }) => ({
         url: `/academics/curriculum/subject-assignments`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.subjectAssignment],
     }),
@@ -36,7 +37,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       query: ({ assignmentId, body }) => ({
         url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.subjectAssignment],
     }),
@@ -65,7 +66,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       query: (body) => ({
         url: `/academics/curriculum/files`,
         method: 'POST',
-        data: body,
+        body,
         headers: {
           'Content-Type': 'multipart/form-data',
         },

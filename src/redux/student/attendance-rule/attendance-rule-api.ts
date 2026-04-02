@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentAttendanceRuleType } from 'src/redux/tagTypes';
 
 export const StudentAttendanceRuleApi = api.injectEndpoints({
@@ -22,7 +22,7 @@ export const StudentAttendanceRuleApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/student-attendance-rule/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentAttendanceRuleType.studentAttendanceRule],
     }),

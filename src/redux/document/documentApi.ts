@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { documentType } from 'src/redux/tagTypes';
 
 export const documentApi = api.injectEndpoints({
@@ -11,7 +11,7 @@ export const documentApi = api.injectEndpoints({
       query: (body) => ({
         url: '/employees/documents',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [documentType.document],
     }),
@@ -19,7 +19,7 @@ export const documentApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/employees/documents/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [documentType.document],
     }),

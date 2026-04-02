@@ -1,5 +1,6 @@
-﻿import { libraryModuleApi } from '../libraryModuleApi';
 import { libraryModuleType } from 'src/redux/tagTypes';
+
+import { libraryModuleApi } from '../libraryModuleApi';
 
 export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -23,7 +24,7 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
       query: ({ body }) => ({
         url: '/library/issues',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [libraryModuleType.books],
     }),
@@ -41,7 +42,7 @@ export const issueAndReturnApi = libraryModuleApi.injectEndpoints({
         url: '/library/return',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [libraryModuleType.books],
     }),

@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from './financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from './financeModuleApi';
 
 export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -17,7 +17,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: '/fee-structures',
         method: 'POST',
-        data: body,
+        body,
         params: {
           academicYearId,
         },
@@ -28,7 +28,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
       query: ({ feeStructureId, body }) => ({
         url: `/fee-structures/${feeStructureId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.feeStructure],
     }),
@@ -45,7 +45,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
       query: ({ feeStructureId, body }) => ({
         url: `/fee-structures/${feeStructureId}/status`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.feeStructure],
     }),
@@ -54,7 +54,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
       query: ({ feeStructureId, body }) => ({
         url: `/fee-structures/${feeStructureId}/standard-fee-structures`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.feeStructure],
     }),

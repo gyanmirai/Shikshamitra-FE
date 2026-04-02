@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { tenantType } from 'src/redux/tagTypes';
 
 export const tenantApi = api.injectEndpoints({
@@ -7,7 +7,7 @@ export const tenantApi = api.injectEndpoints({
       query: (body) => ({
         url: '/multi-tenancy/tenants',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [tenantType.tenant],
     }),
@@ -27,7 +27,7 @@ export const tenantApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/multi-tenancy/tenants/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [tenantType.tenant],
     }),

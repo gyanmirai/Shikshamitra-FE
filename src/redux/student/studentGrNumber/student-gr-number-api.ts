@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentGrNumberType } from 'src/redux/tagTypes';
 
 export const studentGrNumberApi = api.injectEndpoints({
@@ -16,7 +16,7 @@ export const studentGrNumberApi = api.injectEndpoints({
       query: ({ body }) => ({
         url: '/students/records/gr-numbers',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentGrNumberType.studentGrNumber],
     }),

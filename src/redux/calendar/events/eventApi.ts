@@ -1,6 +1,6 @@
-﻿import { calendarModuleApi } from '../calendarApi';
 import { calendarModuleType } from 'src/redux/tagTypes';
 
+import { calendarModuleApi } from '../calendarApi';
 
 export const eventApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -35,9 +35,12 @@ export const eventApi = calendarModuleApi.injectEndpoints({
       query: ({ eventId, body }) => ({
         url: `/calendar/events/${eventId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
-      invalidatesTags: (result, error, arg) => [calendarModuleType.events, { type: calendarModuleType.events, id: arg.eventId }],
+      invalidatesTags: (result, error, arg) => [
+        calendarModuleType.events,
+        { type: calendarModuleType.events, id: arg.eventId },
+      ],
     }),
 
     deleteEvent: builder.mutation({

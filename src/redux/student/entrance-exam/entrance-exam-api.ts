@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { entranceExamType } from 'src/redux/tagTypes';
 
 export const EntranceExamApi = api.injectEndpoints({
@@ -14,7 +14,7 @@ export const EntranceExamApi = api.injectEndpoints({
       query: ({ body, studentId }) => ({
         url: `/student-enrollment/entrance-exam/${studentId}/schedule`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [entranceExamType.entranceExam],
     }),
@@ -22,7 +22,7 @@ export const EntranceExamApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student-enrollment/entrance-exam/${id}/result`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [entranceExamType.entranceExam],
     }),

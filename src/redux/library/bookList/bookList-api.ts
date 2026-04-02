@@ -1,5 +1,6 @@
-﻿import { libraryModuleApi } from '../libraryModuleApi';
 import { libraryModuleType } from 'src/redux/tagTypes';
+
+import { libraryModuleApi } from '../libraryModuleApi';
 
 export const booksApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -17,7 +18,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         url: '/library/books',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [libraryModuleType.books],
     }),
@@ -26,7 +27,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
       query: ({ bookId, accessionNumber, body }) => ({
         url: `/library/books/${bookId}/copies/${accessionNumber}/status`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [libraryModuleType.copies],
     }),
@@ -43,7 +44,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
       query: ({ bookId, body }) => ({
         url: `/library/books/${bookId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { bookId }) => [
         libraryModuleType.books,
@@ -71,7 +72,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
       query: ({ bookId, body }) => ({
         url: `/library/books/${bookId}/reservations`,
         method: 'POST',
-        data: body,
+        body,
       }),
     }),
 
@@ -97,7 +98,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         url: `/library/books/${bookId}/copies`,
         method: 'PUT',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { bookId }) => [
         { type: libraryModuleType.copies, id: bookId },
@@ -123,7 +124,7 @@ export const booksApi = libraryModuleApi.injectEndpoints({
         url: `/library/books/${bookId}/status`,
         method: 'PUT',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { bookId }) => [
         libraryModuleType.books,

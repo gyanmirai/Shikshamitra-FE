@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { roleType } from 'src/redux/tagTypes';
 
 export const roleApi = api.injectEndpoints({
@@ -11,7 +11,7 @@ export const roleApi = api.injectEndpoints({
       query: (body) => ({
         url: '/identity/roles',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [roleType.role],
     }),
@@ -19,7 +19,7 @@ export const roleApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/identity/roles/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [roleType.role],
     }),

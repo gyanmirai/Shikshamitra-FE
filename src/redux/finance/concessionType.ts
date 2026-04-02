@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from './financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from './financeModuleApi';
 
 export const concessionTypeApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,7 +25,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: `/${academicYearId}/concession-types`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.concessionType],
     }),
@@ -33,7 +33,7 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
       query: ({ concessionTypeId, body }) => ({
         url: `/concession-types/${concessionTypeId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.concessionType],
     }),

@@ -1,4 +1,4 @@
-﻿import { academicType } from 'src/redux/tagTypes';
+import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
@@ -27,7 +27,7 @@ export const subjectsApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, body }) => ({
         url: `/academic-mediums/${academicMediumId}/subjects`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.subject],
     }),
@@ -37,7 +37,7 @@ export const subjectsApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, id, body }) => ({
         url: `/academic-mediums/${academicMediumId}/subjects/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.subject],
     }),

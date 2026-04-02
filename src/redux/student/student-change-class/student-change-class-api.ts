@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentChangeClassType } from 'src/redux/tagTypes';
 
 export const studentChangeClassApi = api.injectEndpoints({
@@ -7,7 +7,7 @@ export const studentChangeClassApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/student/student-standard',
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentChangeClassType.studentChangeClass],
     }),

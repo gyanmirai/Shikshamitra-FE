@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentAttendanceType } from 'src/redux/tagTypes';
 
 export const StudentAttendanceTypeApi = api.injectEndpoints({
@@ -22,7 +22,7 @@ export const StudentAttendanceTypeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/students/attendance/settings/leave-types/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentAttendanceType.studentAttendanceType],
     }),
