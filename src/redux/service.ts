@@ -9,6 +9,9 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { tagTypes } from './tagTypes';
 
 // 🔹 Base query (like axios base config)
+// Note: Content-Type is NOT set globally — it's set per-request in baseQueryWithAuth
+// so that FormData requests (file uploads) can have Content-Type auto-set by the browser
+// (with the correct multipart boundary), while JSON requests get application/json.
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   credentials: 'include', // ✅ send cookies
@@ -32,6 +35,16 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
+    }
+
+    // ✅ Detect non-JSON bodies (file uploads or form-encoded data)
+    // For FormData: browser auto-sets multipart/form-data with correct boundary
+    // For URLSearchParams: browser auto-sets application/x-www-form-urlencoded
+    // For everything else: set application/json so RTK Query serializes the body.
+    const argBody = typeof args !== 'string' ? (args as any).body : undefined;
+    const isNonJsonBody = argBody instanceof FormData || argBody instanceof URLSearchParams;
+    if (!isNonJsonBody) {
+      headers['Content-Type'] = 'application/json';
     }
 
     // ✅ Call API
