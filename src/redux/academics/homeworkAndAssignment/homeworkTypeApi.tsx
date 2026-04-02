@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { homeworkType } from 'src/redux/tagTypes';
 
 export const homeworkTypeApi = api.injectEndpoints({
@@ -15,7 +15,7 @@ export const homeworkTypeApi = api.injectEndpoints({
       query: (body) => ({
         url: '/homework-type',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [homeworkType.homeworkType],
     }),
@@ -23,7 +23,7 @@ export const homeworkTypeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/homework-type/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [homeworkType.homeworkType],
     }),

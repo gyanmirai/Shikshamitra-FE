@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const examinationTypeApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -29,7 +29,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, body }) => ({
         url: `/academics/examination/settings/exam-type`,
         method: 'POST',
-        data: body,
+        body,
         params: { academicMediumId },
       }),
       invalidatesTags: [academicType.examinationType],
@@ -40,7 +40,7 @@ export const examinationTypeApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, id, body }) => ({
         url: `/academics/examination/settings/exam-type/${id}`,
         method: 'PUT',
-        data: body,
+        body,
         params: { academicMediumId },
       }),
       invalidatesTags: [academicType.examinationType],

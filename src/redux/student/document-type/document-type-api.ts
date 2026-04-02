@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentDocumentType } from 'src/redux/tagTypes';
 
 export const StudentDocumentTypeApi = api.injectEndpoints({
@@ -36,7 +36,7 @@ export const StudentDocumentTypeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student-enrollment/settings/document-types/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentDocumentType.studentDocumentType],
     }),

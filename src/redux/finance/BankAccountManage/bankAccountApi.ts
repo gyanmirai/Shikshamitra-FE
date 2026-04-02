@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from '../financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from '../financeModuleApi';
 
 export const bankAccountApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -18,7 +18,7 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: '/bank-accounts',
         method: 'POST',
-        data: body,
+        body,
         params: {
           academicYearId,
         },
@@ -29,7 +29,7 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
       query: ({ bankAccountId, body }: { bankAccountId: string; body: any }) => ({
         url: `/bank-accounts/${bankAccountId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.bankAccount],
     }),

@@ -1,5 +1,6 @@
-﻿import { employeeApi } from './employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
+
+import { employeeApi } from './employeeApi';
 
 export const leaveApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -17,7 +18,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         url: '/hr-leave-types',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeType],
     }),
@@ -32,7 +33,7 @@ export const leaveApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/hr-leave-types/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeType],
     }),
@@ -58,7 +59,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         url: '/leave-policies',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeLeavePolicy],
     }),
@@ -73,7 +74,7 @@ export const leaveApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/leave-policies/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employeeLeavePolicy],
     }),
@@ -99,7 +100,7 @@ export const leaveApi = employeeApi.injectEndpoints({
         url: '/leave-management',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -124,7 +125,7 @@ export const leaveApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/leave-management/${id}/approve`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),
@@ -132,7 +133,7 @@ export const leaveApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/leave-management/${id}/reject`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),

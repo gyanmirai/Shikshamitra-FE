@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { entranceExamSlotType } from 'src/redux/tagTypes';
 
 export const EntranceExamSlotApi = api.injectEndpoints({
@@ -22,7 +22,7 @@ export const EntranceExamSlotApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student-enrollment/settings/entrance-exam-slots/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [entranceExamSlotType.entranceExamSlot],
     }),

@@ -1,6 +1,6 @@
-﻿import { employeeApi } from '../hr/employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
 
+import { employeeApi } from '../hr/employeeApi';
 
 export const pfApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -17,7 +17,7 @@ export const pfApi = employeeApi.injectEndpoints({
       query: ({ body, academicYearId }) => ({
         url: '/payroll/pf-rules',
         method: 'POST',
-        data: body,
+        body,
         params: { academicYearId },
       }),
       invalidatesTags: [employeeType.pf],
@@ -27,7 +27,7 @@ export const pfApi = employeeApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/payroll/pf-rules/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.pf],
     }),

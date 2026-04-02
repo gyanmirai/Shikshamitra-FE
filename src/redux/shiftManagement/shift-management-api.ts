@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { shiftManagementType } from 'src/redux/tagTypes';
 
 export const shiftManagementApi = api.injectEndpoints({
@@ -7,7 +7,7 @@ export const shiftManagementApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/shift-management/',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [shiftManagementType.shift],
     }),
@@ -21,7 +21,7 @@ export const shiftManagementApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/shift-management/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [shiftManagementType.shift],
     }),

@@ -1,6 +1,6 @@
-﻿import { classManagementApi } from '../classManagementApi';
 import { classManagementType } from 'src/redux/tagTypes';
 
+import { classManagementApi } from '../classManagementApi';
 
 export const classTeacherAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -26,7 +26,7 @@ export const classTeacherAssignmentApi = classManagementApi.injectEndpoints({
       query: (body) => ({
         url: 'class-teachers/assignments',
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [classManagementType.classTeacherAssignment],
     }),

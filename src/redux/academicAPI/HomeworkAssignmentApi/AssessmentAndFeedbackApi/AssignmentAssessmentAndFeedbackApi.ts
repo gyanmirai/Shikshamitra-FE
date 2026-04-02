@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -52,7 +52,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
       query: ({ assignmentId, studentId, body }) => ({
         url: `assignment/${assignmentId}/submissions/${studentId}/feedback`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.assignmentSubmissions],
     }),
@@ -62,7 +62,7 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
       query: ({ assignmentId, studentId, body }) => ({
         url: `assignment/${assignmentId}/submissions/${studentId}/status`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.assignmentSubmissions],
     }),

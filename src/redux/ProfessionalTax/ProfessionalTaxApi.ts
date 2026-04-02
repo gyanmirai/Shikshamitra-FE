@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { professionalType } from 'src/redux/tagTypes';
 
 export const ProfessionalApi = api.injectEndpoints({
@@ -22,7 +22,7 @@ export const ProfessionalApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/professional-tax/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [professionalType.pf],
     }),

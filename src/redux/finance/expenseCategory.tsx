@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from './financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from './financeModuleApi';
 
 export const expenseCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -19,7 +19,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: '/expense-categories',
         method: 'POST',
-        data: body,
+        body,
         params: {
           academicYearId,
         },
@@ -31,7 +31,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
       query: ({ expenseCategoryId, body }) => ({
         url: `/expense-categories/${expenseCategoryId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.expenseCategory],
     }),

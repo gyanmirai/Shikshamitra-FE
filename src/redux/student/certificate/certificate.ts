@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentCertificateType } from 'src/redux/tagTypes';
 
 export const StudentCertificateApi = api.injectEndpoints({
@@ -7,7 +7,7 @@ export const StudentCertificateApi = api.injectEndpoints({
       query: ({ studentId, body }) => ({
         url: `/students/upload-certificate?studentId=${studentId}`,
         method: 'POST',
-        data: body,
+        body,
         headers: {
           'Content-Type': 'multipart/form-data',
         },

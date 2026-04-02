@@ -1,5 +1,7 @@
 // src/redux/services/api.ts
 
+import type { FetchArgs } from '@reduxjs/toolkit/query/react';
+
 import { toast } from 'sonner';
 import { signOut, getSession } from 'next-auth/react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -10,17 +12,18 @@ import { tagTypes } from './tagTypes';
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   credentials: 'include', // ✅ send cookies
-  headers: {
-    'Content-Type': 'application/json',
-    accept: '*/*',
-  },
 });
 
 // 🔹 Custom baseQuery (like interceptors)
 const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) => {
   try {
+    console.log('API Request:', args); // ✅ Log request details
     // ✅ Request interceptor logic
-    const headers: Record<string, string> = {};
+    const headers: any = {
+      'Content-Type': 'application/json',
+      accept: '*/*',
+      ...((args as FetchArgs)?.headers || {}),
+    };
 
     if (typeof window !== 'undefined') {
       const session: any = await getSession();
@@ -39,6 +42,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
           ...(typeof args !== 'string' ? args.headers : {}),
           ...headers,
         },
+        ...((args as any)?.data ? { body: (args as any)?.data } : {}),
       },
       api,
       extraOptions

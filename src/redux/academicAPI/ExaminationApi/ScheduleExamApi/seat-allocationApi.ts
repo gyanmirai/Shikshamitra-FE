@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const seatAllocationApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -20,7 +20,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
         url: `exams/${examId}/seat-allocation/save`,
         method: 'POST',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.seatAllocation],
     }),

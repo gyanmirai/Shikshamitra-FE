@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const chaptersApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -18,7 +18,7 @@ export const chaptersApi = academicApi.injectEndpoints({
       query: (body) => ({
         url: `/subjects/${body.subjectId}/chapters`,
         method: 'POST',
-        data: body,
+        body,
         params: { subjectId: body.subjectId, classId: body.classId },
       }),
       invalidatesTags: [academicType.chapter],
@@ -29,7 +29,7 @@ export const chaptersApi = academicApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/chapters/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.chapter],
     }),

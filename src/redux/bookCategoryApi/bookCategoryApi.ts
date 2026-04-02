@@ -1,4 +1,4 @@
-﻿import { bookCategoryType } from 'src/redux/tagTypes';
+import { bookCategoryType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -18,7 +18,7 @@ export const bookCategoryApi = api.injectEndpoints({
         return {
           url: '/book-categories',
           method: 'POST',
-          data: body,
+          body,
           params: { academicYearId },
         };
       },

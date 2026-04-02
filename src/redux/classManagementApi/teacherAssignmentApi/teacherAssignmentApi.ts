@@ -1,6 +1,6 @@
-﻿import { classManagementApi } from '../classManagementApi';
 import { classManagementType } from 'src/redux/tagTypes';
 
+import { classManagementApi } from '../classManagementApi';
 
 // Teacher Assignment APIs (reference: StudentElectiveAssignment)
 // GET /api/teachers/assignments?academicMediumId={uuid}&classId={uuid}
@@ -42,7 +42,7 @@ export const teacherAssignmentApi = classManagementApi.injectEndpoints({
       query: (body) => ({
         url: 'teachers/assignments',
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [classManagementType.teacherAssignment],
     }),

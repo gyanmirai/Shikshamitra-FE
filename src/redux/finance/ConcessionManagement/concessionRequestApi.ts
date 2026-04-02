@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from '../financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from '../financeModuleApi';
 
 export const concessionRequestApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -25,7 +25,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
       query: (body) => ({
         url: '/finance/concessions',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
@@ -34,7 +34,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
       query: ({ concessionRequestId, body }) => ({
         url: `/finance/concessions/${concessionRequestId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
@@ -43,7 +43,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
     //   query: ({ concessionRequestId, body }) => ({
     //     url: `/finance/concessions/${concessionRequestId}/approve`,
     //     method: 'POST',
-    //     data: body,
+    //     body,
     //   }),
     //   invalidatesTags: [financeModuleType.concessionRequest],
     // }),
@@ -52,7 +52,7 @@ export const concessionRequestApi = financeModuleApi.injectEndpoints({
     //   query: ({ concessionRequestId, body }) => ({
     //     url: `/finance/concessions/${concessionRequestId}/reject`,
     //     method: 'POST',
-    //     data: body,
+    //     body,
     //   }),
     //   invalidatesTags: [financeModuleType.concessionRequest],
     // }),

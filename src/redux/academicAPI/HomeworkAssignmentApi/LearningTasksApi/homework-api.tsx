@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const homeworkApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -33,7 +33,7 @@ export const homeworkApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, ...body }) => ({
         url: `app/homework?academicMediumId=${academicMediumId}`,
         method: 'POST',
-        data: body,
+        body,
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -46,7 +46,7 @@ export const homeworkApi = academicApi.injectEndpoints({
       query: ({ id, academicMediumId, body }) => ({
         url: `app/homework/${id}`,
         method: 'PUT',
-        data: body,
+        body,
         params: {
           academicMediumId,
         },

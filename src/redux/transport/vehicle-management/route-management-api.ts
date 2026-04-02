@@ -1,6 +1,6 @@
-﻿import { transportApi } from '../transportApi';
 import { transportType } from 'src/redux/tagTypes';
 
+import { transportApi } from '../transportApi';
 
 export const routeManagementApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -20,7 +20,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         url: '/transport/routes',
         method: 'POST',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.routeManagement],
     }),
@@ -32,7 +32,9 @@ export const routeManagementApi = transportApi.injectEndpoints({
         method: 'GET',
         params: { academicMediumId },
       }),
-      providesTags: (result, error, { routeId }) => [{ type: transportType.routeManagement, id: routeId }],
+      providesTags: (result, error, { routeId }) => [
+        { type: transportType.routeManagement, id: routeId },
+      ],
     }),
 
     // Update route (Step 1)
@@ -41,7 +43,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         url: `/transport/routes/${routeId}`,
         method: 'PUT',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: routeId },
@@ -93,7 +95,7 @@ export const routeManagementApi = transportApi.injectEndpoints({
         url: `/transport/routes/${routeId}/vehicle-assignment`,
         method: 'POST',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { routeId }) => [
         { type: transportType.routeManagement, id: `${routeId}-vehicle` },

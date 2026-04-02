@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const electiveGroupsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -27,7 +27,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, body }) => ({
         url: `/academic-mediums/${academicMediumId}/elective-groups`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.electiveGroup],
     }),
@@ -37,7 +37,7 @@ export const electiveGroupsApi = academicApi.injectEndpoints({
       query: ({ academicMediumId, id, body }) => ({
         url: `/academic-mediums/${academicMediumId}/elective-groups/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.electiveGroup],
     }),

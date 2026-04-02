@@ -1,4 +1,4 @@
-﻿import { calendarModuleApi } from 'src/redux/calendar/calendarApi';
+import { calendarModuleApi } from 'src/redux/calendar/calendarApi';
 import { communicationType, calendarModuleType } from 'src/redux/tagTypes';
 
 export const holidayApi = calendarModuleApi.injectEndpoints({
@@ -42,7 +42,7 @@ export const holidayApi = calendarModuleApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/calendar/holidays/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [communicationType.holiday],
     }),

@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { paymentStatusOptionType } from 'src/redux/tagTypes';
 
 export const paymentStatusOptionApi = api.injectEndpoints({
@@ -15,7 +15,7 @@ export const paymentStatusOptionApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/payment-status-option',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [paymentStatusOptionType.paymentStatusOption],
     }),
@@ -23,7 +23,7 @@ export const paymentStatusOptionApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/payment-status-option/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [paymentStatusOptionType.paymentStatusOption],
     }),

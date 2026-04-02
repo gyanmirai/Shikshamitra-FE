@@ -1,4 +1,4 @@
-﻿import { financeModuleType } from 'src/redux/tagTypes';
+import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
 
@@ -16,7 +16,7 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: `/receipt-books`,
         method: 'POST',
-        data: body,
+        body,
         params: {
           academicYearId,
         },
@@ -27,7 +27,7 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/receipt-books/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.receiptBook],
     }),
@@ -42,7 +42,7 @@ export const receiptBookApi = financeModuleApi.injectEndpoints({
       query: ({ receiptBookId, body }) => ({
         url: `/receipt-books/${receiptBookId}/status`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.receiptBook],
     }),

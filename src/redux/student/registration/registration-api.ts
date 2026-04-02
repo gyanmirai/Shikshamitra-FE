@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentRegistrationType } from 'src/redux/tagTypes';
 
 export const StudentRegistrationApi = api.injectEndpoints({
@@ -14,7 +14,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: (body) => ({
         url: '/student/enrollment/registrations/general-details',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -22,7 +22,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/student-enrollment/student-registration/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -59,7 +59,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/general-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -74,7 +74,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/family-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -89,7 +89,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/bank-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -104,7 +104,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/previous-school-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -119,7 +119,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/additional-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -134,7 +134,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/communication-details`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -149,7 +149,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student/enrollment/registrations/${id}/medical-records`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentRegistration],
     }),
@@ -159,7 +159,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
       query: ({ studentId, body }) => ({
         url: `/app/student-document/upload-document/${studentId}`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentDocument],
     }),
@@ -170,7 +170,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationType.studentDocument],
     }),

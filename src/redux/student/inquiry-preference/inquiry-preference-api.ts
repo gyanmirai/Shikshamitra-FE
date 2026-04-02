@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { inquiryPreferenceType } from 'src/redux/tagTypes';
 
 export const inquiryPreferenceApi = api.injectEndpoints({
@@ -22,7 +22,7 @@ export const inquiryPreferenceApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/student-enrollment/settings/inquiry-preferences/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [inquiryPreferenceType.studentDocumentType],
     }),

@@ -1,4 +1,4 @@
-﻿import { boardType } from 'src/redux/tagTypes';
+import { boardType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -16,7 +16,7 @@ export const boardApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/education-board',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [boardType.board],
     }),
@@ -24,7 +24,7 @@ export const boardApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/education-board/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [boardType.board],
     }),

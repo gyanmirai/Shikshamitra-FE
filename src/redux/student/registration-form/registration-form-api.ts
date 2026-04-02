@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentRegistrationFormType } from 'src/redux/tagTypes';
 
 export const StudentRegistrationFormApi = api.injectEndpoints({
@@ -14,7 +14,7 @@ export const StudentRegistrationFormApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/student-enrollment/student-registration-form',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationFormType.studentRegistrationForm],
     }),
@@ -22,7 +22,7 @@ export const StudentRegistrationFormApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/student-enrollment/student-registration-form/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [studentRegistrationFormType.studentRegistrationForm],
     }),

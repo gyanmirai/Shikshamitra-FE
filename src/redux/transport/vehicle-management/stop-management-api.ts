@@ -1,6 +1,6 @@
-﻿import { transportApi } from '../transportApi';
 import { transportType } from 'src/redux/tagTypes';
 
+import { transportApi } from '../transportApi';
 
 // ----------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         url: '/transport/stops',
         method: 'POST',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.stopManagement],
     }),
@@ -33,7 +33,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         url: `/transport/stops/${stopId}`,
         method: 'PUT',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.stopManagement],
     }),
@@ -44,7 +44,7 @@ export const stopManagementApi = transportApi.injectEndpoints({
         url: `/transport/stops/${stopId}/status`,
         method: 'PUT',
         params: { academicMediumId },
-        data: body,
+        body,
       }),
       invalidatesTags: [transportType.stopManagement],
     }),

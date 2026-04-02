@@ -1,4 +1,4 @@
-﻿import { librarySettingsType } from 'src/redux/tagTypes';
+import { librarySettingsType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -28,7 +28,7 @@ export const librarySettingsApi = api.injectEndpoints({
         return {
           url: '/api/library/charge-categories',
           method: 'POST',
-          data: body,
+          body,
           params: { academicYearId },
         };
       },
@@ -67,7 +67,7 @@ export const librarySettingsApi = api.injectEndpoints({
         return {
           url: '/api/library-hours',
           method: 'POST',
-          data: body,
+          body,
           params: { academicYearId },
         };
       },
@@ -111,7 +111,7 @@ export const librarySettingsApi = api.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: `/api/library/sections`,
         method: 'POST',
-        data: body,
+        body,
         params: { academicYearId },
       }),
       invalidatesTags: [librarySettingsType.librarySettings],

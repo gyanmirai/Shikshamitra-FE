@@ -1,4 +1,4 @@
-﻿import { academicType } from 'src/redux/tagTypes';
+import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
 
@@ -17,7 +17,7 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
       query: (body) => ({
         url: 'weekly-lecture-slots',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.weeklyLectureSlot],
     }),
@@ -42,7 +42,7 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
       query: ({ lectureSlotId, body }) => ({
         url: `weekly-lecture-slots/${lectureSlotId}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: (result, error, { lectureSlotId }) => [
         academicType.weeklyLectureSlot,

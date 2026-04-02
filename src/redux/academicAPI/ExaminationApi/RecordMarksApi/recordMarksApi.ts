@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const recordMarksApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -19,7 +19,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
       query: ({ examId, studentId, body }) => ({
         url: `exams/${examId}/students/${studentId}/marks`,
         method: 'PATCH',
-        data: body,
+        body,
       }),
       invalidatesTags: [academicType.recordMarks],
     }),

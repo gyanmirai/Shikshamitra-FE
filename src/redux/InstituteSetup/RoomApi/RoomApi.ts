@@ -1,6 +1,6 @@
-﻿import { instituteSetupApi } from '../instituteSetupApi';
 import { instituteSetupType } from 'src/redux/tagTypes';
 
+import { instituteSetupApi } from '../instituteSetupApi';
 
 export const roomsApi = instituteSetupApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -33,7 +33,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/rooms/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [instituteSetupType.rooms],
     }),

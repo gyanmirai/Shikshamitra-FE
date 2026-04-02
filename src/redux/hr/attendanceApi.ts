@@ -1,5 +1,6 @@
-﻿import { employeeApi } from './employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
+
+import { employeeApi } from './employeeApi';
 
 export const attendanceApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,7 +10,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         url: '/attendance/configuration',
         method: 'POST',
         params: { academicYearId },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.attendanceRule],
     }),
@@ -54,7 +55,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
       query: (body) => ({
         url: '/attendance/employees',
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.attendance],
     }),
@@ -65,7 +66,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        data: body,
+        body,
       }),
       invalidatesTags: [employeeType.attendance],
     }),

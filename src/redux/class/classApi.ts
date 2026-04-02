@@ -1,4 +1,4 @@
-﻿import { classType } from 'src/redux/tagTypes';
+import { classType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
@@ -16,7 +16,7 @@ export const classApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/standard',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [classType.class],
     }),
@@ -24,7 +24,7 @@ export const classApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/standard/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [classType.class],
     }),

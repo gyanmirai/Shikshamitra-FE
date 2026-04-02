@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { payrollStructureType } from 'src/redux/tagTypes';
 
 export const payrollStructureApi = api.injectEndpoints({
@@ -11,7 +11,7 @@ export const payrollStructureApi = api.injectEndpoints({
       query: (body) => ({
         url: '/app/payroll-structure',
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [payrollStructureType.payrollStructure],
     }),
@@ -19,7 +19,7 @@ export const payrollStructureApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/app/payroll-structure/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [payrollStructureType.payrollStructure],
     }),

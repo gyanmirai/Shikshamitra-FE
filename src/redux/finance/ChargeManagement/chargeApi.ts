@@ -1,6 +1,6 @@
-﻿import { financeModuleApi } from '../financeModuleApi';
 import { financeModuleType } from 'src/redux/tagTypes';
 
+import { financeModuleApi } from '../financeModuleApi';
 
 export const chargesApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -16,7 +16,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: '/charges',
         method: 'POST',
-        data: body,
+        body,
         params: { academicYearId },
       }),
       invalidatesTags: [financeModuleType.charges],
@@ -25,7 +25,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/charges/${id}`,
         method: 'PUT',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.charges],
     }),
@@ -40,7 +40,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/charges/${id}/approve`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.charges],
     }),
@@ -48,7 +48,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/charges/${id}/reject`,
         method: 'POST',
-        data: body,
+        body,
       }),
       invalidatesTags: [financeModuleType.charges],
     }),
