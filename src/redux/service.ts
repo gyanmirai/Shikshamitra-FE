@@ -14,14 +14,13 @@ import { tagTypes } from './tagTypes';
 // (with the correct multipart boundary), while JSON requests get application/json.
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  credentials: 'include', // ✅ send cookies
+  credentials: 'include', //  send cookies
 });
 
 // 🔹 Custom baseQuery (like interceptors)
 const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) => {
   try {
-    console.log('API Request:', args); // ✅ Log request details
-    // ✅ Request interceptor logic
+    //  Request interceptor logic
     const headers: any = {
       'Content-Type': 'application/json',
       accept: '*/*',
@@ -37,7 +36,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
       }
     }
 
-    // ✅ Detect non-JSON bodies (file uploads or form-encoded data)
+    //  Detect non-JSON bodies (file uploads or form-encoded data)
     // For FormData: browser auto-sets multipart/form-data with correct boundary
     // For URLSearchParams: browser auto-sets application/x-www-form-urlencoded
     // For everything else: set application/json so RTK Query serializes the body.
@@ -47,7 +46,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
       headers['Content-Type'] = 'application/json';
     }
 
-    // ✅ Call API
+    //  Call API
     const result = await rawBaseQuery(
       {
         ...(typeof args === 'string' ? { url: args } : args),
@@ -61,7 +60,7 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
       extraOptions
     );
 
-    // ✅ Response interceptor logic
+    //  Response interceptor logic
     if (result.error) {
       const { status } = result.error;
 

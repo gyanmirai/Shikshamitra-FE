@@ -56,7 +56,10 @@ const ChangeStatusForm = ({
       try {
         await updateStatus({
           id: employeeId,
-          employeeStatusType: values.status.value,
+          body: {
+            employeeStatusType: values.status.value,
+            remarks: values.remarks,
+          },
         }).unwrap();
         shikshaMitraToast.success({
           message: `Status of ${employeeName} has been updated successfully.`,

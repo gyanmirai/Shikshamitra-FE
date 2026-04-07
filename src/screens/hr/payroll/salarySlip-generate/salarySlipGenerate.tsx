@@ -12,7 +12,6 @@ import { hrPaths } from 'src/constants/hr-menus';
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
-import { LoadingScreen } from 'src/components/loading-screen';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
@@ -27,6 +26,7 @@ import {
   Button,
   Avatar,
   Divider,
+  Skeleton,
   CardHeader,
   Typography,
 } from '@mui/material';
@@ -240,7 +240,44 @@ const PaySlipGenerationScreen = () => {
           </Grid>
         </>
       ) : employeeSalarySlipLoading ? (
-        <LoadingScreen />
+        <>
+          <Grid container spacing={1}>
+            {[1, 2, 3].map((item) => (
+              <Grid size={{ xs: 12, md: 4 }} key={item}>
+                <Card sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Skeleton variant="rounded" width={56} height={56} />
+                  <Box flexGrow={1}>
+                    <Skeleton variant="text" width="50%" height={20} sx={{ mb: 0.5 }} />
+                    <Skeleton variant="text" width="70%" height={40} />
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+          <Divider sx={{ my: 1 }} />
+          <Grid container spacing={1}>
+            {[1, 2].map((item) => (
+              <Grid size={{ xs: 12, md: 6 }} key={item}>
+                <Card>
+                  <CardHeader
+                    avatar={<Skeleton variant="circular" width={32} height={32} />}
+                    title={<Skeleton variant="text" width="30%" height={24} />}
+                    subheader={<Skeleton variant="text" width="40%" height={20} />}
+                    sx={{ p: 2 }}
+                  />
+                  <Box sx={{ px: 2, py: 2, pt: 0 }}>
+                    <Skeleton
+                      variant="rectangular"
+                      width="100%"
+                      height={200}
+                      sx={{ borderRadius: 1 }}
+                    />
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </>
       ) : (
         <EmptyContent title="No Data Found Search the Employee" />
       )}
