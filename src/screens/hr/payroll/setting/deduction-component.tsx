@@ -13,6 +13,7 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -53,24 +54,19 @@ import {
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  deductionName: string;
+  deductionComponentName?: string;
+  deductionName?: string;
+  deductionType?: string;
   calculationType: string;
   id: string;
   description: string;
-  isEmployeeSpecific: boolean;
-  isDependent: boolean;
-  dependName: string;
-  dependent: {
-    amount: number;
-    percentage: boolean;
-    elementCode: string;
-  };
+  isSameAmountForAll?: boolean;
   amount: number;
-  amountOfPercentage: number;
-  showOnPayslip: boolean;
-  isSameAmountForAll: boolean;
-  calculatePercentageBasedOn: string;
-  selectedDeductionComponent: string;
+  percentage?: number;
+  visibleInPayslip?: boolean;
+  showOnPayslip?: boolean;
+  selectedDeductionComponent?: string;
+  selectedDeductionComponentId?: string;
 }
 
 const DeductionComponent = () => {
@@ -140,7 +136,7 @@ const DeductionComponent = () => {
             onClick={isDeductionComponentOpen.onTrue}
             sx={{ px: '32px' }}
           >
-            Deduction Component
+            Deduction
           </Button>
         }
       />
@@ -150,8 +146,9 @@ const DeductionComponent = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <b>{deleteInformation?.deductionName}</b> Deduction
-            Component?
+            Are you sure you want to delete{' '}
+            <b>{deleteInformation?.deductionComponentName || deleteInformation?.deductionName}</b>{' '}
+            Deduction Component?
           </>
         }
         action={
@@ -194,7 +191,13 @@ const DeductionComponent = () => {
         tableId="earning-component"
         isLoading={getDeductionComponentsLoading}
         columns={[
-          { id: 'deductionName', label: 'Name', align: 'left', minWidth: '10vw', sticky: true },
+          {
+            id: 'deductionComponentName',
+            label: 'Name',
+            align: 'left',
+            minWidth: '20vw',
+            sticky: true,
+          },
           {
             id: 'deductionType',
             label: 'Deduction Type',
@@ -206,7 +209,6 @@ const DeductionComponent = () => {
               { label: 'Variable', value: 'Variable' },
             ],
           },
-          { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
           {
             id: 'calculationType',
             label: 'Calculation Type',
@@ -226,11 +228,18 @@ const DeductionComponent = () => {
           },
           {
             id: 'amount',
-            label: 'Amount',
+            label: 'Amount / Percentage',
             align: 'right',
             minWidth: '10vw',
             filterType: 'number',
             render(value, row) {
+              if (row.calculationType === 'Percentage') {
+                return (
+                  <Typography variant="caption" fontSize="13px">
+                    {row.percentage}%
+                  </Typography>
+                );
+              }
               return (
                 <Typography variant="caption" fontSize="13px">
                   {formatNumber(value, 'INR')}
@@ -238,6 +247,7 @@ const DeductionComponent = () => {
               );
             },
           },
+          { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
           {
             id: 'showOnPayslip',
             label: 'Visible In Payslip',
@@ -407,27 +417,44 @@ const DeductionComponentForm = ({
 
   const formik = useFormik({
     initialValues: {
-      deductionName: editData?.deductionName || '',
+      deductionName: editData?.deductionComponentName || editData?.deductionName || '',
       description: editData?.description || '',
-      deductionType: editData ? (editData.isSameAmountForAll ? 'Fixed' : 'Variable') : 'Fixed',
+      deductionType:
+        editData?.deductionType ||
+        (editData && editData.isSameAmountForAll !== undefined
+          ? editData.isSameAmountForAll
+            ? 'Fixed'
+            : 'Variable'
+          : 'Fixed'),
       calculationType: editData?.calculationType || '',
-      // calculatePercentageBasedOn: editData?.calculatePercentageBasedOn || '',
-      selectedDeductionComponent: editData?.selectedDeductionComponent || null,
-      amount: editData?.amount || '',
-      showOnPayslip: editData?.showOnPayslip || true,
+      selectedDeductionComponent:
+        editData?.selectedDeductionComponentId || editData?.selectedDeductionComponent || null,
+      amount:
+        editData?.calculationType === 'Percentage'
+          ? editData?.percentage || ''
+          : editData?.amount || '',
+      showOnPayslip: editData?.visibleInPayslip ?? editData?.showOnPayslip ?? true,
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
         const payload = {
-          deductionName: values.deductionName,
+          deductionComponentName: values.deductionName,
           description: values.description,
+          deductionType: values.deductionType,
           calculationType: values.calculationType,
-          calculatePercentageBasedOn: 'CUSTOM_COMPONENT',
-          selectedDeductionComponent: values.selectedDeductionComponent,
-          amount: values.deductionType === 'Fixed' ? values.amount : 0,
-          showOnPayslip: values.showOnPayslip,
-          isSameAmountForAll: values.deductionType === 'Fixed',
+          amount:
+            values.deductionType === 'Fixed' && values.calculationType === 'Amount'
+              ? Number(values.amount) || 0
+              : 0,
+          percentage:
+            values.deductionType === 'Fixed' && values.calculationType === 'Percentage'
+              ? Number(values.amount) || 0
+              : 0,
+          selectedDeductionComponentId:
+            values.calculationType === 'Percentage' ? values.selectedDeductionComponent : null,
+          visibleInPayslip: values.showOnPayslip,
         };
 
         if (editData) {
@@ -435,11 +462,12 @@ const DeductionComponentForm = ({
             id: editData.id,
             body: payload,
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Deduction Component updated successfully' });
         } else {
           await addDeductionComponent({
-            academicYearId: currentYear?.id,
             body: payload,
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Deduction Component added successfully' });
         }
         handleClose(null, true);
       } catch (error) {
@@ -452,12 +480,16 @@ const DeductionComponentForm = ({
     () => [
       ...(getEarningComponentsData?.items || []).map((item: any) => ({
         ...item,
-        componentName: item.componentName, // Map earningName to componentName for unification
+        componentName: item.earningComponentName || item.componentName || 'Unnamed Earning',
         group: 'Earning Components',
       })),
       ...(getDeductionComponentsData?.items || []).map((item: any) => ({
         ...item,
-        componentName: item.componentName, // Map deductionName to componentName for unification
+        componentName:
+          item.deductionComponentName ||
+          item.deductionName ||
+          item.componentName ||
+          'Unnamed Deduction',
         group: 'Deduction Components',
       })),
     ],

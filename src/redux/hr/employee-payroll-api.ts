@@ -34,7 +34,6 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: '/payroll/deduction-components',
         method: 'POST',
-        params: { academicYearId },
         body,
       }),
       invalidatesTags: [employeeType.deductionComponents],
@@ -58,7 +57,6 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
       query: ({ academicYearId, body }) => ({
         url: '/payroll/earning-components',
         method: 'POST',
-        params: { academicYearId },
         body,
       }),
       invalidatesTags: [employeeType.earningComponents],

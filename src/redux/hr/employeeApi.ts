@@ -127,12 +127,10 @@ export const employeeApi = api.injectEndpoints({
     }),
 
     updateEmployeeStatus: builder.mutation({
-      query: ({ id, employeeStatusType }) => ({
-        url: `/app/employee-status/change-status/${id}`,
-        method: 'POST',
-        data: {
-          employeeStatusType,
-        },
+      query: ({ id, body }) => ({
+        url: `/employees/${id}/status`,
+        method: 'PUT',
+        body,
       }),
       invalidatesTags: [employeeType.employee],
     }),

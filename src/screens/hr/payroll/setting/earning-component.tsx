@@ -13,6 +13,7 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -53,15 +54,19 @@ import {
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  componentName: string;
-  componentType: string;
+  earningComponentName?: string;
+  componentName?: string;
+  earningType?: string;
+  componentType?: string;
   id: string;
   description: string;
-  isFixed: boolean;
+  isFixed?: boolean;
   amount: number;
+  percentage?: number;
   visibleInPayslip: boolean;
-  dependOn: string;
-  customComponentId: string;
+  dependOn?: string;
+  selectedEarningComponentId?: string;
+  customComponentId?: string;
 }
 
 const EarningComponent = () => {
@@ -131,7 +136,7 @@ const EarningComponent = () => {
             onClick={isEarningComponentOpen.onTrue}
             sx={{ px: '32px' }}
           >
-            Earning Component
+            Earning
           </Button>
         }
       />
@@ -141,8 +146,9 @@ const EarningComponent = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <b>{deleteInformation?.componentName}</b> Earning
-            Component?
+            Are you sure you want to delete{' '}
+            <b>{deleteInformation?.earningComponentName || deleteInformation?.componentName}</b>{' '}
+            Earning Component?
           </>
         }
         action={
@@ -185,22 +191,30 @@ const EarningComponent = () => {
         tableId="earning-component"
         isLoading={getEarningComponentsLoading}
         columns={[
-          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw', sticky: true },
           {
-            id: 'isFixed',
+            id: 'earningComponentName',
+            label: 'Name',
+            align: 'left',
+            minWidth: '20vw',
+            sticky: true,
+          },
+          {
+            id: 'earningType',
             label: 'Earning Type',
             align: 'left',
             minWidth: '10vw',
             filterType: 'enum',
             enumOptions: [
-              { label: 'Fixed', value: true },
-              { label: 'Variable', value: false },
+              { label: 'Fixed', value: 'Fixed' },
+              { label: 'Variable', value: 'Variable' },
             ],
-            render(value: boolean) {
-              return value ? 'Fixed' : 'Variable';
+            render(value: string | boolean) {
+              if (typeof value === 'boolean') {
+                return value ? 'Fixed' : 'Variable';
+              }
+              return value || 'Fixed';
             },
           },
-          { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
           {
             id: 'calculationType',
             label: 'Calculation Type',
@@ -214,11 +228,18 @@ const EarningComponent = () => {
           },
           {
             id: 'amount',
-            label: 'Amount',
+            label: 'Amount / Percentage',
             align: 'right',
             minWidth: '10vw',
             filterType: 'number',
             render(value, row) {
+              if (row.calculationType === 'Percentage') {
+                return (
+                  <Typography variant="caption" fontSize="13px">
+                    {row.percentage}%
+                  </Typography>
+                );
+              }
               return (
                 <Typography variant="caption" fontSize="13px">
                   {formatNumber(value, 'INR')}
@@ -226,6 +247,7 @@ const EarningComponent = () => {
               );
             },
           },
+          { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
           {
             id: 'visibleInPayslip',
             label: 'Visible In Payslip',
@@ -377,12 +399,22 @@ const EarningComponentForm = ({
 
   const formik = useFormik({
     initialValues: {
-      earningName: editData?.componentName || '',
+      earningName: editData?.earningComponentName || editData?.componentName || '',
       description: editData?.description || '',
-      earningType: editData ? (editData.isFixed ? 'Fixed' : 'Variable') : 'Fixed',
-      calculationType: editData?.componentType || '',
-      selectedEarningComponent: editData?.customComponentId || null,
-      amount: editData?.amount || '',
+      earningType:
+        editData?.earningType ||
+        (editData && editData.isFixed !== undefined
+          ? editData.isFixed
+            ? 'Fixed'
+            : 'Variable'
+          : 'Fixed'),
+      calculationType: editData?.calculationType || editData?.componentType || '',
+      selectedEarningComponent:
+        editData?.selectedEarningComponentId || editData?.customComponentId || null,
+      amount:
+        editData?.calculationType === 'Percentage'
+          ? editData?.percentage || ''
+          : editData?.amount || '',
       showOnPayslip: editData?.visibleInPayslip ?? true,
     },
     enableReinitialize: true,
@@ -390,14 +422,21 @@ const EarningComponentForm = ({
     onSubmit: async (values) => {
       try {
         const payload = {
-          componentName: values.earningName,
+          earningComponentName: values.earningName,
           description: values.description,
-          componentType: values.calculationType,
-          dependOn: 'CUSTOM_COMPONENT',
-          customComponentId: values.selectedEarningComponent,
-          amount: values.earningType === 'Fixed' ? values.amount : 0,
+          earningType: values.earningType,
+          calculationType: values.calculationType,
+          amount:
+            values.earningType === 'Fixed' && values.calculationType === 'Amount'
+              ? Number(values.amount) || 0
+              : 0,
+          percentage:
+            values.earningType === 'Fixed' && values.calculationType === 'Percentage'
+              ? Number(values.amount) || 0
+              : 0,
+          selectedEarningComponentId:
+            values.calculationType === 'Percentage' ? values.selectedEarningComponent : null,
           visibleInPayslip: values.showOnPayslip,
-          isFixed: values.earningType === 'Fixed',
         };
 
         if (editData) {
@@ -405,8 +444,10 @@ const EarningComponentForm = ({
             id: editData.id,
             body: payload,
           }).unwrap();
+          shikshaMitraToast.success({ message: 'Earning Component updated successfully' });
         } else {
-          await addEarningComponent({ academicYearId: currentYear?.id, body: payload }).unwrap();
+          await addEarningComponent({ body: payload }).unwrap();
+          shikshaMitraToast.success({ message: 'Earning Component added successfully' });
         }
         handleClose(null, true);
       } catch (error) {
@@ -418,23 +459,29 @@ const EarningComponentForm = ({
   const { data: getEarningComponentsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEarningComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   const { data: getDeductionComponentsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDeductionComponentsQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
   });
 
   const componentOptions = React.useMemo(
     () => [
       ...(getEarningComponentsData?.items || []).map((item: any) => ({
         ...item,
-        componentName: item.componentName, // Map earningName to componentName for unification
+        componentName: item.earningComponentName || item.componentName, // Map earningName to componentName for unification
         group: 'Earning Components',
       })),
       ...(getDeductionComponentsData?.items || []).map((item: any) => ({
         ...item,
-        componentName: item.componentName, // Map deductionName to componentName for unification
+        componentName: item.deductionName || item.componentName, // Map deductionName to componentName for unification
         group: 'Deduction Components',
       })),
     ],

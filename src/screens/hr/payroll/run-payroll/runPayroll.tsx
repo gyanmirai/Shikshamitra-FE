@@ -1,25 +1,24 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Card, Alert, Avatar, Button, Typography, IconButton } from '@mui/material';
 import {
-  useGetRunPayrollPreviewQuery,
+  useLazyGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
@@ -30,18 +29,15 @@ const RunPayroll = () => {
   const deductionDialog = useBoolean();
   const isPayrollOpen = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const { data: getRunPayrollPreviewData, isLoading: getRunPayrollPreviewLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      currentQueryAndMutation: useGetRunPayrollPreviewQuery,
-      params: { month: month?.format('MMMM-YYYY').toUpperCase(), academicYearId: currentYear?.id },
-      options: {
-        skip: !month,
-      },
-    });
-  // console.log("getRunPayrollPreviewData---", getRunPayrollPreviewData)
+  const [
+    fetchRunPayrollPreview,
+    { data: getRunPayrollPreviewData, isLoading: getRunPayrollPreviewLoading },
+  ] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useLazyGetRunPayrollPreviewQuery,
+  });
+
   const [generateAndLockPayroll, { isLoading: generateAndLockPayrollLoading }] =
     useQueryAndMutation({
       type: 'mutation',
@@ -179,6 +175,9 @@ const RunPayroll = () => {
                 startIcon={<Iconify icon="uiw:pay" />}
                 disabled={!month}
                 onClick={() => {
+                  fetchRunPayrollPreview({
+                    month: month?.format('MMMM-YYYY').toUpperCase(),
+                  });
                   isPayrollOpen.onTrue();
                 }}
                 size="small"
@@ -209,11 +208,20 @@ const RunPayroll = () => {
             <LoadingButton
               variant="contained"
               startIcon={<Iconify icon={GlobalIcons.submit} />}
-              onClick={() => {
-                generateAndLockPayroll({
-                  month: month?.format('MMMM-YYYY').toUpperCase(),
-                  academicYearId: currentYear?.id,
-                });
+              onClick={async () => {
+                try {
+                  const res = await generateAndLockPayroll({
+                    month: month?.format('MMMM-YYYY').toUpperCase(),
+                  }).unwrap();
+                  shikshaMitraToast.success({
+                    message: res?.message || 'Payroll generated successfully.',
+                  });
+                } catch (error: any) {
+                  console.error('Error generating payroll:', error);
+                  shikshaMitraToast.error({
+                    message: error?.data?.message || 'Failed to generate payroll.',
+                  });
+                }
               }}
               loading={generateAndLockPayrollLoading}
               size="small"
