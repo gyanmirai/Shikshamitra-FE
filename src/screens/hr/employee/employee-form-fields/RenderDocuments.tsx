@@ -89,14 +89,16 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
   const tableData =
     documents?.items?.map((item: any) => ({
       ...item,
-      statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+      statusVal: employeeDocuments?.items?.find((doc: any) => doc.fileName === item.documentName)
         ? 'Uploaded'
         : 'Not Uploaded',
       docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
-      statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+      statusColor: employeeDocuments?.items?.find((doc: any) => doc.fileName === item.documentName)
         ? 'success'
         : 'warning',
-      uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
+      uploadDocument: employeeDocuments?.items?.find(
+        (doc: any) => doc.fileName === item.documentName
+      ),
     })) || [];
 
   return (
