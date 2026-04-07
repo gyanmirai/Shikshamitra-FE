@@ -55,7 +55,7 @@ export const toRawMobile = (value: string | null | undefined) => {
 export const personalInformationInitialValues = (
   editData?: Partial<IPersonalInformationResponse>
 ) => ({
-  photo: '',
+  // photo: '',
   lastName: editData ? editData.lastName : '',
   firstName: editData ? editData.firstName : '',
   middleName: editData ? editData.middleName : '',
@@ -354,6 +354,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
+        console.log(values);
         const body: Record<string, any> = {
           lastName: values.lastName,
           firstName: values.firstName,
@@ -387,8 +388,14 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         if (values.addressLine3) {
           body.address3 = values.addressLine3;
         }
+        const formData = new FormData();
+        formData.append('Data', JSON.stringify(body));
 
-        const resp = await addEmployee({ body }).unwrap();
+        if (values.photoFile instanceof File) {
+          formData.append('ProfilePicture', values.photoFile);
+        }
+
+        const resp = await addEmployee({ body: formData }).unwrap();
         formik.setFieldValue('employeeId', resp.id);
         return resp.id;
       }

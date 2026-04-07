@@ -6,7 +6,7 @@ export const employeeApi = api.injectEndpoints({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
       query: ({ search }) => ({
-        url: `/employees/search`,
+        url: `/employees`,
         method: 'GET',
         params: {
           search,
