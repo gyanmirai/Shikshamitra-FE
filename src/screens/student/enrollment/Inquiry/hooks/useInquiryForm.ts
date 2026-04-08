@@ -202,9 +202,33 @@ export const useInquiryForm = (
   // 1. Sync data when fetched by ID (detailed edit data)
   useEffect(() => {
     if (inquiryData?.data) {
-      resetForm({ values: inquiryInitialValues(inquiryData.data, selectedAcademicYear) });
+      // Derive board from medium when academicBoardId is null
+      let derivedBoardId = inquiryData.data.academicBoardId || '';
+      let derivedYearId = inquiryData.data.academicYearId || '';
+
+      if (!derivedBoardId && inquiryData.data.academicMediumId && board?.items) {
+        const derivedBoard = board.items.find((b: Board) =>
+          b.educationMediums?.some((m: any) => m.id === inquiryData.data.academicMediumId)
+        );
+        if (derivedBoard) {
+          derivedBoardId = derivedBoard.id;
+          if (!derivedYearId) {
+            derivedYearId = derivedBoard.academicYearId || '';
+          }
+        }
+      }
+
+      const fallbackYearId = derivedYearId || currentYear?.id || '';
+
+      resetForm({
+        values: {
+          ...inquiryInitialValues(inquiryData.data, fallbackYearId),
+          board: derivedBoardId,
+          academicYear: fallbackYearId,
+        },
+      });
     }
-  }, [inquiryData?.data, resetForm, selectedAcademicYear]);
+  }, [inquiryData?.data, board?.items, currentYear?.id, resetForm]);
 
   // 2. Cascading Dropdowns Logic
   useEffect(() => {
@@ -213,12 +237,16 @@ export const useInquiryForm = (
     if (year) setSelectedAcademicYear(year.name);
 
     // Filter Boards based on Academic Year
+    // Use values.academicYear (already derived/fallback-populated) rather than editData?.academicYearId
+    // which can be null when the backend doesn't return it
     if (board?.items) {
-      const yearIdToFilter = editData?.academicYearId ?? values.academicYear;
-      const findBoards = board.items.filter(
-        (item: Board) => item.academicYearId === yearIdToFilter
-      );
-      setBoards(findBoards);
+      const yearIdToFilter = values.academicYear || editData?.academicYearId;
+      if (yearIdToFilter) {
+        const findBoards = board.items.filter(
+          (item: Board) => item.academicYearId === yearIdToFilter
+        );
+        setBoards(findBoards);
+      }
     }
   }, [academicYear?.items, board?.items, editData?.academicYearId, values.academicYear]);
 

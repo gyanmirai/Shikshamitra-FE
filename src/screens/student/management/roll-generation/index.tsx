@@ -303,7 +303,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
               )}
               <Button
                 startIcon={<ChecklistOutlined />}
-                variant="outlined"
+                variant={isManual ? 'contained' : 'outlined'}
                 onClick={handleManualToggle}
                 size="small"
               >

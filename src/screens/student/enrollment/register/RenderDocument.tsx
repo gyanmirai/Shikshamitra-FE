@@ -15,9 +15,9 @@ import { DocumentStatusOptions } from 'src/enums/document-statusType';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
 import {
-  useUploadDocumentsMutation,
   useGetStudentDocumentsQuery,
   useGetStudentDocumentByIdQuery,
+  useUploadStudentDocumentsMutation,
   useLazyGetStudentDocumentByIdQuery,
 } from 'src/redux/student/registration/registration-api';
 
@@ -39,7 +39,7 @@ export const RenderDocuments = (props: any) => {
   // Mutation hook for uploading new documents
   const [uploadDocument] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUploadDocumentsMutation,
+    currentQueryAndMutation: useUploadStudentDocumentsMutation,
   });
 
   const [fetchDocument] = useLazyGetStudentDocumentByIdQuery();

@@ -155,7 +155,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
     }),
 
     // document
-    uploadDocuments: builder.mutation({
+    uploadStudentDocuments: builder.mutation({
       query: ({ studentId, body }) => ({
         url: `/app/student-document/upload-document/${studentId}`,
         method: 'POST',
@@ -210,7 +210,7 @@ export const {
   useUpdateStudentCommunicationDetailsMutation,
   useUpdateStudentMedicalDetailsMutation,
 
-  useUploadDocumentsMutation,
+  useUploadStudentDocumentsMutation,
   useStudentUpdateDocumentMutation,
   useGetStudentDocumentsQuery,
   useGetStudentDocumentListQuery,
