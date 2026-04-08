@@ -95,6 +95,7 @@ const RoomCreateManagement = () => {
         open={addRoomDialog.value}
         handleClose={() => {
           addRoomDialog.onFalse();
+          setSelectedRoom(null);
         }}
         maxWidth="sm"
         title={selectedRoom ? 'Update Room' : 'Add Room'}

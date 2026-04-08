@@ -206,7 +206,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     name="building"
                     size="small"
                     isLoading={isBuldingLoading}
-                    options={buildings}
+                    options={buildings || []}
                     labelKey="buildingName"
                     valueKey="id"
                     value={formik.values.building}
@@ -230,7 +230,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     label="Floor *"
                     name="floor"
                     size="small"
-                    options={floorsOptions}
+                    options={floorsOptions || []}
                     labelKey="floorName"
                     valueKey="id"
                     value={formik.values.floor}

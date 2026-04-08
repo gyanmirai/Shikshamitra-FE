@@ -1,8 +1,22 @@
+import { motion } from 'framer-motion';
 import { Box, Grid, Typography } from '@mui/material';
 
 import SeatBox from './SeatBox';
 
 import type { IRoom, ISeat, ISeatAllocation, IStudentRoomAssignment } from '../type';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 },
+  },
+};
+
+const columnVariants = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } },
+};
 
 const SeatManagement = ({
   selectedRoom,
@@ -139,87 +153,91 @@ const SeatManagement = ({
           '::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: 'grey.300' },
         }}
       >
-        <Grid container spacing={4} justifyContent="center">
-          {Array.from({ length: selectedRoom.columns }).map((_, colIdx) => {
-            // Filter seats for this column and group by bench
-            const columnSeats = seatList.filter((s) => s.column === colIdx);
+        <motion.div variants={containerVariants} initial="hidden" animate="show">
+          <Grid container spacing={4} justifyContent="center">
+            {Array.from({ length: selectedRoom.columns }).map((_, colIdx) => {
+              // Filter seats for this column and group by bench
+              const columnSeats = seatList.filter((s) => s.column === colIdx);
 
-            // Group seats by bench number
-            const benchesInColumn = columnSeats.reduce((acc: Record<number, ISeat[]>, seat) => {
-              if (!acc[seat.benchNumber]) acc[seat.benchNumber] = [];
-              acc[seat.benchNumber].push(seat);
-              return acc;
-            }, {});
+              // Group seats by bench number
+              const benchesInColumn = columnSeats.reduce((acc: Record<number, ISeat[]>, seat) => {
+                if (!acc[seat.benchNumber]) acc[seat.benchNumber] = [];
+                acc[seat.benchNumber].push(seat);
+                return acc;
+              }, {});
 
-            // Sort bench numbers numerically
-            const benchNumbers = Object.keys(benchesInColumn)
-              .map(Number)
-              .sort((a, b) => a - b);
+              // Sort bench numbers numerically
+              const benchNumbers = Object.keys(benchesInColumn)
+                .map(Number)
+                .sort((a, b) => a - b);
 
-            return (
-              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={`column-${colIdx}`}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: (theme) =>
-                      theme.palette.mode === 'dark'
-                        ? 'rgba(255, 255, 255, 0.02)'
-                        : 'rgba(0, 0, 0, 0.02)',
-                    border: '1px dashed',
-                    borderColor: 'divider',
-                  }}
-                >
-                  <Typography
-                    align="center"
-                    variant="overline"
-                    sx={{
-                      color: 'text.disabled',
-                      fontWeight: 700,
-                      letterSpacing: 1.2,
-                      mb: 1,
-                    }}
-                  >
-                    Column {colIdx + 1}
-                  </Typography>
-
-                  {benchNumbers.map((benchNo) => {
-                    const benchSeats = benchesInColumn[benchNo];
-                    benchSeats.sort((a, b) => a.seatNumber - b.seatNumber);
-
-                    return (
-                      <Box
-                        key={`bench-${benchNo}-${colIdx}`}
+              return (
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={`column-${colIdx}`}>
+                  <motion.div variants={columnVariants}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: (theme) =>
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.02)'
+                            : 'rgba(0, 0, 0, 0.02)',
+                        border: '1px dashed',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Typography
+                        align="center"
+                        variant="overline"
                         sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          gap: 1.5,
-                          p: 1.5,
-                          borderRadius: 1.5,
-                          bgcolor: 'background.paper',
-                          boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.06)',
+                          color: 'text.disabled',
+                          fontWeight: 700,
+                          letterSpacing: 1.2,
+                          mb: 1,
                         }}
                       >
-                        {benchSeats.map((seat) => (
-                          <SeatBox
-                            key={`seat-${seat.seatNumber}`}
-                            seat={seat}
-                            onStudentDrop={onStudentDrop}
-                            onStudentRemove={onStudentRemove}
-                            onSeatSwap={handleSeatSwap}
-                          />
-                        ))}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              </Grid>
-            );
-          })}
-        </Grid>
+                        Column {colIdx + 1}
+                      </Typography>
+
+                      {benchNumbers.map((benchNo) => {
+                        const benchSeats = benchesInColumn[benchNo];
+                        benchSeats.sort((a, b) => a.seatNumber - b.seatNumber);
+
+                        return (
+                          <Box
+                            key={`bench-${benchNo}-${colIdx}`}
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              bgcolor: 'background.paper',
+                              boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.06)',
+                            }}
+                          >
+                            {benchSeats.map((seat) => (
+                              <SeatBox
+                                key={`seat-${seat.seatNumber}`}
+                                seat={seat}
+                                onStudentDrop={onStudentDrop}
+                                onStudentRemove={onStudentRemove}
+                                onSeatSwap={handleSeatSwap}
+                              />
+                            ))}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </motion.div>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </motion.div>
       </Box>
     </Box>
   );

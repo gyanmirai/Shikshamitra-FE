@@ -251,12 +251,14 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               const base64 = await fileToBase64(file);
               formik.setFieldValue('photo', base64); // set base64 preview
               formik.setFieldValue('photoFile', file); // store raw File for upload
-              formik.setFieldTouched('photo', true, false); // mark as touched
-              await formik.validateField('photo'); // force Yup validation
+              formik.setFieldTouched('photo', true); // mark as touched
+              await formik.setFieldValue('photo', base64, true); // triggers validation
             }}
             value={formik.values.photo}
-            error={formik.touched.photo && Boolean(formik.errors.photo)}
-            helperText={formik.touched.photo && formik.errors.photo}
+            error={!!formik.errors.photo && (!!formik.touched.photo || formik.submitCount > 0)}
+            helperText={
+              formik.touched.photo || formik.submitCount > 0 ? formik.errors.photo : undefined
+            }
             disabled={!isBasicDetailsEditable.value}
           />
         </Grid>

@@ -1,4 +1,5 @@
 import type { FormikProps } from 'formik';
+import type { Variants } from 'framer-motion';
 import type { Division } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
@@ -6,12 +7,29 @@ import { useMemo } from 'react';
 import { alpha } from '@mui/system';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import { motion, AnimatePresence } from 'framer-motion';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Grid, Chip, Paper, Switch, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IExamFormValues } from '../type';
+
+// Stagger variants for room assignment cards
+const cardListVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.09, ease: 'easeOut' },
+  },
+  exit: { opacity: 0, transition: { duration: 0.15 } },
+};
+
+const cardItemVariants: Variants = {
+  hidden: { opacity: 0, y: 22 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.18 } },
+};
 
 const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
@@ -21,8 +39,11 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Modernized Switch Section */}
+      {/* Modernized Switch Section with hover animation */}
       <Paper
+        component={motion.div}
+        whileHover={{ scale: 1.012, transition: { duration: 0.18, ease: 'easeOut' } }}
+        whileTap={{ scale: 0.985, transition: { duration: 0.12 } }}
         elevation={0}
         sx={{
           p: 2,
@@ -31,16 +52,18 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
           display: 'flex',
           alignItems: 'center',
           gap: 2,
-          transition: 'all 0.3s ease',
+          cursor: 'pointer',
+          transformOrigin: 'left center',
+          transition: 'background-color 0.3s ease, border-color 0.3s ease',
           backgroundColor: formik.values.isRoomAssign
             ? alpha(theme.palette.primary.main, 0.04)
             : 'background.paper',
-          '&:hover': {
-            backgroundColor: alpha(theme.palette.primary.main, 0.06),
-            borderColor: formik.values.isRoomAssign
-              ? theme.palette.primary.main
-              : theme.palette.divider,
-          },
+          borderColor: formik.values.isRoomAssign
+            ? alpha(theme.palette.primary.main, 0.4)
+            : theme.palette.divider,
+        }}
+        onClick={() => {
+          formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
         }}
       >
         <Switch
@@ -48,7 +71,8 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
           onChange={() => {
             formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
           }}
-          inputProps={{ 'aria-label': 'controlled' }}
+          onClick={(e) => e.stopPropagation()}
+          inputProps={{ 'aria-label': 'room-assignment-toggle' }}
         />
         <Box>
           <Typography variant="subtitle1" fontWeight={700} color="text.primary">
@@ -60,23 +84,35 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
         </Box>
       </Paper>
 
-      {/* Render Subject Cards if functionality is enabled */}
-      {formik.values.isRoomAssign && (
-        <Grid container spacing={3}>
-          {(formik.values.roomDetails && typeof formik.values.roomDetails === 'object'
-            ? Object.entries(formik.values.roomDetails)
-            : []
-          ).map(([subjectName, subjectDetails]) => (
-            <Grid size={{ xs: 12 }} key={subjectName}>
-              <RoomAssignmentCard
-                subjectName={subjectName}
-                subjectData={subjectDetails}
-                formik={formik}
-              />
+      {/* Render Subject Cards if functionality is enabled — animated with AnimatePresence */}
+      <AnimatePresence>
+        {formik.values.isRoomAssign && (
+          <motion.div
+            key="room-cards"
+            variants={cardListVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+          >
+            <Grid container spacing={3}>
+              {(formik.values.roomDetails && typeof formik.values.roomDetails === 'object'
+                ? Object.entries(formik.values.roomDetails)
+                : []
+              ).map(([subjectName, subjectDetails]) => (
+                <Grid size={{ xs: 12 }} key={subjectName}>
+                  <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
+                    <RoomAssignmentCard
+                      subjectName={subjectName}
+                      subjectData={subjectDetails}
+                      formik={formik}
+                    />
+                  </motion.div>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };
@@ -142,7 +178,8 @@ const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
           transition: 'all 0.3s ease',
           boxShadow: theme.customShadows?.card || '0px 4px 20px rgba(0, 0, 0, 0.05)',
           '&:hover': {
-            boxShadow: theme.customShadows?.z8 || '0px 12px 30px rgba(0, 0, 0, 0.1)',
+            boxShadow: theme.customShadows?.z8 || '0px 12px 30px rgba(0, 0, 0, 0.08)',
+            transform: 'translateY(-2px)',
           },
         },
       }}
@@ -169,6 +206,8 @@ const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
             {
               id: 'roomIds',
               label: 'Room Assignment',
+              isFilter: false,
+              isSort: false,
               render: (value, row) => {
                 const fieldPath = `roomDetails.${subjectName}.divisions.${row.divisionId}.roomIds`;
                 const selectedRoomId =
@@ -205,6 +244,8 @@ const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
             {
               id: 'capacity',
               label: 'Capacity',
+              isFilter: false,
+              isSort: false,
               render: (_: any, row: any) => (
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                   {formik.values.roomDetails?.[subjectName]?.divisions?.[row.divisionId]

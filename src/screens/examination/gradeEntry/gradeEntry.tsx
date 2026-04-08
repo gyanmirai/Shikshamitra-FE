@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -262,206 +263,215 @@ const GradeEntry = (props: TabComponentType) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <CustomBreadcrumbs
-        heading="Record Marks"
-        description="Enter and manage student examination marks and grades"
-        links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/scheduleExam' },
-          { name: 'Record Marks' },
-        ]}
-        action={
-          <LoadingButton
-            variant="contained"
-            size="small"
-            disabled={!examId}
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              publishMarksDialog.onTrue();
-            }}
-            loading={isPublishLoading}
-            title="Publish marks to make them visible to students"
-            sx={{ px: '32px' }}
-          >
-            Publish Marks
-          </LoadingButton>
-        }
-      />
-      <Box
-        display="flex"
-        sx={{
-          borderRadius: '8px',
-          bgcolor: 'background.paper',
-          boxShadow: 'var(--shadows-3)',
-          p: 1,
-          gap: 2,
-        }}
-      >
-        {' '}
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          disabled={!classes}
-        />
-        <CustomSelect
-          label="Subject"
-          disabled={!division}
-          options={[
-            { value: 'math', label: 'Mathematics' },
-            { value: 'science', label: 'Science' },
-            { value: 'english', label: 'English' },
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <CustomBreadcrumbs
+          heading="Record Marks"
+          description="Enter and manage student examination marks and grades"
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Examination', href: '/academic/scheduleExam' },
+            { name: 'Record Marks' },
           ]}
-          onChange={(val) => {
-            setSubject(val as string);
-          }}
-          value={subject}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-        <CustomTooltip placement="top" title={examId && `${examId}`}>
-          <Autocomplete
-            disabled={!subject}
-            options={[
-              // Unit Test titles
-              { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
-              { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
-              // Mid Term titles
-              { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
-              { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
-              // Final Term titles
-              { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
-              { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
-              // Practical titles
-              { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
-              { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
-              // Project titles
-              { value: 'project_1', label: 'Project Work 1', type: 'project' },
-              { value: 'project_2', label: 'Project Work 2', type: 'project' },
-              // Assignment titles
-              { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
-              { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-            ].filter((option) => !assignmentType || option.type === assignmentType)}
-            getOptionLabel={(option: any) => option.label || ''}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
-            value={
-              [
-                { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
-                { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
-                { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
-                { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
-                { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
-                { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
-                { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
-                { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
-                { value: 'project_1', label: 'Project Work 1', type: 'project' },
-                { value: 'project_2', label: 'Project Work 2', type: 'project' },
-                { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
-                { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-              ].find((opt) => opt.value === examId) || null
-            }
-            onChange={(event, newValue) => {
-              setExamId(newValue?.value || '');
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Exam Title"
-                size="small"
-                fullWidth
-                sx={{ minWidth: '248px', width: '100%' }}
-              />
-            )}
-          />
-        </CustomTooltip>
-      </Box>
-      <GradeEntryTable
-        data={tableData}
-        selectedStudents={selectedStudents}
-        handleSelectStudent={handleSelectStudent}
-        actions={actions}
-        classId={classes}
-        divisionId={division}
-        subjectId={subject}
-        examId={examId}
-      />
-
-      <CustomDialog
-        open={viewSubmissionDialog.value}
-        handleClose={() => {
-          viewSubmissionDialog.onFalse();
-          setTimeout(() => {
-            setSelectedStudent(null);
-          }, 200); // Adjust timing based on dialog animation if needed
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedStudent?.marks ? 'Update Marks' : 'Assign Marks'}
-            </Typography>
-            <CustomTooltip
-              sx={{ textAlign: 'justify' }}
-              arrow
-              placement="right"
-              title={
-                selectedStudent?.marks
-                  ? 'You can modify the existing marks, grades and feedback for this student.'
-                  : 'Input marks, assign grades, and give feedback for the student.'
-              }
+          action={
+            <LoadingButton
+              variant="contained"
+              size="small"
+              disabled={!examId}
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
+              onClick={() => {
+                publishMarksDialog.onTrue();
+              }}
+              loading={isPublishLoading}
+              title="Publish marks to make them visible to students"
+              sx={{ px: '32px' }}
             >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              Publish Marks
+            </LoadingButton>
+          }
+        />
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          <Box
+            display="flex"
+            sx={{
+              borderRadius: '8px',
+              bgcolor: 'background.paper',
+              boxShadow: 'var(--shadows-3)',
+              p: 1,
+              gap: 2,
+              mb: 1,
+            }}
+          >
+            {' '}
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+              disabled={!classes}
+            />
+            <CustomSelect
+              label="Subject"
+              disabled={!division}
+              options={[
+                { value: 'math', label: 'Mathematics' },
+                { value: 'science', label: 'Science' },
+                { value: 'english', label: 'English' },
+              ]}
+              onChange={(val) => {
+                setSubject(val as string);
+              }}
+              value={subject}
+              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+            />
+            <CustomTooltip placement="top" title={examId && `${examId}`}>
+              <Autocomplete
+                disabled={!subject}
+                options={[
+                  // Unit Test titles
+                  { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
+                  { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
+                  // Mid Term titles
+                  { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
+                  { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
+                  // Final Term titles
+                  { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
+                  { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
+                  // Practical titles
+                  { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
+                  { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
+                  // Project titles
+                  { value: 'project_1', label: 'Project Work 1', type: 'project' },
+                  { value: 'project_2', label: 'Project Work 2', type: 'project' },
+                  // Assignment titles
+                  { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
+                  { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
+                ].filter((option) => !assignmentType || option.type === assignmentType)}
+                getOptionLabel={(option: any) => option.label || ''}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                value={
+                  [
+                    { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
+                    { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
+                    { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
+                    { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
+                    { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
+                    { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
+                    { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
+                    { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
+                    { value: 'project_1', label: 'Project Work 1', type: 'project' },
+                    { value: 'project_2', label: 'Project Work 2', type: 'project' },
+                    { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
+                    { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
+                  ].find((opt) => opt.value === examId) || null
+                }
+                onChange={(event, newValue) => {
+                  setExamId(newValue?.value || '');
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Exam Title"
+                    size="small"
+                    fullWidth
+                    sx={{ minWidth: '248px', width: '100%' }}
+                  />
+                )}
+              />
             </CustomTooltip>
           </Box>
-        }
-      >
-        <AssignGrade data={selectedStudent} onClose={handleClose} />
-      </CustomDialog>
+        </motion.div>
+        <GradeEntryTable
+          data={tableData}
+          selectedStudents={selectedStudents}
+          handleSelectStudent={handleSelectStudent}
+          actions={actions}
+          classId={classes}
+          divisionId={division}
+          subjectId={subject}
+          examId={examId}
+        />
 
-      <CustomDialog
-        open={bulkGradeDialog.value}
-        handleClose={bulkGradeDialog.onFalse}
-        title={`Assign Grade to ${selectedStudents.length} Students`}
-      >
-        <AssignGrade />
-      </CustomDialog>
+        <CustomDialog
+          open={viewSubmissionDialog.value}
+          handleClose={() => {
+            viewSubmissionDialog.onFalse();
+            setTimeout(() => {
+              setSelectedStudent(null);
+            }, 200); // Adjust timing based on dialog animation if needed
+          }}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">
+                {selectedStudent?.marks ? 'Update Marks' : 'Assign Marks'}
+              </Typography>
+              <CustomTooltip
+                sx={{ textAlign: 'justify' }}
+                arrow
+                placement="right"
+                title={
+                  selectedStudent?.marks
+                    ? 'You can modify the existing marks, grades and feedback for this student.'
+                    : 'Input marks, assign grades, and give feedback for the student.'
+                }
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
+        >
+          <AssignGrade data={selectedStudent} onClose={handleClose} />
+        </CustomDialog>
 
-      <ConfirmDialog
-        open={publishMarksDialog.value}
-        onClose={() => {
-          publishMarksDialog.onFalse();
-          // setSelectedExam(null);
-        }}
-        title="Publish"
-        content={
-          <>
-            Are you sure you want to publish marks <strong>{examId}</strong>?`
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              // handleDelete(selectedExam?.id);
-            }}
-          >
-            Publish
-          </Button>
-        }
-      />
+        <CustomDialog
+          open={bulkGradeDialog.value}
+          handleClose={bulkGradeDialog.onFalse}
+          title={`Assign Grade to ${selectedStudents.length} Students`}
+        >
+          <AssignGrade />
+        </CustomDialog>
+
+        <ConfirmDialog
+          open={publishMarksDialog.value}
+          onClose={() => {
+            publishMarksDialog.onFalse();
+            // setSelectedExam(null);
+          }}
+          title="Publish"
+          content={
+            <>
+              Are you sure you want to publish marks <strong>{examId}</strong>?`
+            </>
+          }
+          action={
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
+              onClick={() => {
+                // handleDelete(selectedExam?.id);
+              }}
+            >
+              Publish
+            </Button>
+          }
+        />
+      </Box>
     </Box>
   );
 };
