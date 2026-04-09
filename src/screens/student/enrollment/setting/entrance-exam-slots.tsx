@@ -396,8 +396,22 @@ export const SlotsForm = ({
               academicYearId: currentYear?.id,
               slotName: values.slotName,
               date: dateConvertor(date?.format(dateFormat) || ''),
-              startTime: values.startTime ? values.startTime.format('HH:mm:ss') : null,
-              endTime: values.endTime ? values.endTime.format('HH:mm:ss') : null,
+              startTime:
+                values.startTime && date
+                  ? date
+                      .hour(values.startTime.hour())
+                      .minute(values.startTime.minute())
+                      .second(values.startTime.second())
+                      .format()
+                  : null,
+              endTime:
+                values.endTime && date
+                  ? date
+                      .hour(values.endTime.hour())
+                      .minute(values.endTime.minute())
+                      .second(values.endTime.second())
+                      .format()
+                  : null,
               studentLimit: values.studentLimit,
               roomNo: values.roomNo,
             },
@@ -409,9 +423,23 @@ export const SlotsForm = ({
           await addSlot({
             academicYearId: currentYear?.id,
             slotName: values.slotName,
-            date: dateConvertor(date?.format(dateFormat) || ''),
-            startTime: values.startTime ? values.startTime.format('HH:mm:ss') : null,
-            endTime: values.endTime ? values.endTime.format('HH:mm:ss') : null,
+            // date: dateConvertor(date?.format(dateFormat) || ''),
+            startTimeDate:
+              values.startTime && date
+                ? date
+                    .hour(values.startTime.hour())
+                    .minute(values.startTime.minute())
+                    .second(values.startTime.second())
+                    .format()
+                : null,
+            endTimeDate:
+              values.endTime && date
+                ? date
+                    .hour(values.endTime.hour())
+                    .minute(values.endTime.minute())
+                    .second(values.endTime.second())
+                    .format()
+                : null,
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
           }).unwrap();
