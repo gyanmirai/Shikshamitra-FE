@@ -125,7 +125,7 @@ const SeatAllocationTable = ({
     >
       <Box>
         <CustomizableTable
-          tableId="schedule-exam-table"
+          tableId="seat-allocation-table"
           noDataText={<>Exam Data Not Found </>}
           isLoading={isLoading || isFetching}
           columns={[

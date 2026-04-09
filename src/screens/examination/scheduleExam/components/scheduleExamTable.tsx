@@ -195,19 +195,17 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             </Tabs>
           </motion.div>
           {isScheduleExamButton && (
-            <motion.div variants={headerItemVariant}>
-              <Button
-                size="small"
-                startIcon={<Add />}
-                variant="contained"
-                onClick={() => {
-                  setOpenDialog?.(true);
-                }}
-                sx={{ px: '32px', mt: 1.5 }}
-              >
-                Schedule Exam
-              </Button>
-            </motion.div>
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => {
+                setOpenDialog?.(true);
+              }}
+              sx={{ px: '32px', mt: 1.5 }}
+            >
+              Schedule Exam
+            </Button>
           )}
         </Box>
       </Card>

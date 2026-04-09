@@ -39,7 +39,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             render(value, row) {
               return (
-                <Box key={value.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box key={row.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Box
                     sx={{
                       width: 5,

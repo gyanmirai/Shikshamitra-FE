@@ -41,6 +41,8 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Modernized Switch Section with hover animation */}
       <Paper
+        role="button"
+        tabIndex={0}
         component={motion.div}
         whileHover={{ scale: 1.012, transition: { duration: 0.18, ease: 'easeOut' } }}
         whileTap={{ scale: 0.985, transition: { duration: 0.12 } }}
@@ -64,6 +66,12 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
         }}
         onClick={() => {
           formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
+          }
         }}
       >
         <Switch
