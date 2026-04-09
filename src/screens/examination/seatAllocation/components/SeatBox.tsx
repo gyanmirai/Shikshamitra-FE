@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { RemoveCircle } from '@mui/icons-material';
@@ -113,173 +114,180 @@ const SeatBox = ({
   };
 
   return (
-    <Box
-      draggable={seat.isAssigned} // Only occupied seats can be dragged
-      onDragStart={(e) => {
-        if (seat.isAssigned) {
-          const dragData = { type: 'seat', seat };
-          e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-          e.dataTransfer.effectAllowed = 'move';
-        }
-      }}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      sx={{
-        position: 'relative',
-        width: 140,
-        height: 90,
-        bgcolor: getBgColor(),
-        color: getTextColor(),
-        borderRadius: 1.5,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        border: getBorderStyle(),
-        cursor: seat.isAssigned ? 'move' : 'default',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: seat.isAssigned
-          ? theme.customShadows?.card ||
-            '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)'
-          : 'none',
-        '&:hover': {
-          transform: seat.isAssigned ? 'translateY(-2px)' : 'none',
-          boxShadow: seat.isAssigned ? theme.shadows[4] : 'none',
-          borderColor: !seat.isAssigned ? theme.palette.text.disabled : undefined,
-        },
-      }}
+    <motion.div
+      layout
+      whileHover={seat.isAssigned ? { scale: 1.05 } : {}}
+      whileTap={seat.isAssigned ? { scale: 0.95 } : {}}
+      style={{ display: 'flex' }}
     >
       <Box
+        draggable={seat.isAssigned} // Only occupied seats can be dragged
+        onDragStart={(e: React.DragEvent) => {
+          if (seat.isAssigned) {
+            const dragData = { type: 'seat', seat };
+            e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+            e.dataTransfer.effectAllowed = 'move';
+          }
+        }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         sx={{
-          position: 'absolute',
-          top: 6,
-          left: 8,
-          bgcolor: seat.isAssigned ? 'primary.main' : 'action.disabledBackground',
-          color: seat.isAssigned ? 'primary.contrastText' : 'text.disabled',
-          px: 0.75,
-          py: 0.25,
-          borderRadius: 0.5,
-          fontSize: '0.65rem',
-          fontWeight: 700,
-          lineHeight: 1,
+          position: 'relative',
+          width: 140,
+          height: 90,
+          bgcolor: getBgColor(),
+          color: getTextColor(),
+          borderRadius: 1.5,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          border: getBorderStyle(),
+          cursor: seat.isAssigned ? 'move' : 'default',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: seat.isAssigned
+            ? theme.customShadows?.card ||
+              '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)'
+            : 'none',
+          '&:hover': {
+            transform: seat.isAssigned ? 'translateY(-2px)' : 'none',
+            boxShadow: seat.isAssigned ? theme.shadows[4] : 'none',
+            borderColor: !seat.isAssigned ? theme.palette.text.disabled : undefined,
+          },
         }}
       >
-        {seat.seatNumber.toString().padStart(2, '0')}
-      </Box>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 6,
+            left: 8,
+            bgcolor: seat.isAssigned ? 'primary.main' : 'action.disabledBackground',
+            color: seat.isAssigned ? 'primary.contrastText' : 'text.disabled',
+            px: 0.75,
+            py: 0.25,
+            borderRadius: 0.5,
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            lineHeight: 1,
+          }}
+        >
+          {seat.seatNumber.toString().padStart(2, '0')}
+        </Box>
 
-      {seat.isAssigned && (
-        <Box sx={{ width: '100%', px: 1.5, pt: 1 }}>
-          <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
-            <Typography
-              variant="subtitle2"
-              noWrap
-              sx={{ maxWidth: '100%', fontSize: '0.8rem', fontWeight: 600 }}
-            >
-              {seat.studentName}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {seat.isAssigned && (
+          <Box sx={{ width: '100%', px: 1.5, pt: 1 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
               <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '0.65rem',
-                  color: 'text.secondary',
-                  bgcolor: 'action.hover',
-                  px: 0.5,
-                  borderRadius: 0.5,
-                }}
+                variant="subtitle2"
+                noWrap
+                sx={{ maxWidth: '100%', fontSize: '0.8rem', fontWeight: 600 }}
               >
-                {seat.class}
+                {seat.studentName}
               </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '0.65rem',
-                  color: 'text.secondary',
-                  bgcolor: 'action.hover',
-                  px: 0.5,
-                  borderRadius: 0.5,
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '0.65rem',
+                    color: 'text.secondary',
+                    bgcolor: 'action.hover',
+                    px: 0.5,
+                    borderRadius: 0.5,
+                  }}
+                >
+                  {seat.class}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '0.65rem',
+                    color: 'text.secondary',
+                    bgcolor: 'action.hover',
+                    px: 0.5,
+                    borderRadius: 0.5,
+                  }}
+                >
+                  Rank: {seat.rollNo}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box className="action-menu">
+              <ThreeDotsActions
+                placement="bottom-center"
+                onClickThreeDots={(e) => {
+                  e.stopPropagation();
                 }}
-              >
-                Rank: {seat.rollNo}
-              </Typography>
+                sx={{
+                  position: 'absolute',
+                  top: 4,
+                  right: 4,
+                  zIndex: 1,
+                  width: 24,
+                  height: 24,
+                  '& .MuiSvgIcon-root': { fontSize: 16 },
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+                actions={({ popover }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeStudentDialog.onTrue();
+                        popover.onClose();
+                      }}
+                      sx={{ color: 'error.main' }}
+                    >
+                      <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
+                      Remove Student
+                    </MenuItem>
+                  </MenuList>
+                )}
+              />
             </Box>
           </Box>
+        )}
 
-          <Box className="action-menu">
-            <ThreeDotsActions
-              placement="bottom-center"
-              onClickThreeDots={(e) => {
-                e.stopPropagation();
+        {isDragOver && !seat.isAssigned && (
+          <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
+            Drop Here
+          </Typography>
+        )}
+
+        {!seat.isAssigned && !isDragOver && (
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
+            Empty
+          </Typography>
+        )}
+
+        <ConfirmDialog
+          open={removeStudentDialog.value}
+          onClose={() => {
+            removeStudentDialog.onFalse();
+          }}
+          title="Remove Student"
+          content={
+            <>
+              Are you sure you want to remove <strong>{seat.studentName}</strong> from seat{' '}
+              {seat.seatNumber}?
+            </>
+          }
+          action={
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => {
+                onStudentRemove(seat?.studentId);
+                removeStudentDialog.onFalse();
               }}
-              sx={{
-                position: 'absolute',
-                top: 4,
-                right: 4,
-                zIndex: 1,
-                width: 24,
-                height: 24,
-                '& .MuiSvgIcon-root': { fontSize: 16 },
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-              actions={({ popover }) => (
-                <MenuList>
-                  <MenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeStudentDialog.onTrue();
-                      popover.onClose();
-                    }}
-                    sx={{ color: 'error.main' }}
-                  >
-                    <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
-                    Remove Student
-                  </MenuItem>
-                </MenuList>
-              )}
-            />
-          </Box>
-        </Box>
-      )}
-
-      {isDragOver && !seat.isAssigned && (
-        <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-          Drop Here
-        </Typography>
-      )}
-
-      {!seat.isAssigned && !isDragOver && (
-        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
-          Empty
-        </Typography>
-      )}
-
-      <ConfirmDialog
-        open={removeStudentDialog.value}
-        onClose={() => {
-          removeStudentDialog.onFalse();
-        }}
-        title="Remove Student"
-        content={
-          <>
-            Are you sure you want to remove <strong>{seat.studentName}</strong> from seat{' '}
-            {seat.seatNumber}?
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              onStudentRemove(seat?.studentId);
-              removeStudentDialog.onFalse();
-            }}
-          >
-            Remove
-          </Button>
-        }
-      />
-    </Box>
+            >
+              Remove
+            </Button>
+          }
+        />
+      </Box>
+    </motion.div>
   );
 };
 

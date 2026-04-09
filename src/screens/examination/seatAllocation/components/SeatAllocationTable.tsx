@@ -3,6 +3,7 @@ import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
@@ -117,65 +118,81 @@ const SeatAllocationTable = ({
   );
 
   return (
-    <CustomizableTable
-      tableId="schedule-exam-table"
-      noDataText={<>Exam Data Not Found </>}
-      isLoading={isLoading || isFetching}
-      columns={[
-        { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 120, sticky: true },
-        { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 110 },
-        {
-          id: 'className',
-          label: 'Class',
-          align: 'left',
-          filterType: 'number',
-        },
-        {
-          id: 'divisions',
-          label: 'Divisions',
-          align: 'left',
-          render: (value) => <Box>{value.join(', ')}</Box>,
-        },
-        { id: 'totalStudents', label: 'Total Students', align: 'left', minWidth: 140 },
-        { id: 'allocatedStudents', label: 'Allocated Student', align: 'left', minWidth: 170 },
-        {
-          id: 'pendingStudents',
-          label: 'Pending Allocation Students',
-          align: 'left',
-          minWidth: 240,
-        },
-        {
-          id: 'status',
-          label: 'Status',
-          align: 'left',
-          render: (value, row) => (
-            <Label color={value === 'pending' ? 'warning' : 'primary'}>{value}</Label>
-          ),
-        },
-        {
-          id: 'actions',
-          label: 'Actions',
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                actions={(prop) => actions({ ...prop, row })}
-                placement="right-top"
-                // showViewIcon
-
-                // handleViewClick={() => {
-                //   onViewTimetable(row as IExamFormValues);
-                // }}
-              />
-            );
-          },
-        },
-      ]}
-      data={tableData || []}
-    />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Box>
+        <CustomizableTable
+          tableId="seat-allocation-table"
+          noDataText={<>Exam Data Not Found </>}
+          isLoading={isLoading || isFetching}
+          columns={[
+            { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 120, sticky: true },
+            { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 110 },
+            {
+              id: 'className',
+              label: 'Class',
+              align: 'left',
+              filterType: 'number',
+            },
+            {
+              id: 'divisions',
+              label: 'Divisions',
+              align: 'left',
+              render: (value) => <Box>{value.join(', ')}</Box>,
+            },
+            {
+              id: 'totalStudents',
+              label: 'Total Students',
+              align: 'left',
+              minWidth: 140,
+              filterType: 'number',
+            },
+            {
+              id: 'allocatedStudents',
+              label: 'Allocated Student',
+              align: 'left',
+              minWidth: 170,
+              filterType: 'number',
+            },
+            {
+              id: 'pendingStudents',
+              label: 'Pending Allocation Students',
+              align: 'left',
+              minWidth: 240,
+              filterType: 'number',
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              align: 'left',
+              render: (value, row) => (
+                <Label color={value === 'pending' ? 'warning' : 'primary'}>{value}</Label>
+              ),
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              align: 'left',
+              isSort: false,
+              sticky: true,
+              isFilter: false,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                  />
+                );
+              },
+            },
+          ]}
+          data={tableData || []}
+        />
+      </Box>
+    </motion.div>
   );
 };
 

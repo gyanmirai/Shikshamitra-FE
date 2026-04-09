@@ -169,7 +169,6 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
 
   return (
     <CustomStepperWithFormik
-      scrollbarHeight="400px"
       initialValues={{
         examType: '',
         examName: '',

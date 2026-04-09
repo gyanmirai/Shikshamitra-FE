@@ -1,6 +1,8 @@
+import type { Variants } from 'framer-motion';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import { motion } from 'framer-motion';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
@@ -15,7 +17,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
-import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem } from '@mui/material';
+import { Box, Tab, Card, Tabs, Button, MenuList, MenuItem } from '@mui/material';
 import {
   useGetExamsQuery,
   usePublishExamMutation,
@@ -160,37 +162,38 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [publishExamDialog]
   );
 
+  const headerItemVariant: Variants = {
+    hidden: { opacity: 0, y: -12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+  };
+
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
-          <Tabs
-            value={tabs.value}
-            onChange={handleTabChange}
-            sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
-            }}
-          >
-            {TABS.map((tab) => (
-              <Tab
-                sx={{ fontSize: '12px' }}
-                key={tab.value}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}{' '}
-                    <Label
-                      // variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
-                      color={(tab?.color as LabelColor) || 'default'}
-                    >
-                      {tab.count}
-                    </Label>
-                  </Box>
-                }
-                // icon={tab.icon}
-                value={tab.value}
-              />
-            ))}
-          </Tabs>
+          <motion.div variants={headerItemVariant}>
+            <Tabs
+              value={tabs.value}
+              onChange={handleTabChange}
+              sx={{
+                '& .MuiTabs-flexContainer': { gap: 2 },
+              }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  sx={{ fontSize: '12px' }}
+                  key={tab.value}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}{' '}
+                      <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                    </Box>
+                  }
+                  value={tab.value}
+                />
+              ))}
+            </Tabs>
+          </motion.div>
           {isScheduleExamButton && (
             <Button
               size="small"
