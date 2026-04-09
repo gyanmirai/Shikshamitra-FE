@@ -133,33 +133,37 @@ const RoomCreateManagement = () => {
             color="error"
             size="small"
             onClick={async () => {
+              const roomToDelete = selectedRoom;
+              let deletedRoomIndex = -1;
+
               confirmWithUndo({
-                item: selectedRoom,
-                message: `Room "${selectedRoom?.roomName}" deleted successfully`,
+                item: roomToDelete,
+                message: `Room "${roomToDelete?.roomName}" deleted successfully`,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     roomsApi.util.updateQueryData('getRooms', undefined, (draft: any) => {
                       const targetArray = Array.isArray(draft) ? draft : draft?.items;
                       if (!targetArray) return;
                       const index = targetArray.findIndex(
-                        (item: any) => item.id === selectedRoom?.id
+                        (item: any) => item.id === roomToDelete?.id
                       );
+                      deletedRoomIndex = index;
                       setDeleteIndex(index);
                       if (index !== -1) {
                         targetArray.splice(index, 1);
                       }
                     })
                   ),
-                onUndoRestore: (dispatchFn, index) => {
+                onUndoRestore: (dispatchFn) => {
                   dispatchFn(
                     roomsApi.util.updateQueryData('getRooms', undefined, (draft: any) => {
                       const targetArray = Array.isArray(draft) ? draft : draft?.items;
-                      if (!targetArray || index === -1) return;
-                      targetArray.splice(index, 0, selectedRoom);
+                      if (!targetArray || deletedRoomIndex === -1 || !roomToDelete) return;
+                      targetArray.splice(deletedRoomIndex, 0, roomToDelete);
                     })
                   );
                 },
-                onCommit: () => deleteRoom(selectedRoom?.id),
+                onCommit: () => deleteRoom(roomToDelete?.id),
               });
               deleteRoomDialog.onFalse();
               setSelectedRoom(null);
