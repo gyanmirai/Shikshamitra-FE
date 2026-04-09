@@ -166,33 +166,37 @@ const BuildingManagement = () => {
             color="error"
             size="small"
             onClick={async () => {
+              const buildingToDelete = selectedBuilding;
+              let deletedIndex = -1;
+
               confirmWithUndo({
-                item: selectedBuilding,
-                message: `Building "${selectedBuilding?.buildingName}" deleted successfully`,
+                item: buildingToDelete,
+                message: `Building "${buildingToDelete?.buildingName}" deleted successfully`,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     buildingsApi.util.updateQueryData('getBuildings', undefined, (draft: any) => {
                       const targetArray = Array.isArray(draft) ? draft : draft?.items;
                       if (!targetArray) return;
                       const index = targetArray.findIndex(
-                        (item: any) => item.id === selectedBuilding?.id
+                        (item: any) => item.id === buildingToDelete?.id
                       );
+                      deletedIndex = index;
                       setDeleteIndex(index);
                       if (index !== -1) {
                         targetArray.splice(index, 1);
                       }
                     })
                   ),
-                onUndoRestore: (dispatchFn, index) => {
+                onUndoRestore: (dispatchFn) => {
                   dispatchFn(
                     buildingsApi.util.updateQueryData('getBuildings', undefined, (draft: any) => {
                       const targetArray = Array.isArray(draft) ? draft : draft?.items;
-                      if (!targetArray || index === -1) return;
-                      targetArray.splice(index, 0, selectedBuilding);
+                      if (!targetArray || deletedIndex === -1 || !buildingToDelete) return;
+                      targetArray.splice(deletedIndex, 0, buildingToDelete);
                     })
                   );
                 },
-                onCommit: () => deleteBuilding(selectedBuilding?.id),
+                onCommit: () => deleteBuilding(buildingToDelete?.id),
               });
               deleteBuildingDialog.onFalse();
               setSelectedBuilding(null);
