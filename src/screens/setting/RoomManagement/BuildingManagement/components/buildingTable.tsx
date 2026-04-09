@@ -88,7 +88,7 @@ const BuildingTable: React.FC<IBuildingTableProps> = ({
         {
           id: 'action',
           label: 'Actions',
-          minWidth: 60,
+          minWidth: 10,
           align: 'left',
           isSort: false,
           sticky: true,

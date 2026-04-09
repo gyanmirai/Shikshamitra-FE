@@ -20,7 +20,7 @@ import {
 import { getBuildingInitialValues } from './initialValues';
 import { buildingValidationSchema } from './validationSchema';
 
-import type { IBuildingFormProps } from '../types';
+import type { IFloor, IBuildingFormProps } from '../types';
 
 const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
   const [addBuilding, { isLoading }] = useQueryAndMutation({
@@ -35,7 +35,6 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
     initialValues: getBuildingInitialValues(editData),
     validationSchema: buildingValidationSchema,
     onSubmit(values) {
-      console.log('values----', values);
       if (editData) {
         updateBuilding({
           id: editData.id,
@@ -43,7 +42,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
             buildingName: values.buildingName,
             totalFloors: values.totalFloors,
             description: values.description,
-            floors: values.floors,
+            floorsToUpdate: values.floors,
           },
         });
         shikshaMitraToast.success({
@@ -56,7 +55,11 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
         buildingName: values.buildingName,
         totalFloors: values.totalFloors,
         description: values.description,
-        floors: values.floors,
+        floors: values.floors.map((floor) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...rest } = floor;
+          return rest;
+        }),
       });
       shikshaMitraToast.success({
         message: `"${values.buildingName}" Building added successfully`,
@@ -64,22 +67,20 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
       onClose(null, true);
     },
   });
-  console.log('formik---', formik.values);
-  console.log('formik---', formik.errors);
 
   const handleTotalFloors = (e: any) => {
     const inputValue = e.target.value;
     const floorsCount = parseInt(inputValue, 10);
     formik.setFieldValue('totalFloors', inputValue);
     formik.setFieldTouched('totalFloors', false);
+    const currentFloors = formik.values.floors || [];
 
-    // Check if floorsCount is a valid number
     if (!isNaN(floorsCount) && floorsCount > 0) {
-      const currentFloors = formik.values.floors || [];
       const newFloors = Array.from(
         { length: floorsCount },
-        (_, index) =>
+        (floor: IFloor, index) =>
           currentFloors[index] || {
+            id: '',
             floorNo: index + 1,
             floorName: '',
             totalRoom: '',
@@ -127,6 +128,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                     type="number"
                     label="Total Floors *"
                     name="totalFloors"
+                    disabled={!!editData}
                     value={formik.values.totalFloors}
                     onChange={handleTotalFloors}
                     onKeyDown={(e) => {

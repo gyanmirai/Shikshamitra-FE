@@ -61,7 +61,7 @@ const RoomTable: React.FC<IRoomTableProps> = ({ onEdit, onDelete }) => {
           ),
         },
         {
-          id: 'floor',
+          id: 'floorName',
           label: 'Floor',
           align: 'left',
           render: (value) => (

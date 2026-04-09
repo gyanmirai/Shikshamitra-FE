@@ -8,12 +8,16 @@ import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { instituteSetupPaths } from 'src/constants/institute-setup';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteBuildingMutation } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
+import {
+  buildingsApi,
+  useDeleteBuildingMutation,
+} from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 
 import BuildingForm from './components/buildingForm';
 import BuildingTable from './components/buildingTable';
@@ -32,6 +36,7 @@ const BuildingManagement = () => {
   });
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State for managing selected building and building data
   const [selectedBuilding, setSelectedBuilding] = useState<IBuilding | null>(null);
@@ -78,9 +83,14 @@ const BuildingManagement = () => {
             handleClose(null, false);
           }}
           links={[
-            { name: 'Institute Setup', href: '/academic/dashboard' },
-            { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
-            { name: 'Building Management', href: '/academic/curriculumSubjects' },
+            { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
+            {
+              name: 'Rooms Management',
+              onClick: () => {
+                addBuildingDialog.onFalse();
+              },
+            },
+            { name: 'Building Management' },
           ]}
           sx={{ px: 1 }}
         />
@@ -89,8 +99,8 @@ const BuildingManagement = () => {
           heading="Building Management"
           description="Define and organize building infrastructure by setting up buildings, floors and rooms to ensure effective facility management."
           links={[
-            { name: 'Institute Setup', href: '/academic/dashboard' },
-            { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
+            { name: 'Institute Setup', href: instituteSetupPaths.academicSetup },
+            { name: 'Rooms Management', href: instituteSetupPaths.roomsManagement.root },
             { name: 'Building Management' },
           ]}
           sx={{ px: 1 }}
@@ -156,12 +166,36 @@ const BuildingManagement = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deleteBuilding(selectedBuilding?.id);
+              confirmWithUndo({
+                item: selectedBuilding,
+                message: `Building "${selectedBuilding?.buildingName}" deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    buildingsApi.util.updateQueryData('getBuildings', undefined, (draft: any) => {
+                      const targetArray = Array.isArray(draft) ? draft : draft?.items;
+                      if (!targetArray) return;
+                      const index = targetArray.findIndex(
+                        (item: any) => item.id === selectedBuilding?.id
+                      );
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        targetArray.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) => {
+                  dispatchFn(
+                    buildingsApi.util.updateQueryData('getBuildings', undefined, (draft: any) => {
+                      const targetArray = Array.isArray(draft) ? draft : draft?.items;
+                      if (!targetArray || index === -1) return;
+                      targetArray.splice(index, 0, selectedBuilding);
+                    })
+                  );
+                },
+                onCommit: () => deleteBuilding(selectedBuilding?.id),
+              });
               deleteBuildingDialog.onFalse();
               setSelectedBuilding(null);
-              shikshaMitraToast.success({
-                message: `Building "${selectedBuilding?.buildingName}" deleted successfully`,
-              });
             }}
           >
             Yes

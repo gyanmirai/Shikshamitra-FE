@@ -11,6 +11,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { boardApi } from 'src/redux/board/boardApi';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import {
   Tab,
   Box,
@@ -31,6 +32,7 @@ import {
 } from 'src/redux/division/divisionApi';
 
 import { Iconify } from '../iconify';
+import CustomSelect from '../custom-select';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 import CustomDialog, { DialogScrollContent } from '../customDialog';
@@ -224,6 +226,14 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
       successMessage: 'Division added Successfully',
     },
   });
+  const {
+    data: rooms,
+    isLoading: isRoomLoading,
+    isFetching: isRoomFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomsQuery,
+  });
   const [updatedivision, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateDivisionMutation,
@@ -343,12 +353,12 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
             helperText={formik.touched.strength && formik.errors.strength}
             size="small"
           />
-          <TextField
-            fullWidth
-            id="roomNo"
-            name="roomNo"
-            label="Room No"
+          <CustomSelect
+            options={rooms?.items || []}
+            loading={isRoomLoading || isRoomFetching}
             value={formik.values.roomNo}
+            valueKey="id"
+            labelKey="roomName"
             onChange={formik.handleChange}
             error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
             // @ts-ignore

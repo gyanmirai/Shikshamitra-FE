@@ -175,7 +175,7 @@ const RoleScreen = () => {
             isFilter: false,
             sticky: true,
             align: 'left',
-            minWidth: 80,
+            minWidth: '30px',
             render: (value, data) => (
               <ThreeDotsActions
                 showDeleteIcon

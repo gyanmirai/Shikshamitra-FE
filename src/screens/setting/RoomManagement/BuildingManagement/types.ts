@@ -1,4 +1,5 @@
 export interface IFloor {
+  id: string;
   floorNo: number;
   floorName: string;
   totalRoom: number | string;
