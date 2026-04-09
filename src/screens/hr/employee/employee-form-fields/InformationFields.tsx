@@ -249,10 +249,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               const file = acceptedFiles?.[0];
               if (!file) return;
               const base64 = await fileToBase64(file);
-              formik.setFieldValue('photo', base64); // set base64 preview
               formik.setFieldValue('photoFile', file); // store raw File for upload
-              formik.setFieldTouched('photo', true); // mark as touched
-              await formik.setFieldValue('photo', base64, true); // triggers validation
+              formik.setFieldTouched('photo', true, false); // mark as touched without triggering validation
+              await formik.setFieldValue('photo', base64, true); // set value and trigger validation
             }}
             value={formik.values.photo}
             error={!!formik.errors.photo && (!!formik.touched.photo || formik.submitCount > 0)}
