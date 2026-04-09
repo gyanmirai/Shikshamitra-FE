@@ -455,7 +455,7 @@ const GradeEntry = (props: TabComponentType) => {
           title="Publish"
           content={
             <>
-              Are you sure you want to publish marks <strong>{examId}</strong>?`
+              Are you sure you want to publish marks <strong>{examId}</strong>?
             </>
           }
           action={
