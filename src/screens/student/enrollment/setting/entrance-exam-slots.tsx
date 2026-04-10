@@ -388,6 +388,10 @@ export const SlotsForm = ({
       roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
+      const newDate = date?.format('DD/MM/YYYY');
+      const newStartTime = values.startTime ? values.startTime.format('HH:mm:ss') : null;
+      const newEndTime = values.endTime ? values.endTime.format('HH:mm:ss') : null;
+
       try {
         if (editData) {
           await updateSlot({
@@ -395,22 +399,17 @@ export const SlotsForm = ({
             body: {
               academicYearId: currentYear?.id,
               slotName: values.slotName,
-              date: dateConvertor(date?.format(dateFormat) || ''),
-              startTime:
+              startTimeDate:
                 values.startTime && date
-                  ? date
-                      .hour(values.startTime.hour())
-                      .minute(values.startTime.minute())
-                      .second(values.startTime.second())
-                      .format()
+                  ? dateConvertor(
+                      dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                    )
                   : null,
-              endTime:
+              endTimeDate:
                 values.endTime && date
-                  ? date
-                      .hour(values.endTime.hour())
-                      .minute(values.endTime.minute())
-                      .second(values.endTime.second())
-                      .format()
+                  ? dateConvertor(
+                      dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                    )
                   : null,
               studentLimit: values.studentLimit,
               roomNo: values.roomNo,
@@ -423,22 +422,17 @@ export const SlotsForm = ({
           await addSlot({
             academicYearId: currentYear?.id,
             slotName: values.slotName,
-            // date: dateConvertor(date?.format(dateFormat) || ''),
             startTimeDate:
               values.startTime && date
-                ? date
-                    .hour(values.startTime.hour())
-                    .minute(values.startTime.minute())
-                    .second(values.startTime.second())
-                    .format()
+                ? dateConvertor(
+                    dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                  )
                 : null,
             endTimeDate:
               values.endTime && date
-                ? date
-                    .hour(values.endTime.hour())
-                    .minute(values.endTime.minute())
-                    .second(values.endTime.second())
-                    .format()
+                ? dateConvertor(
+                    dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                  )
                 : null,
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
