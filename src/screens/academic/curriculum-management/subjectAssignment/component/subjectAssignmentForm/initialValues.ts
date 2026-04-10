@@ -40,7 +40,7 @@ export const getSubjectAssignmentInitialValues = (
 
   const overallSubjectType = data.subjects?.some((s: any) => s.subjectType === 1) ? 1 : 0;
 
-  data.subjects.forEach((item: any, index: number) => {
+  data.subjects?.forEach((item: any, index: number) => {
     subjectNames.push(item.subjectName);
 
     flattenedSubjects.push({

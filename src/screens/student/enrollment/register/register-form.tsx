@@ -212,7 +212,7 @@ const RegisterForm = ({
               academicMediumId: values.medium,
               standardId: values.class,
 
-              formNo: values.formNo,
+              formNumber: values.formNo,
               // academicYearId: values.academicYear,
               // educationBoardId: values.board,
             },
@@ -255,7 +255,7 @@ const RegisterForm = ({
             academicMediumId: values.medium,
             standardId: values.class,
 
-            formNo: values.formNo,
+            formNumber: values.formNo,
             // academicYearId: values.academicYear,
             // educationBoardId: values.board,
           }).unwrap();
@@ -468,6 +468,7 @@ const RegisterForm = ({
             tcNumber: values.tcNumber,
             lastClassAttended: String(values.previousClass),
             percentageObtained: +values.percentage,
+            reasonForLeaving: values.reasonForLeaving || undefined,
           },
         }).unwrap();
       } catch (error) {
@@ -486,7 +487,7 @@ const RegisterForm = ({
             bankName: values.bankName,
             branchName: values.branchName,
             accountHolderName: values.accountHolderName,
-            accountNumber: values.accountNo,
+            accountNo: values.accountNo,
             ifscCode: values.ifscCode,
           },
         }).unwrap();

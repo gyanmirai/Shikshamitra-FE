@@ -241,12 +241,10 @@ export const useInquiryForm = (
     // which can be null when the backend doesn't return it
     if (board?.items) {
       const yearIdToFilter = values.academicYear || editData?.academicYearId;
-      if (yearIdToFilter) {
-        const findBoards = board.items.filter(
-          (item: Board) => item.academicYearId === yearIdToFilter
-        );
-        setBoards(findBoards);
-      }
+      const findBoards = yearIdToFilter
+        ? board.items.filter((item: Board) => item.academicYearId === yearIdToFilter)
+        : [];
+      setBoards(findBoards);
     }
   }, [academicYear?.items, board?.items, editData?.academicYearId, values.academicYear]);
 

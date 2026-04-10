@@ -35,11 +35,7 @@ export const generalFieldValidation = Yup.object({
   panNo: Yup.string().test(
     'pan-format',
     'PAN must be in format: AAAAA9999A (5 letters, 4 digits, 1 letter)',
-    (value) => {
-      if (!value || value.length === 0) return true; // optional field
-      if (value.length < 10) return true; // don't error until complete
-      return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value);
-    }
+    (value) => !value || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
   ),
   religion: Yup.string(),
   familyCast: Yup.string().required('Family caste is required'),

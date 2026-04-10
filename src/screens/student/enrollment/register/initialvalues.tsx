@@ -335,6 +335,7 @@ export const previousSchoolFieldsInitialValues = (editData?: IPreviousSchoolResp
   tcNumber: editData?.tcNumber || '',
   previousClass: editData?.lastClassAttended || '',
   percentage: editData?.percentageObtained || '',
+  reasonForLeaving: editData?.reasonForLeaving || '',
 });
 
 export const bankDetailsInitialValues = (editData?: IBankDetailsResponse | null) => ({

@@ -226,7 +226,7 @@ const Subjects = () => {
         // Table view for displaying chapters
         <>
           {/* Filter controls for class and subject selection */}
-          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
             <Box
               sx={{
                 display: 'flex',
