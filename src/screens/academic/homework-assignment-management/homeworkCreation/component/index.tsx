@@ -142,9 +142,10 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          mt: 2,
+          mt: 1,
           p: 1,
           gap: 2,
+          mb: 1,
         }}
       >
         {' '}

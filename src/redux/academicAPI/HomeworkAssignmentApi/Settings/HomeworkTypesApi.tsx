@@ -1,14 +1,15 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const homeworkTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all homework types under academic medium
     getHomeworkTypes: builder.query({
-      query: () => ({
+      query: ({ academicMediumId }: { academicMediumId: string }) => ({
         url: `/homework-type`,
         method: 'GET',
+        params: { academicMediumId },
       }),
       providesTags: [academicType.homeworkType],
     }),
@@ -25,29 +26,52 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
 
     // Add new homework type
     addHomeworkType: builder.mutation({
-      query: ({ name }: { name: string }) => ({
+      query: ({
+        data,
+        academicMediumId,
+      }: {
+        data: { name: string };
+        academicMediumId: string;
+      }) => ({
         url: `/homework-type`,
         method: 'POST',
-        params: { name },
+        data,
+        params: { academicMediumId },
       }),
       invalidatesTags: [academicType.homeworkType],
     }),
 
     // Update homework type
     updateHomeworkType: builder.mutation({
-      query: ({ homeworkTypeId, name }: { homeworkTypeId: string; name: string }) => ({
+      query: ({
+        homeworkTypeId,
+        homeworkTypeName,
+        academicMediumId,
+      }: {
+        homeworkTypeId: string;
+        homeworkTypeName: string;
+        academicMediumId: string;
+      }) => ({
         url: `/homework-type/${homeworkTypeId}`,
         method: 'PUT',
-        params: { name },
+        data: { homeworkTypeName },
+        params: { academicMediumId },
       }),
       invalidatesTags: [academicType.homeworkType],
     }),
 
     // Delete homework type
     deleteHomeworkType: builder.mutation({
-      query: ({ homeworkTypeId }: { homeworkTypeId: string }) => ({
+      query: ({
+        homeworkTypeId,
+        academicMediumId,
+      }: {
+        homeworkTypeId: string;
+        academicMediumId: string;
+      }) => ({
         url: `/homework-type/${homeworkTypeId}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
       invalidatesTags: [academicType.homeworkType],
     }),

@@ -316,7 +316,11 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       name="title"
                       size="small"
                       value={formik.values.title}
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const onlyLetters = e.target.value.replace(/[^A-Za-z0-9&()_\-\s]/g, '');
+                        const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
+                        formik.setFieldValue('title', capitalized);
+                      }}
                       error={formik.touched.title && Boolean(formik.errors.title)}
                       helperText={formik.touched.title && formik.errors.title}
                     />
