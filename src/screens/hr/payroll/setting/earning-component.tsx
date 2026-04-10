@@ -233,7 +233,7 @@ const EarningComponent = () => {
             minWidth: '10vw',
             filterType: 'number',
             render(value, row) {
-              if (row.calculationType === 'Percentage') {
+              if (row.calculationType === 'PERCENTAGE') {
                 return (
                   <Typography variant="caption" fontSize="13px">
                     {row.percentage}%
@@ -245,6 +245,15 @@ const EarningComponent = () => {
                   {formatNumber(value, 'INR')}
                 </Typography>
               );
+            },
+          },
+          {
+            id: 'customComponent.componentName',
+            label: 'Component Name',
+            align: 'left',
+            minWidth: '10vw',
+            render(value: string) {
+              return value || '-';
             },
           },
           { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
@@ -402,17 +411,25 @@ const EarningComponentForm = ({
       earningName: editData?.earningComponentName || editData?.componentName || '',
       description: editData?.description || '',
       earningType:
-        editData?.earningType ||
-        (editData && editData.isFixed !== undefined
-          ? editData.isFixed
+        editData?.earningType?.toLowerCase() === 'variable'
+          ? 'Variable'
+          : editData?.earningType?.toLowerCase() === 'fixed'
             ? 'Fixed'
-            : 'Variable'
-          : 'Fixed'),
-      calculationType: editData?.calculationType || editData?.componentType || '',
+            : editData && editData.isFixed !== undefined
+              ? editData.isFixed
+                ? 'Fixed'
+                : 'Variable'
+              : 'Fixed',
+      calculationType:
+        editData?.calculationType?.toLowerCase() === 'percentage'
+          ? 'Percentage'
+          : editData?.calculationType?.toLowerCase() === 'amount'
+            ? 'Amount'
+            : editData?.calculationType || editData?.componentType || '',
       selectedEarningComponent:
         editData?.selectedEarningComponentId || editData?.customComponentId || null,
       amount:
-        editData?.calculationType === 'Percentage'
+        editData?.calculationType?.toLowerCase() === 'percentage'
           ? editData?.percentage || ''
           : editData?.amount || '',
       showOnPayslip: editData?.visibleInPayslip ?? true,
@@ -519,7 +536,10 @@ const EarningComponentForm = ({
                 label="Earning Name *"
                 name="earningName"
                 value={formik.values.earningName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
+                  formik.setFieldValue('earningName', value);
+                }}
                 error={formik.touched.earningName && Boolean(formik.errors.earningName)}
                 helperText={(formik.touched.earningName && formik.errors.earningName) as string}
               />

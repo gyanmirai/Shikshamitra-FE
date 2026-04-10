@@ -39,14 +39,48 @@ const PayrollConfiguration = () => {
       totalDayType: 'total-month-days', // 'total-month-days' | 'manual-days'
       manualDays: '',
     },
-    validationSchema: Yup.object({
-      manualDays: Yup.number()
-        .required('Manual Days is required')
-        .min(1, 'Manual Days must be at least 1')
-        .max(31, 'Manual Days must be at most 31'),
+    validationSchema: Yup.object().shape({
+      manualDays: Yup.mixed()
+        // eslint-disable-next-line func-names
+        .test('is-required', 'Manual Days is required', function (value) {
+          // eslint-disable-next-line react/no-this-in-sfc
+          const { dayCalculationType, totalDayType } = this.parent;
+          if (dayCalculationType === 'total-days' && totalDayType === 'manual-days') {
+            return value !== undefined && value !== null && value !== '';
+          }
+          return true;
+        })
+        // eslint-disable-next-line func-names
+        .test('min', 'Manual Days must be at least 1', function (value) {
+          // eslint-disable-next-line react/no-this-in-sfc
+          const { dayCalculationType, totalDayType } = this.parent;
+          if (dayCalculationType === 'total-days' && totalDayType === 'manual-days') {
+            return Number(value) >= 1;
+          }
+          return true;
+        })
+        // eslint-disable-next-line func-names
+        .test('max', 'Manual Days must be at most 31', function (value) {
+          // eslint-disable-next-line react/no-this-in-sfc
+          const { dayCalculationType, totalDayType } = this.parent;
+          if (dayCalculationType === 'total-days' && totalDayType === 'manual-days') {
+            return Number(value) <= 31;
+          }
+          return true;
+        }),
     }),
     onSubmit: async (values) => {
-      await saveDayCalculationSettings({ body: values, academicYearId: '' });
+      const payload = {
+        dayCalculationType:
+          values.dayCalculationType === 'total-days'
+            ? values.totalDayType
+            : values.dayCalculationType,
+        manualDays:
+          values.dayCalculationType === 'total-days' && values.totalDayType === 'manual-days'
+            ? Number(values.manualDays)
+            : 0,
+      };
+      await saveDayCalculationSettings({ body: payload, academicYearId: '' });
     },
   });
 

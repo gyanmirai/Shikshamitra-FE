@@ -15,6 +15,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
+import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
@@ -66,7 +67,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       roomName: editData?.roomName || '',
       capacity: editData?.capacity || '',
       building: editData?.buildingId || '',
-      floor: editData?.floor || '',
+      floor: editData?.floorId || editData?.floor || '',
       roomType: editData?.roomTypeId || '',
       totalBenches: editData?.totalBenches || '',
       benchCapacity: editData?.benchCapacity || '',
@@ -86,20 +87,36 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       benchesPerColumn: Yup.number().required('Class Benches Columns is required'),
     }),
     onSubmit: (values) => {
+      const selectedBuilding: any = buildings?.find((b: any) => b.id === values.building);
+      const selectedFloor: any = floorsOptions?.find((f: any) => f.id === values.floor);
+      const selectedRoomType: any = roomTypes?.items?.find((r: any) => r.id === values.roomType);
+
+      const payload = {
+        roomName: values.roomName,
+        capacity: Number(values.capacity),
+        buildingId: values.building,
+        buildingName: selectedBuilding?.buildingName || '',
+        floorId: values.floor,
+        floorName: selectedFloor?.floorName || '',
+        roomTypeId: values.roomType,
+        roomTypeName: selectedRoomType?.roomTypeName || '',
+        totalBenches: Number(values.totalBenches),
+        benchCapacity: Number(values.benchCapacity),
+        benchesPerRow: Number(values.benchesPerRow),
+        benchesPerColumn: Number(values.benchesPerColumn),
+        features: values.features,
+      };
+
       if (editData) {
         updateRoom({
           id: editData.id,
           body: {
-            roomName: values.roomName,
-            capacity: values.capacity,
-            buildingId: values.building,
-            floor: values.floor,
-            roomTypeId: values.roomType,
-            totalBenches: values.totalBenches,
-            benchCapacity: values.benchCapacity,
-            benchesPerRow: values.benchesPerRow,
-            benchesPerColumn: values.benchesPerColumn,
-            features: values.features,
+            id: editData.id,
+            creationTime: editData.creationTime,
+            creatorId: editData.creatorId,
+            lastModificationTime: editData.lastModificationTime,
+            lastModifierId: editData.lastModifierId,
+            ...payload,
           },
         });
         shikshaMitraToast.success({
@@ -108,18 +125,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
         onClose(null, true);
         return;
       }
-      addRoom({
-        roomName: values.roomName,
-        capacity: values.capacity,
-        buildingId: values.building,
-        floor: values.floor,
-        roomTypeId: values.roomType,
-        totalBenches: values.totalBenches,
-        benchCapacity: values.benchCapacity,
-        benchesPerRow: values.benchesPerRow,
-        benchesPerColumn: values.benchesPerColumn,
-        features: values.features,
-      });
+      addRoom(payload);
       shikshaMitraToast.success({
         message: `"${values.roomName}" Room added successfully`,
       });

@@ -9,12 +9,15 @@ import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteRoomTypeMutation } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
+import {
+  roomTypeApi,
+  useDeleteRoomTypeMutation,
+} from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 
 import RoomTypeForm from './components/roomTypeForm';
 import RoomTypeTable from './components/roomTypeTable';
@@ -31,6 +34,7 @@ const RoomTypeManagement = () => {
   });
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State for managing selected room type and room type data
   const [selectedRoomType, setSelectedRoomType] = useState<IRoomType | null>(null);
@@ -135,9 +139,33 @@ const RoomTypeManagement = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deleteRoomType(selectedRoomType?.id);
-              shikshaMitraToast.success({
+              confirmWithUndo({
+                item: selectedRoomType,
                 message: `Room type "${selectedRoomType?.roomTypeName}" deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    roomTypeApi.util.updateQueryData('getRoomTypes', undefined, (draft: any) => {
+                      const targetArray = Array.isArray(draft) ? draft : draft?.items;
+                      if (!targetArray) return;
+                      const index = targetArray.findIndex(
+                        (item: any) => item.id === selectedRoomType?.id
+                      );
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        targetArray.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) => {
+                  dispatchFn(
+                    roomTypeApi.util.updateQueryData('getRoomTypes', undefined, (draft: any) => {
+                      const targetArray = Array.isArray(draft) ? draft : draft?.items;
+                      if (!targetArray || index === -1) return;
+                      targetArray.splice(index, 0, selectedRoomType);
+                    })
+                  );
+                },
+                onCommit: () => deleteRoomType(selectedRoomType?.id),
               });
               deleteRoomTypeDialog.onFalse();
               setSelectedRoomType(null);

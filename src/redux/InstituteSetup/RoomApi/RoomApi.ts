@@ -6,7 +6,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
   endpoints: (builder) => ({
     getRooms: builder.query({
       query: () => ({
-        url: '/rooms',
+        url: '/app/room',
         method: 'GET',
       }),
       providesTags: [instituteSetupType.rooms],
@@ -14,7 +14,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
 
     addRoom: builder.mutation({
       query: (data) => ({
-        url: '/rooms',
+        url: '/app/room',
         method: 'POST',
         data,
       }),
@@ -23,7 +23,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
 
     getRoomById: builder.query({
       query: (id) => ({
-        url: `/rooms/${id}`,
+        url: `/app/room/${id}`,
         method: 'GET',
       }),
       providesTags: [instituteSetupType.rooms],
@@ -31,7 +31,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
 
     updateRoom: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/rooms/${id}`,
+        url: `/app/room/${id}`,
         method: 'PUT',
         body,
       }),
@@ -40,7 +40,7 @@ export const roomsApi = instituteSetupApi.injectEndpoints({
 
     deleteRoom: builder.mutation({
       query: (id) => ({
-        url: `/rooms/${id}`,
+        url: `/app/room/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: [instituteSetupType.rooms],

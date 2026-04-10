@@ -1,12 +1,11 @@
+import { api } from 'src/redux/service';
 import { instituteSetupType } from 'src/redux/tagTypes';
 
-import { instituteSetupApi } from '../instituteSetupApi';
-
-export const buildingsApi = instituteSetupApi.injectEndpoints({
+export const buildingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getBuildings: builder.query({
       query: () => ({
-        url: '/buildings',
+        url: '/institute-setup/buildings',
         method: 'GET',
       }),
       providesTags: [instituteSetupType.buildings],
@@ -14,7 +13,7 @@ export const buildingsApi = instituteSetupApi.injectEndpoints({
 
     addBuilding: builder.mutation({
       query: (data) => ({
-        url: '/buildings',
+        url: '/institute-setup/buildings',
         method: 'POST',
         data,
       }),
@@ -23,7 +22,7 @@ export const buildingsApi = instituteSetupApi.injectEndpoints({
 
     getBuildingById: builder.query({
       query: (id) => ({
-        url: `/buildings/${id}`,
+        url: `/institute-setup/buildings/${id}`,
         method: 'GET',
       }),
       providesTags: [instituteSetupType.buildings],
@@ -31,7 +30,7 @@ export const buildingsApi = instituteSetupApi.injectEndpoints({
 
     updateBuilding: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/buildings/${id}`,
+        url: `/institute-setup/buildings/${id}`,
         method: 'PUT',
         body,
       }),
@@ -40,7 +39,7 @@ export const buildingsApi = instituteSetupApi.injectEndpoints({
 
     deleteBuilding: builder.mutation({
       query: (id) => ({
-        url: `/buildings/${id}`,
+        url: `/institute-setup/buildings/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: [instituteSetupType.buildings],

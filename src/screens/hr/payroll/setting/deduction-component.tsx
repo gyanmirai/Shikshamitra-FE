@@ -208,6 +208,12 @@ const DeductionComponent = () => {
               { label: 'Fixed', value: 'Fixed' },
               { label: 'Variable', value: 'Variable' },
             ],
+            render(value: string | boolean) {
+              if (typeof value === 'boolean') {
+                return value ? 'Fixed' : 'Variable';
+              }
+              return value || 'Fixed';
+            },
           },
           {
             id: 'calculationType',
@@ -221,19 +227,13 @@ const DeductionComponent = () => {
             ],
           },
           {
-            id: 'calculatePercentageBasedOn',
-            label: 'Depends On',
-            align: 'left',
-            minWidth: '10vw',
-          },
-          {
             id: 'amount',
             label: 'Amount / Percentage',
             align: 'right',
             minWidth: '10vw',
             filterType: 'number',
             render(value, row) {
-              if (row.calculationType === 'Percentage') {
+              if (row.calculationType === 'PERCENTAGE') {
                 return (
                   <Typography variant="caption" fontSize="13px">
                     {row.percentage}%
@@ -247,9 +247,18 @@ const DeductionComponent = () => {
               );
             },
           },
+          {
+            id: 'customComponent.componentName',
+            label: 'Component Name',
+            align: 'left',
+            minWidth: '10vw',
+            render(value: string) {
+              return value || '-';
+            },
+          },
           { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
           {
-            id: 'showOnPayslip',
+            id: 'visibleInPayslip',
             label: 'Visible In Payslip',
             align: 'left',
             minWidth: '10vw',
@@ -258,7 +267,7 @@ const DeductionComponent = () => {
               { value: true, label: 'Yes' },
               { value: false, label: 'No' },
             ],
-            render(value, row) {
+            render(value: boolean) {
               return value ? 'Yes' : 'No';
             },
           },
@@ -419,18 +428,22 @@ const DeductionComponentForm = ({
     initialValues: {
       deductionName: editData?.deductionComponentName || editData?.deductionName || '',
       description: editData?.description || '',
-      deductionType:
-        editData?.deductionType ||
-        (editData && editData.isSameAmountForAll !== undefined
+      deductionType: editData?.deductionType
+        ? editData.deductionType.charAt(0).toUpperCase() +
+          editData.deductionType.slice(1).toLowerCase()
+        : editData && editData.isSameAmountForAll !== undefined
           ? editData.isSameAmountForAll
             ? 'Fixed'
             : 'Variable'
-          : 'Fixed'),
-      calculationType: editData?.calculationType || '',
+          : 'Fixed',
+      calculationType: editData?.calculationType
+        ? editData.calculationType.charAt(0).toUpperCase() +
+          editData.calculationType.slice(1).toLowerCase()
+        : '',
       selectedDeductionComponent:
         editData?.selectedDeductionComponentId || editData?.selectedDeductionComponent || null,
       amount:
-        editData?.calculationType === 'Percentage'
+        editData?.calculationType?.toUpperCase() === 'PERCENTAGE'
           ? editData?.percentage || ''
           : editData?.amount || '',
       showOnPayslip: editData?.visibleInPayslip ?? editData?.showOnPayslip ?? true,
@@ -527,7 +540,10 @@ const DeductionComponentForm = ({
                 label="Deduction Name *"
                 name="deductionName"
                 value={formik.values.deductionName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
+                  formik.setFieldValue('deductionName', value);
+                }}
                 error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
                 helperText={(formik.touched.deductionName && formik.errors.deductionName) as string}
               />

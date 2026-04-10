@@ -7,6 +7,7 @@ export const getBuildingInitialValues = (editData?: IBuilding | null) => ({
   description: editData?.description ?? '',
   floors:
     editData?.floors?.map((floor) => ({
+      id: floor?.id ?? '',
       floorNo: floor?.floorNo ?? '',
       floorName: floor?.floorName ?? '',
       totalRoom: floor?.totalRoom ?? '',
