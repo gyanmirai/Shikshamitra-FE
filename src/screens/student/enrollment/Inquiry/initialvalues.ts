@@ -24,7 +24,7 @@ export const inquiryInitialValues: (
   age: editData?.dateOfBirth ? calculateAge(dayjs(editData?.dateOfBirth).format()) : '',
 
   dateOfInquiry: editData?.dateOfInquiry ? dayjs(editData?.dateOfInquiry) : dayjs(new Date()),
-  gender: editData?.gender as GenderType,
+  gender: (editData?.gender ?? '') as GenderType,
   address: editData?.address || '',
   primaryContactNumber: editData?.primaryContactNo || '',
   secondaryContactNumber: editData?.secondaryContactNo || '',

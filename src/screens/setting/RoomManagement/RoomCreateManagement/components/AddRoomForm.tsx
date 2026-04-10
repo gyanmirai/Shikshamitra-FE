@@ -17,7 +17,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 import {
   useAddRoomMutation,
