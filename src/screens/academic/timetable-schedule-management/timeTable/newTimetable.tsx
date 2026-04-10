@@ -536,7 +536,7 @@ const TimeTableGrid = () => {
 
       {!open && (
         <>
-          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
             <Box
               sx={{
                 display: 'flex',

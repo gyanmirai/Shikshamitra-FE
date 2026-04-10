@@ -192,10 +192,10 @@ const IdentificationSection: React.FC<SectionProps> = ({
           groupBy={5}
           value={String((formik.values as any).panNo ?? '').toUpperCase()}
           onChange={(val) => {
-            formik.setFieldValue('panNo', val.toUpperCase());
+            formik.setFieldValue('panNo', val.toUpperCase(), true);
             formik.setFieldTouched('panNo', true, false);
           }}
-          onBlur={() => formik.setFieldTouched('panNo', true, false)}
+          onBlur={() => formik.setFieldTouched('panNo', true, true)}
           error={(formik.touched as any).panNo && Boolean((formik.errors as any).panNo)}
           helperText={(formik.touched as any).panNo && (formik.errors as any).panNo}
           disabled={!isEdit.value}

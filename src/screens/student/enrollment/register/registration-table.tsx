@@ -61,7 +61,7 @@ const RegistrationTable = ({
         <MenuList>
           <MenuItem
             onClick={() => {
-              if (row.percentage < 50) {
+              if (row.progress < 50) {
                 shikshaMitraToast.error({
                   message: 'Please Complete Required Fields of Registration Form',
                 });

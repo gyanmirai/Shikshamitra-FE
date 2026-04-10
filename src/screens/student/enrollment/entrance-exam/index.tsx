@@ -139,9 +139,7 @@ const EntranceExamScreen = () => {
         status: item.examStatus, // examStatus → status
 
         // Computed fields
-        examTime: `${dayjs(item.examStartTime).format('hh:mm A')} to ${dayjs(
-          item.examEndTime
-        ).format('hh:mm A')}`,
+        examTime: item.examTime,
 
         // Pass-through fields (already match column IDs):
         // - studentName

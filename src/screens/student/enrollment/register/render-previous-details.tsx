@@ -38,8 +38,7 @@ const RenderPreviousSchoolFields = (props: any) => {
     { label: 'CBSE', value: 'CBSE' },
     { label: 'ICSE', value: 'ICSE' },
     { label: 'State Board', value: 'State Board' },
-    { label: 'IB', value: 'IB' },
-    { label: 'Cambridge', value: 'Cambridge' },
+    { label: 'GSEB', value: 'GSEB' },
   ];
   const mediumOptions = [
     { label: 'English', value: 'English' },

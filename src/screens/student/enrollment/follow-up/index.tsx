@@ -216,9 +216,9 @@ export default FollowUpScreen;
 
 interface IFollowUpResponse {
   note: string;
+  creationTime: string;
   status: FollowUpStatusType;
   nextReminderDate: string;
-  createdAt?: string;
   creatorName?: string;
 }
 export const CommunicationForm = ({
@@ -386,13 +386,15 @@ export const CommunicationForm = ({
                           variant="subtitle2"
                           sx={{ color: 'text.secondary', fontWeight: 'bold' }}
                         >
-                          {dayjs(item?.createdAt || item?.nextReminderDate).format('DD MMM YYYY')}
+                          {dayjs(item?.creationTime || item?.nextReminderDate).format(
+                            'DD MMM YYYY'
+                          )}
                         </Typography>
                         <Typography
                           variant="caption"
                           sx={{ color: 'text.disabled', fontWeight: 'bold', display: 'block' }}
                         >
-                          {dayjs(item?.createdAt || item?.nextReminderDate).format('hh:mm A')}
+                          {dayjs(item?.creationTime || item?.nextReminderDate).format('hh:mm A')}
                         </Typography>
                       </TimelineOppositeContent>
                       <TimelineSeparator>

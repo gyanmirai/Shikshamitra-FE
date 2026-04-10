@@ -388,6 +388,10 @@ export const SlotsForm = ({
       roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
+      const newDate = date?.format('DD/MM/YYYY');
+      const newStartTime = values.startTime ? values.startTime.format('HH:mm:ss') : null;
+      const newEndTime = values.endTime ? values.endTime.format('HH:mm:ss') : null;
+
       try {
         if (editData) {
           await updateSlot({
@@ -395,9 +399,18 @@ export const SlotsForm = ({
             body: {
               academicYearId: currentYear?.id,
               slotName: values.slotName,
-              date: dateConvertor(date?.format(dateFormat) || ''),
-              startTime: values.startTime ? values.startTime.format('HH:mm:ss') : null,
-              endTime: values.endTime ? values.endTime.format('HH:mm:ss') : null,
+              startTimeDate:
+                values.startTime && date
+                  ? dateConvertor(
+                      dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                    )
+                  : null,
+              endTimeDate:
+                values.endTime && date
+                  ? dateConvertor(
+                      dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                    )
+                  : null,
               studentLimit: values.studentLimit,
               roomNo: values.roomNo,
             },
@@ -409,9 +422,18 @@ export const SlotsForm = ({
           await addSlot({
             academicYearId: currentYear?.id,
             slotName: values.slotName,
-            date: dateConvertor(date?.format(dateFormat) || ''),
-            startTime: values.startTime ? values.startTime.format('HH:mm:ss') : null,
-            endTime: values.endTime ? values.endTime.format('HH:mm:ss') : null,
+            startTimeDate:
+              values.startTime && date
+                ? dateConvertor(
+                    dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                  )
+                : null,
+            endTimeDate:
+              values.endTime && date
+                ? dateConvertor(
+                    dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
+                  )
+                : null,
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
           }).unwrap();
