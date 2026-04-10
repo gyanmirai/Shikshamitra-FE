@@ -19,6 +19,7 @@ export default function ShakingTextField({
       initial={{ x: 0 }}
       animate={error ? { x: [-5, 5, -5, 5, 0] } : { x: 0 }}
       transition={{ duration: 0.3 }}
+      sx={{ width: '100%', ...(props.sx || {}) }}
       {...props}
     >
       {children}

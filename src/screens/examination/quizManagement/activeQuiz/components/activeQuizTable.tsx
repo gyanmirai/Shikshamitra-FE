@@ -117,7 +117,7 @@ const QuizTable = ({
   return (
     <>
       {/* Tabs Section */}
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <Tabs
             value={tabs.value}

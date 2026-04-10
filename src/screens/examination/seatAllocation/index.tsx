@@ -109,7 +109,6 @@ const SeatAllocation = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              mt: 2,
               p: 2,
             }}
           >
@@ -172,8 +171,8 @@ const SeatAllocation = () => {
           />
         </CustomDialog>
       ) : (
-        <>
-          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1 }}>
+        <Box key="table-view" sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -181,7 +180,7 @@ const SeatAllocation = () => {
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
               valueKey="name"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%', pb: 1 } }}
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
           </Card>
           <SeatAllocationTable
@@ -191,7 +190,7 @@ const SeatAllocation = () => {
             }}
             classId={classes}
           />
-        </>
+        </Box>
       )}
     </Box>
   );

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, Grid, Paper } from '@mui/material';
@@ -18,6 +19,21 @@ import type {
   ISeatAllocation,
   IStudentRoomAssignment,
 } from '../type';
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0 },
+};
 
 const SeatAllocationSection = ({
   division,
@@ -154,7 +170,7 @@ const SeatAllocationSection = ({
   };
 
   return (
-    <Grid container spacing={1} height="calc(100vh - 150px)" p={2}>
+    <Grid container spacing={1} height="calc(100vh - 150px)" p={1}>
       <Grid size={2.5} height="100%">
         <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
           <Box
@@ -165,13 +181,26 @@ const SeatAllocationSection = ({
             Total Students : {seatAllocationStudentsData?.length}
           </Box>
           <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
-            <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
+            <motion.div
+              variants={listVariants}
+              initial="hidden"
+              animate="show"
+              style={{
+                marginTop: '8px',
+                padding: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
               {[...students]
                 .sort((a, b) => Number(a.isRoomAssign) - Number(b.isRoomAssign))
                 .map((student) => (
-                  <StudentCard key={student.id} student={student} theme={theme} />
+                  <motion.div key={student.id} variants={itemVariants}>
+                    <StudentCard student={student} theme={theme} />
+                  </motion.div>
                 ))}
-            </Box>
+            </motion.div>
           </Scrollbar>
         </Paper>
       </Grid>

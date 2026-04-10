@@ -16,15 +16,12 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 import {
   useAddRoomMutation,
   useUpdateRoomMutation,
 } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
-import {
-  useGetBuildingsQuery,
-  useLazyGetBuildingsQuery,
-} from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 
 interface IRoomFormProps {
   open: UseBooleanReturn;
@@ -63,8 +60,6 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
     currentQueryAndMutation: useGetRoomTypesQuery,
   });
 
-  const [triggerGetBuildings] = useLazyGetBuildingsQuery();
-  console.log('buildings---', buildings);
   const [floorsOptions, setFloorsOptions] = useState([]);
   const formik = useFormik({
     initialValues: {
@@ -206,7 +201,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     name="building"
                     size="small"
                     isLoading={isBuldingLoading}
-                    options={buildings}
+                    options={buildings || []}
                     labelKey="buildingName"
                     valueKey="id"
                     value={formik.values.building}
@@ -230,7 +225,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     label="Floor *"
                     name="floor"
                     size="small"
-                    options={floorsOptions}
+                    options={floorsOptions || []}
                     labelKey="floorName"
                     valueKey="id"
                     value={formik.values.floor}

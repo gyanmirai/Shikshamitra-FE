@@ -8,10 +8,10 @@ import { Box, Card } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-// import examTableData from 'src/json/examination/examTableData.json';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -133,30 +133,49 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             ]}
           />
         ))}
-      {open ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
-          <NewExamForm
-            onClose={() => {
-              setOpen(false);
-            }}
-          />
-        </Card>
-      ) : (
-        <ScheduledExamTable
-          onDelete={(data) => {
-            setSelectedExam(data);
-            deleteDialog.onTrue();
-          }}
-          openDialog={open}
-          setOpenDialog={setOpen}
-          editData={selectedExam}
-          setEditData={setSelectedExam}
-          onViewTimetable={(data) => {
-            viewTimeDialog.onTrue();
-            setSelectedExam(data);
-          }}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {open ? (
+          <motion.div
+            key="exam-form"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
+            style={{ height: '100%' }}
+          >
+            <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+              <NewExamForm
+                onClose={() => {
+                  setOpen(false);
+                }}
+              />
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="exam-table"
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
+          >
+            <ScheduledExamTable
+              onDelete={(data) => {
+                setSelectedExam(data);
+                deleteDialog.onTrue();
+              }}
+              openDialog={open}
+              setOpenDialog={setOpen}
+              editData={selectedExam}
+              setEditData={setSelectedExam}
+              onViewTimetable={(data) => {
+                viewTimeDialog.onTrue();
+                setSelectedExam(data);
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
