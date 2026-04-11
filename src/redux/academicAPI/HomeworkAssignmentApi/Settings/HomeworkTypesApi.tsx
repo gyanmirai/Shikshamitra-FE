@@ -30,7 +30,7 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
         data,
         academicMediumId,
       }: {
-        data: { name: string };
+        data: { homeworkTypeName: string };
         academicMediumId: string;
       }) => ({
         url: `/homework-type`,
