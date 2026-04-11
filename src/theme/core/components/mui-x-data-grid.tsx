@@ -105,7 +105,7 @@ const MuiDataGrid: Components<Theme>['MuiDataGrid'] = {
       '--unstable_DataGrid-radius': 0,
       '--DataGrid-rowBorderColor': theme.vars.palette.divider,
       '--DataGrid-containerBackground': theme.vars.palette.background.neutral,
-      '--unstable_DataGrid-headWeight': theme.typography.fontWeightSemiBold,
+      '--unstable_DataGrid-headWeight': theme.typography.fontWeightBold,
       borderWidth: 0,
       scrollbarWidth: 'thin',
       scrollbarColor: `${varAlpha(theme.vars.palette.text.disabledChannel, 0.4)} ${varAlpha(theme.vars.palette.text.disabledChannel, 0.08)}`,
