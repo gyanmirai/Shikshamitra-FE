@@ -45,19 +45,28 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
     }),
     onSubmit: async (values) => {
       try {
+        if (!medium?.id) {
+          shikshaMitraToast.error({
+            message: 'Academic medium is required',
+          });
+          return;
+        }
+
+        const academicMediumId = medium.id;
+
         if (editData) {
           await updateHomeworkType({
             homeworkTypeId: editData.id,
             homeworkTypeName: values.homeworkTypeName,
-            academicMediumId: medium?.id,
+            academicMediumId,
           }).unwrap();
           shikshaMitraToast.success({
             message: `"${values.homeworkTypeName}" Homework Type updated successfully`,
           });
         } else {
           await addHomeworkType({
-            data: { homeworkTypeName: values.homeworkTypeName },
-            academicMediumId: medium?.id,
+            data: { name: values.homeworkTypeName },
+            academicMediumId,
           }).unwrap();
           shikshaMitraToast.success({
             message: `"${values.homeworkTypeName}" Homework Type added successfully`,
