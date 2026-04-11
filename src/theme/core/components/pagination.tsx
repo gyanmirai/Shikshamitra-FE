@@ -31,7 +31,7 @@ const softVariant: Record<string, ComponentsVariants<Theme>['MuiPagination']> = 
     style: ({ theme }) => ({
       [`& .${paginationItemClasses.root}`]: {
         [`&.${paginationItemClasses.selected}`]: {
-          fontWeight: theme.typography.fontWeightSemiBold,
+          fontWeight: theme.typography.fontWeightBold,
           color: theme.vars.palette[color].dark,
           backgroundColor: varAlpha(theme.vars.palette[color].mainChannel, 0.08),
           '&:hover': { backgroundColor: varAlpha(theme.vars.palette[color].mainChannel, 0.16) },
@@ -46,7 +46,7 @@ const softVariant: Record<string, ComponentsVariants<Theme>['MuiPagination']> = 
       style: ({ theme }) => ({
         [`& .${paginationItemClasses.root}`]: {
           [`&.${paginationItemClasses.selected}`]: {
-            fontWeight: theme.typography.fontWeightSemiBold,
+            fontWeight: theme.typography.fontWeightBold,
             backgroundColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
             '&:hover': { backgroundColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.16) },
           },
@@ -79,7 +79,7 @@ const MuiPagination: Components<Theme>['MuiPagination'] = {
     text: ({ ownerState, theme }) => ({
       [`& .${paginationItemClasses.root}`]: {
         [`&.${paginationItemClasses.selected}`]: {
-          fontWeight: theme.typography.fontWeightSemiBold,
+          fontWeight: theme.typography.fontWeightBold,
           ...(ownerState.color === 'standard' && {
             color: theme.vars.palette.common.white,
             backgroundColor: theme.vars.palette.text.primary,
@@ -100,7 +100,7 @@ const MuiPagination: Components<Theme>['MuiPagination'] = {
         borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.24),
         [`&.${paginationItemClasses.selected}`]: {
           borderColor: 'currentColor',
-          fontWeight: theme.typography.fontWeightSemiBold,
+          fontWeight: theme.typography.fontWeightBold,
           ...(ownerState.color === 'standard' && {
             backgroundColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
           }),

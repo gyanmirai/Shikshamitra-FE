@@ -46,7 +46,7 @@ const StyledLabel = styled('span')(({ theme }) => ({
   width: 100,
   flexShrink: 0,
   color: theme.vars.palette.text.secondary,
-  fontWeight: theme.typography.fontWeightSemiBold,
+  fontWeight: theme.typography.fontWeightBold,
 }));
 
 // ----------------------------------------------------------------------

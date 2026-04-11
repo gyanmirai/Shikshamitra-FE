@@ -344,8 +344,14 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
           },
 
-          earningComponents: values.earningComponents,
-          deductionComponents: values.deductionComponents,
+          earningComponents: values.earningComponents.map((item: any) => ({
+            componentId: item?.id || item?.componentId,
+            amount: Number(item?.amount),
+          })),
+          deductionComponents: values.deductionComponents.map((item: any) => ({
+            componentId: item?.id || item?.componentId,
+            amount: Number(item?.amount),
+          })),
         },
       }).unwrap();
       return res;

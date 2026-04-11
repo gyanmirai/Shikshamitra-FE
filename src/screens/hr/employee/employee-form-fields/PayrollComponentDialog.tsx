@@ -82,7 +82,9 @@ export default function PayrollComponentDialog({
           loading={isLoading}
           size="small"
           options={components?.items || []}
-          getOptionLabel={(option: any) => option?.componentName || option?.name}
+          getOptionLabel={(option: any) =>
+            option?.earningComponentName || option?.deductionComponentName
+          }
           slotProps={{
             chip: {
               size: 'small',

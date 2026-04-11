@@ -140,9 +140,6 @@ export const employeeApi = api.injectEndpoints({
       query: ({ id, body }) => ({
         url: `/employees/${id}/documents`,
         method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
         body,
       }),
       invalidatesTags: [employeeType.employeeDocument],
@@ -151,9 +148,6 @@ export const employeeApi = api.injectEndpoints({
       query: ({ employeeId, documentId, body }) => ({
         url: `/employees/${employeeId}/documents/${documentId}`,
         method: 'PUT',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
         body,
       }),
       invalidatesTags: [employeeType.employeeDocument],
@@ -172,6 +166,7 @@ export const employeeApi = api.injectEndpoints({
     getEmployeeDocumentById: builder.query({
       query: ({ employeeId, documentId }) => ({
         url: `/employees/${employeeId}/documents/${documentId}`,
+        responseHandler: (response) => response.blob(),
       }),
       providesTags: [employeeType.employeeDocument],
     }),

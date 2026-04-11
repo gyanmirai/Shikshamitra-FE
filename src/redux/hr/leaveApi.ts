@@ -1,8 +1,8 @@
 import { employeeType } from 'src/redux/tagTypes';
 
-import { employeeApi } from './employeeApi';
+import { api } from '../service';
 
-export const leaveApi = employeeApi.injectEndpoints({
+export const leaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Leave Types
     getLeaveTypes: builder.query({

@@ -1,6 +1,9 @@
-import type { Theme as BaseTheme } from '@mui/material/styles/createTheme';
-import type { CssVarsTheme, CssVarsThemeOptions } from '@mui/material/styles';
-import type { TypographyStyleOptions } from '@mui/material/styles/createTypography';
+import type {
+  CssVarsTheme,
+  TypographyStyle,
+  Theme as BaseTheme,
+  CssVarsThemeOptions,
+} from '@mui/material/styles';
 
 import type { CustomShadows } from './core/custom-shadows';
 
@@ -9,7 +12,7 @@ import type { CustomShadows } from './core/custom-shadows';
 export type Theme = Omit<BaseTheme, 'palette' | 'applyStyles'> & CssVarsTheme;
 
 export type ThemeUpdateOptions = Omit<CssVarsThemeOptions, 'typography'> & {
-  typography?: TypographyStyleOptions;
+  typography?: TypographyStyle;
   customShadows?: CustomShadows;
 };
 

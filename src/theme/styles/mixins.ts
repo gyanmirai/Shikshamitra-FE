@@ -228,7 +228,7 @@ export function menuItem(theme: Theme) {
     borderRadius: +theme.shape.borderRadius * 0.75,
     '&:not(:last-of-type)': { marginBottom: 4 },
     [`&.${menuItemClasses.selected}`]: {
-      fontWeight: theme.typography.fontWeightSemiBold,
+      fontWeight: theme.typography.fontWeightBold,
       backgroundColor: theme.vars.palette.action.selected,
       '&:hover': { backgroundColor: theme.vars.palette.action.hover },
     },

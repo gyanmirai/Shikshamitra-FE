@@ -77,7 +77,7 @@ const StyledNavItem = styled(ButtonBase, {
       '&:hover': { opacity: 0.64, '&::before': baseStyles.dot },
       ...(active && {
         color: theme.palette.primary.main,
-        fontWeight: theme.typography.fontWeightSemiBold,
+        fontWeight: theme.typography.fontWeightBold,
         '&::before': baseStyles.dot,
       }),
       ...(open && { opacity: 0.64, '&::before': baseStyles.dot }),
@@ -94,7 +94,7 @@ const StyledNavItem = styled(ButtonBase, {
       '&:hover': { color: theme.vars.palette.text.primary, '&::before': baseStyles.dot },
       ...(active && {
         color: theme.vars.palette.text.primary,
-        fontWeight: theme.typography.fontWeightSemiBold,
+        fontWeight: theme.typography.fontWeightBold,
         '&::before': baseStyles.dot,
       }),
     }),

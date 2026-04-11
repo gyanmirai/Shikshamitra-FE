@@ -52,7 +52,7 @@ const MuiTab: Components<Theme>['MuiTab'] = {
       lineHeight: theme.typography.body2.lineHeight,
       [`&.${tabClasses.selected}`]: {
         color: theme.vars.palette.text.primary,
-        fontWeight: theme.typography.fontWeightSemiBold,
+        fontWeight: theme.typography.fontWeightBold,
       },
     }),
   },

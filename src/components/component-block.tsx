@@ -47,7 +47,7 @@ export function ComponentBlock({ title, sx, children, ...other }: ComponentBlock
             bgcolor: 'common.white',
             transform: 'translateY(-50%)',
             fontSize: (theme) => theme.typography.caption.fontSize,
-            fontWeight: (theme) => theme.typography.fontWeightSemiBold,
+            fontWeight: (theme) => theme.typography.fontWeightBold,
             border: (theme) => `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.24)}`,
             [stylesMode.dark]: { bgcolor: 'background.neutral' },
           }}
