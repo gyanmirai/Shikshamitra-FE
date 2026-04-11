@@ -12,7 +12,7 @@ export const getHomeworkInitialValues = (
   title: editData?.title || '',
   description: editData?.description || '',
   class: editData?.class || classes || '',
-  classId: editData?.classId || '',
+  classId: editData?.classId ?? undefined,
 
   divisions:
     editData?.divisions?.map((div) => ({
