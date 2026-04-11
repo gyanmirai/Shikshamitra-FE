@@ -181,8 +181,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     },
   });
 
-  console.log('formik----', formik.errors);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box
