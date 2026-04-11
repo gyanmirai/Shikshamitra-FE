@@ -36,10 +36,6 @@ import {
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
 import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
-import {
   Box,
   Card,
   Grid,
@@ -51,6 +47,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/hr/employee-salary-structure-api';
 
 import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
@@ -471,24 +471,22 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
     onSubmit: async (values) => {
       const data = {
         earningComponents: values.earningComponents.map((item: any) => ({
+          id: item?.id || null,
+          componentId: item?.componentId || item?.id || null,
           name: item?.earningComponentName || item?.name,
-          description: item?.description || '',
           amount: Number(item?.amount),
           isFixed: !!item?.isFixed,
           isTemp: !!item?.isTemp,
-          componentType: Number(item?.componentType || 0),
-          dependOn: Number(item?.dependOn || 0),
-          applicableMonth: item?.applicableMonth || null,
+          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
         deductionComponents: values.deductionComponents.map((item: any) => ({
+          id: item?.id || null,
+          componentId: item?.componentId || item?.id || null,
           name: item?.deductionComponentName || item?.name,
-          description: item?.description || '',
           amount: Number(item?.amount),
           isFixed: !!item?.isFixed,
           isTemp: !!item?.isTemp,
-          componentType: Number(item?.componentType || 0),
-          dependOn: Number(item?.dependOn || 0),
-          applicableMonth: item?.applicableMonth || null,
+          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
       };
 

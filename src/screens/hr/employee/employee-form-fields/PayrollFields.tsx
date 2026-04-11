@@ -25,6 +25,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     const normalized = selectedComponents.map((c: any) => ({
       ...c,
       amount: c.amount ?? 0,
+      applicableMonth: c.applicableMonth ?? dayjs().toISOString(),
     }));
     formik.setFieldValue(name, normalized);
     // Reset temp add mode after adding
@@ -32,7 +33,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
       isAddingTemp.onFalse();
     }
   };
-  console.log('components---', components);
   const handleAddTemp = (selectedValues: any) => {
     const updatedComponents = [...components, selectedValues];
     formik.setFieldValue(name, updatedComponents);
@@ -186,7 +186,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                     </ShakingTextField>
                   )}
 
-                  {!component.isTemp && (
+                  {component.applicableMonth && dayjs(component.applicableMonth).isValid() && (
                     <Typography
                       variant="caption"
                       sx={{

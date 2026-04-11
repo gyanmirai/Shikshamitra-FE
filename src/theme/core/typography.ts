@@ -1,16 +1,13 @@
-// import type { TypographyOptions } from '@mui/material/styles/createTypography';
-
-import type { TypographyStyleOptions } from '@mui/material/styles/createTypography';
+import type {
+  Theme,
+  TypographyVariantsOptions as MuiTypographyVariantsOptions,
+} from '@mui/material/styles';
 
 import { setFont, pxToRem, responsiveFontSizes } from '../styles/utils';
 
 // ----------------------------------------------------------------------
 
 declare module '@mui/material/styles' {
-  interface TypographyVariants {
-    fontSecondaryFamily: React.CSSProperties['fontFamily'];
-    fontWeightSemiBold: React.CSSProperties['fontWeight'];
-  }
   interface TypographyVariantsOptions {
     fontSecondaryFamily?: React.CSSProperties['fontFamily'];
     fontWeightSemiBold?: React.CSSProperties['fontWeight'];
@@ -30,7 +27,7 @@ export const secondaryFont = setFont('Barlow');
 
 // ----------------------------------------------------------------------
 
-export const typography: TypographyStyleOptions = {
+export const typography: MuiTypographyVariantsOptions = {
   fontFamily: primaryFont,
   fontSecondaryFamily: secondaryFont,
   fontWeightLight: '300',
