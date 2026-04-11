@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
@@ -14,7 +14,23 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
   const [employeeParams, setEmployeeParams] = useState({
     search: '',
   });
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(
+    formik.values.reportingManager
+      ? { id: formik.values.reportingManager, fullName: formik.values.reportingManagerName }
+      : null
+  );
+
+  useEffect(() => {
+    if (formik.values.reportingManager) {
+      setSelectedEmployee({
+        id: formik.values.reportingManager,
+        fullName: formik.values.reportingManagerName,
+      });
+    } else {
+      setSelectedEmployee(null);
+    }
+  }, [formik.values.reportingManager, formik.values.reportingManagerName]);
+
   const {
     data: employees,
     isLoading,

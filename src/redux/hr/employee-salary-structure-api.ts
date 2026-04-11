@@ -1,15 +1,18 @@
-﻿import { employeeApi } from './employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
 
+import { employeeApi } from './employeeApi';
 
 export interface EmployeeSalaryComponent {
   id?: string | null;
   componentId?: string | null;
   name: string;
+  description?: string;
   amount?: number | null;
   isFixed?: boolean;
   isTemp: boolean;
-  applicableMonth: string;
+  componentType?: number;
+  dependOn?: number;
+  applicableMonth?: string;
 }
 
 export interface EmployeeSalaryStructureResponse {

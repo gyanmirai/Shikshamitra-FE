@@ -73,7 +73,7 @@ export interface IAdditionalInformationResponse {
 
 export interface IWorkExperienceResponse {
   id: string;
-  organizationName: string;
+  mediumStageName: string;
   designation: string;
   department: string;
   country: {
@@ -101,8 +101,10 @@ export interface ISalaryDetails {
   pfRuleId: string;
   epfNumber: string;
   uanNumber: string;
+  basicSalary: number;
   punchId: string;
-  totalWorkingHourPerMonth: number;
+  tdsPercentage: number;
+  tdsAmount: number;
 }
 
 export interface ISalaryComponent {

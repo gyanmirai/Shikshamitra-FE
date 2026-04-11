@@ -20,14 +20,19 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const components = values[name] || [];
   const isDialogOpen = useBoolean();
   const isAddingTemp = useBoolean(false);
-  const handleAdd = (selectedNames: string[]) => {
-    formik.setFieldValue(name, selectedNames);
+  const handleAdd = (selectedComponents: any[]) => {
+    // Ensure amount defaults to 0 for all newly added components
+    const normalized = selectedComponents.map((c: any) => ({
+      ...c,
+      amount: c.amount ?? 0,
+    }));
+    formik.setFieldValue(name, normalized);
     // Reset temp add mode after adding
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
     }
   };
-
+  console.log('components---', components);
   const handleAddTemp = (selectedValues: any) => {
     const updatedComponents = [...components, selectedValues];
     formik.setFieldValue(name, updatedComponents);
@@ -38,6 +43,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     const updatedComponents = components.filter((_: any, i: number) => i !== index);
     formik.setFieldValue(name, updatedComponents);
   };
+  console.log('earningComponents', formik.values.earningComponents);
 
   return (
     <Box mt={2}>
@@ -121,7 +127,9 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                       pl: 1,
                     }}
                   >
-                    {component?.componentName || component?.name}
+                    {component?.earningComponentName ||
+                      component?.deductionComponentName ||
+                      component?.name}
                   </Typography>
 
                   {isFixed && (
@@ -153,8 +161,18 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                         variant="standard"
                         label="Amount"
                         name={`${name}.${index}.amount`}
-                        value={component.amount}
-                        onChange={formik.handleChange}
+                        value={component.amount ?? 0}
+                        onChange={(e: any) => {
+                          let val = e.target.value;
+                          val = val.replace(/[₹,\s]/g, '');
+                          if (!/^\d*$/.test(val)) return;
+                          console.log(`${name}.${index}----`, `${name}.${index}`);
+                          formik.setFieldValue(
+                            `${name}.${index}.amount`,
+                            val !== '' ? Number(val) : 0
+                          );
+                          formik.setFieldTouched(`${name}.${index}.amount`, true, false);
+                        }}
                         error={
                           formik.touched[name]?.[index]?.amount &&
                           Boolean((formik.errors[name] as any)?.[index]?.amount)

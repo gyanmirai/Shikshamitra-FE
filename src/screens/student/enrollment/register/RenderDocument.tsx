@@ -3,7 +3,7 @@ import type { RootState } from 'src/redux/store';
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
 import { shikshaMitraToast } from 'src/components/toast';

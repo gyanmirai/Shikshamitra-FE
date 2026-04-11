@@ -195,7 +195,7 @@ const additionalDetailsValidationSchema = Yup.object({
 export const workExperienceValidationSchema = Yup.object({
   experiences: Yup.array().of(
     Yup.object({
-      organizationName: Yup.string().required('Organization Name is required'),
+      mediumStageName: Yup.string().required('Organization Name is required'),
       // organizationAddress: Yup.string(),
       country: Yup.object().shape({
         name: Yup.string(),
