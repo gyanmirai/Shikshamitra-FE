@@ -67,11 +67,14 @@ export const inquiryValidationSchema = Yup.object().shape({
     ),
   previousSchool: Yup.string(),
   inquiryPreferences: Yup.string(),
-  pinCode: Yup.number()
-    .test('pincode', 'Must be exactly 6 numbers', (value) =>
-      value ? !!`${value}`.match(/\b\d{6}\b/) : true
+  pinCode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
     )
-    .nullable(),
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
 
   board: Yup.string().required('Board is required'),
   medium: Yup.string().required('Medium is required'),

@@ -1,6 +1,6 @@
-﻿import { transportApi } from '../transportApi';
 import { transportType } from 'src/redux/tagTypes';
 
+import { transportApi } from '../transportApi';
 
 export const routeStopApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({

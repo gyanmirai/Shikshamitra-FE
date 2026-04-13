@@ -1,6 +1,6 @@
-﻿import { communicationApi } from '../communicationApi';
 import { communicationType } from 'src/redux/tagTypes';
 
+import { communicationApi } from '../communicationApi';
 
 export const meetingApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({

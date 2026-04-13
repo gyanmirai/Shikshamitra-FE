@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { budgetsCategoryType } from 'src/redux/tagTypes';
-
-import budgetsCategoryData from '../../json/finance/settings/Budget/budgetsCategoryData.json';
-
 
 export const BudgetsCategoryApi = api.injectEndpoints({
   endpoints: (builder) => ({

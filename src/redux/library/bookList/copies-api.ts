@@ -1,6 +1,6 @@
-﻿import { libraryModuleApi } from '../libraryModuleApi';
 import { libraryModuleType } from 'src/redux/tagTypes';
 
+import { libraryModuleApi } from '../libraryModuleApi';
 
 export const copiesApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({

@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { reservationDataType } from 'src/redux/tagTypes';
-
-import reservationData from '../../../issueReturnData.json';
-
 
 export const reservationDataApi = api.injectEndpoints({
   endpoints: (builder) => ({

@@ -1,4 +1,4 @@
-﻿import { studentReceiptType } from 'src/redux/tagTypes';
+import { studentReceiptType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 

@@ -1,5 +1,6 @@
-import { employeeApi } from './employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
+
+import { employeeApi } from './employeeApi';
 
 export const employeePayrollApi = employeeApi.injectEndpoints({
   // tagTypes: ['Deduction-Components', 'Employee-Payroll', 'Earning-Components'],

@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { surveyTypeOptionsType } from 'src/redux/tagTypes';
 
 export const surveyTypeOptionsApi = api.injectEndpoints({

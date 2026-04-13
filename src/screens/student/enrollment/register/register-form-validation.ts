@@ -5,6 +5,7 @@ import { matchIsValidTel } from 'mui-tel-input';
 // validation schema for student registration
 // Validates various student-specific information and characteristics
 const MIN_DOB = dayjs('1947-01-01');
+
 export const generalFieldValidation = Yup.object({
   inquiryNo: Yup.string(),
   formNo: Yup.string().required('Form No. is required'),
@@ -67,6 +68,15 @@ export const generalFieldValidation = Yup.object({
         return !value || value !== this.parent.primaryContactNumber;
       }
     ),
+  pinCode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
+
   addressLine1: Yup.string().required('Building/Flat/House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
   email: Yup.string().email('Invalid email address'),
@@ -131,6 +141,22 @@ export const familyFieldsValidation = Yup.object({
   fatherDesignation: Yup.string(),
   fatherOrganization: Yup.string(),
   fatherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  fatherOfficePincode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
+  fatherLocalPincode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
   fatherRemarks: Yup.string(),
   fatherAddress1: Yup.string(),
   fatherAddress2: Yup.string(),
@@ -174,6 +200,22 @@ export const familyFieldsValidation = Yup.object({
   motherDesignation: Yup.string(),
   motherOrganization: Yup.string(),
   motherAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  motherOfficePincode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
+  motherLocalPincode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
   motherRemarks: Yup.string(),
   motherAddress1: Yup.string(),
   motherAddress2: Yup.string(),
@@ -217,6 +259,22 @@ export const familyFieldsValidation = Yup.object({
   guardianDesignation: Yup.string(),
   guardianOrganization: Yup.string(),
   guardianAadharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
+  guardianOfficePincode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
+  guardianLocalPincode: Yup.string()
+    .nullable()
+    .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
+      value ? /^\d{6}$/.test(value) : true
+    )
+    .test('pincode-start', 'PIN code cannot start with 0', (value) =>
+      value ? !/^0/.test(value) : true
+    ),
   guardianRemarks: Yup.string(),
   guardianAddress1: Yup.string(),
   guardianAddress2: Yup.string(),
@@ -286,6 +344,7 @@ export const additionalDetailsValidations = Yup.object({
   transportMember: Yup.boolean(),
   sponsorName: Yup.string(),
 });
+
 export const medicalDetailsValidations = Yup.object({
   weight: Yup.number(),
   height: Yup.string(),
@@ -301,6 +360,7 @@ export const medicalDetailsValidations = Yup.object({
   childImmunisation: Yup.string(),
   immunisationRemarks: Yup.string(),
 });
+
 export const previousSchoolValidation = Yup.object({
   schoolName: Yup.string(),
   schoolAddress: Yup.string(),

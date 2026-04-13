@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { invoiceType } from 'src/redux/tagTypes';
-
-import invoiceData from '../../../invoiceAndReceipt.json';
-
 
 export const invoiceApi = api.injectEndpoints({
   endpoints: (builder) => ({

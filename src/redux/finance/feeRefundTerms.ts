@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { feeRefundTermsType } from 'src/redux/tagTypes';
-
-import financeData from '../../../feeRefundData.json';
-
 
 export const feeRefundsTermsApi = api.injectEndpoints({
   endpoints: (builder) => ({

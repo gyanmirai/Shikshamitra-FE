@@ -1,7 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { feeConcessionType } from 'src/redux/tagTypes';
-
-import feeCollection from '../../../financeFeeCollection.json';
 
 export const feeConcessionApi = api.injectEndpoints({
   endpoints: (builder) => ({

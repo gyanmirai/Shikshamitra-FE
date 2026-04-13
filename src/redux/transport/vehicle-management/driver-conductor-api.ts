@@ -1,6 +1,6 @@
-﻿import { transportApi } from '../transportApi';
 import { transportType } from 'src/redux/tagTypes';
 
+import { transportApi } from '../transportApi';
 
 export const driverConductorApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({

@@ -22,7 +22,7 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import { useGetStudentByIdQuery, useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import {
   Box,
   Tab,
@@ -198,19 +198,15 @@ export function StudentProfile() {
   // Returns getStudents function, StudentsData response and loading state
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
 
   // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
-      getStudents({
-        academicMediumId: medium?.id,
-        standardId: classes,
-        divisionId: division,
-      });
+      getStudents(division);
     }
-  }, [division, classes, organization, medium?.id, getStudents]);
+  }, [division, classes, organization, getStudents]);
 
   // Transform students data to include full name
   const tableData = useMemo(

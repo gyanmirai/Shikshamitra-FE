@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { expenseType } from 'src/redux/tagTypes';
 
 export const expenseApi = api.injectEndpoints({

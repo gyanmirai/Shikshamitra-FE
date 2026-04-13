@@ -1,6 +1,6 @@
-﻿import { libraryModuleApi } from '../libraryModuleApi';
 import { libraryModuleType } from 'src/redux/tagTypes';
 
+import { libraryModuleApi } from '../libraryModuleApi';
 
 export const memberManagementApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -19,7 +19,9 @@ export const memberManagementApi = libraryModuleApi.injectEndpoints({
         method: 'GET',
         params: { academicYearId },
       }),
-      providesTags: (result, error, { memberId }) => [{ type: libraryModuleType.members, id: memberId }],
+      providesTags: (result, error, { memberId }) => [
+        { type: libraryModuleType.members, id: memberId },
+      ],
     }),
 
     getMemberBorrowedBooks: builder.query({

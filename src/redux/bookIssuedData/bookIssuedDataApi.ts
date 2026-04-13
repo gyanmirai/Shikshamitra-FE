@@ -1,4 +1,4 @@
-﻿import { bookIssuedType } from 'src/redux/tagTypes';
+import { bookIssuedType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 

@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { incomeType } from 'src/redux/tagTypes';
-
-import incomeData from '../../../financeIncomeData.json';
-
 
 export const incomeApi = api.injectEndpoints({
   endpoints: (builder) => ({

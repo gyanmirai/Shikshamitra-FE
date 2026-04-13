@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { bookConditionOptionsType } from 'src/redux/tagTypes';
-
-import libraryData from '../../../../issueReturnData.json';
-
 
 export const bookConditionOptionsApi = api.injectEndpoints({
   endpoints: (builder) => ({

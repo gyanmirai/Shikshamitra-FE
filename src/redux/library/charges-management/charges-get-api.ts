@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { libraryChargeType } from 'src/redux/tagTypes';
-
-import libraryChargesData from '../../../../issueReturnData.json';
-
 
 export const LibraryChargeApi = api.injectEndpoints({
   endpoints: (builder) => ({

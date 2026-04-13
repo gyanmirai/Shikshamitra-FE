@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { paymentHistoryType } from 'src/redux/tagTypes';
-
-import feeCollection from '../../../financeFeeCollection.json';
-
 
 export const paymentHistoryApi = api.injectEndpoints({
   endpoints: (builder) => ({
