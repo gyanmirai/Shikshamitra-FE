@@ -304,12 +304,12 @@ const PFForm = ({
               academicYearId: currentYear?.id,
             },
             id: editData.id,
-          });
+          }).unwrap();
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" updated successfully`,
           });
         } else {
-          await addPF({ body: values, academicYearId: currentYear?.id });
+          await addPF({ body: values, academicYearId: currentYear?.id }).unwrap();
           shikshaMitraToast.success({
             message: `PF rule "${values.name}" created successfully`,
           });

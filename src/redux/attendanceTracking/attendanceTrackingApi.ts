@@ -1,6 +1,6 @@
-﻿import { employeeApi } from '../hr/employeeApi';
 import { employeeType } from 'src/redux/tagTypes';
 
+import { employeeApi } from '../hr/employeeApi';
 
 export const attendanceTrackingApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({

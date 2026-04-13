@@ -70,6 +70,28 @@ export const attendanceApi = employeeApi.injectEndpoints({
       }),
       invalidatesTags: [employeeType.attendance],
     }),
+    previewAttendance: builder.mutation({
+      query: (body) => ({
+        url: '/attendance-import/preview',
+        method: 'POST',
+        body,
+      }),
+    }),
+    confirmAttendance: builder.mutation({
+      query: (body) => ({
+        url: '/attendance-import/confirm',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [employeeType.attendance],
+    }),
+    downloadAttendanceTemplate: builder.mutation({
+      query: () => ({
+        url: '/attendance-import/template',
+        method: 'GET',
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 });
 
@@ -81,4 +103,7 @@ export const {
   useGetPaginatedAttendanceQuery,
   useUpdateAttendanceMutation,
   useImportAttendanceMutation,
+  usePreviewAttendanceMutation,
+  useConfirmAttendanceMutation,
+  useDownloadAttendanceTemplateMutation,
 } = attendanceApi;

@@ -17,7 +17,7 @@ const WorkExperiences = (props: any) => {
   const [selectedExperience, setSelectedExperience] = useState<number | null>();
   const { formik, isMainForm } = props;
   const { values, setFieldValue } = formik;
-
+  console.log('work experience-----', values);
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -272,18 +272,6 @@ const WorkExperiences = (props: any) => {
                   }}
                   InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
-                {/* <TextField
-                fullWidth
-                size="small"
-                name={`experiences.${index}.organizationCity`}
-                label="Organization City"
-                value={experience.organizationCity}
-                onChange={(event) => {
-                  const val = capitalize(event.target.value);
-                  setFieldValue(`experiences.${index}.organizationCity`, val);
-                }}
-                disabled={!isEditable.value}
-              /> */}
               </Box>
               <Box sx={{ width: '200px' }}>
                 <ShakingTextField
