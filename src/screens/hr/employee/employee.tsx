@@ -7,6 +7,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -35,10 +36,6 @@ import {
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
 import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
-import {
   Box,
   Card,
   Grid,
@@ -50,6 +47,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/hr/employee-salary-structure-api';
 
 import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
@@ -430,7 +431,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
     options: { skip: !editData?.id },
   });
 
-  const [updateSalaryStructure] = useQueryAndMutation({
+  const [updateSalaryStructure, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeSalaryStructureMutation,
   });
@@ -446,7 +447,11 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentType: Yup.string(),
           // eslint-disable-next-line func-names
           amount: Yup.string().required('Amount is required'),
-          applicableMonth: Yup.mixed().required('Applicable month is required'),
+          applicableMonth: Yup.mixed().when('isTemp', {
+            is: true,
+            then: (schema) => schema.required('Applicable month is required'),
+            otherwise: (schema) => schema.nullable(),
+          }),
         })
       ),
       deductionComponents: Yup.array().of(
@@ -455,33 +460,33 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentType: Yup.string(),
           // eslint-disable-next-line func-names
           amount: Yup.string().required('Amount is required'),
-          applicableMonth: Yup.mixed().required('Applicable month is required'),
+          applicableMonth: Yup.mixed().when('isTemp', {
+            is: true,
+            then: (schema) => schema.required('Applicable month is required'),
+            otherwise: (schema) => schema.nullable(),
+          }),
         })
       ),
     }),
     onSubmit: async (values) => {
       const data = {
         earningComponents: values.earningComponents.map((item: any) => ({
-          name: item?.name || item?.componentName,
-          description: item?.description,
+          id: item?.id || null,
+          componentId: item?.componentId || item?.id || null,
+          name: item?.earningComponentName || item?.name,
           amount: Number(item?.amount),
-          applicableMonth: item?.applicableMonth,
-          isFixed: item?.isFixed,
-          isTemp: false,
-          componentType: item?.componentType,
-          dependOn: item?.dependOn,
-          id: item?.id || '',
+          isFixed: !!item?.isFixed,
+          isTemp: !!item?.isTemp,
+          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
         deductionComponents: values.deductionComponents.map((item: any) => ({
-          name: item?.name || item?.componentName,
-          description: item?.description,
+          id: item?.id || null,
+          componentId: item?.componentId || item?.id || null,
+          name: item?.deductionComponentName || item?.name,
           amount: Number(item?.amount),
-          applicableMonth: item?.applicableMonth,
-          isFixed: item?.isFixed,
-          isTemp: false,
-          componentType: item?.componentType,
-          dependOn: item?.dependOn,
-          id: item?.id || '',
+          isFixed: !!item?.isFixed,
+          isTemp: !!item?.isTemp,
+          applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
       };
 
@@ -496,6 +501,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
       }
     },
   });
+
   useEffect(() => {
     if (salaryStructure) {
       formik.setValues({
@@ -546,14 +552,15 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           size="small"
+          loading={isUpdating}
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </>
   );

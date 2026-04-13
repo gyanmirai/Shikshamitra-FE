@@ -59,7 +59,7 @@ const MuiTableCell: Components<Theme>['MuiTableCell'] = {
     head: ({ theme }) => ({
       fontSize: 14,
       color: theme.vars.palette.text.secondary,
-      fontWeight: theme.typography.fontWeightSemiBold,
+      fontWeight: theme.typography.fontWeightBold,
       backgroundColor: theme.vars.palette.background.neutral,
     }),
     stickyHeader: ({ theme }) => ({

@@ -30,7 +30,7 @@ export type AnimateTextProps = TypographyProps & {
 };
 
 // ✅ Motion-enabled Box so we can still use `sx`
-const MotionBox = m(Box);
+const MotionBox = m.create(Box);
 
 export function AnimateText({
   sx,

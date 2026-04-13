@@ -8,8 +8,8 @@ import type {} from '@mui/material/themeCssVarsAugmentation';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import { useSettingsContext } from 'src/components/settings';
+import { ThemeProvider as CssVarsProvider } from '@mui/material/styles';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
-import { Experimental_CssVarsProvider as CssVarsProvider } from '@mui/material/styles';
 
 import { createTheme } from './create-theme';
 import { RTL } from './with-settings/right-to-left';
@@ -30,7 +30,6 @@ export function ThemeProvider({ children }: Props) {
         theme={theme}
         defaultMode={schemeConfig.defaultMode}
         modeStorageKey={schemeConfig.modeStorageKey}
-        colorSchemeSelector="attribute"
       >
         <CssBaseline />
         <RTL direction={settings.direction}>{children}</RTL>

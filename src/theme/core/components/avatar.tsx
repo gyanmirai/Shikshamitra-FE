@@ -109,7 +109,7 @@ const MuiAvatarGroup: Components<Theme>['MuiAvatarGroup'] = {
     }),
     avatar: ({ theme }) => ({
       fontSize: 16,
-      fontWeight: theme.typography.fontWeightSemiBold,
+      fontWeight: theme.typography.fontWeightBold,
       '&:first-of-type': {
         fontSize: 12,
         color: theme.vars.palette.primary.dark,

@@ -22,7 +22,6 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
   try {
     //  Request interceptor logic
     const headers: any = {
-      'Content-Type': 'application/json',
       accept: '*/*',
       ...((args as FetchArgs)?.headers || {}),
     };
@@ -40,9 +39,13 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     // For FormData: browser auto-sets multipart/form-data with correct boundary
     // For URLSearchParams: browser auto-sets application/x-www-form-urlencoded
     // For everything else: set application/json so RTK Query serializes the body.
-    const argBody = typeof args !== 'string' ? (args as any).body : undefined;
+    const argBody =
+      typeof args !== 'string' ? ((args as any).body ?? (args as any).data) : undefined;
     const isNonJsonBody = argBody instanceof FormData || argBody instanceof URLSearchParams;
-    if (!isNonJsonBody) {
+
+    // Only set Content-Type: application/json if there is a body and it's not FormData/URLSearchParams
+    // This avoids CORS preflight issues on GET requests (which have no body)
+    if (argBody && !isNonJsonBody) {
       headers['Content-Type'] = 'application/json';
     }
 

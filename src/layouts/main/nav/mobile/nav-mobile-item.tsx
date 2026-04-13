@@ -60,7 +60,7 @@ const StyledNavItem = styled(ButtonBase, {
   fontWeight: theme.typography.fontWeightMedium,
   ...(active && {
     color: theme.palette.primary.main,
-    fontWeight: theme.typography.fontWeightSemiBold,
+    fontWeight: theme.typography.fontWeightBold,
     backgroundColor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
     '&:hover': { backgroundColor: varAlpha(theme.vars.palette.primary.mainChannel, 0.16) },
   }),

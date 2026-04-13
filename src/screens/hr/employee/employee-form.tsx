@@ -215,6 +215,7 @@ export const workExperienceInitialValues = (editData?: IWorkExperienceResponse[]
   experiences: editData
     ? editData?.map((i: any) => ({
         ...i,
+        mediumStageName: i.mediumStageName || i.organizationName || '',
         startDate: i?.startDate ? dayjs(i.startDate) : null,
         endDate: i?.endDate ? dayjs(i.endDate) : null,
       }))
@@ -235,12 +236,15 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   epfNumber: editData?.salaryDetails?.epfNumber ?? '',
   uanNumber: editData?.salaryDetails?.uanNumber ?? '',
 
-  totalWorkingHourPerMonth:
-    editData?.salaryDetails?.totalWorkingHourPerMonth != null
-      ? String(editData.salaryDetails.totalWorkingHourPerMonth)
-      : '',
+  basicSalary:
+    editData?.salaryDetails?.basicSalary != null ? editData.salaryDetails.basicSalary : 0,
 
   punchId: editData?.salaryDetails?.punchId ?? '',
+
+  tdsPercentage:
+    editData?.salaryDetails?.tdsPercentage != null ? editData.salaryDetails.tdsPercentage : 100,
+
+  tdsAmount: editData?.salaryDetails?.tdsAmount != null ? editData.salaryDetails.tdsAmount : 0,
 
   // ================= COMPONENTS =================
   earningComponents: editData?.earningComponents ?? [],
@@ -514,12 +518,20 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             pfRuleId: values.pfRule,
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
+            basicSalary: Number(values.basicSalary),
             punchId: values.punchId,
-            totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
+            tdsPercentage: Number(values.tdsPercentage),
+            tdsAmount: Number(values.tdsAmount),
           },
 
-          earningComponents: values.earningComponents,
-          deductionComponents: values.deductionComponents,
+          earningComponents: values.earningComponents.map((item: any) => ({
+            componentId: item?.id || item?.componentId,
+            amount: Number(item?.amount ?? 0),
+          })),
+          deductionComponents: values.deductionComponents.map((item: any) => ({
+            componentId: item?.id || item?.componentId,
+            amount: Number(item?.amount ?? 0),
+          })),
         },
       }).unwrap();
       return res;

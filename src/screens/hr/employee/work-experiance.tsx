@@ -52,11 +52,10 @@ const WorkExperiences = (props: any) => {
               setFieldValue('experiences', [
                 ...values.experiences,
                 {
-                  organizationName: '',
-                  organizationAddress: '',
-                  organizationCountry: { name: 'India', isoCode: 'IN' },
-                  organizationState: { name: '', isoCode: '' },
-                  organizationCity: { name: '' },
+                  mediumStageName: '',
+                  country: { name: 'India', isoCode: 'IN' },
+                  state: { name: '', isoCode: '' },
+                  city: { name: '' },
                   startDate: null,
                   endDate: null,
                   department: '',
@@ -110,21 +109,21 @@ const WorkExperiences = (props: any) => {
                   <TextField
                     fullWidth
                     size="small"
-                    name={`experiences.${index}.organizationName`}
+                    name={`experiences.${index}.mediumStageName`}
                     label="Organization Name *"
-                    value={experience.organizationName}
+                    value={experience.mediumStageName}
                     onChange={(e) => {
                       const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
                       const capitalized = sanitizedValue.replace(/\b\w/g, (c) => c.toUpperCase());
-                      formik.setFieldValue(`experiences.${index}.organizationName`, capitalized);
+                      formik.setFieldValue(`experiences.${index}.mediumStageName`, capitalized);
                     }}
                     error={
-                      formik?.touched?.experiences?.[index]?.organizationName &&
-                      formik?.errors?.experiences?.[index]?.organizationName
+                      formik?.touched?.experiences?.[index]?.mediumStageName &&
+                      formik?.errors?.experiences?.[index]?.mediumStageName
                     }
                     helperText={
-                      formik?.touched?.experiences?.[index]?.organizationName &&
-                      formik?.errors?.experiences?.[index]?.organizationName
+                      formik?.touched?.experiences?.[index]?.mediumStageName &&
+                      formik?.errors?.experiences?.[index]?.mediumStageName
                     }
                     FormHelperTextProps={{
                       sx: {

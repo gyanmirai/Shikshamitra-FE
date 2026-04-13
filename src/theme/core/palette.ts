@@ -5,7 +5,7 @@ import { varAlpha, createPaletteChannel } from '../styles';
 
 // ----------------------------------------------------------------------
 
-declare module '@mui/material/styles/createPalette' {
+declare module '@mui/material/styles' {
   interface CommonColors {
     whiteChannel: string;
     blackChannel: string;
@@ -18,14 +18,19 @@ declare module '@mui/material/styles/createPalette' {
     neutralChannel: string;
   }
   interface SimplePaletteColorOptions {
+    lighter?: string;
+    darker?: string;
+    lighterChannel?: string;
+    darkerChannel?: string;
+  }
+  interface PaletteColor {
     lighter: string;
     darker: string;
     lighterChannel: string;
     darkerChannel: string;
   }
-  interface PaletteColor {
-    lighter: string;
-    darker: string;
+
+  interface PaletteColorChannel {
     lighterChannel: string;
     darkerChannel: string;
   }

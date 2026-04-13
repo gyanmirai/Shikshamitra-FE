@@ -1,4 +1,4 @@
-import type { Theme } from '@mui/material/styles';
+import type { CssVarsTheme } from '@mui/material/styles';
 import type { SettingsState } from 'src/components/settings';
 
 import { extendTheme } from '@mui/material/styles';
@@ -10,7 +10,7 @@ import { updateCoreWithSettings, updateComponentsWithSettings } from './with-set
 
 // ----------------------------------------------------------------------
 
-export function createTheme(settings: SettingsState): Theme {
+export function createTheme(settings: SettingsState): CssVarsTheme {
   const initialTheme = {
     colorSchemes,
     shadows: shadows(settings.colorScheme),

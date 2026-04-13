@@ -155,7 +155,7 @@ export const StyledNavItem = styled(ButtonBase, {
         ...sharedStyles.noWrap,
         lineHeight: '16px',
         fontSize: theme.typography.pxToRem(10),
-        fontWeight: active ? theme.typography.fontWeightBold : theme.typography.fontWeightSemiBold,
+        fontWeight: active ? theme.typography.fontWeightBold : theme.typography.fontWeightMedium,
         whiteSpace: 'unset',
       },
       [`& .${navSectionClasses.item.caption}`]: {
@@ -203,9 +203,7 @@ export const StyledNavItem = styled(ButtonBase, {
       [`& .${navSectionClasses.item.title}`]: {
         ...baseStyles.title,
         ...theme.typography.body2,
-        fontWeight: active
-          ? theme.typography.fontWeightSemiBold
-          : theme.typography.fontWeightMedium,
+        fontWeight: active ? theme.typography.fontWeightBold : theme.typography.fontWeightMedium,
         flex: '1 1 auto',
       },
       [`& .${navSectionClasses.item.caption}`]: { ...baseStyles.caption },

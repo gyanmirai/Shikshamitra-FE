@@ -130,7 +130,7 @@ const StyledNavItem = styled(ButtonBase, {
     title: {
       ...sharedStyles.noWrap,
       ...theme.typography.body2,
-      fontWeight: active ? theme.typography.fontWeightSemiBold : theme.typography.fontWeightMedium,
+      fontWeight: active ? theme.typography.fontWeightBold : theme.typography.fontWeightMedium,
       // fontSize: '13.5px',
       whiteSpace: 'normal',
     },
