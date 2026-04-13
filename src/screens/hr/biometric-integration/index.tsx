@@ -247,7 +247,6 @@ const BiometricIntegrationScreen = () => {
             onChange={(newValue) => setDate(newValue)}
             format="DD-MM-YYYY"
             views={['year', 'month', 'day']}
-            // disableFuture
             slotProps={{
               textField: {
                 size: 'small',
