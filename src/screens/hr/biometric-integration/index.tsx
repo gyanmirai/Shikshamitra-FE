@@ -111,6 +111,7 @@ const BiometricIntegrationScreen = () => {
       return;
     }
 
+    isUploadingFile.onTrue();
     try {
       const formData = new FormData();
       formData.append('File', file);
@@ -130,16 +131,17 @@ const BiometricIntegrationScreen = () => {
           message: `Attendance data has been imported successfully (${confirmResponse?.summary?.totalRows || 0} rows)`,
         });
       }
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     } catch (error: any) {
       console.error('Failed to import attendance:', error);
       shikshaMitraToast.error({
         message: `Failed to import attendance: ${error?.data?.error?.message || 'Unknown error'}`,
       });
+    } finally {
+      isUploadingFile.onFalse();
+      // Always reset the file input so the same file can be re-uploaded if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
