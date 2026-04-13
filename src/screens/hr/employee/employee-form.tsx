@@ -218,6 +218,7 @@ export const workExperienceInitialValues = (editData?: IWorkExperienceResponse[]
         mediumStageName: i.mediumStageName || i.organizationName || '',
         startDate: i?.startDate ? dayjs(i.startDate) : null,
         endDate: i?.endDate ? dayjs(i.endDate) : null,
+        city: i?.city ? { name: i.city } : { name: '' },
       }))
     : [],
 });

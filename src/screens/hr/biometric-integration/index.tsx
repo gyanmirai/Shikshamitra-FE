@@ -17,20 +17,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
-  useImportAttendanceMutation,
   useUpdateAttendanceMutation,
-  useGetPaginatedAttendanceQuery,
+  usePreviewAttendanceMutation,
+  useConfirmAttendanceMutation,
+  useDownloadAttendanceTemplateMutation,
 } from 'src/redux/hr/attendanceApi';
 
 const BiometricIntegrationScreen = () => {
@@ -41,29 +40,49 @@ const BiometricIntegrationScreen = () => {
   const dispatch = useDispatch();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const { data: attendanceData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPaginatedAttendanceQuery,
-    params: dateConvertor(date?.format(dateFormat) || '', true),
-    options: { skip: !date },
-  });
+  const [importResults, setImportResults] = useState<any>(null);
 
-  const [importAttendance] = useQueryAndMutation({
+  const [previewAttendance, { isLoading: isPreviewing, isFetching: isPreviewingFetching }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: usePreviewAttendanceMutation,
+    });
+
+  const [confirmAttendance, { isLoading: isConfirming, isFetching: isConfirmingFetching }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useConfirmAttendanceMutation,
+    });
+
+  const [downloadAttendanceTemplate] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useImportAttendanceMutation,
+    currentQueryAndMutation: useDownloadAttendanceTemplateMutation,
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const open = useBoolean();
   const [editData, setEditData] = useState<any>(null);
 
-  const handleDownloadTemplate = () => {
-    isDownLoadingTemplate.onTrue();
-    const link = document.createElement('a');
-    link.href = '/templates/Employee_import_attendance.xlsx'; // relative path to public folder
-    link.download = 'Employee_import_attendance.xlsx'; // filename for download
-    link.click();
-    isDownLoadingTemplate.onFalse();
+  const handleDownloadTemplate = async () => {
+    try {
+      isDownLoadingTemplate.onTrue();
+      const blob: any = await downloadAttendanceTemplate({}).unwrap();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Employee_import_attendance.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Failed to download attendance template:', error);
+      shikshaMitraToast.error({
+        message: 'Failed to download template. Please try again.',
+      });
+    } finally {
+      isDownLoadingTemplate.onFalse();
+    }
   };
 
   const handleUploadClick = () => {
@@ -92,31 +111,40 @@ const BiometricIntegrationScreen = () => {
       return;
     }
 
+    isUploadingFile.onTrue();
     try {
-      isUploadingFile.onTrue();
       const formData = new FormData();
       formData.append('File', file);
-      formData.append('Date', dateConvertor(date?.format(dateFormat) || ''));
 
-      await importAttendance(formData).unwrap();
+      // Step 1: Preview
+      const previewResponse = await previewAttendance(formData).unwrap();
 
-      shikshaMitraToast.success({
-        message: `Attendance data for ${date?.format('DD-MM-YYYY')} has been imported successfully`,
-      });
+      if (previewResponse?.previewToken) {
+        // Step 2: Confirm
+        const confirmResponse = await confirmAttendance({
+          previewToken: previewResponse.previewToken,
+        }).unwrap();
 
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        setImportResults(previewResponse);
+
+        shikshaMitraToast.success({
+          message: `Attendance data has been imported successfully (${confirmResponse?.summary?.totalRows || 0} rows)`,
+        });
       }
     } catch (error: any) {
-      console.error('Failed to upload attendance file:', error);
+      console.error('Failed to import attendance:', error);
       shikshaMitraToast.error({
         message: `Failed to import attendance: ${error?.data?.error?.message || 'Unknown error'}`,
       });
     } finally {
       isUploadingFile.onFalse();
+      // Always reset the file input so the same file can be re-uploaded if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
+
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       open.onFalse();
@@ -130,110 +158,60 @@ const BiometricIntegrationScreen = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
+      { id: 'rowNumber', label: 'Row', minWidth: '4vw', align: 'left' },
       { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
-      { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '10vw' },
-      {
-        id: 'phoneNo',
-        label: 'Mobile No.',
-        align: 'left',
-        minWidth: '8vw',
-      },
-      {
-        id: 'inTime',
-        label: 'In-Time',
-        align: 'left',
-        minWidth: '6vw',
-        render(value, row) {
-          return value || `__ __`;
-        },
-      },
-      {
-        id: 'outTime',
-        label: 'Out-Time',
-        align: 'left',
-        minWidth: '7vw',
-        render(value, row) {
-          return value || `__ __`;
-        },
-      },
-      {
-        id: 'hoursWorked',
-        label: 'Hours Worked',
-        minWidth: '9vw',
-        align: 'left',
-        filterType: 'number',
-      },
+      { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
+      { id: 'attendanceDate', label: 'Date', align: 'left', minWidth: '8vw' },
+      { id: 'timeIn', label: 'In-Time', align: 'left', minWidth: '6vw' },
+      { id: 'timeOut', label: 'Out-Time', align: 'left', minWidth: '6vw' },
       {
         id: 'status',
         label: 'Status',
-        filterType: 'enum',
-        sticky: true,
         align: 'left',
         minWidth: '6vw',
-        enumOptions: [
-          {
-            label: 'Pending',
-            value: 'Pending',
-          },
-          {
-            label: 'Present',
-            value: 'Present',
-          },
-          {
-            label: 'Absent',
-            value: 'Absent',
-          },
-          {
-            label: 'Half Day',
-            value: 'Half Day',
-          },
-          {
-            label: 'Leave',
-            value: 'Leave',
-          },
-        ],
-        render(value, row) {
+        render(value) {
           return (
             <Label
-              color={value === 'Present' ? 'success' : value === 'Leave' ? 'error' : 'warning'}
+              color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
             >
               {value}
             </Label>
           );
         },
       },
+      { id: 'remarks', label: 'Remarks', align: 'left', minWidth: '10vw' },
       {
-        id: 'action',
-        label: 'Action',
-        isFilter: false,
-        minWidth: '3vw',
+        id: 'errors',
+        label: 'Errors',
         align: 'left',
-        sticky: true,
-        isSort: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              showEditIcon
-              handleEditClick={() => {
-                setEditData(row);
-                open.onTrue();
-              }}
-              showThreeDots={false}
-            />
+        minWidth: '3vw',
+        render(value) {
+          return value?.length > 0 ? (
+            <CustomTooltip title={value.join(', ')}>
+              <Iconify icon="material-symbols:error-outline" color="error.main" />
+            </CustomTooltip>
+          ) : (
+            '-'
           );
         },
       },
-      // {
-      //   id: 'empty',
-      //   label: ' ',
-      //   isFilter: false,
-      //   align: 'left',
-      //   render(value, row) {
-      //     return ' ';
-      //   },
-      // },
+      {
+        id: 'warnings',
+        label: 'Warnings',
+        align: 'left',
+        minWidth: '3vw',
+        render(value) {
+          return value?.length > 0 ? (
+            <CustomTooltip title={value.join(', ')}>
+              <Iconify icon="material-symbols:warning-outline" color="warning.main" />
+            </CustomTooltip>
+          ) : (
+            '-'
+          );
+        },
+      },
     ],
-    [open]
+    []
   );
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -269,7 +247,6 @@ const BiometricIntegrationScreen = () => {
             onChange={(newValue) => setDate(newValue)}
             format="DD-MM-YYYY"
             views={['year', 'month', 'day']}
-            disableFuture
             slotProps={{
               textField: {
                 size: 'small',
@@ -312,12 +289,47 @@ const BiometricIntegrationScreen = () => {
         </Box>
       </Card>
 
+      {importResults && (
+        <Card sx={{ p: 2, mb: 1, display: 'flex', gap: 3, bgcolor: 'background.neutral' }}>
+          {/* <Box>
+            <Typography variant="overline" color="text.secondary">
+              Total Rows
+            </Typography>
+            <Typography variant="h6">{importResults.summary.totalRows}</Typography>
+          </Box> */}
+          <Box>
+            <Typography variant="overline" color="success.main">
+              Valid Rows
+            </Typography>
+            <Typography variant="h6">{importResults.summary.validRows}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="overline" color="error.main">
+              Invalid Rows
+            </Typography>
+            <Typography variant="h6">{importResults.summary.invalidRows}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="overline" color="info.main">
+              New Records
+            </Typography>
+            <Typography variant="h6">{importResults.summary.createCount}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="overline" color="warning.main">
+              Replaced Records
+            </Typography>
+            <Typography variant="h6">{importResults.summary.replaceCount}</Typography>
+          </Box>
+        </Card>
+      )}
+
       <CustomizableTable
-        isLoading={isLoading}
+        isLoading={isPreviewing || isConfirming || isPreviewingFetching || isConfirmingFetching}
         noDataText={<>No Import Attendance Data Found </>}
         tableId="biometric-integration-table"
         columns={columns}
-        data={attendanceData?.data || []}
+        data={importResults?.rows || []}
       />
 
       <CustomDialog

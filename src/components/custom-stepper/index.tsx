@@ -13,7 +13,15 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
-import { Box, Step, Button, Stepper, StepLabel, StepConnector } from '@mui/material';
+import {
+  Box,
+  Step,
+  Button,
+  Stepper,
+  StepLabel,
+  StepConnector,
+  CircularProgress,
+} from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
@@ -381,6 +389,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
+          position: 'relative',
           ...(scrollbarHeight !== 'auto' && scrollbarHeight
             ? { flex: 'none', height: scrollbarHeight }
             : {}),
@@ -391,6 +400,31 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           },
         }}
       >
+        {(isSaveLoading.value || isLoading) && (
+          <div
+            className="loading-overlay"
+            style={{
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              position: 'absolute',
+              opacity: 0.7,
+              zIndex: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            }}
+          >
+            <CircularProgress size={40} />
+            <span style={{ fontSize: '14px', fontWeight: 500, color: 'rgba(0,0,0,0.7)' }}>
+              Saving...
+            </span>
+          </div>
+        )}
         {formik && renderItem({ formik, activeStep, isBackClick })}
       </Scrollbar>
 
