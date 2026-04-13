@@ -17,7 +17,6 @@ const WorkExperiences = (props: any) => {
   const [selectedExperience, setSelectedExperience] = useState<number | null>();
   const { formik, isMainForm } = props;
   const { values, setFieldValue } = formik;
-  console.log('work experience-----', values);
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
