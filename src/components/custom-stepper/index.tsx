@@ -263,7 +263,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     },
     validateOnChange,
   });
-  console.log('isSaveLoading----loading====', isSaveLoading.value, isLoading);
 
   const isVertical = viewMode === 'vertical' && !isMobile;
 
