@@ -2,6 +2,7 @@
 
 import type React from 'react';
 
+import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -26,18 +27,11 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
   // Initialize Next.js router for navigation
   const router = useRouter();
 
-  // Flag to check if initial application setup is complete
-  // const isCompleteInitialSetup = true; // TODO: get this from redux store
-
-  // if (!isCompleteInitialSetup) {
-  //   router.push('/initial-setup');
-  //   return null;
-  // }
-
-  if (status !== 'loading' && !sessionData?.profile) {
-    router.push('/login');
-    return null;
-  }
+  useEffect(() => {
+    if (status !== 'loading' && !sessionData?.profile) {
+      router.push('/login');
+    }
+  }, [status, sessionData, router]);
 
   if (status === 'loading' || loading) {
     return <SplashScreen />;

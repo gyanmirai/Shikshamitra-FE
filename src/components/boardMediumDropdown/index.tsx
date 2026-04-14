@@ -50,7 +50,7 @@ export default function BoardMediumDropdown({
     <Autocomplete
       size={size}
       options={options}
-      value={value}
+      value={value ?? undefined}
       disableClearable
       getOptionLabel={(option) => option.label}
       onChange={(_, newValue) => {

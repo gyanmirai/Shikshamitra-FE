@@ -31,7 +31,7 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          NODE_OPTIONS: --max-old-space-size=4096
+          NODE_OPTIONS: --max-old-space-size=3072
 
       - name: Prepare standalone build
         run: |
