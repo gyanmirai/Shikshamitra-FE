@@ -9,6 +9,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Card, Grid, Paper, Button, TextField, IconButton, Typography } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
+import { isSalaryComponentFixed } from '../salary-utils';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
@@ -43,7 +44,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     const updatedComponents = components.filter((_: any, i: number) => i !== index);
     formik.setFieldValue(name, updatedComponents);
   };
-  console.log('earningComponents', formik.values.earningComponents);
 
   return (
     <Box mt={2}>
@@ -89,7 +89,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
 
       <Box display="flex" flexDirection="column" gap={2}>
         {components.map((component: any, index: number) => {
-          const { isFixed } = component;
+          const isFixed = isSalaryComponentFixed(component);
           // If it's fixed, we don't show inputs. If it's not fixed, we show Amount.
           // We never show "Type" dropdown as per requirement.
 
@@ -166,7 +166,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                           let val = e.target.value;
                           val = val.replace(/[₹,\s]/g, '');
                           if (!/^\d*$/.test(val)) return;
-                          console.log(`${name}.${index}----`, `${name}.${index}`);
                           formik.setFieldValue(
                             `${name}.${index}.amount`,
                             val !== '' ? Number(val) : 0

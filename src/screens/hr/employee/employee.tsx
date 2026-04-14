@@ -36,10 +36,6 @@ import {
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
 import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
-import {
   Box,
   Card,
   Grid,
@@ -51,11 +47,16 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/hr/employee-salary-structure-api';
 
 import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
+import { isSalaryComponentFixed } from './salary-utils';
 import { RenderComponents } from './employee-form-fields/PayrollFields';
 
 const HrEmployee = () => {
@@ -475,7 +476,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentId: item?.componentId || item?.id || null,
           name: item?.earningComponentName || item?.name,
           amount: Number(item?.amount),
-          isFixed: !!item?.isFixed,
+          isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
@@ -484,7 +485,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentId: item?.componentId || item?.id || null,
           name: item?.deductionComponentName || item?.name,
           amount: Number(item?.amount),
-          isFixed: !!item?.isFixed,
+          isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),

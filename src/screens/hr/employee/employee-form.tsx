@@ -36,6 +36,7 @@ import {
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
+import { isSalaryComponentFixed } from './salary-utils';
 import { validations } from './employee-form-validation';
 
 import type {
@@ -237,15 +238,12 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   epfNumber: editData?.salaryDetails?.epfNumber ?? '',
   uanNumber: editData?.salaryDetails?.uanNumber ?? '',
 
-  basicSalary:
-    editData?.salaryDetails?.basicSalary != null ? editData.salaryDetails.basicSalary : 0,
-
   punchId: editData?.salaryDetails?.punchId ?? '',
 
-  tdsPercentage:
-    editData?.salaryDetails?.tdsPercentage != null ? editData.salaryDetails.tdsPercentage : 100,
-
-  tdsAmount: editData?.salaryDetails?.tdsAmount != null ? editData.salaryDetails.tdsAmount : 0,
+  totalWorkingHourPerMonth:
+    editData?.salaryDetails?.totalWorkingHourPerMonth != null
+      ? editData.salaryDetails.totalWorkingHourPerMonth
+      : 0,
 
   // ================= COMPONENTS =================
   earningComponents: editData?.earningComponents ?? [],
@@ -519,19 +517,21 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             pfRuleId: values.pfRule,
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
-            basicSalary: Number(values.basicSalary),
             punchId: values.punchId,
-            tdsPercentage: Number(values.tdsPercentage),
-            tdsAmount: Number(values.tdsAmount),
+            totalWorkingHourPerMonth: Number(values.totalWorkingHourPerMonth),
           },
 
           earningComponents: values.earningComponents.map((item: any) => ({
             componentId: item?.id || item?.componentId,
+            name: item?.name || item?.earningComponentName || '',
             amount: Number(item?.amount ?? 0),
+            isFixed: isSalaryComponentFixed(item),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
             componentId: item?.id || item?.componentId,
+            name: item?.name || item?.deductionComponentName || '',
             amount: Number(item?.amount ?? 0),
+            isFixed: isSalaryComponentFixed(item),
           })),
         },
       }).unwrap();
