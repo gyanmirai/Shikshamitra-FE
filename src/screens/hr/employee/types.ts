@@ -101,7 +101,7 @@ export interface ISalaryDetails {
   pfRuleId: string;
   epfNumber: string;
   uanNumber: string;
-  basicSalary: number;
+  basicSalary?: number;
   punchId: string;
   totalWorkingHourPerMonth: number;
 }
