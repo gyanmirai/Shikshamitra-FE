@@ -30,8 +30,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -464,13 +464,6 @@ const LeaveRequestForm = ({
     params: { divisionId: division },
     currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
-
-  console.log('allOrganization', allOrganization);
-  console.log('allClass', allClass);
-  console.log('allDivision', allDivision);
-  console.log('organization', organization);
-  console.log('classes', classes);
-  console.log('division', division);
 
   // Fetch all attendance types
   const { data: attendanceTypes } = useQueryAndMutation({

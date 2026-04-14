@@ -4,19 +4,17 @@ import { studentAdmissionType } from 'src/redux/tagTypes';
 export const StudentAdmissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentAdmission: builder.query({
-      query: ({ AcademicMediumId, approvalStatus, sorting, skipCount, maxResultCount }) => {
-        const params = new URLSearchParams({
+      query: ({ AcademicMediumId, approvalStatus, sorting, skipCount, maxResultCount }) => ({
+        url: `/students/admissions`,
+        method: 'GET',
+        params: {
           AcademicMediumId,
           approvalStatus,
-          ...(sorting ? { Sorting: sorting } : {}),
-          ...(skipCount !== undefined ? { SkipCount: String(skipCount) } : {}),
-          ...(maxResultCount !== undefined ? { MaxResultCount: String(maxResultCount) } : {}),
-        });
-        return {
-          url: `/students/admissions?${params.toString()}`,
-          method: 'GET',
-        };
-      },
+          Sorting: sorting,
+          SkipCount: skipCount,
+          MaxResultCount: maxResultCount,
+        },
+      }),
       providesTags: [studentAdmissionType.studentAdmission],
     }),
     changeAdmissionStatus: builder.mutation({
@@ -44,7 +42,7 @@ export const StudentAdmissionApi = api.injectEndpoints({
       providesTags: [studentAdmissionType.studentAdmission],
     }),
     getStandardFeeStructure: builder.query({
-      query: (studentId) => ({
+      query: ({ studentId }) => ({
         url: `/student-fee-structure/student/${studentId}`,
         method: 'GET',
       }),

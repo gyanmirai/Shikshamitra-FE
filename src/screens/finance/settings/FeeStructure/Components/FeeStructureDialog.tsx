@@ -38,7 +38,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
       return;
     }
 
-    const updated = [...formik.values.feeStructureClasses[className]];
+    const updated = [...(formik.values.feeStructureClasses[className] ?? [])];
 
     if (editIndex !== null && editIndex !== undefined) {
       // Edit mode
