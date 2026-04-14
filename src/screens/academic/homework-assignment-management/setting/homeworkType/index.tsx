@@ -117,7 +117,7 @@ const HomeworkTypeCreation = () => {
 
       <HomeworkTypeTable
         isLoading={isLoading || isFetching}
-        data={homeworkTypeData}
+        data={homeworkTypeData?.data}
         onEdit={(data) => {
           setSelectedData(data);
           addHomeworkTypeDialog.onTrue();
@@ -189,11 +189,13 @@ const HomeworkTypeCreation = () => {
                   dispatchFn(
                     homeworkTypesApi.util.updateQueryData(
                       'getHomeworkTypes',
-                      undefined,
+                      { academicMediumId: (medium as Medium)?.id },
                       (draft: any) => {
-                        const index = draft.findIndex((item: any) => item.id === selectedData?.id);
+                        const index = draft.data.findIndex(
+                          (item: any) => item.id === selectedData?.id
+                        );
                         setDeleteIndex(index);
-                        if (index !== -1) draft.splice(index, 1);
+                        if (index !== -1) draft.data.splice(index, 1);
                       }
                     )
                   ),

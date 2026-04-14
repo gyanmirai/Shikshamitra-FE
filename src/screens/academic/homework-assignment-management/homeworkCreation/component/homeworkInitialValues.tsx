@@ -11,8 +11,8 @@ export const getHomeworkInitialValues = (
   id: editData?.id || '',
   title: editData?.title || '',
   description: editData?.description || '',
-  class: editData?.class || '',
-  classId: editData?.classId || classes || '',
+  class: editData?.class || classes || '',
+  classId: editData?.classId ?? undefined,
 
   divisions:
     editData?.divisions?.map((div) => ({

@@ -1,9 +1,12 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -20,6 +23,8 @@ import {
 import type { IHomeworkTypeFormProps } from './type';
 
 const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, editData }) => {
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const [addHomeworkType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkTypeMutation,
@@ -40,20 +45,29 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
     }),
     onSubmit: async (values) => {
       try {
+        if (!medium?.id) {
+          shikshaMitraToast.error({
+            message: 'Academic medium is required',
+          });
+          return;
+        }
+
+        const academicMediumId = medium.id;
+
         if (editData) {
-          const payload = {
+          await updateHomeworkType({
             homeworkTypeId: editData.id,
-            name: values.homeworkTypeName,
-          };
-          await updateHomeworkType(payload).unwrap();
+            homeworkTypeName: values.homeworkTypeName,
+            academicMediumId,
+          }).unwrap();
           shikshaMitraToast.success({
             message: `"${values.homeworkTypeName}" Homework Type updated successfully`,
           });
         } else {
-          const payload = {
-            name: values.homeworkTypeName,
-          };
-          await addHomeworkType(payload).unwrap();
+          await addHomeworkType({
+            data: { name: values.homeworkTypeName },
+            academicMediumId,
+          }).unwrap();
           shikshaMitraToast.success({
             message: `"${values.homeworkTypeName}" Homework Type added successfully`,
           });
