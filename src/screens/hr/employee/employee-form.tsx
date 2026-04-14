@@ -36,6 +36,7 @@ import {
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
+import { isSalaryComponentFixed } from './salary-utils';
 import { validations } from './employee-form-validation';
 
 import type {
@@ -524,23 +525,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             componentId: item?.id || item?.componentId,
             name: item?.name || item?.earningComponentName || '',
             amount: Number(item?.amount ?? 0),
-            isFixed:
-              item?.earningType === 'FIXED' ||
-              item?.deductionType === 'FIXED' ||
-              (item?.earningType === undefined &&
-                item?.deductionType === undefined &&
-                !!item?.isFixed),
+            isFixed: isSalaryComponentFixed(item),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
             componentId: item?.id || item?.componentId,
             name: item?.name || item?.deductionComponentName || '',
             amount: Number(item?.amount ?? 0),
-            isFixed:
-              item?.deductionType === 'FIXED' ||
-              item?.earningType === 'FIXED' ||
-              (item?.deductionType === undefined &&
-                item?.earningType === undefined &&
-                !!item?.isFixed),
+            isFixed: isSalaryComponentFixed(item),
           })),
         },
       }).unwrap();

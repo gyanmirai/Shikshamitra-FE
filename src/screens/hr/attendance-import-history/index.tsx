@@ -262,7 +262,6 @@ const STATUS_ENUM_OPTIONS = [
 
 const AttendanceImportHistoryScreen = () => {
   const tabs = useTabs(ImportStatus.All);
-  const [searchTerm, setSearchTerm] = useState('');
   const [fromDate, setFromDate] = useState<any>(null);
   const [toDate, setToDate] = useState<any>(null);
   const [viewRecord, setViewRecord] = useState<ImportRecord | null>(null);
@@ -366,11 +365,6 @@ const AttendanceImportHistoryScreen = () => {
       data = data.filter((r) => r.status === tabs.value);
     }
 
-    // Search
-    if (searchTerm) {
-      data = data.filter((r) => r.fileName.toLowerCase().includes(searchTerm.toLowerCase()));
-    }
-
     // Date range
     if (fromDate) {
       data = data.filter((r) => dayjs(r.uploadDate).isAfter(dayjs(fromDate).subtract(1, 'day')));
@@ -380,7 +374,7 @@ const AttendanceImportHistoryScreen = () => {
     }
 
     return data;
-  }, [tabs.value, searchTerm, fromDate, toDate]);
+  }, [tabs.value, fromDate, toDate]);
 
   // ── Columns ────────────────────────────────────────────────────────────────
   const columns: IColumn[] = useMemo(
@@ -521,14 +515,13 @@ const AttendanceImportHistoryScreen = () => {
             format="DD-MM-YYYY"
             slotProps={{ textField: { size: 'small' } }}
           />
-          {(searchTerm || fromDate || toDate) && (
+          {(fromDate || toDate) && (
             <Button
               variant="outlined"
               size="small"
               color="inherit"
               startIcon={<Iconify icon="mdi:filter-off-outline" />}
               onClick={() => {
-                setSearchTerm('');
                 setFromDate(null);
                 setToDate(null);
               }}

@@ -9,6 +9,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Card, Grid, Paper, Button, TextField, IconButton, Typography } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
+import { isSalaryComponentFixed } from '../salary-utils';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
@@ -88,10 +89,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
 
       <Box display="flex" flexDirection="column" gap={2}>
         {components.map((component: any, index: number) => {
-          const isFixed =
-            component.earningType === 'FIXED' ||
-            component.deductionType === 'FIXED' ||
-            component.isFixed === true;
+          const isFixed = isSalaryComponentFixed(component);
           // If it's fixed, we don't show inputs. If it's not fixed, we show Amount.
           // We never show "Type" dropdown as per requirement.
 
