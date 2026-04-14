@@ -475,7 +475,12 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentId: item?.componentId || item?.id || null,
           name: item?.earningComponentName || item?.name,
           amount: Number(item?.amount),
-          isFixed: !!item?.isFixed,
+          isFixed:
+            item?.earningType === 'FIXED' ||
+            item?.deductionType === 'FIXED' ||
+            (item?.earningType === undefined &&
+              item?.deductionType === undefined &&
+              !!item?.isFixed),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
@@ -484,7 +489,12 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentId: item?.componentId || item?.id || null,
           name: item?.deductionComponentName || item?.name,
           amount: Number(item?.amount),
-          isFixed: !!item?.isFixed,
+          isFixed:
+            item?.deductionType === 'FIXED' ||
+            item?.earningType === 'FIXED' ||
+            (item?.deductionType === undefined &&
+              item?.earningType === undefined &&
+              !!item?.isFixed),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),

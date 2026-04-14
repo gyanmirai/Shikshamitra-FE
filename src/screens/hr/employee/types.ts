@@ -103,8 +103,7 @@ export interface ISalaryDetails {
   uanNumber: string;
   basicSalary: number;
   punchId: string;
-  tdsPercentage: number;
-  tdsAmount: number;
+  totalWorkingHourPerMonth: number;
 }
 
 export interface ISalaryComponent {
