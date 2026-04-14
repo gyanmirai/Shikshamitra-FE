@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "npm install && next dev --turbopack",
     "start": "next start",
-    "build": "next build",
+    "build": "next build --webpack",
     "build:window": "build-and-copy.bat",
     "build:linux": "./build-and-copy.sh",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
