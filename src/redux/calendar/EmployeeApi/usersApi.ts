@@ -1,6 +1,6 @@
-﻿import { calendarModuleApi } from '../calendarApi';
 import { calendarModuleType } from 'src/redux/tagTypes';
 
+import { calendarModuleApi } from '../calendarApi';
 
 export const usersApi = calendarModuleApi.injectEndpoints({
   endpoints: (builder) => ({

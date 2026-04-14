@@ -119,6 +119,8 @@ const EntranceExamScreen = () => {
     },
   });
 
+  console.log('entranceExamData', entranceExamData);
+
   // Mutation hook for moving students to admission
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
@@ -128,7 +130,7 @@ const EntranceExamScreen = () => {
 
   const tableData = useMemo(
     () =>
-      entranceExamData?.items?.map((item: any) => ({
+      entranceExamData?.data?.items?.map((item: any) => ({
         // Spread original item to preserve all backend fields
         ...item,
 
@@ -140,16 +142,11 @@ const EntranceExamScreen = () => {
 
         // Computed fields
         examTime: item.examTime,
-
-        // Pass-through fields (already match column IDs):
-        // - studentName
-        // - totalMarks
-        // - obtainedMarks
-        // - percentage
-        // - progress
       })),
     [entranceExamData]
   );
+
+  console.log('tableData', tableData);
 
   const actions = useCallback(
     ({ popover }: any, row: any) => (

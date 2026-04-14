@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { organizationUnitType } from 'src/redux/tagTypes';
 
 export const organizationUnitApi = api.injectEndpoints({

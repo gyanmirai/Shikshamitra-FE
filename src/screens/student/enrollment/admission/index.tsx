@@ -266,7 +266,7 @@ const AdmissionScreen = () => {
         render: (value, row) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
-              variant="caption"
+              variant="inherit"
               noWrap
               sx={{
                 maxWidth: 150,
@@ -315,7 +315,7 @@ const AdmissionScreen = () => {
         render: (value, row) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
-              variant="caption"
+              variant="inherit"
               noWrap
               sx={{
                 maxWidth: 150,
@@ -1136,9 +1136,12 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     remarks: string;
   }>({
     initialValues: {
-      status: 0,
+      status: tabValue ?? RegistrationStatusType.Pending,
       remarks: '',
     },
+    validationSchema: Yup.object({
+      status: Yup.number().required('Status is required'),
+    }),
     onSubmit: async (values) => {
       try {
         const hasDivisions = selectedStudents.every((student) => !!student.divisionId);
@@ -1187,10 +1190,12 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
         <Stack spacing={2}>
           <Autocomplete
             options={options}
-            value={options.find((opt) => opt.value === formik.values.status)}
+            value={options.find((opt) => opt.value === formik.values.status) ?? undefined}
             onChange={(_, newValue) => {
-              formik.setFieldValue('status', newValue?.value || 0);
+              formik.setFieldValue('status', newValue?.value ?? null);
+              formik.setFieldTouched('status', true, false);
             }}
+            onBlur={() => formik.setFieldTouched('status', true)}
             size="small"
             disableClearable
             getOptionLabel={(option) => String(option.label)}
@@ -1221,7 +1226,16 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
               </Box>
             )}
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Select Status" fullWidth />
+              <TextField
+                {...params}
+                size="small"
+                label="Select Status *"
+                fullWidth
+                error={formik.touched.status && Boolean(formik.errors.status)}
+                helperText={
+                  formik.touched.status && formik.errors.status ? String(formik.errors.status) : ''
+                }
+              />
             )}
           />
           <TextField
@@ -1247,6 +1261,7 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
         <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
           loading={isLoading}
+          disabled={!formik.dirty}
           variant="contained"
           type="submit"
           size="small"

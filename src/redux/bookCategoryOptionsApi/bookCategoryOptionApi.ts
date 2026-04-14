@@ -1,4 +1,4 @@
-﻿import { bookCategoryOptionsType } from 'src/redux/tagTypes';
+import { bookCategoryOptionsType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 

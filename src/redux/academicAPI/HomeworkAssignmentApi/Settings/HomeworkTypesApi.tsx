@@ -1,6 +1,6 @@
-﻿import { academicApi } from '../../academicApi';
 import { academicType } from 'src/redux/tagTypes';
 
+import { academicApi } from '../../academicApi';
 
 export const homeworkTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({

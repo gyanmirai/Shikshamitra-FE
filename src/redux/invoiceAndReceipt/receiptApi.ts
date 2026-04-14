@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { receiptType } from 'src/redux/tagTypes';
-
-import receiptData from '../../../invoiceAndReceipt.json';
-
 
 export const receiptApi = api.injectEndpoints({
   endpoints: (builder) => ({

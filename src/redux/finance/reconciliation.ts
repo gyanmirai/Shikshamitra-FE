@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { reconciliationType } from 'src/redux/tagTypes';
-
-import reconciliationData from '../../json/finance/reconicilation/reconicilationData.json';
-
 
 export const ReconciliationApi = api.injectEndpoints({
   endpoints: (builder) => ({

@@ -1,4 +1,4 @@
-﻿import { memberManagementType } from 'src/redux/tagTypes';
+import { memberManagementType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 

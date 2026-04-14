@@ -1,6 +1,6 @@
-﻿import { classManagementApi } from '../classManagementApi';
 import { classManagementType } from 'src/redux/tagTypes';
 
+import { classManagementApi } from '../classManagementApi';
 
 export const subjectProgressManageApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({

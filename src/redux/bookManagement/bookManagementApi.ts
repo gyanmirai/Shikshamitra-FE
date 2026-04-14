@@ -1,4 +1,4 @@
-﻿import { bookManagementType } from 'src/redux/tagTypes';
+import { bookManagementType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 

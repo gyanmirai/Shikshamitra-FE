@@ -4,22 +4,17 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CountryComponent from 'src/components/stardard-address/country-component';
+import { Box, Grid, Divider, TextField, Typography, InputAdornment } from '@mui/material';
+import { useLazySearchStudentRegistrationsQuery } from 'src/redux/student/registration/registration-api';
 import {
   CardActions,
   SectionCard,
 } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  Box,
-  Grid,
-  Divider,
-  TextField,
-  Typography,
-  Autocomplete,
-  InputAdornment,
-} from '@mui/material';
 
 function MotherOfficeAddressComponent(props: any) {
   const { formik, disabled = false } = props;
@@ -506,6 +501,16 @@ function GuardianAddressComponent(props: any) {
 function RenderFamilyInformation(props: any) {
   const { formik, isMainForm = false } = props;
   const [student, setStudent] = useState([]);
+
+  const [studentSearchData] = useQueryAndMutation({
+    type: 'mutation',
+    options: {
+      skip: true,
+    },
+    currentQueryAndMutation: useLazySearchStudentRegistrationsQuery,
+  });
+
+  console.log('studentData-->', studentSearchData.data);
 
   const isFatherDetailsEditable = useBoolean(isMainForm);
   const isMotherDetailsEditable = useBoolean(isMainForm);
@@ -1564,27 +1569,34 @@ function RenderFamilyInformation(props: any) {
           )
         }
       >
-        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
-          <Autocomplete
+        <Grid size={{ xs: 12, md: 8 }}>
+          <PaginatedSearchSelect
             disabled={!isSiblingDetailsEditable.value}
-            loading={false}
-            noOptionsText={<Typography variant="caption">No Student Found</Typography>}
-            fullWidth
-            value={student}
-            onChange={(e, value: any) => {
-              setStudent(value);
-            }}
+            noOptionsText="No students found"
+            label="Student"
             multiple
-            options={[]}
-            getOptionLabel={(option: any) => option?.firstName || ''}
-            renderInput={(params) => (
-              <TextField {...params} size="small" label="Student" fullWidth />
-            )}
-            renderOption={(prop: any, option: any) => (
+            value={student}
+            fetchOptions={async (query) => {
+              const res = await studentSearchData({ searchTerm: query }).unwrap();
+              return {
+                data: (res?.data ?? []).map((item: any) => ({
+                  label: item.student,
+                  id: item.id,
+                })),
+                hasMore: false,
+              };
+            }}
+            isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+            getOptionLabel={(option: any) => option?.label || ''}
+            renderOption={(prop, option: any) => (
               <li {...prop} key={option.id}>
-                {option.firstName}
+                {option.label}
               </li>
             )}
+            onChange={(_, value: any) => setStudent(value)}
+            minChars={1}
+            debounceMs={400}
+            size="small"
           />
         </Grid>
       </SectionCard>

@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { enrollmentReportType } from 'src/redux/tagTypes';
 
 export const EnrollmentReportApi = api.injectEndpoints({

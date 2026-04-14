@@ -359,7 +359,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
-        console.log(values);
         const body: Record<string, any> = {
           lastName: values.lastName,
           firstName: values.firstName,

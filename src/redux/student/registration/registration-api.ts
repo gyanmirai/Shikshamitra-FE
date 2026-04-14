@@ -192,6 +192,13 @@ export const StudentRegistrationApi = api.injectEndpoints({
       }),
       providesTags: [studentRegistrationType.studentDocument],
     }),
+    searchStudentRegistrations: builder.query({
+      query: ({ searchTerm }) => ({
+        url: `/student/enrollment/registrations/search?searchTerm=${searchTerm}`,
+        method: 'GET',
+        params: { searchTerm },
+      }),
+    }),
   }),
 });
 
@@ -224,4 +231,5 @@ export const {
   useGetStudentAdditionalDetailsQuery,
   useGetStudentCommunicationDetailsQuery,
   useGetStudentMedicalDetailsQuery,
+  useLazySearchStudentRegistrationsQuery,
 } = StudentRegistrationApi;

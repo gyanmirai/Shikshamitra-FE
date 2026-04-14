@@ -1,8 +1,5 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { issueReturnFormType } from 'src/redux/tagTypes';
-
-import issueReturnFormData from '../../../issueReturnData.json';
-
 
 export const issueReturnFormApi = api.injectEndpoints({
   endpoints: (builder) => ({

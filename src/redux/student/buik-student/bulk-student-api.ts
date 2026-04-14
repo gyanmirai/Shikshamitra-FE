@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { bulkStudentType } from 'src/redux/tagTypes';
 
 export const BulkStudentApi = api.injectEndpoints({

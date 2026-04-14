@@ -176,7 +176,7 @@ const RegisterForm = ({
   const handleGeneralFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
-        if (editData) {
+        if (editData || values?.id) {
           await updateBasicDetails({
             id: editData?.studentId || values?.id,
             body: {

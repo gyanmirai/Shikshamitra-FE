@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 import { studentTakeAttendanceType } from 'src/redux/tagTypes';
 
 export const StudentTakeAttendanceApi = api.injectEndpoints({

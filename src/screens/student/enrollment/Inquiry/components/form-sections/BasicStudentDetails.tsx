@@ -7,6 +7,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 // Utils
 import calculateAge from 'src/utils/calculate-age';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
@@ -41,7 +42,7 @@ interface BasicStudentDetailsProps {
     isGetLoading: boolean;
   };
   actions: {
-    getClassByMedium: (id: string) => Promise<any>;
+    getClassByMedium: (id: string) => any;
     updateBoards?: (boards: any[]) => void;
   };
 }
@@ -176,7 +177,13 @@ export const BasicStudentDetails = ({
                   setFieldValue('medium', value);
                   setFieldValue('class', '');
                   setFieldTouched('medium', false);
-                  await actions.getClassByMedium(value as string);
+                  try {
+                    await actions.getClassByMedium(value as string).unwrap();
+                  } catch (error) {
+                    shikshaMitraToast.error({
+                      message: 'Failed to load classes for the selected medium. Please try again.',
+                    });
+                  }
                 }}
                 error={!!(touched.medium && errors.medium)}
                 helperText={(touched.medium && errors.medium) || ''}

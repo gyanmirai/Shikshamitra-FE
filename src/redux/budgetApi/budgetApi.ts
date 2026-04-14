@@ -1,4 +1,4 @@
-﻿import { budgetType } from 'src/redux/tagTypes';
+import { budgetType } from 'src/redux/tagTypes';
 
 // <-- your mock JSON
 import { api } from '../service';

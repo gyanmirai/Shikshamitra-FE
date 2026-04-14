@@ -1,4 +1,4 @@
-﻿import { roleOptionsType } from 'src/redux/tagTypes';
+import { roleOptionsType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 

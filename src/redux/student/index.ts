@@ -49,6 +49,13 @@ export const StudentApi = api.injectEndpoints({
       }),
       providesTags: [studentType.student],
     }),
+    getStudentsByDivision: builder.query({
+      query: ({ divisionId }: { divisionId: string }) => ({
+        url: `/students/records/list/${divisionId}`,
+        method: 'GET',
+      }),
+      providesTags: [studentType.student],
+    }),
   }),
 });
 
@@ -58,4 +65,6 @@ export const {
   useChangeDivisionMutation,
   useGetAllStudentsQuery,
   useGetStudentByIdQuery,
+  useGetStudentsByDivisionQuery,
+  useLazyGetStudentsByDivisionQuery,
 } = StudentApi;

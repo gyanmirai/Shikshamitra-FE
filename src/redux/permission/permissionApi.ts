@@ -1,4 +1,4 @@
-﻿import { api } from 'src/redux/service';
+import { api } from 'src/redux/service';
 
 export const permissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
