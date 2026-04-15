@@ -70,7 +70,7 @@ const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   const { data: assignedStructureData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: values.studentId,
+    params: { studentId: values.studentId },
     options: { skip: !values.studentId },
   }) as { data: IAdmissionFeeStructure | undefined; isLoading: boolean };
 
