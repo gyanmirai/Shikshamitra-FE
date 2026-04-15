@@ -6,10 +6,10 @@ export const leaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Leave Types
     getLeaveTypes: builder.query({
-      query: ({ page = 1, pageSize = 20, academicYearId, search }) => ({
+      query: ({ page = 1, pageSize = 10, academicYearId, search }) => ({
         url: '/hr-leave-types',
         method: 'GET',
-        params: { page, pageSize, academicYearId, search },
+        params: { academicYearId, page, pageSize, search },
       }),
       providesTags: [employeeType.employeeType],
     }),
@@ -30,8 +30,8 @@ export const leaveApi = api.injectEndpoints({
       providesTags: [employeeType.employeeType],
     }),
     updateLeaveType: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/hr-leave-types/${id}`,
+      query: ({ leaveTypeId, body }) => ({
+        url: `/hr-leave-types/${leaveTypeId}`,
         method: 'PUT',
         body,
       }),
@@ -47,7 +47,7 @@ export const leaveApi = api.injectEndpoints({
 
     // Leave Policies
     getLeavePolicies: builder.query({
-      query: ({ academicYearId, page = 1, pageSize = 20, search }) => ({
+      query: ({ academicYearId, page = 1, pageSize = 10, search }) => ({
         url: '/leave-policies',
         method: 'GET',
         params: { academicYearId, page, pageSize, search },
@@ -101,9 +101,6 @@ export const leaveApi = api.injectEndpoints({
         method: 'POST',
         params: { academicYearId },
         body,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [employeeType.employee],
     }),
