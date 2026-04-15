@@ -74,10 +74,14 @@ export const useInquiryForm = (
   });
 
   // 4. Classes (Lazy Fetch)
-  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
+  const [
+    getClassByMedium,
+    { data: classes, isLoading: classIsLoading, isFetching: classIsFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
+  const classLoading = classIsLoading || classIsFetching;
 
   // 5. Add Mutation
   const [addInquiry, { isLoading: isAddLoading }] = useQueryAndMutation({

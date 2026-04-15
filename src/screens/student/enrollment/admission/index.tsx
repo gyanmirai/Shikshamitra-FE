@@ -8,7 +8,6 @@ import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useTabs } from 'src/hooks/use-tabs';
@@ -176,7 +175,7 @@ const AdmissionScreen = () => {
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
-        // studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
+        studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
         secondaryContactNo: item.secondaryContactNumber || undefined,
         genderValue: GenderType[item?.gender as any],
         remarks: item?.remarks || '-',
@@ -248,7 +247,7 @@ const AdmissionScreen = () => {
       // { id: 'educationBoard.name', label: 'Board', align: 'left' },
       // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
       { id: 'standard', label: 'Class', align: 'left' },
-      { id: 'division', label: 'Division', align: 'left' },
+      { id: 'divisionId', label: 'Division', align: 'left' },
       {
         id: 'dobValue',
         label: 'Date of Birth',
@@ -350,7 +349,7 @@ const AdmissionScreen = () => {
         render: (value, row) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
-              variant="caption"
+              variant="inherit"
               noWrap
               sx={{
                 maxWidth: 150,
@@ -1145,8 +1144,10 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     onSubmit: async (values) => {
       try {
         const hasDivisions = selectedStudents.every((student) => !!student.divisionId);
-        if (!hasDivisions && values.status === RegistrationStatusType.Approved) {
-          toast.error('Please First assign division to Selected Students');
+        if (!hasDivisions) {
+          shikshaMitraToast.error({
+            message: 'Please assign a division to all selected students before approving.',
+          });
           return;
         }
         await changeStatus({

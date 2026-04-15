@@ -56,8 +56,8 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAssignedFeeStructureQuery,
-    params: student?.id,
-    options: { skip: !student?.id },
+    params: { studentId: student?.studentId },
+    options: { skip: !student?.studentId },
   });
   // Get available fee structures for the standard
   const {
@@ -73,6 +73,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
 
   const [assignFeeStructure, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
+    params: { studentId: student?.studentId },
     currentQueryAndMutation: useAssignFeeStructureMutation,
   });
 
@@ -108,7 +109,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     onSubmit: async (values) => {
       try {
         const body = {
-          studentId: student?.id,
+          studentId: student?.studentId,
           standardFeeStructureId: values.feeStructureId,
           selectedOptionalFeeHeadIds: values.selectedFeeHeads,
         };
