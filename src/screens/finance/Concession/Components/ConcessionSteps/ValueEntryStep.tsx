@@ -163,7 +163,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
   const { data: assignedStructureData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: values.studentId,
+    params: { studentId: values.studentId },
     options: { skip: !values.studentId },
   });
 
