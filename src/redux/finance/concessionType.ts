@@ -6,11 +6,8 @@ export const concessionTypeApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getConcessionTypes: builder.query({
       query: ({ academicYearId }: { academicYearId: string }) => ({
-        url: `/all-concession-types`,
+        url: `/${academicYearId}/concession-types`,
         method: 'GET',
-        params: {
-          academicYearId,
-        },
       }),
       providesTags: [financeModuleType.concessionType],
     }),

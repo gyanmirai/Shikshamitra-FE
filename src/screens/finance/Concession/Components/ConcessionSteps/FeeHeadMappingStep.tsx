@@ -1,7 +1,7 @@
 import { styled } from '@mui/material/styles';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetStandardFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import { Box, Card, Grid, Chip, Stack, Checkbox, Typography, CardContent } from '@mui/material';
 import { useGetConcessionRequestFeeHeadsQuery } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
@@ -67,12 +67,9 @@ const FeeHeadMappingStep: React.FC<Props> = ({ formik, concessionTypes }) => {
     }
   }, [requestDetails, setFieldValue, values.selectedFeeHeads]);
 
-  // Ideally, this query fetches data relevant to all concession types if the API supports it,
-  // or it fetches the structure for the student which is then applied across types.
-  // Based on the prompt, it seems we fetch one structure layout.
   const { data: assignedStructureData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStandardFeeStructureQuery,
+    currentQueryAndMutation: useGetStudentFeeStructureQuery,
     params: values.studentId,
     options: { skip: !values.studentId },
   }) as { data: IAdmissionFeeStructure | undefined; isLoading: boolean };

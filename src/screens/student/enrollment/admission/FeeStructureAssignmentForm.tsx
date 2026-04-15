@@ -14,7 +14,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetStandardFeeStructureQuery as useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
+import { useGetStandardFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
+import {
+  useAssignFeeStructureMutation,
+  useGetStudentFeeStructureQuery,
+} from 'src/redux/student/admission/admission-api';
 import {
   Grid,
   Card,
@@ -25,10 +29,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useAssignFeeStructureMutation,
-  useGetStandardFeeStructureQuery as useGetAssignedFeeStructureQuery,
-} from 'src/redux/student/admission/admission-api';
 
 import type { IInquiryData } from '../Inquiry/type';
 
@@ -55,7 +55,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     isLoading: assignedLoading,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAssignedFeeStructureQuery,
+    currentQueryAndMutation: useGetStudentFeeStructureQuery,
     params: { studentId: student?.studentId },
     options: { skip: !student?.studentId },
   });
@@ -66,7 +66,7 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     isLoading: financeLoading,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetFinanceFeeStructureQuery,
+    currentQueryAndMutation: useGetStandardFeeStructureQuery,
     params: { standardId: student?.standardId },
     options: { skip: !student?.standardId },
   });
@@ -132,12 +132,10 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   };
   const feeStructureOptions = useMemo(
     () =>
-      (financeFeeStructures?.standardFeeStructures ?? [])
-        .map((fs: any) => ({
-          ...fs,
-          name: `${fs.name}`,
-        }))
-        .filter((fs: any) => fs.status === 1),
+      (financeFeeStructures?.standardFeeStructures ?? []).map((fs: any) => ({
+        ...fs,
+        name: `${fs.name}`,
+      })),
     [financeFeeStructures]
   );
 

@@ -129,7 +129,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
     getConcessionApplications: builder.query({
       query: (params) => ({
-        url: '/concession-request/applications',
+        url: '/concession-request',
         method: 'GET',
         params,
       }),

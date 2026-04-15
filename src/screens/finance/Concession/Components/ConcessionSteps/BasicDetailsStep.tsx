@@ -5,8 +5,8 @@ import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useEffect } from 'react';
 import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 const BasicDetailsStep = ({ formik }: { formik: any }) => {
@@ -20,9 +20,12 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
-  const [getStudents, { data: studentsData, isLoading: studentLoading }] = useQueryAndMutation({
+  const [
+    getStudents,
+    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
 
   useEffect(() => {
@@ -47,7 +50,6 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
   useEffect(() => {
     if (values.standardId && values.divisionId) {
       getStudents({
-        standardId: values.standardId,
         divisionId: values.divisionId,
       });
     }
@@ -180,7 +182,7 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
           <Autocomplete
-            loading={studentLoading}
+            loading={studentLoading || studentFetching}
             noOptionsText="No Student Found"
             fullWidth
             disabled={!values.divisionId}

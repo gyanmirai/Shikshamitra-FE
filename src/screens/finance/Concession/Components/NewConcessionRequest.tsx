@@ -329,30 +329,36 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               return (
                 <ConcessionTypeSelectionStep
                   formik={formik}
-                  concessionTypes={concessionTypes?.items || []}
+                  concessionTypes={concessionTypes?.data?.items || []}
                 />
               );
             case 2:
               return (
                 <FeeHeadMappingStep
                   formik={formik}
-                  concessionTypes={concessionTypes?.items || []}
+                  concessionTypes={concessionTypes?.data?.items || []}
                 />
               );
             case 3:
               return (
-                <ValueEntryStep formik={formik} concessionTypes={concessionTypes?.items || []} />
+                <ValueEntryStep
+                  formik={formik}
+                  concessionTypes={concessionTypes?.data?.items || []}
+                />
               );
             case 4:
               return (
                 <DocumentUploadStep
                   formik={formik}
-                  concessionTypes={concessionTypes?.items || []}
+                  concessionTypes={concessionTypes?.data?.items || []}
                 />
               );
             case 5:
               return (
-                <ReviewSubmitStep formik={formik} concessionTypes={concessionTypes?.items || []} />
+                <ReviewSubmitStep
+                  formik={formik}
+                  concessionTypes={concessionTypes?.data?.items || []}
+                />
               );
             default:
               return null;
