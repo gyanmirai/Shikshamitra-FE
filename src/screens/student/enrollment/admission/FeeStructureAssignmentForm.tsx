@@ -47,7 +47,6 @@ interface Props {
 }
 
 const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
-  console.log('student----', student);
   const [feeHeads, setFeeHeads] = useState([]);
   // Get student's assigned structure
   const {
