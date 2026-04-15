@@ -32,6 +32,7 @@ export const hrPaths = {
   attendance: {
     root: '',
     importAttendance: '/hr/biometric-integration',
+    importHistory: '/hr/attendance-import-history',
     leaveManagement: '/hr/leave-requests',
     attendanceTracking: '/hr/attendance-tracking',
     setting: {
@@ -74,6 +75,7 @@ export const hrPermissions = {
   attendance: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement`,
     importAttendance: `${defaultHrPermissionName}AttendanceAndLeave.ImportAttendance`,
+    importHistory: `${defaultHrPermissionName}AttendanceAndLeave.ImportHistory`,
     leaveManagement: `${defaultHrPermissionName}AttendanceAndLeave.LeaveManagement`,
     attendanceTracking: `${defaultHrPermissionName}AttendanceAndLeave.AttendanceTracking`,
     setting: {
@@ -259,11 +261,20 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:file-import-outline'),
             },
             {
+              title: 'Import History',
+              path: hrPaths.attendance.importHistory,
+              _action: 'attendance-import-history',
+              shortcutKey: 'Alt+H+A+2',
+              shortcutKeyName: 'Alt+H+A+2',
+              permissionName: hrPermissions.attendance.importHistory,
+              icon: menuIconView('mdi:history'),
+            },
+            {
               title: 'Leave Management',
               path: hrPaths.attendance.leaveManagement,
               _action: 'leave-requests-and-approvals',
-              shortcutKey: 'Alt+H+A+2',
-              shortcutKeyName: 'Alt+H+A+2',
+              shortcutKey: 'Alt+H+A+3',
+              shortcutKeyName: 'Alt+H+A+3',
               permissionName: hrPermissions.attendance.leaveManagement,
               icon: menuIconView('mdi:calendar-remove-outline'),
             },
@@ -271,8 +282,8 @@ const hrModule = (isDdvs: boolean) => ({
               title: 'Attendance Tracking',
               path: hrPaths.attendance.attendanceTracking,
               _action: 'attendance-tracking',
-              shortcutKey: 'Alt+H+A+3',
-              shortcutKeyName: 'Alt+H+A+3',
+              shortcutKey: 'Alt+H+A+4',
+              shortcutKeyName: 'Alt+H+A+4',
               permissionName: hrPermissions.attendance.attendanceTracking,
               icon: menuIconView('mdi:calendar-check-outline'),
             },
@@ -280,8 +291,8 @@ const hrModule = (isDdvs: boolean) => ({
               title: 'Settings',
               path: hrPaths.attendance.setting.root,
               _action: 'setting',
-              shortcutKey: 'Alt+H+A+4',
-              shortcutKeyName: 'Alt+H+A+4',
+              shortcutKey: 'Alt+H+A+5',
+              shortcutKeyName: 'Alt+H+A+5',
               permissionName: hrPermissions.attendance.setting.root,
               icon: menuIconView('mdi:cog-outline'),
               children: [
