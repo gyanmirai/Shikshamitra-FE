@@ -244,7 +244,7 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => setClass(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
           disabled={!organization}
         />
         <CustomSelect
@@ -254,7 +254,7 @@ const TakeAttendanceScreen = () => {
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
           disabled={!classes}
         />
         {/* Reset Button */}
@@ -753,7 +753,11 @@ const ListView = ({
                             isLocked ||
                             data.length === 0 ||
                             data.every((item: any) => item.isPresent === AttendanceStatus.Present)
-                              ? 'transparent'
+                              ? studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Present
+                                ).length > 0
+                                ? theme.vars.palette.success.main
+                                : 'transparent'
                               : studentData.filter(
                                     (item: any) => item.isPresent === AttendanceStatus.Present
                                   ).length > 0
@@ -975,7 +979,11 @@ const ListView = ({
                             isLocked ||
                             data.length === 0 ||
                             data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
-                              ? 'transparent'
+                              ? studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Absent
+                                ).length > 0
+                                ? theme.vars.palette.error.main
+                                : 'transparent'
                               : studentData.filter(
                                     (item: any) => item.isPresent === AttendanceStatus.Absent
                                   ).length > 0

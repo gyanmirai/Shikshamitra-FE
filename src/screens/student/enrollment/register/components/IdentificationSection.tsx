@@ -192,8 +192,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
           groupBy={5}
           value={String((formik.values as any).panNo ?? '').toUpperCase()}
           onChange={(val) => {
-            formik.setFieldValue('panNo', val.toUpperCase(), true);
-            formik.setFieldTouched('panNo', true, false);
+            formik.setFieldValue('panNo', val.toUpperCase());
           }}
           onBlur={() => formik.setFieldTouched('panNo', true, true)}
           error={(formik.touched as any).panNo && Boolean((formik.errors as any).panNo)}
@@ -221,7 +220,6 @@ const IdentificationSection: React.FC<SectionProps> = ({
           value={String((formik.values as any).apparId || '')}
           onChange={(val) => {
             formik.setFieldValue('apparId', val);
-            formik.setFieldTouched('apparId', true, false);
           }}
           onBlur={() => formik.setFieldTouched('apparId', true, false)}
           error={(formik.touched as any).apparId && Boolean((formik.errors as any).apparId)}

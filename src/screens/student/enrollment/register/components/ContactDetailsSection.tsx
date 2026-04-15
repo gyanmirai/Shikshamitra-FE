@@ -43,7 +43,6 @@ const ContactDetailsSection: React.FC<SectionProps> = ({
           value={(formik.values as any).primaryContactNumber}
           onChange={(value) => {
             formik.setFieldValue('primaryContactNumber', value);
-            formik.setFieldTouched('primaryContactNumber', true, true);
           }}
           label="Primary Contact No *"
           error={

@@ -32,7 +32,6 @@ const RenderMedium = (props: any) => {
         onChange={(value) => {
           setFieldValue('medium', value);
           setFieldValue('class', null);
-          formik.setFieldTouched('medium', true, false);
         }}
         error={!!(touched.medium && errors.medium) || false}
         helperText={(touched.medium && errors.medium) || ''}

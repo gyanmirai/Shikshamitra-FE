@@ -43,7 +43,6 @@ import {
 } from 'src/enums/entranceExam-type';
 import {
   Box,
-  Grid,
   Paper,
   Radio,
   Button,
@@ -52,7 +51,6 @@ import {
   TextField,
   Typography,
   DialogActions,
-  FormControlLabel,
   CircularProgress,
 } from '@mui/material';
 import {
@@ -82,7 +80,7 @@ const EntranceExamScreen = () => {
   const [startDate, setStartDate] = useState<Dayjs | null>(dayjs().startOf('isoWeek'));
 
   // State for managing the end date filter for entrance exams
-  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
+  const [endDate, setEndDate] = useState<Dayjs | null>(dayjs().endOf('day'));
   // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
@@ -118,8 +116,6 @@ const EntranceExamScreen = () => {
       skip: !currentMedium.id,
     },
   });
-
-  console.log('entranceExamData', entranceExamData);
 
   // Mutation hook for moving students to admission
   const [moveToAdmission] = useQueryAndMutation({
@@ -389,7 +385,7 @@ const EntranceExamScreen = () => {
             dateFormat="DD/MM/YYYY"
             onChange={(value) => {
               setStartDate(value[0]);
-              setEndDate(value[1]);
+              setEndDate(value[1] ? value[1].endOf('day') : null);
             }}
           />
         </Box>
@@ -644,9 +640,12 @@ export const ExamForm = ({
   };
 
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValue={formik.values}>
-      <DialogScrollContent style={{ height: '100%' }}>
-        <Paper sx={{ p: 2, height: '100%' }}>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}
+      >
+        {/* Student info bar */}
+        <Paper sx={{ p: 2, flexShrink: 0 }}>
           <Box display="flex" gap={4}>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Typography variant="subtitle2" color="text.primary">
@@ -672,137 +671,414 @@ export const ExamForm = ({
                 {educationMedium}
               </Typography>
             </Box>
-
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="subtitle2" color="text.primary">
                 Class :
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
-                {' '}
                 {standardName}
               </Typography>
             </Box>
           </Box>
         </Paper>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 4 }}>
-              <Paper sx={{ height: '100%' }}>
-                <DateCalendar
-                  value={formik.values.examDate}
-                  onChange={(value) => {
-                    formik.setFieldValue('examDate', value);
-                    if (value) {
-                      handleGetAllStudentCount(dayjs(value).format('YYYY-MM-DD'));
-                    }
-                  }}
-                  disablePast
-                  slots={{
-                    day: (props: any) => {
-                      const { day } = props;
-                      const absent = day.format('DD-MM-YYYY') === '11-09-2024';
-                      return (
-                        <PickersDay
-                          {...props}
-                          sx={absent ? { bgcolor: 'error.main', color: 'white' } : {}}
+
+        {/* Main two-column layout */}
+        <Box
+          sx={{
+            display: 'flex',
+            flex: 1,
+            overflow: 'hidden',
+            bgcolor: 'background.neutral',
+            minHeight: 480,
+          }}
+        >
+          {/* Left — Calendar */}
+          <Box
+            sx={{
+              width: 320,
+              minWidth: 280,
+              bgcolor: 'background.paper',
+              borderRight: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              flexDirection: 'column',
+              flexShrink: 0,
+            }}
+          >
+            <DateCalendar
+              value={formik.values.examDate}
+              onChange={(value) => {
+                formik.setFieldValue('examDate', value);
+                if (value) {
+                  handleGetAllStudentCount(dayjs(value).format('YYYY-MM-DD'));
+                }
+              }}
+              disablePast
+              slots={{
+                day: (props: any) => {
+                  const { day } = props;
+                  const hasSlots = (slots?.items || []).some(
+                    (s: any) =>
+                      dayjs(s.startDateTime).format('YYYY-MM-DD') === day.format('YYYY-MM-DD')
+                  );
+                  return (
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        display: 'inline-flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <PickersDay {...props} />
+                      {hasSlots && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 1,
+                            width: 5,
+                            height: 5,
+                            borderRadius: '50%',
+                            bgcolor: props.selected ? 'common.white' : 'success.light',
+                          }}
                         />
-                      );
-                    },
-                  }}
-                />
-              </Paper>
-              {formik.touched.examDate && formik.errors.examDate && (
-                <Typography variant="caption" color="error">
-                  {formik.errors.examDate as string}
-                </Typography>
-              )}
-            </Grid>
-
-            <Grid size={{ xs: 8 }}>
-              <Paper sx={{ p: 1, height: '100%' }}>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12 }}>
-                    <Box>
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        padding={2}
-                      >
-                        <Typography variant="h6">Slots</Typography>
-                      </Box>
-
-                      <Grid container spacing={2}>
-                        {isStudentCountLoading || isSlotsLoading ? (
-                          <Grid size={{ xs: 12 }}>
-                            <Box className="loader" height={24} />
-                          </Grid>
-                        ) : formik.values.slots.length === 0 ? (
-                          <EmptyContent title="No slots available." />
-                        ) : (
-                          formik.values.slots.map((slot: any, index: number) => (
-                            <Grid size={{ xs: 6 }} key={index}>
-                              <FormControlLabel
-                                sx={{ marginLeft: 1 }}
-                                control={
-                                  <Radio
-                                    checked={slot.id === formik.values.slot}
-                                    size="small"
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        formik.setFieldValue('slot', slot.id);
-                                      } else {
-                                        formik.setFieldValue('slot', '');
-                                      }
-                                    }}
-                                  />
-                                }
-                                label={`${slot.slotName} (${slot.startTime} - ${slot.endTime})`}
-                              />
-                              <Label variant="soft" color="success">
-                                {slot.enrolledStudents} / {slot.studentLimit}
-                              </Label>
-                            </Grid>
-                          ))
-                        )}
-                      </Grid>
+                      )}
                     </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
+                  );
+                },
+              }}
+            />
+            {formik.touched.examDate && formik.errors.examDate && (
+              <Typography variant="caption" color="error" sx={{ px: 2, pb: 1 }}>
+                {formik.errors.examDate as string}
+              </Typography>
+            )}
+            {/* Legend */}
+            <Box sx={{ display: 'flex', gap: 2, px: 2.5, pb: 2.5, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+                <Typography variant="caption" color="text.secondary">
+                  Today / Selected
+                </Typography>
+              </Box>
+              {/* <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
+                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.light' }} />
+                <Typography variant="caption" color="text.secondary">
+                  Slots available
+                </Typography>
+              </Box> */}
+            </Box>
+          </Box>
+
+          {/* Right — Slots + Booking Summary */}
+          <Scrollbar
+            sx={{
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                p: 2.5,
+                gap: 2,
+              }}
+            >
+              {/* Section header */}
+              <Box>
+                <Typography variant="h6" fontWeight={700}>
+                  Available slots
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {dayjs(formik.values.examDate).format('dddd, D MMMM YYYY')}
+                </Typography>
+              </Box>
+
+              {/* Slot cards */}
+              {isStudentCountLoading || isSlotsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <Box className="loader" height={24} />
+                </Box>
+              ) : formik.values.slots.length === 0 ? (
+                <EmptyContent title="No slots available." />
+              ) : (
+                formik.values.slots.map((slot: any, index: number) => {
+                  const isSelected = slot.id === formik.values.slot;
+                  const enrolled = slot.enrolledStudents || 0;
+                  const total = slot.studentLimit || 0;
+                  const available = total - enrolled;
+                  const fillPercent = total ? Math.round((enrolled / total) * 100) : 0;
+                  const isAlmostFull = available <= Math.ceil(total * 0.15);
+                  const duration = dayjs(slot.endDateTime).diff(
+                    dayjs(slot.startDateTime),
+                    'minute'
+                  );
+
+                  return (
+                    <Box
+                      key={slot.id || index}
+                      onClick={() => formik.setFieldValue('slot', isSelected ? '' : slot.id)}
+                      sx={{
+                        cursor: 'pointer',
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: isSelected ? 'success.main' : 'divider',
+                        bgcolor: 'background.paper',
+                        overflow: 'hidden',
+                        transition: 'border-color 0.2s, box-shadow 0.2s',
+                        boxShadow: isSelected ? '0 0 0 1px rgba(34,197,94,0.15)' : 'none',
+                        '&:hover': {
+                          borderColor: isSelected ? 'success.main' : 'text.secondary',
+                        },
+                      }}
+                    >
+                      {isSelected && (
+                        <Box sx={{ height: 3, bgcolor: 'success.main', width: '100%' }} />
+                      )}
+                      <Box sx={{ p: 2 }}>
+                        {/* Top row: slot name + radio */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            mb: 0.5,
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight={700}
+                              color={isSelected ? 'success.main' : 'text.primary'}
+                            >
+                              {slot.slotName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {dayjs(slot.startDateTime).format('hh:mm A')} –{' '}
+                              {dayjs(slot.endDateTime).format('hh:mm A')}
+                            </Typography>
+                          </Box>
+                          <Radio
+                            checked={isSelected}
+                            size="small"
+                            sx={{
+                              color: isSelected ? 'success.main' : 'text.disabled',
+                              '&.Mui-checked': { color: 'success.main' },
+                              p: 0,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => formik.setFieldValue('slot', isSelected ? '' : slot.id)}
+                          />
+                        </Box>
+
+                        {/* Info chips + available count */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            gap: 2,
+                            mt: 1.5,
+                            mb: 1.5,
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {duration > 0 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Iconify
+                                icon="mdi:clock-outline"
+                                sx={{ width: 14, height: 14, color: 'text.disabled' }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                {duration} min
+                              </Typography>
+                            </Box>
+                          )}
+                          {slot.roomNo && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Iconify
+                                icon="mdi:door-open"
+                                sx={{ width: 14, height: 14, color: 'text.disabled' }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                Room {slot.roomNo}
+                              </Typography>
+                            </Box>
+                          )}
+                          {total > 0 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Iconify
+                                icon="mdi:account-group-outline"
+                                sx={{ width: 14, height: 14, color: 'text.disabled' }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                {total} seats total
+                              </Typography>
+                            </Box>
+                          )}
+                          <Box sx={{ ml: 'auto', textAlign: 'right' }}>
+                            <Typography
+                              variant="h5"
+                              fontWeight={800}
+                              lineHeight={1}
+                              color={isAlmostFull ? 'warning.main' : 'success.main'}
+                            >
+                              {available}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              available
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Seats-filled progress bar */}
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Seats filled
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {enrolled} / {total}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: 'action.hover',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                height: '100%',
+                                width: `${fillPercent}%`,
+                                borderRadius: 3,
+                                bgcolor: isAlmostFull ? 'warning.main' : 'success.main',
+                                transition: 'width 0.4s ease',
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                  );
+                })
+              )}
+
+              {/* Booking summary — always rendered, visible only when slot is selected */}
+              {(() => {
+                const selected = formik.values.slots.find((s: any) => s.id === formik.values.slot);
+                const available = selected
+                  ? (selected.studentLimit || 0) - (selected.enrolledStudents || 0)
+                  : 0;
+                const slotDuration = selected
+                  ? dayjs(selected.endDateTime).diff(dayjs(selected.startDateTime), 'minute')
+                  : 0;
+                return (
+                  <Box
+                    sx={{
+                      borderRadius: 2,
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: formik.values.slot ? 'divider' : 'transparent',
+                      p: 2,
+                      mt: 0.5,
+                      opacity: formik.values.slot ? 1 : 0,
+                      pointerEvents: formik.values.slot ? 'auto' : 'none',
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    <Typography
+                      variant="overline"
+                      color="text.secondary"
+                      fontWeight={700}
+                      sx={{ letterSpacing: 1.5 }}
+                    >
+                      Booking Summary
+                    </Typography>
+                    {selected && (
+                      <>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mt: 1.5 }}>
+                          <Iconify
+                            icon="mdi:calendar-check"
+                            sx={{ mt: 0.25, color: 'text.secondary', width: 18, height: 18 }}
+                          />
+                          <Box>
+                            <Typography variant="body2" fontWeight={700}>
+                              {dayjs(formik.values.examDate).format('dddd, D MMMM YYYY')}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {selected.slotName} ·{' '}
+                              {dayjs(selected.startDateTime).format('hh:mm A')} –{' '}
+                              {dayjs(selected.endDateTime).format('hh:mm A')}
+                            </Typography>
+                            {selected.roomNo && (
+                              <Typography variant="body2" color="text.secondary">
+                                Room {selected.roomNo} · {slotDuration} min duration
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1.5 }}>
+                          <Iconify
+                            icon="mdi:account-check-outline"
+                            sx={{ color: 'success.main', width: 16, height: 16 }}
+                          />
+                          <Typography variant="caption" color="success.main" fontWeight={600}>
+                            {available} seat{available !== 1 ? 's' : ''} still available
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
+                  </Box>
+                );
+              })()}
+
               {formik.touched.slot && formik.errors.slot && (
                 <Typography variant="caption" color="error">
                   {formik.errors.slot}
                 </Typography>
               )}
-            </Grid>
-          </Grid>
-        </Scrollbar>
-      </DialogScrollContent>
-      <DialogActions>
-        <Button
-          variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => {
-            handleClose(null, false);
-          }}
-          size="small"
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          loading={isAddLoading}
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
-          type="submit"
-          variant="contained"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          size="small"
-        >
-          Submit
-        </LoadingButton>
+            </Box>
+          </Scrollbar>
+        </Box>
+      </Box>
+
+      <DialogActions
+        sx={{
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          px: 2.5,
+          py: 1.5,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={() => {
+              handleClose(null, false);
+            }}
+            size="small"
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isAddLoading}
+            onClick={(e: any) => formik.handleSubmit(e)}
+            type="submit"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            size="small"
+            disabled={!formik.values.slot}
+          >
+            Confirm
+          </LoadingButton>
+        </Box>
       </DialogActions>
+
       <CustomDialog
         title={
           <Box display="flex" alignItems="center" gap={1}>
