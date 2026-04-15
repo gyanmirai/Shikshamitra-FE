@@ -126,7 +126,7 @@ const LeavePolicy = () => {
       },
       {
         id: 'accrualPolicyType',
-        label: 'Accural Policy',
+        label: 'Accrual Policy',
         minWidth: '11vw',
         align: 'left',
       },
