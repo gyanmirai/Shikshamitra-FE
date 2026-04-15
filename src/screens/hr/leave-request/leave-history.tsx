@@ -57,7 +57,7 @@ const LeaveHistory = (props: any) => {
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
       academicYearId: currentYear?.id,
-      'month-year': date?.format('MMMM-YYYY').toUpperCase(), // API expects e.g. JANUARY-2026
+      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(), // API expects e.g. JANUARY-2026
     },
   });
 
