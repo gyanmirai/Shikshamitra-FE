@@ -90,12 +90,14 @@ const validationSchema = Yup.object().shape({
 const AttendanceConfigurationScreen = () => {
   // UI state for enhanced interactions (UI-only)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null); // Track which card is hovered for subtle animations
+  const { currentYear: academicYearId } = useSelector((state: RootState) => state.globalState);
+
   const theme = useTheme();
   const [saveAttendanceConfiguration, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSaveAttendanceConfigurationMutation,
+    options: { skip: !academicYearId?.id },
   });
-  const { currentYear: academicYearId } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik<AttendanceConfiguration>({
     initialValues: INITIAL_ATTENDANCE_CONFIG,
