@@ -70,9 +70,9 @@ const LeaveType = () => {
   const dispatch = useDispatch();
   const leaveTypeDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const { academicYearId } = useSelector((state: RootState) => state.globalState);
+  const { currentYear: academicYearId } = useSelector((state: RootState) => state.globalState);
   const {
-    data: leavePolicyData,
+    data: leaveTypesData,
     refetch,
     isLoading,
   } = useQueryAndMutation({
@@ -80,7 +80,7 @@ const LeaveType = () => {
     currentQueryAndMutation: useGetLeaveTypesQuery,
     params: { academicYearId: academicYearId?.id },
   });
-  const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+  const [deleteLeaveType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteLeaveTypeMutation,
   });
@@ -102,18 +102,6 @@ const LeaveType = () => {
 
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  const tableData = useMemo(
-    () =>
-      leavePolicyData?.items.map((item: ILeavePolicy) => ({
-        ...item,
-        leaveDays: item?.maxLeavePerYear?.toString(),
-        isCarryForward: item.carryForward ? 'Yes' : 'No',
-        // accrualRateString: AccurateRateType[item.accrualRate],
-        // color: item.color,
-      })) || [],
-    [leavePolicyData?.items]
-  );
-
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -127,6 +115,11 @@ const LeaveType = () => {
             </Typography>
           </Box>
         ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        render: (value) => <Typography variant="body2">{value || '-'}</Typography>,
       },
       {
         id: 'action',
@@ -189,7 +182,7 @@ const LeaveType = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.leaveType}</strong>?
+            Are you sure you want to delete <strong>{editData?.name}</strong>?
           </>
         }
         action={
@@ -203,16 +196,20 @@ const LeaveType = () => {
                 item: editData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
-                    leaveApi.util.updateQueryData('getLeaveTypes', undefined, (draft: any) => {
-                      const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
-                      setDeleteIndex(index);
-                      if (index !== -1) {
-                        draft.items.splice(index, 1);
+                    leaveApi.util.updateQueryData(
+                      'getLeaveTypes',
+                      { academicYearId: academicYearId?.id },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
                       }
-                    })
+                    )
                   ),
                 onUndoRestore: (dispatchFn, index) => refetch(),
-                onCommit: () => deleteLeavePolicy(editData?.id),
+                onCommit: () => deleteLeaveType(editData?.id),
               });
               confirm.onFalse();
               setEditData(null);
@@ -258,7 +255,7 @@ const LeaveType = () => {
         isLoading={isLoading}
         tableId="leave-policy-table"
         columns={columns}
-        data={tableData || []}
+        data={leaveTypesData?.items || []}
       />
 
       <CustomDialog
@@ -298,14 +295,14 @@ const LeaveTypeForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   editData: any | null;
 }) => {
-  const { academicYearId } = useSelector((state: RootState) => state.globalState);
+  const { currentYear: academicYearId } = useSelector((state: RootState) => state.globalState);
 
-  const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
+  const [createLeaveType, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateLeaveTypeMutation,
   });
 
-  const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateLeaveType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateLeaveTypeMutation,
   });
@@ -339,13 +336,13 @@ const LeaveTypeForm = ({
         };
 
         if (editData) {
-          await updateLeavePolicy({
+          await updateLeaveType({
             leaveTypeId: editData.id,
             body: payload,
           });
           shikshaMitraToast.success({ message: 'Leave Type updated successfully' });
         } else {
-          await addLeavePolicy({
+          await createLeaveType({
             academicYearId: academicYearId?.id,
             body: payload,
           });
@@ -384,7 +381,7 @@ const LeaveTypeForm = ({
             </ShakingTextField>
           </Grid>
 
-          {/* <Grid size={12}>
+          <Grid size={12}>
             <ShakingTextField
               error={formik.touched.description && Boolean(formik.errors.description)}
             >
@@ -401,7 +398,7 @@ const LeaveTypeForm = ({
                 helperText={(formik.touched.description && formik.errors.description) as string}
               />
             </ShakingTextField>
-          </Grid> */}
+          </Grid>
 
           {/* <Grid item xs={12}>
             <ShakingTextField
