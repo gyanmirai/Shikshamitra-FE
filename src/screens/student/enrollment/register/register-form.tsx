@@ -546,12 +546,19 @@ const RegisterForm = ({
       setIsLoading(true);
       try {
         if (activeStep === 0) {
+          const isNew = !editData && !values?.id;
           await handleGeneralFormSubmit(values, formik);
           if (!isComeFromIssueForm) {
             shikshaMitraToast.success({
-              message: `${values.firstName} ${values.lastName}'s details updated successfully`,
+              message: isNew
+                ? `${values.firstName} ${values.lastName}'s details added successfully`
+                : `${values.firstName} ${values.lastName}'s details updated successfully`,
             });
           }
+        } else if (activeStep === 1) {
+          shikshaMitraToast.success({
+            message: `${values.firstName} ${values.lastName}'s documents saved successfully`,
+          });
         } else if (activeStep === 2) {
           await handleFamilyFormSubmit(values, formik);
           shikshaMitraToast.success({
@@ -607,6 +614,7 @@ const RegisterForm = ({
       handleMedicalFormSubmit,
       handlePreviousSchoolFormSubmit,
       isComeFromIssueForm,
+      editData,
     ]
   );
 

@@ -196,12 +196,11 @@ export function StudentProfile() {
 
   // Query hook for fetching filtered student data
   // Returns getStudents function, StudentsData response and loading state
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+  const [getStudents, { data: StudentsData, isLoading, isFetching }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
 
-  // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
       getStudents(division);
@@ -225,6 +224,8 @@ export function StudentProfile() {
       })) || [],
     [StudentsData?.items]
   );
+
+  console.log('tableData--->', tableData);
 
   // Find currently selected student based on search params
   const currentStudent: boolean = !!searchParams?.student;
@@ -346,7 +347,7 @@ export function StudentProfile() {
             tableId="student-list"
             noDataText={<>No Student Data Found </>}
             data={tableData}
-            isLoading={isLoading}
+            isLoading={isLoading || isFetching}
             columns={[
               {
                 id: 'name',

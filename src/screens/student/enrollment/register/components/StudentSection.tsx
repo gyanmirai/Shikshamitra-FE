@@ -83,7 +83,6 @@ const StudentSection: React.FC<SectionProps> = ({
               fullWidth
               onChange={(e) => {
                 formik.setFieldValue('firstName', toLettersTitleCase(e.target.value));
-                formik.setFieldTouched('firstName', true);
               }}
               disabled={!isEdit.value}
             />
@@ -129,7 +128,6 @@ const StudentSection: React.FC<SectionProps> = ({
               fullWidth
               onChange={(e) => {
                 formik.setFieldValue('lastName', toLettersTitleCase(e.target.value));
-                formik.setFieldTouched('lastName', true);
               }}
               disabled={!isEdit.value}
             />
@@ -158,7 +156,6 @@ const StudentSection: React.FC<SectionProps> = ({
               }}
               onChange={(newValue) => {
                 formik.setFieldValue('dob', newValue);
-                formik.setFieldTouched('dob', true);
               }}
             />
           </ShakingTextField>
