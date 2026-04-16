@@ -505,12 +505,10 @@ function RenderFamilyInformation(props: any) {
   const [studentSearchData] = useQueryAndMutation({
     type: 'mutation',
     options: {
-      skip: true,
+      skip: !student?.length,
     },
     currentQueryAndMutation: useLazySearchStudentRegistrationsQuery,
   });
-
-  console.log('studentData-->', studentSearchData.data);
 
   const isFatherDetailsEditable = useBoolean(isMainForm);
   const isMotherDetailsEditable = useBoolean(isMainForm);

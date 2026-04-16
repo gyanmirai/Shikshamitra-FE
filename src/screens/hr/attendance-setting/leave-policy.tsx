@@ -125,8 +125,8 @@ const LeavePolicy = () => {
         render: (value) => (typeof value === 'object' ? value?.name : value) || '-',
       },
       {
-        id: 'accuralPolicyType',
-        label: 'Accural Policy',
+        id: 'accrualPolicyType',
+        label: 'Accrual Policy',
         minWidth: '11vw',
         align: 'left',
       },
@@ -159,6 +159,10 @@ const LeavePolicy = () => {
         render: (value) => (value ? 'Yes' : 'No'),
       },
       {
+        id: 'encashmentTiming',
+        label: 'Encashment Time',
+      },
+      {
         id: 'paidType',
         label: 'Paid Type',
         minWidth: '16vw',
@@ -169,6 +173,7 @@ const LeavePolicy = () => {
         label: 'Requires Approval',
         minWidth: '16vw',
         align: 'left',
+        render: (value) => (value ? 'Yes' : 'No'),
       },
       {
         id: 'action',

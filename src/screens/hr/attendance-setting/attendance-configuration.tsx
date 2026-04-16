@@ -1,16 +1,23 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 // Icons
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import { shikshaMitraToast } from 'src/components/toast';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 // Date Pickers
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useSaveAttendanceConfigurationMutation } from 'src/redux/hr/attendanceApi';
 // UI Components
 import {
   Box,
@@ -83,13 +90,44 @@ const validationSchema = Yup.object().shape({
 const AttendanceConfigurationScreen = () => {
   // UI state for enhanced interactions (UI-only)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null); // Track which card is hovered for subtle animations
+  const { currentYear: academicYearId } = useSelector((state: RootState) => state.globalState);
+
   const theme = useTheme();
+  const [saveAttendanceConfiguration, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveAttendanceConfigurationMutation,
+    options: { skip: !academicYearId?.id },
+  });
 
   const formik = useFormik<AttendanceConfiguration>({
     initialValues: INITIAL_ATTENDANCE_CONFIG,
     validationSchema,
-    onSubmit: (values) => {
-      // TODO: Call API to save settings
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          dailyRules: {
+            hoursBasedPayPercentage: values.dailyRules.hoursBasedPayPercentage,
+          },
+          lateEarlyRules: {
+            graceTime: values.lateEarlyRules.graceTime,
+            maxLateAllowedPerMonth: values.lateEarlyRules.maxLateAllowedPerMonth,
+            penaltyType: values.lateEarlyRules.penaltyType,
+          },
+          overtime: {
+            enabled: values.overtime.enabled,
+            rate: values.overtime.rate,
+            minOvertimeMinutes: values.overtime.minOvertimeMinutes,
+          },
+        };
+
+        await saveAttendanceConfiguration({ academicYearId: academicYearId.id, body: payload });
+        shikshaMitraToast.success({ message: 'Attendance configuration saved successfully' });
+      } catch (error) {
+        console.error('Failed to save attendance configuration:', error);
+        shikshaMitraToast.error({
+          message: 'Failed to save attendance configuration',
+        });
+      }
     },
   });
 
@@ -689,14 +727,15 @@ const AttendanceConfigurationScreen = () => {
               >
                 Reset
               </Button>
-              <Button
+              <LoadingButton
                 variant="contained"
                 size="small"
                 type="submit"
+                loading={isUpdateLoading}
                 startIcon={<Iconify icon="mdi:content-save" />}
               >
                 Submit
-              </Button>
+              </LoadingButton>
             </DialogActions>
           </form>
         </Box>

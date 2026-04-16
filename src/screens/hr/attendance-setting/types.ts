@@ -15,12 +15,12 @@ export type LateEarlyRule = {
   graceTime: number; // minutes
   maxLateAllowedPerMonth: number;
   penaltyType: 'deduct_half_day' | 'deduct_full_day' | 'none';
-  penaltyCountThreshold: number; // e.g., 3 lates
+  penaltyCountThreshold?: number; // e.g., 3 lates
 };
 
 export type AttendanceConfiguration = {
-  shiftTiming: ShiftTiming;
-  weeklyOff: WeeklyOffPattern;
+  shiftTiming?: ShiftTiming;
+  weeklyOff?: WeeklyOffPattern;
   customWeeklyOffs?: number[]; // indices of days, Maintained if pattern is custom
   dailyRules: DailyAttendanceRule;
   lateEarlyRules: LateEarlyRule;
@@ -29,7 +29,7 @@ export type AttendanceConfiguration = {
     rate: '1.5x' | '2.0x' | 'flat';
     minOvertimeMinutes: number;
   };
-  holidayRules: {
+  holidayRules?: {
     workOnHolidayBehavior: 'paid' | 'comp_off' | 'ot_payout';
     sandwichRule: boolean;
   };

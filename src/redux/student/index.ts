@@ -50,7 +50,7 @@ export const StudentApi = api.injectEndpoints({
       providesTags: [studentType.student],
     }),
     getStudentsByDivision: builder.query({
-      query: ({ divisionId }: { divisionId: string }) => ({
+      query: (divisionId: string) => ({
         url: `/students/records/list/${divisionId}`,
         method: 'GET',
       }),

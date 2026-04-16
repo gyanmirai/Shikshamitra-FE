@@ -49,9 +49,7 @@ import AddLeaveRequest from './leave-requst';
 import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
-  const { currentYear, currentMedium: mediumStageId } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
   const { data, isLoading } = useQueryAndMutation({
@@ -59,8 +57,7 @@ const LeaveHistory = (props: any) => {
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
       academicYearId: currentYear?.id,
-      'month-year': date?.format('MM-YYYY'),
-      mediumStageId: mediumStageId?.id,
+      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(), // API expects e.g. JANUARY-2026
     },
   });
 

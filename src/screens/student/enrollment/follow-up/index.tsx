@@ -431,6 +431,8 @@ export const CommunicationForm = ({
                               mb: 2,
                               fontWeight: 500,
                               lineHeight: 1.6,
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
                             }}
                           >
                             {item?.note}

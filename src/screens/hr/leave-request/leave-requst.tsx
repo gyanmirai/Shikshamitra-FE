@@ -15,16 +15,19 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
-import { useGetLeaveRequestsQuery, useCreateLeaveRequestMutation } from 'src/redux/hr/leaveApi';
+import {
+  useGetLeaveTypesQuery,
+  useCreateLeaveRequestMutation,
+  useRejectLeaveRequestMutation,
+  useApproveLeaveRequestMutation,
+} from 'src/redux/hr/leaveApi';
 
 import type { TabComponentType } from '.';
 
@@ -67,17 +70,26 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     currentQueryAndMutation: useCreateLeaveRequestMutation,
   });
 
-  // Query hook to fetch employee leave policy data
-  const { data: leaveRequestData, isLoading: isLeaveRequestLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeaveRequestsQuery,
+  // Mutation hooks for approving / rejecting an existing leave request
+  const [approveLeave, { isLoading: isApproveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveLeaveRequestMutation,
   });
-  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [rejectLeave, { isLoading: isRejectLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectLeaveRequestMutation,
+  });
 
-  // Handler to remove a single file attachment
-  // const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
-  //   setFieldValue('docs', '');
-  // }, []);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const {
+    data: leaveTypesData,
+    isLoading: isLeaveTypeLoading,
+    isFetching: isLeaveTypeFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLeaveTypesQuery,
+    params: { academicYearId: currentYear?.id },
+  });
 
   const {
     initialValues,
@@ -86,7 +98,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     setFieldValue,
     values,
     handleSubmit,
-    handleBlur,
     resetForm,
     isSubmitting,
   } = useFormik({
@@ -97,7 +108,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
       rejectionReason: editData?.rejectionReason || '',
       status: editData?.status,
-      docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
+      docs: editData?.attachmentUrl || '',
     },
     validationSchema: Yup.object().shape({
       leaveTypeId: Yup.string().required('Leave Type is required'),
@@ -172,31 +183,43 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     onSubmit: async (formValues: FormValues, { setSubmitting }) => {
       try {
         setSubmitting(true);
+
         if (editData) {
-          // await updateLeaveStatus({
-          //   leaveRequestId: editData.id,
-          //   body: {
-          //     status:
-          //       formValues.status === EmployeeLeaveStatusType.Rejected
-          //         ? 'REJECTED'
-          //         : formValues.status === EmployeeLeaveStatusType.Approved
-          //           ? 'APPROVED'
-          //           : 'REVIEWED',
-          //     remarks: formValues.rejectionReason || undefined,
-          //   },
-          // });
+          // --- Update flow: approve or reject the existing leave request ---
+          if (formValues.status === EmployeeLeaveStatusType.Rejected) {
+            await rejectLeave({
+              id: editData.id,
+              body: { rejectionReason: formValues.rejectionReason },
+            });
+          } else {
+            // Covers Pending → Approve and re-approving a previously Rejected leave
+            await approveLeave({ id: editData.id, body: {} });
+          }
         } else {
+          // --- Create flow: build multipart/form-data body as per API contract ---
+          const formData = new FormData();
+          formData.append('leaveTypeId', formValues.leaveTypeId);
+          formData.append('startDate', dayjs(formValues.startDate).toISOString());
+          formData.append('endDate', dayjs(formValues.endDate).toISOString());
+          formData.append('reason', formValues.reason);
+
+          if (formValues.docs) {
+            const docs = formValues.docs as any;
+
+            if (docs instanceof File) {
+              formData.append('File', docs);
+            } else if (Array.isArray(docs) && docs.length > 0) {
+              formData.append('attachment', docs[0]);
+            } else {
+              console.warn('Invalid file format:', docs);
+            }
+          }
           await addLeave({
-            mediumStageId: currentMedium?.id,
-            leaveTypeId: formValues.leaveTypeId,
-            startDate: dateConvertor(dayjs(formValues.startDate).format(dateFormat)),
-            endDate: dateConvertor(dayjs(formValues.endDate).format(dateFormat)),
-            reason: formValues.reason,
-            attachment: formValues.docs
-              ? formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, '')
-              : undefined,
+            academicYearId: currentYear?.id,
+            body: formData,
           });
         }
+
         handleClose?.(null, true);
         resetForm();
       } catch (e) {
@@ -220,14 +243,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
                 <CustomSelect
-                  isLoading={isLeaveRequestLoading}
-                  options={leaveRequestData?.items || []}
+                  isLoading={isLeaveTypeLoading || isLeaveTypeFetching}
+                  options={leaveTypesData?.items || []}
                   label="Leave Type *"
                   value={values.leaveTypeId}
                   name="leaveTypeId"
                   valueKey="id"
-                  disabled={!!editData || isLeaveRequestLoading}
-                  labelKey="leaveType"
+                  disabled={!!editData}
+                  labelKey="name"
                   error={!!touched.leaveTypeId && !!errors.leaveTypeId}
                   helperText={(touched.leaveTypeId && errors.leaveTypeId) || ''}
                   onChange={(value) => {
@@ -468,12 +491,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
         {editData && values.status !== EmployeeLeaveStatusType.Approved && (
           <LoadingButton
-            // loading={isUpdateStatusLoading}
+            loading={isSubmitting || isApproveLoading || isRejectLoading}
             onClick={(e: any) => {
               handleSubmit(e);
             }}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
-            // disabled={isUpdateStatusLoading}
+            disabled={isSubmitting || isApproveLoading || isRejectLoading}
             size="small"
           >
             {values.status === EmployeeLeaveStatusType.Rejected ? 'Approve' : 'Update Status'}
