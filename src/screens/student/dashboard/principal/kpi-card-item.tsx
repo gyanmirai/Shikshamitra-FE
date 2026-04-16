@@ -56,58 +56,40 @@ export default function CompactKPICard({
   };
 
   const mainColor = theme.palette[status].main;
-  const lightColor = theme.palette[status].light;
   const lighterColor = theme.palette[status].lighter;
 
   const isRadialChart = RADIAL_TYPES.includes(chart?.type || '');
 
   const sparklineOptions = useChart({
     colors: chart?.colors || [mainColor],
-    fill:
-      chart?.type === 'bar'
-        ? { type: 'solid' }
-        : {
-            type: 'gradient',
-            gradient: {
-              colorStops: [
-                { offset: 0, color: lightColor, opacity: 1 },
-                { offset: 100, color: mainColor, opacity: 1 },
-              ],
-            },
-          },
+
     chart: {
       animations: { enabled: false },
       sparkline: { enabled: true },
     },
+
+    // ADD THIS
+    yaxis: {
+      show: false,
+    },
+
+    xaxis: {
+      labels: { show: false },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+
+    grid: {
+      show: false,
+    },
+
     tooltip: {
       x: { show: false },
       y: {
         formatter: (val: number) => `${val}`,
-        title: {
-          formatter: (_s: string, opts?: any) =>
-            chart?.labels?.[opts?.dataPointIndex] ? `${chart.labels[opts.dataPointIndex]}: ` : '',
-        },
-      },
-      marker: { show: true },
-      fixed: {
-        enabled: true,
-        position: 'topLeft',
-        offsetY: -5,
-        offsetX: -100, // Move it explicitly to the left of the small chart using native offsets
       },
     },
-    stroke: {
-      show: true,
-      width: chart?.type === 'bar' ? 4 : 2,
-      colors: chart?.type === 'bar' ? ['transparent'] : undefined,
-      curve: 'smooth',
-    },
-    plotOptions: {
-      bar: { columnWidth: '70%', borderRadius: 2, distributed: chart?.type === 'bar' },
-    },
-    xaxis: {
-      categories: chart?.labels || [],
-    },
+
     ...(!isRadialChart ? chart?.options : {}),
   });
 
