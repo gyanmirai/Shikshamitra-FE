@@ -225,11 +225,9 @@ export const CommunicationForm = ({
   handleCloseDialog,
   studentEnrollmentId,
   selectedStudent,
-  isStatus = true,
 }: {
   handleCloseDialog: () => void;
   studentEnrollmentId: string;
-  isStatus?: boolean;
   selectedStudent?: IInquiryResponse | IGeneralInformationResponse | null;
 }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -265,7 +263,7 @@ export const CommunicationForm = ({
           studentId: studentEnrollmentId,
           body: {
             note: values.msg,
-            status: isStatus ? values.status : FollowUpStatusType.Interested,
+            status: values.status,
             nextReminderDate: dateConvertor((values.dueDate as Dayjs).format(dateFormat)),
           },
         }).unwrap();
@@ -537,7 +535,7 @@ export const CommunicationForm = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12, md: isStatus ? 6 : 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}>
               <DatePicker
                 label="Next Reminder Date *"
@@ -562,21 +560,19 @@ export const CommunicationForm = ({
             </ShakingTextField>
           </Grid>
 
-          {isStatus && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                options={FollowUpStatusTypeOptions}
-                value={formik.values.status}
-                isLoading={isLoading}
-                sx={{ minWidth: 200, flex: 1 }}
-                onChange={(newValue) => {
-                  formik.setFieldValue('status', newValue);
-                }}
-                size="small"
-                label="Status"
-              />
-            </Grid>
-          )}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <CustomSelect
+              options={FollowUpStatusTypeOptions}
+              value={formik.values.status}
+              isLoading={isLoading}
+              sx={{ minWidth: 200, flex: 1 }}
+              onChange={(newValue) => {
+                formik.setFieldValue('status', newValue);
+              }}
+              size="small"
+              label="Status"
+            />
+          </Grid>
         </Grid>
       </DialogScrollContent>
       <DialogActions>

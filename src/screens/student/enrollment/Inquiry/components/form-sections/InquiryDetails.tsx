@@ -69,7 +69,7 @@ export const InquiryDetails = ({ formik, data, loading, actions }: InquiryDetail
               name="dateOfInquiry"
               value={values.dateOfInquiry}
               format="DD-MM-YYYY"
-              readOnly
+              disablePast
               onChange={(newValue) => {
                 setFieldValue('dateOfInquiry', newValue);
                 setFieldTouched('dateOfInquiry', true);

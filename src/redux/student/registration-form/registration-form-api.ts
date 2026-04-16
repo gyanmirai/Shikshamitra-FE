@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentRegistrationFormType } from 'src/redux/tagTypes';
+import { followUpType, studentRegistrationFormType } from 'src/redux/tagTypes';
 
 export const StudentRegistrationFormApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,7 +8,7 @@ export const StudentRegistrationFormApi = api.injectEndpoints({
         url: `/student/enrollment/registrations/forms?academicMediumId=${academicMediumId}`,
         method: 'GET',
       }),
-      providesTags: [studentRegistrationFormType.studentRegistrationForm],
+      providesTags: [studentRegistrationFormType.studentRegistrationForm, followUpType.followUp],
     }),
     addStudentRegistrationForm: builder.mutation({
       query: (body) => ({

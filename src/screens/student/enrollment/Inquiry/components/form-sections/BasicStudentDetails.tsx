@@ -8,6 +8,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import calculateAge from 'src/utils/calculate-age';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
@@ -137,81 +138,106 @@ export const BasicStudentDetails = ({
 
           {/* Board */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ShakingTextField error={!!(touched.board && errors.board)}>
-              <CustomSelect
-                name="board"
-                label="Board *"
-                isLoading={boardLoading}
-                options={boards || []}
-                labelKey="name"
-                valueKey="id"
-                value={values.board}
-                onChange={(value) => {
-                  setFieldValue('medium', '');
-                  setFieldValue('class', '');
-                  setFieldValue('board', value);
-                }}
-                error={!!(touched.board && errors.board)}
-                helperText={(touched.board && errors.board) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                disabled={!values.academicYear}
-              />
-            </ShakingTextField>
+            <CustomTooltip
+              title={!values.academicYear ? 'Please select Academic Year first' : ''}
+              arrow
+              placement="top"
+            >
+              <span style={{ display: 'block' }}>
+                <ShakingTextField error={!!(touched.board && errors.board)}>
+                  <CustomSelect
+                    name="board"
+                    label="Board *"
+                    isLoading={boardLoading}
+                    options={boards || []}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.board}
+                    onChange={(value) => {
+                      setFieldValue('medium', '');
+                      setFieldValue('class', '');
+                      setFieldValue('board', value);
+                    }}
+                    error={!!(touched.board && errors.board)}
+                    helperText={(touched.board && errors.board) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                    disabled={!values.academicYear}
+                  />
+                </ShakingTextField>
+              </span>
+            </CustomTooltip>
           </Grid>
 
           {/* Medium */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ShakingTextField error={!!(touched.medium && errors.medium)}>
-              <CustomSelect
-                name="medium"
-                label="Medium *"
-                disabled={!values.board}
-                options={
-                  board?.items?.find((item: Board) => item.id === values.board)?.educationMediums ||
-                  []
-                }
-                value={values.medium}
-                labelKey="name"
-                valueKey="id"
-                onChange={async (value) => {
-                  setFieldValue('medium', value);
-                  setFieldValue('class', '');
-                  setFieldTouched('medium', false);
-                  try {
-                    await actions.getClassByMedium(value as string).unwrap();
-                  } catch (error) {
-                    shikshaMitraToast.error({
-                      message: 'Failed to load classes for the selected medium. Please try again.',
-                    });
-                  }
-                }}
-                error={!!(touched.medium && errors.medium)}
-                helperText={(touched.medium && errors.medium) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
+            <CustomTooltip
+              title={!values.board ? 'Please select Board first' : ''}
+              arrow
+              placement="top"
+            >
+              <span style={{ display: 'block' }}>
+                <ShakingTextField error={!!(touched.medium && errors.medium)}>
+                  <CustomSelect
+                    name="medium"
+                    label="Medium *"
+                    disabled={!values.board}
+                    options={
+                      board?.items?.find((item: Board) => item.id === values.board)
+                        ?.educationMediums || []
+                    }
+                    value={values.medium}
+                    labelKey="name"
+                    valueKey="id"
+                    onChange={async (value) => {
+                      setFieldValue('medium', value);
+                      setFieldValue('class', '');
+                      setFieldTouched('medium', false);
+                      try {
+                        await actions.getClassByMedium(value as string).unwrap();
+                      } catch (error) {
+                        shikshaMitraToast.error({
+                          message:
+                            'Failed to load classes for the selected medium. Please try again.',
+                        });
+                      }
+                    }}
+                    error={!!(touched.medium && errors.medium)}
+                    helperText={(touched.medium && errors.medium) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </span>
+            </CustomTooltip>
           </Grid>
 
           {/* Class */}
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ShakingTextField error={!!(touched.class && errors.class)}>
-              <CustomSelect
-                name="class"
-                label="Class *"
-                disabled={!values.medium}
-                isLoading={classLoading}
-                labelKey="name"
-                valueKey="id"
-                options={classes || []}
-                value={values.class}
-                onChange={(value) => {
-                  setFieldValue('class', value);
-                }}
-                error={!!(touched.class && errors.class)}
-                helperText={(touched.class && errors.class) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
+            <CustomTooltip
+              title={!values.medium ? 'Please select Medium first' : ''}
+              arrow
+              placement="top"
+            >
+              <span style={{ display: 'block' }}>
+                <ShakingTextField error={!!(touched.class && errors.class)}>
+                  <CustomSelect
+                    name="class"
+                    label="Class *"
+                    disabled={!values.medium}
+                    isLoading={classLoading}
+                    labelKey="name"
+                    valueKey="id"
+                    options={classes || []}
+                    value={values.class}
+                    onChange={(value) => {
+                      setFieldValue('class', value);
+                    }}
+                    error={!!(touched.class && errors.class)}
+                    helperText={(touched.class && errors.class) || ''}
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </span>
+            </CustomTooltip>
           </Grid>
 
           {/* previous school */}
@@ -379,7 +405,7 @@ export const BasicStudentDetails = ({
               </Box>
               {!!(touched.gender && errors.gender) && (
                 <FormHelperText error sx={{ ml: 0 }}>
-                  {errors.gender}
+                  {/* {errors.gender} */}
                 </FormHelperText>
               )}
             </ShakingTextField>
