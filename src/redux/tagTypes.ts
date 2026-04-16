@@ -178,6 +178,7 @@ export const employeeType = {
   employeeLeavePolicy: 'Employee-Leave-Policy',
   attendanceRule: 'AttendanceRule',
   attendance: 'Attendance',
+  attendanceImport: 'Attendance-Import',
 } as const;
 
 // ===== Enrollment Report API (reducerPath: EnrollmentReportApi) =====

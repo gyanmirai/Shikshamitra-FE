@@ -17,7 +17,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/hr/employee-salary-slip-api';
+import { useGetEmployeeSalarySlipQuery } from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Card,
@@ -57,7 +57,7 @@ const PaySlipGenerationScreen = () => {
     { data: employeeSalarySlip, isLoading: employeeSalarySlipLoading },
   ] = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useLazyGetEmployeeSalarySlipQuery,
+    currentQueryAndMutation: useGetEmployeeSalarySlipQuery,
     params: {
       employeeId: employee?.id,
       monthYear: monthYear?.format('MMMM-YYYY').toUpperCase(),

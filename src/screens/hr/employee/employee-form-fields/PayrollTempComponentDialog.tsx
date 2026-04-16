@@ -93,7 +93,12 @@ export default function PayrollTempComponentDialog({
             fullWidth
             size="small"
             value={formik.values.amount}
-            onChange={formik.handleChange}
+            onChange={(e: any) => {
+              let val = e.target.value;
+              val = val.replace(/[₹,\s]/g, '');
+              formik.setFieldValue('amount', val !== '' ? Number(val) : '');
+              formik.setFieldTouched('amount', true, false);
+            }}
             error={formik.touched.amount && Boolean(formik.errors.amount)}
             helperText={
               formik.touched.amount && typeof formik.errors.amount === 'string'
