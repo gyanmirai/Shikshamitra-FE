@@ -68,7 +68,7 @@ export default function CompactKPICard({
       sparkline: { enabled: true },
     },
 
-    // ADD THIS
+    // Hide the y-axis to keep the KPI sparkline compact and free of chart chrome.
     yaxis: {
       show: false,
     },

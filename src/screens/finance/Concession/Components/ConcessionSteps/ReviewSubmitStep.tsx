@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetStandardFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import {
   Box,
   Card,
@@ -30,8 +30,8 @@ const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({ formik, concessionT
   // Fetch fee structure to get original amounts and names
   const { data: assignedStructureData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStandardFeeStructureQuery,
-    params: values.studentId,
+    currentQueryAndMutation: useGetStudentFeeStructureQuery,
+    params: { studentId: values.studentId },
     options: { skip: !values.studentId },
   });
 

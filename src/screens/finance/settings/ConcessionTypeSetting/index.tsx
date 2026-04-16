@@ -143,8 +143,8 @@ const ConcessionType = () => {
         </CustomDialog>
 
         <ConcessionTypeTable
-          data={concessionTypes?.items}
-          isLoading={isLoading}
+          data={concessionTypes?.data?.items ?? []}
+          isLoading={Boolean(currentYear?.id) && isLoading}
           addConcessionType={addConcessionTypeDialog}
           setEditData={setSelectedConcessionType}
           onEdit={(data) => {

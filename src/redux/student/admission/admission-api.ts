@@ -41,7 +41,7 @@ export const StudentAdmissionApi = api.injectEndpoints({
       }),
       providesTags: [studentAdmissionType.studentAdmission],
     }),
-    getStandardFeeStructure: builder.query({
+    getStudentFeeStructure: builder.query({
       query: ({ studentId }) => ({
         url: `/student-fee-structure/student/${studentId}`,
         method: 'GET',
@@ -65,5 +65,5 @@ export const {
   useAssignDivisionTOStudentMutation,
   useGetDivisionForStandardQuery,
   useAssignFeeStructureMutation,
-  useGetStandardFeeStructureQuery,
+  useGetStudentFeeStructureQuery,
 } = StudentAdmissionApi;

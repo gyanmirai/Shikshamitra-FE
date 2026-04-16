@@ -3,7 +3,7 @@ import React, { useMemo, useEffect, useCallback } from 'react';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { useGetStandardFeeStructureQuery } from 'src/redux/student/admission/admission-api';
+import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import { useGetConcessionRequestValueEntriesQuery } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 import {
   Box,
@@ -162,8 +162,8 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
 const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
   const { data: assignedStructureData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStandardFeeStructureQuery,
-    params: values.studentId,
+    currentQueryAndMutation: useGetStudentFeeStructureQuery,
+    params: { studentId: values.studentId },
     options: { skip: !values.studentId },
   });
 
