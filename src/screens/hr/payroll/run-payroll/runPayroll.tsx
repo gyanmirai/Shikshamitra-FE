@@ -1,22 +1,33 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Alert, Avatar, Typography, IconButton } from '@mui/material';
+import { Box, Card, Avatar, Checkbox, Typography, IconButton } from '@mui/material';
+import {
+  PayrollStatus,
+  PayrollStatusColor,
+  PayrollStatusOptions,
+} from 'src/enums/payroll-status-type';
 import {
   useLazyGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
@@ -27,7 +38,22 @@ import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerat
 const RunPayroll = () => {
   const deductionDialog = useBoolean();
   const isPayrollOpen = useBoolean();
+  const lockConfirmDialog = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
+  const [selectedBoard, setSelectedBoard] = useState('');
+  const [boards, setBoards] = useState<any[]>([]);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  useEffect(() => {
+    const currentBoards = currentYear?.boards || [];
+    setBoards(currentBoards);
+    if (!selectedBoard && currentBoards.length > 0) {
+      setSelectedBoard(currentBoards[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear?.boards]);
 
   const [
     fetchRunPayrollPreview,
@@ -43,12 +69,61 @@ const RunPayroll = () => {
       currentQueryAndMutation: useGenerateAndLockPayrollMutation,
     });
 
+  const tableData = useMemo(
+    () => getRunPayrollPreviewData?.items || [],
+    [getRunPayrollPreviewData?.items]
+  );
+
   const columns: IColumn[] = useMemo(
     () => [
       {
+        id: 'checkBox',
+        align: 'center',
+        minWidth: '60px',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        label: '',
+        renderColumn() {
+          const pendingEmployees = (tableData || []).filter(
+            (emp: any) => emp?.status?.toLowerCase() !== 'locked'
+          );
+          const isAllSelected =
+            pendingEmployees.length > 0 &&
+            pendingEmployees.every((emp: any) => selectedEmployeeIds.includes(emp.id));
+          return (
+            <Checkbox
+              checked={isAllSelected}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedEmployeeIds(pendingEmployees.map((emp: any) => emp.id));
+                } else {
+                  setSelectedEmployeeIds([]);
+                }
+              }}
+            />
+          );
+        },
+        render(value, row) {
+          const isChecked = selectedEmployeeIds.includes(row.id);
+          return (
+            <Checkbox
+              checked={isChecked}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedEmployeeIds((prev) => [...prev, row.id]);
+                } else {
+                  setSelectedEmployeeIds((prev) => prev.filter((id) => id !== row.id));
+                }
+              }}
+            />
+          );
+        },
+      },
+      {
         id: 'employeeName',
         label: 'Employee Name',
-        minWidth: '160px',
+        minWidth: '180px',
         align: 'left',
         sticky: true,
         render(value, row) {
@@ -67,21 +142,21 @@ const RunPayroll = () => {
       { id: 'employeeGroup', label: 'Employee Group', minWidth: '160px', align: 'left' },
       {
         id: 'totalWorkingDays',
-        label: 'Total Working Days',
+        label: 'Working Days',
         minWidth: '170px',
         align: 'left',
         filterType: 'number',
       },
       {
         id: 'totalPresentDays',
-        label: 'Total Present Days',
+        label: 'Present Days',
         minWidth: '170px',
         align: 'left',
         filterType: 'number',
       },
       {
         id: 'totalAbsentDays',
-        label: 'Total Absent Days',
+        label: 'Absent Days',
         minWidth: '170px',
         align: 'left',
         filterType: 'number',
@@ -139,8 +214,31 @@ const RunPayroll = () => {
         minWidth: '130px',
         align: 'left',
       },
+      {
+        id: 'lastMonthSalary',
+        label: 'Last Month Salary',
+        minWidth: '130px',
+        align: 'left',
+        filterType: 'number',
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        minWidth: '130px',
+        align: 'left',
+        sticky: true,
+        filterType: 'enum',
+        enumOptions: PayrollStatusOptions,
+        render(value) {
+          return (
+            <Label variant="soft" color={PayrollStatusColor[value as PayrollStatus] as any}>
+              {value === PayrollStatus.Locked ? 'Locked' : 'Pending'}
+            </Label>
+          );
+        },
+      },
     ],
-    [deductionDialog]
+    [deductionDialog, tableData, selectedEmployeeIds]
   );
 
   return (
@@ -152,8 +250,20 @@ const RunPayroll = () => {
       />
       {/* <StepsForPayroll /> */}
 
-      <Card sx={{ p: 1.5 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 1, alignItems: 'center' }}>
+      <Card sx={{ p: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <CustomSelect
+            label="Board"
+            options={boards || []}
+            labelKey="name"
+            valueKey="id"
+            value={selectedBoard}
+            onChange={(value) => {
+              setSelectedBoard(value as string);
+            }}
+            formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          />
+
           <DatePicker
             label="Select Month *"
             views={['month']}
@@ -188,13 +298,11 @@ const RunPayroll = () => {
             )}
           </Box>
         </Box>
-        <Alert variant="outlined" severity="warning">
-          Please ensure all payroll data is accurate and verified before proceeding. Once payroll is
-          processed, any modifications may require additional steps.
-        </Alert>
       </Card>
       {month && (
-        <Card sx={{ p: 1.5, mt: 1 }}>
+        <Card
+          sx={{ p: 1.5, mt: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+        >
           <Box
             sx={{
               display: 'flex',
@@ -205,38 +313,43 @@ const RunPayroll = () => {
             }}
           >
             <Typography variant="h6">Employee Payable</Typography>
-            <LoadingButton
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              onClick={async () => {
-                try {
-                  const res = await generateAndLockPayroll({
-                    month: month?.format('MMMM-YYYY').toUpperCase(),
-                  }).unwrap();
-                  shikshaMitraToast.success({
-                    message: res?.message || 'Payroll generated successfully.',
-                  });
-                } catch (error: any) {
-                  console.error('Error generating payroll:', error);
-                  shikshaMitraToast.error({
-                    message: error?.data?.message || 'Failed to generate payroll.',
-                  });
-                }
-              }}
-              loading={generateAndLockPayrollLoading}
-              size="small"
-            >
-              Submit
-            </LoadingButton>
+            <Box display="flex" gap={1}>
+              <CustomTooltip
+                title="Lock the payroll for the selected employees. Locked payrolls cannot be modified."
+                placement="top"
+                arrow
+              >
+                <span>
+                  <LoadingButton
+                    variant="contained"
+                    startIcon={<Iconify icon="mdi:lock-outline" />}
+                    disabled={(() => {
+                      if (selectedEmployeeIds.length === 0) return true;
+                      const selectedRows = tableData.filter((emp: any) =>
+                        selectedEmployeeIds.includes(emp.id)
+                      );
+                      const hasPending = selectedRows.some(
+                        (emp: any) => emp?.status?.toLowerCase() !== 'locked'
+                      );
+                      return !hasPending;
+                    })()}
+                    size="small"
+                    onClick={() => lockConfirmDialog.onTrue()}
+                  >
+                    Lock
+                  </LoadingButton>
+                </span>
+              </CustomTooltip>
+            </Box>
           </Box>
 
           <CustomizableTable
-            wrapperProps={{ sx: { height: '400px' } }}
+            showCheckbox={selectedEmployeeIds.length !== 0}
             noDataText={<>No Data Found For Payroll</>}
             tableId="employee-salary-table"
             isLoading={getRunPayrollPreviewLoading}
             columns={columns}
-            data={getRunPayrollPreviewData?.items || []}
+            data={tableData || []}
           />
         </Card>
       )}
@@ -260,6 +373,46 @@ const RunPayroll = () => {
           />
         </Box>
       </CustomDialog>
+
+      <ConfirmDialog
+        open={lockConfirmDialog.value}
+        onClose={lockConfirmDialog.onFalse}
+        title="Lock Payroll"
+        icon="warning"
+        content={
+          <>
+            Are you sure you want to lock the payroll for{' '}
+            <strong>{selectedEmployeeIds.length} employee(s)</strong>? This action cannot be undone.
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            loading={generateAndLockPayrollLoading}
+            onClick={async () => {
+              try {
+                const res = await generateAndLockPayroll({
+                  month: month?.format('MMMM-YYYY').toUpperCase(),
+                  boardId: selectedBoard,
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: res?.message || 'Payroll locked successfully.',
+                });
+                lockConfirmDialog.onFalse();
+              } catch (error: any) {
+                console.error('Error locking payroll:', error);
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to lock payroll.',
+                });
+              }
+            }}
+          >
+            Yes
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };

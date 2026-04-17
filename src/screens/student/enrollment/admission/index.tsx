@@ -648,7 +648,6 @@ const AdmissionScreen = () => {
           }}
           selectedStudent={editData as any}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
-          isStatus={false}
         />
       </CustomDialog>
       {/* <CustomDialog

@@ -13,10 +13,10 @@ export const runPayrollApi = employeeApi.injectEndpoints({
     }),
 
     generateAndLockPayroll: builder.mutation({
-      query: ({ month }) => ({
+      query: ({ month, boardId }) => ({
         url: `/payroll/run`,
         method: 'POST',
-        body: { month },
+        body: { month, boardId },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
@@ -37,4 +37,5 @@ export const {
   useLazyGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
   useGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipQuery,
 } = runPayrollApi;
