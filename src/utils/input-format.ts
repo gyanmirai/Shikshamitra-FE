@@ -2,8 +2,7 @@ export function toLettersTitleCase(input: string): string {
   const sanitized = input.replace(/[^a-zA-Z\s]/g, '');
   return sanitized
     .split(' ')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''))
     .join(' ');
 }
 
@@ -11,8 +10,7 @@ export function toAlphanumericTitleCase(input: string): string {
   const sanitized = input.replace(/[^a-zA-Z0-9\s]/g, '');
   return sanitized
     .split(' ')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''))
     .join(' ');
 }
 

@@ -100,7 +100,7 @@ const RenderBankDetails = (props: any) => {
               type="text"
               inputMode={isAccount ? 'numeric' : 'text'}
               inputProps={{
-                maxLength: field.name === 'ifscCode' ? 11 : undefined,
+                maxLength: field.name === 'ifscCode' ? 11 : isAccount ? 18 : undefined,
                 style: field.name === 'ifscCode' ? { textTransform: 'uppercase' } : undefined,
                 pattern: isAccount ? '[0-9]*' : undefined,
               }}

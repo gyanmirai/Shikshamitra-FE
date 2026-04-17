@@ -142,8 +142,6 @@ const EntranceExamScreen = () => {
     [entranceExamData]
   );
 
-  console.log('tableData', tableData);
-
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -249,14 +247,17 @@ const EntranceExamScreen = () => {
         align: 'left',
         filterType: 'number',
         render(value, row) {
+          const isNum = value !== '' && value !== null && !Number.isNaN(Number(value));
+          const displayValue = isNum ? parseFloat(Number(value).toFixed(2)) : value;
+          const ringValue = isNum ? Number(value) : 0;
           return (
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress
                 variant="determinate"
-                value={value}
+                value={ringValue}
                 size={50}
                 thickness={3}
-                sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
+                sx={{ color: ringValue < 50 ? 'warning.main' : 'success.main' }}
               />
               <Box
                 sx={{
@@ -276,7 +277,7 @@ const EntranceExamScreen = () => {
                   color="text.secondary"
                   sx={{ fontSize: '12px' }}
                 >
-                  {value}%
+                  {displayValue}%
                 </Typography>
               </Box>
             </Box>
@@ -291,14 +292,17 @@ const EntranceExamScreen = () => {
         minWidth: '100px',
         align: 'left',
         render(value, row) {
+          const isNum = value !== '' && value !== null && !Number.isNaN(Number(value));
+          const displayValue = isNum ? parseFloat(Number(value).toFixed(2)) : value;
+          const ringValue = isNum ? Number(value) : 0;
           return (
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress
                 variant="determinate"
-                value={value}
+                value={ringValue}
                 size={50}
                 thickness={3}
-                sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
+                sx={{ color: ringValue < 50 ? 'warning.main' : 'success.main' }}
               />
               <Box
                 sx={{
@@ -318,7 +322,7 @@ const EntranceExamScreen = () => {
                   color="text.secondary"
                   sx={{ fontSize: '12px' }}
                 >
-                  {value}%
+                  {displayValue}%
                 </Typography>
               </Box>
             </Box>

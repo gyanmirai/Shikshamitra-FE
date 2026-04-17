@@ -1,4 +1,4 @@
-import type { ICity, IState } from 'country-state-city';
+import type { ICity, IState, ICountry } from 'country-state-city';
 import type { TextFieldProps, AutocompleteProps } from '@mui/material';
 
 import React, { useMemo } from 'react';
@@ -11,12 +11,14 @@ const CityComponent = ({
   helperText,
   value,
   stateValue,
+  countryValue,
   textFieldProps,
   ...filedProps
 }: Partial<
   AutocompleteProps<Partial<ICity>, false, false, false> &
     Omit<TextFieldProps, 'onChange'> & {
       stateValue?: Partial<IState>;
+      countryValue?: Partial<ICountry>;
     } & {
       textFieldProps?: Partial<TextFieldProps>;
     }
@@ -24,16 +26,20 @@ const CityComponent = ({
   const allCities = useMemo(
     () =>
       stateValue
-        ? City.getCitiesOfState(stateValue?.countryCode as string, stateValue?.isoCode as string)
+        ? City.getCitiesOfState(
+            (stateValue?.countryCode || countryValue?.isoCode) as string,
+            stateValue?.isoCode as string
+          )
         : [],
-    [stateValue]
+    [stateValue, countryValue]
   );
   return (
     <Autocomplete
       noOptionsText={<Typography variant="caption">No City Found</Typography>}
       fullWidth
-      value={value}
+      value={value?.name ? value : null}
       onChange={onChange}
+      isOptionEqualToValue={(option, val) => option?.name === val?.name}
       renderOption={(props, option: any) => (
         <li {...props} key={option.id}>
           {`${option?.name}`}

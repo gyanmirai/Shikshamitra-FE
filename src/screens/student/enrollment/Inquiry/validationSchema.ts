@@ -9,8 +9,20 @@ export const inquiryValidationSchema = Yup.object().shape({
   organization: Yup.string(),
   academicYear: Yup.string().required('Academic Year is required'),
   class: Yup.string().required('Class is required'),
-  lastName: Yup.string().required('Last Name is required'),
-  firstName: Yup.string().required('First Name is required'),
+  lastName: Yup.string()
+    .nullable()
+    .test(
+      'lastName-required',
+      'Last Name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
+  firstName: Yup.string()
+    .nullable()
+    .test(
+      'firstName-required',
+      'First Name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
   middleName: Yup.string(),
   dateOfBirth: Yup.mixed()
     .test(
