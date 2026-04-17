@@ -16,13 +16,12 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Alert, Avatar, Button, Typography, IconButton } from '@mui/material';
+import { Box, Card, Alert, Avatar, Typography, IconButton } from '@mui/material';
 import {
   useLazyGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
-import { salaryData } from './component/verifyPayrollComponent';
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
 
 const RunPayroll = () => {
@@ -169,9 +168,10 @@ const RunPayroll = () => {
 
           {/* Button aligned to the right */}
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            {!getRunPayrollPreviewData?.data?.isGenerated && (
-              <Button
+            {!getRunPayrollPreviewData?.isGenerated && (
+              <LoadingButton
                 variant="contained"
+                loading={getRunPayrollPreviewLoading}
                 startIcon={<Iconify icon="uiw:pay" />}
                 disabled={!month}
                 onClick={() => {
@@ -184,7 +184,7 @@ const RunPayroll = () => {
                 sx={{ px: '32px' }}
               >
                 Run Payroll
-              </Button>
+              </LoadingButton>
             )}
           </Box>
         </Box>
@@ -236,7 +236,7 @@ const RunPayroll = () => {
             tableId="employee-salary-table"
             isLoading={getRunPayrollPreviewLoading}
             columns={columns}
-            data={salaryData}
+            data={getRunPayrollPreviewData?.items || []}
           />
         </Card>
       )}

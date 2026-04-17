@@ -35,10 +35,23 @@ export default function PayrollComponentDialog({
     params: {},
   });
 
+  const options: any[] = components?.items || [];
+
+  // Helper to get a consistent ID from either an option (uses _id) or a
+  // componentValue (uses componentId or id from the salary-structure API).
+  const getId = (item: any): string | undefined => item?._id ?? item?.componentId ?? item?.id;
+
+  // Resolve already-selected components against the fetched options list,
+  // matching by the flexible ID so MUI Autocomplete gets real option objects.
+  const resolvedInitialValues = (componentValues || [])
+    .map((cv: any) => options.find((opt: any) => getId(opt) === getId(cv)) ?? null)
+    .filter(Boolean);
+
   const formik = useFormik({
     initialValues: {
-      selectedComponents: componentValues || [],
+      selectedComponents: resolvedInitialValues,
     },
+    enableReinitialize: true,
     validationSchema: Yup.object({
       selectedComponents: Yup.array().min(1, 'Please select at least one Component'),
     }),
@@ -48,6 +61,11 @@ export default function PayrollComponentDialog({
       onClose();
     },
   });
+
+  // Keep selectedComponents in sync when options finish loading (important for update flow)
+  const syncedValue = formik.values.selectedComponents
+    .map((cv: any) => options.find((opt: any) => getId(opt) === getId(cv)) ?? null)
+    .filter(Boolean);
 
   const handleClose = () => {
     formik.resetForm();
@@ -81,17 +99,18 @@ export default function PayrollComponentDialog({
           fullWidth
           loading={isLoading}
           size="small"
-          options={components?.items || []}
+          options={options}
           getOptionLabel={(option: any) =>
-            option?.earningComponentName || option?.deductionComponentName
+            option?.earningComponentName || option?.deductionComponentName || ''
           }
+          isOptionEqualToValue={(option: any, value: any) => getId(option) === getId(value)}
           slotProps={{
             chip: {
               size: 'small',
               variant: 'soft',
             },
           }}
-          value={formik.values.selectedComponents || []}
+          value={syncedValue}
           onChange={(e, newValue) => formik.setFieldValue('selectedComponents', newValue)}
           renderInput={(params) => (
             <TextField
