@@ -1,5 +1,6 @@
+import _ from 'lodash';
 import { useTheme } from '@mui/material/styles';
-import { useState, useCallback, useLayoutEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import type { IColumn } from '../types';
 
@@ -19,8 +20,8 @@ export const useStickyColumns = ({
     left: Record<string, number>;
     right: Record<string, number>;
   }>({ left: {}, right: {} });
-
-  useLayoutEffect(() => {
+  const clonedHeaderRefs = _.cloneDeep(headerRefs);
+  useEffect(() => {
     setTimeout(() => {
       const leftSticky: { col: IColumn; idx: number }[] = [];
       const rightSticky: { col: IColumn; idx: number }[] = [];
@@ -42,7 +43,7 @@ export const useStickyColumns = ({
       const leftOffsets: Record<string, number> = {};
       let left = 0;
       leftSticky.forEach(({ col, idx }) => {
-        const el = headerRefs[idx];
+        const el = clonedHeaderRefs[idx];
         const width = el ?? 100;
         leftOffsets[col.id as string] = left;
         left += width;
@@ -51,7 +52,7 @@ export const useStickyColumns = ({
       const rightOffsets: Record<string, number> = {};
       let right = 0;
       [...rightSticky].reverse().forEach(({ col, idx }) => {
-        const el = headerRefs[idx];
+        const el = clonedHeaderRefs[idx];
         const width = el ?? 100;
 
         rightOffsets[col.id as string] = right;
@@ -59,8 +60,8 @@ export const useStickyColumns = ({
       });
 
       setStickyMap({ left: leftOffsets, right: rightOffsets });
-    }, 10);
-  }, [columnVisibility, columns, headerRefs]);
+    }, 100);
+  }, [columnVisibility, columns, clonedHeaderRefs]);
 
   /**
    * Memoization Justification:
