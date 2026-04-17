@@ -10,7 +10,6 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -20,16 +19,7 @@ import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
-import {
-  Box,
-  Card,
-  Grid,
-  TableRow,
-  MenuList,
-  MenuItem,
-  TableCell,
-  Typography,
-} from '@mui/material';
+import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 
 import type { TabComponentType } from '.';
 
@@ -83,20 +73,7 @@ const LeaveCalender = (props: TabComponentType) => {
     setOrganization(newView);
   }, []);
   return (
-    <>
-      <Card sx={{ mb: 1, mt: 1 }}>
-        <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 1, mb: 1 } }}
-          disabled={!mediumStageId}
-        />
-      </Card>
-
+    <Box sx={{ height: '100%' }}>
       <CommonCalender
         data={calendarData}
         isLoading={isLoading}
@@ -170,7 +147,7 @@ const LeaveCalender = (props: TabComponentType) => {
           ))}
         </MenuList>
       </CustomPopover>
-    </>
+    </Box>
   );
 };
 

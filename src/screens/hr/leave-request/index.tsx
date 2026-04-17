@@ -51,7 +51,7 @@ const LeaveRequest = () => {
         heading="Leave Management"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: hrPaths.attendance.leaveManagement },
+          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
           { name: 'Leave Management' },
         ]}
         description={
@@ -74,7 +74,6 @@ const LeaveRequest = () => {
             } else {
               setIsBackClick(false);
             }
-
             setSearchParams({ tab: value });
           }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}

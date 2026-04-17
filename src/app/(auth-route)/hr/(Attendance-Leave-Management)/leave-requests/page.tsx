@@ -1,6 +1,6 @@
 import React from 'react';
-import LeaveRequest from 'src/screens/hr/leave-request';
+import LeaveHistory from 'src/screens/hr/leave-request/leave-history';
 
-const LeaveManagement = () => <LeaveRequest />;
+const LeaveManagement = () => <LeaveHistory />;
 
 export default LeaveManagement;

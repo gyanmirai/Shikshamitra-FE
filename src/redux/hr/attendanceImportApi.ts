@@ -21,6 +21,7 @@ export interface AttendanceImportItem {
   createdCount: number;
   replacedCount: number;
   canOpen: boolean;
+  isPayrollLocked?: boolean;
 }
 
 export interface AttendanceImportListResponse {
@@ -79,9 +80,9 @@ export const attendanceImportApi = api.injectEndpoints({
     }),
 
     // 2. GET /api/payroll/attendance-imports/{importId}
-    getAttendanceImportById: builder.query<AttendanceImportDetail, string>({
-      query: (importId) => ({
-        url: `/payroll/attendance-imports/${importId}`,
+    getAttendanceImportById: builder.query<AttendanceImportDetail, { id: string }>({
+      query: ({ id }) => ({
+        url: `/payroll/attendance-imports/${id}`,
         method: 'GET',
       }),
       providesTags: [employeeType.attendanceImport],
@@ -91,13 +92,13 @@ export const attendanceImportApi = api.injectEndpoints({
     getAttendanceImportRows: builder.query<
       AttendanceImportRowsResponse,
       {
-        importId: string;
+        id: string;
         skipCount?: number;
         maxResultCount?: number;
       }
     >({
-      query: ({ importId, skipCount = 0, maxResultCount = 50 }) => ({
-        url: `/payroll/attendance-imports/${importId}/rows`,
+      query: ({ id, skipCount = 0, maxResultCount = 50 }) => ({
+        url: `/payroll/attendance-imports/${id}/rows`,
         method: 'GET',
         params: { skipCount, maxResultCount },
       }),
