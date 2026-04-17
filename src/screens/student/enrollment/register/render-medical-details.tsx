@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Grid, MenuItem, TextField } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import {
   CardActions,
   SectionCard,
@@ -230,24 +231,28 @@ const RenderMedicalFields = (props: any) => {
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <TextField
-          fullWidth
-          select
-          label="Covid Vaccination (Dose) *"
-          name="covidVaccination"
-          size="small"
-          value={formik.values.covidVaccination || ''}
-          onChange={formik.handleChange}
-          error={formik.touched.covidVaccination && Boolean(formik.errors.covidVaccination)}
-          helperText={formik.touched.covidVaccination && formik.errors.covidVaccination}
-          disabled={!isMedicalEditable.value}
+        <ShakingTextField
+          error={!!(formik.touched.covidVaccination && formik.errors.covidVaccination)}
         >
-          {COVID_VACCINATION_OPTIONS.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
+          <TextField
+            fullWidth
+            select
+            label="Covid Vaccination (Dose) *"
+            name="covidVaccination"
+            size="small"
+            value={formik.values.covidVaccination || ''}
+            onChange={formik.handleChange}
+            error={formik.touched.covidVaccination && Boolean(formik.errors.covidVaccination)}
+            helperText={formik.touched.covidVaccination && formik.errors.covidVaccination}
+            disabled={!isMedicalEditable.value}
+          >
+            {COVID_VACCINATION_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </ShakingTextField>
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField

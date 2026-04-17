@@ -8,9 +8,23 @@ const MIN_DOB = dayjs('1947-01-01');
 
 export const generalFieldValidation = Yup.object({
   inquiryNo: Yup.string(),
-  formNo: Yup.string().required('Form No. is required'),
-  firstName: Yup.string().required('First Name is required'),
-  lastName: Yup.string().required('Last Name is required'),
+  formNo: Yup.string()
+    .nullable()
+    .test('formNo-required', 'Form No. is required', (value) => !!(value && value.trim() !== '')),
+  firstName: Yup.string()
+    .nullable()
+    .test(
+      'firstName-required',
+      'First Name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
+  lastName: Yup.string()
+    .nullable()
+    .test(
+      'lastName-required',
+      'Last Name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
   middleName: Yup.string(),
   dob: Yup.mixed()
     .test(
@@ -39,7 +53,13 @@ export const generalFieldValidation = Yup.object({
     (value) => !value || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value)
   ),
   religion: Yup.string(),
-  familyCast: Yup.string().required('Family caste is required'),
+  familyCast: Yup.string()
+    .nullable()
+    .test(
+      'familyCast-required',
+      'Family caste is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
   castCategory: Yup.string().required('Cast Category is required'),
   motherTongue: Yup.string(),
   nationality: Yup.string(),
@@ -77,8 +97,20 @@ export const generalFieldValidation = Yup.object({
       value ? !/^0/.test(value) : true
     ),
 
-  addressLine1: Yup.string().required('Building/Flat/House No. is required'),
-  addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
+  addressLine1: Yup.string()
+    .nullable()
+    .test(
+      'addressLine1-required',
+      'Building/Flat/House No. is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
+  addressLine2: Yup.string()
+    .nullable()
+    .test(
+      'addressLine2-required',
+      'Street/Locality/Area is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
   email: Yup.string().email('Invalid email address'),
   medium: Yup.string().required('Medium is required'),
   board: Yup.string().required('Board is required'),
@@ -102,7 +134,13 @@ export const generalFieldValidation = Yup.object({
 });
 
 export const familyFieldsValidation = Yup.object({
-  fatherName: Yup.string().required('Full Name is required'),
+  fatherName: Yup.string()
+    .nullable()
+    .test(
+      'fatherName-required',
+      'Father Name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
   fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
@@ -161,7 +199,13 @@ export const familyFieldsValidation = Yup.object({
   fatherAddress1: Yup.string(),
   fatherAddress2: Yup.string(),
   fatherAddress3: Yup.string(),
-  motherName: Yup.string().required('Full Name is required'),
+  motherName: Yup.string()
+    .nullable()
+    .test(
+      'motherName-required',
+      'Mother Name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
   motherDob: Yup.string().required('Mother DOB is Required').nullable(),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),

@@ -176,6 +176,7 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
                   error={touched.city && Boolean((errors.city as any)?.name)}
                   helperText={touched.city && (errors.city as any)?.name}
                   stateValue={values.state}
+                  countryValue={values.country}
                   textFieldProps={{ label: 'City *' }}
                 />
               </span>

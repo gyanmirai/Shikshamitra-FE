@@ -48,8 +48,11 @@ const CountryComponent = ({
       <Autocomplete
         noOptionsText={<Typography variant="caption">No Country Found</Typography>}
         fullWidth
-        value={value}
+        value={value?.isoCode || value?.name ? value : null}
         onChange={onChange}
+        isOptionEqualToValue={(option, val) =>
+          option?.isoCode === val?.isoCode || option?.name === val?.name
+        }
         options={allCountry || []}
         getOptionLabel={(option: any) =>
           `${option?.isoCode ? `${option?.isoCode} ` : ''}${option?.name || ''}`

@@ -15,7 +15,11 @@ export const inquiryInitialValues: (
   lastName: editData?.lastName || '',
   city: editData ? { name: editData?.city } : { name: '' },
   state: editData
-    ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+    ? {
+        name: editData?.state?.name,
+        isoCode: editData?.state?.isoCode,
+        countryCode: editData?.country?.isoCode,
+      }
     : { name: '', isoCode: '' },
   pinCode: editData?.pinCode || '',
   firstName: editData?.firstName || '',

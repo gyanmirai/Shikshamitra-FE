@@ -622,7 +622,7 @@ const RegisterForm = ({
     <>
       <CustomStepperWithFormik
         showSaveButton={isChanges}
-        disableSubmit={!isChanges}
+        disableSubmit={!isChanges && activeStep !== steps.length - 1}
         onStepClick={(index) => {
           if (editData) {
             if (isChanges) {
