@@ -1,5 +1,6 @@
 import type { FormikProps } from 'formik';
 
+import CustomTooltip from 'src/components/custom-tooltip';
 // Components
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
@@ -59,7 +60,7 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
           <ShakingTextField error={!!(touched.addressLine1 && errors.addressLine1)}>
             <TextField
               name="addressLine1"
-              label="House / Building / Flat"
+              label="House / Building / Flat *"
               value={values.addressLine1}
               onChange={(e) => {
                 const { value } = e.target;
@@ -79,7 +80,7 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
           <ShakingTextField error={!!(touched.addressLine2 && errors.addressLine2)}>
             <TextField
               name="addressLine2"
-              label="Area / Locality / Road Name"
+              label="Area / Locality / Road Name *  "
               value={values.addressLine2}
               onChange={(e) => {
                 const { value } = e.target;
@@ -135,34 +136,50 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(touched.state && (errors.state as any)?.name)}>
-            <StateComponent
-              value={values.state}
-              onChange={(_e: any, value: any) => {
-                setValues({
-                  ...values,
-                  state: { ...(value || {}), name: value?.name, isoCode: value?.isoCode },
-                  city: { name: '' },
-                });
-              }}
-              error={touched.state && Boolean((errors.state as any)?.name)}
-              helperText={touched.state && (errors.state as any)?.name}
-              countryValue={values.country}
-              textFieldProps={{ label: 'State *' }}
-            />
+            <CustomTooltip
+              title={!values.country?.name ? 'Please select Country first' : ''}
+              arrow
+              placement="top"
+            >
+              <span style={{ display: 'block' }}>
+                <StateComponent
+                  value={values.state}
+                  onChange={(_e: any, value: any) => {
+                    setValues({
+                      ...values,
+                      state: { ...(value || {}), name: value?.name, isoCode: value?.isoCode },
+                      city: { name: '' },
+                    });
+                  }}
+                  error={touched.state && Boolean((errors.state as any)?.name)}
+                  helperText={touched.state && (errors.state as any)?.name}
+                  countryValue={values.country}
+                  textFieldProps={{ label: 'State *' }}
+                />
+              </span>
+            </CustomTooltip>
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(touched.city && (errors.city as any)?.name)}>
-            <CityComponent
-              value={values.city}
-              onChange={(_e: any, value: any) => {
-                setFieldValue('city', { name: value?.name });
-              }}
-              error={touched.city && Boolean((errors.city as any)?.name)}
-              helperText={touched.city && (errors.city as any)?.name}
-              stateValue={values.state}
-              textFieldProps={{ label: 'City *' }}
-            />
+            <CustomTooltip
+              title={!values.state?.name ? 'Please select State first' : ''}
+              arrow
+              placement="top"
+            >
+              <span style={{ display: 'block' }}>
+                <CityComponent
+                  value={values.city}
+                  onChange={(_e: any, value: any) => {
+                    setFieldValue('city', { name: value?.name });
+                  }}
+                  error={touched.city && Boolean((errors.city as any)?.name)}
+                  helperText={touched.city && (errors.city as any)?.name}
+                  stateValue={values.state}
+                  textFieldProps={{ label: 'City *' }}
+                />
+              </span>
+            </CustomTooltip>
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>

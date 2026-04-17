@@ -51,6 +51,16 @@ const CityComponent = ({
           error={error}
           helperText={helperText}
           {...textFieldProps}
+          sx={{
+            ...(error && {
+              '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'error.main',
+              },
+              '& .MuiInputLabel-root.Mui-disabled': {
+                color: 'error.main',
+              },
+            }),
+          }}
         />
       )}
       label="City"

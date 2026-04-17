@@ -43,9 +43,8 @@ export const inquiryValidationSchema = Yup.object().shape({
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
     'Please enter a valid email'
   ),
-  gender: Yup.string()
-    // .oneOf(['male', 'female', 'other'], 'Invalid gender')
-    .required('Gender is required'),
+  gender: Yup.string().required('Gender is required'),
+  // .oneOf(['male', 'female', 'other'], 'Invalid gender')
   address: Yup.string(),
   primaryContactNumber: Yup.string()
     .test('Mobile NO', 'Primary Contact No. is not valid', (value) =>
@@ -78,26 +77,20 @@ export const inquiryValidationSchema = Yup.object().shape({
 
   board: Yup.string().required('Board is required'),
   medium: Yup.string().required('Medium is required'),
-  // country: Yup.object()
-  //   .nullable()
-  //   .required('Country is required')
-  //   .shape({
-  //     name: Yup.string().required('Country is required'),
-  //   }),
-
-  // state: Yup.object()
-  //   .nullable()
-  //   .required('State is required') // handles `null` case
-  //   .shape({
-  //     name: Yup.string().required('State is required'), // handles `{ name: '' }`
-  //   }),
-
-  // city: Yup.object()
-  //   .nullable()
-  //   .required('City is required')
-  //   .shape({
-  //     name: Yup.string().required('City is required'),
-  //   }),
+  addressLine1: Yup.string()
+    .nullable()
+    .test(
+      'addressLine1-required',
+      'House / Building / Flat is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
+  addressLine2: Yup.string()
+    .nullable()
+    .test(
+      'addressLine2-required',
+      'Area / Locality / Road name is required',
+      (value) => !!(value && value.trim() !== '')
+    ),
 
   country: Yup.object()
     .shape({ name: Yup.string().required('Country is required') })

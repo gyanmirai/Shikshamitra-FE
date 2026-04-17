@@ -141,7 +141,6 @@ const RegistrationFormScreen = () => {
         maxWidth="sm"
       >
         <CommunicationForm
-          isStatus={false}
           handleCloseDialog={() => {
             setEditData(null);
             followUpDialog.onFalse();

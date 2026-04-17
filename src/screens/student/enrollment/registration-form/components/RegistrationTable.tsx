@@ -5,13 +5,20 @@ import { Iconify } from 'src/components/iconify';
 import { GenderOptions } from 'src/enums/gender';
 import sortQueryString from 'src/utils/sort-query-string';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Label, type LabelColor } from 'src/components/label';
 import { MenuItem, MenuList, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
 
 export type RegistrationTableProps = {
   data: IData[];
   isLoading?: boolean;
+  isFetching?: boolean;
   onMoveToRegistration: (row: IData) => void;
   onOpenNotes: (row: IData) => void;
 };
@@ -19,6 +26,7 @@ export type RegistrationTableProps = {
 const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
   data,
   isLoading,
+  isFetching,
   onMoveToRegistration,
   onOpenNotes,
 }) => {
@@ -170,6 +178,21 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         align: 'left',
       },
       {
+        id: 'inquiryStatus',
+        label: 'Status',
+        filterType: 'enum',
+        enumOptions: FollowUpStatusTypeOptions,
+        minWidth: '100px',
+        align: 'left',
+        sticky: true,
+        render: (value: unknown) => {
+          // Strict casting for enum value
+          const statusValue = value as FollowUpStatusType;
+          const color = FollowUpStatusTypeColors[statusValue] as LabelColor;
+          return <Label color={color}>{FollowUpStatusType[statusValue]}</Label>;
+        },
+      },
+      {
         id: 'actions',
         label: 'Actions',
         isFilter: false,
@@ -215,7 +238,7 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
   return (
     <CustomizableTable
       tableTitle="Registration Form Issued"
-      isLoading={isLoading}
+      isLoading={isLoading || isFetching}
       noDataText={<Typography variant="body2">No Registration Form Issued Data Found</Typography>}
       tableId="student-registration-form-table"
       columns={columns}
