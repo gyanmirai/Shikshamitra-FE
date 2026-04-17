@@ -105,7 +105,7 @@ export const leaveApi = api.injectEndpoints({
       invalidatesTags: [employeeType.employee],
     }),
     getLeaveRequestById: builder.query({
-      query: (id) => ({
+      query: ({ id }) => ({
         url: `/leave-management/${id}`,
         method: 'GET',
       }),

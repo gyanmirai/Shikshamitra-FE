@@ -23,12 +23,12 @@ const QUICK_ACTIONS = [
     color: 'success',
     href: hrPaths.attendance.leaveManagement,
   },
-  {
-    label: 'Mark Attendance',
-    icon: 'mdi:calendar-check-outline',
-    color: 'info',
-    href: hrPaths.attendance.attendanceTracking,
-  },
+  // {
+  //   label: 'Mark Attendance',
+  //   icon: 'mdi:calendar-check-outline',
+  //   color: 'info',
+  //   href: hrPaths.attendance.attendanceTracking,
+  // },
   {
     label: 'Generate Payroll',
     icon: 'mdi:cash-multiple',

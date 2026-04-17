@@ -1,3 +1,5 @@
+'use client';
+
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
@@ -12,6 +14,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -19,6 +22,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -46,9 +50,64 @@ import {
 } from 'src/redux/hr/leaveApi';
 
 import AddLeaveRequest from './leave-requst';
-import { LeaveRequestForm } from './leave-calender';
+import LeaveCalender, { LeaveRequestForm } from './leave-calender';
 
-const LeaveHistory = (props: any) => {
+const DUMMY_LEAVE_DATA = [
+  {
+    id: '1',
+    name: 'John Doe',
+    employeeIdentifier: 'EMP001',
+    leaveType: 'Annual Leave',
+    startDate: '2026-04-10',
+    endDate: '2026-04-12',
+    totalDays: 3,
+    organization: 'Main Branch',
+    reason: 'Family vacation',
+    remarks: 'Approved by Manager',
+    status: EmployeeLeaveStatusType.Approved,
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    employeeIdentifier: 'EMP002',
+    leaveType: 'Sick Leave',
+    startDate: '2026-04-15',
+    endDate: '2026-04-15',
+    totalDays: 1,
+    organization: 'Main Branch',
+    reason: 'Fever',
+    remarks: '',
+    status: EmployeeLeaveStatusType.Pending,
+  },
+  {
+    id: '3',
+    name: 'Robert Johnson',
+    employeeIdentifier: 'EMP003',
+    leaveType: 'Casual Leave',
+    startDate: '2026-04-20',
+    endDate: '2026-04-21',
+    totalDays: 2,
+    organization: 'Secondary Branch',
+    reason: 'Personal work',
+    remarks: 'Insufficient balance',
+    status: EmployeeLeaveStatusType.Rejected,
+  },
+  {
+    id: '4',
+    name: 'Michael Brown',
+    employeeIdentifier: 'EMP004',
+    leaveType: 'Maternity Leave',
+    startDate: '2026-04-01',
+    endDate: '2026-04-30',
+    totalDays: 30,
+    organization: 'Main Branch',
+    reason: 'Maternity leave',
+    remarks: '',
+    status: EmployeeLeaveStatusType.Viewed,
+  },
+];
+
+const LeaveHistory = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
@@ -79,12 +138,11 @@ const LeaveHistory = (props: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
-  const { modal } = props;
-
+  const addLeaveRequestDialog = useBoolean();
   const approveConfirmation = useBoolean();
   const approveOrRejectConfirmation = useBoolean();
   const cancelConfirmation = useBoolean();
-
+  const viewCalendarView = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const actions = useCallback(
     ({ popover }: any, row: any) => (
@@ -92,7 +150,7 @@ const LeaveHistory = (props: any) => {
         <MenuItem
           onClick={() => {
             setEditData(row);
-            modal?.onTrue?.();
+            addLeaveRequestDialog?.onTrue?.();
             popover.onClose();
           }}
         >
@@ -134,11 +192,11 @@ const LeaveHistory = (props: any) => {
         </MenuItem>
       </MenuList>
     ),
-    [modal, approveOrRejectConfirmation, cancelConfirmation]
+    [addLeaveRequestDialog, approveOrRejectConfirmation, cancelConfirmation]
   );
 
-  const tableData = useMemo(
-    () =>
+  const tableData = useMemo(() => {
+    const apiData =
       data?.items?.map((item: any) => {
         const start = dayjs(item.startDate);
         const end = dayjs(item.endDate);
@@ -152,13 +210,21 @@ const LeaveHistory = (props: any) => {
           endDate: end.format('DD-MM-YYYY'),
           totalDays: item.totalDays,
           organization: item.organization,
-          reason: item.reason || item.description,
+          description: item.reason || item.description,
           remarks: item.remarks,
           status: item.status,
         };
-      }) || [],
-    [data]
-  );
+      }) || [];
+
+    const dummyData = DUMMY_LEAVE_DATA.map((item: any) => ({
+      ...item,
+      startDate: dayjs(item.startDate).format('DD-MM-YYYY'),
+      endDate: dayjs(item.endDate).format('DD-MM-YYYY'),
+      description: item.reason || item.description,
+    }));
+
+    return [...apiData, ...dummyData];
+  }, [data]);
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -172,11 +238,11 @@ const LeaveHistory = (props: any) => {
       isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'));
 
     if (confirmLeave()) {
-      modal?.onFalse?.();
+      addLeaveRequestDialog?.onFalse?.();
       resetState();
       dispatch(setIsChanges(false)); // Optional if used
     } else if (!isChanges) {
-      modal?.onFalse?.();
+      addLeaveRequestDialog?.onFalse?.();
       setTimeout(() => {
         setEditData(null);
         setRejectionReason('');
@@ -207,12 +273,13 @@ const LeaveHistory = (props: any) => {
         sticky: true,
         minWidth: '12vw',
         align: 'left',
-      },
-      {
-        label: 'Employee Code',
-        id: 'employeeIdentifier',
-        minWidth: '9.5vw',
-        align: 'left',
+        render(value, row) {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              {value} ({row.employeeIdentifier})
+            </Box>
+          );
+        },
       },
       {
         label: 'Start Date',
@@ -289,71 +356,119 @@ const LeaveHistory = (props: any) => {
   );
   return (
     <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
-      <Card
-        sx={{
-          display: 'flex',
-          p: 2,
-          gap: 2,
-          mt: 1,
-          pl: 1,
-          mb: 1,
-          justifyContent: 'space-between',
-        }}
-      >
-        <DatePicker
-          label="Month-Year"
-          format="MMM-YYYY"
-          value={date}
-          minDate={dayjs(currentYear?.startDate)}
-          maxDate={dayjs(currentYear?.endDate)}
-          views={['year', 'month']}
-          slotProps={{
-            textField: {
-              size: 'small',
+      {viewCalendarView.value ? (
+        <CustomBreadcrumbs
+          heading="Calendar View"
+          links={[
+            { name: 'HR/Staff', href: '/hr/dashboard/' },
+            {
+              name: 'Attendance & Leave',
+              href: hrPaths.attendance.leaveManagement,
+              onClick: viewCalendarView.onFalse,
             },
-          }}
-          onChange={(newDate) => {
-            setDate(newDate);
-          }}
+            { name: 'Leave Management' },
+          ]}
+          description="The Leave Calendar visually displays employees leave requests and their statuses—approved, pending, or rejected—on specific dates."
+          isBack
+          onBack={viewCalendarView.onFalse}
         />
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Add />}
-          onClick={() => {
-            modal?.onTrue?.();
-          }}
-          sx={{ px: '32px' }}
-        >
-          Leave Request
-        </Button>
-      </Card>
-      <CustomizableTable
-        noDataText={
-          <>
-            No Leave Request Found{' '}
-            <Box
-              onClick={() => modal?.onTrue?.()}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
+      ) : (
+        <CustomBreadcrumbs
+          heading="Leave Management"
+          links={[
+            { name: 'HR/Staff', href: '/hr/dashboard/' },
+            { name: 'Attendance & Leave', href: hrPaths.attendance.leaveManagement },
+            { name: 'Leave Management' },
+          ]}
+          description="Create new leave requests and manage existing ones by approving or rejecting them."
+        />
+      )}
+      {viewCalendarView.value ? (
+        <Box display="flex" flexDirection="column" gap={2}>
+          <LeaveCalender />
+        </Box>
+      ) : (
+        <>
+          <Card
+            sx={{
+              display: 'flex',
+              p: 2,
+              gap: 2,
+              mt: 1,
+              pl: 1,
+              mb: 1,
+              justifyContent: 'space-between',
+            }}
+          >
+            <DatePicker
+              label="Month-Year"
+              format="MMM-YYYY"
+              value={date}
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
+              views={['year', 'month']}
+              slotProps={{
+                textField: {
+                  size: 'small',
                 },
               }}
-            >
-              Leave Request
+              onChange={(newDate) => {
+                setDate(newDate);
+              }}
+            />
+            <Box display="flex" gap={2}>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Add />}
+                onClick={() => {
+                  addLeaveRequestDialog.onTrue();
+                }}
+                sx={{ px: '32px' }}
+              >
+                Leave Request
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
+                onClick={() => {
+                  viewCalendarView.onTrue();
+                }}
+                sx={{ px: '32px' }}
+              >
+                View Calendar
+              </Button>
             </Box>
-          </>
-        }
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
-        isLoading={isLoading}
-        tableId="leave-history-table"
-        data={tableData}
-        columns={columns}
-      />
+          </Card>
+          <CustomizableTable
+            noDataText={
+              <>
+                No Leave Request Found{' '}
+                <Box
+                  onClick={() => addLeaveRequestDialog.onTrue?.()}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Leave Request
+                </Box>
+              </>
+            }
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
+            isLoading={isLoading}
+            tableId="leave-history-table"
+            data={tableData}
+            columns={columns}
+          />
+        </>
+      )}
 
       <ConfirmDialog
         open={approveConfirmation.value}
@@ -421,9 +536,9 @@ const LeaveHistory = (props: any) => {
         />
       )}
       <CustomDialog
-        open={modal?.value}
+        open={addLeaveRequestDialog?.value}
         handleClose={() => {
-          modal?.onFalse?.();
+          addLeaveRequestDialog?.onFalse?.();
           setEditData(null);
           setRejectionReason('');
         }}
@@ -450,9 +565,10 @@ const LeaveHistory = (props: any) => {
         {editData ? (
           <LeaveRequestForm editData={editData} />
         ) : (
-          <AddLeaveRequest {...props} editData={editData} handleClose={handleClose} />
+          <AddLeaveRequest editData={editData} handleClose={handleClose} />
         )}
       </CustomDialog>
+
       {editData?.type && (
         <CustomDialog
           open={approveOrRejectConfirmation?.value}

@@ -1,25 +1,45 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AttendanceImportItem } from 'src/redux/hr/attendanceImportApi';
 
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
+import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
+import {
+  AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusOptions,
+} from 'src/enums/attendance-import-batch-statusType';
+import {
+  Person,
+  Numbers,
+  FilePresent,
+  ErrorOutline,
+  CalendarMonth,
+  CheckCircleOutline,
+} from '@mui/icons-material';
+import {
+  useConfirmAttendanceMutation,
+  usePreviewAttendanceMutation,
+  useDownloadAttendanceTemplateMutation,
+} from 'src/redux/hr/attendanceApi';
 import {
   useGetAttendanceImportsQuery,
   useGetAttendanceImportByIdQuery,
@@ -27,62 +47,55 @@ import {
 } from 'src/redux/hr/attendanceImportApi';
 import {
   Box,
-  Tab,
-  Tabs,
   Card,
+  Grid,
+  Paper,
   Stack,
   Button,
-  Divider,
-  MenuList,
+  Collapse,
   MenuItem,
+  MenuList,
+  Skeleton,
+  IconButton,
   Typography,
-  CircularProgress,
+  CardContent,
 } from '@mui/material';
 
-// ─── Enum ──────────────────────────────────────────────────────────────────────
-
-export enum ImportStatus {
-  All = 0,
-  Processed = 1,
-  Failed = 2,
-  Pending = 3,
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-const statusLabelMap: Record<ImportStatus, string> = {
-  [ImportStatus.All]: 'All',
-  [ImportStatus.Processed]: 'Processed',
-  [ImportStatus.Failed]: 'Failed',
-  [ImportStatus.Pending]: 'Pending',
+// ─── Inner-table (row-level) attendance status ─────────────────────────────────
+type RowStatusType = AttendanceRowStatus | 'Pending';
+const ROW_STATUS = {
+  Present: AttendanceRowStatus.Present,
+  Absent: AttendanceRowStatus.Absent,
+  HalfDay: AttendanceRowStatus.HalfDay,
+  Pending: 'Pending' as const,
 };
 
-const statusColorMap: Record<ImportStatus, LabelColor> = {
-  [ImportStatus.All]: 'default',
-  [ImportStatus.Processed]: 'success',
-  [ImportStatus.Failed]: 'error',
-  [ImportStatus.Pending]: 'warning',
+const segmentBtnBase = {
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '4px',
+  transition: 'all 0.2s',
 };
-
-// ─── enum options for column filter ───────────────────────────────────────────
-
-const STATUS_ENUM_OPTIONS = [
-  { label: 'Processed', value: ImportStatus.Processed },
-  { label: 'Failed', value: ImportStatus.Failed },
-  { label: 'Pending', value: ImportStatus.Pending },
-];
 
 // ─── Preview table columns (defined outside component to be stable refs) ───────
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn[] = [
-  { id: 'rowNumber', label: 'Row #', minWidth: '4vw', align: 'left' },
-  { id: 'employeeName', label: 'Employee Name', minWidth: '12vw', align: 'left' },
   {
-    id: 'employeeCode',
-    label: 'Emp Code',
-    minWidth: '8vw',
+    id: 'employeeName',
+    label: 'Employee Name',
+    minWidth: '12vw',
     align: 'left',
+    sticky: true,
+    render(value, row) {
+      return (
+        <Box display="flex" alignItems="center" gap={1}>
+          {value} ({row.employeeCode})
+        </Box>
+      );
+    },
   },
   {
     id: 'attendanceDate',
@@ -92,13 +105,6 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
   },
   { id: 'timeIn', label: 'In Time', minWidth: '7vw', align: 'left', render: (v) => v || '—' },
   { id: 'timeOut', label: 'Out Time', minWidth: '7vw', align: 'left', render: (v) => v || '—' },
-  {
-    id: 'action',
-    label: 'Action',
-    minWidth: '6vw',
-    align: 'left',
-    render: (v: string) => v || '—',
-  },
   {
     id: 'status',
     label: 'Status',
@@ -157,20 +163,57 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 const AttendanceImportHistoryScreen = () => {
-  const tabs = useTabs(ImportStatus.All);
+  const theme = useTheme();
+
+  // Local lock state: set of locked import IDs
+  const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
+  const [lockConfirmRow, setLockConfirmRow] = useState<AttendanceImportItem | null>(null);
+
+  const handleToggleLock = useCallback((row: AttendanceImportItem) => {
+    setLockConfirmRow(row);
+  }, []);
+
+  const handleConfirmToggleLock = useCallback(() => {
+    if (!lockConfirmRow) return;
+    setLockedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(lockConfirmRow.id)) {
+        next.delete(lockConfirmRow.id);
+      } else {
+        next.add(lockConfirmRow.id);
+      }
+      return next;
+    });
+    setLockConfirmRow(null);
+  }, [lockConfirmRow]);
 
   // Month picker — null means "no filter"
   const [selectedMonth, setSelectedMonth] = useState<any>(null);
 
   // The import ID to show in the detail dialog
-  const [viewImportId, setViewImportId] = useState<string | null>(null);
-
+  const [viewImportData, setViewImportData] = useState<AttendanceImportItem | null>(null);
+  const viewImportDialog = useBoolean();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const downloadDialog = useBoolean();
   const errorReportDialog = useBoolean();
   const reprocessDialog = useBoolean();
+  const isDownLoadingTemplate = useBoolean();
+  const isUploadingFile = useBoolean();
+  const [previewAttendance] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePreviewAttendanceMutation,
+  });
 
+  const [confirmAttendance] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useConfirmAttendanceMutation,
+  });
+
+  const [downloadAttendanceTemplate] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDownloadAttendanceTemplateMutation,
+  });
   // Build payrollMonth param: "YYYY-MM" from the dayjs picker value
   const payrollMonthParam = selectedMonth
     ? (dayjs(selectedMonth).format('YYYY-MM') as string)
@@ -187,35 +230,7 @@ const AttendanceImportHistoryScreen = () => {
   });
 
   // ── Counts per status for tab labels ──────────────────────────────────────
-  const counts = useMemo(
-    () => ({
-      [ImportStatus.All]: listData?.items.length,
-      [ImportStatus.Processed]: listData?.items.filter(
-        (r: any) => r.status === ImportStatus.Processed
-      ).length,
-      [ImportStatus.Failed]: listData?.items.filter((r: any) => r.status === ImportStatus.Failed)
-        .length,
-      [ImportStatus.Pending]: listData?.items.filter((r: any) => r.status === ImportStatus.Pending)
-        .length,
-    }),
-    [listData?.items]
-  );
-
-  const TABS = useMemo(
-    () => [
-      { value: ImportStatus.All, label: 'All', color: 'default' as LabelColor },
-      { value: ImportStatus.Processed, label: 'Processed', color: 'success' as LabelColor },
-      { value: ImportStatus.Failed, label: 'Failed', color: 'error' as LabelColor },
-      { value: ImportStatus.Pending, label: 'Pending', color: 'warning' as LabelColor },
-    ],
-    []
-  );
-
-  // ── Tab-filtered data ──────────────────────────────────────────────────────
-  const filteredData = useMemo(() => {
-    if (tabs.value === ImportStatus.All) return listData?.items;
-    return listData?.items.filter((r: any) => r.status === tabs.value);
-  }, [listData?.items, tabs.value]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // ── Popover actions ───────────────────────────────────────────────────────
   const actions = useCallback(
@@ -225,7 +240,8 @@ const AttendanceImportHistoryScreen = () => {
         <MenuList>
           <MenuItem
             onClick={() => {
-              setViewImportId((row as AttendanceImportItem).id);
+              viewImportDialog.onTrue();
+              setViewImportData(row as AttendanceImportItem);
               pop.onClose();
             }}
           >
@@ -243,6 +259,20 @@ const AttendanceImportHistoryScreen = () => {
             Download File
           </MenuItem>
 
+          {(row as AttendanceImportItem).status === AttendanceImportBatchStatus.Preview && (
+            <MenuItem
+              onClick={() => {
+                viewImportDialog.onTrue();
+                setViewImportData(row as AttendanceImportItem);
+                pop.onClose();
+              }}
+              sx={{ color: 'info.main' }}
+            >
+              <Iconify icon="mdi:table-check" sx={{ height: '16px', width: '16px' }} />
+              Review & Confirm Import
+            </MenuItem>
+          )}
+
           {(row as AttendanceImportItem).invalidRows > 0 && (
             <MenuItem
               onClick={() => {
@@ -256,8 +286,7 @@ const AttendanceImportHistoryScreen = () => {
             </MenuItem>
           )}
 
-          {((row as AttendanceImportItem).status === ImportStatus.Failed ||
-            (row as AttendanceImportItem).status === ImportStatus.Pending) && (
+          {(row as AttendanceImportItem).status === AttendanceImportBatchStatus.Preview && (
             <MenuItem
               onClick={() => {
                 reprocessDialog.onTrue();
@@ -276,6 +305,81 @@ const AttendanceImportHistoryScreen = () => {
     [downloadDialog.onTrue, errorReportDialog.onTrue, reprocessDialog.onTrue]
   );
 
+  const handleDownloadTemplate = async () => {
+    try {
+      isDownLoadingTemplate.onTrue();
+      const blob: any = await downloadAttendanceTemplate({}).unwrap();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Employee_import_attendance.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Failed to download attendance template:', error);
+      shikshaMitraToast.error({
+        message: 'Failed to download template. Please try again.',
+      });
+    } finally {
+      isDownLoadingTemplate.onFalse();
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+    if (!validTypes.includes(file.type)) {
+      shikshaMitraToast.error({
+        message: 'Please upload a valid Excel file (.xls or .xlsx)',
+      });
+      return;
+    }
+
+    isUploadingFile.onTrue();
+    try {
+      const formData = new FormData();
+      formData.append('File', file);
+
+      // Step 1: Preview
+      const previewResponse = await previewAttendance(formData).unwrap();
+
+      if (previewResponse?.previewToken) {
+        // Step 2: Confirm
+        const confirmResponse = await confirmAttendance({
+          previewToken: previewResponse.previewToken,
+        }).unwrap();
+
+        // setImportResults(previewResponse);
+
+        shikshaMitraToast.success({
+          message: `Attendance data has been imported successfully (${confirmResponse?.summary?.totalRows || 0} rows)`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to import attendance:', error);
+      shikshaMitraToast.error({
+        message: `Failed to import attendance: ${error?.data?.error?.message || 'Unknown error'}`,
+      });
+    } finally {
+      isUploadingFile.onFalse();
+      // Always reset the file input so the same file can be re-uploaded if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
   // ── Columns ────────────────────────────────────────────────────────────────
   const columns: IColumn[] = useMemo(
     () => [
@@ -291,6 +395,7 @@ const AttendanceImportHistoryScreen = () => {
         label: 'Imported At',
         minWidth: '10vw',
         align: 'left',
+        filterType: 'date',
         render: (value: string) => (
           <Typography variant="body2">{dayjs(value).format('DD-MM-YYYY hh:mm A')}</Typography>
         ),
@@ -300,14 +405,6 @@ const AttendanceImportHistoryScreen = () => {
         label: 'Imported By',
         minWidth: '10vw',
         align: 'left',
-      },
-      {
-        id: 'payrollMonth',
-        label: 'Payroll Month',
-        minWidth: '8vw',
-        align: 'left',
-        render: (value: string) =>
-          value ? <Typography variant="body2">{dayjs(value).format('MMM YYYY')}</Typography> : '—',
       },
       {
         id: 'totalRows',
@@ -354,12 +451,44 @@ const AttendanceImportHistoryScreen = () => {
         isFilter: true,
         filterType: 'enum',
         sticky: true,
-        enumOptions: STATUS_ENUM_OPTIONS,
-        render: (value: number) => (
-          <Label color={statusColorMap[value as ImportStatus] ?? 'default'}>
-            {statusLabelMap[value as ImportStatus] ?? value ?? '—'}
-          </Label>
-        ),
+        enumOptions: AttendanceImportBatchStatusOptions,
+        // render: (value: number) => (
+        //   <Label color={AttendanceImportBatchStatusColors[value] as LabelColor}>
+        //     {AttendanceImportBatchStatus[value]}
+        //   </Label>
+        // ),
+      },
+      {
+        id: 'isPayrollLocked',
+        label: 'Lock',
+        minWidth: '60px',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        render: (_value: any, row: any) => {
+          const isLocked = row.status === 'payroll_locked';
+          const color = isLocked ? theme.palette.grey[500] : theme.vars.palette.success.main;
+          return (
+            <CustomTooltip title={isLocked ? 'Unlock' : 'Lock'} arrow placement="left">
+              <IconButton
+                onClick={() => handleToggleLock(row as AttendanceImportItem)}
+                sx={{
+                  p: 0.6,
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': { transform: 'scale(1.1)', backgroundColor: color },
+                }}
+              >
+                <Iconify
+                  icon={isLocked ? 'mdi:lock-outline' : 'mdi:lock-open-outline'}
+                  sx={{ width: 20, height: 20, color: '#fff' }}
+                />
+              </IconButton>
+            </CustomTooltip>
+          );
+        },
       },
       {
         id: 'actions',
@@ -374,124 +503,276 @@ const AttendanceImportHistoryScreen = () => {
         ),
       },
     ],
-    [actions]
+    [actions, handleToggleLock, theme]
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Breadcrumbs */}
-      <CustomBreadcrumbs
-        heading="Import History"
-        description="Track uploaded biometric attendance files, review records, and manage imports."
-        links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
-          { name: 'Import History' },
-        ]}
-      />
+      {viewImportDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Import Attendance"
+          description="Track uploaded biometric attendance files, review records, and manage imports."
+          links={[
+            { name: 'HR/Staff', href: '/hr/dashboard/' },
+            { name: 'Attendance & Leave' },
+            { name: 'Import Attendance' },
+          ]}
+          isBack
+          onBack={() => {
+            viewImportDialog.onFalse();
+            setViewImportData(null);
+          }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Import Attendance"
+          description="Track uploaded biometric attendance files, review records, and manage imports."
+          links={[
+            { name: 'HR/Staff', href: '/hr/dashboard/' },
+            { name: 'Attendance & Leave' },
+            { name: 'Import Attendance' },
+          ]}
+        />
+      )}
 
       {/* Toolbar: Month Picker + Tabs */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{
-          p: 1,
-          gap: 2,
-          borderRadius: '8px',
-          bgcolor: 'background.paper',
-          boxShadow: 'var(--shadows-3)',
-          mb: 1,
-          flexWrap: 'wrap',
-        }}
-      >
-        {/* Month picker on left */}
-        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" gap={1}>
-          <DatePicker
-            label="Payroll Month"
-            views={['year', 'month']}
-            openTo="month"
-            value={selectedMonth}
-            onChange={setSelectedMonth}
-            minDate={dayjs(currentYear?.startDate)}
-            maxDate={dayjs(currentYear?.endDate)}
-            format="MMM YYYY"
-            slotProps={{ textField: { size: 'small' } }}
-          />
-          {selectedMonth && (
-            <Button
-              variant="outlined"
-              size="small"
-              color="inherit"
-              startIcon={<Iconify icon="mdi:filter-off-outline" />}
-              onClick={() => setSelectedMonth(null)}
-            >
-              Clear
-            </Button>
-          )}
-        </Stack>
-
-        {/* Status Tabs on right */}
-        <Tabs
-          value={tabs.value}
-          onChange={(e, val) => tabs.onChange(e, val)}
-          sx={{
-            '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' },
-            flexGrow: 1,
-          }}
-        >
-          {TABS.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              sx={{ fontSize: '12px' }}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}
-                  <Label variant="soft" color={tab.color}>
-                    {counts[tab.value]}
-                  </Label>
-                </Box>
-              }
+      {!viewImportDialog.value ? (
+        <>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              p: 1,
+              gap: 2,
+              borderRadius: '8px',
+              bgcolor: 'background.paper',
+              boxShadow: 'var(--shadows-3)',
+              mb: 1,
+              flexWrap: 'wrap',
+            }}
+          >
+            {/* Month picker on left */}
+            {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}> */}
+            <DatePicker
+              label="Month"
+              views={['year', 'month']}
+              openTo="month"
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
+              format="MMM YYYY"
+              slotProps={{ textField: { size: 'small' } }}
             />
-          ))}
-        </Tabs>
-      </Box>
+            {/* Buttons */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <LoadingButton
+                loading={isDownLoadingTemplate.value}
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="eva:download-fill" />}
+                onClick={handleDownloadTemplate}
+                sx={{ px: '32px' }}
+              >
+                Download Sample File
+              </LoadingButton>
 
-      {/* Table */}
-      <CustomizableTable
-        tableId="attendance-import-history-table"
-        columns={columns}
-        data={filteredData || []}
-        isLoading={listLoading}
-        noDataText={
-          <Stack alignItems="center" spacing={1} py={4}>
-            {' '}
-            <Typography color="text.secondary" variant="body2">
-              No import history found.
-            </Typography>
-          </Stack>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+
+              <LoadingButton
+                loading={isUploadingFile.value}
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="eva:upload-fill" />}
+                onClick={handleUploadClick}
+                sx={{ px: '32px' }}
+              >
+                Upload File
+              </LoadingButton>
+            </Box>
+            {/* </Box> */}
+          </Box>
+
+          <CustomizableTable
+            tableId="attendance-import-history-table"
+            columns={columns}
+            data={listData?.items || []}
+            isLoading={listLoading}
+            noDataText={
+              <Stack alignItems="center" spacing={1} py={4}>
+                {' '}
+                <Typography color="text.secondary" variant="body2">
+                  No import attendace found.
+                </Typography>
+              </Stack>
+            }
+          />
+        </>
+      ) : (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <ImportDetailDialog importData={viewImportData} onClose={() => setViewImportData(null)} />
+        </Card>
+      )}
+      {/* Lock/Unlock Confirm Dialog */}
+      <ConfirmDialog
+        open={!!lockConfirmRow}
+        onClose={() => setLockConfirmRow(null)}
+        title={
+          lockConfirmRow && lockedIds.has(lockConfirmRow.id)
+            ? 'Unlock Attendance?'
+            : 'Lock Attendance?'
+        }
+        content={
+          lockConfirmRow && lockedIds.has(lockConfirmRow.id)
+            ? 'Are you sure you want to unlock this attendance import for payroll?'
+            : 'Are you sure you want to lock this attendance import for payroll? This will prevent further edits.'
+        }
+        action={
+          <Button
+            variant="contained"
+            color={lockConfirmRow && lockedIds.has(lockConfirmRow.id) ? 'warning' : 'primary'}
+            size="small"
+            onClick={handleConfirmToggleLock}
+          >
+            Yes, {lockConfirmRow && lockedIds.has(lockConfirmRow.id) ? 'Unlock' : 'Lock'}
+          </Button>
         }
       />
-
-      {/* Detail View Dialog — triggered by View action */}
-      {viewImportId && (
-        <ImportDetailDialog importId={viewImportId} onClose={() => setViewImportId(null)} />
-      )}
     </Box>
   );
 };
 
 export default AttendanceImportHistoryScreen;
 
-// ─── Detail Dialog ─────────────────────────────────────────────────────────────
+// ─── Import Detail Skeleton ────────────────────────────────────────────────────
 
-const ImportDetailDialog = ({ importId, onClose }: { importId: string; onClose: () => void }) => {
+const ImportDetailSkeleton = () => (
+  <Box>
+    {/* Summary Card Skeleton */}
+    <Paper
+      variant="outlined"
+      sx={{
+        borderRadius: 2,
+        mb: 2,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          p: 1.5,
+          borderBottom: '1px dashed',
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box>
+          <Skeleton variant="text" width={140} height={28} />
+          <Skeleton variant="text" width={220} height={20} />
+        </Box>
+      </Box>
+
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Grid container spacing={3}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Grid key={i} size={{ xs: 12, sm: 6, md: 3 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Skeleton variant="circular" width={40} height={40} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="60%" height={16} />
+                  <Skeleton variant="text" width="80%" height={22} />
+                </Box>
+              </Stack>
+            </Grid>
+          ))}
+        </Grid>
+      </CardContent>
+    </Paper>
+
+    {/* Table Header Skeleton */}
+    <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
+      <Skeleton variant="text" width={140} height={28} />
+      <Skeleton variant="rounded" width={90} height={32} />
+    </Stack>
+
+    {/* Status summary skeleton */}
+    <Stack direction="row" spacing={2} mb={1}>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} variant="text" width={80} height={18} />
+      ))}
+    </Stack>
+
+    {/* Table skeleton */}
+    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+      {/* Table head */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: 1,
+          px: 2,
+          py: 1.2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.neutral',
+        }}
+      >
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Skeleton key={i} variant="text" width="70%" height={18} />
+        ))}
+      </Box>
+      {/* Table rows */}
+      {Array.from({ length: 6 }).map((_row, i) => (
+        <Box
+          key={i}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: 1,
+            px: 2,
+            py: 1.2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            '&:last-child': { borderBottom: 'none' },
+          }}
+        >
+          {Array.from({ length: 7 }).map((_col, j) => (
+            <Skeleton key={j} variant="text" width={j === 0 ? '90%' : '60%'} height={20} />
+          ))}
+        </Box>
+      ))}
+    </Paper>
+  </Box>
+);
+
+const ImportDetailDialog = ({
+  importData,
+  onClose,
+}: {
+  importData: AttendanceImportItem | null;
+  onClose: () => void;
+}) => {
+  // Local row state for attendance status overrides
+  const [rowsData2, setRowsData2] = useState<any[]>([]);
+  const isPayrollLocked = !!importData?.isPayrollLocked;
+  const summaryOpen = useBoolean(false);
+
   // API call 2: fetch detail by id
   const { data: detail, isLoading: detailLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceImportByIdQuery,
-    params: importId,
+    params: { id: importData?.id },
+    options: { skip: !importData?.id },
   });
 
   // API call 3: fetch employee rows for this import
@@ -499,150 +780,326 @@ const ImportDetailDialog = ({ importId, onClose }: { importId: string; onClose: 
     type: 'query',
     currentQueryAndMutation: useGetAttendanceImportRowsQuery,
     params: {
-      importId,
+      id: importData?.id,
       maxResultCount: 50,
     },
+    options: { skip: !importData?.id },
   });
 
-  return (
-    <CustomDialog
-      title={
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h6">File Details</Typography>
-          {detail && (
-            <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 300 }}>
-              — {detail.fileName}
-            </Typography>
-          )}
-        </Stack>
-      }
-      open
-      handleClose={onClose}
-      maxWidth="lg"
-    >
-      <Scrollbar sx={{ height: 500, p: 2 }}>
-        {detailLoading ? (
-          <Stack alignItems="center" py={4}>
-            <CircularProgress size={32} />
-          </Stack>
-        ) : detail ? (
-          <>
-            {/* Summary Card */}
-            <Card
+  // Sync API rows into local state
+  React.useEffect(() => {
+    if (rowsData?.items) {
+      setRowsData2(
+        rowsData.items.map((r: any) => ({
+          ...r,
+          attendanceStatus: r.attendanceStatus || ROW_STATUS.Pending,
+        }))
+      );
+    }
+  }, [rowsData]);
+
+  const updateRow = React.useCallback((id: string, patch: any) => {
+    setRowsData2((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }, []);
+
+  // Attendance column — defined here so updateRow closure is fresh
+  const attendanceColumn = useMemo(
+    () => ({
+      id: 'attendanceStatus',
+      label: 'Attendance',
+      minWidth: '180px',
+      align: 'left' as const,
+      isSort: false,
+      isFilter: false,
+      render: (value: RowStatusType, row: any) => (
+        <Box
+          sx={{
+            display: 'flex',
+            width: '172px',
+            height: '30px',
+            bgcolor: (t: any) => t.vars.palette.background.neutral,
+            borderRadius: '6px',
+            p: 0.25,
+            gap: 0.25,
+          }}
+        >
+          <CustomTooltip title="Present" arrow placement="top">
+            <Box
+              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.Present })}
               sx={{
+                ...segmentBtnBase,
+                cursor: 'pointer',
+                bgcolor:
+                  value === ROW_STATUS.Present
+                    ? (t: any) => t.vars.palette.success.main
+                    : 'transparent',
+                color:
+                  value === ROW_STATUS.Present
+                    ? (t: any) => t.vars.palette.success.contrastText
+                    : (t: any) => t.vars.palette.text.secondary,
+                '&:hover': {
+                  bgcolor: (t: any) =>
+                    value === ROW_STATUS.Present
+                      ? t.vars.palette.success.dark
+                      : varAlpha(t.vars.palette.success.mainChannel, 0.08),
+                },
+              }}
+            >
+              <Iconify icon="eva:checkmark-fill" width={16} />
+            </Box>
+          </CustomTooltip>
+
+          <CustomTooltip title="Half Day" arrow placement="top">
+            <Box
+              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.HalfDay })}
+              sx={{
+                ...segmentBtnBase,
+                cursor: 'pointer',
+                bgcolor:
+                  value === ROW_STATUS.HalfDay
+                    ? (t: any) => t.vars.palette.info.main
+                    : 'transparent',
+                color:
+                  value === ROW_STATUS.HalfDay
+                    ? (t: any) => t.vars.palette.info.contrastText
+                    : (t: any) => t.vars.palette.text.secondary,
+                '&:hover': {
+                  bgcolor: (t: any) =>
+                    value === ROW_STATUS.HalfDay
+                      ? t.vars.palette.info.dark
+                      : varAlpha(t.vars.palette.info.mainChannel, 0.08),
+                },
+              }}
+            >
+              <Iconify icon="mdi:fraction-one-half" width={16} />
+            </Box>
+          </CustomTooltip>
+
+          <CustomTooltip title="Pending" arrow placement="top">
+            <Box
+              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.Pending })}
+              sx={{
+                ...segmentBtnBase,
+                cursor: 'pointer',
+                bgcolor:
+                  value === ROW_STATUS.Pending
+                    ? (t: any) => t.vars.palette.warning.main
+                    : 'transparent',
+                color:
+                  value === ROW_STATUS.Pending
+                    ? (t: any) => t.vars.palette.warning.contrastText
+                    : (t: any) => t.vars.palette.text.secondary,
+                '&:hover': {
+                  bgcolor: (t: any) =>
+                    value === ROW_STATUS.Pending
+                      ? t.vars.palette.warning.dark
+                      : varAlpha(t.vars.palette.warning.mainChannel, 0.08),
+                },
+              }}
+            >
+              <Iconify icon="eva:minus-fill" width={16} />
+            </Box>
+          </CustomTooltip>
+
+          <CustomTooltip title="Absent" arrow placement="top">
+            <Box
+              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.Absent })}
+              sx={{
+                ...segmentBtnBase,
+                cursor: 'pointer',
+                bgcolor:
+                  value === ROW_STATUS.Absent
+                    ? (t: any) => t.vars.palette.error.main
+                    : 'transparent',
+                color:
+                  value === ROW_STATUS.Absent
+                    ? (t: any) => t.vars.palette.error.contrastText
+                    : (t: any) => t.vars.palette.text.secondary,
+                '&:hover': {
+                  bgcolor: (t: any) =>
+                    value === ROW_STATUS.Absent
+                      ? t.vars.palette.error.dark
+                      : varAlpha(t.vars.palette.error.mainChannel, 0.08),
+                },
+              }}
+            >
+              <Iconify icon="eva:close-fill" width={16} />
+            </Box>
+          </CustomTooltip>
+        </Box>
+      ),
+    }),
+    [updateRow]
+  );
+
+  const previewColumns = useMemo(
+    () => (isPayrollLocked ? PREVIEW_COLUMNS : [...PREVIEW_COLUMNS, attendanceColumn]),
+    [attendanceColumn, isPayrollLocked]
+  );
+
+  return (
+    <Box sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {detailLoading ? (
+        <ImportDetailSkeleton />
+      ) : detail ? (
+        <>
+          {/* Summary Card */}
+          <Paper
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              boxShadow: (theme) =>
+                `0 0 2px 0 ${varAlpha(theme.palette.grey['500Channel'], 0.2)}, 0 12px 24px -4px ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+              mb: 2,
+            }}
+          >
+            <Box
+              onClick={summaryOpen.onToggle}
+              sx={{
+                p: 1.5,
+                borderBottom: summaryOpen.value ? '1px dashed' : 'none',
+                borderColor: 'divider',
                 display: 'flex',
-                flexWrap: 'wrap',
-                gap: 3,
-                p: 2,
-                mb: 2,
-                bgcolor: 'background.neutral',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.02),
+                cursor: 'pointer',
+                userSelect: 'none',
               }}
             >
               <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Imported At
+                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
+                  Import Summary
                 </Typography>
-                <Typography variant="subtitle2">
-                  {dayjs(detail.importedAt).format('DD MMM YYYY, hh:mm A')}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Imported By
-                </Typography>
-                <Typography variant="subtitle2">{detail.importedByName}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Payroll Month
-                </Typography>
-                <Typography variant="subtitle2">
-                  {detail.payrollMonth ? dayjs(detail.payrollMonth).format('MMM YYYY') : '—'}
+                <Typography variant="body2" color="text.secondary">
+                  Details of this attendance import
                 </Typography>
               </Box>
-              <Divider orientation="vertical" flexItem />
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Total Rows
-                </Typography>
-                <Typography variant="h6">{detail.totalRows}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="success.main">
-                  Valid Rows
-                </Typography>
-                <Typography variant="h6" color="success.main">
-                  {detail.validRows}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="error.main">
-                  Invalid Rows
-                </Typography>
-                <Typography variant="h6" color="error.main">
-                  {detail.invalidRows}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Created
-                </Typography>
-                <Typography variant="h6">{detail.createdCount}</Typography>
-              </Box>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Replaced
-                </Typography>
-                <Typography variant="h6">{detail.replacedCount}</Typography>
-              </Box>
-              <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
-                <Label color={statusColorMap[detail.status as ImportStatus] ?? 'default'}>
-                  {statusLabelMap[detail.status as ImportStatus] ?? detail.status}
-                </Label>
-              </Box>
-            </Card>
+              <IconButton size="small" sx={{ pointerEvents: 'none' }}>
+                <Iconify
+                  icon={summaryOpen.value ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'}
+                  width={20}
+                />
+              </IconButton>
+            </Box>
 
-            {/* Error/Warning Summary */}
-            {(detail.errorsSummary?.length ?? 0) > 0 && (
-              <Stack spacing={0.5} mb={2}>
-                <Typography variant="subtitle2" color="error.main">
-                  Errors Summary
-                </Typography>
-                {detail.errorsSummary!.map((e: any, i: number) => (
-                  <Typography key={i} variant="caption" color="error.main">
-                    • {e}
-                  </Typography>
-                ))}
-              </Stack>
+            <Collapse in={summaryOpen.value} unmountOnExit>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<CalendarMonth />}
+                      label="Imported At"
+                      value={dayjs(detail.importedAt).format('DD MMM YYYY, hh:mm A')}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<Person />}
+                      label="Imported By"
+                      value={detail.importedByName}
+                      iconColor="warning.main"
+                      iconBgColor={(theme) => varAlpha(theme.palette.warning.mainChannel, 0.08)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<CalendarMonth />}
+                      label="Payroll Month"
+                      value={
+                        detail.payrollMonth ? dayjs(detail.payrollMonth).format('MMM YYYY') : '—'
+                      }
+                      iconColor="info.main"
+                      iconBgColor={(theme) => varAlpha(theme.palette.info.mainChannel, 0.08)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<Numbers />}
+                      label="Total Rows"
+                      value={String(detail.totalRows)}
+                      iconColor="text.secondary"
+                      iconBgColor={(theme) => varAlpha(theme.palette.grey['500Channel'], 0.08)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<CheckCircleOutline />}
+                      label="Valid Rows"
+                      value={String(detail.validRows)}
+                      iconColor="success.main"
+                      iconBgColor={(theme) => varAlpha(theme.palette.success.mainChannel, 0.08)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<ErrorOutline />}
+                      label="Invalid Rows"
+                      value={String(detail.invalidRows)}
+                      iconColor="error.main"
+                      iconBgColor={(theme) => varAlpha(theme.palette.error.mainChannel, 0.08)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<FilePresent />}
+                      label="Created"
+                      value={String(detail.createdCount)}
+                      iconColor="primary.main"
+                      iconBgColor={(theme) => varAlpha(theme.palette.primary.mainChannel, 0.08)}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <InfoItem
+                      icon={<FilePresent />}
+                      label="Replaced"
+                      value={String(detail.replacedCount)}
+                      iconColor="secondary.main"
+                      iconBgColor={(theme) => varAlpha(theme.palette.secondary.mainChannel, 0.08)}
+                    />
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Collapse>
+          </Paper>
+
+          {/* Row Preview Table — API call 3 */}
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Typography variant="h6">Employee Rows</Typography>
+            {!isPayrollLocked && (
+              <LoadingButton
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
+                disabled={
+                  rowsData2.length === 0 ||
+                  rowsData2.every((r) => r.attendanceStatus === ROW_STATUS.Pending)
+                }
+              >
+                Submit
+              </LoadingButton>
             )}
-
-            {/* Row Preview Table — API call 3 */}
-            <Typography variant="subtitle2" mb={1}>
-              Employee Rows
-            </Typography>
-            <CustomizableTable
-              tableId="import-detail-preview-table"
-              columns={PREVIEW_COLUMNS}
-              data={rowsData?.items || []}
-              isLoading={rowsLoading}
-              isPagination={false}
-              isSearch={false}
-              isFilter={false}
-              noDataText={
-                <Stack alignItems="center" spacing={1} py={3}>
-                  <Typography color="text.secondary" variant="body2">
-                    No rows found for this import.
-                  </Typography>
-                </Stack>
-              }
-            />
-          </>
-        ) : (
-          <Typography color="text.secondary" variant="body2">
-            Unable to load import details.
-          </Typography>
-        )}
-      </Scrollbar>
-    </CustomDialog>
+          </Box>
+          <CustomizableTable
+            tableId="import-detail-preview-table"
+            columns={previewColumns}
+            data={rowsData2}
+            isLoading={rowsLoading}
+            noDataText={
+              <Stack alignItems="center" spacing={1} py={3}>
+                <Typography color="text.secondary" variant="body2">
+                  No rows found for this import.
+                </Typography>
+              </Stack>
+            }
+          />
+        </>
+      ) : (
+        <Typography color="text.secondary" variant="body2">
+          Unable to load import details.
+        </Typography>
+      )}
+    </Box>
   );
 };

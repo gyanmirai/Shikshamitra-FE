@@ -14,6 +14,7 @@ export const GlobalIcons = {
   share: 'mdi:share-variant-outline',
   resetFilter: 'carbon:filter-reset',
   bell: 'mdi:bell-outline',
+  calendar: 'mdi:calendar',
   pdf: 'mdi:file-pdf-box',
   sendNotification: 'mynaui:send',
   alertIcon: 'fluent:alert-on-24-regular',
