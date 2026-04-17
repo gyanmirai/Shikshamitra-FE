@@ -214,7 +214,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           // pt: 1,
           display: 'flex',
           flexDirection: 'column',
-          height: '100%',
+          flex: 1,
           minHeight: 0,
           ...boxSx,
         }}
@@ -228,7 +228,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             borderRadius: 2,
             display: 'flex',
             flexDirection: 'column',
-            height: '100%',
+            flex: 1,
             minHeight: 0,
             border: `1px solid ${theme.palette.divider}`,
           }}

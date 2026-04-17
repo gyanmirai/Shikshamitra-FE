@@ -17,7 +17,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useGetEmployeeSalarySlipQuery } from 'src/redux/runPayroll/runPayrollApi';
+import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Card,
@@ -57,7 +57,7 @@ const PaySlipGenerationScreen = () => {
     { data: employeeSalarySlip, isLoading: employeeSalarySlipLoading },
   ] = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeSalarySlipQuery,
+    currentQueryAndMutation: useLazyGetEmployeeSalarySlipQuery,
     params: {
       employeeId: employee?.id,
       monthYear: monthYear?.format('MMMM-YYYY').toUpperCase(),
@@ -185,7 +185,7 @@ const PaySlipGenerationScreen = () => {
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 4 }}>
               <SummaryWidget
-                title="Total Salary"
+                title="Total Earning"
                 total={employeeSalarySlip?.totalEarning || 0}
                 icon="solar:wallet-bold-duotone"
                 color="success"
