@@ -260,16 +260,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <PaginatedSearchSelect
                   label="Employee *"
                   fetchOptions={async (query, page) => {
-                    const res = await getEmployees({ search: query, page, pageSize: 10 }).unwrap();
-                    const hasMore = res.currentPage !== res.totalPages;
-                    const items =
-                      res?.items?.map((item: any) => ({
+                    if (page > 1) return { data: [], hasMore: false };
+                    const res = await getEmployees({ search: query }).unwrap();
+                    const items = (Array.isArray(res) ? res : res?.items || []).map(
+                      (item: any) => ({
                         label: item.fullName,
                         id: item.id,
-                      })) || [];
+                      })
+                    );
                     return {
-                      data: page === 1 ? [SELF_OPTION, ...items] : items,
-                      hasMore,
+                      data: [SELF_OPTION, ...items],
+                      hasMore: false,
                     };
                   }}
                   value={values.employee}
