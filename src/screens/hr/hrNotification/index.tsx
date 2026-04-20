@@ -24,7 +24,7 @@ const TABS = [
   },
   {
     value: 'attendanceLeave',
-    label: 'Attendance & Leave',
+    label: 'Attendance Management',
     icon: <Iconify icon="mdi:clipboard-list-outline" width={20} />,
     component: (props: any) => <AttendanceLeaveNotificationManagement {...props} />,
   },

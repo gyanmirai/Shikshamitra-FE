@@ -6,7 +6,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 const BasicDetailsStep = ({ formik }: { formik: any }) => {
@@ -15,17 +15,24 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivisions, setAllDivisions] = useState<any[]>([]);
-
+  console.log('formik----', formik.values);
   const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
+  // const [
+  //   getStudents,
+  //   { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
+  // ] = useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
+  // });
   const [
-    getStudents,
+    getFilterStudents,
     { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
   ] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
+    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
   useEffect(() => {
@@ -49,11 +56,18 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
 
   useEffect(() => {
     if (values.standardId && values.divisionId) {
-      getStudents({
-        divisionId: values.divisionId,
+      getFilterStudents({
+        academicYearId: values.academicYearId,
+        academicMediumId: values.mediumId,
       });
     }
-  }, [values.standardId, values.divisionId, getStudents]);
+  }, [
+    values.academicYearId,
+    getFilterStudents,
+    values.mediumId,
+    values.standardId,
+    values.divisionId,
+  ]);
 
   const studentOptions = useMemo(
     () =>

@@ -220,7 +220,7 @@ const BiometricIntegrationScreen = () => {
         description="Configure Attendance Types, Leave Policies, and Late Arrival Rules for accurate tracking and enforcement."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: '/hr/biometric-integration/' },
+          { name: 'Attendance Management', href: '/hr/biometric-integration/' },
           { name: 'Import Attendance' },
         ]}
       />

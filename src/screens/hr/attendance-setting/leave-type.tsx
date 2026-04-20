@@ -156,8 +156,8 @@ const LeaveType = () => {
         heading="Leave Type"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
-          { name: 'Settings', href: hrPaths.attendance.setting.root },
+          { name: 'Leave Management', href: hrPaths.leaveManagement.root },
+          { name: 'Settings', href: hrPaths.leaveManagement.setting.root },
           { name: 'Leave Type' },
         ]}
         description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
@@ -253,7 +253,7 @@ const LeaveType = () => {
           </>
         }
         isLoading={isLoading}
-        tableId="leave-policy-table"
+        tableId="leave-type-table"
         columns={columns}
         data={leaveTypesData?.items || []}
       />

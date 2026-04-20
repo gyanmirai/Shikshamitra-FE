@@ -21,7 +21,7 @@ const QUICK_ACTIONS = [
     label: 'Approve Leave',
     icon: 'mdi:clipboard-check-outline',
     color: 'success',
-    href: hrPaths.attendance.leaveManagement,
+    href: hrPaths.leaveManagement.approvals,
   },
   // {
   //   label: 'Mark Attendance',

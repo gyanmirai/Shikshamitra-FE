@@ -1,8 +1,8 @@
 import React from 'react';
 import TeacherPermission from 'src/components/teacher-permission';
 
-const AttendanceSettingLayout = ({ children }: any) => (
+const AttendanceImportHistoryLayout = ({ children }: { children: React.ReactNode }) => (
   <TeacherPermission>{children}</TeacherPermission>
 );
 
-export default AttendanceSettingLayout;
+export default AttendanceImportHistoryLayout;

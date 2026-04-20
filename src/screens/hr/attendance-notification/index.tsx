@@ -45,7 +45,11 @@ const HrAttendanceNotificationScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Notifications History"
-        links={[{ name: 'HR' }, { name: 'Attendance & Leave' }, { name: 'Notifications History' }]}
+        links={[
+          { name: 'HR' },
+          { name: 'Attendance Management' },
+          { name: 'Notifications History' },
+        ]}
       />
       <CustomizableTable
         tableId="hr-attendance-notification"

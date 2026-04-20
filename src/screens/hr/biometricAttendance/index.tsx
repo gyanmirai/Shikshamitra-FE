@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -22,11 +21,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
+import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
-import {
-  AttendanceImportBatchStatus,
-  AttendanceImportBatchStatusOptions,
-} from 'src/enums/attendance-import-batch-statusType';
 import {
   Person,
   Numbers,
@@ -35,6 +31,10 @@ import {
   CalendarMonth,
   CheckCircleOutline,
 } from '@mui/icons-material';
+import {
+  AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusOptions,
+} from 'src/enums/attendance-import-batch-statusType';
 import {
   useConfirmAttendanceMutation,
   usePreviewAttendanceMutation,
@@ -52,6 +52,7 @@ import {
   Paper,
   Stack,
   Button,
+  Checkbox,
   Collapse,
   MenuItem,
   MenuList,
@@ -105,17 +106,7 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
   },
   { id: 'timeIn', label: 'In Time', minWidth: '7vw', align: 'left', render: (v) => v || '—' },
   { id: 'timeOut', label: 'Out Time', minWidth: '7vw', align: 'left', render: (v) => v || '—' },
-  {
-    id: 'status',
-    label: 'Status',
-    minWidth: '6vw',
-    align: 'left',
-    render: (value: string) => (
-      <Label color={value === 'Valid' ? 'success' : value === 'Invalid' ? 'error' : 'warning'}>
-        {value || '—'}
-      </Label>
-    ),
-  },
+
   {
     id: 'errors',
     label: 'Errors',
@@ -158,12 +149,27 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
         </Typography>
       ),
   },
+  {
+    id: 'status',
+    label: 'Status',
+    minWidth: '6vw',
+    sticky: true,
+    align: 'left',
+    render: (value: string) => (
+      <Label color={value === 'Valid' ? 'success' : value === 'Invalid' ? 'error' : 'warning'}>
+        {value || '—'}
+      </Label>
+    ),
+  },
 ];
 
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 const AttendanceImportHistoryScreen = () => {
   const theme = useTheme();
+
+  // Selected rows for bulk actions
+  const [selectedRows, setSelectedRows] = useState<AttendanceImportItem[]>([]);
 
   // Local lock state: set of locked import IDs
   const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
@@ -381,8 +387,50 @@ const AttendanceImportHistoryScreen = () => {
     }
   };
   // ── Columns ────────────────────────────────────────────────────────────────
+  const tableData = useMemo(() => listData?.items || [], [listData?.items]);
+
   const columns: IColumn[] = useMemo(
     () => [
+      {
+        id: 'checkBox',
+        label: '',
+        align: 'center',
+        minWidth: '60px',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        renderColumn() {
+          return (
+            <Checkbox
+              checked={tableData.length > 0 && selectedRows.length === tableData.length}
+              indeterminate={selectedRows.length > 0 && selectedRows.length < tableData.length}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedRows(tableData);
+                } else {
+                  setSelectedRows([]);
+                }
+              }}
+            />
+          );
+        },
+        render(_value: any, row: any) {
+          const isChecked = selectedRows.some((r) => r.id === row.id);
+          return (
+            <Checkbox
+              checked={isChecked}
+              onChange={(e) => {
+                e.stopPropagation();
+                if (e.target.checked) {
+                  setSelectedRows((prev) => [...prev, row as AttendanceImportItem]);
+                } else {
+                  setSelectedRows((prev) => prev.filter((r) => r.id !== row.id));
+                }
+              }}
+            />
+          );
+        },
+      },
       {
         id: 'fileName',
         label: 'File Name',
@@ -503,7 +551,8 @@ const AttendanceImportHistoryScreen = () => {
         ),
       },
     ],
-    [actions, handleToggleLock, theme]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [actions, handleToggleLock, selectedRows, tableData, theme]
   );
 
   return (
@@ -511,12 +560,12 @@ const AttendanceImportHistoryScreen = () => {
       {/* Breadcrumbs */}
       {viewImportDialog.value ? (
         <CustomBreadcrumbs
-          heading="Import Attendance"
+          heading="Biometric Attendance"
           description="Track uploaded biometric attendance files, review records, and manage imports."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
-            { name: 'Attendance & Leave' },
-            { name: 'Import Attendance' },
+            { name: 'Attendance Management' },
+            { name: 'Biometric Attendance' },
           ]}
           isBack
           onBack={() => {
@@ -526,12 +575,12 @@ const AttendanceImportHistoryScreen = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Import Attendance"
+          heading="Biometric Attendance"
           description="Track uploaded biometric attendance files, review records, and manage imports."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
-            { name: 'Attendance & Leave' },
-            { name: 'Import Attendance' },
+            { name: 'Attendance Management' },
+            { name: 'Biometric Attendance' },
           ]}
         />
       )}
@@ -602,7 +651,8 @@ const AttendanceImportHistoryScreen = () => {
           </Box>
 
           <CustomizableTable
-            tableId="attendance-import-history-table"
+            tableId="biometric-attendance-history-table"
+            showCheckbox={selectedRows.length > 0}
             columns={columns}
             data={listData?.items || []}
             isLoading={listLoading}
@@ -610,7 +660,7 @@ const AttendanceImportHistoryScreen = () => {
               <Stack alignItems="center" spacing={1} py={4}>
                 {' '}
                 <Typography color="text.secondary" variant="body2">
-                  No import attendace found.
+                  No biometric attendance found.
                 </Typography>
               </Stack>
             }
@@ -627,13 +677,13 @@ const AttendanceImportHistoryScreen = () => {
         onClose={() => setLockConfirmRow(null)}
         title={
           lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Unlock Attendance?'
-            : 'Lock Attendance?'
+            ? 'Unlock Biometric Attendance?'
+            : 'Lock Biometric Attendance?'
         }
         content={
           lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Are you sure you want to unlock this attendance import for payroll?'
-            : 'Are you sure you want to lock this attendance import for payroll? This will prevent further edits.'
+            ? 'Are you sure you want to unlock this biometric attendance import for payroll?'
+            : 'Are you sure you want to lock this biometric attendance import for payroll? This will prevent further edits.'
         }
         action={
           <Button
@@ -755,6 +805,8 @@ const ImportDetailSkeleton = () => (
   </Box>
 );
 
+type EditingCell = { rowId: string; field: 'timeIn' | 'timeOut'; value: dayjs.Dayjs | null } | null;
+
 const ImportDetailDialog = ({
   importData,
   onClose,
@@ -764,6 +816,7 @@ const ImportDetailDialog = ({
 }) => {
   // Local row state for attendance status overrides
   const [rowsData2, setRowsData2] = useState<any[]>([]);
+  const [editingCell, setEditingCell] = useState<EditingCell>(null);
   const isPayrollLocked = !!importData?.isPayrollLocked;
   const summaryOpen = useBoolean(false);
 
@@ -807,6 +860,7 @@ const ImportDetailDialog = ({
     () => ({
       id: 'attendanceStatus',
       label: 'Attendance',
+      sticky: true,
       minWidth: '180px',
       align: 'left' as const,
       isSort: false,
@@ -932,9 +986,120 @@ const ImportDetailDialog = ({
     [updateRow]
   );
 
+  const makeTimeColumn = useCallback(
+    (field: 'timeIn' | 'timeOut', label: string) => ({
+      id: field,
+      label,
+      minWidth: '140px',
+      align: 'left' as const,
+      isSort: false,
+      isFilter: false,
+      render: (value: string, row: any) => {
+        const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
+
+        if (isEditing) {
+          return (
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <TimePicker
+                value={editingCell.value}
+                onChange={(newVal) => setEditingCell((prev) => prev && { ...prev, value: newVal })}
+                format="HH:mm"
+                ampm={false}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    autoFocus: true,
+                    sx: { width: '120px', '& input': { fontSize: '0.8rem', p: '4px 6px' } },
+                  },
+                }}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+              />
+              <CustomTooltip title="Save" arrow placement="top">
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={() => {
+                    const formatted = editingCell.value?.isValid()
+                      ? editingCell.value.format('HH:mm')
+                      : null;
+                    updateRow(row.id, { [field]: formatted });
+                    setEditingCell(null);
+                  }}
+                  sx={{ p: 0.4 }}
+                >
+                  <Iconify icon="eva:checkmark-fill" width={16} />
+                </IconButton>
+              </CustomTooltip>
+              <CustomTooltip title="Cancel" arrow placement="top">
+                <IconButton size="small" onClick={() => setEditingCell(null)} sx={{ p: 0.4 }}>
+                  <Iconify icon="eva:close-fill" width={16} />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
+          );
+        }
+
+        return (
+          <Stack
+            direction="row"
+            spacing={0.5}
+            alignItems="center"
+            sx={{
+              '& .edit-btn': { opacity: 0, transition: 'opacity 0.15s' },
+              '&:hover .edit-btn': { opacity: 1 },
+            }}
+          >
+            <Typography variant="body2">{value || '—'}</Typography>
+            {!isPayrollLocked && (
+              <CustomTooltip title={`Edit ${label}`} arrow placement="top">
+                <IconButton
+                  className="edit-btn"
+                  size="small"
+                  onClick={() =>
+                    setEditingCell({
+                      rowId: row.id,
+                      field,
+                      value: value ? dayjs(`1970-01-01T${value}`) : null,
+                    })
+                  }
+                  sx={{ p: 0.3 }}
+                >
+                  <Iconify icon="eva:edit-2-outline" width={14} />
+                </IconButton>
+              </CustomTooltip>
+            )}
+          </Stack>
+        );
+      },
+    }),
+    [editingCell, isPayrollLocked, updateRow]
+  );
+
+  const editableTimeColumns = useMemo(
+    () => [makeTimeColumn('timeIn', 'In Time'), makeTimeColumn('timeOut', 'Out Time')],
+    [makeTimeColumn]
+  );
+
+  const PREVIEW_COLUMNS_WITH_EDIT = useMemo(
+    () =>
+      PREVIEW_COLUMNS.map((col) => {
+        if (col.id === 'timeIn') return editableTimeColumns[0];
+        if (col.id === 'timeOut') return editableTimeColumns[1];
+        return col;
+      }),
+    [editableTimeColumns]
+  );
+
   const previewColumns = useMemo(
-    () => (isPayrollLocked ? PREVIEW_COLUMNS : [...PREVIEW_COLUMNS, attendanceColumn]),
-    [attendanceColumn, isPayrollLocked]
+    () =>
+      isPayrollLocked
+        ? PREVIEW_COLUMNS_WITH_EDIT
+        : [...PREVIEW_COLUMNS_WITH_EDIT, attendanceColumn],
+    [attendanceColumn, isPayrollLocked, PREVIEW_COLUMNS_WITH_EDIT]
   );
 
   return (

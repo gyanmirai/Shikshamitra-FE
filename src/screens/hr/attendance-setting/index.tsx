@@ -137,7 +137,7 @@ const HrAttendanceSettingScreen = () => {
         heading="Setting"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: `/hr/attendance-setting` },
+          { name: 'Attendance Management', href: `/hr/attendance-setting` },
           { name: 'Setting' },
         ]}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}

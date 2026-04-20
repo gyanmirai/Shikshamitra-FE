@@ -213,8 +213,8 @@ const LeavePolicy = () => {
         description="Define and manage leave policies for your organization to ensure smooth attendance and leave management."
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
-          { name: 'Settings', href: hrPaths.attendance.setting.root },
+          { name: 'Leave Management', href: hrPaths.leaveManagement.root },
+          { name: 'Settings', href: hrPaths.leaveManagement.setting.root },
           { name: 'Leave Policy' },
         ]}
         action={
