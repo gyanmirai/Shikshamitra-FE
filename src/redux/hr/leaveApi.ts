@@ -134,6 +134,16 @@ export const leaveApi = api.injectEndpoints({
       }),
       invalidatesTags: [employeeType.employee],
     }),
+
+    // Leave Balance
+    getMyLeaveBalance: builder.query({
+      query: ({ academicYearId }) => ({
+        url: '/leave-management/my-balance',
+        method: 'GET',
+        params: { academicYearId },
+      }),
+      providesTags: [employeeType.employee],
+    }),
   }),
 });
 
@@ -154,4 +164,5 @@ export const {
   useCancelLeaveRequestMutation,
   useApproveLeaveRequestMutation,
   useRejectLeaveRequestMutation,
+  useGetMyLeaveBalanceQuery,
 } = leaveApi;

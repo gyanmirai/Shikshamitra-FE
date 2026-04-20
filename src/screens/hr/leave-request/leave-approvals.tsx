@@ -9,24 +9,20 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   Box,
   Card,
@@ -38,19 +34,17 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
+  useGetLeaveRequestsQuery,
+  useRejectLeaveRequestMutation,
+  useApproveLeaveRequestMutation,
+} from 'src/redux/hr/leaveApi';
+import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
-import {
-  useGetLeaveRequestsQuery,
-  useCancelLeaveRequestMutation,
-  useRejectLeaveRequestMutation,
-  useApproveLeaveRequestMutation,
-} from 'src/redux/hr/leaveApi';
 
-import AddLeaveRequest from './leave-requst';
-import LeaveCalender, { LeaveRequestForm } from './leave-calender';
+import { LeaveRequestForm } from './leave-calender';
 
 const DUMMY_LEAVE_DATA = [
   {
@@ -107,7 +101,7 @@ const DUMMY_LEAVE_DATA = [
   },
 ];
 
-const LeaveHistory = () => {
+const LeaveApprovals = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
@@ -116,41 +110,21 @@ const LeaveHistory = () => {
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
       academicYearId: currentYear?.id,
-      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(), // API expects e.g. JANUARY-2026
+      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
     },
   });
 
-  const [approveLeave, { isLoading: isApproveLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useApproveLeaveRequestMutation,
-  });
-
-  const [rejectLeave, { isLoading: isRejectLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useRejectLeaveRequestMutation,
-  });
-
-  const [deleteLeave, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCancelLeaveRequestMutation,
-  });
-
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-
-  const addLeaveRequestDialog = useBoolean();
-  const approveConfirmation = useBoolean();
+  const viewDialog = useBoolean();
   const approveOrRejectConfirmation = useBoolean();
-  const cancelConfirmation = useBoolean();
-  const viewCalendarView = useBoolean();
   const [editData, setEditData] = useState<any>(null);
+
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
             setEditData(row);
-            addLeaveRequestDialog?.onTrue?.();
+            viewDialog.onTrue();
             popover.onClose();
           }}
         >
@@ -158,7 +132,7 @@ const LeaveHistory = () => {
           View
         </MenuItem>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             setEditData({ ...row, type: EmployeeLeaveStatusType.Approved });
             approveOrRejectConfirmation.onTrue();
             popover.onClose();
@@ -169,7 +143,7 @@ const LeaveHistory = () => {
           Approve
         </MenuItem>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             setEditData({ ...row, type: EmployeeLeaveStatusType.Rejected });
             approveOrRejectConfirmation.onTrue();
             popover.onClose();
@@ -179,20 +153,9 @@ const LeaveHistory = () => {
           <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
           Reject
         </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setEditData(row);
-            cancelConfirmation.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'warning.main' }}
-        >
-          <Iconify icon="mdi:cancel" sx={{ height: '16px', width: '16px' }} />
-          Cancel
-        </MenuItem>
       </MenuList>
     ),
-    [addLeaveRequestDialog, approveOrRejectConfirmation, cancelConfirmation]
+    [viewDialog, approveOrRejectConfirmation]
   );
 
   const tableData = useMemo(() => {
@@ -226,45 +189,6 @@ const LeaveHistory = () => {
     return [...apiData, ...dummyData];
   }, [data]);
 
-  const handleClose = (_e?: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setEditData(null);
-        setRejectionReason('');
-      }, 200); // Optional delay for modal/dialog animation
-    };
-
-    const confirmLeave = () =>
-      isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'));
-
-    if (confirmLeave()) {
-      addLeaveRequestDialog?.onFalse?.();
-      resetState();
-      dispatch(setIsChanges(false)); // Optional if used
-    } else if (!isChanges) {
-      addLeaveRequestDialog?.onFalse?.();
-      setTimeout(() => {
-        setEditData(null);
-        setRejectionReason('');
-      }, 200);
-    }
-  };
-
-  const [selectedStudents] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [rejectionReason, setRejectionReason] = useState('');
-
-  useEffect(() => {
-    setRejectionReason(editData?.rejectionReason || '');
-  }, [editData?.rejectionReason]);
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -280,6 +204,12 @@ const LeaveHistory = () => {
             </Box>
           );
         },
+      },
+      {
+        label: 'Leave Type',
+        id: 'leaveType',
+        align: 'left',
+        minWidth: '10vw',
       },
       {
         label: 'Start Date',
@@ -354,227 +284,85 @@ const LeaveHistory = () => {
     ],
     [actions]
   );
+
   return (
     <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
-      {viewCalendarView.value ? (
-        <CustomBreadcrumbs
-          heading="Calendar View"
-          links={[
-            { name: 'HR/Staff', href: '/hr/dashboard/' },
-            {
-              name: 'Attendance & Leave',
-              href: hrPaths.attendance.leaveManagement,
-              onClick: viewCalendarView.onFalse,
+      <CustomBreadcrumbs
+        heading="Leave Approvals"
+        links={[
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+          { name: 'Leave Approvals' },
+        ]}
+        description="Review and approve or reject employee leave requests."
+      />
+      <Card
+        sx={{
+          display: 'flex',
+          p: 2,
+          gap: 2,
+          mt: 1,
+          pl: 1,
+          mb: 1,
+          justifyContent: 'space-between',
+        }}
+      >
+        <DatePicker
+          label="Month-Year"
+          format="MMM-YYYY"
+          value={date}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
+          views={['year', 'month']}
+          slotProps={{
+            textField: {
+              size: 'small',
             },
-            { name: 'Leave Management' },
-          ]}
-          description="The Leave Calendar visually displays employees leave requests and their statuses—approved, pending, or rejected—on specific dates."
-          isBack
-          onBack={viewCalendarView.onFalse}
+          }}
+          onChange={(newDate) => {
+            setDate(newDate);
+          }}
         />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Leave Management"
-          links={[
-            { name: 'HR/Staff', href: '/hr/dashboard/' },
-            { name: 'Attendance & Leave', href: hrPaths.attendance.leaveManagement },
-            { name: 'Leave Management' },
-          ]}
-          description="Create new leave requests and manage existing ones by approving or rejecting them."
-        />
-      )}
-      {viewCalendarView.value ? (
-        <Box display="flex" flexDirection="column" gap={2}>
-          <LeaveCalender />
-        </Box>
-      ) : (
-        <>
-          <Card
-            sx={{
-              display: 'flex',
-              p: 2,
-              gap: 2,
-              mt: 1,
-              pl: 1,
-              mb: 1,
-              justifyContent: 'space-between',
-            }}
-          >
-            <DatePicker
-              label="Month-Year"
-              format="MMM-YYYY"
-              value={date}
-              minDate={dayjs(currentYear?.startDate)}
-              maxDate={dayjs(currentYear?.endDate)}
-              views={['year', 'month']}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                },
-              }}
-              onChange={(newDate) => {
-                setDate(newDate);
-              }}
-            />
-            <Box display="flex" gap={2}>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Add />}
-                onClick={() => {
-                  addLeaveRequestDialog.onTrue();
-                }}
-                sx={{ px: '32px' }}
-              >
-                Leave Request
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
-                onClick={() => {
-                  viewCalendarView.onTrue();
-                }}
-                sx={{ px: '32px' }}
-              >
-                View Calendar
-              </Button>
-            </Box>
-          </Card>
-          <CustomizableTable
-            noDataText={
-              <>
-                No Leave Request Found{' '}
-                <Box
-                  onClick={() => addLeaveRequestDialog.onTrue?.()}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Leave Request
-                </Box>
-              </>
-            }
-            onSendNotification={handlerSendNotification}
-            showCheckbox={selectedStudents.length !== 0}
-            isLoading={isLoading}
-            tableId="leave-history-table"
-            data={tableData}
-            columns={columns}
-          />
-        </>
-      )}
+      </Card>
 
-      <ConfirmDialog
-        open={approveConfirmation.value}
-        onClose={() => {
-          setEditData(null);
-          approveConfirmation.onFalse();
-        }}
-        title="Approve"
-        content="Are you sure you want to Approve?"
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isApproveLoading}
-            onClick={async () => {
-              await approveLeave({
-                id: editData?.id,
-                body: {
-                  remarks: '',
-                },
-              });
-
-              approveConfirmation.onFalse();
-              setEditData(null);
-            }}
-          >
-            Approve
-          </LoadingButton>
-        }
+      <CustomizableTable
+        noDataText="No Leave Requests Found"
+        isLoading={isLoading}
+        tableId="leave-approvals-table"
+        data={tableData}
+        columns={columns}
       />
 
-      <ConfirmDialog
-        open={cancelConfirmation.value}
-        onClose={() => {
-          setEditData(null);
-          cancelConfirmation.onFalse();
-        }}
-        title="Cancel Leave Request"
-        content={
-          <>
-            Are you sure you want to cancel this leave request for <strong>{editData?.name}</strong>
-            ?
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            color="warning"
-            loading={isDeleteLoading}
-            onClick={async () => {
-              await deleteLeave(editData?.id);
-              cancelConfirmation.onFalse();
-              setEditData(null);
-            }}
-          >
-            Yes, Cancel
-          </LoadingButton>
-        }
-      />
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
+      {/* View Dialog */}
       <CustomDialog
-        open={addLeaveRequestDialog?.value}
+        open={viewDialog.value}
         handleClose={() => {
-          addLeaveRequestDialog?.onFalse?.();
+          viewDialog.onFalse();
           setEditData(null);
-          setRejectionReason('');
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {editData ? 'Review Leave Request' : 'Add Leave Request'}
-            </Typography>
+            <Typography variant="h5">View Leave Request</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title={
-                editData
-                  ? 'Review the request to see all leave information.'
-                  : 'Create a leave request by entering all required fields.'
-              }
+              title="Review the request to see all leave information."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
       >
-        {editData ? (
-          <LeaveRequestForm editData={editData} />
-        ) : (
-          <AddLeaveRequest editData={editData} handleClose={handleClose} />
-        )}
+        <LeaveRequestForm editData={editData} />
       </CustomDialog>
 
+      {/* Approve / Reject Dialog */}
       {editData?.type && (
         <CustomDialog
-          open={approveOrRejectConfirmation?.value}
+          open={approveOrRejectConfirmation.value}
           handleClose={() => {
-            approveOrRejectConfirmation?.onFalse();
-            setRejectionReason('');
+            approveOrRejectConfirmation.onFalse();
             setEditData(null);
           }}
           title={
@@ -601,8 +389,7 @@ const LeaveHistory = () => {
         >
           <ApproveRejectForm
             handleClose={() => {
-              approveOrRejectConfirmation?.onFalse();
-              setRejectionReason('');
+              approveOrRejectConfirmation.onFalse();
               setEditData(null);
             }}
             editData={editData}
@@ -613,13 +400,13 @@ const LeaveHistory = () => {
   );
 };
 
-export default LeaveHistory;
+export default LeaveApprovals;
 
 export const ApproveRejectForm = ({
   handleClose,
   editData,
 }: {
-  handleClose: (e: any, isSubmit: boolean) => void;
+  handleClose: (e: any, isSubmit?: boolean) => void;
   editData: any;
 }) => {
   const [approveLeaveRequest, { isLoading: isApproveLeaveRequestLoading }] = useQueryAndMutation({
@@ -630,6 +417,7 @@ export const ApproveRejectForm = ({
     type: 'mutation',
     currentQueryAndMutation: useRejectLeaveRequestMutation,
   });
+
   const { values, handleChange, errors, touched, handleSubmit } = useFormik({
     initialValues: {
       rejectionReason: '',
@@ -663,6 +451,7 @@ export const ApproveRejectForm = ({
       }
     },
   });
+
   return (
     <>
       <DialogScrollContent>
@@ -683,9 +472,7 @@ export const ApproveRejectForm = ({
         <Button
           variant="outlined"
           size="small"
-          onClick={() => {
-            handleClose(null, false);
-          }}
+          onClick={() => handleClose(null, false)}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Cancel

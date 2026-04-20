@@ -1,5 +1,5 @@
 import React from 'react';
-import AttendanceImportHistoryScreen from 'src/screens/hr/attendance-import-history';
+import AttendanceImportHistoryScreen from 'src/screens/hr/biometricAttendance';
 
 const AttendanceImportHistoryPage = () => <AttendanceImportHistoryScreen />;
 

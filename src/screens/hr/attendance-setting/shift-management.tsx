@@ -81,7 +81,7 @@ const ShiftManagement = () => {
         Configure and manage shift rules to optimize workforce scheduling and ensure efficient attendance tracking."
         links={[
           { name: 'Hr', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave' },
+          { name: 'Attendance Management' },
           { name: 'Setting' },
           { name: 'Shift Management' },
         ]}

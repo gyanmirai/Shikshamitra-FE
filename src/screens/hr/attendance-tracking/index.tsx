@@ -80,7 +80,7 @@ const AttendanceTrackingScreen = () => {
         heading="Attendance Tracking"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Attendance & Leave', href: hrPaths.attendance.attendanceTracking },
+          { name: 'Attendance Management', href: hrPaths.attendance.biometricAttendance },
           { name: 'Attendance Tracking' },
         ]}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."

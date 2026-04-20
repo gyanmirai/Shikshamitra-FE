@@ -26,7 +26,7 @@ const HRStaticNotificationScreen = () => {
       component: () => <HrEventHolidayNotificationManagementScreen />,
     },
     {
-      label: 'Attendance & Leave',
+      label: 'Attendance Management',
       value: 'attendanceAndLeave',
       icon: <Iconify icon="hugeicons:task-daily-01" width={20} />,
       component: () => <HrAttendanceNotificationManagementScreen />,

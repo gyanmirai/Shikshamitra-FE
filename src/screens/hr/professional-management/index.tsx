@@ -53,7 +53,7 @@ const ProfessionalManagementScreen = () => {
         }
         links={[
           { name: 'HR' },
-          { name: 'Attendance & Leave' },
+          { name: 'Attendance Management' },
           { name: currentActiveComponent?.label },
         ]}
       />

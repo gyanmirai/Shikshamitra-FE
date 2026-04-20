@@ -22,7 +22,7 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Avatar, Checkbox, Typography, IconButton } from '@mui/material';
+import { Box, Card, Avatar, Checkbox, IconButton, Typography } from '@mui/material';
 import {
   PayrollStatus,
   PayrollStatusColor,
@@ -35,9 +35,92 @@ import {
 
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
 
+// ---------------------------------------------------------------------------
+// Payroll Engine Idle
+// ---------------------------------------------------------------------------
+function PayrollEngineIdle() {
+  return (
+    <Card
+      sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 7,
+        px: 3,
+        textAlign: 'center',
+      }}
+    >
+      {/* Illustration */}
+      <Box sx={{ position: 'relative', mb: 3 }}>
+        <Box
+          sx={{
+            width: 120,
+            height: 120,
+            bgcolor: 'grey.900',
+            borderRadius: 3,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Iconify
+            icon="solar:calculator-minimalistic-bold-duotone"
+            sx={{ width: 56, height: 56, color: 'grey.400' }}
+          />
+        </Box>
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: -10,
+            right: -10,
+            bgcolor: 'background.paper',
+            borderRadius: '50%',
+            p: 0.6,
+            boxShadow: 4,
+          }}
+        >
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              bgcolor: 'warning.lighter',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Iconify
+              icon="solar:settings-bold"
+              sx={{ width: 16, height: 16, color: 'warning.main' }}
+            />
+          </Box>
+        </Box>
+      </Box>
+
+      <Typography variant="h6" fontWeight={700} gutterBottom>
+        Payroll Engine Idle
+      </Typography>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ maxWidth: 440, lineHeight: 1.75, mb: 3.5 }}
+      >
+        We&apos;re ready to calculate, but the foundations aren&apos;t quite finished. To generate
+        this month&apos;s payroll, you must first complete the monthly attendance records and
+        validate staff salary structures.
+      </Typography>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
 const RunPayroll = () => {
   const deductionDialog = useBoolean();
-  const isPayrollOpen = useBoolean();
   const lockConfirmDialog = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
   const [selectedBoard, setSelectedBoard] = useState('');
@@ -73,6 +156,11 @@ const RunPayroll = () => {
     () => getRunPayrollPreviewData?.items || [],
     [getRunPayrollPreviewData?.items]
   );
+
+  const handleFetchPreview = () => {
+    if (!month) return;
+    fetchRunPayrollPreview({ month: month.format('MMMM-YYYY').toUpperCase() });
+  };
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -133,7 +221,7 @@ const RunPayroll = () => {
                 alt={value}
                 src={convertBase64Format(row.profilePicture)}
                 sx={{ height: 32, width: 32 }}
-              />{' '}
+              />
               {value} ({row.employeeIdentifier})
             </Box>
           );
@@ -161,13 +249,7 @@ const RunPayroll = () => {
         align: 'left',
         filterType: 'number',
       },
-      {
-        id: 'salary',
-        label: 'Salary',
-        minWidth: '100px',
-        align: 'left',
-        filterType: 'number',
-      },
+      { id: 'salary', label: 'Salary', minWidth: '100px', align: 'left', filterType: 'number' },
       {
         id: 'grossSalary',
         label: 'Gross Salary',
@@ -188,19 +270,13 @@ const RunPayroll = () => {
         minWidth: '180px',
         align: 'left',
         filterType: 'number',
-        render(value, row) {
+        render(value) {
           return (
             <Box display="flex" alignItems="center" gap={1}>
               <Typography variant="caption" fontSize="13px">
                 {value}
               </Typography>
-              <IconButton
-                onClick={() => {
-                  deductionDialog.onTrue();
-                }}
-                size="small"
-                sx={{ zIndex: 0 }}
-              >
+              <IconButton onClick={() => deductionDialog.onTrue()} size="small" sx={{ zIndex: 0 }}>
                 <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
               </IconButton>
             </Box>
@@ -241,119 +317,138 @@ const RunPayroll = () => {
     [deductionDialog, tableData, selectedEmployeeIds]
   );
 
+  const hasData = !!getRunPayrollPreviewData;
+  const hasSelectedEmployees = selectedEmployeeIds.length > 0;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        heading="Run Payroll"
+        heading="Payroll Processing"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
-        description="Run payroll by selecting a month, and verify details before processing."
+        description="Calculate and finalize staff compensation for the current cycle."
       />
-      {/* <StepsForPayroll /> */}
 
-      <Card sx={{ p: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+      {/* ── Filter Bar + Pipeline Actions ────────────────────────── */}
+      <Card sx={{ p: 1.5, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <CustomSelect
             label="Board"
             options={boards || []}
             labelKey="name"
             valueKey="id"
             value={selectedBoard}
-            onChange={(value) => {
-              setSelectedBoard(value as string);
-            }}
-            formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+            onChange={(value) => setSelectedBoard(value as string)}
+            formControlProps={{ sx: { minWidth: 180 } }}
           />
 
           <DatePicker
-            label="Select Month *"
+            label="Select Month"
             views={['month']}
-            format="MMMM"
+            format="MMMM YYYY"
             value={month}
-            onChange={(newValue) => {
-              setMonth(newValue);
-            }}
+            onChange={(newValue) => setMonth(newValue)}
             slotProps={{ textField: { size: 'small' } }}
-            sx={{ width: '100%', maxWidth: '200px' }}
+            sx={{ width: 200 }}
           />
 
-          {/* Button aligned to the right */}
-          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            {!getRunPayrollPreviewData?.isGenerated && (
-              <LoadingButton
-                variant="contained"
-                loading={getRunPayrollPreviewLoading}
-                startIcon={<Iconify icon="uiw:pay" />}
-                disabled={!month}
-                onClick={() => {
-                  fetchRunPayrollPreview({
-                    month: month?.format('MMMM-YYYY').toUpperCase(),
-                  });
-                  isPayrollOpen.onTrue();
-                }}
-                size="small"
-                sx={{ px: '32px' }}
-              >
-                Run Payroll
-              </LoadingButton>
-            )}
-          </Box>
+          <Box sx={{ flexGrow: 1 }} />
+
+          <LoadingButton
+            variant="contained"
+            size="small"
+            loading={getRunPayrollPreviewLoading}
+            disabled={!month}
+            startIcon={<Iconify icon="solar:rocket-bold" />}
+            onClick={handleFetchPreview}
+          >
+            Run Payroll Cycle
+          </LoadingButton>
         </Box>
       </Card>
-      {month && (
-        <Card
-          sx={{ p: 1.5, mt: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+
+      {/* ── Employee Table or Idle State ─────────────────────────── */}
+
+      <Card sx={{ p: 1.5, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 1.5,
+          }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              justifyContent: 'space-between',
-              mb: 1,
-            }}
-          >
-            <Typography variant="h6">Employee Payable</Typography>
-            <Box display="flex" gap={1}>
-              <CustomTooltip
-                title="Lock the payroll for the selected employees. Locked payrolls cannot be modified."
-                placement="top"
-                arrow
-              >
-                <span>
-                  <LoadingButton
-                    variant="contained"
-                    startIcon={<Iconify icon="mdi:lock-outline" />}
-                    disabled={(() => {
-                      if (selectedEmployeeIds.length === 0) return true;
-                      const selectedRows = tableData.filter((emp: any) =>
-                        selectedEmployeeIds.includes(emp.id)
-                      );
-                      const hasPending = selectedRows.some(
-                        (emp: any) => emp?.status?.toLowerCase() !== 'locked'
-                      );
-                      return !hasPending;
-                    })()}
-                    size="small"
-                    onClick={() => lockConfirmDialog.onTrue()}
-                  >
-                    Lock
-                  </LoadingButton>
-                </span>
-              </CustomTooltip>
-            </Box>
+          <Box>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Employee Payable
+            </Typography>
+            {month && (
+              <Typography variant="caption" color="text.secondary">
+                {month.format('MMMM YYYY')} — {tableData.length} employee(s)
+              </Typography>
+            )}
           </Box>
 
-          <CustomizableTable
-            showCheckbox={selectedEmployeeIds.length !== 0}
-            noDataText={<>No Data Found For Payroll</>}
-            tableId="employee-salary-table"
-            isLoading={getRunPayrollPreviewLoading}
-            columns={columns}
-            data={tableData || []}
-          />
-        </Card>
-      )}
+          <Box display="flex" gap={1} alignItems="center">
+            <LoadingButton
+              variant="contained"
+              size="small"
+              loading={getRunPayrollPreviewLoading}
+              disabled={!month}
+              startIcon={<Iconify icon={GlobalIcons.eye} />}
+              onClick={handleFetchPreview}
+            >
+              Preview
+            </LoadingButton>
 
+            {hasSelectedEmployees && (
+              <Typography variant="caption" color="text.secondary">
+                {selectedEmployeeIds.length} selected
+              </Typography>
+            )}
+            <CustomTooltip
+              title={
+                !hasSelectedEmployees
+                  ? 'Select employees to lock payroll.'
+                  : 'Lock payroll for selected employees. This cannot be undone.'
+              }
+              placement="top"
+              arrow
+            >
+              <span>
+                <LoadingButton
+                  variant="contained"
+                  color="success"
+                  startIcon={<Iconify icon="solar:lock-bold" />}
+                  disabled={(() => {
+                    if (selectedEmployeeIds.length === 0) return true;
+                    const selectedRows = tableData.filter((emp: any) =>
+                      selectedEmployeeIds.includes(emp.id)
+                    );
+                    return !selectedRows.some(
+                      (emp: any) => emp?.status?.toLowerCase() !== 'locked'
+                    );
+                  })()}
+                  size="small"
+                  onClick={() => lockConfirmDialog.onTrue()}
+                >
+                  Finalize &amp; Lock
+                </LoadingButton>
+              </span>
+            </CustomTooltip>
+          </Box>
+        </Box>
+
+        <CustomizableTable
+          showCheckbox={selectedEmployeeIds.length !== 0}
+          noDataText={<>No Data Found For Payroll</>}
+          tableId="employee-salary-table"
+          isLoading={getRunPayrollPreviewLoading}
+          columns={columns}
+          data={tableData || []}
+        />
+      </Card>
+
+      {/* ── Deduction Dialog ─────────────────────────────────────── */}
       <CustomDialog
         open={deductionDialog.value}
         handleClose={() => deductionDialog.onFalse()}
@@ -374,15 +469,17 @@ const RunPayroll = () => {
         </Box>
       </CustomDialog>
 
+      {/* ── Lock Confirm Dialog ──────────────────────────────────── */}
       <ConfirmDialog
         open={lockConfirmDialog.value}
         onClose={lockConfirmDialog.onFalse}
-        title="Lock Payroll"
+        title="Finalize & Lock Payroll"
         icon="warning"
         content={
           <>
             Are you sure you want to lock the payroll for{' '}
-            <strong>{selectedEmployeeIds.length} employee(s)</strong>? This action cannot be undone.
+            <strong>{selectedEmployeeIds.length} employee(s)</strong>? This action{' '}
+            <strong>cannot be undone</strong>.
           </>
         }
         action={
@@ -409,7 +506,7 @@ const RunPayroll = () => {
               }
             }}
           >
-            Yes
+            Yes, Finalize
           </LoadingButton>
         }
       />

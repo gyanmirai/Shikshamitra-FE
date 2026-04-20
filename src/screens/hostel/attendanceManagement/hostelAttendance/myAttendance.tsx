@@ -23,7 +23,7 @@ const MyAttendance = () => {
     <Box display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Attendance"
-        description="Manual attendance for all students"
+        description="Take Attendance for all students"
         links={[
           { name: 'Hostel Management', href: '/hostel/dashboard' },
           { name: 'Attendance And Leave Management', href: '' },

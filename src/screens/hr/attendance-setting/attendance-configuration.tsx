@@ -151,7 +151,7 @@ const AttendanceConfigurationScreen = () => {
         heading="Attendance Configuration"
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Attendance & Leave', href: hrPaths.attendance.importAttendance },
+          { name: 'Attendance Management', href: hrPaths.attendance.importAttendance },
           { name: 'Settings', href: hrPaths.attendance.setting.root },
           { name: 'Attendance Configuration' },
         ]}

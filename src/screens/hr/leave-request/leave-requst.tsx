@@ -18,8 +18,10 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
@@ -29,12 +31,12 @@ import {
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
 
-import type { TabComponentType } from '.';
-
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 // ----------------------------------------------------------------------
+
+const SELF_OPTION = { id: 'self', label: 'Self' };
 
 export const CALENDAR_COLOR_OPTIONS = [
   primary.main,
@@ -46,12 +48,13 @@ export const CALENDAR_COLOR_OPTIONS = [
   error.main,
   error.darker,
 ];
-type AddLeaveRequestProps = TabComponentType & {
+type AddLeaveRequestProps = {
   editData?: any;
   handleClose?: (e: any, isSubmit: boolean) => void;
 };
 
 interface FormValues {
+  employee: { id: string; label: string } | null;
   leaveTypeId: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
@@ -64,6 +67,11 @@ interface FormValues {
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
+  const [getEmployees] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEmployeeQuery,
+  });
+
   // Mutation hook for adding new leave request
   const [addLeave, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -102,6 +110,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     isSubmitting,
   } = useFormik({
     initialValues: {
+      employee: editData?.employeeId
+        ? { id: editData.employeeId, label: editData.employeeName || '' }
+        : SELF_OPTION,
       leaveTypeId: editData?.leaveTypeId || '',
       reason: editData?.reason || editData?.description || '',
       startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
@@ -111,6 +122,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       docs: editData?.attachmentUrl || '',
     },
     validationSchema: Yup.object().shape({
+      employee: Yup.object().nullable().required('Employee is required'),
       leaveTypeId: Yup.string().required('Leave Type is required'),
       startDate: Yup.mixed()
         .required('Start Date is required')
@@ -198,6 +210,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         } else {
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = new FormData();
+          if (formValues.employee && formValues.employee.id !== 'self') {
+            formData.append('employeeId', formValues.employee.id);
+          }
           formData.append('leaveTypeId', formValues.leaveTypeId);
           formData.append('startDate', dayjs(formValues.startDate).toISOString());
           formData.append('endDate', dayjs(formValues.endDate).toISOString());
@@ -240,6 +255,42 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!touched.employee && !!errors.employee}>
+                <PaginatedSearchSelect
+                  label="Employee *"
+                  fetchOptions={async (query, page) => {
+                    const res = await getEmployees({ search: query, page, pageSize: 10 }).unwrap();
+                    const hasMore = res.currentPage !== res.totalPages;
+                    const items =
+                      res?.items?.map((item: any) => ({
+                        label: item.fullName,
+                        id: item.id,
+                      })) || [];
+                    return {
+                      data: page === 1 ? [SELF_OPTION, ...items] : items,
+                      hasMore,
+                    };
+                  }}
+                  value={values.employee}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderOption={(prop, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  minChars={0}
+                  onChange={(_, value) => setFieldValue('employee', value)}
+                  debounceMs={400}
+                  error={!!touched.employee && !!errors.employee}
+                  helperText={(touched.employee && (errors.employee as string)) || ''}
+                  disabled={!!editData}
+                  size="small"
+                />
+              </ShakingTextField>
+            </Grid>
+
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
                 <CustomSelect

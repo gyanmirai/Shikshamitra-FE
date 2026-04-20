@@ -242,8 +242,88 @@ const ManualAttendanceScreen = () => {
       // -------------------------------------------------------------------
       // Status column — 3-button segmented control (Present / Pending / Absent)
       // -------------------------------------------------------------------
+
+      // -------------------------------------------------------------------
+      // Remarks — only for Absent employees
+      // -------------------------------------------------------------------
+      {
+        id: 'remarks',
+        label: 'Remarks',
+        align: 'left',
+        minWidth: '15vw',
+        render: (val, row) =>
+          row.status === STATUS.Absent ? (
+            <TextField
+              size="small"
+              fullWidth
+              disabled={isLocked}
+              value={val || ''}
+              onChange={(e) =>
+                setEmployeeData((prev) =>
+                  prev.map((emp) => (emp.id === row.id ? { ...emp, remarks: e.target.value } : emp))
+                )
+              }
+              label="Add remarks"
+              multiline
+              rows={2}
+              sx={{ width: '100%' }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: '100%',
+                height: '56px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'text.disabled',
+                fontStyle: 'italic',
+                fontSize: '0.875rem',
+              }}
+            >
+              {row.status === STATUS.Present ? 'No remarks needed' : 'Mark attendance first'}
+            </Box>
+          ),
+      },
+      // -------------------------------------------------------------------
+      // Errors
+      // -------------------------------------------------------------------
+      {
+        id: 'errors',
+        label: 'Errors',
+        align: 'left',
+        minWidth: '3vw',
+        render(value) {
+          return value?.length > 0 ? (
+            <CustomTooltip title={value.join(', ')}>
+              <Iconify icon="material-symbols:error-outline" color="error.main" />
+            </CustomTooltip>
+          ) : (
+            '-'
+          );
+        },
+      },
+      // -------------------------------------------------------------------
+      // Warnings
+      // -------------------------------------------------------------------
+      {
+        id: 'warnings',
+        label: 'Warnings',
+        align: 'left',
+        minWidth: '3vw',
+        render(value) {
+          return value?.length > 0 ? (
+            <CustomTooltip title={value.join(', ')}>
+              <Iconify icon="material-symbols:warning-outline" color="warning.main" />
+            </CustomTooltip>
+          ) : (
+            '-'
+          );
+        },
+      },
       {
         id: 'status',
+        sticky: true,
         label: (
           <Stack spacing={0.75} alignItems="center">
             {/* ── Count badges ── */}
@@ -621,84 +701,6 @@ const ManualAttendanceScreen = () => {
           );
         },
       },
-      // -------------------------------------------------------------------
-      // Remarks — only for Absent employees
-      // -------------------------------------------------------------------
-      {
-        id: 'remarks',
-        label: 'Remarks',
-        align: 'left',
-        minWidth: '15vw',
-        render: (val, row) =>
-          row.status === STATUS.Absent ? (
-            <TextField
-              size="small"
-              fullWidth
-              disabled={isLocked}
-              value={val || ''}
-              onChange={(e) =>
-                setEmployeeData((prev) =>
-                  prev.map((emp) => (emp.id === row.id ? { ...emp, remarks: e.target.value } : emp))
-                )
-              }
-              label="Add remarks"
-              multiline
-              rows={2}
-              sx={{ width: '100%' }}
-            />
-          ) : (
-            <Box
-              sx={{
-                width: '100%',
-                height: '56px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'text.disabled',
-                fontStyle: 'italic',
-                fontSize: '0.875rem',
-              }}
-            >
-              {row.status === STATUS.Present ? 'No remarks needed' : 'Mark attendance first'}
-            </Box>
-          ),
-      },
-      // -------------------------------------------------------------------
-      // Errors
-      // -------------------------------------------------------------------
-      {
-        id: 'errors',
-        label: 'Errors',
-        align: 'left',
-        minWidth: '3vw',
-        render(value) {
-          return value?.length > 0 ? (
-            <CustomTooltip title={value.join(', ')}>
-              <Iconify icon="material-symbols:error-outline" color="error.main" />
-            </CustomTooltip>
-          ) : (
-            '-'
-          );
-        },
-      },
-      // -------------------------------------------------------------------
-      // Warnings
-      // -------------------------------------------------------------------
-      {
-        id: 'warnings',
-        label: 'Warnings',
-        align: 'left',
-        minWidth: '3vw',
-        render(value) {
-          return value?.length > 0 ? (
-            <CustomTooltip title={value.join(', ')}>
-              <Iconify icon="material-symbols:warning-outline" color="warning.main" />
-            </CustomTooltip>
-          ) : (
-            '-'
-          );
-        },
-      },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -736,11 +738,11 @@ const ManualAttendanceScreen = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Manual Attendance"
+        heading="Take Attendance"
         links={[
           { name: 'HR', href: '/hr/dashboard/' },
           { name: 'Attendance', href: '/hr/attendance-tracking' },
-          { name: 'Manual Attendance' },
+          { name: 'Take Attendance' },
         ]}
         description="Quickly record employee attendance manually: Choose the date, then mark each employee as Present, Pending, or Absent."
       />
