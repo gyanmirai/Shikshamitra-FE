@@ -323,7 +323,7 @@ const RunPayroll = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        heading="Payroll Processing"
+        heading="Run Payroll"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
         description="Calculate and finalize staff compensation for the current cycle."
       />

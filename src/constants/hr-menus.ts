@@ -363,7 +363,7 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:calendar-plus-outline'),
             },
             {
-              title: 'Approvals (Principal/Admin)',
+              title: 'Leave Approvals',
               path: hrPaths.leaveManagement.approvals,
               _action: 'leave-approvals',
               shortcutKey: 'Alt+H+L+2',
@@ -399,9 +399,9 @@ const hrModule = (isDdvs: boolean) => ({
                   icon: menuIconView('mdi:calendar-text-outline'),
                 },
                 {
-                  title: 'Leave Policies',
+                  title: 'Leave Policy',
                   path: hrPaths.leaveManagement.setting.leavePolicy,
-                  _action: 'leave-policies',
+                  _action: 'leave-policy',
                   shortcutKey: 'Alt+H+L+4+2',
                   shortcutKeyName: 'Alt+H+L+4+2',
                   permissionName: hrPermissions.leaveManagement.setting.leavePolicy,

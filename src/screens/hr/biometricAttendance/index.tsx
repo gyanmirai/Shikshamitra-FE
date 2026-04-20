@@ -24,10 +24,6 @@ import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
-  AttendanceImportBatchStatus,
-  AttendanceImportBatchStatusOptions,
-} from 'src/enums/attendance-import-batch-statusType';
-import {
   Person,
   Numbers,
   FilePresent,
@@ -35,6 +31,10 @@ import {
   CalendarMonth,
   CheckCircleOutline,
 } from '@mui/icons-material';
+import {
+  AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusOptions,
+} from 'src/enums/attendance-import-batch-statusType';
 import {
   useConfirmAttendanceMutation,
   usePreviewAttendanceMutation,
@@ -560,12 +560,12 @@ const AttendanceImportHistoryScreen = () => {
       {/* Breadcrumbs */}
       {viewImportDialog.value ? (
         <CustomBreadcrumbs
-          heading="Import Attendance"
+          heading="Biometric Attendance"
           description="Track uploaded biometric attendance files, review records, and manage imports."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
             { name: 'Attendance Management' },
-            { name: 'Import Attendance' },
+            { name: 'Biometric Attendance' },
           ]}
           isBack
           onBack={() => {
@@ -575,12 +575,12 @@ const AttendanceImportHistoryScreen = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Import Attendance"
+          heading="Biometric Attendance"
           description="Track uploaded biometric attendance files, review records, and manage imports."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
             { name: 'Attendance Management' },
-            { name: 'Import Attendance' },
+            { name: 'Biometric Attendance' },
           ]}
         />
       )}
@@ -651,7 +651,7 @@ const AttendanceImportHistoryScreen = () => {
           </Box>
 
           <CustomizableTable
-            tableId="attendance-import-history-table"
+            tableId="biometric-attendance-history-table"
             showCheckbox={selectedRows.length > 0}
             columns={columns}
             data={listData?.items || []}
@@ -660,7 +660,7 @@ const AttendanceImportHistoryScreen = () => {
               <Stack alignItems="center" spacing={1} py={4}>
                 {' '}
                 <Typography color="text.secondary" variant="body2">
-                  No import attendace found.
+                  No biometric attendance found.
                 </Typography>
               </Stack>
             }
@@ -677,13 +677,13 @@ const AttendanceImportHistoryScreen = () => {
         onClose={() => setLockConfirmRow(null)}
         title={
           lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Unlock Attendance?'
-            : 'Lock Attendance?'
+            ? 'Unlock Biometric Attendance?'
+            : 'Lock Biometric Attendance?'
         }
         content={
           lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Are you sure you want to unlock this attendance import for payroll?'
-            : 'Are you sure you want to lock this attendance import for payroll? This will prevent further edits.'
+            ? 'Are you sure you want to unlock this biometric attendance import for payroll?'
+            : 'Are you sure you want to lock this biometric attendance import for payroll? This will prevent further edits.'
         }
         action={
           <Button
