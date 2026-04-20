@@ -6,9 +6,10 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all assignment types under academic medium
     getAssignmentTypes: builder.query({
-      query: () => ({
+      query: ({ academicMediumId }: { academicMediumId: string }) => ({
         url: `/assignment-type`,
         method: 'GET',
+        params: { academicMediumId },
       }),
       providesTags: [academicType.assignmentType],
     }),
@@ -24,29 +25,52 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
 
     // Add new assignment type
     addAssignmentType: builder.mutation({
-      query: ({ name }: { name: string }) => ({
+      query: ({
+        academicMediumId,
+        data,
+      }: {
+        academicMediumId: string;
+        data: { assignmentTypeName: string };
+      }) => ({
         url: `/assignment-type`,
         method: 'POST',
-        params: { name },
+        body: data,
+        params: { academicMediumId },
       }),
       invalidatesTags: [academicType.assignmentType],
     }),
 
     // Update assignment type
     updateAssignmentType: builder.mutation({
-      query: ({ assignmentTypeId, name }: { assignmentTypeId: string; name: string }) => ({
+      query: ({
+        assignmentTypeId,
+        academicMediumId,
+        data,
+      }: {
+        assignmentTypeId: string;
+        academicMediumId: string;
+        data: { assignmentTypeName: string };
+      }) => ({
         url: `/assignment-type/${assignmentTypeId}`,
         method: 'PUT',
-        params: { name },
+        body: data,
+        params: { academicMediumId },
       }),
       invalidatesTags: [academicType.assignmentType],
     }),
 
     // Delete assignment type
     deleteAssignmentType: builder.mutation({
-      query: ({ assignmentTypeId }: { assignmentTypeId: string }) => ({
+      query: ({
+        assignmentTypeId,
+        academicMediumId,
+      }: {
+        assignmentTypeId: string;
+        academicMediumId: string;
+      }) => ({
         url: `/assignment-type/${assignmentTypeId}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
       invalidatesTags: [academicType.assignmentType],
     }),

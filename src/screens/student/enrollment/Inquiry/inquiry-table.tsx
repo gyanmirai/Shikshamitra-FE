@@ -78,7 +78,7 @@ const InquiryTable = ({
   );
 
   return (
-    <Box sx={{ minHeight: 0, flexGrow: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, flexGrow: 1 }}>
       <CustomizableTable
         tableTitle="Inquiry"
         showCheckbox

@@ -27,12 +27,12 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   chaptersApi,
-  useGetChaptersQuery,
   useDeleteChapterMutation,
+  useGetChaptersByStandardQuery,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { AddNewChapter } from './addChapterForm';
@@ -71,8 +71,6 @@ const Subjects = () => {
   const addChapterDialog = useBoolean();
   // State for storing subject data with initial temp data
   const [subjectData] = useState<any>(subjectTempData);
-  // State for storing subject table data
-  const [chapterData] = useState<IChapter[]>(chapterTableData);
   // State for storing dialog data
   const [, setDialogData] = useState<any>([]);
   // State for managing selected chapter
@@ -135,17 +133,33 @@ const Subjects = () => {
   );
 
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !medium?.id || !classId,
+    },
+  });
+
+  const {
     data: chapterResponse,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: isChapterLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching: isChapterFetching,
     refetch: refetchChapters,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChaptersQuery,
-    params: { standardId: classId, subjectId },
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { assignedStandardId: subjectId },
+    options: {
+      skip: !subjectId,
+    },
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -231,7 +245,6 @@ const Subjects = () => {
               sx={{
                 display: 'flex',
                 gap: 2,
-                mb: 1,
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
@@ -252,23 +265,33 @@ const Subjects = () => {
                   }}
                 />
                 <CustomSelect
-                  options={[
-                    { value: 'Mathematics', label: 'Mathematics' },
-                    { value: 'Science', label: 'Science' },
-                    { value: 'English', label: 'English' },
-                    { value: 'History', label: 'History' },
-                    { value: 'Geography', label: 'Geography' },
-                  ]}
-                  value={subject}
+                  options={
+                    subjectOptionsData?.data?.items?.map((item: any) => ({
+                      value: item.id,
+                      label:
+                        item.subjects?.length > 1
+                          ? item.electiveGroupName
+                          : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName,
+                    })) || []
+                  }
+                  value={subjectId}
                   disabled={!classes}
                   onChange={(val) => {
-                    setSubject(val as string);
+                    const selected = subjectOptionsData?.data?.items?.find(
+                      (item: any) => item.id === val
+                    );
+                    const label =
+                      selected?.subjects?.length > 1
+                        ? selected?.electiveGroupName
+                        : selected?.subjects?.[0]?.subject?.name ||
+                          selected?.subjects?.[0]?.subjectName;
+                    setSubject(label || '');
                     setSubjectId(val as string);
                   }}
                   label="Subject"
                   valueKey="value"
                   labelKey="label"
-                  isLoading={isLoading}
+                  isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
                   formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
                 />
               </Box>
@@ -295,7 +318,7 @@ const Subjects = () => {
             isLoading={isChapterLoading || isChapterFetching}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
-            data={chapterData}
+            data={chapterResponse?.data || []}
             actions={actions}
             handleEyeClick={handleEyeClick}
             onViewDocuments={(chapter) => {
@@ -333,15 +356,16 @@ const Subjects = () => {
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     chaptersApi.util.updateQueryData(
-                      'getChapters',
-                      { standardId: classId, subjectId },
+                      'getChaptersByStandard',
+                      { assignedStandardId: subjectId },
                       (draft: any) => {
-                        const index = draft.findIndex(
+                        const list = draft?.data ?? draft;
+                        const index = list.findIndex(
                           (b: any) => b.id === (selectedChapter as any)?.id
                         );
                         setDeleteIndex(index);
                         if (index !== -1) {
-                          draft.splice(index, 1);
+                          list.splice(index, 1);
                         }
                       }
                     )

@@ -22,114 +22,117 @@ import CreateNoOfLecture from './createWeeklyLectures';
 
 import type { ISubject, ISubjectFormValues } from './type';
 
-const data = [
-  {
-    id: '1',
-    className: 1,
-    totalLectures: 52,
-    subjects: [
-      {
-        name: 'Mathematics',
-        subjectCode: 'MATH101',
-        subjectColor: '#FFB74D',
-        noOfLecture: 10,
-      },
-      { name: 'Science', subjectCode: 'SCI101', subjectColor: '#81C784', noOfLecture: 8 },
-      { name: 'English', subjectCode: 'ENG101', subjectColor: '#64B5F6', noOfLecture: 8 },
-      { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#E57373', noOfLecture: 6 },
-      { name: 'Computer', subjectCode: 'COM101', subjectColor: '#4DB6AC', noOfLecture: 6 },
-      { name: 'Art', subjectCode: 'ART101', subjectColor: '#FF8A65', noOfLecture: 4 },
-      {
-        name: 'Physical Education',
-        subjectCode: 'PHY101',
-        subjectColor: '#9575CD',
-        noOfLecture: 4,
-      },
-      {
-        name: 'Environmental Studies',
-        subjectCode: 'EVS101',
-        subjectColor: '#7CB342',
-        noOfLecture: 6,
-      },
-    ],
-  },
-  {
-    id: '2',
-    className: 2,
-    totalLectures: 54,
-    subjects: [
-      {
-        name: 'Mathematics',
-        subjectCode: 'MATH201',
-        subjectColor: '#FFB74D',
-        noOfLecture: 10,
-      },
-      { name: 'Science', subjectCode: 'SCI201', subjectColor: '#81C784', noOfLecture: 8 },
-      { name: 'English', subjectCode: 'ENG201', subjectColor: '#64B5F6', noOfLecture: 8 },
-      { name: 'Hindi', subjectCode: 'HIN201', subjectColor: '#E57373', noOfLecture: 7 },
-      { name: 'Computer', subjectCode: 'COM201', subjectColor: '#4DB6AC', noOfLecture: 6 },
-      { name: 'Art', subjectCode: 'ART201', subjectColor: '#FF8A65', noOfLecture: 4 },
-      {
-        name: 'Physical Education',
-        subjectCode: 'PHY201',
-        subjectColor: '#9575CD',
-        noOfLecture: 5,
-      },
-      {
-        name: 'Environmental Studies',
-        subjectCode: 'EVS201',
-        subjectColor: '#7CB342',
-        noOfLecture: 6,
-      },
-    ],
-  },
-  {
-    id: '3',
-    className: 3,
-    totalLectures: 56,
-    subjects: [
-      {
-        name: 'Mathematics',
-        subjectCode: 'MATH301',
-        subjectColor: '#FFB74D',
-        noOfLecture: 10,
-      },
-      { name: 'Science', subjectCode: 'SCI301', subjectColor: '#81C784', noOfLecture: 9 },
-      { name: 'English', subjectCode: 'ENG301', subjectColor: '#64B5F6', noOfLecture: 8 },
-      { name: 'Hindi', subjectCode: 'HIN301', subjectColor: '#E57373', noOfLecture: 7 },
-      { name: 'Computer', subjectCode: 'COM301', subjectColor: '#4DB6AC', noOfLecture: 6 },
-      { name: 'Art', subjectCode: 'ART301', subjectColor: '#FF8A65', noOfLecture: 4 },
-      {
-        name: 'Physical Education',
-        subjectCode: 'PHY301',
-        subjectColor: '#9575CD',
-        noOfLecture: 5,
-      },
-      {
-        name: 'Environmental Studies',
-        subjectCode: 'EVS301',
-        subjectColor: '#7CB342',
-        noOfLecture: 7,
-      },
-    ],
-  },
-];
+// const data = [
+//   {
+//     id: '1',
+//     className: 1,
+//     totalLectures: 52,
+//     subjects: [
+//       {
+//         name: 'Mathematics',
+//         subjectCode: 'MATH101',
+//         subjectColor: '#FFB74D',
+//         noOfLecture: 10,
+//       },
+//       { name: 'Science', subjectCode: 'SCI101', subjectColor: '#81C784', noOfLecture: 8 },
+//       { name: 'English', subjectCode: 'ENG101', subjectColor: '#64B5F6', noOfLecture: 8 },
+//       { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#E57373', noOfLecture: 6 },
+//       { name: 'Computer', subjectCode: 'COM101', subjectColor: '#4DB6AC', noOfLecture: 6 },
+//       { name: 'Art', subjectCode: 'ART101', subjectColor: '#FF8A65', noOfLecture: 4 },
+//       {
+//         name: 'Physical Education',
+//         subjectCode: 'PHY101',
+//         subjectColor: '#9575CD',
+//         noOfLecture: 4,
+//       },
+//       {
+//         name: 'Environmental Studies',
+//         subjectCode: 'EVS101',
+//         subjectColor: '#7CB342',
+//         noOfLecture: 6,
+//       },
+//     ],
+//   },
+//   {
+//     id: '2',
+//     className: 2,
+//     totalLectures: 54,
+//     subjects: [
+//       {
+//         name: 'Mathematics',
+//         subjectCode: 'MATH201',
+//         subjectColor: '#FFB74D',
+//         noOfLecture: 10,
+//       },
+//       { name: 'Science', subjectCode: 'SCI201', subjectColor: '#81C784', noOfLecture: 8 },
+//       { name: 'English', subjectCode: 'ENG201', subjectColor: '#64B5F6', noOfLecture: 8 },
+//       { name: 'Hindi', subjectCode: 'HIN201', subjectColor: '#E57373', noOfLecture: 7 },
+//       { name: 'Computer', subjectCode: 'COM201', subjectColor: '#4DB6AC', noOfLecture: 6 },
+//       { name: 'Art', subjectCode: 'ART201', subjectColor: '#FF8A65', noOfLecture: 4 },
+//       {
+//         name: 'Physical Education',
+//         subjectCode: 'PHY201',
+//         subjectColor: '#9575CD',
+//         noOfLecture: 5,
+//       },
+//       {
+//         name: 'Environmental Studies',
+//         subjectCode: 'EVS201',
+//         subjectColor: '#7CB342',
+//         noOfLecture: 6,
+//       },
+//     ],
+//   },
+//   {
+//     id: '3',
+//     className: 3,
+//     totalLectures: 56,
+//     subjects: [
+//       {
+//         name: 'Mathematics',
+//         subjectCode: 'MATH301',
+//         subjectColor: '#FFB74D',
+//         noOfLecture: 10,
+//       },
+//       { name: 'Science', subjectCode: 'SCI301', subjectColor: '#81C784', noOfLecture: 9 },
+//       { name: 'English', subjectCode: 'ENG301', subjectColor: '#64B5F6', noOfLecture: 8 },
+//       { name: 'Hindi', subjectCode: 'HIN301', subjectColor: '#E57373', noOfLecture: 7 },
+//       { name: 'Computer', subjectCode: 'COM301', subjectColor: '#4DB6AC', noOfLecture: 6 },
+//       { name: 'Art', subjectCode: 'ART301', subjectColor: '#FF8A65', noOfLecture: 4 },
+//       {
+//         name: 'Physical Education',
+//         subjectCode: 'PHY301',
+//         subjectColor: '#9575CD',
+//         noOfLecture: 5,
+//       },
+//       {
+//         name: 'Environmental Studies',
+//         subjectCode: 'EVS301',
+//         subjectColor: '#7CB342',
+//         noOfLecture: 7,
+//       },
+//     ],
+//   },
+// ];
 
 const WeeklyLectures = () => {
   const [selectedWeeklyLecture, setSelectedWeeklyLecture] = useState<ISubjectFormValues | null>(
     null
   );
 
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: weeklyLectureData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetWeeklyLectureSlotsQuery,
+    params: { AcademicMediumId: medium?.id },
+    options: {
+      skip: !medium?.id,
+    },
   });
 
   // Dialog state to control the visibility of create lecture number dialog
@@ -236,13 +239,13 @@ const WeeklyLectures = () => {
 
   const tableData = useMemo(
     () =>
-      data.map((item, index) => ({
+      weeklyLectureData?.data?.map((item: { subjects: any[] }, index: any) => ({
         ...item,
         newSubject: item.subjects
           .map((subject, ind) => `${subject.name} (${subject.noOfLecture})`)
           .join(' '),
       })),
-    []
+    [weeklyLectureData]
   );
 
   return (
@@ -272,6 +275,7 @@ const WeeklyLectures = () => {
 
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
+        isLoading={isLoading || isFetching}
         noDataText={
           <>
             Weekly Lectures Data Not Found{' '}
@@ -295,7 +299,7 @@ const WeeklyLectures = () => {
           </>
         }
         columns={columns}
-        data={tableData}
+        data={tableData || []}
       />
 
       <CustomDialog

@@ -1,5 +1,3 @@
-import { generateDummySubjects } from './createWeeklyLectures';
-
 import type { ISubjectFormValues } from './type';
 
 export const getNoOfLectureInitialValues = (
@@ -20,14 +18,7 @@ export const getNoOfLectureInitialValues = (
         noOfLecture,
         electiveGroupId: electiveGroupId || null,
       })
-    ) ??
-    generateDummySubjects().map((subj, index) => ({
-      id: `subject-${index}`,
-      subjectId: '',
-      ...subj,
-      noOfLecture: '',
-      electiveGroupId: null,
-    }));
+    ) ?? [];
 
   const totalLectures = subjects.reduce<number>(
     (sum, subj) => sum + (Number(subj.noOfLecture) || 0),

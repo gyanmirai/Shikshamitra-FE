@@ -5,10 +5,9 @@ import { classManagementApi } from '../classManagementApi';
 export const subjectProgressManageApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
     getSubjects: builder.query<any, { academicMediumId: string; classId: string }>({
-      query: (params) => ({
-        url: 'subjects',
+      query: ({ academicMediumId, classId }) => ({
+        url: `/academic-mediums/${academicMediumId}/subjects`,
         method: 'GET',
-        params,
       }),
       providesTags: [classManagementType.subjectProgress],
     }),

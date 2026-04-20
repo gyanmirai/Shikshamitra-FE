@@ -1,9 +1,12 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -20,6 +23,7 @@ import {
 import type { IAssignmentTypeFormProps } from './type';
 
 const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose, editData }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [addAssignmentType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAssignmentTypeMutation,
@@ -41,19 +45,19 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
     onSubmit: async (values) => {
       try {
         if (editData) {
-          const payload = {
+          await updateAssignmentType({
             assignmentTypeId: editData.id,
-            name: values.assignmentTypeName,
-          };
-          await updateAssignmentType(payload).unwrap();
+            academicMediumId: (currentMedium as any).id,
+            data: { assignmentTypeName: values.assignmentTypeName },
+          }).unwrap();
           shikshaMitraToast.success({
             message: `"${values.assignmentTypeName}" Assignment Type updated successfully`,
           });
         } else {
-          const payload = {
-            name: values.assignmentTypeName,
-          };
-          await addAssignmentType(payload).unwrap();
+          await addAssignmentType({
+            academicMediumId: (currentMedium as any).id,
+            data: { assignmentTypeName: values.assignmentTypeName },
+          }).unwrap();
           shikshaMitraToast.success({
             message: `"${values.assignmentTypeName}" Assignment Type added successfully`,
           });

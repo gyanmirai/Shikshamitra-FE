@@ -34,33 +34,6 @@ import SettingElectiveSubjectForm from '../../../setting/electiveSubjectSetting/
 
 import type { ISubjectAssignmentFormProps, ISubjectAssignmentFormValues } from './type';
 
-// Enhanced subject options with Core and Elective groups
-const subjectOptions = [
-  { label: 'Mathematics', value: 'Mathematics', type: 0, subjectColor: '#DEB887' },
-  { label: 'Science', value: 'Science', type: 0, subjectColor: '#00CED1' },
-  { label: 'Social Science', value: 'Social Science', type: 0, subjectColor: '#B22222' },
-  { label: 'English', value: 'English', type: 0, subjectColor: '#4682B4' },
-  { label: 'Gujarati', value: 'Gujarati', type: 0, subjectColor: '#3CB371' },
-  {
-    label: 'Tech & Fitness Group',
-    value: 'Tech & Fitness Group',
-    type: 1,
-    subjects: [
-      { name: 'Computer', code: 'COMP101', subjectColor: '#4169E1' },
-      { name: 'Physical Training', code: 'PT101', subjectColor: '#FF69B4' },
-    ],
-  },
-  {
-    label: 'Language Enrichment Group',
-    value: 'Language Enrichment Group',
-    type: 1,
-    subjects: [
-      { name: 'Sanskrit', code: 'SNSK101', subjectColor: '#DA70D6' },
-      { name: 'Hindi', code: 'HIND101', subjectColor: '#FF4500' },
-    ],
-  },
-];
-
 const SubjectAssignmentForm = ({
   onClose,
   data,
@@ -114,9 +87,13 @@ const SubjectAssignmentForm = ({
     currentQueryAndMutation: useUploadCurriculumFileMutation,
   });
 
+  // Normalize API response: GET-by-ID may return { data: {...} } or a flat object
+  const assignmentDetail =
+    subjectAssignmentData?.data ?? subjectAssignmentData ?? (isEdit ? data : null);
+
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectAssignmentFormValues>({
-    initialValues: getSubjectAssignmentInitialValues(subjectAssignmentData, selectedClass, classId),
+    initialValues: getSubjectAssignmentInitialValues(assignmentDetail, selectedClass, classId),
     validationSchema,
     enableReinitialize: true,
     // Handle form submission
@@ -140,19 +117,17 @@ const SubjectAssignmentForm = ({
           subjects: subjectsPayload,
         };
 
-        const finalPayload = {
-          academicMediumId: (currentMedium as Medium).id,
-          body: payload,
-        };
-
-        if (isEdit && subjectAssignmentData) {
-          await updateSubjectAssignment(finalPayload).unwrap();
+        if (isEdit && data?.id) {
+          await updateSubjectAssignment({ assignmentId: data.id, body: payload }).unwrap();
 
           shikshaMitraToast.success({
             message: `Subject Assignment updated successfully for class ${values.className}`,
           });
         } else {
-          await addSubjectAssignment(finalPayload).unwrap();
+          await addSubjectAssignment({
+            academicMediumId: (currentMedium as Medium).id,
+            body: payload,
+          }).unwrap();
 
           shikshaMitraToast.success({
             message:
@@ -186,41 +161,30 @@ const SubjectAssignmentForm = ({
     setAllClass(allClasses);
   }, [medium]);
 
-  // Initialize subject option when editing
+  // Initialize selected option from real API options when editing
   useEffect(() => {
-    if (isEdit && data && isInitializing) {
-      const preSelectedOptions: any[] = [];
-      const subjects = data.subjects || [];
+    if (!isEdit || !isInitializing) return;
+    const apiOptions = subjectOptionsData?.data;
+    if (!apiOptions) return;
 
-      // Naive matching: match by name or group containment
-      subjectOptions.forEach((opt) => {
-        if (opt.type === 0) {
-          // Core: Check if the option's name matches any subject's name in the data
-          if (subjects.some((s: any) => s.subjectName === opt.label)) {
-            preSelectedOptions.push(opt);
-          }
-        } else {
-          // Elective Group: Check if ANY of the group's subjects are in the data
-          // The option has a list of 'subjects' (definitions)
-          // The data has a list of 'subjects' (assignments)
-          // We check if any assignment's subjectName matches any definition's name in this group
-          // eslint-disable-next-line no-lonely-if
-          if (
-            opt.subjects &&
-            opt.subjects.some((sub: any) => subjects.some((s: any) => s.subjectName === sub.name))
-          ) {
-            preSelectedOptions.push(opt);
-          }
-        }
-      });
+    const assignmentSubjects = (assignmentDetail?.subjects as any[]) || [];
+    const preSelectedOptions = apiOptions
+      .filter((item: any) =>
+        assignmentSubjects.some(
+          (s: any) => s.subjectId === item.id || s.electiveGroupId === item.id
+        )
+      )
+      .map((item: any) => ({
+        label: item.name,
+        value: item.id,
+        type: item.subjectType,
+        color: item.color,
+        subjects: item.subjects,
+      }));
 
-      if (preSelectedOptions.length > 0) {
-        setSelectedOption(preSelectedOptions);
-      }
-
-      setIsInitializing(false);
-    }
-  }, [data, isEdit, isInitializing]);
+    setSelectedOption(preSelectedOptions);
+    setIsInitializing(false);
+  }, [isEdit, isInitializing, assignmentDetail, subjectOptionsData]);
 
   // Handle subject selection change
   const handleSubjectChange = (newValue: any[]) => {
@@ -321,6 +285,7 @@ const SubjectAssignmentForm = ({
                     value={formik.values.classId}
                     labelKey="name"
                     valueKey="id"
+                    disabled={isEdit}
                     onChange={(val) => {
                       formik.setFieldValue('classId', val);
                       const standard = allClass.find((c) => c.id === val);

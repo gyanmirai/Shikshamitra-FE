@@ -1,9 +1,14 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, List, Card, Button, ListItem, Typography } from '@mui/material';
 import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { ItemTypes } from './types';
 import { Iconify } from '../iconify';
@@ -84,19 +89,59 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
 };
 
 interface PaletteProps {
-  subjects: Subject[];
   placedCounts: Record<string, number>;
   selectedClass: string;
   selectedDivision: string;
 }
 
 const SubjectPalette: React.FC<PaletteProps> = ({
-  subjects,
   placedCounts,
   selectedClass,
   selectedDivision,
 }) => {
   const weeklyLecturesDialog = useBoolean();
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const standardId = React.useMemo(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [];
+    const matched = allClasses.find((c: any) => c.name === selectedClass || c.id === selectedClass);
+    return matched?.id || '';
+  }, [medium, selectedClass]);
+
+  const { data: subjectTableData, isLoading: isSubjectsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId,
+    },
+    options: {
+      skip: !medium?.id || !standardId,
+    },
+  });
+
+  const subjects: Subject[] = React.useMemo(() => {
+    if (!subjectTableData?.data?.items) return [];
+    return subjectTableData.data.items.flatMap((item: any) => {
+      if (item.subjectType === 1) {
+        return item.subjects.map((sub: any) => ({
+          id: sub.assignedId || sub.subjectId,
+          name: sub.subject?.name || sub.subjectName,
+          color: sub.subject?.color || sub.color || '#90caf9',
+          totalLectures: item.totalLectures,
+        }));
+      }
+      return [
+        {
+          id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
+          name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
+          color: item.subjects[0]?.subject?.color || item.subjects[0]?.color || '#90caf9',
+          totalLectures: item.totalLectures,
+        },
+      ];
+    });
+  }, [subjectTableData]);
 
   return (
     <Card

@@ -65,7 +65,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
           });
         } else {
           await addHomeworkType({
-            data: { name: values.homeworkTypeName },
+            data: { homeworkTypeName: values.homeworkTypeName },
             academicMediumId,
           }).unwrap();
           shikshaMitraToast.success({

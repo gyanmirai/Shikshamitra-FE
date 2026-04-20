@@ -72,15 +72,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     onSubmit: async (values) => {
       try {
         const payload = {
-          standardId: classId, // Assuming standardId is part of IChapterFormValues
-          subjectId, // Assuming subjectId is part of IChapterFormValues
-          educationMediumId: currentMedium?.id, // Assuming educationMediumId is part of IChapterFormValues
+          assignedSubjectId: subjectId,
           chapterNumber: values.chapterNo,
           chapterName: values.chapterName,
           chapterStartTime: values?.startDate?.toISOString(),
           chapterEndTime: values?.endDate?.toISOString(),
           description: values.description,
-          documents: [], // Assuming documents are managed separately or will be added here
+          documents:
+            formik.values.documents?.map((doc: any) => (typeof doc === 'string' ? doc : doc)) || [],
         };
 
         if (initialValues) {

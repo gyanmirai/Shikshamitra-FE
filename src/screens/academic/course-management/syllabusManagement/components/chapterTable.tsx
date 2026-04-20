@@ -57,7 +57,7 @@ const ChapterTable = ({
         render: (value, row) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
-              variant="caption"
+              variant="inherit"
               noWrap
               sx={{
                 maxWidth: 150,
