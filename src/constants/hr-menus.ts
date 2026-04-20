@@ -84,7 +84,7 @@ export const hrPermissions = {
   },
   attendance: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement`,
-    markAttendance: `${defaultHrPermissionName}AttendanceAndLeave.markAttendance`,
+    markAttendance: `${defaultHrPermissionName}AttendanceAndLeave.MarkAttendance`,
     biometricAttendance: `${defaultHrPermissionName}AttendanceAndLeave.BiometricAttendance`,
     setting: {
       root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement.Settings`,
