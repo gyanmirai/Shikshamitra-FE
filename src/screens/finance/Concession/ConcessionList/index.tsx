@@ -5,9 +5,9 @@ import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
-import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -66,30 +66,33 @@ const ConcessionList = () => {
           { name: 'Concession List' },
         ]}
       />
-      <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
-        <CustomSelect
-          label="Board"
-          options={boards || []}
-          labelKey="name"
-          valueKey="id"
-          value={selectedBoard}
-          onChange={(value) => {
-            setSelectedBoard(value as string);
-            setSelectedMedium('');
-          }}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-        <CustomSelect
-          label="Medium"
-          options={mediums || []}
-          labelKey="name"
-          disabled={!selectedBoard}
-          valueKey="id"
-          value={selectedMedium}
-          onChange={(value) => setSelectedMedium(value as string)}
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-      </Box>
+      <Card sx={{ p: 1.5, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          {' '}
+          <CustomSelect
+            label="Board"
+            options={boards || []}
+            labelKey="name"
+            valueKey="id"
+            value={selectedBoard}
+            onChange={(value) => {
+              setSelectedBoard(value as string);
+              setSelectedMedium('');
+            }}
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          />
+          <CustomSelect
+            label="Medium"
+            options={mediums || []}
+            labelKey="name"
+            disabled={!selectedBoard}
+            valueKey="id"
+            value={selectedMedium}
+            onChange={(value) => setSelectedMedium(value as string)}
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+          />
+        </Box>
+      </Card>
       <StudentConcessionListTable
         data={concessionData}
         onViewAllConcession={(data) => {

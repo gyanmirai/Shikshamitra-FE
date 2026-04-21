@@ -18,10 +18,10 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
     variant="outlined"
     sx={{
       mb: 1,
+      flexShrink: 0,
       borderRadius: 2,
       boxShadow: (theme) =>
         `0 0 2px 0 ${varAlpha(theme.palette.grey['500Channel'], 0.2)}, 0 12px 24px -4px ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
-      overflow: 'hidden',
     }}
   >
     {/* Header */}
@@ -49,7 +49,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       </Label>
     </Box>
 
-    <CardContent sx={{ p: 1 }}>
+    <CardContent sx={{ p: 1, '&:last-child': { pb: 0 } }}>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3.5 }}>
           <InfoItem icon={<AccountTree />} label="Fee Structure Name" value={feeStructure?.name} />

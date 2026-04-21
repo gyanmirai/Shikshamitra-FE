@@ -23,7 +23,7 @@ export const StudentApi = api.injectEndpoints({
         return {
           url: `/students/admissions${queryString}`,
           method: 'GET',
-          params: { academicMediumId },
+          // params: { academicMediumId },
         };
       },
       providesTags: [studentType.student],
