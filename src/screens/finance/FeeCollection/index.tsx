@@ -46,8 +46,9 @@ const FeeCollection = () => {
           description="Select the applicable fee term and enter payment details. Once completed, click 'Generate Receipt' to collect the fee."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
             {
-              name: 'Fee Collection',
+              name: 'Collections',
               href: '/finance/fee-collection',
               onClick() {
                 studentDialog.onFalse();
@@ -66,8 +67,9 @@ const FeeCollection = () => {
           description="View detailed fee information and payment history for the selected student."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
             {
-              name: 'Fee Collection',
+              name: 'Collections',
               href: '/finance/fee-collection',
               onClick() {
                 viewDialog.onFalse();
@@ -86,7 +88,11 @@ const FeeCollection = () => {
         <CustomBreadcrumbs
           heading="Fee Collection"
           description="Select class and division to view students. Click a student to see their fee details and collect fees or send reminders."
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Collection' }]}
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
+            { name: 'Collections' },
+          ]}
         />
       )}
       {!studentDialog.value && !viewDialog.value && (

@@ -90,8 +90,9 @@ const ConcessionType = () => {
         }
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Settings', href: '/finance/setting' },
-          { name: 'Concession Type', href: '/finance/concession-type' },
+          { name: 'Fees', href: '/finance/concession' },
+          { name: 'Settings' },
+          { name: 'Concession Type' },
         ]}
         action={
           <Button

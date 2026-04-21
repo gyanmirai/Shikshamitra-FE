@@ -40,6 +40,7 @@ const IncomeTracking = () => {
           onBack={() => handleClose(null, false)}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Accounts', href: '/finance/income-tracking' },
             {
               name: 'Income Tracking',
               href: '/finance/income-tracking',
@@ -55,7 +56,11 @@ const IncomeTracking = () => {
         <CustomBreadcrumbs
           heading="Income Tracking"
           description="This screen displays all income categories with the option to view detailed entries under each category and add new income records."
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Income Tracking' }]}
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Accounts', href: '/finance/income-tracking' },
+            { name: 'Income Tracking' },
+          ]}
           action={
             <Button
               onClick={() => addIncomeDialog.onTrue()}

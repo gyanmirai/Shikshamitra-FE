@@ -71,8 +71,9 @@ const Concession = () => {
           description="View and manage student concession requests."
           links={[
             { name: 'Finance', href: financePaths.dashboard },
+            { name: 'Fees', href: financePaths.concession },
             {
-              name: 'Concession',
+              name: 'Concessions',
               href: financePaths.concession,
               onClick(e) {
                 handleClose(null, false);
@@ -91,8 +92,9 @@ const Concession = () => {
           description="View and manage student concession requests."
           links={[
             { name: 'Finance', href: financePaths.dashboard },
+            { name: 'Fees', href: financePaths.concession },
             {
-              name: 'Concession',
+              name: 'Concessions',
               href: financePaths.concession,
               onClick(e) {
                 viewConcessionRequest.onFalse();
@@ -108,11 +110,12 @@ const Concession = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Concession"
+          heading="Concessions"
           description="View and manage student concession requests."
           links={[
             { name: 'Finance', href: financePaths.dashboard },
-            { name: 'Concession', href: financePaths.concession },
+            { name: 'Fees', href: financePaths.concession },
+            { name: 'Concessions', href: financePaths.concession },
           ]}
           action={
             <Button

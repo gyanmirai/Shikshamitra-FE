@@ -283,7 +283,11 @@ const FinanceReports = ({ addReportDialog }: { addReportDialog: UseBooleanReturn
       <CustomBreadcrumbs
         heading="Generate Reports"
         description="Generate and export various finance reports."
-        links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Generate Reports' }]}
+        links={[
+          { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Reports' },
+          { name: 'Generate Reports' },
+        ]}
         isBack={addReportDialog?.value}
         onBack={() => {
           addReportDialog?.onFalse();

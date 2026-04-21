@@ -93,6 +93,7 @@ const FinanceIncomeCategoriesScreen = () => {
         description="This screen displays all the created income categories with an option to create a new income category."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Accounts', href: '/finance/income-tracking' },
           { name: 'Settings' },
           { name: 'Income Category' },
         ]}

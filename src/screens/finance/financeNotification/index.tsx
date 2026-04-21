@@ -85,7 +85,7 @@ const FinanceNotificationScreen = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Notification',
+              name: 'Notifications',
               onClick(e) {
                 dialog.onFalse();
               },
@@ -100,7 +100,7 @@ const FinanceNotificationScreen = () => {
         <CustomBreadcrumbs
           heading="Notification"
           description="Configure notifications for fee collection, charges, concessions, and financial tracking."
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Notification' }]}
+          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Notifications' }]}
           sx={{ px: 1 }}
         />
       )}

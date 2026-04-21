@@ -100,6 +100,7 @@ const FeeHeadCreation = () => {
         description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click '+ Fee Head' to create a new one."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Fees', href: '/finance/fee-collection' },
           { name: 'Settings' },
           { name: 'Fee Head' },
         ]}

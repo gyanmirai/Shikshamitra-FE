@@ -62,7 +62,8 @@ const ConcessionList = () => {
         description="View and manage student concession requests."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Concession', href: '/finance/concession/concessionRequest' },
+          { name: 'Fees', href: '/finance/concession' },
+          { name: 'Concessions', href: '/finance/concession/concessionRequest' },
           { name: 'Concession List' },
         ]}
       />
