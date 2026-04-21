@@ -279,7 +279,7 @@ const hrModule = (isDdvs: boolean) => ({
             //   icon: menuIconView('mdi:file-import-outline'),
             // },
             {
-              title: 'Biometric Attendance',
+              title: 'Automated Marking',
               path: hrPaths.attendance.biometricAttendance,
               _action: 'biometric-attendance',
               shortcutKey: 'Alt+H+A+2',
@@ -306,7 +306,7 @@ const hrModule = (isDdvs: boolean) => ({
             //   icon: menuIconView('mdi:calendar-check-outline'),
             // },
             {
-              title: 'Take Attendance',
+              title: 'Mark Attendance',
               path: hrPaths.attendance.markAttendance,
               _action: 'manual-attendance',
               shortcutKey: 'Alt+H+A+5',

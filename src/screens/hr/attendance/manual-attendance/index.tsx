@@ -9,7 +9,6 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { RestartAlt } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -20,7 +19,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Button, TextField, Typography } from '@mui/material';
+import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { Box, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
 import {
   useUpdateAttendanceMutation,
   useGetPaginatedAttendanceQuery,
@@ -31,6 +31,7 @@ import {
 // ---------------------------------------------------------------------------
 const STATUS = {
   Present: 'Present',
+  HalfDay: 'HalfDay',
   Absent: 'Absent',
   Pending: 'Pending',
 } as const;
@@ -44,8 +45,8 @@ const DUMMY_DATA = [
     id: '1',
     fullName: 'Arjun Sharma',
     employeeIdentifier: 'EMP001',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
+    timeIn: '09:00',
+    timeOut: '18:00',
     status: STATUS.Present,
     remarks: 'Regular shift',
     errors: [],
@@ -55,8 +56,8 @@ const DUMMY_DATA = [
     id: '2',
     fullName: 'Priya Verma',
     employeeIdentifier: 'EMP002',
-    timeIn: '09:15 AM',
-    timeOut: '06:15 PM',
+    timeIn: '09:15',
+    timeOut: '18:15',
     status: STATUS.Present,
     remarks: 'Slightly late',
     errors: [],
@@ -77,8 +78,8 @@ const DUMMY_DATA = [
     id: '4',
     fullName: 'Anjali Singh',
     employeeIdentifier: 'EMP004',
-    timeIn: '09:00 AM',
-    timeOut: '04:00 PM',
+    timeIn: '09:00',
+    timeOut: '16:00',
     status: STATUS.Present,
     remarks: 'Half day',
     errors: ['Early departure'],
@@ -98,6 +99,11 @@ const DUMMY_DATA = [
 ];
 
 // ---------------------------------------------------------------------------
+// Editing cell type for inline time editing
+// ---------------------------------------------------------------------------
+type EditingCell = { rowId: string; field: 'timeIn' | 'timeOut'; value: Dayjs | null } | null;
+
+// ---------------------------------------------------------------------------
 // Shared segmented-control button styles
 // ---------------------------------------------------------------------------
 const segmentBtnBase = {
@@ -113,6 +119,7 @@ const ManualAttendanceScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [employeeData, setEmployeeData] = useState<any[]>(DUMMY_DATA);
   const [isLocked, setIsLocked] = useState(false);
+  const [editingCell, setEditingCell] = useState<EditingCell>(null);
 
   const resetConfirmDialog = useBoolean();
   const lockConfirmDialog = useBoolean();
@@ -159,6 +166,10 @@ const ManualAttendanceScreen = () => {
   // -------------------------------------------------------------------------
   // Helpers to update a single row's status
   // -------------------------------------------------------------------------
+  const updateRow = React.useCallback((id: string, patch: any) => {
+    setEmployeeData((prev) => prev.map((emp) => (emp.id === id ? { ...emp, ...patch } : emp)));
+  }, []);
+
   const setRowStatus = (id: string, status: AttendanceStatusType) => {
     if (isLocked) return;
     setEmployeeData((prev) => prev.map((emp) => (emp.id === id ? { ...emp, status } : emp)));
@@ -195,6 +206,7 @@ const ManualAttendanceScreen = () => {
   // Count helpers used in column header badges & tooltips
   // -------------------------------------------------------------------------
   const presentCount = employeeData.filter((e) => e.status === STATUS.Present).length;
+  const halfDayCount = employeeData.filter((e) => e.status === STATUS.HalfDay).length;
   const absentCount = employeeData.filter((e) => e.status === STATUS.Absent).length;
   const pendingCount = employeeData.filter((e) => e.status === STATUS.Pending).length;
 
@@ -225,20 +237,99 @@ const ManualAttendanceScreen = () => {
         minWidth: '8vw',
         render: () => date?.format('DD/MM/YYYY'),
       },
-      {
-        id: 'timeIn',
-        label: 'In-Time',
-        align: 'left',
-        minWidth: '6vw',
-        render: (val) => val || '-',
-      },
-      {
-        id: 'timeOut',
-        label: 'Out-Time',
-        align: 'left',
-        minWidth: '6vw',
-        render: (val) => val || '-',
-      },
+      ...(['timeIn', 'timeOut'] as const).map((field) => ({
+        id: field,
+        label: field === 'timeIn' ? 'In-Time' : 'Out-Time',
+        align: 'left' as const,
+        minWidth: '140px',
+        isSort: false,
+        isFilter: false,
+        render: (value: string, row: any) => {
+          const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
+          if (isEditing) {
+            return (
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <TimePicker
+                  value={editingCell.value}
+                  onChange={(newVal) =>
+                    setEditingCell((prev) => prev && { ...prev, value: newVal })
+                  }
+                  format="HH:mm"
+                  ampm={false}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      autoFocus: true,
+                      sx: { width: '120px', '& input': { fontSize: '0.8rem', p: '4px 6px' } },
+                    },
+                  }}
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock,
+                    seconds: renderTimeViewClock,
+                  }}
+                />
+                <CustomTooltip title="Save" arrow placement="top">
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => {
+                      const formatted = editingCell.value?.isValid()
+                        ? editingCell.value.format('HH:mm')
+                        : null;
+                      updateRow(row.id, { [field]: formatted });
+                      setEditingCell(null);
+                    }}
+                    sx={{ p: 0.4 }}
+                  >
+                    <Iconify icon="eva:checkmark-fill" width={16} />
+                  </IconButton>
+                </CustomTooltip>
+                <CustomTooltip title="Cancel" arrow placement="top">
+                  <IconButton size="small" onClick={() => setEditingCell(null)} sx={{ p: 0.4 }}>
+                    <Iconify icon="eva:close-fill" width={16} />
+                  </IconButton>
+                </CustomTooltip>
+              </Stack>
+            );
+          }
+          return (
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              sx={{
+                '& .edit-btn': { opacity: 0, transition: 'opacity 0.15s' },
+                '&:hover .edit-btn': { opacity: 1 },
+              }}
+            >
+              <Typography variant="body2">{value || '\u2014'}</Typography>
+              {!isLocked && (
+                <CustomTooltip
+                  title={`Edit ${field === 'timeIn' ? 'In-Time' : 'Out-Time'}`}
+                  arrow
+                  placement="top"
+                >
+                  <IconButton
+                    className="edit-btn"
+                    size="small"
+                    onClick={() =>
+                      setEditingCell({
+                        rowId: row.id,
+                        field,
+                        value: value ? dayjs(`1970-01-01T${value}`) : null,
+                      })
+                    }
+                    sx={{ p: 0.3 }}
+                  >
+                    <Iconify icon="eva:edit-2-outline" width={14} />
+                  </IconButton>
+                </CustomTooltip>
+              )}
+            </Stack>
+          );
+        },
+      })),
       // -------------------------------------------------------------------
       // Status column — 3-button segmented control (Present / Pending / Absent)
       // -------------------------------------------------------------------
@@ -327,7 +418,14 @@ const ManualAttendanceScreen = () => {
         label: (
           <Stack spacing={0.75} alignItems="center">
             {/* ── Count badges ── */}
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
+            <Box
+              sx={{
+                display: 'flex',
+                width: '230px',
+                gap: 0.25,
+                px: 0.25,
+              }}
+            >
               {/* Present */}
               <CustomTooltip
                 title={
@@ -385,7 +483,7 @@ const ManualAttendanceScreen = () => {
               >
                 <Box
                   sx={{
-                    minWidth: '28px',
+                    flex: 1,
                     height: '20px',
                     display: 'flex',
                     alignItems: 'center',
@@ -395,7 +493,6 @@ const ManualAttendanceScreen = () => {
                     color: 'success.dark',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    px: 0.75,
                     cursor: 'default',
                   }}
                 >
@@ -403,10 +500,29 @@ const ManualAttendanceScreen = () => {
                 </Box>
               </CustomTooltip>
 
+              {/* Half Day */}
+              <Box
+                sx={{
+                  flex: 1,
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '10px',
+                  bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
+                  color: 'info.dark',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'default',
+                }}
+              >
+                {halfDayCount}
+              </Box>
+
               {/* Pending */}
               <Box
                 sx={{
-                  minWidth: '28px',
+                  flex: 1,
                   height: '20px',
                   display: 'flex',
                   alignItems: 'center',
@@ -416,7 +532,6 @@ const ManualAttendanceScreen = () => {
                   color: 'warning.dark',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  px: 0.75,
                   cursor: 'default',
                 }}
               >
@@ -480,7 +595,7 @@ const ManualAttendanceScreen = () => {
               >
                 <Box
                   sx={{
-                    minWidth: '28px',
+                    flex: 1,
                     height: '20px',
                     display: 'flex',
                     alignItems: 'center',
@@ -490,20 +605,19 @@ const ManualAttendanceScreen = () => {
                     color: 'error.dark',
                     fontSize: '0.75rem',
                     fontWeight: 600,
-                    px: 0.75,
                     cursor: 'default',
                   }}
                 >
                   {absentCount}
                 </Box>
               </CustomTooltip>
-            </Stack>
+            </Box>
 
             {/* ── Mark-all segmented control ── */}
             <Box
               sx={{
                 display: 'flex',
-                width: '180px',
+                width: '230px',
                 height: '32px',
                 bgcolor: (t) => t.vars.palette.background.neutral,
                 borderRadius: '6px',
@@ -550,6 +664,47 @@ const ManualAttendanceScreen = () => {
                   }}
                 >
                   <Iconify icon="eva:checkmark-fill" width={18} />
+                </Box>
+              </CustomTooltip>
+
+              {/* Mark all Half Day */}
+              <CustomTooltip title="Mark all as Half Day" arrow placement="top">
+                <Box
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (
+                      isLocked ||
+                      employeeData.length === 0 ||
+                      employeeData.every((emp) => emp.status === STATUS.HalfDay)
+                    )
+                      return;
+                    setAllStatus(STATUS.HalfDay);
+                  }}
+                  sx={{
+                    ...segmentBtnBase,
+                    cursor:
+                      isLocked ||
+                      employeeData.length === 0 ||
+                      employeeData.every((e) => e.status === STATUS.HalfDay)
+                        ? 'not-allowed'
+                        : 'pointer',
+                    opacity:
+                      isLocked ||
+                      employeeData.length === 0 ||
+                      employeeData.every((e) => e.status === STATUS.HalfDay)
+                        ? 0.5
+                        : 1,
+                    bgcolor: (t) => (halfDayCount > 0 ? t.vars.palette.info.main : 'transparent'),
+                    color: (t) =>
+                      halfDayCount > 0
+                        ? t.vars.palette.info.contrastText
+                        : t.vars.palette.text.secondary,
+                    '&:hover': {
+                      bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.12),
+                    },
+                  }}
+                >
+                  <Iconify icon="mdi:fraction-one-half" width={18} />
                 </Box>
               </CustomTooltip>
 
@@ -610,7 +765,7 @@ const ManualAttendanceScreen = () => {
           </Stack>
         ),
         align: 'left',
-        minWidth: '200px',
+        minWidth: '230px',
         isSort: false,
         isFilter: false,
         render(value, row) {
@@ -618,7 +773,7 @@ const ManualAttendanceScreen = () => {
             <Box
               sx={{
                 display: 'flex',
-                width: '180px',
+                width: '220px',
                 height: '32px',
                 bgcolor: (t) => t.vars.palette.background.neutral,
                 borderRadius: '6px',
@@ -627,76 +782,108 @@ const ManualAttendanceScreen = () => {
               }}
             >
               {/* Present */}
-              <Box
-                onClick={() => setRowStatus(row.id, STATUS.Present)}
-                sx={{
-                  ...segmentBtnBase,
-                  cursor: isLocked ? 'not-allowed' : 'pointer',
-                  opacity: isLocked ? 0.5 : 1,
-                  bgcolor:
-                    value === STATUS.Present ? (t) => t.vars.palette.success.main : 'transparent',
-                  color:
-                    value === STATUS.Present
-                      ? (t) => t.vars.palette.success.contrastText
-                      : (t) => t.vars.palette.text.secondary,
-                  '&:hover': {
+              <CustomTooltip title="Present" arrow placement="top">
+                <Box
+                  onClick={() => setRowStatus(row.id, STATUS.Present)}
+                  sx={{
+                    ...segmentBtnBase,
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    opacity: isLocked ? 0.5 : 1,
                     bgcolor:
+                      value === STATUS.Present ? (t) => t.vars.palette.success.main : 'transparent',
+                    color:
                       value === STATUS.Present
-                        ? (t) => t.vars.palette.success.dark
-                        : (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
-                  },
-                }}
-              >
-                <Iconify icon="eva:checkmark-fill" width={18} />
-              </Box>
+                        ? (t) => t.vars.palette.success.contrastText
+                        : (t) => t.vars.palette.text.secondary,
+                    '&:hover': {
+                      bgcolor:
+                        value === STATUS.Present
+                          ? (t) => t.vars.palette.success.dark
+                          : (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
+                    },
+                  }}
+                >
+                  <Iconify icon="eva:checkmark-fill" width={18} />
+                </Box>
+              </CustomTooltip>
+
+              {/* Half Day */}
+              <CustomTooltip title="Half Day" arrow placement="top">
+                <Box
+                  onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
+                  sx={{
+                    ...segmentBtnBase,
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    opacity: isLocked ? 0.5 : 1,
+                    bgcolor:
+                      value === STATUS.HalfDay ? (t) => t.vars.palette.info.main : 'transparent',
+                    color:
+                      value === STATUS.HalfDay
+                        ? (t) => t.vars.palette.info.contrastText
+                        : (t) => t.vars.palette.text.secondary,
+                    '&:hover': {
+                      bgcolor:
+                        value === STATUS.HalfDay
+                          ? (t) => t.vars.palette.info.dark
+                          : (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
+                    },
+                  }}
+                >
+                  <Iconify icon="mdi:fraction-one-half" width={18} />
+                </Box>
+              </CustomTooltip>
 
               {/* Pending */}
-              <Box
-                onClick={() => setRowStatus(row.id, STATUS.Pending)}
-                sx={{
-                  ...segmentBtnBase,
-                  cursor: isLocked ? 'not-allowed' : 'pointer',
-                  opacity: isLocked ? 0.5 : 1,
-                  bgcolor:
-                    value === STATUS.Pending ? (t) => t.vars.palette.warning.main : 'transparent',
-                  color:
-                    value === STATUS.Pending
-                      ? (t) => t.vars.palette.warning.contrastText
-                      : (t) => t.vars.palette.text.secondary,
-                  '&:hover': {
+              <CustomTooltip title="Pending" arrow placement="top">
+                <Box
+                  onClick={() => setRowStatus(row.id, STATUS.Pending)}
+                  sx={{
+                    ...segmentBtnBase,
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    opacity: isLocked ? 0.5 : 1,
                     bgcolor:
+                      value === STATUS.Pending ? (t) => t.vars.palette.warning.main : 'transparent',
+                    color:
                       value === STATUS.Pending
-                        ? (t) => t.vars.palette.warning.dark
-                        : (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
-                  },
-                }}
-              >
-                <Iconify icon="eva:minus-fill" width={18} />
-              </Box>
+                        ? (t) => t.vars.palette.warning.contrastText
+                        : (t) => t.vars.palette.text.secondary,
+                    '&:hover': {
+                      bgcolor:
+                        value === STATUS.Pending
+                          ? (t) => t.vars.palette.warning.dark
+                          : (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
+                    },
+                  }}
+                >
+                  <Iconify icon="eva:minus-fill" width={18} />
+                </Box>
+              </CustomTooltip>
 
               {/* Absent */}
-              <Box
-                onClick={() => setRowStatus(row.id, STATUS.Absent)}
-                sx={{
-                  ...segmentBtnBase,
-                  cursor: isLocked ? 'not-allowed' : 'pointer',
-                  opacity: isLocked ? 0.5 : 1,
-                  bgcolor:
-                    value === STATUS.Absent ? (t) => t.vars.palette.error.main : 'transparent',
-                  color:
-                    value === STATUS.Absent
-                      ? (t) => t.vars.palette.error.contrastText
-                      : (t) => t.vars.palette.text.secondary,
-                  '&:hover': {
+              <CustomTooltip title="Absent" arrow placement="top">
+                <Box
+                  onClick={() => setRowStatus(row.id, STATUS.Absent)}
+                  sx={{
+                    ...segmentBtnBase,
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    opacity: isLocked ? 0.5 : 1,
                     bgcolor:
+                      value === STATUS.Absent ? (t) => t.vars.palette.error.main : 'transparent',
+                    color:
                       value === STATUS.Absent
-                        ? (t) => t.vars.palette.error.dark
-                        : (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
-                  },
-                }}
-              >
-                <Iconify icon="eva:close-fill" width={18} />
-              </Box>
+                        ? (t) => t.vars.palette.error.contrastText
+                        : (t) => t.vars.palette.text.secondary,
+                    '&:hover': {
+                      bgcolor:
+                        value === STATUS.Absent
+                          ? (t) => t.vars.palette.error.dark
+                          : (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
+                    },
+                  }}
+                >
+                  <Iconify icon="eva:close-fill" width={18} />
+                </Box>
+              </CustomTooltip>
             </Box>
           );
         },
@@ -710,8 +897,11 @@ const ManualAttendanceScreen = () => {
       date,
       isLocked,
       presentCount,
+      halfDayCount,
       pendingCount,
       absentCount,
+      editingCell,
+      updateRow,
     ]
   );
 
@@ -723,9 +913,11 @@ const ManualAttendanceScreen = () => {
       background: (theme: any) =>
         row.status === STATUS.Present
           ? varAlpha(theme.vars.palette.success.mainChannel, 0.1)
-          : row.status === STATUS.Absent
-            ? varAlpha(theme.vars.palette.error.mainChannel, 0.1)
-            : varAlpha(theme.vars.palette.warning.mainChannel, 0.06),
+          : row.status === STATUS.HalfDay
+            ? varAlpha(theme.vars.palette.info.mainChannel, 0.1)
+            : row.status === STATUS.Absent
+              ? varAlpha(theme.vars.palette.error.mainChannel, 0.1)
+              : varAlpha(theme.vars.palette.warning.mainChannel, 0.06),
       transition: 'background-color 0.2s',
       height: '40px',
       '& td': { py: 0.5 },
@@ -738,11 +930,11 @@ const ManualAttendanceScreen = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Take Attendance"
+        heading="Mark Attendance"
         links={[
           { name: 'HR', href: '/hr/dashboard/' },
           { name: 'Attendance', href: '/hr/attendance-tracking' },
-          { name: 'Take Attendance' },
+          { name: 'Mark Attendance' },
         ]}
         description="Quickly record employee attendance manually: Choose the date, then mark each employee as Present, Pending, or Absent."
       />

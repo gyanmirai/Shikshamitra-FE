@@ -24,6 +24,10 @@ import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
+  AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusOptions,
+} from 'src/enums/attendance-import-batch-statusType';
+import {
   Person,
   Numbers,
   FilePresent,
@@ -31,10 +35,6 @@ import {
   CalendarMonth,
   CheckCircleOutline,
 } from '@mui/icons-material';
-import {
-  AttendanceImportBatchStatus,
-  AttendanceImportBatchStatusOptions,
-} from 'src/enums/attendance-import-batch-statusType';
 import {
   useConfirmAttendanceMutation,
   usePreviewAttendanceMutation,
@@ -560,12 +560,12 @@ const AttendanceImportHistoryScreen = () => {
       {/* Breadcrumbs */}
       {viewImportDialog.value ? (
         <CustomBreadcrumbs
-          heading="Biometric Attendance"
+          heading=" Automated Marking"
           description="Track uploaded biometric attendance files, review records, and manage imports."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
             { name: 'Attendance Management' },
-            { name: 'Biometric Attendance' },
+            { name: 'Automated Marking' },
           ]}
           isBack
           onBack={() => {
@@ -575,12 +575,12 @@ const AttendanceImportHistoryScreen = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Biometric Attendance"
+          heading="Automated Marking"
           description="Track uploaded biometric attendance files, review records, and manage imports."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
             { name: 'Attendance Management' },
-            { name: 'Biometric Attendance' },
+            { name: 'Automated Marking' },
           ]}
         />
       )}
@@ -677,13 +677,13 @@ const AttendanceImportHistoryScreen = () => {
         onClose={() => setLockConfirmRow(null)}
         title={
           lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Unlock Biometric Attendance?'
-            : 'Lock Biometric Attendance?'
+            ? 'Unlock Automated Marking?'
+            : 'Lock Automated Marking?'
         }
         content={
           lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Are you sure you want to unlock this biometric attendance import for payroll?'
-            : 'Are you sure you want to lock this biometric attendance import for payroll? This will prevent further edits.'
+            ? 'Are you sure you want to unlock this automated marking import for payroll?'
+            : 'Are you sure you want to lock this automated marking import for payroll? This will prevent further edits.'
         }
         action={
           <Button
@@ -843,8 +843,9 @@ const ImportDetailDialog = ({
   React.useEffect(() => {
     if (rowsData?.items) {
       setRowsData2(
-        rowsData.items.map((r: any) => ({
+        rowsData.items.map((r: any, index: number) => ({
           ...r,
+          id: r.id ?? `row-${index}`,
           attendanceStatus: r.attendanceStatus || ROW_STATUS.Pending,
         }))
       );
