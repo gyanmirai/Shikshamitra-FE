@@ -16,13 +16,13 @@ import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
-import React, { useState, useEffect, useCallback } from 'react';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
@@ -89,15 +89,19 @@ const CourseProgressComponent = ({
 }: any) => {
   const isVertical = layout === 'vertical';
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [courses, setCourses] = useState<ICourse[]>(courseData || []);
   const [query, setQuery] = useState({
     sorting: '',
     skipCount: 0,
     maxResultCount: 10,
   });
 
-  const { data: subjectData } = useQueryAndMutation({
+  const isApiActive = !!(selectedClass && selectedDivision && (currentMedium as Medium)?.id);
+
+  const {
+    data: subjectData,
+    isLoading: isSubjectsLoading,
+    isFetching: isSubjectsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectsQuery,
     params: {
@@ -105,32 +109,67 @@ const CourseProgressComponent = ({
       classId: selectedClass,
       divisionId: selectedDivision,
     },
+    options: {
+      skip: !isApiActive,
+    },
   });
 
-  useEffect(() => {
-    if (subjectData) {
-      setCourses(subjectData);
-    }
-  }, [subjectData]);
+  const courses = useMemo<ICourse[]>(() => {
+    // When the API is not active (student/HR profile view), use the courseData prop directly
+    if (!isApiActive) return courseData || [];
+
+    const raw: any[] =
+      subjectData?.data?.items ??
+      subjectData?.items ??
+      subjectData?.records ??
+      (Array.isArray(subjectData) ? subjectData : []);
+
+    return raw.map((s: any) => ({
+      id: s.id ?? s.subjectId,
+      name: s.subjectName ?? s.name ?? '',
+      color: s.color ?? '#1976d2',
+      progress: s.progress ?? 0,
+      completedChapter: s.completedChapter ?? 0,
+      totalChapter: s.totalChapter ?? 0,
+      details: s.details ?? [],
+    }));
+  }, [subjectData, courseData, isApiActive]);
 
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
+  // Dedicated string ID so the chapters query gets a stable, clean param on every subject click
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
+
+  // Reset selection whenever class or division changes to avoid stale chapter data
+  useEffect(() => {
+    setSelectedCourse(null);
+    setSelectedSubjectId('');
+  }, [selectedClass, selectedDivision]);
 
   const { data: chaptersData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersProgressQuery,
     params: {
       academicMediumId: (currentMedium as Medium)?.id,
-      classId: selectedClass?.id,
-      divisionId: selectedDivision?.id,
-      subjectId: selectedCourse?.id,
+      classId: selectedClass,
+      divisionId: selectedDivision,
+      subjectId: selectedSubjectId,
+    },
+    options: {
+      skip: !isApiActive || !selectedSubjectId,
     },
   });
 
   useEffect(() => {
-    if (chaptersData) {
-      setSelectedCourse((prev) => (prev ? { ...prev, details: chaptersData } : null));
-    }
+    if (!chaptersData) return;
+
+    const raw: any[] =
+      chaptersData?.data?.items ??
+      chaptersData?.items ??
+      chaptersData?.records ??
+      (Array.isArray(chaptersData) ? chaptersData : []);
+
+    setSelectedCourse((prev) => (prev ? { ...prev, details: raw } : null));
   }, [chaptersData]);
 
   // Dialog state for updating progress
@@ -138,6 +177,7 @@ const CourseProgressComponent = ({
   // Handler for when a course card is selected
   const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
+    setSelectedSubjectId(course.id ? String(course.id) : '');
   };
 
   const [selectedChapter, setSelectedChapter] = useState<ICourseDetail | null>(null);
@@ -235,17 +275,21 @@ const CourseProgressComponent = ({
           {isVertical ? (
             <Box>
               <CourseCardsGrid
+                key={`${selectedClass}-${selectedDivision}`}
                 courses={courses}
                 handleCardDetails={handleCardDetails}
                 layout={layout}
+                isLoading={isSubjectsLoading || isSubjectsFetching}
               />
             </Box>
           ) : (
             <Card sx={{ height: '100%', p: 1, overflow: 'hidden' }}>
               <CourseCardsGrid
+                key={`${selectedClass}-${selectedDivision}`}
                 courses={courses}
                 handleCardDetails={handleCardDetails}
                 layout={layout}
+                isLoading={isSubjectsLoading || isSubjectsFetching}
               />
             </Card>
           )}

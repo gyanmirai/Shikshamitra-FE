@@ -25,7 +25,7 @@ interface SubjectCardProps {
 }
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
-  const isFull = placedCount >= (subject.totalLectures || 0);
+  const isFull = placedCount >= (subject.totalLectures ?? 6);
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.SUBJECT,
@@ -82,7 +82,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
         color={isFull ? 'error.main' : placedCount > 0 ? 'primary.main' : 'text.secondary'}
         fontWeight={placedCount > 0 ? 'bold' : 'regular'}
       >
-        {placedCount} / {subject.totalLectures}
+        {placedCount} / {subject.totalLectures ?? 6}
       </Typography>
     </ListItem>
   );
@@ -124,12 +124,13 @@ const SubjectPalette: React.FC<PaletteProps> = ({
   const subjects: Subject[] = React.useMemo(() => {
     if (!subjectTableData?.data?.items) return [];
     return subjectTableData.data.items.flatMap((item: any) => {
+      const totalLectures = item.totalLectures ?? 6;
       if (item.subjectType === 1) {
         return item.subjects.map((sub: any) => ({
           id: sub.assignedId || sub.subjectId,
           name: sub.subject?.name || sub.subjectName,
           color: sub.subject?.color || sub.color || '#90caf9',
-          totalLectures: item.totalLectures,
+          totalLectures,
         }));
       }
       return [
@@ -137,7 +138,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
           id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
           name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
           color: item.subjects[0]?.subject?.color || item.subjects[0]?.color || '#90caf9',
-          totalLectures: item.totalLectures,
+          totalLectures,
         },
       ];
     });

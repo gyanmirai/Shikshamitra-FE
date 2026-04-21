@@ -3,7 +3,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import React, { useRef, useState, useEffect } from 'react';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Card, IconButton, Typography, CircularProgress } from '@mui/material';
+import { Box, Card, Skeleton, IconButton, Typography, CircularProgress } from '@mui/material';
 
 import type { IAppWidgetProps, ICourseCardsGridProps } from '../type';
 
@@ -11,8 +11,9 @@ export default function CourseCardsGrid({
   courses,
   handleCardDetails,
   layout = 'horizontal',
+  isLoading = false,
 }: ICourseCardsGridProps) {
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | number | null>(null);
 
   useEffect(() => {
     if (courses?.length > 0 && selectedCourseId === null) {
@@ -63,7 +64,23 @@ export default function CourseCardsGrid({
   const isVertical = layout === 'vertical';
   const showArrows = isVertical && courses && courses.length > 2;
 
-  const content = (
+  const content = isLoading ? (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: isVertical ? 'row' : 'column',
+        gap: isVertical ? 1 : 1.5,
+      }}
+    >
+      {[1, 2, 3].map((i) => (
+        <Card key={i} sx={{ minWidth: isVertical ? 280 : undefined, p: 1.5, flexShrink: 0 }}>
+          <Skeleton variant="text" width="60%" height={22} sx={{ mb: 1 }} />
+          <Skeleton variant="rectangular" height={8} sx={{ borderRadius: 1, mb: 0.5 }} />
+          <Skeleton variant="text" width="40%" height={18} />
+        </Card>
+      ))}
+    </Box>
+  ) : (
     <Box
       ref={isVertical ? scrollRef : undefined}
       sx={{
@@ -82,6 +99,7 @@ export default function CourseCardsGrid({
     >
       {courses?.map((course) => {
         const isSelected = selectedCourseId === course.id;
+        const courseColor = course.color || '#1976d2';
 
         return (
           <Card
@@ -98,24 +116,23 @@ export default function CourseCardsGrid({
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               border: (theme) =>
                 isSelected
-                  ? `1.5px solid ${alpha(course.color, 0.6)}`
+                  ? `1.5px solid ${alpha(courseColor, 0.6)}`
                   : `1px solid ${theme.palette.divider}`,
               backgroundColor: (theme) =>
-                isSelected ? alpha(course.color, 0.04) : theme.vars.palette.background.paper,
+                isSelected ? alpha(courseColor, 0.04) : theme.vars.palette.background.paper,
               boxShadow: (theme) =>
                 isSelected
-                  ? `0 8px 20px -4px ${alpha(course.color, 0.18)}`
+                  ? `0 8px 20px -4px ${alpha(courseColor, 0.18)}`
                   : theme.customShadows.card,
               '&:hover': {
                 transform: 'translateY(-2px)',
-
-                borderColor: alpha(course.color, 0.4),
+                borderColor: alpha(courseColor, 0.4),
               },
             }}
           >
             <AppWidget
               title={course.name}
-              color={course.color}
+              color={courseColor}
               chart={{ series: course.progress }}
               completedChapter={course.completedChapter}
               totalChapter={course.totalChapter}
@@ -190,6 +207,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
   totalChapter,
 }: IAppWidgetProps) => {
   const progress = chart.series;
+  const safeColor = color || '#1976d2';
 
   return (
     <Box
@@ -204,7 +222,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
       {/* Title & Chapter Count */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box display="flex" alignItems="center" gap={1}>
-          <SubjectColorIndicator color={color} />
+          <SubjectColorIndicator color={safeColor} />
           <Typography
             variant="subtitle2"
             fontWeight={700}
@@ -222,7 +240,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
             value={100}
             size={48}
             thickness={4}
-            sx={{ color: alpha(color, 0.16) }}
+            sx={{ color: alpha(safeColor, 0.16) }}
           />
           {/* Active Progress */}
           <CircularProgress

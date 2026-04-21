@@ -318,7 +318,7 @@ const Subjects = () => {
             isLoading={isChapterLoading || isChapterFetching}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
-            data={chapterResponse?.data || []}
+            data={chapterResponse || []}
             actions={actions}
             handleEyeClick={handleEyeClick}
             onViewDocuments={(chapter) => {

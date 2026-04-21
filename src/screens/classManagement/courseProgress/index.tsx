@@ -8,7 +8,6 @@ import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 
 import CourseProgressComponent from './courseProgress';
 
@@ -74,12 +73,7 @@ const CourseProgress = () => {
             disabled={!classes}
           />
         </Box>
-        <CourseProgressComponent
-          courseData={courseProgressTableData}
-          isAction
-          selectedClass={classes}
-          selectedDivision={division}
-        />
+        <CourseProgressComponent isAction selectedClass={classes} selectedDivision={division} />
       </Card>
     </Box>
   );
