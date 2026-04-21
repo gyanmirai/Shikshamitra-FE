@@ -174,7 +174,6 @@ const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, ed
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                style={{ overflow: 'hidden' }}
               >
                 <BackPopUpChecked
                   initialValues={formik.initialValues}

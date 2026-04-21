@@ -12,13 +12,13 @@ import { EmptyContent } from 'src/components/empty-content';
 import { Box, Card, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import feeCollectionData from '../../../../../financeFeeCollection.json';
 
 import type { IFeeData, IFeeTableProps } from './type';
 
@@ -34,15 +34,22 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // const { data: feeCollectionData, isLoading: feeCollectionLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetFeeCollectionListQuery,
-  //   params: {
-  //     academicYearId: currentYear?.id,
-  //     boardId: selectedBoard,
-  //     mediumId: selectedMedium,
-  //   },
-  // });
+  const {
+    data: feeCollectionData,
+    isLoading: feeCollectionLoading,
+    isFetching: feeCollectionFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeCollectionListQuery,
+    params: {
+      AcademicYearId: currentYear?.id,
+      BoardId: selectedBoard,
+      MediumId: selectedMedium,
+    },
+    options: {
+      skip: !selectedBoard || !selectedMedium, // Skip query if board or medium is not selected
+    },
+  });
   useEffect(() => {
     // Filter boards based on academic year ID from edit data
     setBoards(currentYear?.boards);
@@ -65,21 +72,23 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
 
   const tableData = useMemo(
     () =>
-      ((feeCollectionData?.feeCollectionData || []) as any[]).map((item) => ({
+      ((feeCollectionData?.items || []) as any[]).map((item) => ({
         ...item,
-        nameValue: `${item.name || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
-        classDivValue: `${item.className || '-'}-${item.division}`,
-        paybleFeesValue: item.paybleFees ?? 0,
+        nameValue: `${item.studentName || '-'}${item.grNo ? ` (${item.grNo})` : ''}`,
+        classDivValue: `${item.standardName || '-'}-${item.divisionName || ''}`,
+        rollNoValue: item.rollNo || '-',
         totalFeesValue: item.totalFees ?? 0,
+        paidFeesValue: item.paidFees ?? 0,
         pendingFeesValue: item.pendingFees ?? 0,
+        overdueFeesValue: item.overdueFees ?? 0,
       })),
-    []
+    [feeCollectionData]
   );
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, pb: 1 }}>
+      <Card sx={{ p: 1.5, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <CustomSelect
             label="Board"
             options={boards || []}
@@ -126,19 +135,10 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               minWidth: '70px',
             },
             {
-              id: 'rollNumber',
+              id: 'rollNoValue',
               label: 'Roll No.',
               align: 'left',
               isFilter: true,
-            },
-            {
-              id: 'paybleFeesValue',
-              label: 'Payble Fees',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-              minWidth: '120px',
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
               id: 'totalFeesValue',
@@ -150,8 +150,26 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
+              id: 'paidFeesValue',
+              label: 'Paid Fees',
+              align: 'left',
+              isFilter: true,
+              filterType: 'number',
+              minWidth: '120px',
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+            },
+            {
               id: 'pendingFeesValue',
               label: 'Pending Fees',
+              filterType: 'number',
+              align: 'left',
+              isFilter: true,
+              minWidth: '130px',
+              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
+            },
+            {
+              id: 'overdueFeesValue',
+              label: 'Overdue Fees',
               filterType: 'number',
               align: 'left',
               isFilter: true,
