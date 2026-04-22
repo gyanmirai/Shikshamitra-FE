@@ -118,6 +118,7 @@ const ChargesManagement = () => {
           description="View and manage student charges."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
               href: '/finance/charge-management/chargesRequest',
@@ -140,6 +141,7 @@ const ChargesManagement = () => {
           description="View and manage student charges."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
               href: '/finance/charge-management/chargesRequest',
@@ -161,6 +163,7 @@ const ChargesManagement = () => {
           description="View and manage student charges."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
               href: '/finance/charge-management/chargesRequest',
@@ -184,6 +187,7 @@ const ChargesManagement = () => {
           description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/charge-management' },
             { name: 'Charges', href: '/finance/charge-management/chargesRequest' },
           ]}
           action={

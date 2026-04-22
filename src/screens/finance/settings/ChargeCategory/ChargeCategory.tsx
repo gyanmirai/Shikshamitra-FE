@@ -202,6 +202,7 @@ const FinanceChargeCategory = () => {
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Fees', href: '/finance/charge-management' },
           { name: 'Settings' },
           { name: 'Charge Category' },
         ]}

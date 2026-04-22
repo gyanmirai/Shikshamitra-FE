@@ -10,7 +10,11 @@ import IncomeTable from './Components/IncomeTable';
 import IncomeTrackingForm from './Components/IncomeTrackingForm';
 import { useIncomeTrackingScreen } from './hooks/useIncomeTrackingScreen';
 
-const IncomeTracking = () => {
+interface IncomeTrackingProps {
+  embedded?: boolean;
+}
+
+const IncomeTracking = ({ embedded = false }: IncomeTrackingProps) => {
   const {
     selectedIncome,
     setSelectedIncome,
@@ -28,46 +32,66 @@ const IncomeTracking = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {addIncomeDialog.value ? (
-        <CustomBreadcrumbs
-          heading={selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking '}
-          description={
-            selectedIncome
-              ? 'Update income record details such as source, date, amount, and category to maintain accurate income tracking.'
-              : 'This screen allows users to add a new income by filling in all related fields such as category, amount, date and payment details.'
-          }
-          isBack
-          onBack={() => handleClose(null, false)}
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            {
-              name: 'Income Tracking',
-              href: '/finance/income-tracking',
-              onClick: () => {
-                addIncomeDialog.onFalse();
-                setSelectedIncome(null);
+      {!embedded &&
+        (addIncomeDialog.value ? (
+          <CustomBreadcrumbs
+            heading={selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking '}
+            description={
+              selectedIncome
+                ? 'Update income record details such as source, date, amount, and category to maintain accurate income tracking.'
+                : 'This screen allows users to add a new income by filling in all related fields such as category, amount, date and payment details.'
+            }
+            isBack
+            onBack={() => handleClose(null, false)}
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              { name: 'Accounts', href: '/finance/income-tracking' },
+              {
+                name: 'Income Tracking',
+                href: '/finance/income-tracking',
+                onClick: () => {
+                  addIncomeDialog.onFalse();
+                  setSelectedIncome(null);
+                },
               },
-            },
-            { name: selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking ' },
-          ]}
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Income Tracking"
-          description="This screen displays all income categories with the option to view detailed entries under each category and add new income records."
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Income Tracking' }]}
-          action={
-            <Button
-              onClick={() => addIncomeDialog.onTrue()}
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              sx={{ px: '32px' }}
-            >
-              Income
-            </Button>
-          }
-        />
+              { name: selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking ' },
+            ]}
+          />
+        ) : (
+          <CustomBreadcrumbs
+            heading="Income Tracking"
+            description="This screen displays all income categories with the option to view detailed entries under each category and add new income records."
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              { name: 'Accounts', href: '/finance/income-tracking' },
+              { name: 'Income Tracking' },
+            ]}
+            action={
+              <Button
+                onClick={() => addIncomeDialog.onTrue()}
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                sx={{ px: '32px' }}
+              >
+                Income
+              </Button>
+            }
+          />
+        ))}
+
+      {embedded && !addIncomeDialog.value && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Button
+            onClick={() => addIncomeDialog.onTrue()}
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            sx={{ px: '32px' }}
+          >
+            Income
+          </Button>
+        </Box>
       )}
 
       <>

@@ -9,15 +9,14 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
-import { Cancel, CheckCircle } from '@mui/icons-material';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Tab, Tabs, Button, Typography } from '@mui/material';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import { useDeleteConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
   concessionManagementApi,
@@ -147,87 +146,71 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     ]
   );
 
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {row.status === ConcessionStatusType.Rejected ? (
-          <MenuItem
-            onClick={() => {
-              onApprove(row as IStudentInfo);
-              pop.onClose();
-            }}
-          >
-            <CheckCircle sx={{ width: '20px', height: '20px', color: 'success.main' }} /> Approve
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={() => {
-              onReject(row as IStudentInfo);
-              pop.onClose();
-            }}
-          >
-            <Cancel sx={{ width: '20px', height: '20px', color: 'error.main' }} /> Reject
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
-    [onApprove, onReject]
-  );
-
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1.5, pt: 1.5, pb: 1.5, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between">
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <CustomSelect
-              label="Board"
-              options={boards || []}
-              labelKey="name"
-              valueKey="id"
-              value={selectedBoard}
-              onChange={(value) => {
-                onBoardChange(value as string);
-                onMediumChange('');
-              }}
-              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-            />
-            <CustomSelect
-              label="Medium"
-              options={mediums || []}
-              labelKey="name"
-              disabled={!selectedBoard}
-              valueKey="id"
-              value={selectedMedium}
-              onChange={(value) => onMediumChange(value as string)}
-              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-            />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Tabs
-              value={tabs.value}
-              onChange={tabs.onChange}
-              sx={{
-                '& .MuiTabs-flexContainer': { gap: 2 },
-                flexGrow: 1,
-              }}
-            >
-              {TABS.map((tab) => (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  sx={{ fontSize: '12px' }}
-                  label={
-                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                      {tab.label}
-                      <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                    </Box>
-                  }
-                />
-              ))}
-            </Tabs>
-          </Box>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{
+          p: 1,
+          gap: 2,
+          borderRadius: '8px',
+          bgcolor: 'background.paper',
+          boxShadow: 'var(--shadows-3)',
+          mb: 1,
+          flexWrap: 'wrap',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <CustomSelect
+            label="Board"
+            options={boards || []}
+            labelKey="name"
+            valueKey="id"
+            value={selectedBoard}
+            onChange={(value) => {
+              onBoardChange(value as string);
+              onMediumChange('');
+            }}
+            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+          />
+          <CustomSelect
+            label="Medium"
+            options={mediums || []}
+            labelKey="name"
+            disabled={!selectedBoard}
+            valueKey="id"
+            value={selectedMedium}
+            onChange={(value) => onMediumChange(value as string)}
+            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+          />
         </Box>
-      </Card>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            sx={{
+              '& .MuiTabs-flexContainer': { gap: 2 },
+              flexGrow: 1,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Tab
+                key={tab.value}
+                value={tab.value}
+                sx={{ fontSize: '12px' }}
+                label={
+                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                    {tab.label}
+                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+        </Box>
+      </Box>
 
       <CustomizableTable
         tableId="student-concession-table"

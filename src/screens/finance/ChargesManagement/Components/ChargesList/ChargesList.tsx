@@ -60,6 +60,7 @@ const ChargesList = () => {
         description="View and manage student charges."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
+          { name: 'Fees', href: '/finance/charge-management' },
           { name: 'Charges', href: '/finance/charge-management/chargesRequest' },
           { name: 'Charges List' },
         ]}

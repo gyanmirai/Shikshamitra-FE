@@ -218,7 +218,11 @@ const FinanceReconciliation = () => {
       <CustomBreadcrumbs
         heading="Reconciliation"
         description="This section helps you compare recorded transactions with bank statements to ensure financial records match, quickly identify matched, unmatched, and discrepant transactions."
-        links={[{ name: 'Finance', href: '/finance/dashboard/' }, { name: 'Reconciliation' }]}
+        links={[
+          { name: 'Finance', href: '/finance/dashboard/' },
+          { name: 'Accounts', href: '/finance/reconciliation' },
+          { name: 'Reconciliation' },
+        ]}
       />
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, pb: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">

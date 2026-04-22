@@ -74,6 +74,7 @@ const FeeStructure = () => {
           }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
             {
               name: 'Settings',
               href: '/finance/settings/fee-category',
@@ -104,6 +105,7 @@ const FeeStructure = () => {
           }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
             {
               name: 'Settings',
               href: '/finance/settings/fee-category',
@@ -128,6 +130,7 @@ const FeeStructure = () => {
           description="Define and organize fee structures by configuring categories, amounts and payment schedules to ensure effective fee management."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fees', href: '/finance/fee-collection' },
             {
               name: 'Settings',
               href: '/finance/settings/fee-category',

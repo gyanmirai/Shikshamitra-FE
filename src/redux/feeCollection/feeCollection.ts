@@ -7,7 +7,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
     // Get fee collection list (table view)
     getFeeCollectionList: builder.query({
       query: (params) => ({
-        url: '/v1/finance/fee-collection',
+        url: '/fee-collections',
         method: 'GET',
         params,
       }),
@@ -17,7 +17,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
     // Get fee collection details for a student
     getFeeCollectionDetails: builder.query({
       query: (studentFeeId) => ({
-        url: `/v1/finance/fee-collection/${studentFeeId}`,
+        url: `/fee-collections/${studentFeeId}`,
         method: 'GET',
       }),
       providesTags: [financeModuleType.feeCollection],
@@ -26,7 +26,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
     // Get student fee details
     getStudentFeeDetails: builder.query({
       query: ({ studentId, academicYearId }) => ({
-        url: `/v1/finance/fee-details/${studentId}`,
+        url: `/fee-details/${studentId}`,
         method: 'GET',
         params: { academicYearId },
       }),
@@ -36,7 +36,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
     // Collect fee with multiple payment methods
     collectFee: builder.mutation({
       query: (body) => ({
-        url: '/v1/finance/fee-collections',
+        url: '/fee-collections',
         method: 'POST',
         body,
       }),

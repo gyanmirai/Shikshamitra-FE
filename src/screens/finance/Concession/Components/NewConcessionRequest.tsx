@@ -165,11 +165,16 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           shikshaMitraToast.success({ message: 'Concession request created successfully' });
         }
 
-        const reqId = res?.data?.concessionRequestId;
+        const reqId =
+          res?.data?.concessionRequestId || res?.concessionRequestId || res?.data?.id || res?.id;
+        if (!reqId) {
+          throw new Error('Failed to get concession request ID from response');
+        }
         _formik.setFieldValue('id', reqId);
 
         // Store selectedConcessionTypes from API response (contains ConcessionRequestConcessionTypeId)
-        const selectedConcessionTypes = res?.data?.selectedConcessionTypes || [];
+        const selectedConcessionTypes =
+          res?.data?.selectedConcessionTypes || res?.selectedConcessionTypes || [];
         _formik.setFieldValue('selectedConcessionTypes', selectedConcessionTypes);
 
         setActiveStep((s) => s + 1);

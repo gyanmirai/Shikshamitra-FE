@@ -5,20 +5,21 @@ import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { RestartAlt } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
 import {
@@ -121,8 +122,13 @@ const ManualAttendanceScreen = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
 
+  // Track original data to detect unsaved changes
+  const originalDataRef = useRef<any[]>(DUMMY_DATA);
+  const [pendingDate, setPendingDate] = useState<Dayjs | null>(null);
+
   const resetConfirmDialog = useBoolean();
   const lockConfirmDialog = useBoolean();
+  const discardConfirmDialog = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -151,17 +157,51 @@ const ManualAttendanceScreen = () => {
 
   useEffect(() => {
     if (data?.items && data.items.length > 0) {
-      setEmployeeData(
-        data.items.map((item: any) => ({
-          ...item,
-          status: item.status || STATUS.Pending,
-          remarks: item.remarks || '',
-        }))
-      );
+      const mapped = data.items.map((item: any) => ({
+        ...item,
+        status: item.status || STATUS.Pending,
+        remarks: item.remarks || '',
+      }));
+      setEmployeeData(mapped);
+      originalDataRef.current = mapped;
     } else {
       setEmployeeData(DUMMY_DATA);
+      originalDataRef.current = DUMMY_DATA;
     }
   }, [data]);
+
+  // Detect unsaved changes by comparing current data with original
+  const isDirty = useMemo(
+    () =>
+      employeeData.some((emp) => {
+        const original = originalDataRef.current.find((o: any) => o.id === emp.id);
+        if (!original) return true;
+        return emp.status !== original.status || emp.remarks !== original.remarks;
+      }),
+    [employeeData]
+  );
+
+  // Sync isDirty with global Redux confirmPopup state for route-change guard
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(setIsChanges(isDirty));
+    return () => {
+      dispatch(setIsChanges(false));
+    };
+  }, [isDirty, dispatch]);
+
+  // Handle date change — intercept if dirty
+  const handleDateChange = useCallback(
+    (val: Dayjs | null) => {
+      if (isDirty) {
+        setPendingDate(val);
+        discardConfirmDialog.onTrue();
+      } else {
+        setDate(val);
+      }
+    },
+    [isDirty, discardConfirmDialog]
+  );
 
   // -------------------------------------------------------------------------
   // Helpers to update a single row's status
@@ -193,6 +233,7 @@ const ManualAttendanceScreen = () => {
       }));
 
       await updateAttendance(payload).unwrap();
+      originalDataRef.current = employeeData;
       shikshaMitraToast.success({
         message: `Attendance updated successfully for ${date?.format('DD-MM-YYYY')}`,
       });
@@ -957,7 +998,7 @@ const ManualAttendanceScreen = () => {
         <DatePicker
           label="Date"
           value={date}
-          onChange={(val) => setDate(val)}
+          onChange={handleDateChange}
           format="DD-MM-YYYY"
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
@@ -1101,6 +1142,39 @@ const ManualAttendanceScreen = () => {
             }}
           >
             Yes, Reset
+          </Button>
+        }
+      />
+
+      {/* ── Discard unsaved changes confirmation ── */}
+      <ConfirmDialog
+        open={discardConfirmDialog.value}
+        onClose={() => {
+          setPendingDate(null);
+          discardConfirmDialog.onFalse();
+        }}
+        title="Unsaved Changes"
+        content={
+          <>
+            You have unsaved changes in the attendance table.
+            <br />
+            <strong>
+              Changing the date will discard all your current changes. Do you want to continue?
+            </strong>
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              setDate(pendingDate);
+              setPendingDate(null);
+              discardConfirmDialog.onFalse();
+            }}
+          >
+            Yes, Discard Changes
           </Button>
         }
       />
