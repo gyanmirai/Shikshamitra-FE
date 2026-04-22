@@ -36,8 +36,8 @@ const IncomeAndExpense = () => {
       </CustomTabs>
 
       <Box sx={{ flex: 1 }}>
-        {tabs.value === 'income' && <IncomeTracking />}
-        {tabs.value === 'expense' && <FinanceExpenseTracking />}
+        {tabs.value === 'income' && <IncomeTracking embedded />}
+        {tabs.value === 'expense' && <FinanceExpenseTracking embedded />}
       </Box>
     </Box>
   );

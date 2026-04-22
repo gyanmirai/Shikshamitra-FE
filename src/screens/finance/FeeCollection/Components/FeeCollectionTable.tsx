@@ -34,11 +34,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const {
-    data: feeCollectionData,
-    isLoading: feeCollectionLoading,
-    isFetching: feeCollectionFetching,
-  } = useQueryAndMutation({
+  const { data: feeCollectionData, isLoading: feeCollectionLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCollectionListQuery,
     params: {
@@ -117,7 +113,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
         <CustomizableTable
           tableId="fee-collection-table"
           noDataText={<>Fee Collection Data Not Found </>}
-          // isLoading={feeCollectionLoading}
+          isLoading={feeCollectionLoading}
           columns={[
             {
               id: 'nameValue',

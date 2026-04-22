@@ -176,12 +176,7 @@ const ManualAttendanceScreen = () => {
       employeeData.some((emp) => {
         const original = originalDataRef.current.find((o: any) => o.id === emp.id);
         if (!original) return true;
-        return (
-          emp.status !== original.status ||
-          emp.remarks !== original.remarks ||
-          emp.timeIn !== original.timeIn ||
-          emp.timeOut !== original.timeOut
-        );
+        return emp.status !== original.status || emp.remarks !== original.remarks;
       }),
     [employeeData]
   );
@@ -238,6 +233,7 @@ const ManualAttendanceScreen = () => {
       }));
 
       await updateAttendance(payload).unwrap();
+      originalDataRef.current = employeeData;
       shikshaMitraToast.success({
         message: `Attendance updated successfully for ${date?.format('DD-MM-YYYY')}`,
       });

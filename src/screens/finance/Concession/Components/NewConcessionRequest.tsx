@@ -154,7 +154,6 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           shikshaMitraToast.success({ message: 'Concession request updated successfully' });
         } else {
           // Create new request
-          console.log('[Concession] Creating new request...');
           res = await createConcessionRequest({
             boardId: values.boardId,
             educationMediumId: values.mediumId,
@@ -165,7 +164,6 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           }).unwrap();
           shikshaMitraToast.success({ message: 'Concession request created successfully' });
         }
-        console.log('[Concession] Create/Update response:', JSON.stringify(res));
 
         const reqId =
           res?.data?.concessionRequestId || res?.concessionRequestId || res?.data?.id || res?.id;

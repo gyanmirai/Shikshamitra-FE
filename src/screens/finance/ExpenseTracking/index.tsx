@@ -10,7 +10,11 @@ import ExpenseCategoryForm from './component/ExpenseCategoryForm';
 import ExpenseCategoryTable from './component/ExpenseCategoryTable';
 import { useExpenseManagement } from './hooks/useExpenseManagement';
 
-const FinanceExpenseTracking = () => {
+interface FinanceExpenseTrackingProps {
+  embedded?: boolean;
+}
+
+const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProps) => {
   const {
     selectedExpense,
     setSelectedExpense,
@@ -27,53 +31,68 @@ const FinanceExpenseTracking = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {addExpenseDialog.value ? (
-        <CustomBreadcrumbs
-          heading={selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking'}
-          description={
-            selectedExpense
-              ? 'Update expense record details such as category, date, amount, and payment method to maintain accurate expense tracking.'
-              : 'This screen allows users to fill in all required fields and add a new expense entry.'
-          }
-          isBack
-          onBack={() => handleClose(null, false)}
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Accounts', href: '/finance/expenseTracking' },
-            {
-              name: 'Expense Tracking',
-              href: '/finance/expenseTracking',
-              onClick: () => {
-                addExpenseDialog.onFalse();
-                setSelectedExpense(null);
+      {!embedded &&
+        (addExpenseDialog.value ? (
+          <CustomBreadcrumbs
+            heading={selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking'}
+            description={
+              selectedExpense
+                ? 'Update expense record details such as category, date, amount, and payment method to maintain accurate expense tracking.'
+                : 'This screen allows users to fill in all required fields and add a new expense entry.'
+            }
+            isBack
+            onBack={() => handleClose(null, false)}
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              { name: 'Accounts', href: '/finance/expenseTracking' },
+              {
+                name: 'Expense Tracking',
+                href: '/finance/expenseTracking',
+                onClick: () => {
+                  addExpenseDialog.onFalse();
+                  setSelectedExpense(null);
+                },
               },
-            },
-            {
-              name: selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking',
-            },
-          ]}
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Expense Tracking"
-          description="This screen displays all expense categories with the option to view detailed entries under each category and add new expense records."
-          links={[
-            { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Accounts', href: '/finance/expenseTracking' },
-            { name: 'Expense Tracking' },
-          ]}
-          action={
-            <Button
-              onClick={() => addExpenseDialog.onTrue()}
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              sx={{ px: '32px' }}
-            >
-              Expense
-            </Button>
-          }
-        />
+              {
+                name: selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking',
+              },
+            ]}
+          />
+        ) : (
+          <CustomBreadcrumbs
+            heading="Expense Tracking"
+            description="This screen displays all expense categories with the option to view detailed entries under each category and add new expense records."
+            links={[
+              { name: 'Finance', href: '/finance/dashboard' },
+              { name: 'Accounts', href: '/finance/expenseTracking' },
+              { name: 'Expense Tracking' },
+            ]}
+            action={
+              <Button
+                onClick={() => addExpenseDialog.onTrue()}
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                sx={{ px: '32px' }}
+              >
+                Expense
+              </Button>
+            }
+          />
+        ))}
+
+      {embedded && !addExpenseDialog.value && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Button
+            onClick={() => addExpenseDialog.onTrue()}
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            sx={{ px: '32px' }}
+          >
+            Expense
+          </Button>
+        </Box>
       )}
 
       <>
