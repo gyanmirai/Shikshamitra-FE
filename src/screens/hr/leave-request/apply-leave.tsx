@@ -36,61 +36,6 @@ import {
 import AddLeaveRequest from './leave-requst';
 import LeaveCalender, { LeaveRequestForm } from './leave-calender';
 
-const DUMMY_LEAVE_DATA = [
-  {
-    id: '1',
-    name: 'John Doe',
-    employeeIdentifier: 'EMP001',
-    leaveType: 'Annual Leave',
-    startDate: '2026-04-10',
-    endDate: '2026-04-12',
-    totalDays: 3,
-    organization: 'Main Branch',
-    reason: 'Family vacation',
-    remarks: 'Approved by Manager',
-    status: EmployeeLeaveStatusType.Approved,
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    employeeIdentifier: 'EMP002',
-    leaveType: 'Sick Leave',
-    startDate: '2026-04-15',
-    endDate: '2026-04-15',
-    totalDays: 1,
-    organization: 'Main Branch',
-    reason: 'Fever',
-    remarks: '',
-    status: EmployeeLeaveStatusType.Pending,
-  },
-  {
-    id: '3',
-    name: 'Robert Johnson',
-    employeeIdentifier: 'EMP003',
-    leaveType: 'Casual Leave',
-    startDate: '2026-04-20',
-    endDate: '2026-04-21',
-    totalDays: 2,
-    organization: 'Secondary Branch',
-    reason: 'Personal work',
-    remarks: 'Insufficient balance',
-    status: EmployeeLeaveStatusType.Rejected,
-  },
-  {
-    id: '4',
-    name: 'Michael Brown',
-    employeeIdentifier: 'EMP004',
-    leaveType: 'Maternity Leave',
-    startDate: '2026-04-01',
-    endDate: '2026-04-30',
-    totalDays: 30,
-    organization: 'Main Branch',
-    reason: 'Maternity leave',
-    remarks: '',
-    status: EmployeeLeaveStatusType.Viewed,
-  },
-];
-
 const ApplyLeave = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
@@ -160,21 +105,14 @@ const ApplyLeave = () => {
           startDate: start.format('DD-MM-YYYY'),
           endDate: end.format('DD-MM-YYYY'),
           totalDays: item.totalDays,
-          organization: item.organization,
-          description: item.reason || item.description,
+          organization: item.mediumStageName,
+          description: item.description,
           remarks: item.remarks,
           status: item.status,
         };
       }) || [];
 
-    const dummyData = DUMMY_LEAVE_DATA.map((item: any) => ({
-      ...item,
-      startDate: dayjs(item.startDate).format('DD-MM-YYYY'),
-      endDate: dayjs(item.endDate).format('DD-MM-YYYY'),
-      description: item.reason || item.description,
-    }));
-
-    return [...apiData, ...dummyData];
+    return apiData;
   }, [data]);
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {

@@ -23,8 +23,9 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
 import {
-  useUpdateAttendanceMutation,
-  useGetPaginatedAttendanceQuery,
+  useGetDayAttendanceQuery,
+  useLockDayAttendanceMutation,
+  useSaveDayAttendanceMutation,
 } from 'src/redux/hr/attendanceApi';
 
 // ---------------------------------------------------------------------------
@@ -38,66 +39,14 @@ const STATUS = {
 } as const;
 type AttendanceStatusType = (typeof STATUS)[keyof typeof STATUS];
 
-// ---------------------------------------------------------------------------
-// Dummy data shown when the API returns no items
-// ---------------------------------------------------------------------------
-const DUMMY_DATA = [
-  {
-    id: '1',
-    fullName: 'Arjun Sharma',
-    employeeIdentifier: 'EMP001',
-    timeIn: '09:00',
-    timeOut: '18:00',
-    status: STATUS.Present,
-    remarks: 'Regular shift',
-    errors: [],
-    warnings: [],
-  },
-  {
-    id: '2',
-    fullName: 'Priya Verma',
-    employeeIdentifier: 'EMP002',
-    timeIn: '09:15',
-    timeOut: '18:15',
-    status: STATUS.Present,
-    remarks: 'Slightly late',
-    errors: [],
-    warnings: ['Late arrival by 15 mins'],
-  },
-  {
-    id: '3',
-    fullName: 'Rahul Gupta',
-    employeeIdentifier: 'EMP003',
-    timeIn: '-',
-    timeOut: '-',
-    status: STATUS.Absent,
-    remarks: 'Sick leave',
-    errors: [],
-    warnings: [],
-  },
-  {
-    id: '4',
-    fullName: 'Anjali Singh',
-    employeeIdentifier: 'EMP004',
-    timeIn: '09:00',
-    timeOut: '16:00',
-    status: STATUS.Present,
-    remarks: 'Half day',
-    errors: ['Early departure'],
-    warnings: [],
-  },
-  {
-    id: '5',
-    fullName: 'Vikram Mehta',
-    employeeIdentifier: 'EMP005',
-    timeIn: '-',
-    timeOut: '-',
-    status: STATUS.Pending,
-    remarks: '',
-    errors: [],
-    warnings: [],
-  },
-];
+// Map statusWire from API to local status constants
+const mapStatusWire = (wire: string): AttendanceStatusType => {
+  const lower = wire?.toLowerCase();
+  if (lower === 'present') return STATUS.Present;
+  if (lower === 'halfday' || lower === 'half_day') return STATUS.HalfDay;
+  if (lower === 'absent') return STATUS.Absent;
+  return STATUS.Pending;
+};
 
 // ---------------------------------------------------------------------------
 // Editing cell type for inline time editing
@@ -118,55 +67,74 @@ const segmentBtnBase = {
 
 const ManualAttendanceScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
-  const [employeeData, setEmployeeData] = useState<any[]>(DUMMY_DATA);
+  const [employeeData, setEmployeeData] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
 
   // Track original data to detect unsaved changes
-  const originalDataRef = useRef<any[]>(DUMMY_DATA);
+  const originalDataRef = useRef<any[]>([]);
   const [pendingDate, setPendingDate] = useState<Dayjs | null>(null);
 
   const resetConfirmDialog = useBoolean();
   const lockConfirmDialog = useBoolean();
   const discardConfirmDialog = useBoolean();
 
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
 
-  const [updateAttendance, { isLoading: isUpdating }] = useQueryAndMutation({
+  const [saveDayAttendance, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateAttendanceMutation,
+    currentQueryAndMutation: useSaveDayAttendanceMutation,
+  });
+
+  const [lockDayAttendance, { isLoading: isLocking }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLockDayAttendanceMutation,
   });
 
   const [query, setQuery] = useState({
-    page: 0,
-    pageSize: 20,
+    skipCount: 0,
+    maxResultCount: 50,
     search: '',
   });
 
   const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetPaginatedAttendanceQuery,
+    currentQueryAndMutation: useGetDayAttendanceQuery,
     params: {
-      date: dateConvertor(dayjs(date).format(dateFormat)),
-      page: query.page,
-      pageSize: query.pageSize,
+      attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
+      educationMediumStageId: (currentMedium as any)?.id,
       search: query.search,
+      skipCount: query.skipCount,
+      maxResultCount: query.maxResultCount,
     },
-    options: { skip: !date },
+    options: { skip: !date || !(currentMedium as any)?.id },
   });
 
   useEffect(() => {
     if (data?.items && data.items.length > 0) {
       const mapped = data.items.map((item: any) => ({
-        ...item,
-        status: item.status || STATUS.Pending,
+        id: item.employeeId,
+        employeeId: item.employeeId,
+        fullName: item.fullName,
+        employeeCode: item.employeeCode,
+        department: item.department,
+        dateIso: item.dateIso,
+        timeIn: item.inTime ? dayjs(item.inTime).format('HH:mm') : '',
+        timeOut: item.outTime ? dayjs(item.outTime).format('HH:mm') : '',
         remarks: item.remarks || '',
+        warnings: item.warnings || [],
+        errors: item.errors || [],
+        status: mapStatusWire(item.statusWire),
       }));
       setEmployeeData(mapped);
       originalDataRef.current = mapped;
     } else {
-      setEmployeeData(DUMMY_DATA);
-      originalDataRef.current = DUMMY_DATA;
+      setEmployeeData([]);
+      originalDataRef.current = [];
+    }
+    // Sync lock state from API
+    if (data?.isDayLocked !== undefined) {
+      setIsLocked(data.isDayLocked);
     }
   }, [data]);
 
@@ -225,14 +193,19 @@ const ManualAttendanceScreen = () => {
   // -------------------------------------------------------------------------
   const handleSave = async () => {
     try {
-      const payload = employeeData.map((emp) => ({
-        employeeId: emp.id || emp.employeeId,
-        date: dateConvertor(dayjs(date).format(dateFormat)),
-        status: emp.status,
-        remarks: emp.remarks || '',
-      }));
+      const payload = {
+        attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
+        educationMediumStageId: (currentMedium as any)?.id,
+        entries: employeeData.map((emp) => ({
+          employeeId: emp.employeeId || emp.id,
+          statusWire: emp.status,
+          inTime: emp.timeIn || '',
+          outTime: emp.timeOut || '',
+          remarks: emp.remarks || '',
+        })),
+      };
 
-      await updateAttendance(payload).unwrap();
+      await saveDayAttendance(payload).unwrap();
       originalDataRef.current = employeeData;
       shikshaMitraToast.success({
         message: `Attendance updated successfully for ${date?.format('DD-MM-YYYY')}`,
@@ -240,6 +213,25 @@ const ManualAttendanceScreen = () => {
     } catch (error) {
       console.error('Error updating attendance:', error);
       shikshaMitraToast.error({ message: 'Failed to update attendance.' });
+    }
+  };
+
+  const handleLockToggle = async () => {
+    try {
+      await lockDayAttendance({
+        educationMediumStageId: (currentMedium as any)?.id,
+        attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
+      }).unwrap();
+      setIsLocked((prev) => !prev);
+      shikshaMitraToast.success({
+        message: isLocked ? 'Attendance unlocked successfully' : 'Attendance locked successfully',
+      });
+      lockConfirmDialog.onFalse();
+    } catch (error) {
+      console.error('Error toggling attendance lock:', error);
+      shikshaMitraToast.error({
+        message: isLocked ? 'Failed to unlock attendance.' : 'Failed to lock attendance.',
+      });
     }
   };
 
@@ -265,7 +257,7 @@ const ManualAttendanceScreen = () => {
         render(value, row) {
           return (
             <Box display="flex" alignItems="center" gap={1}>
-              {value} ({row.employeeIdentifier})
+              {value} ({row.employeeCode})
             </Box>
           );
         },
@@ -480,7 +472,7 @@ const ManualAttendanceScreen = () => {
                         .slice(0, 8)
                         .map((e) => (
                           <Typography key={e.id} variant="caption" display="block">
-                            • {e.fullName} ({e.employeeIdentifier})
+                            • {e.fullName} ({e.employeeCode})
                           </Typography>
                         ))}
                       {presentCount > 8 && (
@@ -592,7 +584,7 @@ const ManualAttendanceScreen = () => {
                         .slice(0, 8)
                         .map((e) => (
                           <Typography key={e.id} variant="caption" display="block">
-                            • {e.fullName} ({e.employeeIdentifier})
+                            • {e.fullName} ({e.employeeCode})
                           </Typography>
                         ))}
                       {absentCount > 8 && (
@@ -933,8 +925,8 @@ const ManualAttendanceScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       employeeData,
-      query.page,
-      query.pageSize,
+      query.skipCount,
+      query.maxResultCount,
       date,
       isLocked,
       presentCount,
@@ -974,7 +966,7 @@ const ManualAttendanceScreen = () => {
         heading="Mark Attendance"
         links={[
           { name: 'HR', href: '/hr/dashboard/' },
-          { name: 'Attendance', href: '/hr/attendance-tracking' },
+          { name: 'Attendance Management', href: '/hr/attendance-tracking' },
           { name: 'Mark Attendance' },
         ]}
         description="Quickly record employee attendance manually: Choose the date, then mark each employee as Present, Pending, or Absent."
@@ -1076,8 +1068,13 @@ const ManualAttendanceScreen = () => {
         data={employeeData}
         rowProps={rowProps}
         serverSide
+        totalCount={data?.totalCount || 0}
         onServerPagination={(page, rowsPerPage) => {
-          setQuery((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
+          setQuery((prev) => ({
+            ...prev,
+            skipCount: page * rowsPerPage,
+            maxResultCount: rowsPerPage,
+          }));
         }}
       />
 
@@ -1102,15 +1099,8 @@ const ManualAttendanceScreen = () => {
             variant="contained"
             color={isLocked ? 'error' : 'primary'}
             size="small"
-            onClick={() => {
-              setIsLocked((prev) => !prev);
-              shikshaMitraToast.success({
-                message: isLocked
-                  ? 'Attendance unlocked successfully'
-                  : 'Attendance locked successfully',
-              });
-              lockConfirmDialog.onFalse();
-            }}
+            loading={isLocking}
+            onClick={handleLockToggle}
           >
             Yes, {isLocked ? 'Unlock' : 'Lock'}
           </Button>

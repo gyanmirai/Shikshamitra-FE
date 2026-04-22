@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -15,15 +14,13 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { useGetLeaveRequestsQuery, useGetLeaveRequestByIdQuery } from 'src/redux/hr/leaveApi';
+import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
-import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 
-import type { TabComponentType } from '.';
-
-const LeaveCalender = (props: TabComponentType) => {
+const LeaveCalender = () => {
   const [organization, setOrganization] = useState<string>('');
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const popover = usePopover();
@@ -154,12 +151,14 @@ const LeaveCalender = (props: TabComponentType) => {
 export default LeaveCalender;
 
 export const LeaveRequestForm = ({ editData }: any) => {
-  const isView = useBoolean();
-  const { isLoading: isLeavePolicyLoading } = useQueryAndMutation({
+  const { data: leaveDetail, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestByIdQuery,
     params: { id: editData?.id },
   });
+
+  const detail = leaveDetail || editData;
+
   return isLeavePolicyLoading ? (
     <TableRow>
       <TableCell sx={{ height: '50px' }}>
@@ -176,8 +175,18 @@ export const LeaveRequestForm = ({ editData }: any) => {
         </Grid>
         <Grid size={{ xs: 8 }}>
           <Typography variant="body2">
-            {editData?.employee?.firstName} {editData?.employee?.lastName}
+            {detail?.employeeName ||
+              `${editData?.employee?.firstName || ''} ${editData?.employee?.lastName || ''}`}
           </Typography>
+        </Grid>
+
+        <Grid size={{ xs: 4 }}>
+          <Typography variant="body2" fontWeight={600}>
+            Employee Code
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 8 }}>
+          <Typography variant="body2">{detail?.employeeCode || '-'}</Typography>
         </Grid>
 
         <Grid size={{ xs: 4 }}>
@@ -186,7 +195,9 @@ export const LeaveRequestForm = ({ editData }: any) => {
           </Typography>
         </Grid>
         <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{editData?.employee?.educationMediumStage?.name}</Typography>
+          <Typography variant="body2">
+            {detail?.mediumStageName || editData?.employee?.educationMediumStage?.name}
+          </Typography>
         </Grid>
 
         <Grid size={{ xs: 4 }}>
@@ -195,18 +206,9 @@ export const LeaveRequestForm = ({ editData }: any) => {
           </Typography>
         </Grid>
         <Grid size={{ xs: 8 }}>
-          {editData?.leavePolicy?.leaveType && (
-            <Typography variant="body2">{editData.leavePolicy.leaveType}</Typography>
-          )}
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Half Day
+          <Typography variant="body2">
+            {detail?.leaveType || editData?.leavePolicy?.leaveType || '-'}
           </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{editData?.halfDay ? 'Yes' : 'No'}</Typography>
         </Grid>
 
         <Grid size={{ xs: 4 }}>
@@ -216,11 +218,11 @@ export const LeaveRequestForm = ({ editData }: any) => {
         </Grid>
         <Grid size={{ xs: 8 }}>
           <Typography variant="body2">
-            {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}
+            {dayjs(detail?.startDate || editData?.viewStartDate).format('DD-MM-YYYY')}
           </Typography>
         </Grid>
 
-        {!editData?.halfDay && (
+        {!detail?.halfDay && (
           <>
             <Grid size={{ xs: 4 }}>
               <Typography variant="body2" fontWeight={600}>
@@ -229,8 +231,21 @@ export const LeaveRequestForm = ({ editData }: any) => {
             </Grid>
             <Grid size={{ xs: 8 }}>
               <Typography variant="body2">
-                {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
+                {dayjs(detail?.endDate || editData?.viewEndDate).format('DD-MM-YYYY')}
               </Typography>
+            </Grid>
+          </>
+        )}
+
+        {detail?.totalDays != null && (
+          <>
+            <Grid size={{ xs: 4 }}>
+              <Typography variant="body2" fontWeight={600}>
+                Total Days
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 8 }}>
+              <Typography variant="body2">{detail.totalDays}</Typography>
             </Grid>
           </>
         )}
@@ -242,7 +257,8 @@ export const LeaveRequestForm = ({ editData }: any) => {
         </Grid>
         <Grid size={{ xs: 8 }}>
           <Typography variant="body2">
-            {editData?.reason ||
+            {detail?.description ||
+              editData?.reason ||
               (editData?.description && (
                 // eslint-disable-next-line react/no-danger
                 <span dangerouslySetInnerHTML={{ __html: editData.description }} />
@@ -250,15 +266,15 @@ export const LeaveRequestForm = ({ editData }: any) => {
           </Typography>
         </Grid>
 
-        {editData?.rejectionReason && (
+        {detail?.remarks && (
           <>
             <Grid size={{ xs: 4 }}>
               <Typography variant="body2" fontWeight={600}>
-                Rejection Reason
+                Remarks
               </Typography>
             </Grid>
             <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">{editData.rejectionReason}</Typography>
+              <Typography variant="body2">{detail.remarks}</Typography>
             </Grid>
           </>
         )}
@@ -272,15 +288,15 @@ export const LeaveRequestForm = ({ editData }: any) => {
           <Label
             color={
               EmployeeLeaveStatusTypeColor[
-                editData?.status as EmployeeLeaveStatusType
+                (detail?.status ?? editData?.status) as EmployeeLeaveStatusType
               ] as LabelColor
             }
           >
-            {EmployeeLeaveStatusType[editData?.status]}
+            {EmployeeLeaveStatusType[detail?.status ?? editData?.status]}
           </Label>
         </Grid>
 
-        {editData?.attachment && (
+        {detail?.attachmentUrl && (
           <>
             <Grid size={{ xs: 4 }}>
               <Typography variant="body2" fontWeight={600}>
@@ -291,7 +307,7 @@ export const LeaveRequestForm = ({ editData }: any) => {
               <Iconify
                 icon="eva:eye-fill"
                 sx={{ mr: 0.5, cursor: 'pointer' }}
-                onClick={isView.onTrue}
+                onClick={() => window.open(detail.attachmentUrl, '_blank')}
               />
             </Grid>
           </>

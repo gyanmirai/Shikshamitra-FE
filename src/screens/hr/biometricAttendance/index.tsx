@@ -36,15 +36,16 @@ import {
   CheckCircleOutline,
 } from '@mui/icons-material';
 import {
-  useConfirmAttendanceMutation,
-  usePreviewAttendanceMutation,
-  useDownloadAttendanceTemplateMutation,
-} from 'src/redux/hr/attendanceApi';
-import {
   useGetAttendanceImportsQuery,
   useGetAttendanceImportByIdQuery,
   useGetAttendanceImportRowsQuery,
 } from 'src/redux/hr/attendanceImportApi';
+import {
+  useConfirmAttendanceMutation,
+  usePreviewAttendanceMutation,
+  useSaveDayAttendanceMutation,
+  useDownloadAttendanceTemplateMutation,
+} from 'src/redux/hr/attendanceApi';
 import {
   Box,
   Card,
@@ -106,7 +107,6 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
   },
   { id: 'timeIn', label: 'In Time', minWidth: '7vw', align: 'left', render: (v) => v || '—' },
   { id: 'timeOut', label: 'Out Time', minWidth: '7vw', align: 'left', render: (v) => v || '—' },
-
   {
     id: 'errors',
     label: 'Errors',
@@ -155,11 +155,15 @@ const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn
     minWidth: '6vw',
     sticky: true,
     align: 'left',
-    render: (value: string) => (
-      <Label color={value === 'Valid' ? 'success' : value === 'Invalid' ? 'error' : 'warning'}>
-        {value || '—'}
-      </Label>
-    ),
+    render: (value: string) => {
+      const colorMap: Record<string, 'primary' | 'error' | 'warning' | 'info' | 'default'> = {
+        Present: 'primary',
+        Absent: 'error',
+        Pending: 'warning',
+        HalfDay: 'info',
+      };
+      return <Label color={colorMap[value] || 'default'}>{value || '—'}</Label>;
+    },
   },
 ];
 
@@ -265,7 +269,7 @@ const AttendanceImportHistoryScreen = () => {
             Download File
           </MenuItem>
 
-          {(row as AttendanceImportItem).status === AttendanceImportBatchStatus.Preview && (
+          {Number((row as AttendanceImportItem).status) === AttendanceImportBatchStatus.Preview && (
             <MenuItem
               onClick={() => {
                 viewImportDialog.onTrue();
@@ -292,7 +296,7 @@ const AttendanceImportHistoryScreen = () => {
             </MenuItem>
           )}
 
-          {(row as AttendanceImportItem).status === AttendanceImportBatchStatus.Preview && (
+          {Number((row as AttendanceImportItem).status) === AttendanceImportBatchStatus.Preview && (
             <MenuItem
               onClick={() => {
                 reprocessDialog.onTrue();
@@ -507,14 +511,14 @@ const AttendanceImportHistoryScreen = () => {
         // ),
       },
       {
-        id: 'isPayrollLocked',
+        id: 'isBatchLocked',
         label: 'Lock',
         minWidth: '60px',
         isFilter: false,
         isSort: false,
         sticky: true,
         render: (_value: any, row: any) => {
-          const isLocked = row.status === 'payroll_locked';
+          const isLocked = row.isBatchLocked;
           const color = isLocked ? theme.palette.grey[500] : theme.vars.palette.success.main;
           return (
             <CustomTooltip title={isLocked ? 'Unlock' : 'Lock'} arrow placement="left">
@@ -817,8 +821,14 @@ const ImportDetailDialog = ({
   // Local row state for attendance status overrides
   const [rowsData2, setRowsData2] = useState<any[]>([]);
   const [editingCell, setEditingCell] = useState<EditingCell>(null);
-  const isPayrollLocked = !!importData?.isPayrollLocked;
+  const isPayrollLocked = !!importData?.isBatchLocked;
   const summaryOpen = useBoolean(false);
+  const isSaving = useBoolean();
+
+  const [saveDayAttendance] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSaveDayAttendanceMutation,
+  });
 
   // API call 2: fetch detail by id
   const { data: detail, isLoading: detailLoading } = useQueryAndMutation({
@@ -842,11 +852,16 @@ const ImportDetailDialog = ({
   // Sync API rows into local state
   React.useEffect(() => {
     if (rowsData?.items) {
+      const statusMap: Record<string, RowStatusType> = {
+        Present: ROW_STATUS.Present,
+        Absent: ROW_STATUS.Absent,
+        HalfDay: ROW_STATUS.HalfDay,
+      };
       setRowsData2(
         rowsData.items.map((r: any, index: number) => ({
           ...r,
           id: r.id ?? `row-${index}`,
-          attendanceStatus: r.attendanceStatus || ROW_STATUS.Pending,
+          attendanceStatus: r.attendanceStatus ?? statusMap[r.status] ?? ROW_STATUS.Pending,
         }))
       );
     }
@@ -855,6 +870,58 @@ const ImportDetailDialog = ({
   const updateRow = React.useCallback((id: string, patch: any) => {
     setRowsData2((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }, []);
+
+  // Map numeric enum to string for API statusWire
+  const getStatusWire = (status: RowStatusType): string => {
+    if (status === ROW_STATUS.Present) return 'Present';
+    if (status === ROW_STATUS.Absent) return 'Absent';
+    if (status === ROW_STATUS.HalfDay) return 'HalfDay';
+    return 'Pending';
+  };
+
+  const handleSubmitAttendance = async () => {
+    const nonPendingRows = rowsData2.filter((r) => r.attendanceStatus !== ROW_STATUS.Pending);
+    if (nonPendingRows.length === 0) return;
+
+    // Group entries by attendanceDate
+    const dateGroups = nonPendingRows.reduce(
+      (acc: Record<string, any[]>, row) => {
+        const date = row.attendanceDate || '';
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(row);
+        return acc;
+      },
+      {} as Record<string, any[]>
+    );
+
+    isSaving.onTrue();
+    try {
+      const requests = Object.entries(dateGroups).map(([date, rows]) => {
+        const body = {
+          attendanceDate: date,
+          entries: rows.map((r: any) => ({
+            employeeId: r.employeeId || r.id,
+            statusWire: getStatusWire(r.attendanceStatus),
+            inTime: r.timeIn || '',
+            outTime: r.timeOut || '',
+            remarks: r.remarks || '',
+          })),
+        };
+        return saveDayAttendance(body).unwrap();
+      });
+      await Promise.all(requests);
+      shikshaMitraToast.success({
+        message: `Attendance saved successfully for ${nonPendingRows.length} employee(s).`,
+      });
+    } catch (error: any) {
+      console.error('Failed to save attendance:', error);
+      shikshaMitraToast.error({
+        message: `Failed to save attendance: ${error?.data?.error?.message || 'Unknown error'}`,
+      });
+    } finally {
+      isSaving.onFalse();
+    }
+  };
 
   // Attendance column — defined here so updateRow closure is fresh
   const attendanceColumn = useMemo(
@@ -1237,11 +1304,13 @@ const ImportDetailDialog = ({
                 variant="contained"
                 color="primary"
                 size="small"
+                loading={isSaving.value}
                 startIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
                 disabled={
                   rowsData2.length === 0 ||
                   rowsData2.every((r) => r.attendanceStatus === ROW_STATUS.Pending)
                 }
+                onClick={handleSubmitAttendance}
               >
                 Submit
               </LoadingButton>
