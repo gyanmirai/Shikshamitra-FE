@@ -113,7 +113,7 @@ const AssignmentTypeCreation = () => {
 
       <AssignmentTypeTable
         isLoading={isFetching}
-        data={assignmentTypeData || []}
+        data={assignmentTypeData?.data || []}
         onEdit={(data) => {
           setSelectedData(data);
           addAssignmentTypeDialog.onTrue();
@@ -123,7 +123,7 @@ const AssignmentTypeCreation = () => {
           deleteDialog.onTrue();
         }}
       />
-
+      {/* Add/Edit Assignment Type Dialog */}
       <CustomDialog
         open={addAssignmentTypeDialog.value}
         handleClose={() => {
@@ -158,7 +158,7 @@ const AssignmentTypeCreation = () => {
           editData={selectedData}
         />
       </CustomDialog>
-
+      {/* Delete Assignment Type Dialog */}
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
@@ -185,7 +185,7 @@ const AssignmentTypeCreation = () => {
                   dispatchFn(
                     assignmentTypesApi.util.updateQueryData(
                       'getAssignmentTypes',
-                      undefined,
+                      { academicMediumId: (currentMedium as Medium).id },
                       (draft: any) => {
                         const index = draft.findIndex((item: any) => item.id === selectedData?.id);
                         setDeleteIndex(index);

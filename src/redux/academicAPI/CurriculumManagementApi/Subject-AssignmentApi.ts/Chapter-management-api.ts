@@ -13,13 +13,21 @@ export const chaptersApi = academicApi.injectEndpoints({
       providesTags: [academicType.chapter],
     }),
 
+    // GET - Fetch all chapters by assigned standard ID
+    getChaptersByStandard: builder.query({
+      query: ({ assignedStandardId }) => ({
+        url: `/academic/curriculum/chapters/${assignedStandardId}`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.chapter],
+    }),
+
     // POST - Create new chapter
     addChapter: builder.mutation({
       query: (body) => ({
-        url: `/subjects/${body.subjectId}/chapters`,
+        url: `/academic/curriculum/chapters`,
         method: 'POST',
         body,
-        params: { subjectId: body.subjectId, classId: body.classId },
       }),
       invalidatesTags: [academicType.chapter],
     }),
@@ -50,6 +58,7 @@ export const chaptersApi = academicApi.injectEndpoints({
 // Export hooks
 export const {
   useGetChaptersQuery,
+  useGetChaptersByStandardQuery,
   useAddChapterMutation,
   useUpdateChapterMutation,
   useDeleteChapterMutation,

@@ -7,7 +7,7 @@ export const scheduleExamApi = academicApi.injectEndpoints({
     // Step 1: Basic Details
     addExamBasicDetails: builder.mutation({
       query: ({ body }) => ({
-        url: `exams/basic-details`,
+        url: `/exams/basic-details`,
         method: 'POST',
         body,
       }),

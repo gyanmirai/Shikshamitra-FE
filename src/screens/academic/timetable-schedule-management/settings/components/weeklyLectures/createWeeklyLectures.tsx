@@ -17,8 +17,10 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Skeleton, TextField, Typography, DialogActions } from '@mui/material';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
+  useGetWeeklyLectureSlotsQuery,
   useGetWeeklyLectureSlotByIdQuery,
   useCreateWeeklyLectureSlotMutation,
   useUpdateWeeklyLectureSlotMutation,
@@ -39,8 +41,10 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 }) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
+  // State to store selected class/standard name
   const [classes, setClasses] = useState<string>('');
+  // State to store selected class/standard ID (used for API calls)
+  const [classId, setClassId] = useState<string>('');
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [addWeeklyLectureSlot, { isLoading: isAddLoading }] = useQueryAndMutation({
@@ -50,6 +54,14 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   const [updateWeeklyLectureSlot, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateWeeklyLectureSlotMutation,
+  });
+  const { data: weeklyLectureSlots, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetWeeklyLectureSlotsQuery,
+    params: { AcademicMediumId: medium?.id },
+    options: {
+      skip: !medium?.id,
+    },
   });
   const { data: weeklyLectureSlotById, isLoading: isLoadingGetById } = useQueryAndMutation({
     type: 'query',
@@ -89,7 +101,8 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
         }
       } else {
         const res = await addWeeklyLectureSlot({
-          standardId: values.className,
+          academicMediumId: (medium as any)?.id,
+          standardId: classId,
           subjects: subjectsPayload,
         });
 
@@ -103,6 +116,22 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     },
   });
 
+  const {
+    data: subjectTableData,
+    isLoading: isSubjectsLoading,
+    isFetching: isSubjectsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId: classId,
+    },
+    options: {
+      skip: !medium?.id || !classId || !!editData,
+    },
+  });
+
   // Update classes when organization changes
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -111,24 +140,57 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 
     setAllClass(allClasses);
     setClasses(allClasses[0]?.name || '');
+    setClassId(allClasses[0]?.id || '');
+    if (!editData && !selectedClass) {
+      formik.setFieldValue('className', allClasses[0]?.name || '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [medium]);
 
   useEffect(() => {
     if (!editData && selectedClass) {
-      const dummySubjects = generateDummySubjects().map((subj, index) => ({
-        id: `subject-${index}`,
-        subjectId: '',
-        ...subj,
-        noOfLecture: '',
-        electiveGroupId: null,
-      }));
-
-      // formik.setFieldValue('className', selectedClass);
-      formik.setFieldValue('subjects', dummySubjects);
+      const matched = allClass.find((c) => c.name === selectedClass || c.id === selectedClass);
+      if (matched) {
+        setClassId(matched.id);
+        formik.setFieldValue('className', matched.name);
+      }
+      formik.setFieldValue('subjects', []);
       formik.setFieldValue('totalLectures', 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClass, editData, classes]); // only run when selectedClass or editData changes
+  }, [selectedClass, editData, allClass]); // only run when selectedClass or editData changes
+
+  useEffect(() => {
+    if (!editData && subjectTableData?.data?.items) {
+      const mappedSubjects = subjectTableData.data.items.flatMap((item: any) => {
+        if (item.subjectType === 1) {
+          return item.subjects.map((sub: any) => ({
+            id: sub.assignedId || sub.subjectId,
+            subjectId: sub.subjectId,
+            name: sub.subject?.name || sub.subjectName,
+            subjectCode: sub.subjectCode,
+            subjectColor: sub.subject?.color || sub.color,
+            noOfLecture: '',
+            electiveGroupId: item.electiveGroupId || sub.electiveGroupId || null,
+          }));
+        }
+        return [
+          {
+            id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
+            subjectId: item.subjects[0]?.subjectId,
+            name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
+            subjectCode: item.subjects[0]?.subjectCode,
+            subjectColor: item.subjects[0]?.subject?.color || item.subjects[0]?.color,
+            noOfLecture: '',
+            electiveGroupId: null,
+          },
+        ];
+      });
+      formik.setFieldValue('subjects', mappedSubjects);
+      formik.setFieldValue('totalLectures', 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectTableData, editData]);
 
   // const initialValues = useMemo(() => {
   //   const base = getNoOfLectureInitialValues(editData, selectedClass);
@@ -206,18 +268,12 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
               <CustomSelect
                 options={allClass}
-                value={formik.values.className}
+                value={classId}
                 onChange={(val) => {
-                  formik.setFieldValue('className', val as string);
-
-                  const dummySubjects = generateDummySubjects().map((subj, index) => ({
-                    id: `subject-${index}`,
-                    subjectId: '',
-                    ...subj,
-                    noOfLecture: '',
-                    electiveGroupId: null,
-                  }));
-                  formik.setFieldValue('subjects', dummySubjects);
+                  setClassId(val as string);
+                  const found = allClass.find((c) => c.id === val);
+                  formik.setFieldValue('className', found?.name || val);
+                  formik.setFieldValue('subjects', []);
                   formik.setFieldValue('totalLectures', 0);
                 }}
                 label="Class *"
@@ -235,42 +291,60 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             </ShakingTextField>
           </Grid>
 
-          {formik.values.className && (
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
-                <CustomizableTable
-                  tableId="table-subject-list"
-                  isSearch={false}
-                  isShowedDense={false}
-                  noDataText={<>No Subject&apos;s weekly lectures Found </>}
-                  isFilter={false}
-                  columns={[
-                    {
-                      id: 'name',
-                      label: 'Subject',
-                      isFilter: false,
-                      render: (value, row) => (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <SubjectColorIndicator color={row.subjectColor} />
-                          <Typography variant="caption" fontSize="13px">
-                            {value} ({row.subjectCode})
-                          </Typography>
-                        </Box>
-                      ),
-                    },
-                    {
-                      id: 'noOfLecture',
-                      label: 'Weekly Lectures',
-                      isSort: false,
-                      isFilter: false,
-                      render: subjectColumnRender,
-                    },
-                  ]}
-                  data={formik.values.subjects}
-                />
-              </Box>
-            </Grid>
-          )}
+          {(isLoadingGetById || isSubjectsLoading || isSubjectsFetching) &&
+            formik.values.className && (
+              <Grid size={{ xs: 12 }}>
+                <Box display="flex" flexDirection="column" gap={1}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Box key={i} display="flex" alignItems="center" gap={2} px={1}>
+                      <Skeleton variant="rounded" width={24} height={24} />
+                      <Skeleton variant="text" sx={{ flex: 1 }} height={40} />
+                      <Skeleton variant="rounded" width={120} height={40} />
+                    </Box>
+                  ))}
+                </Box>
+              </Grid>
+            )}
+
+          {formik.values.className &&
+            !isLoadingGetById &&
+            !isSubjectsLoading &&
+            !isSubjectsFetching && (
+              <Grid size={{ xs: 12 }}>
+                <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
+                  <CustomizableTable
+                    tableId="table-subject-list"
+                    isSearch={false}
+                    isShowedDense={false}
+                    noDataText={<>No Subject&apos;s weekly lectures Found </>}
+                    isFilter={false}
+                    columns={[
+                      {
+                        id: 'name',
+                        label: 'Subject',
+                        isFilter: false,
+                        render: (value, row) => (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <SubjectColorIndicator color={row.subjectColor} />
+                            <Typography variant="caption" fontSize="13px">
+                              {value} ({row.subjectCode})
+                            </Typography>
+                          </Box>
+                        ),
+                      },
+                      {
+                        id: 'noOfLecture',
+                        label: 'Weekly Lectures',
+                        isSort: false,
+                        isFilter: false,
+                        render: subjectColumnRender,
+                      },
+                    ]}
+                    data={formik.values.subjects}
+                  />
+                </Box>
+              </Grid>
+            )}
         </Grid>
 
         {/* </Scrollbar> */}
@@ -313,15 +387,3 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 };
 
 export default CreateNoOfLecture;
-
-export const generateDummySubjects = () => [
-  { name: 'Mathematics', subjectCode: 'MTH101', subjectColor: '#42a5f5' },
-  { name: 'Science', subjectCode: 'SCI101', subjectColor: '#66bb6a' },
-  { name: 'English', subjectCode: 'ENG101', subjectColor: '#ef5350' },
-  { name: 'Social Studies', subjectCode: 'SST101', subjectColor: '#ab47bc' },
-  { name: 'Gujarati', subjectCode: 'GUJ101', subjectColor: '#ffa726' },
-  { name: 'Computer', subjectCode: 'COMP101', subjectColor: '#26c6da' },
-  { name: 'Art', subjectCode: 'ART101', subjectColor: '#8d6e63' },
-  { name: 'General Knowledge', subjectCode: 'GK101', subjectColor: '#78909c' },
-  { name: 'Physics', subjectCode: 'PHY101', subjectColor: '#5c6bc0' },
-];

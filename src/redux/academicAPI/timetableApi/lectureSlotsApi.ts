@@ -14,11 +14,20 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
 
     addLectureSlot: builder.mutation({
       query: (body) => ({
-        url: 'academics/timetable/lecture-slots',
+        url: '/academics/timetable/settings/lecture-slots',
         method: 'POST',
         body,
       }),
       invalidatesTags: [academicType.lectureSlot],
+    }),
+
+    getLectureSlots: builder.query({
+      query: ({ AcademicMediumId }: { AcademicMediumId: string }) => ({
+        url: '/academics/timetable/settings/lecture-slots',
+        method: 'GET',
+        params: { AcademicMediumId },
+      }),
+      providesTags: [academicType.lectureSlot],
     }),
 
     getLectureSlotById: builder.query({
@@ -59,4 +68,5 @@ export const {
   useGetLectureSlotByIdQuery,
   useUpdateLectureSlotMutation,
   useAssignLectureSlotToClassesMutation,
+  useGetLectureSlotsQuery,
 } = lectureSlotsApi;

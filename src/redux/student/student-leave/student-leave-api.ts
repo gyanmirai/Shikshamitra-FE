@@ -5,7 +5,7 @@ export const StudentLeaveApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentLeave: builder.query({
       query: () => ({
-        url: `/app/student-leave`,
+        url: `/students/attendance/leaves`,
         method: 'GET',
       }),
       providesTags: [studentLeaveType.studentLeave],

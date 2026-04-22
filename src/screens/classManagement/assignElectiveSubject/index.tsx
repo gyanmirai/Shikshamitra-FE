@@ -17,7 +17,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useGetStudentElectiveAssignmentsQuery,
   useUpdateStudentElectiveAssignmentsMutation,
@@ -42,15 +42,18 @@ const AssignElectiveSubject = () => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // --------------------------------------------
-  // FETCH ELECTIVE GROUPS
+  // FETCH ELECTIVE GROUPS (subject-assignments filtered to elective/subjectType=1)
   // --------------------------------------------
-  const { data: electiveGroupsData } = useQueryAndMutation({
+  const { data: subjectAssignmentsData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetElectiveGroupsQuery,
-    params: { academicMediumId: medium?.id },
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: classes },
+    options: { skip: !classes },
   });
 
-  const electiveGroups = electiveGroupsData?.records || [];
+  const electiveGroups = (subjectAssignmentsData?.data?.items ?? [])
+    .filter((item: any) => item.subjectType === 1)
+    .map((item: any) => ({ id: item.electiveGroupId, name: item.electiveGroupName }));
 
   // --------------------------------------------
   // BUILD CLASS LIST FROM MEDIUM
@@ -91,7 +94,9 @@ const AssignElectiveSubject = () => {
       classId: classes,
       divisionId: division,
       electiveGroupId,
-      search: '',
+    },
+    options: {
+      skip: !medium?.id || !classes || !division || !electiveGroupId,
     },
   });
 
@@ -216,6 +221,9 @@ const AssignElectiveSubject = () => {
           bgcolor: 'background.paper',
           boxShadow: (theme) => theme.customShadows.card,
           p: 1.5,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {/* FILTER & ACTIONS */}

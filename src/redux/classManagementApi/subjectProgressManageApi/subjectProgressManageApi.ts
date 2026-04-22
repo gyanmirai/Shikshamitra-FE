@@ -4,11 +4,18 @@ import { classManagementApi } from '../classManagementApi';
 
 export const subjectProgressManageApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSubjects: builder.query<any, { academicMediumId: string; classId: string }>({
-      query: (params) => ({
-        url: 'subjects',
+    getSubjects: builder.query<
+      any,
+      { academicMediumId: string; classId: string; divisionId?: string }
+    >({
+      query: ({ academicMediumId, classId, divisionId }) => ({
+        url: `/subjects`,
         method: 'GET',
-        params,
+        params: {
+          academicMediumId,
+          classId,
+          ...(divisionId ? { divisionId } : {}),
+        },
       }),
       providesTags: [classManagementType.subjectProgress],
     }),
@@ -17,15 +24,19 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
       {
         academicMediumId: string;
         classId: string;
-        divisionId: string;
+        divisionId?: string;
         subjectId: string;
-        search?: string;
       }
     >({
-      query: (params) => ({
+      query: ({ academicMediumId, classId, divisionId, subjectId }) => ({
         url: 'chapters/progress',
         method: 'GET',
-        params,
+        params: {
+          academicMediumId,
+          classId,
+          subjectId,
+          ...(divisionId ? { divisionId } : {}),
+        },
       }),
       providesTags: [classManagementType.subjectProgress],
     }),

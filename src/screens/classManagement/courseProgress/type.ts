@@ -32,7 +32,7 @@ export interface ICourseDetail {
 
 // Interface representing a course with its details
 export interface ICourse {
-  id: number; // Unique identifier for the course
+  id: string | number; // UUID from API, or legacy integer from static data
   name: string; // Name of the course
   progress: number; // Overall progress percentage of the course
   details: ICourseDetail[]; // Array of chapter details for the course
@@ -45,6 +45,7 @@ export interface ICourseCardsGridProps {
   courses: ICourse[];
   handleCardDetails: (course: ICourse) => void;
   layout?: 'horizontal' | 'vertical';
+  isLoading?: boolean;
 }
 
 export interface IAppWidgetProps {

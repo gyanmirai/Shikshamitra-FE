@@ -1,9 +1,14 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, List, Card, Button, ListItem, Typography } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, List, Card, Button, Skeleton, ListItem, Typography } from '@mui/material';
 import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { ItemTypes } from './types';
 import { Iconify } from '../iconify';
@@ -20,7 +25,8 @@ interface SubjectCardProps {
 }
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
-  const isFull = placedCount >= (subject.totalLectures || 0);
+  const totalLectures = subject.totalLectures ?? 0;
+  const isFull = totalLectures > 0 && placedCount >= totalLectures;
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.SUBJECT,
@@ -77,26 +83,71 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
         color={isFull ? 'error.main' : placedCount > 0 ? 'primary.main' : 'text.secondary'}
         fontWeight={placedCount > 0 ? 'bold' : 'regular'}
       >
-        {placedCount} / {subject.totalLectures}
+        {placedCount} / {subject.totalLectures ?? 0}
       </Typography>
     </ListItem>
   );
 };
 
 interface PaletteProps {
-  subjects: Subject[];
   placedCounts: Record<string, number>;
   selectedClass: string;
   selectedDivision: string;
 }
 
 const SubjectPalette: React.FC<PaletteProps> = ({
-  subjects,
   placedCounts,
   selectedClass,
   selectedDivision,
 }) => {
   const weeklyLecturesDialog = useBoolean();
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const standardId = React.useMemo(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [];
+    const matched = allClasses.find((c: any) => c.name === selectedClass || c.id === selectedClass);
+    return matched?.id || '';
+  }, [medium, selectedClass]);
+
+  const {
+    data: subjectTableData,
+    isLoading: isSubjectsLoading,
+    isFetching: isSubjectsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      standardId,
+    },
+    options: {
+      skip: !medium?.id || !standardId,
+    },
+  });
+
+  const subjects: Subject[] = React.useMemo(() => {
+    if (!subjectTableData?.data?.items) return [];
+    return subjectTableData.data.items.flatMap((item: any) => {
+      const totalLectures = item.totalLectures ?? 0;
+      if (item.subjectType === 1) {
+        return item.subjects.map((sub: any) => ({
+          id: sub.assignedId || sub.subjectId,
+          name: sub.subject?.name || sub.subjectName,
+          color: sub.subject?.color || sub.color || '#90caf9',
+          totalLectures,
+        }));
+      }
+      return [
+        {
+          id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
+          name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
+          color: item.subjects[0]?.subject?.color || item.subjects[0]?.color || '#90caf9',
+          totalLectures,
+        },
+      ];
+    });
+  }, [subjectTableData]);
 
   return (
     <Card
@@ -114,7 +165,15 @@ const SubjectPalette: React.FC<PaletteProps> = ({
         boxShadow: 'var(--shadows-4)',
       }}
     >
-      {subjects.length > 0 ? (
+      {isSubjectsLoading || isSubjectsFetching ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+          <Skeleton variant="text" width={100} height={32} />
+          <Skeleton variant="text" width={140} height={20} />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} variant="rounded" height={52} sx={{ borderRadius: 1 }} />
+          ))}
+        </Box>
+      ) : subjects.length > 0 ? (
         <>
           <Box sx={{ mb: 1 }}>
             <Typography variant="h6" fontWeight="600">

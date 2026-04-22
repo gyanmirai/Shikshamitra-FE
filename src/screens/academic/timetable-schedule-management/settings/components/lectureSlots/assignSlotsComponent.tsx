@@ -5,6 +5,7 @@ import type { Standards, Organization } from 'src/types/school';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
@@ -14,11 +15,23 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Stack, Button, DialogActions } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useAssignLectureSlotToClassesMutation } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 
-const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
+interface AssignSlotsProps {
+  onClose: (e: any, isSubmit: boolean) => void;
+  lectureSlotId?: string;
+}
+
+const AssignSlots = ({ onClose, lectureSlotId }: AssignSlotsProps) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const [assignLectureSlot, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAssignLectureSlotToClassesMutation,
+  });
 
   // Update classes when organization changes
   useEffect(() => {
@@ -36,11 +49,17 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
     validationSchema: Yup.object({
       classNames: Yup.array().min(1, 'Please select at least one class'),
     }),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `Slots assign successfully to class ${values.classNames}`,
+    onSubmit: async (values) => {
+      const res = await assignLectureSlot({
+        lectureSlotId,
+        body: { standardIds: values.classNames },
       });
-      onClose?.(null, true);
+      if (res.data) {
+        shikshaMitraToast.success({
+          message: 'Slots assigned successfully.',
+        });
+        onClose?.(null, true);
+      }
     },
   });
 
@@ -58,7 +77,7 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
               label="Class"
               multiple
               labelKey="name"
-              valueKey="name"
+              valueKey="id"
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={formik.touched.classNames && Boolean(formik.errors.classNames)}
               helperText={
@@ -80,15 +99,15 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           size="small"
           variant="contained"
-          form="dialog-form"
+          loading={isLoading}
           onClick={() => formik.handleSubmit()}
         >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </Box>
   );

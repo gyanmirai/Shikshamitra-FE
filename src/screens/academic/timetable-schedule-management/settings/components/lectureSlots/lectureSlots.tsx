@@ -10,9 +10,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { useGetLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 
 import ViewCreateSlots from './ViewCreateSlots';
 import AssignSlots from './assignSlotsComponent';
@@ -28,13 +30,24 @@ const LectureSlots = () => {
   const assignSlotsDialog = useBoolean();
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const dispatch = useDispatch();
+
+  const { data: lectureSlotsData, isLoading: isLectureSlotsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLectureSlotsQuery,
+    params: { AcademicMediumId: medium?.id },
+    options: { skip: !medium?.id },
+  });
+
+  const tableData = lectureSlotsData?.data?.items ?? [];
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
+            setEditData(row);
             assignSlotsDialog.onTrue();
             pop.onClose();
           }}
@@ -44,7 +57,7 @@ const LectureSlots = () => {
         </MenuItem>
       </MenuList>
     ),
-    [assignSlotsDialog]
+    [assignSlotsDialog, setEditData]
   );
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -387,7 +400,7 @@ const LectureSlots = () => {
         </Card>
       ) : assignSlotsDialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
-          <AssignSlots onClose={handleClose} />
+          <AssignSlots onClose={handleClose} lectureSlotId={editData?.id} />
         </Card>
       ) : (
         <CustomizableTable
@@ -414,7 +427,8 @@ const LectureSlots = () => {
             </>
           }
           columns={columns}
-          data={mockData}
+          data={tableData}
+          isLoading={isLectureSlotsLoading}
         />
       )}
     </Box>

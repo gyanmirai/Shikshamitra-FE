@@ -15,10 +15,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -30,6 +32,11 @@ import {
   TimetableStatusColors,
   TimetableStatusOptions,
 } from 'src/enums/timatable-type';
+import {
+  useCreateTimetableMutation,
+  useGetTimetableByStandardDivisionQuery,
+  useGetTimetableManagementByStandardQuery,
+} from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
 
 import type { TimetableSlot, TSubjectGroup } from './type';
 
@@ -369,7 +376,11 @@ const TimeTableGrid = () => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard name
   const [classes, setClasses] = useState<string>('');
+  const [selectedStandardId, setSelectedStandardId] = useState<string>('');
+  const [slotConfigStandardId, setSlotConfigStandardId] = useState<string>('');
+  const [slotConfigDivisionId, setSlotConfigDivisionId] = useState<string>('');
   const [division, setDivision] = useState<string>('');
+  const [selectedDivisionId, setSelectedDivisionId] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -382,10 +393,8 @@ const TimeTableGrid = () => {
 
     setAllClass(allClasses);
     setClasses(allClasses[0]?.name || '');
+    setSelectedStandardId(allClasses[0]?.id || '');
   }, [medium]);
-
-  // State for managing classroom selection
-  // const [classroom, setClassroom] = useState<string>('');
 
   // State for managing modal/dialog open state
   const [open, setOpen] = useState(false);
@@ -394,18 +403,6 @@ const TimeTableGrid = () => {
   // Theme object from Material-UI
   const [initialTimetableData, setInitialTimetableData] = useState<TimetableSlot[]>([]);
   const [initialSubjectsGroups, setInitialSubjectsGroups] = useState<any>([]);
-
-  // Initialize remaining lectures count for each subject
-
-  // Define time slots for the timetable
-  // const timeSlots = [
-  //   '8:00 - 8:45', // First period
-  //   '8:45 - 9:30', // Second period
-  //   '9:30 - 10:15', // Third period
-  //   '10:15 - 10:30', // Break time
-  //   '10:30 - 11:15', // Fourth period
-  //   '11:15 - 12:00', // Fifth period
-  // ];
 
   // Initialize timetable as an array of arrays
   const defaultTimetableData = useMemo(() => cloneDeep(timetableData), []);
@@ -430,7 +427,8 @@ const TimeTableGrid = () => {
             <MenuItem
               onClick={() => {
                 handleOpenDialog();
-                setDivision(row.division);
+                setDivision(row.divisionName);
+                setSelectedDivisionId(row.divisionId);
               }}
             >
               <Iconify icon="mdi:add" sx={{ height: '16px', width: '16px' }} />
@@ -441,9 +439,12 @@ const TimeTableGrid = () => {
           {(row.status === 1 || row.status === 2) && (
             <MenuItem
               onClick={() => {
-                handleOpenDialog(); // Use the new function
+                handleOpenDialog();
+                setDivision(row.divisionName);
+                setSelectedDivisionId(row.divisionId);
                 setIsEdit(true);
-                // TODO: Implement update functionality
+                setSlotConfigStandardId(selectedStandardId);
+                setSlotConfigDivisionId(row.divisionId);
               }}
             >
               <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
@@ -453,11 +454,11 @@ const TimeTableGrid = () => {
         </MenuList>
       </>
     ),
-    [handleOpenDialog]
+    [handleOpenDialog, selectedStandardId]
   );
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'division', label: 'Division' },
+      { id: 'divisionName', label: 'Division' },
       {
         id: 'status',
         label: 'Status',
@@ -484,6 +485,36 @@ const TimeTableGrid = () => {
     ],
     [actions]
   );
+
+  const {
+    data: timetableManagementData,
+    isLoading: isTimetableManagementLoading,
+    isFetching: isTimetableManagementFetching,
+    refetch: refetchTimetableManagement,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTimetableManagementByStandardQuery,
+    params: selectedStandardId,
+    options: {
+      skip: !selectedStandardId,
+    },
+  });
+
+  const {
+    data: slotConfigData,
+    isLoading: isSlotConfigLoading,
+    isFetching: isSlotConfigFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTimetableByStandardDivisionQuery,
+    params: { standardId: slotConfigStandardId, divisionId: slotConfigDivisionId },
+    options: {
+      skip: !slotConfigStandardId || !slotConfigDivisionId,
+    },
+  });
+
+  console.log('Slot Config Data:--->', slotConfigData);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {open ? (
@@ -531,7 +562,18 @@ const TimeTableGrid = () => {
         open={open}
         fullScreen
       >
-        <TimeTableForm selectedClass={classes} selectedDivision={division} />
+        <TimeTableForm
+          selectedClass={classes}
+          selectedDivision={division}
+          standardId={selectedStandardId}
+          divisionId={selectedDivisionId}
+          slotConfigData={slotConfigData}
+          isSlotConfigLoading={isSlotConfigLoading || isSlotConfigFetching}
+          onClose={() => {
+            setOpen(false);
+            setIsEdit(false);
+          }}
+        />
       </CustomDialog>
 
       {!open && (
@@ -554,7 +596,10 @@ const TimeTableGrid = () => {
                 formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
                 value={classes}
                 onChange={(value) => {
-                  setClasses(value as string);
+                  const name = value as string;
+                  setClasses(name);
+                  const found = allClass.find((c) => c.name === name);
+                  setSelectedStandardId(found?.id || '');
                 }}
               />
             </Box>
@@ -563,44 +608,8 @@ const TimeTableGrid = () => {
             tableId="timetable-table"
             noDataText="No Time Table Data Found"
             columns={columns}
-            data={[
-              {
-                id: 1,
-                className: 'Class 10',
-                division: 'A',
-                status: 0,
-              },
-              {
-                id: 2,
-                className: 'Class 9',
-                division: 'B',
-                status: 1,
-              },
-              {
-                id: 3,
-                className: 'Class 8',
-                division: 'C',
-                status: 2,
-              },
-              {
-                id: 5,
-                className: 'Class 6',
-                division: 'E',
-                status: 1,
-              },
-              {
-                id: 6,
-                className: 'Class 5',
-                division: 'F',
-                status: 2,
-              },
-              {
-                id: 7,
-                className: 'Class 4',
-                division: 'G',
-                status: 0,
-              },
-            ]}
+            isLoading={isTimetableManagementLoading || isTimetableManagementFetching}
+            data={timetableManagementData?.items || []}
           />{' '}
         </>
       )}
@@ -652,10 +661,71 @@ export default TimeTableGrid;
 const TimeTableForm = ({
   selectedClass,
   selectedDivision,
+  standardId,
+  divisionId,
+  slotConfigData,
+  isSlotConfigLoading,
+  onClose,
 }: {
   selectedClass: string;
   selectedDivision: string;
+  standardId: string;
+  divisionId: string;
+  slotConfigData?: any;
+  isSlotConfigLoading?: boolean;
+  onClose: () => void;
 }) => {
+  const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateTimetableMutation,
+  });
+
+  const transformSlotsToPayload = useCallback(
+    (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
+      const dayNameMap: Record<DayOfWeek, string> = {
+        MONDAY: 'Monday',
+        TUESDAY: 'Tuesday',
+        WEDNESDAY: 'Wednesday',
+        THURSDAY: 'Thursday',
+        FRIDAY: 'Friday',
+        SATURDAY: 'Saturday',
+      };
+
+      const timetable: Record<string, any[]> = {};
+
+      (Object.keys(slots) as DayOfWeek[]).forEach((day) => {
+        const apiDay = dayNameMap[day];
+        timetable[apiDay] = slots[day].map((slot, index) => ({
+          sequence: slot.sequence ?? index,
+          startTime: dayjs(slot.startTime, 'HH:mm').toISOString(),
+          endTime: dayjs(slot.endTime, 'HH:mm').toISOString(),
+          type: slot.type === 'LECTURE' ? 0 : 1,
+          breakType: slot.breakType === 'SHORT' ? 0 : slot.breakType === 'LUNCH' ? 1 : 0,
+          subjectType: slot.subjectType ?? 0,
+          electiveGroupId: slot.electiveGroupId ?? null,
+          subjects: (slot.subjects ?? []).map((s) => ({
+            subjectId: s.id,
+            teacherId: s.teacherId ?? '',
+            roomId: s.roomId ?? '',
+          })),
+        }));
+      });
+
+      return { status, timetable };
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(
+    async (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
+      const body = transformSlotsToPayload(slots, status);
+      await createTimetable({ standardId, divisionId, body });
+      shikshaMitraToast.success({ message: 'Timetable published successfully.' });
+      onClose();
+    },
+    [createTimetable, divisionId, onClose, standardId, transformSlotsToPayload]
+  );
+
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
       slots: generateWeeklySlots(DEFAULT_CONFIG),
@@ -717,7 +787,8 @@ const TimeTableForm = ({
               variant="contained"
               size="small"
               startIcon={<Iconify icon={GlobalIcons.publish} />}
-              onClick={() => {}}
+              onClick={() => handleSubmit(formik.values.slots, 2)}
+              disabled={isSubmitting}
             >
               Publish
             </Button>

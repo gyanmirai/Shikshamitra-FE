@@ -1,6 +1,7 @@
 // components/ChapterTable.tsx
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import dayjs from 'dayjs';
 import { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -24,7 +25,7 @@ const ChapterTable = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'chapterNo',
+        id: 'chapterNumber',
         label: 'Chapter No.',
         align: 'left',
         sticky: true,
@@ -38,39 +39,52 @@ const ChapterTable = ({
         filterType: 'string',
       },
       {
-        id: 'startDate',
+        id: 'chapterStartTime',
         label: 'Start Date',
         align: 'left',
         filterType: 'date',
+        render: (value, row) => (
+          <Typography fontSize="12px" gutterBottom>
+            {dayjs(value).format('DD MMM YYYY')}
+          </Typography>
+        ),
       },
       {
-        id: 'endDate',
+        id: 'chapterEndTime',
         label: 'End Date',
         align: 'left',
         filterType: 'date',
+        render: (value, row) => (
+          <Typography fontSize="12px" gutterBottom>
+            {dayjs(value).format('DD MMM YYYY')}
+          </Typography>
+        ),
       },
       {
         id: 'description',
         label: 'Description',
         align: 'left',
         filterType: 'string',
-        render: (value, row) => (
-          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-            <Typography
-              variant="caption"
-              noWrap
-              sx={{
-                maxWidth: 150,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-              }}
-            >
-              {value}
-            </Typography>
-          </CustomTooltip>
-        ),
+        render: (value, row) => {
+          const plainText = value ? value.replace(/<[^>]*>/g, '').trim() : '';
+          return (
+            <CustomTooltip title={plainText} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="inherit"
+                noWrap
+                sx={{
+                  maxWidth: 150,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}
+              >
+                {plainText}
+              </Typography>
+            </CustomTooltip>
+          );
+        },
       },
       // {
       //   id: 'viewMaterial',

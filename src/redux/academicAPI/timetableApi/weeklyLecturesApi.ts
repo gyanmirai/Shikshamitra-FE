@@ -5,19 +5,20 @@ import { academicApi } from '../academicApi';
 export const weeklyLecturesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getWeeklyLectureSlots: builder.query({
-      query: (params) => ({
-        url: 'weekly-lecture-slots',
+      query: ({ AcademicMediumId }: { AcademicMediumId: string }) => ({
+        url: '/academics/timetable/settings/weekly-lecture-slots',
         method: 'GET',
-        params: params || {},
+        params: { AcademicMediumId },
       }),
       providesTags: [academicType.weeklyLectureSlot],
     }),
 
     createWeeklyLectureSlot: builder.mutation({
-      query: (body) => ({
-        url: 'weekly-lecture-slots',
+      query: ({ academicMediumId, standardId, subjects }) => ({
+        url: '/academics/timetable/settings/weekly-lecture-slots',
         method: 'POST',
-        body,
+        params: { academicMediumId },
+        body: { standardId, subjects },
       }),
       invalidatesTags: [academicType.weeklyLectureSlot],
     }),

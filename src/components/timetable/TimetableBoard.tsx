@@ -368,7 +368,6 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       {/* Left Panel: Palette */}
       {!readOnly && (
         <SubjectPalette
-          subjects={subjects}
           placedCounts={subjectCounts}
           selectedClass={selectedClass}
           selectedDivision={selectedDivision}

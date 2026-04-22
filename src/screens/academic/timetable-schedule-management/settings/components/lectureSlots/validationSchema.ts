@@ -399,38 +399,6 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
 
                 return true;
               }
-            )
-            // Total Time Coverage
-            .test(
-              'time-coverage',
-              'Slots should cover the entire school hours',
-              // eslint-disable-next-line func-names
-              function (slots) {
-                if (!slots || slots.length === 0) return true;
-
-                const firstSlotStart = dayjs(slots[0].startTime as Dayjs);
-                const lastSlotEnd = dayjs(slots[slots.length - 1].endTime as Dayjs);
-
-                // Allow 15 minutes tolerance
-                const startDiff = Math.abs(firstSlotStart.diff(schoolStart, 'minute'));
-                const endDiff = Math.abs(lastSlotEnd.diff(schoolEnd, 'minute'));
-
-                if (startDiff > 15) {
-                  return this.createError({
-                    path: 'timeSlots[0].startTime',
-                    message: 'First slot should start close to school start time',
-                  });
-                }
-
-                if (endDiff > 15) {
-                  return this.createError({
-                    path: `timeSlots[${slots.length - 1}].endTime`,
-                    message: 'Last slot should end close to school end time',
-                  });
-                }
-
-                return true;
-              }
             ),
         })
       )
