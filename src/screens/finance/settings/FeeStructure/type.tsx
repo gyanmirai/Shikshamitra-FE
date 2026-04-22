@@ -56,6 +56,11 @@ export interface IFeeStructureFormProps {
   editData: IFeeStructure | null;
 }
 
+export interface IFeeStructureEditFormProps {
+  editData: IFeeStructure;
+  onClose: (e: any, isSubmit?: boolean) => void;
+}
+
 export interface FeeStructureCardProps {
   className: string;
   feeItems: IClassWiseFeeItem[];

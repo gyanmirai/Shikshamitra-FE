@@ -5,8 +5,8 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Box, IconButton } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -158,24 +158,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
     <CustomizableTable
       tableId="fee-structure-table"
       isLoading={isLoading || isFetching}
-      noDataText={
-        <>
-          No Fee Structure data found
-          <Box
-            onClick={() => {
-              addFeeStructure.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': { cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' },
-            }}
-          >
-            Fee Structure
-          </Box>
-        </>
-      }
+      noDataText="No Fee Structure data found"
       columns={columns}
       data={tableData}
     />
