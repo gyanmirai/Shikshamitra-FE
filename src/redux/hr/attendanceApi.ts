@@ -92,6 +92,52 @@ export const attendanceApi = employeeApi.injectEndpoints({
         responseHandler: (response) => response.blob(),
       }),
     }),
+    saveDayAttendance: builder.mutation({
+      query: (body) => ({
+        url: '/hr/attendance/take-attendance/day/save',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [employeeType.attendance],
+    }),
+
+    // Lock/Unlock Attendance Day
+    lockDayAttendance: builder.mutation({
+      query: ({ educationMediumStageId, attendanceDate }) => ({
+        url: '/hr/attendance/take-attendance/day/lock',
+        method: 'POST',
+        params: { educationMediumStageId, attendanceDate },
+      }),
+      invalidatesTags: [employeeType.attendance],
+    }),
+
+    // Take Attendance - Day (GET)
+    getDayAttendance: builder.query({
+      query: ({
+        attendanceDate,
+        educationMediumStageId,
+        department,
+        isTeaching,
+        roleId,
+        search,
+        skipCount = 0,
+        maxResultCount = 50,
+      }) => ({
+        url: '/hr/attendance/take-attendance/day',
+        method: 'GET',
+        params: {
+          attendanceDate,
+          educationMediumStageId,
+          department,
+          isTeaching,
+          roleId,
+          search,
+          skipCount,
+          maxResultCount,
+        },
+      }),
+      providesTags: [employeeType.attendance],
+    }),
   }),
 });
 
@@ -106,4 +152,7 @@ export const {
   usePreviewAttendanceMutation,
   useConfirmAttendanceMutation,
   useDownloadAttendanceTemplateMutation,
+  useSaveDayAttendanceMutation,
+  useLockDayAttendanceMutation,
+  useGetDayAttendanceQuery,
 } = attendanceApi;

@@ -300,6 +300,7 @@ const BREAKDOWN_COLUMNS: IColumn[] = [
 
 const LeaveBalance = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { employee } = useSelector((state: any) => state.auth);
 
   const {
     data: balanceData,
@@ -308,7 +309,7 @@ const LeaveBalance = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetMyLeaveBalanceQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, employeeId: employee?.id },
   });
 
   const {
@@ -321,10 +322,27 @@ const LeaveBalance = () => {
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
   });
 
-  const mergedBalance: LeaveBalanceData = useMemo(
-    () => balanceData ?? DUMMY_BALANCE_DATA,
-    [balanceData]
-  );
+  const mergedBalance: LeaveBalanceData = useMemo(() => {
+    if (!balanceData?.items?.length) return DUMMY_BALANCE_DATA;
+    const { items } = balanceData;
+    const totalLeaves = items.reduce((sum: number, i: any) => sum + (i.entitledDays ?? 0), 0);
+    const usedLeaves = items.reduce((sum: number, i: any) => sum + (i.usedDays ?? 0), 0);
+    const remainingLeaves = items.reduce((sum: number, i: any) => sum + (i.remainingDays ?? 0), 0);
+    return {
+      totalLeaves,
+      usedLeaves,
+      remainingLeaves,
+      pendingLeaves: 0,
+      leaveTypeBreakdown: items.map((i: any) => ({
+        leaveTypeId: i.leaveTypeMasterId,
+        leaveTypeName: i.leaveTypeName ?? i.policyName ?? '-',
+        total: i.entitledDays ?? 0,
+        used: i.usedDays ?? 0,
+        pending: 0,
+        remaining: i.remainingDays ?? 0,
+      })),
+    };
+  }, [balanceData]);
 
   const summaryCards = useMemo(() => SUMMARY_CARDS(mergedBalance), [mergedBalance]);
 

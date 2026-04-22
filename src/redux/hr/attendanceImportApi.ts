@@ -10,7 +10,7 @@ export interface AttendanceImportItem {
   importedByUserId: string;
   importedByName: string;
   importedAt: string;
-  status: number; // 0=All, 1=Processed, 2=Failed, 3=Pending
+  status: string;
   payrollMonth: string;
   totalRows: number;
   validRows: number;
@@ -21,7 +21,10 @@ export interface AttendanceImportItem {
   createdCount: number;
   replacedCount: number;
   canOpen: boolean;
-  isPayrollLocked?: boolean;
+  runSource: string;
+  externalCorrelationId: string;
+  integrationProvider: string;
+  isBatchLocked: boolean;
 }
 
 export interface AttendanceImportListResponse {
@@ -34,7 +37,6 @@ export interface AttendanceImportDetail extends AttendanceImportItem {
   previewTokenExpiresAt?: string;
   errorsSummary?: string[];
   warningsSummary?: string[];
-  // status inherited as number from AttendanceImportItem
 }
 
 export interface AttendanceImportRow {
@@ -61,7 +63,7 @@ export interface AttendanceImportRowsResponse {
 
 export const attendanceImportApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    // 1. GET /api/payroll/attendance-imports
+    // 1. GET /api/hr/attendance/automated-runs
     getAttendanceImports: builder.query<
       AttendanceImportListResponse,
       {
@@ -72,23 +74,23 @@ export const attendanceImportApi = api.injectEndpoints({
       }
     >({
       query: ({ payrollMonth, search, skipCount = 0, maxResultCount = 50 }) => ({
-        url: '/payroll/attendance-imports',
+        url: '/hr/attendance/automated-runs',
         method: 'GET',
         params: { payrollMonth, search, skipCount, maxResultCount },
       }),
       providesTags: [employeeType.attendanceImport],
     }),
 
-    // 2. GET /api/payroll/attendance-imports/{importId}
+    // 2. GET /api/hr/attendance/automated-runs/{importId}
     getAttendanceImportById: builder.query<AttendanceImportDetail, { id: string }>({
       query: ({ id }) => ({
-        url: `/payroll/attendance-imports/${id}`,
+        url: `/hr/attendance/automated-runs/${id}`,
         method: 'GET',
       }),
       providesTags: [employeeType.attendanceImport],
     }),
 
-    // 3. GET /api/payroll/attendance-imports/{importId}/rows
+    // 3. GET /api/hr/attendance/automated-runs/{importId}/rows
     getAttendanceImportRows: builder.query<
       AttendanceImportRowsResponse,
       {
@@ -98,7 +100,7 @@ export const attendanceImportApi = api.injectEndpoints({
       }
     >({
       query: ({ id, skipCount = 0, maxResultCount = 50 }) => ({
-        url: `/payroll/attendance-imports/${id}/rows`,
+        url: `/hr/attendance/automated-runs/${id}/rows`,
         method: 'GET',
         params: { skipCount, maxResultCount },
       }),

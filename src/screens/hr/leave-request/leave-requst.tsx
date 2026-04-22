@@ -26,6 +26,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   useGetLeaveTypesQuery,
+  useGetLeavePoliciesQuery,
   useCreateLeaveRequestMutation,
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
@@ -55,6 +56,7 @@ type AddLeaveRequestProps = {
 
 interface FormValues {
   employee: { id: string; label: string } | null;
+  leavePolicyId: string;
   leaveTypeId: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
@@ -100,6 +102,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
 
   const {
+    data: leavePoliciesData,
+    isLoading: isLeavePolicyLoading,
+    isFetching: isLeavePolicyFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLeavePoliciesQuery,
+    params: { academicYearId: currentYear?.id },
+  });
+
+  const {
     initialValues,
     errors,
     touched,
@@ -113,6 +125,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       employee: editData?.employeeId
         ? { id: editData.employeeId, label: editData.employeeName || '' }
         : SELF_OPTION,
+      leavePolicyId: editData?.leavePolicyId || '',
       leaveTypeId: editData?.leaveTypeId || '',
       reason: editData?.reason || editData?.description || '',
       startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
@@ -123,6 +136,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     },
     validationSchema: Yup.object().shape({
       employee: Yup.object().nullable().required('Employee is required'),
+      leavePolicyId: Yup.string().required('Leave Policy is required'),
       leaveTypeId: Yup.string().required('Leave Type is required'),
       startDate: Yup.mixed()
         .required('Start Date is required')
@@ -213,6 +227,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           if (formValues.employee && formValues.employee.id !== 'self') {
             formData.append('employeeId', formValues.employee.id);
           }
+          formData.append('leavePolicyId', formValues.leavePolicyId);
           formData.append('leaveTypeId', formValues.leaveTypeId);
           formData.append('startDate', dayjs(formValues.startDate).toISOString());
           formData.append('endDate', dayjs(formValues.endDate).toISOString());
@@ -288,6 +303,26 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   helperText={(touched.employee && (errors.employee as string)) || ''}
                   disabled={!!editData}
                   size="small"
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!touched.leavePolicyId && !!errors.leavePolicyId}>
+                <CustomSelect
+                  isLoading={isLeavePolicyLoading || isLeavePolicyFetching}
+                  options={leavePoliciesData?.items || []}
+                  label="Leave Policy *"
+                  value={values.leavePolicyId}
+                  name="leavePolicyId"
+                  valueKey="id"
+                  disabled={!!editData}
+                  labelKey="policyTitle"
+                  error={!!touched.leavePolicyId && !!errors.leavePolicyId}
+                  helperText={(touched.leavePolicyId && errors.leavePolicyId) || ''}
+                  onChange={(value) => {
+                    setFieldValue('leavePolicyId', value);
+                  }}
                 />
               </ShakingTextField>
             </Grid>

@@ -88,12 +88,30 @@ export const leaveApi = api.injectEndpoints({
 
     // Leave Management
     getLeaveRequests: builder.query({
-      query: ({ academicYearId, 'month-year': monthYear, page = 1, pageSize = 20, search }) => ({
+      query: ({
+        academicYearId,
+        'month-year': monthYear,
+        page = 1,
+        pageSize = 20,
+        search,
+        status,
+        leavePolicyId,
+        leaveTypeMasterId,
+      }) => ({
         url: '/leave-management',
         method: 'GET',
-        params: { academicYearId, 'month-year': monthYear, page, pageSize, search },
+        params: {
+          academicYearId,
+          'month-year': monthYear,
+          page,
+          pageSize,
+          search,
+          status,
+          leavePolicyId,
+          leaveTypeMasterId,
+        },
       }),
-      providesTags: [employeeType.employee], // Following existing pattern in employeeApi
+      providesTags: [employeeType.employee],
     }),
     createLeaveRequest: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -137,10 +155,10 @@ export const leaveApi = api.injectEndpoints({
 
     // Leave Balance
     getMyLeaveBalance: builder.query({
-      query: ({ academicYearId }) => ({
-        url: '/leave-management/my-balance',
+      query: ({ academicYearId, employeeId }) => ({
+        url: '/leave-management/balances',
         method: 'GET',
-        params: { academicYearId },
+        params: { academicYearId, employeeId },
       }),
       providesTags: [employeeType.employee],
     }),
