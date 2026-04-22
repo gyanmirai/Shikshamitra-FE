@@ -176,7 +176,7 @@ const WeeklyLectures = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'className', label: 'Class', filterType: 'number', align: 'left' },
+      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
       {
         id: 'totalLectures',
         label: 'Total Lectures',
@@ -185,7 +185,7 @@ const WeeklyLectures = () => {
         align: 'left',
       },
       {
-        id: 'newSubject',
+        id: 'subjects',
         label: 'Subjects',
         isSort: false,
         align: 'left',

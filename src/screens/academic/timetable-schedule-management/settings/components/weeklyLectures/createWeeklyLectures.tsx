@@ -17,7 +17,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Skeleton, TextField, Typography, DialogActions } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useGetWeeklyLectureSlotsQuery,
@@ -116,7 +116,11 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     },
   });
 
-  const { data: subjectTableData, isLoading: isSubjectsLoading } = useQueryAndMutation({
+  const {
+    data: subjectTableData,
+    isLoading: isSubjectsLoading,
+    isFetching: isSubjectsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
@@ -287,42 +291,60 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             </ShakingTextField>
           </Grid>
 
-          {formik.values.className && (
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
-                <CustomizableTable
-                  tableId="table-subject-list"
-                  isSearch={false}
-                  isShowedDense={false}
-                  noDataText={<>No Subject&apos;s weekly lectures Found </>}
-                  isFilter={false}
-                  columns={[
-                    {
-                      id: 'name',
-                      label: 'Subject',
-                      isFilter: false,
-                      render: (value, row) => (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <SubjectColorIndicator color={row.subjectColor} />
-                          <Typography variant="caption" fontSize="13px">
-                            {value} ({row.subjectCode})
-                          </Typography>
-                        </Box>
-                      ),
-                    },
-                    {
-                      id: 'noOfLecture',
-                      label: 'Weekly Lectures',
-                      isSort: false,
-                      isFilter: false,
-                      render: subjectColumnRender,
-                    },
-                  ]}
-                  data={formik.values.subjects}
-                />
-              </Box>
-            </Grid>
-          )}
+          {(isLoadingGetById || isSubjectsLoading || isSubjectsFetching) &&
+            formik.values.className && (
+              <Grid size={{ xs: 12 }}>
+                <Box display="flex" flexDirection="column" gap={1}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Box key={i} display="flex" alignItems="center" gap={2} px={1}>
+                      <Skeleton variant="rounded" width={24} height={24} />
+                      <Skeleton variant="text" sx={{ flex: 1 }} height={40} />
+                      <Skeleton variant="rounded" width={120} height={40} />
+                    </Box>
+                  ))}
+                </Box>
+              </Grid>
+            )}
+
+          {formik.values.className &&
+            !isLoadingGetById &&
+            !isSubjectsLoading &&
+            !isSubjectsFetching && (
+              <Grid size={{ xs: 12 }}>
+                <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
+                  <CustomizableTable
+                    tableId="table-subject-list"
+                    isSearch={false}
+                    isShowedDense={false}
+                    noDataText={<>No Subject&apos;s weekly lectures Found </>}
+                    isFilter={false}
+                    columns={[
+                      {
+                        id: 'name',
+                        label: 'Subject',
+                        isFilter: false,
+                        render: (value, row) => (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <SubjectColorIndicator color={row.subjectColor} />
+                            <Typography variant="caption" fontSize="13px">
+                              {value} ({row.subjectCode})
+                            </Typography>
+                          </Box>
+                        ),
+                      },
+                      {
+                        id: 'noOfLecture',
+                        label: 'Weekly Lectures',
+                        isSort: false,
+                        isFilter: false,
+                        render: subjectColumnRender,
+                      },
+                    ]}
+                    data={formik.values.subjects}
+                  />
+                </Box>
+              </Grid>
+            )}
         </Grid>
 
         {/* </Scrollbar> */}

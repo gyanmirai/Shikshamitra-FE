@@ -6,7 +6,7 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, List, Card, Button, ListItem, Typography } from '@mui/material';
+import { Box, List, Card, Button, Skeleton, ListItem, Typography } from '@mui/material';
 import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
@@ -25,7 +25,8 @@ interface SubjectCardProps {
 }
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
-  const isFull = placedCount >= (subject.totalLectures ?? 6);
+  const totalLectures = subject.totalLectures ?? 0;
+  const isFull = totalLectures > 0 && placedCount >= totalLectures;
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.SUBJECT,
@@ -82,7 +83,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
         color={isFull ? 'error.main' : placedCount > 0 ? 'primary.main' : 'text.secondary'}
         fontWeight={placedCount > 0 ? 'bold' : 'regular'}
       >
-        {placedCount} / {subject.totalLectures ?? 6}
+        {placedCount} / {subject.totalLectures ?? 0}
       </Typography>
     </ListItem>
   );
@@ -109,7 +110,11 @@ const SubjectPalette: React.FC<PaletteProps> = ({
     return matched?.id || '';
   }, [medium, selectedClass]);
 
-  const { data: subjectTableData, isLoading: isSubjectsLoading } = useQueryAndMutation({
+  const {
+    data: subjectTableData,
+    isLoading: isSubjectsLoading,
+    isFetching: isSubjectsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
@@ -124,7 +129,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
   const subjects: Subject[] = React.useMemo(() => {
     if (!subjectTableData?.data?.items) return [];
     return subjectTableData.data.items.flatMap((item: any) => {
-      const totalLectures = item.totalLectures ?? 6;
+      const totalLectures = item.totalLectures ?? 0;
       if (item.subjectType === 1) {
         return item.subjects.map((sub: any) => ({
           id: sub.assignedId || sub.subjectId,
@@ -160,7 +165,15 @@ const SubjectPalette: React.FC<PaletteProps> = ({
         boxShadow: 'var(--shadows-4)',
       }}
     >
-      {subjects.length > 0 ? (
+      {isSubjectsLoading || isSubjectsFetching ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+          <Skeleton variant="text" width={100} height={32} />
+          <Skeleton variant="text" width={140} height={20} />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} variant="rounded" height={52} sx={{ borderRadius: 1 }} />
+          ))}
+        </Box>
+      ) : subjects.length > 0 ? (
         <>
           <Box sx={{ mb: 1 }}>
             <Typography variant="h6" fontWeight="600">

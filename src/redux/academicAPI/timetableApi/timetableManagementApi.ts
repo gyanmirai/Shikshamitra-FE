@@ -2,35 +2,6 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
 
-export interface TimetableManagementItem {
-  id: string;
-  className: string;
-  division: string;
-  divisionName: string;
-  divisionId: string;
-  status: number;
-}
-
-export interface TimetableSlotPayload {
-  sequence: number;
-  startTime: string;
-  endTime: string;
-  type: number;
-  breakType: number;
-  subjectType: number;
-  electiveGroupId: string | null;
-  subjects: Array<{
-    subjectId: string;
-    teacherId: string;
-    roomId: string;
-  }>;
-}
-
-export interface CreateTimetablePayload {
-  status: number;
-  timetable: Record<string, TimetableSlotPayload[]>;
-}
-
 export const timetableManagementApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getTimetableManagementByStandard: builder.query({
@@ -50,15 +21,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
     }),
 
     createTimetable: builder.mutation({
-      query: ({
-        standardId,
-        divisionId,
-        body,
-      }: {
-        standardId: string;
-        divisionId: string;
-        body: CreateTimetablePayload;
-      }) => ({
+      query: ({ standardId, divisionId, body }) => ({
         url: `academics/timetable/by-standard/${standardId}/division/${divisionId}`,
         method: 'POST',
         body,
