@@ -69,7 +69,6 @@ const ConcessionList = () => {
       />
       <Card sx={{ p: 1.5, mb: 1 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          {' '}
           <CustomSelect
             label="Board"
             options={boards || []}
