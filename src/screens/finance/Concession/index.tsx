@@ -14,9 +14,9 @@ import { Box, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import ConcessionRequestForm from './Components/ConcessionRequestForm';
 import ReasonApprovalForm from './Components/ConcessionRequestApprove';
 import StudentConcessionTable from './Components/StudentConcessionTable';
-import NewConcessionRequestForm from './Components/NewConcessionRequest';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
@@ -177,7 +177,7 @@ const Concession = () => {
       {/* Show add request form when add dialog is open */}
       {addConcessionRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <NewConcessionRequestForm
+          <ConcessionRequestForm
             open={addConcessionRequest.value}
             onClose={handleClose}
             student={selectedConcession as IStudentInfo}

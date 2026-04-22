@@ -50,7 +50,7 @@ const ConcessionDocumentList: React.FC<IConcessionDocumentListProps> = ({
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [localDocs, setLocalDocs] = useState<IConcessionSubmittedDocument[]>([]);
 
-  const documents = React.useMemo(() => concessionData?.documents || [], [concessionData]);
+  const documents = React.useMemo(() => concessionData?.data?.documents || [], [concessionData]);
 
   useEffect(() => {
     if (!isLoadingDetails && documents.length > 0) {

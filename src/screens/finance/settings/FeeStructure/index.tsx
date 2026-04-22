@@ -4,9 +4,8 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Add } from '@mui/icons-material';
+import { Box, Card } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -17,7 +16,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useUpdateFeeStructureStatusMutation } from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureTable from './Components/FeeStructureTable';
-import FeeStructureFormStepper from './Components/NewStructureForm';
+import FeeStructureEditForm from './Components/FeeStructureEditForm';
 import ViewFeeStructure from './Components/ViewDetails/ViewFeeStructure';
 
 import type { IFeeStructure } from './type';
@@ -26,7 +25,7 @@ const FeeStructure = () => {
   // State to track the currently selected fee structure
   const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeStructure | null>(null);
   // Custom hook to manage dialog open/close state
-  const addFeeStructureDialog = useBoolean();
+  const editFeeStructureDialog = useBoolean();
   const confirmDialog = useBoolean();
   const viewFeeStructureDialog = useBoolean();
 
@@ -41,33 +40,27 @@ const FeeStructure = () => {
   // Redux dispatch function for dispatching actions to update the store
   const dispatch = useDispatch();
   /**
-   * Handles closing the fee structure dialog
+   * Handles closing the fee structure edit form
    * @param _e - Event object (unused)
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      addFeeStructureDialog.onFalse();
+      editFeeStructureDialog.onFalse();
       setSelectedFeeStructure(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      addFeeStructureDialog.onFalse();
+      editFeeStructureDialog.onFalse();
       setSelectedFeeStructure(null);
     }
   };
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
-      {addFeeStructureDialog.value ? (
+      {editFeeStructureDialog.value ? (
         <CustomBreadcrumbs
-          heading={selectedFeeStructure ? 'Update Fee Structure' : 'Add Fee Structure'}
-          description={
-            selectedFeeStructure
-              ? 'Modify the selected fee structure by updating categories, amounts, schedules, and student groups. Your changes will affect how fees are calculated and collected.'
-              : addFeeStructureDialog.value
-                ? 'Create a new fee structure by defining categories, setting amounts, configuring payment schedules, and assigning student groups. This will establish how fees are collected.'
-                : 'Browse and manage existing fee structures. View complete details, make modifications, or remove structures as needed. Create new structures to expand fee configurations.'
-          }
+          heading="Edit Fee Structure"
+          description="Modify the selected fee structure by updating categories, amounts, schedules, and student groups. Your changes will affect how fees are calculated and collected."
           isBack
           onBack={() => {
             handleClose(null, false);
@@ -90,7 +83,7 @@ const FeeStructure = () => {
               },
             },
             {
-              name: selectedFeeStructure ? 'Update Fee Structure' : 'Add Fee Structure',
+              name: 'Edit Fee Structure',
             },
           ]}
         />
@@ -140,36 +133,21 @@ const FeeStructure = () => {
             },
             { name: 'Fee Structure' },
           ]}
-          action={
-            <Button
-              onClick={() => addFeeStructureDialog.onTrue()}
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              sx={{ px: '32px' }}
-            >
-              Fee Structure
-            </Button>
-          }
         />
       )}
       <>
-        {/* Fee Structure form card for creating/editing subjects */}
-        {addFeeStructureDialog.value ? (
+        {/* Fee Structure edit form card */}
+        {editFeeStructureDialog.value && selectedFeeStructure ? (
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-            <FeeStructureFormStepper
-              open={addFeeStructureDialog}
-              onClose={handleClose}
-              editData={selectedFeeStructure}
-            />
+            <FeeStructureEditForm editData={selectedFeeStructure} onClose={handleClose} />
           </Card>
         ) : !viewFeeStructureDialog.value ? (
           <FeeStructureTable
-            addFeeStructure={addFeeStructureDialog}
+            addFeeStructure={editFeeStructureDialog}
             editData={selectedFeeStructure}
             setEditData={setSelectedFeeStructure}
             onEdit={(data) => {
-              addFeeStructureDialog.onTrue();
+              editFeeStructureDialog.onTrue();
               setSelectedFeeStructure(data);
             }}
             onToggle={(data) => {

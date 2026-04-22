@@ -17,7 +17,6 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
     sx={{
       borderRadius: 2,
       p: 1,
-      mb: 1,
       border: (theme) => `1px solid ${theme.palette.divider}`,
       boxShadow: (theme) =>
         theme.customShadows?.card ||
@@ -42,9 +41,7 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
       </Box>
 
       <Box>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Student Information
-        </Typography>
+        <Typography variant="h6">Student Information</Typography>
       </Box>
     </Box>
 
