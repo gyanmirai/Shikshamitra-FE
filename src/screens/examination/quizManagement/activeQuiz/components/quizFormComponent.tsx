@@ -26,7 +26,7 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Draggable, Droppable, DragDropContext } from '@hello-pangea/dnd';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetSubjectsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import { useGetChaptersQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   useGetQuizQuery,
@@ -71,7 +71,7 @@ const QuizInformation = ({ formik }: any) => {
     (state: RootState) => state.globalState
   );
 
-  const { data: subjectsData } = useGetSubjectsQuery(
+  const { data: subjectsData } = useGetCoreSubjectsByMediumQuery(
     { academicMediumId: medium?.id },
     { skip: !medium?.id }
   );

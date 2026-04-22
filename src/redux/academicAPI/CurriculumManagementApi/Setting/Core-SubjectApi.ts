@@ -5,7 +5,7 @@ import { academicApi } from '../../academicApi';
 export const subjectsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subjects under academic medium
-    getSubjects: builder.query({
+    getCoreSubjectsByMedium: builder.query({
       query: ({ academicMediumId }) => ({
         url: `/academic-mediums/${academicMediumId}/subjects`,
         method: 'GET',
@@ -56,7 +56,7 @@ export const subjectsApi = academicApi.injectEndpoints({
 
 // RTK query hooks
 export const {
-  useGetSubjectsQuery,
+  useGetCoreSubjectsByMediumQuery,
   useGetSubjectByIdQuery,
   useAddSubjectMutation,
   useUpdateSubjectMutation,

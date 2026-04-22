@@ -17,7 +17,7 @@ import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-import { useGetSubjectsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   useAddElectiveGroupMutation,
   useGetElectiveGroupByIdQuery,
@@ -45,7 +45,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   });
   const { data: subjectData, isLoading: isSubjectLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetSubjectsQuery,
+    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id },
     options: {
       skip: !(currentMedium as Medium)?.id,

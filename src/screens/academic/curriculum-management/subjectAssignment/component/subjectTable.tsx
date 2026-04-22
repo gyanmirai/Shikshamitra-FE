@@ -72,8 +72,6 @@ const SubjectTable = ({
     });
   }
 
-  console.log('formDataArray---', subjectTableData);
-
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList disablePadding dense>

@@ -11,7 +11,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { useGetSubjectsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import type { ISubject, ISubjectTableProps } from './type';
 
@@ -31,7 +31,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetSubjectsQuery,
+    currentQueryAndMutation: useGetCoreSubjectsByMediumQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id },
     options: {
       skip: !(currentMedium as Medium)?.id,
