@@ -113,7 +113,7 @@ const Subject = () => {
 
       {showSubjectDialog.value && (
         <Box sx={{ height: '100%' }}>
-          <ViewSubject subject={selectedSubject} />
+          <ViewSubject subject={selectedSubject} classId={classId} classes={classes} />
         </Box>
       )}
     </Box>

@@ -46,9 +46,9 @@ export const documentsList = [
 // Documents panel content
 const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
   const {
-    data: documents,
-    isLoading,
-    isFetching,
+    data: _documents,
+    isLoading: _isLoading,
+    isFetching: _isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentDocumentsQuery,

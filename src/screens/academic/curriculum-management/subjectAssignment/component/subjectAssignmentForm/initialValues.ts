@@ -25,7 +25,7 @@ export const validationSchema = Yup.object().shape({
     .required('Subjects are required'),
 });
 
-export const getSubjectAssignmentInitialValues1 = (
+export const getSubjectAssignmentInitialValues = (
   data: any,
   selectedClass: string,
   classId: string

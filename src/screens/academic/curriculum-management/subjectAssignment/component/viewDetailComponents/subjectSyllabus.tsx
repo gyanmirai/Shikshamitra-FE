@@ -51,12 +51,9 @@ const chapters = [
 
 const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    data: chaptersData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isFetching,
+    data: _chaptersData,
+    isLoading: _isLoading,
+    isFetching: _isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersQuery,

@@ -34,7 +34,7 @@ const SubjectActionBar = ({
         labelKey="name"
         formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
         value={classId}
-        onChange={(value: any) => onClassChange(value)}
+        onChange={(value) => onClassChange(value as string | number)}
       />
       <Button
         size="small"

@@ -2,7 +2,6 @@
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,
   List,
@@ -13,7 +12,6 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import { useGetSubjectAssignmentDocumentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { IDocType, IDocument } from '../type';
 
@@ -23,14 +21,6 @@ interface DocumentListProps {
 }
 
 const DocumentList = ({ documents, onDownload }: DocumentListProps) => {
-  const {
-    data: subjectTableData,
-    isLoading,
-    isFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSubjectAssignmentDocumentsQuery,
-  });
   const handleDownload = (doc: IDocument) => {
     if (onDownload) {
       onDownload(doc);

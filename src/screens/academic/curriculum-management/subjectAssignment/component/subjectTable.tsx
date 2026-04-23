@@ -16,14 +16,13 @@ import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status
 
 import { SubjectType, SubjectAssignmentStatus } from '../enum/subjectType';
 
-import type { ISubjectTableProps } from './type';
+import type { ISubjectTableProps, ISubjectFormValues } from './type';
 
 const SubjectTable = ({
   isLoading,
   classId,
   addSubjectDialog,
   subjectTableData,
-  setEditData,
   onView,
   onEdit,
   onDelete,
@@ -41,14 +40,22 @@ const SubjectTable = ({
         subjectTypeValue: SubjectType[item.subjectType] || 'Core',
         subjectName: (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-            {item?.subjects?.map((sub: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <SubjectColorIndicator color={sub.color} />
-                <Typography variant="body2">
-                  {sub.subjectName} ({sub.subjectCode})
-                </Typography>
-              </Box>
-            ))}
+            {item?.subjects?.map(
+              (
+                sub: { color?: string; subjectName?: string; subjectCode?: string },
+                subIndex: number
+              ) => (
+                <Box
+                  key={`${item.id}-${subIndex}`}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <SubjectColorIndicator color={sub.color} />
+                  <Typography variant="body2">
+                    {sub.subjectName} ({sub.subjectCode})
+                  </Typography>
+                </Box>
+              )
+            )}
           </Box>
         ),
         statusValue: SubjectAssignmentStatus[item.status] || 'Draft',
@@ -57,12 +64,12 @@ const SubjectTable = ({
   );
 
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
+    ({ popover, row }: any) => (
       <MenuList disablePadding dense>
         <MenuItem
           onClick={() => {
             onDelete(row);
-            pop.onClose();
+            popover.onClose();
           }}
         >
           <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} />
@@ -110,7 +117,7 @@ const SubjectTable = ({
               {/* Using a span or div wrapper to avoid nested button issues if any */}
               <Box component="span">
                 <IconButton
-                  onClick={() => onToggleStatus(row as any)}
+                  onClick={() => onToggleStatus(row as ISubjectFormValues)}
                   sx={{
                     p: 0.6,
                     borderRadius: '50%',
@@ -142,15 +149,11 @@ const SubjectTable = ({
           return (
             <ThreeDotsActions
               placement="right-top"
-              actions={(prop) => actions({ ...prop, row })}
+              actions={(prop) => actions({ ...prop, row: row as ISubjectFormValues })}
               showViewIcon
               showEditIcon
-              handleViewClick={() => {
-                onView(row as any);
-              }}
-              handleEditClick={() => {
-                onEdit(row as any);
-              }}
+              handleViewClick={() => onView(row as ISubjectFormValues)}
+              handleEditClick={() => onEdit(row as ISubjectFormValues)}
             />
           );
         },
@@ -175,10 +178,7 @@ const SubjectTable = ({
         <>
           No Subject data found
           <Box
-            onClick={() => {
-              addSubjectDialog.onTrue();
-              setEditData(null);
-            }}
+            onClick={() => addSubjectDialog.onTrue()}
             color="primary.main"
             fontWeight={600}
             sx={{

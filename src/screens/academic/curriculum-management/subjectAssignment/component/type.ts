@@ -6,20 +6,6 @@ import type {
   ISubjectAssignmentFormValues,
 } from './subjectAssignmentForm/type';
 
-export interface ISubject {
-  id: number;
-  subjectName: string;
-  subjectCode: string;
-  subjectColor?: string;
-  primaryTeacher: string;
-  secondaryTeacher: string[] | null;
-  documents?: File[];
-  prerequisites: string;
-  learningGoal: string;
-  description: string;
-  isSubjectOpen?: boolean;
-}
-
 export interface TeacherProfile {
   id?: string;
   fullName?: string;
@@ -56,7 +42,7 @@ export interface ISubjectDetail {
   secondaryTeachers: string[] | null; // Renamed from secondaryTeacher
   documents?: (File | string)[];
   prerequisites: string;
-  learningGoal: string;
+  learningGoals: string;
   description: string;
 
   // Legacy fields that might still be used or need deprecation
@@ -114,6 +100,8 @@ export interface ISubjectFormProps {
 
 export interface IViewSubjectProps {
   subject: ISubjectFormValues | null;
+  classId: string;
+  classes: string;
 }
 
 export interface IDocument {
