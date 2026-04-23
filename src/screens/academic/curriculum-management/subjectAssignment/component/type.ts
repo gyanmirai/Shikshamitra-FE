@@ -86,11 +86,22 @@ export interface ISubjectTableProps {
   addSubjectDialog: UseBooleanReturn;
   editData: ISubjectFormValues | null;
   setEditData: React.Dispatch<React.SetStateAction<ISubjectFormValues | null>>;
+  totalCount: number;
   subjectTableData: ISubjectFormValues[];
   onView: (subject: ISubjectFormValues) => void;
   onEdit: (subject: ISubjectFormValues) => void;
   onDelete: (subject: ISubjectFormValues) => void;
   onToggleStatus: (subject: ISubjectFormValues) => void;
+  query: {
+    page: number;
+    pageSize: number;
+  };
+  setQuery: React.Dispatch<
+    React.SetStateAction<{
+      page: number;
+      pageSize: number;
+    }>
+  >;
 }
 
 export interface ISubjectFormProps {

@@ -1,24 +1,33 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Standards, Organization } from 'src/types/school';
+import type { Medium, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Chip,
+  Button,
+  Skeleton,
+  ListItem,
+  TextField,
+  Autocomplete,
+  DialogActions,
+  ListItemButton,
+} from '@mui/material';
 import {
   useAddSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
@@ -28,9 +37,8 @@ import {
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import SubjectCard from './subjectCardComponent';
-import SettingSubjectForm from '../../../setting/subjectCreation/subjectForm';
-import { validationSchema, getSubjectAssignmentInitialValues } from './initialValues';
-import SettingElectiveSubjectForm from '../../../setting/electiveSubjectSetting/components/electiveSubjectForm';
+import { SubjectType, SubjectAssignmentStatus } from '../../enum/subjectType';
+import { validationSchema, getSubjectAssignmentInitialValues1 } from './initialValues';
 
 import type { ISubjectAssignmentFormProps, ISubjectAssignmentFormValues } from './type';
 
@@ -40,8 +48,13 @@ const SubjectAssignmentForm = ({
   isEdit,
   selectedClass,
   classId,
+  subjectTableData,
 }: ISubjectAssignmentFormProps) => {
-  const { data: subjectAssignmentData } = useQueryAndMutation({
+  // Flag to check if the subject is already published
+  const isPublished: boolean =
+    SubjectAssignmentStatus[data?.status as SubjectAssignmentStatus] === 'Published';
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { data: subjectAssignmentData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
     params: { assignmentId: data?.id },
@@ -49,9 +62,10 @@ const SubjectAssignmentForm = ({
       skip: !data?.id,
     },
   });
-
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
   const {
     data: subjectOptionsData,
     isLoading: isSubjectOptionsLoading,
@@ -59,20 +73,9 @@ const SubjectAssignmentForm = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCoreElectiveSubjectsQuery,
-    params: { academicMediumId: (currentMedium as Medium).id },
+    params: { academicMediumId: (medium as Medium).id },
   });
 
-  // Flag to check if the subject is already published
-  const isPublished: boolean =
-    PublishUnpublishStatusType[data?.status as PublishUnpublishStatusType] === 'Published';
-  // State to control visibility of add subject dialog
-  const addSubjectDialog = useBoolean();
-  // State to control visibility of add Elective subject dialog
-  const addElectiveSubjectDialog = useBoolean();
-  // State to track selected option for the autocomplete
-  const [selectedOption, setSelectedOption] = useState<any[]>([]);
-  // Flag to prevent infinite update loops
-  const [isInitializing, setIsInitializing] = useState(true);
   const [addSubjectAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddSubjectAssignmentMutation,
@@ -82,21 +85,48 @@ const SubjectAssignmentForm = ({
     currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
   });
 
-  const [uploadCurriculumFile] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
-  });
+  const checkIfSubjectIsExists = useCallback(
+    (currentId: string) => {
+      const isExists = subjectTableData?.some((subject: any) => {
+        if (subject.subjectType === SubjectType.Core) {
+          return subject.subjects?.[0]?.subjectId === currentId;
+        }
+        return subject.electiveGroupId === currentId;
+      });
+      return isExists;
+    },
+    [subjectTableData]
+  );
 
-  // Normalize API response: GET-by-ID may return { data: {...} } or a flat object
-  const assignmentDetail =
-    subjectAssignmentData?.data ?? subjectAssignmentData ?? (isEdit ? data : null);
+  const subjectsOptions = useMemo(
+    () =>
+      (!isEdit
+        ? subjectOptionsData?.data?.filter((item: any) => checkIfSubjectIsExists(item.id))
+        : subjectOptionsData?.data
+      )?.map((item: any) => ({
+        ...item,
+        label: item.name,
+        value: item.id,
+        type: item.subjectType,
+        color: item.color,
+        subjects: item.subjects,
+      })) || [],
+    [isEdit, subjectOptionsData?.data, checkIfSubjectIsExists]
+  );
 
-  // Initialize formik form with initial values from data prop or default values
+  const classOPtions = useMemo(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    return allClasses.map((cls: any) => ({ label: cls.name, value: cls.id }));
+  }, [medium]);
   const formik = useFormik<ISubjectAssignmentFormValues>({
-    initialValues: getSubjectAssignmentInitialValues(assignmentDetail, selectedClass, classId),
+    enableReinitialize: true,
+    initialValues: getSubjectAssignmentInitialValues1(
+      subjectAssignmentData?.data || {},
+      selectedClass,
+      classId
+    ),
     validationSchema,
-    enableReinitialize: isInitializing,
-    // Handle form submission
     onSubmit: async (values, formikHelpers) => {
       try {
         const subjectsPayload = values.subjects.map((subj) => ({
@@ -125,7 +155,7 @@ const SubjectAssignmentForm = ({
           });
         } else {
           await addSubjectAssignment({
-            academicMediumId: (currentMedium as Medium).id,
+            academicMediumId: (medium as Medium).id,
             body: payload,
           }).unwrap();
 
@@ -144,58 +174,37 @@ const SubjectAssignmentForm = ({
       }
     },
   });
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Grid container spacing={3}>
+          {/* Class dropdown skeleton */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Skeleton variant="rounded" height={40} width="100%" />
+          </Grid>
+          {/* Subjects dropdown skeleton */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Skeleton variant="rounded" height={40} width="100%" />
+          </Grid>
+          {/* Subject card skeleton */}
+          <Grid size={{ xs: 12 }}>
+            <Skeleton variant="rounded" height={56} width="100%" />
+          </Grid>
+        </Grid>
+      </Box>
+    );
+  }
 
-  // Fetch class data using custom query hook
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-  }, [medium]);
-
-  // Initialize selected option from real API options when editing
-  useEffect(() => {
-    if (!isEdit || !isInitializing) return;
-    const apiOptions = subjectOptionsData?.data;
-    if (!apiOptions) return;
-
-    const assignmentSubjects = (assignmentDetail?.subjects as any[]) || [];
-    const preSelectedOptions = apiOptions
-      .filter((item: any) =>
-        assignmentSubjects.some(
-          (s: any) => s.subjectId === item.id || s.electiveGroupId === item.id
-        )
-      )
-      .map((item: any) => ({
-        label: item.name,
-        value: item.id,
-        type: item.subjectType,
-        color: item.color,
-        subjects: item.subjects,
-      }));
-
-    setSelectedOption(preSelectedOptions);
-    setIsInitializing(false);
-  }, [isEdit, isInitializing, assignmentDetail, subjectOptionsData]);
-
-  // Handle subject selection change
   const handleSubjectChange = (newValue: any[]) => {
     if (!newValue || newValue.length === 0) {
       formik.setFieldValue('subjectType', 0);
       formik.setFieldValue('subjects', []);
-      setSelectedOption([]);
+
+      formik.setFieldValue('selectedSubjects', []);
       return;
     }
 
-    setSelectedOption(newValue);
+    formik.setFieldValue('selectedSubjects', newValue);
     formik.setFieldTouched('subjectName', false);
 
     // Combine all subjects from selected options
@@ -248,8 +257,6 @@ const SubjectAssignmentForm = ({
     formik.setFieldValue('subjectType', hasCore ? 0 : 1);
   };
 
-  // Handle changes to individual subject fields
-  // eslint-disable-next-line @typescript-eslint/default-param-last
   const handleSubjectFieldChange = (subjectId: string, field: string, value: any) => {
     if (!subjectId) return;
     // Update the subjects array in Formik
@@ -280,16 +287,16 @@ const SubjectAssignmentForm = ({
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
-                    options={allClass}
+                    options={classOPtions}
                     label="Class *"
                     value={formik.values.classId}
-                    labelKey="name"
-                    valueKey="id"
+                    labelKey="label"
+                    valueKey="value"
                     disabled={isEdit}
                     onChange={(val) => {
                       formik.setFieldValue('classId', val);
-                      const standard = allClass.find((c) => c.id === val);
-                      formik.setFieldValue('className', standard?.name);
+                      const standard = classOPtions.find((c: any) => c.value === val);
+                      formik.setFieldValue('className', standard?.label);
                     }}
                     formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                     error={Boolean(formik.touched.className && formik.errors.className)}
@@ -301,55 +308,67 @@ const SubjectAssignmentForm = ({
               {/* Subject/Group selection */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.subjectName && formik.errors.subjectName)}
+                  error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
                 >
                   <Autocomplete
                     multiple
                     fullWidth
                     size="small"
                     disabled={isPublished}
-                    options={
-                      subjectOptionsData?.data?.map((item: any) => ({
-                        label: item.name,
-                        value: item.id,
-                        type: item.subjectType,
-                        color: item.color,
-                        subjects: item.subjects,
-                      })) || []
-                    }
+                    options={subjectsOptions}
                     loading={isSubjectOptionsLoading}
-                    getOptionLabel={(option) => option.label}
-                    value={selectedOption}
+                    getOptionLabel={(option: any) => option?.label}
+                    value={formik?.values?.selectedSubjects || []}
                     onChange={(_, newValue) => handleSubjectChange(newValue)}
                     ListboxProps={{
                       style: { maxHeight: 200, overflow: 'auto' },
                     }}
                     renderOption={(props, option) => {
                       const { key, ...restProps } = props;
-
                       return (
-                        <li key={key} {...restProps}>
-                          <Box
-                            sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                        <ListItem disablePadding key={key} {...restProps}>
+                          <ListItemButton
+                            disableTouchRipple
+                            disableRipple
+                            sx={{
+                              py: 0.5,
+                              px: 1,
+                              minHeight: 'auto',
+                              '&:hover': { backgroundColor: 'transparent' },
+                            }}
                           >
-                            {option.label}
-                            <Chip
-                              size="small"
-                              label={option.type === 0 ? 'Core' : 'Elective'}
-                              color={option.type === 0 ? 'primary' : 'secondary'}
-                              sx={{ ml: 1, height: 20 }}
-                            />
-                          </Box>
-                        </li>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                                alignItems: 'center',
+                              }}
+                            >
+                              {option.label}
+
+                              <Chip
+                                size="small"
+                                label={option.type === 0 ? 'Core' : 'Elective'}
+                                color={option.type === 0 ? 'primary' : 'secondary'}
+                                sx={{ ml: 1, height: 20 }}
+                              />
+                            </Box>
+                          </ListItemButton>
+                        </ListItem>
                       );
                     }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
                         label="Subjects *"
-                        name="subjectName"
-                        error={Boolean(formik.touched.subjectName && formik.errors.subjectName)}
-                        helperText={formik.touched.subjectName && formik.errors.subjectName}
+                        name="selectedSubjects"
+                        error={Boolean(
+                          formik.touched.selectedSubjects && formik.errors.selectedSubjects
+                        )}
+                        helperText={
+                          formik.touched.selectedSubjects && formik.errors.selectedSubjects
+                        }
                         inputProps={{
                           ...params.inputProps,
                           readOnly: true,
@@ -359,7 +378,7 @@ const SubjectAssignmentForm = ({
                   />
                 </ShakingTextField>
 
-                <CustomDialog
+                {/* <CustomDialog
                   open={addSubjectDialog.value}
                   handleClose={addSubjectDialog.onFalse}
                   title="Add Subject"
@@ -381,7 +400,7 @@ const SubjectAssignmentForm = ({
                     onClose={() => addElectiveSubjectDialog.onFalse()}
                     editData={null}
                   />
-                </CustomDialog>
+                </CustomDialog> */}
               </Grid>
 
               {/* Subject Cards Section */}
@@ -471,5 +490,4 @@ const SubjectAssignmentForm = ({
     </BackPopUpChecked>
   );
 };
-
 export default SubjectAssignmentForm;

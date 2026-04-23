@@ -82,9 +82,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   const fetchPrimaryTeacherOptions = useCallback(
     async (query: string) => {
       const res = await getPrimaryTeacherOptions({ search: query }).unwrap();
+      const hasMore = res.currentPage <= res.totalPages;
       return {
         data: (res?.items ?? []).map((item: any) => ({ id: item.id, label: item.fullName })),
-        hasMore: false,
+        hasMore,
       };
     },
     [getPrimaryTeacherOptions]
@@ -93,9 +94,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   const fetchSecondaryTeacherOptions = useCallback(
     async (query: string) => {
       const res = await getSecondaryTeacherOptions({ search: query }).unwrap();
+      const hasMore = res.currentPage <= res.totalPages;
       return {
         data: (res?.items ?? []).map((item: any) => ({ id: item.id, label: item.fullName })),
-        hasMore: false,
+        hasMore,
       };
     },
     [getSecondaryTeacherOptions]
@@ -196,7 +198,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <ShakingTextField error={!!getError('subjectCode')}>
                 <TextField
                   fullWidth
-                  label="Subject Code"
+                  label="Subject Code *"
                   placeholder="e.g. MATH-101"
                   size="small"
                   value={subject.subjectCode || ''}
@@ -206,7 +208,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       .replace(/[^A-Z0-9\-_]/g, '');
                     formik.setFieldValue(`subjects.${index}.subjectCode`, uppercaseValue);
                   }}
-                  disabled={isPublished}
+                  // disabled={isPublished}
                   error={!!getError('subjectCode')}
                   helperText={getError('subjectCode')}
                 />
@@ -230,7 +232,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 renderOption={(props: any, option: any) => {
                   const { key, ...rest } = props;
                   return (
-                    <Box component="li" key={key} {...rest} sx={{ display: 'flex', gap: 1 }}>
+                    <Box
+                      component="li"
+                      {...rest}
+                      key={option.label + key}
+                      sx={{ display: 'flex', gap: 1 }}
+                    >
                       <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
                         {option.label?.[0]}
                       </Avatar>
@@ -242,7 +249,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 minChars={0}
                 size="small"
                 fullWidth
-                disabled={isPublished}
+                // disabled={isPublished}
                 error={!!getError('primaryTeacher')}
                 helperText={getError('primaryTeacher')}
               />

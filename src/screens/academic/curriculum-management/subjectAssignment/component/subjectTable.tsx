@@ -12,10 +12,9 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusOptions,
-} from 'src/enums/publishUnpublish-status';
+import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+
+import { SubjectType, SubjectAssignmentStatus } from '../enum/subjectType';
 
 import type { ISubjectTableProps } from './type';
 
@@ -29,55 +28,40 @@ const SubjectTable = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  query,
+  setQuery,
+  totalCount,
 }: ISubjectTableProps) => {
   const theme = useTheme();
-  function getSubjectTableData(formDataArray: any[]) {
-    return formDataArray?.map((item: any) => {
-      // Core Subject
-      if (item.subjectType === 0) {
-        return {
-          id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
-          type: 'Core', // For UI display
-          subjectTypeRaw: 0,
-          subjectName: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
-          subjectCode: item.subjects[0]?.subjectCode,
-          status: item?.status,
-          // Generate a color if not present
-          color: item.subjects[0]?.subject?.color || item.subjects[0]?.color,
-          originalData: item,
-        };
-      }
-      // Elective Group
-      if (item.subjectType === 1) {
-        return {
-          // Use electiveGroupId or generate a unique ID
-          id: item.subjects?.[0]?.electiveGroupId || item.electiveGroupId,
-          type: 'Elective',
-          subjectTypeRaw: 1,
 
-          subjectName: item.electiveGroupName,
-          // Extract sub-subjects
-          subjects:
-            item.subjects?.map((sub: any) => ({
-              ...sub,
-              subjectName: sub.subject?.name || sub.subjectName,
-              color: sub.subject?.color || sub.color,
-            })) || [],
-          status: item?.status,
-          color: item.color,
-          originalData: item,
-        };
-      }
-      return item;
-    });
-  }
+  const subjectData = useMemo(
+    () =>
+      subjectTableData?.map((item) => ({
+        ...item,
+        subjectTypeValue: SubjectType[item.subjectType] || 'Core',
+        subjectName: (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+            {item?.subjects?.map((sub: any) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={sub.color} />
+                <Typography variant="body2">
+                  {sub.subjectName} ({sub.subjectCode})
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+        statusValue: SubjectAssignmentStatus[item.status] || 'Draft',
+      })) || [],
+    [subjectTableData]
+  );
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList disablePadding dense>
         <MenuItem
           onClick={() => {
-            onDelete(row.originalData);
+            onDelete(row);
             pop.onClose();
           }}
         >
@@ -92,10 +76,10 @@ const SubjectTable = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'type',
+        id: 'subjectTypeValue',
         label: 'Subject Type',
         align: 'left',
-        minWidth: 130,
+        minWidth: 110,
         sticky: true,
         render: (value) => <Typography variant="body2">{value}</Typography>,
       },
@@ -103,50 +87,11 @@ const SubjectTable = ({
         id: 'subjectName',
         label: 'Subject Name',
         align: 'left',
-        render: (value, row) => {
-          if (row.subjectTypeRaw === 0) {
-            // Core Subject
-            return (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <SubjectColorIndicator color={row.color} />
-                <Typography variant="body2">
-                  {value} ({row.subjectCode})
-                </Typography>
-              </Box>
-            );
-          }
-          if (row.subjectTypeRaw === 1) {
-            // Elective Group
-            return (
-              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                {/* Group Name */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={row.color} />
-                  <Typography variant="body2">{value}</Typography>
-                </Box>
-
-                {/* Sub Subjects */}
-                {row.subjects?.map((sub: any, index: number) => (
-                  <Box
-                    key={sub.subjectId || index}
-                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                  >
-                    {/* Separator Pipe logic could go here if we used strings, but distinct blocks are nicer. 
-                           The user image uses colored bars as separators effectively. */}
-                    <SubjectColorIndicator color={sub.color} />
-                    <Typography variant="body2">
-                      ({sub.subjectName} ({sub.subjectCode}))
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            );
-          }
-          return value;
-        },
+        isFilter: false,
+        isSort: false,
       },
       {
-        id: 'status',
+        id: 'statusValue',
         label: 'Status',
         align: 'left',
         minWidth: 60,
@@ -156,16 +101,16 @@ const SubjectTable = ({
         enumOptions: PublishUnpublishStatusOptions,
         render(value, row) {
           const statusColor =
-            value === PublishUnpublishStatusType.Published
+            row.status === SubjectAssignmentStatus.Published
               ? theme.vars.palette.success.main
               : theme.vars.palette.text.secondary;
 
           return (
-            <CustomTooltip title={value === 1 ? 'Published' : 'Draft'} arrow placement="left">
+            <CustomTooltip title={value} arrow placement="left">
               {/* Using a span or div wrapper to avoid nested button issues if any */}
               <Box component="span">
                 <IconButton
-                  onClick={() => onToggleStatus(row.originalData)}
+                  onClick={() => onToggleStatus(row as any)}
                   sx={{
                     p: 0.6,
                     borderRadius: '50%',
@@ -201,23 +146,31 @@ const SubjectTable = ({
               showViewIcon
               showEditIcon
               handleViewClick={() => {
-                onView(row.originalData);
+                onView(row as any);
               }}
               handleEditClick={() => {
-                onEdit(row.originalData);
+                onEdit(row as any);
               }}
             />
           );
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [theme.vars.palette.success.main, theme.vars.palette.text.secondary]
+
+    [
+      actions,
+      onEdit,
+      onToggleStatus,
+      onView,
+      theme.vars.palette.success.main,
+      theme.vars.palette.text.secondary,
+    ]
   );
   return (
     <CustomizableTable
       tableId="subject-table"
       isLoading={isLoading}
+      totalCount={totalCount}
       noDataText={
         <>
           No Subject data found
@@ -240,8 +193,15 @@ const SubjectTable = ({
           </Box>
         </>
       }
+      serverSidePagination
+      onServerPagination={(page, rowPerPage) => {
+        setQuery({
+          page: page - 1,
+          pageSize: rowPerPage,
+        });
+      }}
       columns={columns}
-      data={getSubjectTableData(subjectTableData) || []}
+      data={subjectData}
     />
   );
 };
