@@ -151,33 +151,31 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TeacherSelectionFields
-                index={index ?? 0}
-                primaryTeacherObj={primaryTeacherObj}
-                secondaryTeacherObjs={secondaryTeacherObjs}
-                secondaryTeacherIds={subject.secondaryTeacher}
-                primaryTeacherId={subject.primaryTeacher}
-                fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
-                fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
-                onPrimaryChange={(newValue) => {
-                  setPrimaryTeacherObj(newValue);
-                  formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
-                  formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
-                  formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
-                }}
-                onSecondaryChange={(newValues) => {
-                  setSecondaryTeacherObjs(newValues);
-                  formik.setFieldValue(
-                    `subjects.${index}.secondaryTeacher`,
-                    newValues.map((item) => item.id)
-                  );
-                  formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
-                  formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
-                }}
-                getError={getError}
-              />
-            </Grid>
+            <TeacherSelectionFields
+              index={index ?? 0}
+              primaryTeacherObj={primaryTeacherObj}
+              secondaryTeacherObjs={secondaryTeacherObjs}
+              secondaryTeacherIds={subject.secondaryTeacher}
+              primaryTeacherId={subject.primaryTeacher}
+              fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
+              fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
+              onPrimaryChange={(newValue) => {
+                setPrimaryTeacherObj(newValue);
+                formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
+                formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
+                formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
+              }}
+              onSecondaryChange={(newValues) => {
+                setSecondaryTeacherObjs(newValues);
+                formik.setFieldValue(
+                  `subjects.${index}.secondaryTeacher`,
+                  newValues.map((item) => item.id)
+                );
+                formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
+                formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
+              }}
+              getError={getError}
+            />
 
             {[
               { label: 'Learning Goals', field: 'learningGoal' },

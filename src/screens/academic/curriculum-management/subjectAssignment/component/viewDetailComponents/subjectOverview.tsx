@@ -34,16 +34,17 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
     <Box sx={{ minWidth: 0 }}>
       <Typography
         variant="caption"
+        component="p"
         sx={{ color: 'text.secondary', display: 'block', mb: 0.5, fontWeight: 500 }}
       >
         {label}
       </Typography>
       <Typography
         variant="subtitle2"
+        component="p"
         sx={{ fontWeight: 600, color: 'text.primary', wordBreak: 'break-word' }}
-      >
-        {value || 'N/A'}
-      </Typography>
+        dangerouslySetInnerHTML={{ __html: value || 'N/A' }}
+      />
     </Box>
   </Box>
 );
