@@ -1,6 +1,5 @@
 import { getIn } from 'formik';
 import { Editor } from 'src/components/editor';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -9,12 +8,13 @@ import { fileData } from 'src/components/file-thumbnail';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { SingleFilePreview } from 'src/components/upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import {
   Box,
   Grid,
@@ -24,14 +24,14 @@ import {
   Accordion,
   TextField,
   Typography,
-  FormControl,
-  Autocomplete,
   FormHelperText,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
 
 import type { TeacherProfile, ISubjectCardProps } from '../type';
+
+type EmployeeOption = { id: string; label: string };
 
 const SubjectCard: React.FC<ISubjectCardProps> = ({
   formik,
@@ -44,12 +44,64 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onFileUpload,
 }: ISubjectCardProps) => {
   // const theme = useTheme();
-  const { data: employee, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetEmployeeQuery,
-  });
+  const [getPrimaryTeacherOptions] = useLazyGetEmployeeQuery();
+  const [getSecondaryTeacherOptions] = useLazyGetEmployeeQuery();
+  const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
 
-  // State to control accordion expansion, initialized with subject's isSubjectOpen or false
+  const [primaryTeacherObj, setPrimaryTeacherObj] = useState<EmployeeOption | null>(null);
+  const [secondaryTeacherObjs, setSecondaryTeacherObjs] = useState<EmployeeOption[]>([]);
+
+  // One-time initialization: populate display values from existing IDs (edit mode)
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    if (subject.primaryTeacher) {
+      getEmployeeById(subject.primaryTeacher)
+        .unwrap()
+        .then((data: any) => setPrimaryTeacherObj({ id: data.id, label: data.fullName }))
+        .catch(() => {});
+    }
+
+    if (subject.secondaryTeacher?.length) {
+      Promise.all(
+        subject.secondaryTeacher.map((id: string) =>
+          getEmployeeById(id)
+            .unwrap()
+            .then((data: any) => ({ id: data.id, label: data.fullName }))
+            .catch(() => null)
+        )
+      ).then((results) => {
+        setSecondaryTeacherObjs(results.filter(Boolean) as EmployeeOption[]);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchPrimaryTeacherOptions = useCallback(
+    async (query: string) => {
+      const res = await getPrimaryTeacherOptions({ search: query }).unwrap();
+      return {
+        data: (res?.items ?? []).map((item: any) => ({ id: item.id, label: item.fullName })),
+        hasMore: false,
+      };
+    },
+    [getPrimaryTeacherOptions]
+  );
+
+  const fetchSecondaryTeacherOptions = useCallback(
+    async (query: string) => {
+      const res = await getSecondaryTeacherOptions({ search: query }).unwrap();
+      return {
+        data: (res?.items ?? []).map((item: any) => ({ id: item.id, label: item.fullName })),
+        hasMore: false,
+      };
+    },
+    [getSecondaryTeacherOptions]
+  );
+
+  // State to control accordion expansion, initialized once from subject's isSubjectOpen
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
@@ -60,10 +112,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     if (!subject?.subjectNo) return;
     onSubjectChange(subject?.subjectNo, field, value);
   };
-
-  useEffect(() => {
-    setIsExpanded(subject.isSubjectOpen || false);
-  }, [subject.subjectNo, subject.isSubjectOpen]);
 
   // Get validation error for a specific field
   // @param field - The field name to check for errors
@@ -129,7 +177,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 )}
                 {subject.primaryTeacher && (
                   <Chip
-                    label={`Lead: ${subject.primaryTeacher}`}
+                    label={`Lead: ${primaryTeacherObj?.label || subject.primaryTeacher}`}
                     size="small"
                     variant="soft"
                     color="info"
@@ -166,63 +214,63 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth error={!!getError('primaryTeacher')}>
-                <Autocomplete
-                  options={
-                    employee?.items?.filter(
-                      (option: any) =>
-                        !subject.secondaryTeacher?.some(
-                          (secondary: any) => (secondary.id || secondary) === option.id
-                        )
-                    ) || []
-                  }
-                  value={employee?.items?.find((t: any) => t.id === subject.primaryTeacher) ?? null}
-                  getOptionLabel={(option) => option.fullName ?? ''}
-                  onChange={(_, newValue) =>
-                    formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '')
-                  }
-                  loading={isLoading}
-                  renderOption={(props, option) => (
-                    <Box component="li" {...props} sx={{ display: 'flex', gap: 1 }}>
+              <PaginatedSearchSelect
+                label="Primary Teacher"
+                fetchOptions={fetchPrimaryTeacherOptions}
+                value={primaryTeacherObj}
+                onChange={(_, newValue: any) => {
+                  setPrimaryTeacherObj(newValue);
+                  formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
+                }}
+                getOptionLabel={(option: any) => option?.label || ''}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                filterOptions={(options: any[]) =>
+                  options.filter((o) => !subject.secondaryTeacher?.includes(o.id))
+                }
+                renderOption={(props: any, option: any) => {
+                  const { key, ...rest } = props;
+                  return (
+                    <Box component="li" key={key} {...rest} sx={{ display: 'flex', gap: 1 }}>
                       <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                        {option.fullName?.[0]}
+                        {option.label?.[0]}
                       </Avatar>
-                      {option.fullName}
+                      {option.label}
                     </Box>
-                  )}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Primary Teacher" size="small" />
-                  )}
-                />
-              </FormControl>
+                  );
+                }}
+                debounceMs={400}
+                minChars={0}
+                size="small"
+                fullWidth
+                disabled={isPublished}
+                error={!!getError('primaryTeacher')}
+                helperText={getError('primaryTeacher')}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth error={!!getError('secondaryTeacher')}>
-                <Autocomplete
-                  multiple
-                  disableCloseOnSelect
-                  options={
-                    employee?.items?.filter(
-                      (option: any) => option.id !== subject.primaryTeacher
-                    ) || []
-                  }
-                  loading={isLoading}
-                  value={
-                    employee?.items?.filter((t: any) =>
-                      subject.secondaryTeacher?.includes(t?.id as any)
-                    ) || []
-                  }
-                  getOptionLabel={(option) => option?.fullName ?? ''}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  onChange={(_, newValue) =>
-                    formik.setFieldValue(
-                      `subjects.${index}.secondaryTeacher`,
-                      newValue.map((item) => item.id)
-                    )
-                  }
-                  renderOption={(props, option, { selected }) => (
-                    <li {...props}>
+              <PaginatedSearchSelect
+                label="Secondary Teachers"
+                multiple
+                disableCloseOnSelect
+                fetchOptions={fetchSecondaryTeacherOptions}
+                value={secondaryTeacherObjs}
+                onChange={(_, newValues: any) => {
+                  setSecondaryTeacherObjs(newValues);
+                  formik.setFieldValue(
+                    `subjects.${index}.secondaryTeacher`,
+                    newValues.map((item: any) => item.id)
+                  );
+                }}
+                getOptionLabel={(option: any) => option?.label || ''}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                filterOptions={(options: any[]) =>
+                  options.filter((o) => o.id !== subject.primaryTeacher)
+                }
+                renderOption={(props: any, option: any, { selected }: any) => {
+                  const { key, ...rest } = props;
+                  return (
+                    <li key={key} {...rest}>
                       <Checkbox
                         icon={<CheckBoxOutlineBlankIcon />}
                         checkedIcon={<CheckBoxIcon />}
@@ -230,51 +278,48 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         sx={{ mr: 1 }}
                       />
                       <Avatar sx={{ width: 24, height: 24, fontSize: 12, mr: 1 }}>
-                        {option.fullName?.[0]}
+                        {option.label?.[0]}
                       </Avatar>
-                      {option?.fullName}
+                      {option.label}
                     </li>
-                  )}
-                  renderTags={(values) => {
-                    if (!values || values.length === 0) return null;
-                    const first = values[0];
-                    const remaining = values.length - 1;
-
-                    return [
-                      <Chip
-                        key={first?.id}
-                        avatar={<Avatar>{first?.fullName?.[0]}</Avatar>}
-                        label={first?.fullName}
-                        size="small"
-                        variant="soft"
-                        sx={{ ml: 1 }}
-                      />,
-                      remaining > 0 && (
-                        <TeacherListPopover
-                          key="popover"
-                          teachers={values.slice(1)}
-                          count={remaining}
-                        />
-                      ),
-                    ];
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Secondary Teachers"
-                      placeholder={subject.secondaryTeacher?.length ? '' : 'Select assist teachers'}
+                  );
+                }}
+                renderTags={(values: any) => {
+                  if (!values || values.length === 0) return null;
+                  const first = values[0];
+                  const remaining = values.length - 1;
+                  return [
+                    <Chip
+                      key={first?.id}
+                      avatar={<Avatar>{first?.label?.[0]}</Avatar>}
+                      label={first?.label}
                       size="small"
-                      error={!!getError('secondaryTeacher')}
-                    />
-                  )}
-                />
-
-                <FormHelperText>
-                  {Array.isArray(getError('secondaryTeacher'))
+                      variant="soft"
+                      sx={{ ml: 1 }}
+                    />,
+                    remaining > 0 && (
+                      <TeacherListPopover
+                        key="popover"
+                        teachers={values
+                          .slice(1)
+                          .map((v: any) => ({ id: v.id, fullName: v.label }))}
+                        count={remaining}
+                      />
+                    ),
+                  ];
+                }}
+                debounceMs={400}
+                minChars={0}
+                size="small"
+                fullWidth
+                placeholder={subject.secondaryTeacher?.length ? '' : 'Select assist teachers'}
+                error={!!getError('secondaryTeacher')}
+                helperText={
+                  Array.isArray(getError('secondaryTeacher'))
                     ? getError('secondaryTeacher').join(', ')
-                    : getError('secondaryTeacher')}
-                </FormHelperText>
-              </FormControl>
+                    : getError('secondaryTeacher')
+                }
+              />
             </Grid>
 
             {/* Content Sections */}

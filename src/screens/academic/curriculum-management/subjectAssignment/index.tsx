@@ -70,6 +70,7 @@ const Subject = () => {
     data: subjectTableData = [],
     isLoading: isTableLoading,
     refetch,
+    isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
@@ -198,7 +199,6 @@ const Subject = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  mb: 1,
                 }}
               >
                 <CustomSelect
@@ -239,7 +239,7 @@ const Subject = () => {
 
           {!showSubjectDialog.value && (
             <SubjectTable
-              isLoading={isTableLoading}
+              isLoading={isTableLoading || isFetching}
               classId={classId}
               addSubjectDialog={addSubjectDialog}
               editData={selectedSubject}
