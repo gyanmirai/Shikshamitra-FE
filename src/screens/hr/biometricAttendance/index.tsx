@@ -24,10 +24,6 @@ import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
-  AttendanceImportBatchStatus,
-  AttendanceImportBatchStatusOptions,
-} from 'src/enums/attendance-import-batch-statusType';
-import {
   Person,
   Numbers,
   FilePresent,
@@ -35,6 +31,10 @@ import {
   CalendarMonth,
   CheckCircleOutline,
 } from '@mui/icons-material';
+import {
+  AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusOptions,
+} from 'src/enums/attendance-import-batch-statusType';
 import {
   useConfirmAttendanceMutation,
   usePreviewAttendanceMutation,
@@ -59,6 +59,7 @@ import {
 } from '@mui/material';
 import {
   useGetAttendanceImportsQuery,
+  AttendanceImportRowStatusCode,
   useGetAttendanceImportByIdQuery,
   useGetAttendanceImportRowsQuery,
   useLockAttendanceImportBatchMutation,
@@ -72,6 +73,26 @@ const ROW_STATUS = {
   Absent: AttendanceRowStatus.Absent,
   HalfDay: AttendanceRowStatus.HalfDay,
   Pending: 'Pending' as const,
+};
+
+const mapImportRowStatusToUi = (
+  statusCode?: number | null,
+  statusText?: string | null
+): RowStatusType => {
+  if (statusCode === AttendanceImportRowStatusCode.Present) return ROW_STATUS.Present;
+  if (statusCode === AttendanceImportRowStatusCode.Absent) return ROW_STATUS.Absent;
+  if (statusCode === AttendanceImportRowStatusCode.HalfDay) return ROW_STATUS.HalfDay;
+
+  const normalizedStatus = (statusText || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s_-]/g, '');
+  if (normalizedStatus === 'PRESENT') return ROW_STATUS.Present;
+  if (normalizedStatus === 'ABSENT' || normalizedStatus === 'FULLDAYLEAVE')
+    return ROW_STATUS.Absent;
+  if (normalizedStatus === 'HALFDAY' || normalizedStatus === 'HALFDAYLEAVE')
+    return ROW_STATUS.HalfDay;
+  return ROW_STATUS.Pending;
 };
 
 const segmentBtnBase = {
@@ -869,16 +890,11 @@ const ImportDetailDialog = ({
   // Sync API rows into local state
   React.useEffect(() => {
     if (rowsData?.items) {
-      const statusMap: Record<string, RowStatusType> = {
-        Present: ROW_STATUS.Present,
-        Absent: ROW_STATUS.Absent,
-        HalfDay: ROW_STATUS.HalfDay,
-      };
       setRowsData2(
-        rowsData.items.map((r: any, index: number) => ({
+        rowsData.items.map((r: any) => ({
           ...r,
-          id: r.id ?? `row-${index}`,
-          attendanceStatus: r.attendanceStatus ?? statusMap[r.status] ?? ROW_STATUS.Pending,
+          id: r.id,
+          attendanceStatus: mapImportRowStatusToUi(r.statusCode, r.status),
         }))
       );
     }
@@ -898,10 +914,16 @@ const ImportDetailDialog = ({
 
   const handleSubmitAttendance = async () => {
     const nonPendingRows = rowsData2.filter((r) => r.attendanceStatus !== ROW_STATUS.Pending);
-    if (nonPendingRows.length === 0) return;
+    const submitReadyRows = nonPendingRows.filter((r) => !!r.employeeId);
+    if (submitReadyRows.length === 0) {
+      shikshaMitraToast.error({
+        message: 'No valid rows available to submit. Resolve employee mapping issues first.',
+      });
+      return;
+    }
 
     // Group entries by attendanceDate
-    const dateGroups = nonPendingRows.reduce(
+    const dateGroups = submitReadyRows.reduce(
       (acc: Record<string, any[]>, row) => {
         const date = row.attendanceDate || '';
         if (!acc[date]) acc[date] = [];
@@ -917,7 +939,7 @@ const ImportDetailDialog = ({
         const body = {
           attendanceDate: date,
           entries: rows.map((r: any) => ({
-            employeeId: r.employeeId || r.id,
+            employeeId: r.employeeId,
             statusWire: getStatusWire(r.attendanceStatus),
             inTime: r.timeIn || '',
             outTime: r.timeOut || '',
@@ -927,8 +949,12 @@ const ImportDetailDialog = ({
         return saveDayAttendance(body).unwrap();
       });
       await Promise.all(requests);
+      const unresolvedCount = nonPendingRows.length - submitReadyRows.length;
       shikshaMitraToast.success({
-        message: `Attendance saved successfully for ${nonPendingRows.length} employee(s).`,
+        message:
+          unresolvedCount > 0
+            ? `Attendance saved for ${submitReadyRows.length} employee(s). Skipped ${unresolvedCount} unresolved row(s).`
+            : `Attendance saved successfully for ${submitReadyRows.length} employee(s).`,
       });
     } catch (error: any) {
       console.error('Failed to save attendance:', error);
@@ -950,125 +976,144 @@ const ImportDetailDialog = ({
       align: 'left' as const,
       isSort: false,
       isFilter: false,
-      render: (value: RowStatusType, row: any) => (
-        <Box
-          sx={{
-            display: 'flex',
-            width: '172px',
-            height: '30px',
-            bgcolor: (t: any) => t.vars.palette.background.neutral,
-            borderRadius: '6px',
-            p: 0.25,
-            gap: 0.25,
-          }}
-        >
-          <CustomTooltip title="Present" arrow placement="top">
-            <Box
-              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.Present })}
-              sx={{
-                ...segmentBtnBase,
-                cursor: 'pointer',
-                bgcolor:
-                  value === ROW_STATUS.Present
-                    ? (t: any) => t.vars.palette.success.main
-                    : 'transparent',
-                color:
-                  value === ROW_STATUS.Present
-                    ? (t: any) => t.vars.palette.success.contrastText
-                    : (t: any) => t.vars.palette.text.secondary,
-                '&:hover': {
-                  bgcolor: (t: any) =>
+      render: (value: RowStatusType, row: any) => {
+        const isRowEditable = !isPayrollLocked && !!row.employeeId;
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              width: '172px',
+              height: '30px',
+              bgcolor: (t: any) => t.vars.palette.background.neutral,
+              borderRadius: '6px',
+              p: 0.25,
+              gap: 0.25,
+            }}
+          >
+            <CustomTooltip title="Present" arrow placement="top">
+              <Box
+                onClick={() => {
+                  if (!isRowEditable) return;
+                  updateRow(row.id, { attendanceStatus: ROW_STATUS.Present });
+                }}
+                sx={{
+                  ...segmentBtnBase,
+                  cursor: isRowEditable ? 'pointer' : 'not-allowed',
+                  opacity: isRowEditable ? 1 : 0.45,
+                  bgcolor:
                     value === ROW_STATUS.Present
-                      ? t.vars.palette.success.dark
-                      : varAlpha(t.vars.palette.success.mainChannel, 0.08),
-                },
-              }}
-            >
-              <Iconify icon="eva:checkmark-fill" width={16} />
-            </Box>
-          </CustomTooltip>
+                      ? (t: any) => t.vars.palette.success.main
+                      : 'transparent',
+                  color:
+                    value === ROW_STATUS.Present
+                      ? (t: any) => t.vars.palette.success.contrastText
+                      : (t: any) => t.vars.palette.text.secondary,
+                  '&:hover': {
+                    bgcolor: (t: any) =>
+                      value === ROW_STATUS.Present
+                        ? t.vars.palette.success.dark
+                        : varAlpha(t.vars.palette.success.mainChannel, 0.08),
+                  },
+                }}
+              >
+                <Iconify icon="eva:checkmark-fill" width={16} />
+              </Box>
+            </CustomTooltip>
 
-          <CustomTooltip title="Half Day" arrow placement="top">
-            <Box
-              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.HalfDay })}
-              sx={{
-                ...segmentBtnBase,
-                cursor: 'pointer',
-                bgcolor:
-                  value === ROW_STATUS.HalfDay
-                    ? (t: any) => t.vars.palette.info.main
-                    : 'transparent',
-                color:
-                  value === ROW_STATUS.HalfDay
-                    ? (t: any) => t.vars.palette.info.contrastText
-                    : (t: any) => t.vars.palette.text.secondary,
-                '&:hover': {
-                  bgcolor: (t: any) =>
+            <CustomTooltip title="Half Day" arrow placement="top">
+              <Box
+                onClick={() => {
+                  if (!isRowEditable) return;
+                  updateRow(row.id, { attendanceStatus: ROW_STATUS.HalfDay });
+                }}
+                sx={{
+                  ...segmentBtnBase,
+                  cursor: isRowEditable ? 'pointer' : 'not-allowed',
+                  opacity: isRowEditable ? 1 : 0.45,
+                  bgcolor:
                     value === ROW_STATUS.HalfDay
-                      ? t.vars.palette.info.dark
-                      : varAlpha(t.vars.palette.info.mainChannel, 0.08),
-                },
-              }}
-            >
-              <Iconify icon="mdi:fraction-one-half" width={16} />
-            </Box>
-          </CustomTooltip>
+                      ? (t: any) => t.vars.palette.info.main
+                      : 'transparent',
+                  color:
+                    value === ROW_STATUS.HalfDay
+                      ? (t: any) => t.vars.palette.info.contrastText
+                      : (t: any) => t.vars.palette.text.secondary,
+                  '&:hover': {
+                    bgcolor: (t: any) =>
+                      value === ROW_STATUS.HalfDay
+                        ? t.vars.palette.info.dark
+                        : varAlpha(t.vars.palette.info.mainChannel, 0.08),
+                  },
+                }}
+              >
+                <Iconify icon="mdi:fraction-one-half" width={16} />
+              </Box>
+            </CustomTooltip>
 
-          <CustomTooltip title="Pending" arrow placement="top">
-            <Box
-              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.Pending })}
-              sx={{
-                ...segmentBtnBase,
-                cursor: 'pointer',
-                bgcolor:
-                  value === ROW_STATUS.Pending
-                    ? (t: any) => t.vars.palette.warning.main
-                    : 'transparent',
-                color:
-                  value === ROW_STATUS.Pending
-                    ? (t: any) => t.vars.palette.warning.contrastText
-                    : (t: any) => t.vars.palette.text.secondary,
-                '&:hover': {
-                  bgcolor: (t: any) =>
+            <CustomTooltip title="Pending" arrow placement="top">
+              <Box
+                onClick={() => {
+                  if (!isRowEditable) return;
+                  updateRow(row.id, { attendanceStatus: ROW_STATUS.Pending });
+                }}
+                sx={{
+                  ...segmentBtnBase,
+                  cursor: isRowEditable ? 'pointer' : 'not-allowed',
+                  opacity: isRowEditable ? 1 : 0.45,
+                  bgcolor:
                     value === ROW_STATUS.Pending
-                      ? t.vars.palette.warning.dark
-                      : varAlpha(t.vars.palette.warning.mainChannel, 0.08),
-                },
-              }}
-            >
-              <Iconify icon="eva:minus-fill" width={16} />
-            </Box>
-          </CustomTooltip>
+                      ? (t: any) => t.vars.palette.warning.main
+                      : 'transparent',
+                  color:
+                    value === ROW_STATUS.Pending
+                      ? (t: any) => t.vars.palette.warning.contrastText
+                      : (t: any) => t.vars.palette.text.secondary,
+                  '&:hover': {
+                    bgcolor: (t: any) =>
+                      value === ROW_STATUS.Pending
+                        ? t.vars.palette.warning.dark
+                        : varAlpha(t.vars.palette.warning.mainChannel, 0.08),
+                  },
+                }}
+              >
+                <Iconify icon="eva:minus-fill" width={16} />
+              </Box>
+            </CustomTooltip>
 
-          <CustomTooltip title="Absent" arrow placement="top">
-            <Box
-              onClick={() => updateRow(row.id, { attendanceStatus: ROW_STATUS.Absent })}
-              sx={{
-                ...segmentBtnBase,
-                cursor: 'pointer',
-                bgcolor:
-                  value === ROW_STATUS.Absent
-                    ? (t: any) => t.vars.palette.error.main
-                    : 'transparent',
-                color:
-                  value === ROW_STATUS.Absent
-                    ? (t: any) => t.vars.palette.error.contrastText
-                    : (t: any) => t.vars.palette.text.secondary,
-                '&:hover': {
-                  bgcolor: (t: any) =>
+            <CustomTooltip title="Absent" arrow placement="top">
+              <Box
+                onClick={() => {
+                  if (!isRowEditable) return;
+                  updateRow(row.id, { attendanceStatus: ROW_STATUS.Absent });
+                }}
+                sx={{
+                  ...segmentBtnBase,
+                  cursor: isRowEditable ? 'pointer' : 'not-allowed',
+                  opacity: isRowEditable ? 1 : 0.45,
+                  bgcolor:
                     value === ROW_STATUS.Absent
-                      ? t.vars.palette.error.dark
-                      : varAlpha(t.vars.palette.error.mainChannel, 0.08),
-                },
-              }}
-            >
-              <Iconify icon="eva:close-fill" width={16} />
-            </Box>
-          </CustomTooltip>
-        </Box>
-      ),
+                      ? (t: any) => t.vars.palette.error.main
+                      : 'transparent',
+                  color:
+                    value === ROW_STATUS.Absent
+                      ? (t: any) => t.vars.palette.error.contrastText
+                      : (t: any) => t.vars.palette.text.secondary,
+                  '&:hover': {
+                    bgcolor: (t: any) =>
+                      value === ROW_STATUS.Absent
+                        ? t.vars.palette.error.dark
+                        : varAlpha(t.vars.palette.error.mainChannel, 0.08),
+                  },
+                }}
+              >
+                <Iconify icon="eva:close-fill" width={16} />
+              </Box>
+            </CustomTooltip>
+          </Box>
+        );
+      },
     }),
-    [updateRow]
+    [isPayrollLocked, updateRow]
   );
 
   const makeTimeColumn = useCallback(
@@ -1081,6 +1126,7 @@ const ImportDetailDialog = ({
       isFilter: false,
       render: (value: string, row: any) => {
         const isEditing = editingCell?.rowId === row.id && editingCell?.field === field;
+        const isRowEditable = !isPayrollLocked && !!row.employeeId;
 
         if (isEditing) {
           return (
@@ -1139,7 +1185,7 @@ const ImportDetailDialog = ({
             }}
           >
             <Typography variant="body2">{value || '—'}</Typography>
-            {!isPayrollLocked && (
+            {isRowEditable && (
               <CustomTooltip title={`Edit ${label}`} arrow placement="top">
                 <IconButton
                   className="edit-btn"
