@@ -2,6 +2,38 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
+export interface GetDayAttendanceParams {
+  attendanceDate: string;
+  department?: string;
+  isTeaching?: boolean;
+  roleId?: string;
+  search?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+}
+
+export interface LockAttendanceDayParams {
+  attendanceDate: string;
+}
+
+export const buildGetDayAttendanceQueryParams = ({
+  attendanceDate,
+  department,
+  isTeaching,
+  roleId,
+  search,
+  skipCount = 0,
+  maxResultCount = 50,
+}: GetDayAttendanceParams) => ({
+  attendanceDate,
+  department,
+  isTeaching,
+  roleId,
+  search,
+  skipCount,
+  maxResultCount,
+});
+
 export const attendanceApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     // Attendance Configuration
@@ -103,38 +135,28 @@ export const attendanceApi = employeeApi.injectEndpoints({
 
     // Lock/Unlock Attendance Day
     lockDayAttendance: builder.mutation({
-      query: ({ educationMediumStageId, attendanceDate }) => ({
+      query: ({ attendanceDate }: LockAttendanceDayParams) => ({
         url: '/hr/attendance/take-attendance/day/lock',
         method: 'POST',
-        params: { educationMediumStageId, attendanceDate },
+        params: { attendanceDate },
+      }),
+      invalidatesTags: [employeeType.attendance],
+    }),
+    unlockDayAttendance: builder.mutation({
+      query: ({ attendanceDate }: LockAttendanceDayParams) => ({
+        url: '/hr/attendance/take-attendance/day/lock',
+        method: 'DELETE',
+        params: { attendanceDate },
       }),
       invalidatesTags: [employeeType.attendance],
     }),
 
     // Take Attendance - Day (GET)
     getDayAttendance: builder.query({
-      query: ({
-        attendanceDate,
-        educationMediumStageId,
-        department,
-        isTeaching,
-        roleId,
-        search,
-        skipCount = 0,
-        maxResultCount = 50,
-      }) => ({
+      query: (params: GetDayAttendanceParams) => ({
         url: '/hr/attendance/take-attendance/day',
         method: 'GET',
-        params: {
-          attendanceDate,
-          educationMediumStageId,
-          department,
-          isTeaching,
-          roleId,
-          search,
-          skipCount,
-          maxResultCount,
-        },
+        params: buildGetDayAttendanceQueryParams(params),
       }),
       providesTags: [employeeType.attendance],
     }),
@@ -154,5 +176,6 @@ export const {
   useDownloadAttendanceTemplateMutation,
   useSaveDayAttendanceMutation,
   useLockDayAttendanceMutation,
+  useUnlockDayAttendanceMutation,
   useGetDayAttendanceQuery,
 } = attendanceApi;

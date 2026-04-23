@@ -3,7 +3,6 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { EmployeeAttendance } from 'src/types/employee';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
@@ -22,12 +21,13 @@ import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
-import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import {
+  ATTENDANCE_TRACKING_FILTERS,
+  getAttendanceTrackingStatusLabel,
+} from 'src/screens/hr/attendance-tracking/status-mapper';
 import {
   useGetDateWiseAttendanceQuery,
   useGetEmployeeWiseAttendanceQuery,
@@ -149,117 +149,49 @@ const DateWise = ({
     (state: RootState) => state.globalState
   );
   const [dateValue, setDateValue] = useState<Dayjs | null>(
-    searchParams.date ? dayjs(searchParams.date, 'DD/MM/YYYY') : dayjs()
+    searchParams.date ? dayjs(searchParams.date, ['DD-MM-YYYY', 'DD/MM/YYYY']) : dayjs()
   );
 
   useEffect(() => {
     if (searchParams.date) {
-      setDateValue(dayjs(searchParams.date, 'DD/MM/YYYY'));
+      setDateValue(dayjs(searchParams.date, ['DD-MM-YYYY', 'DD/MM/YYYY']));
     }
   }, [searchParams.date]);
-  const tabs = useTabs('Pending');
-  const {
-    data: attendanceData,
-    isLoading,
-    refetch: getDateWiseAttendance,
-  } = useQueryAndMutation({
+  const [organization, setOrganization] = useState('');
+  const handleChange = (event: any) => {
+    setOrganization(event.target.value);
+  };
+  const tabs = useTabs('PRESENT');
+  const { data: attendanceData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDateWiseAttendanceQuery,
     params: {
-      attendanceDate: dateValue?.format('DD/MM/YYYY'),
+      attendanceDate: dateValue?.format('DD-MM-YYYY'),
       status: tabs.value,
+      educationMediumStageId: organization,
       page: 1,
       pageSize: 10,
     },
     options: {
-      skip: !dateValue,
+      skip: !dateValue || !organization,
     },
   });
 
-  // const tableData = useMemo(
-  //   () =>
-  //     tabs.value === 'All'
-  //       ? attendanceData?.items || []
-  //       : attendanceData?.items?.filter((i: EmployeeAttendance) => i.status === tabs.value),
-  //   [attendanceData?.items, tabs.value]
-  // );
-
-  useEffect(() => {
-    if (searchParams.date) {
-      const dateTimeOffset = dateConvertor(
-        dayjs(searchParams.date, 'DD/MM/YYYY').format(dateFormat),
-        true
-      );
-      getDateWiseAttendance(dateTimeOffset);
-    } else {
-      getDateWiseAttendance(dateConvertor(dayjs().format(dateFormat), true));
-    }
-  }, [getDateWiseAttendance, searchParams.date]);
-
-  // cleanup removed to avoid infinite re-render loop
-
   const counts = useMemo(
     () => ({
-      Pending:
-        attendanceData?.items.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Pending
-        ).length || 6,
-      Present:
-        attendanceData?.items.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
-        ).length || 6,
-      Absent:
-        attendanceData?.items.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
-        ).length || 2,
-      'Half-Day':
-        attendanceData?.items.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
-        ).length || 2,
-      'Rejected Leave':
-        attendanceData?.items.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.RejectedLeave
-        ).length || 0,
+      PRESENT: attendanceData?.summary?.present || 0,
+      ABSENT: attendanceData?.summary?.absent || 0,
+      HALF_DAY: attendanceData?.summary?.halfDay || 0,
+      REJECTED_LEAVE: attendanceData?.summary?.rejectedLeave || 0,
     }),
-    [attendanceData?.items]
+    [attendanceData?.summary]
   );
   const TABS = useMemo(
-    () => [
-      {
-        value: 'Pending',
-        label: 'Pending',
-        count: counts.Pending || 0,
-        color: 'warning',
-        // icon: <Iconify icon="oui:check-in-circle-empty" />,
-      },
-      {
-        value: 'Present',
-        label: 'Present',
-        count: counts.Present || 0,
-        color: 'success',
-        // icon: <Iconify icon="oui:check-in-circle-empty" />,
-      },
-      {
-        value: 'Absent',
-        label: 'Absent',
-        count: counts.Absent || 0,
-        color: 'error',
-        // icon: <Iconify icon="mdi:cross-circle-outline" />,
-      },
-      {
-        value: 'Half-Day',
-        label: 'Half Day',
-        count: counts['Half-Day'] || 0,
-        color: 'info',
-        // icon: <Iconify icon="radix-icons:half-2" />,
-      },
-      {
-        value: 'Rejected Leave',
-        label: 'Rejected Leave',
-        count: counts['Rejected Leave'] || 0,
-        color: 'error',
-      },
-    ],
+    () =>
+      ATTENDANCE_TRACKING_FILTERS.map((tab) => ({
+        ...tab,
+        count: counts[tab.value] || 0,
+      })),
     [counts]
   );
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
@@ -273,11 +205,6 @@ const DateWise = ({
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
     setSelectedStudents([]);
-  };
-
-  const [organization, setOrganization] = useState('');
-  const handleChange = (event: any) => {
-    setOrganization(event.target.value);
   };
 
   useEffect(() => {
@@ -315,13 +242,15 @@ const DateWise = ({
         align: 'left',
         minWidth: '200px',
         render: (value, row) => {
+          const remarksValue = typeof value === 'string' ? value : '';
+          if (!remarksValue) return '-';
           // Split address into lines and take first two lines
-          const addressLines = value.split(', ');
+          const addressLines = remarksValue.split(', ');
           const displayAddress = addressLines.slice(0, 3).join(', ');
           const hasMoreLines = addressLines.length > 3;
 
           return (
-            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            <CustomTooltip title={remarksValue} arrow sx={{ textAlign: 'justify' }}>
               <Typography
                 variant="caption"
                 sx={{
@@ -351,11 +280,18 @@ const DateWise = ({
         minWidth: '100px',
         align: 'left',
         render(value, row) {
+          const statusLabel = getAttendanceTrackingStatusLabel(value);
           return (
             <Label
-              color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
+              color={
+                statusLabel === 'Present'
+                  ? 'success'
+                  : statusLabel === 'Absent'
+                    ? 'error'
+                    : 'warning'
+              }
             >
-              {value}
+              {statusLabel}
             </Label>
           );
         },
@@ -414,7 +350,7 @@ const DateWise = ({
             setDateValue(value);
           }}
           onAccept={(value) => {
-            setSearchParams('date', value?.format('DD/MM/YYYY') || '');
+            setSearchParams('date', value?.format('DD-MM-YYYY') || '');
           }}
           views={['year', 'month', 'day']}
           minDate={dayjs(currentYear?.startDate)}
@@ -459,7 +395,7 @@ const DateWise = ({
         tableId="employee-attendance-table"
         isLoading={isLoading}
         columns={columns}
-        data={attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []}
+        data={attendanceData?.items || []}
       />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -486,79 +422,43 @@ const EmployeeWise = ({
     (state: RootState) => state.globalState
   );
   const [startDate, setStartDate] = useState<Dayjs | null>(
-    searchParams.startDate ? dayjs(searchParams.startDate, 'DD/MM/YYYY') : dayjs().startOf('month')
+    searchParams.startDate
+      ? dayjs(searchParams.startDate, ['DD-MM-YYYY', 'DD/MM/YYYY'])
+      : dayjs().startOf('month')
   );
   const [endDate, setEndDate] = useState<Dayjs | null>(
-    searchParams.endDate ? dayjs(searchParams.endDate, 'DD/MM/YYYY') : dayjs().endOf('month')
+    searchParams.endDate
+      ? dayjs(searchParams.endDate, ['DD-MM-YYYY', 'DD/MM/YYYY'])
+      : dayjs().endOf('month')
   );
+  const [organization, setOrganization] = useState('');
+  const handleChange = (event: any) => {
+    setOrganization(event.target.value);
+  };
 
-  const tabs = useTabs('Pending');
+  const tabs = useTabs('PRESENT');
 
   const { data: employees, isLoading: employeeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });
 
-  const {
-    data: attendanceData,
-    isLoading: attendanceLoading,
-    refetch: getEmployeeWiseAttendance,
-  } = useQueryAndMutation({
+  const { data: attendanceData, isLoading: attendanceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeWiseAttendanceQuery,
     params: {
       employeeId: searchParams.employeeId,
-      startDate: startDate?.format('DD/MM/YYYY'),
-      endDate: endDate?.format('DD/MM/YYYY'),
+      startDate: startDate?.format('DD-MM-YYYY'),
+      endDate: endDate?.format('DD-MM-YYYY'),
       status: tabs.value,
+      educationMediumStageId: organization,
       page: 1,
       pageSize: 10,
     },
     options: {
-      skip: !searchParams.employeeId,
+      skip: !searchParams.employeeId || !organization,
     },
   });
-
-  useMemo(
-    () => ({
-      Pending:
-        attendanceData?.items?.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Pending
-        ).length || 10,
-      Present:
-        attendanceData?.items?.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
-        ).length || 10,
-      Absent:
-        attendanceData?.items?.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
-        ).length || 8,
-      'Half-Day':
-        attendanceData?.items?.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
-        ).length || 6,
-      'Rejected Leave':
-        attendanceData?.items?.filter(
-          (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.RejectedLeave
-        ).length || 4,
-    }),
-    [attendanceData?.items]
-  );
-
-  useEffect(() => {
-    if (searchParams?.employeeId && startDate && endDate) {
-      getEmployeeWiseAttendance({
-        employeeId: `${searchParams.employeeId}`,
-        startDate: startDate?.format('DD/MM/YYYY'),
-        endDate: endDate?.format('DD/MM/YYYY'),
-        status: tabs.value,
-        page: 1,
-        pageSize: 10,
-      });
-    }
-  }, [searchParams.employeeId, getEmployeeWiseAttendance, startDate, endDate, tabs.value]);
-
-  // cleanup removed to avoid infinite re-render loop
 
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -569,52 +469,38 @@ const EmployeeWise = ({
     }
   };
 
-  useState(
-    attendanceData?.items?.map((i: any) => ({
-      ...i,
-      status: EmployeeLeaveStatusType[i.statusType],
-    })) || []
-  );
-
   const TABS = useMemo(
     () => [
       {
-        value: 'Pending',
-        label: 'Pending',
-        count: attendanceData?.[0]?.pendingDays || 6,
-        icon: 'fluent:person-available-16-regular',
-        color: 'warning',
-      },
-      {
-        value: 'Present',
+        value: 'PRESENT',
         label: 'Present',
-        count: attendanceData?.[0]?.presentDays || 6,
+        count: attendanceData?.attendanceSummary?.present || 0,
         icon: 'fluent:person-available-16-regular',
         color: 'success',
       },
       {
-        value: 'Absent',
+        value: 'ABSENT',
         label: 'Absent',
-        count: attendanceData?.[0]?.leaveDays || 2,
+        count: attendanceData?.attendanceSummary?.absent || 0,
         icon: 'fluent-mdl2:leave-user',
         color: 'error',
       },
       {
-        value: 'Half day',
-        label: 'Half day',
-        count: attendanceData?.[0]?.halfDayLeaves || 2,
+        value: 'HALF_DAY',
+        label: 'Half Day',
+        count: attendanceData?.attendanceSummary?.halfDay || 0,
         icon: 'mdi:fraction-one-half',
         color: 'info',
       },
       {
-        value: 'RejectedLeave',
+        value: 'REJECTED_LEAVE',
         label: 'Rejected Leave',
-        count: attendanceData?.[0]?.rejectedLeaves || 0,
+        count: attendanceData?.attendanceSummary?.rejectedLeave || 0,
         icon: GlobalIcons.reject,
-        color: 'error',
+        color: 'warning',
       },
     ],
-    [attendanceData]
+    [attendanceData?.attendanceSummary]
   );
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
@@ -628,11 +514,6 @@ const EmployeeWise = ({
       ) || null,
     [employees?.items, searchParams.employeeIdentifier]
   );
-  const [organization, setOrganization] = useState('');
-  const handleChange = (event: any) => {
-    setOrganization(event.target.value);
-  };
-
   useEffect(() => {
     if (medium?.educationMediumStages?.[0]) {
       setOrganization(medium?.educationMediumStages?.[0]?.id);
@@ -684,7 +565,7 @@ const EmployeeWise = ({
         filterType: 'date',
         sticky: true,
         render(value, row) {
-          return dayjs(value, 'YYYY-MM-DD').format('DD/MM/YYYY');
+          return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
         },
       },
       {
@@ -721,11 +602,18 @@ const EmployeeWise = ({
         sticky: true,
         isFilter: false,
         render(value, row) {
+          const statusLabel = getAttendanceTrackingStatusLabel(value);
           return (
             <Label
-              color={value === 'Present' ? 'success' : value === 'Absent' ? 'error' : 'warning'}
+              color={
+                statusLabel === 'Present'
+                  ? 'success'
+                  : statusLabel === 'Absent'
+                    ? 'error'
+                    : 'warning'
+              }
             >
-              {value}
+              {statusLabel}
             </Label>
           );
         },
@@ -845,7 +733,7 @@ const EmployeeWise = ({
             // setDate(value);
           }}
           onAccept={(value) => {
-            setSearchParams('startDate', value?.format('DD/MM/YYYY') || '');
+            setSearchParams('startDate', value?.format('DD-MM-YYYY') || '');
           }}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
@@ -867,7 +755,7 @@ const EmployeeWise = ({
             // setDate(value);
           }}
           onAccept={(value) => {
-            setSearchParams('endDate', value?.format('DD/MM/YYYY') || '');
+            setSearchParams('endDate', value?.format('DD-MM-YYYY') || '');
           }}
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
@@ -921,7 +809,7 @@ const EmployeeWise = ({
           tableId="employee-wise-attendance-table"
           isLoading={attendanceLoading}
           columns={columns}
-          data={attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []}
+          data={attendanceData?.items || []}
         />
       )}
       {sendInstantNotificationDialogValue.value && (
