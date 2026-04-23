@@ -1137,14 +1137,15 @@ const ResultForm = ({
    */
   const formik = useFormik({
     initialValues: {
-      obtainedMarks: editData?.marksObtained ?? null,
+      obtainedMarks: editData?.obtainedMarks ?? null,
       totalMarks: editData?.totalMarks,
       status: editData?.status,
-      passingMarks: editData?.passingMark,
+      passingMarks: editData?.passingMarks,
     },
     validateOnChange: true,
     validationSchema: Yup.object({
       obtainedMarks: Yup.number()
+        .max(999, 'Maximum allowed value is 999')
         .test(
           'is-less-than-total',
           'Obtained Marks must be less than total marks',
@@ -1155,6 +1156,7 @@ const ResultForm = ({
         )
         .required('Obtained Marks is required'),
       passingMarks: Yup.number()
+        .max(999, 'Maximum allowed value is 999')
         .test(
           'is-less-than-total',
           'Passing Marks must be less than total marks',
@@ -1164,7 +1166,9 @@ const ResultForm = ({
           }
         )
         .required('Passing Marks is required'),
-      totalMarks: Yup.number().required('Total Marks is required'),
+      totalMarks: Yup.number()
+        .max(999, 'Maximum allowed value is 999')
+        .required('Total Marks is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -1210,7 +1214,11 @@ const ResultForm = ({
                 type="number"
                 name="totalMarks"
                 value={formik.values.totalMarks}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  if (e.target.value.length <= 3) {
+                    formik.handleChange(e);
+                  }
+                }}
                 error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
                 helperText={(formik.touched.totalMarks && formik.errors.totalMarks) as string}
               />
@@ -1225,7 +1233,11 @@ const ResultForm = ({
                 name="passingMarks"
                 type="number"
                 value={formik.values.passingMarks}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  if (e.target.value.length <= 3) {
+                    formik.handleChange(e);
+                  }
+                }}
                 error={formik.touched.passingMarks && Boolean(formik.errors.passingMarks)}
                 helperText={(formik.touched.passingMarks && formik.errors.passingMarks) as string}
               />
@@ -1240,7 +1252,11 @@ const ResultForm = ({
                 type="number"
                 name="obtainedMarks"
                 value={formik.values.obtainedMarks}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  if (e.target.value.length <= 3) {
+                    formik.handleChange(e);
+                  }
+                }}
                 error={formik.touched.obtainedMarks && Boolean(formik.errors.obtainedMarks)}
                 helperText={(formik.touched.obtainedMarks && formik.errors.obtainedMarks) as string}
               />

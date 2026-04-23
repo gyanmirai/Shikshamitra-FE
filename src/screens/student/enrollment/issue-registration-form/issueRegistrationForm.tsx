@@ -71,7 +71,9 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
           } catch (error: any) {
             console.error('Error:', error);
             const errorData = error?.data?.errors || error?.data?.error;
-            if (errorData) {
+            if (error?.data?.errorCode) {
+              shikshaMitraToast.error({ message: error.data.errorCode });
+            } else if (errorData) {
               if (typeof errorData === 'object' && !Array.isArray(errorData)) {
                 const errorMessages = Object.values(errorData).flat().join(', ');
                 shikshaMitraToast.error({ message: errorMessages });
@@ -79,7 +81,9 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                 shikshaMitraToast.error({ message: errorData });
               }
             } else {
-              shikshaMitraToast.error({ message: error?.data?.message || 'Something went wrong' });
+              shikshaMitraToast.error({
+                message: error?.data?.message || error?.data?.detail || 'Something went wrong',
+              });
             }
           }
         }}

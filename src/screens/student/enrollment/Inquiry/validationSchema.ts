@@ -80,6 +80,7 @@ export const inquiryValidationSchema = Yup.object().shape({
   inquiryPreferences: Yup.string(),
   pinCode: Yup.string()
     .nullable()
+    .required('Pin code is required')
     .test('pincode-length', 'PIN code must be exactly 6 digits', (value) =>
       value ? /^\d{6}$/.test(value) : true
     )

@@ -204,7 +204,7 @@ export const AddressDetails = ({ formik, loading }: AddressDetailsProps) => {
                 }
               }}
               size="small"
-              label="PIN Code"
+              label="PIN Code *"
               inputProps={{ maxLength: 6, min: 0 }}
             />
           </ShakingTextField>
