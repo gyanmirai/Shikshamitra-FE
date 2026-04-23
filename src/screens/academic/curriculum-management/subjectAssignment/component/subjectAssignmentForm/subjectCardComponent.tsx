@@ -1,27 +1,19 @@
 import { getIn } from 'formik';
+import { useState } from 'react';
 import { Editor } from 'src/components/editor';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { fileData } from 'src/components/file-thumbnail';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { SingleFilePreview } from 'src/components/upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   Box,
   Grid,
   Chip,
-  Avatar,
-  Checkbox,
   Accordion,
   TextField,
   Typography,
@@ -30,98 +22,40 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
-import type { TeacherProfile, ISubjectCardProps } from '../type';
+import TeacherSelectionFields from './TeacherSelectionFields';
+import { useTeacherSelection } from './hooks/useTeacherSelection';
 
-type EmployeeOption = { id: string; label: string };
+import type { ISubjectCardProps } from '../type';
 
 const SubjectCard: React.FC<ISubjectCardProps> = ({
   formik,
   subject,
-  isCore,
   isPublished,
-  // teacherOptions,
   onSubjectChange,
   index,
   onFileUpload,
-}: ISubjectCardProps) => {
-  // const theme = useTheme();
-  const [getEmployees] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetEmployeeQuery,
+}) => {
+  const {
+    primaryTeacherObj,
+    setPrimaryTeacherObj,
+    secondaryTeacherObjs,
+    setSecondaryTeacherObjs,
+    fetchPrimaryTeacherOptions,
+    fetchSecondaryTeacherOptions,
+  } = useTeacherSelection({
+    primaryTeacherId: subject.primaryTeacher,
+    secondaryTeacherIds: subject.secondaryTeacher,
   });
 
-  const [primaryTeacherObj, setPrimaryTeacherObj] = useState<EmployeeOption | null>(null);
-  const [secondaryTeacherObjs, setSecondaryTeacherObjs] = useState<EmployeeOption[]>([]);
-
-  // One-time initialization: populate display values from existing IDs (edit mode)
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    if (subject.primaryTeacher) {
-      getEmployees(subject.primaryTeacher)
-        .unwrap()
-        .then((data: any) => setPrimaryTeacherObj({ id: data.id, label: data.fullName }))
-        .catch(() => {});
-    }
-
-    if (subject.secondaryTeacher?.length) {
-      Promise.all(
-        subject.secondaryTeacher.map((id: string) =>
-          getEmployees(id)
-            .unwrap()
-            .then((data: any) => ({ id: data.id, label: data.fullName }))
-            .catch(() => null)
-        )
-      ).then((results) => {
-        setSecondaryTeacherObjs(results.filter(Boolean) as EmployeeOption[]);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchPrimaryTeacherOptions = useCallback(
-    async (query: string) => {
-      const res = await getEmployees({ search: query }).unwrap();
-      return {
-        data: (res?.items ?? [])
-          .filter((item: any) => item.roleName === 'Teacher')
-          .map((item: any) => ({ id: item.id, label: item.fullName })),
-        hasMore: false,
-      };
-    },
-    [getEmployees]
-  );
-
-  const fetchSecondaryTeacherOptions = useCallback(
-    async (query: string) => {
-      const res = await getEmployees({ search: query }).unwrap();
-      return {
-        data: (res?.items ?? [])
-          .filter((item: any) => item.roleName === 'Teacher')
-          .map((item: any) => ({ id: item.id, label: item.fullName })),
-        hasMore: false,
-      };
-    },
-    [getEmployees]
-  );
-
-  // State to control accordion expansion, initialized once from subject's isSubjectOpen
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
 
-  // @param field - The field name to update
-  // @param value - The new value to set
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: unknown) => {
     if (!subject?.subjectNo) return;
-    onSubjectChange(subject?.subjectNo, field, value);
+    onSubjectChange(subject.subjectNo, field, value);
   };
 
-  // Get validation error for a specific field
-  // @param field - The field name to check for errors
-  // @returns The error message if field is touched and has error, otherwise undefined
   const getError = (field: string) =>
     getIn(formik.touched, `subjects[${index}].${field}`) &&
     getIn(formik.errors, `subjects[${index}].${field}`);
@@ -197,7 +131,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
 
         <AccordionDetails sx={{ p: 3, bgcolor: 'background.paper' }}>
           <Grid container spacing={3}>
-            {/* Standard Detail Row */}
             <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={!!getError('subjectCode')}>
                 <TextField
@@ -212,7 +145,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       .replace(/[^A-Z0-9\-_]/g, '');
                     formik.setFieldValue(`subjects.${index}.subjectCode`, uppercaseValue);
                   }}
-                  disabled={isPublished}
                   error={!!getError('subjectCode')}
                   helperText={getError('subjectCode')}
                 />
@@ -220,119 +152,33 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <PaginatedSearchSelect
-                label="Primary Teacher"
-                fetchOptions={fetchPrimaryTeacherOptions}
-                value={primaryTeacherObj}
-                onChange={(_, newValue: any) => {
+              <TeacherSelectionFields
+                index={index ?? 0}
+                primaryTeacherObj={primaryTeacherObj}
+                secondaryTeacherObjs={secondaryTeacherObjs}
+                secondaryTeacherIds={subject.secondaryTeacher}
+                primaryTeacherId={subject.primaryTeacher}
+                fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
+                fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
+                onPrimaryChange={(newValue) => {
                   setPrimaryTeacherObj(newValue);
                   formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
                   formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
                   formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
                 }}
-                getOptionLabel={(option: any) => option?.label || ''}
-                isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-                filterOptions={(options: any[]) =>
-                  options.filter((o) => !subject.secondaryTeacher?.includes(o.id))
-                }
-                renderOption={(props: any, option: any) => {
-                  const { key, ...rest } = props;
-                  return (
-                    <Box component="li" key={key} {...rest} sx={{ display: 'flex', gap: 1 }}>
-                      <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                        {option.label?.[0]}
-                      </Avatar>
-                      {option.label}
-                    </Box>
-                  );
-                }}
-                debounceMs={400}
-                minChars={0}
-                size="small"
-                fullWidth
-                disabled={isPublished}
-                error={!!getError('primaryTeacher')}
-                helperText={getError('primaryTeacher')}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 4 }}>
-              <PaginatedSearchSelect
-                label="Secondary Teachers"
-                multiple
-                disableCloseOnSelect
-                fetchOptions={fetchSecondaryTeacherOptions}
-                value={secondaryTeacherObjs}
-                onChange={(_, newValues: any) => {
+                onSecondaryChange={(newValues) => {
                   setSecondaryTeacherObjs(newValues);
                   formik.setFieldValue(
                     `subjects.${index}.secondaryTeacher`,
-                    newValues.map((item: any) => item.id)
+                    newValues.map((item) => item.id)
                   );
                   formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
                   formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
                 }}
-                getOptionLabel={(option: any) => option?.label || ''}
-                isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
-                filterOptions={(options: any[]) =>
-                  options.filter((o) => o.id !== subject.primaryTeacher)
-                }
-                renderOption={(props: any, option: any, { selected }: any) => {
-                  const { key, ...rest } = props;
-                  return (
-                    <li key={key} {...rest}>
-                      <Checkbox
-                        icon={<CheckBoxOutlineBlankIcon />}
-                        checkedIcon={<CheckBoxIcon />}
-                        checked={selected}
-                        sx={{ mr: 1 }}
-                      />
-                      <Avatar sx={{ width: 24, height: 24, fontSize: 12, mr: 1 }}>
-                        {option.label?.[0]}
-                      </Avatar>
-                      {option.label}
-                    </li>
-                  );
-                }}
-                renderTags={(values: any) => {
-                  if (!values || values.length === 0) return null;
-                  const first = values[0];
-                  const remaining = values.length - 1;
-                  return [
-                    <Chip
-                      key={first?.id}
-                      avatar={<Avatar>{first?.label?.[0]}</Avatar>}
-                      label={first?.label}
-                      size="small"
-                      variant="soft"
-                      sx={{ ml: 1 }}
-                    />,
-                    remaining > 0 && (
-                      <TeacherListPopover
-                        key="popover"
-                        teachers={values
-                          .slice(1)
-                          .map((v: any) => ({ id: v.id, fullName: v.label }))}
-                        count={remaining}
-                      />
-                    ),
-                  ];
-                }}
-                debounceMs={400}
-                minChars={0}
-                size="small"
-                fullWidth
-                placeholder={subject.secondaryTeacher?.length ? '' : 'Select assist teachers'}
-                error={!!getError('secondaryTeacher')}
-                helperText={
-                  Array.isArray(getError('secondaryTeacher'))
-                    ? getError('secondaryTeacher').join(', ')
-                    : getError('secondaryTeacher')
-                }
+                getError={getError}
               />
             </Grid>
 
-            {/* Content Sections */}
             {[
               { label: 'Learning Goals', field: 'learningGoal' },
               { label: 'Prerequisites', field: 'prerequisites' },
@@ -347,7 +193,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 <ShakingTextField error={!!getError(section.field)}>
                   <Editor
                     onChange={(value) => handleChange(section.field, value)}
-                    value={(subject as any)[section.field] || ''}
+                    value={
+                      ((subject as unknown as Record<string, unknown>)[section.field] as string) ||
+                      ''
+                    }
                     placeholder={`Enter ${section.label.toLowerCase()}...`}
                     error={!!getError(section.field)}
                     sx={{
@@ -356,13 +205,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         `1px solid ${
                           getError(section.field) ? theme.palette.error.main : theme.palette.divider
                         }`,
-                      '&:hover': {
-                        borderColor: 'text.secondary',
-                      },
-                      '&:focus-within': {
-                        borderColor: 'primary.main',
-                        borderWidth: 2,
-                      },
+                      '&:hover': { borderColor: 'text.secondary' },
+                      '&:focus-within': { borderColor: 'primary.main', borderWidth: 2 },
                       maxHeight: 250,
                       overflow: 'hidden',
                     }}
@@ -376,14 +220,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </Grid>
             ))}
 
-            {/* Upload Document */}
             <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
               <CustomUpload
                 multiple
                 previewCount={6}
-                onChange={(files) => {
-                  onFileUpload(files, index);
-                }}
+                onChange={(files) => onFileUpload(files, index)}
                 value={subject.documents}
                 label="Attach Support Documents"
                 outputFormat="file"
@@ -392,6 +233,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           </Grid>
         </AccordionDetails>
       </Accordion>
+
       <CustomDialog
         open={previewDialog.value}
         handleClose={() => {
@@ -410,39 +252,3 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
 };
 
 export default SubjectCard;
-
-// TeacherListPopover Component
-export const TeacherListPopover = ({
-  teachers,
-  count,
-}: {
-  teachers: TeacherProfile[];
-  count: number;
-}) => (
-  <CustomTooltip
-    sx={{ textAlign: 'justify' }}
-    title={
-      <Box sx={{ p: 1, maxWidth: 180, borderRadius: 1 }}>
-        {teachers.map((teacher) => (
-          <Chip
-            key={teacher.fullName}
-            variant="soft"
-            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher?.fullName?.charAt(0)}</Avatar>}
-            label={teacher.fullName}
-            sx={{ ml: 0.5, height: 24, fontSize: 12, mb: 1 }}
-            size="small"
-          />
-        ))}
-      </Box>
-    }
-    placement="bottom-start"
-    arrow
-  >
-    <Chip
-      label={`+${count}`}
-      sx={{ ml: 0.5, height: 24, fontSize: 12, cursor: 'pointer' }}
-      size="small"
-      variant="soft"
-    />
-  </CustomTooltip>
-);

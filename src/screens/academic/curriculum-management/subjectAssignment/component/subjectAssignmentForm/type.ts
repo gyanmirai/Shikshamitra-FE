@@ -29,6 +29,7 @@ export interface ISubjectAssignmentFormValues {
   className?: string;
   subjectName?: string; // For the autocomplete display
   subjectType?: number; // For the top-level toggle/chips
+  selectedSubjects?: any[]; // For the autocomplete selected values
 }
 
 export interface ISubjectAssignmentFormProps {
@@ -37,6 +38,7 @@ export interface ISubjectAssignmentFormProps {
   isEdit?: boolean;
   selectedClass: string;
   classId: string;
+  subjectTableData: any[];
 }
 
 // export interface ISubjectCardProps {

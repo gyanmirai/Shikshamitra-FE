@@ -1,5 +1,6 @@
 import * as Yup from 'yup';
-import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
+
+import { SubjectType, SubjectAssignmentStatus } from '../../enum/subjectType';
 
 import type { ISubjectAssignmentSubject, ISubjectAssignmentFormValues } from './type';
 
@@ -18,6 +19,10 @@ export const validationSchema = Yup.object().shape({
       })
     )
     .min(1, 'At least one subject is required'),
+
+  selectedSubjects: Yup.array()
+    .min(1, 'At least one subject is required')
+    .required('Subjects are required'),
 });
 
 export const getSubjectAssignmentInitialValues = (
@@ -25,21 +30,19 @@ export const getSubjectAssignmentInitialValues = (
   selectedClass: string,
   classId: string
 ): ISubjectAssignmentFormValues => {
-  if (!data) {
+  if (Object.keys(data).length === 0) {
     return {
       classId,
       className: selectedClass,
-      status: PublishUnpublishStatusType.Draft,
+      status: SubjectAssignmentStatus.Draft,
       subjects: [],
       subjectType: 0,
+      selectedSubjects: [],
     };
   }
-
+  const overallSubjectType = data.subjects?.some((s: any) => s.subjectType === 1) ? 1 : 0;
   const flattenedSubjects: ISubjectAssignmentSubject[] = [];
   const subjectNames: string[] = [];
-
-  const overallSubjectType = data.subjects?.some((s: any) => s.subjectType === 1) ? 1 : 0;
-
   data.subjects?.forEach((item: any, index: number) => {
     subjectNames.push(item.subjectName);
 
@@ -61,12 +64,17 @@ export const getSubjectAssignmentInitialValues = (
     });
   });
 
+  const preSelectedOptions =
+    data?.subjectType === SubjectType.Elective
+      ? [{ label: data.electiveGroupName, value: data.electiveGroupId }]
+      : [{ label: data.subjects?.[0]?.subjectName, value: data.subjects?.[0]?.subjectId }];
+
   return {
-    classId: data.classId || classId,
+    classId,
     className: selectedClass,
-    status: data.status ?? PublishUnpublishStatusType.Draft,
+    status: data.status ?? SubjectAssignmentStatus.Draft,
+    subjects: flattenedSubjects || [],
     subjectType: overallSubjectType,
-    subjectName: subjectNames.join(', '),
-    subjects: flattenedSubjects,
+    selectedSubjects: preSelectedOptions,
   };
 };
