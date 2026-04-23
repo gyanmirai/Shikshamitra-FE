@@ -568,16 +568,43 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                             max={5}
                             step={1}
                             track="inverted"
-                            onChange={(_, newValue) =>
+                            onChange={(_, newValue) => {
                               formik.setFieldValue(
                                 `slotConfigurations[${configIndex}].weekRange`,
                                 newValue
-                              )
-                            }
+                              );
+                              formik.setFieldTouched(
+                                `slotConfigurations[${configIndex}].weekRange`,
+                                true,
+                                false
+                              );
+                            }}
                             valueLabelDisplay="off"
                             disableSwap
                             disabled={disabled}
                           />
+                          {(() => {
+                            if (
+                              !formik.submitCount &&
+                              !(formik.touched.slotConfigurations as any)?.[configIndex]?.weekRange
+                            )
+                              return null;
+                            const configErrors = formik.errors.slotConfigurations;
+                            if (!Array.isArray(configErrors)) return null;
+                            const configErr = configErrors[configIndex];
+                            if (!configErr || typeof configErr !== 'object') return null;
+                            const weekRangeErr = (configErr as any).weekRange;
+                            if (!weekRangeErr || typeof weekRangeErr !== 'string') return null;
+                            return (
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ mt: 0.5, display: 'block' }}
+                              >
+                                {weekRangeErr}
+                              </Typography>
+                            );
+                          })()}
                         </Box>
                       </Box>
                     </Grid>
@@ -656,6 +683,34 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                         <Typography variant="subtitle2" color="primary.main" gutterBottom>
                           Slot Times
                         </Typography>
+                        {/* Summary of per-slot time errors */}
+                        {(() => {
+                          if (!formik.submitCount) return null;
+                          const configErrors = formik.errors.slotConfigurations;
+                          if (!Array.isArray(configErrors)) return null;
+                          const configErr = configErrors[configIndex];
+                          if (!configErr || typeof configErr !== 'object') return null;
+                          const tsErrors = (configErr as any).timeSlots;
+                          if (!Array.isArray(tsErrors)) return null;
+                          const messages: string[] = [];
+                          tsErrors.forEach((slotErr: any, idx: number) => {
+                            if (!slotErr || typeof slotErr !== 'object') return;
+                            if (slotErr.startTime)
+                              messages.push(`Slot ${idx + 1}: ${slotErr.startTime}`);
+                            if (slotErr.endTime)
+                              messages.push(`Slot ${idx + 1}: ${slotErr.endTime}`);
+                          });
+                          if (messages.length === 0) return null;
+                          return (
+                            <Box sx={{ mb: 1 }}>
+                              {messages.map((msg, i) => (
+                                <Typography key={i} variant="caption" color="error" display="block">
+                                  {msg}
+                                </Typography>
+                              ))}
+                            </Box>
+                          );
+                        })()}
                         <Box sx={{ overflowX: 'auto', width: '100%' }}>
                           <CustomizableTable
                             tableContainerProps={{
@@ -664,7 +719,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                             tableId={`time-schedule-${String(config.id)}`}
                             isSearch={false}
                             isFilter={false}
-                            isPagination
+                            isPagination={false}
                             columns={[
                               {
                                 id: 'startTime',
@@ -674,35 +729,51 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                                   const rowIndex = config.timeSlots.findIndex(
                                     (s) => s.id === row.id
                                   );
+                                  const startTimeErr = (() => {
+                                    const configErrors = formik.errors.slotConfigurations;
+                                    if (!Array.isArray(configErrors)) return undefined;
+                                    const configErr = configErrors[configIndex];
+                                    if (!configErr || typeof configErr !== 'object')
+                                      return undefined;
+                                    const tsErrors = (configErr as any).timeSlots;
+                                    if (!Array.isArray(tsErrors)) return undefined;
+                                    const slotErr = tsErrors[rowIndex];
+                                    if (!slotErr || typeof slotErr !== 'object') return undefined;
+                                    return (slotErr as any).startTime as string | undefined;
+                                  })();
                                   return (
-                                    <TimePicker
-                                      value={dayjs(value) || null}
-                                      format="hh:mm a"
-                                      views={['hours', 'minutes']}
-                                      disabled={disabled && !isEdit}
-                                      ampm
-                                      onChange={(newTime) => {
-                                        const updated = [...config.timeSlots];
-                                        updated[rowIndex].startTime = newTime?.isValid?.()
-                                          ? dayjs(newTime)
-                                          : null;
-                                        formik.setFieldValue(
-                                          `slotConfigurations[${configIndex}].timeSlots`,
-                                          updated
-                                        );
-                                      }}
-                                      slotProps={{
-                                        textField: {
-                                          size: 'small',
-                                          sx: { width: '135px', mb: 1 },
-                                        },
-                                      }}
-                                      viewRenderers={{
-                                        hours: renderTimeViewClock,
-                                        minutes: renderTimeViewClock,
-                                        seconds: renderTimeViewClock,
-                                      }}
-                                    />
+                                    <Box>
+                                      <TimePicker
+                                        value={dayjs(value) || null}
+                                        format="hh:mm a"
+                                        views={['hours', 'minutes']}
+                                        disabled={disabled && !isEdit}
+                                        ampm
+                                        onChange={(newTime) => {
+                                          const updated = [...config.timeSlots];
+                                          updated[rowIndex].startTime = newTime?.isValid?.()
+                                            ? dayjs(newTime)
+                                            : null;
+                                          formik.setFieldValue(
+                                            `slotConfigurations[${configIndex}].timeSlots`,
+                                            updated
+                                          );
+                                        }}
+                                        slotProps={{
+                                          textField: {
+                                            size: 'small',
+                                            sx: { width: '135px' },
+                                            error: !!startTimeErr,
+                                            helperText: startTimeErr,
+                                          },
+                                        }}
+                                        viewRenderers={{
+                                          hours: renderTimeViewClock,
+                                          minutes: renderTimeViewClock,
+                                          seconds: renderTimeViewClock,
+                                        }}
+                                      />
+                                    </Box>
                                   );
                                 },
                               },
@@ -715,35 +786,51 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                                     (s) => s.id === row.id
                                   );
                                   const isLast = rowIndex === config.timeSlots.length - 1;
+                                  const endTimeErr = (() => {
+                                    const configErrors = formik.errors.slotConfigurations;
+                                    if (!Array.isArray(configErrors)) return undefined;
+                                    const configErr = configErrors[configIndex];
+                                    if (!configErr || typeof configErr !== 'object')
+                                      return undefined;
+                                    const tsErrors = (configErr as any).timeSlots;
+                                    if (!Array.isArray(tsErrors)) return undefined;
+                                    const slotErr = tsErrors[rowIndex];
+                                    if (!slotErr || typeof slotErr !== 'object') return undefined;
+                                    return (slotErr as any).endTime as string | undefined;
+                                  })();
                                   return (
-                                    <TimePicker
-                                      value={dayjs(value) || null}
-                                      disabled={(disabled && !isEdit) || isLast}
-                                      format="hh:mm a"
-                                      views={['hours', 'minutes']}
-                                      ampm
-                                      onChange={(newTime) => {
-                                        const updated = [...config.timeSlots];
-                                        updated[rowIndex].endTime = newTime?.isValid?.()
-                                          ? dayjs(newTime)
-                                          : null;
-                                        formik.setFieldValue(
-                                          `slotConfigurations[${configIndex}].timeSlots`,
-                                          updated
-                                        );
-                                      }}
-                                      slotProps={{
-                                        textField: {
-                                          size: 'small',
-                                          sx: { width: '140px', mb: 1 },
-                                        },
-                                      }}
-                                      viewRenderers={{
-                                        hours: renderTimeViewClock,
-                                        minutes: renderTimeViewClock,
-                                        seconds: renderTimeViewClock,
-                                      }}
-                                    />
+                                    <Box>
+                                      <TimePicker
+                                        value={dayjs(value) || null}
+                                        disabled={(disabled && !isEdit) || isLast}
+                                        format="hh:mm a"
+                                        views={['hours', 'minutes']}
+                                        ampm
+                                        onChange={(newTime) => {
+                                          const updated = [...config.timeSlots];
+                                          updated[rowIndex].endTime = newTime?.isValid?.()
+                                            ? dayjs(newTime)
+                                            : null;
+                                          formik.setFieldValue(
+                                            `slotConfigurations[${configIndex}].timeSlots`,
+                                            updated
+                                          );
+                                        }}
+                                        slotProps={{
+                                          textField: {
+                                            size: 'small',
+                                            sx: { width: '140px' },
+                                            error: !!endTimeErr,
+                                            helperText: endTimeErr,
+                                          },
+                                        }}
+                                        viewRenderers={{
+                                          hours: renderTimeViewClock,
+                                          minutes: renderTimeViewClock,
+                                          seconds: renderTimeViewClock,
+                                        }}
+                                      />
+                                    </Box>
                                   );
                                 },
                               },

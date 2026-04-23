@@ -76,17 +76,6 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
               return !Number.isNaN(num) && num >= 1 && num <= 20;
             })
             .test(
-              'matches-time-slots',
-              'Total slots must match the number of time slots created',
-              // eslint-disable-next-line func-names
-              function (value) {
-                const { timeSlots } = this.parent;
-                if (!value || !timeSlots) return true;
-                const num = parseInt(value, 10);
-                return num === timeSlots.length;
-              }
-            )
-            .test(
               'realistic-duration',
               'Too many slots for the school hours duration',
               // eslint-disable-next-line func-names

@@ -9,12 +9,13 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { SingleFilePreview } from 'src/components/upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import {
   Box,
   Grid,
@@ -44,9 +45,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onFileUpload,
 }: ISubjectCardProps) => {
   // const theme = useTheme();
-  const [getPrimaryTeacherOptions] = useLazyGetEmployeeQuery();
-  const [getSecondaryTeacherOptions] = useLazyGetEmployeeQuery();
-  const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
+  const [getEmployees] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLazyGetEmployeeQuery,
+  });
 
   const [primaryTeacherObj, setPrimaryTeacherObj] = useState<EmployeeOption | null>(null);
   const [secondaryTeacherObjs, setSecondaryTeacherObjs] = useState<EmployeeOption[]>([]);
@@ -58,7 +60,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     initializedRef.current = true;
 
     if (subject.primaryTeacher) {
-      getEmployeeById(subject.primaryTeacher)
+      getEmployees(subject.primaryTeacher)
         .unwrap()
         .then((data: any) => setPrimaryTeacherObj({ id: data.id, label: data.fullName }))
         .catch(() => {});
@@ -67,7 +69,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     if (subject.secondaryTeacher?.length) {
       Promise.all(
         subject.secondaryTeacher.map((id: string) =>
-          getEmployeeById(id)
+          getEmployees(id)
             .unwrap()
             .then((data: any) => ({ id: data.id, label: data.fullName }))
             .catch(() => null)
@@ -81,24 +83,28 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
 
   const fetchPrimaryTeacherOptions = useCallback(
     async (query: string) => {
-      const res = await getPrimaryTeacherOptions({ search: query }).unwrap();
+      const res = await getEmployees({ search: query }).unwrap();
       return {
-        data: (res?.items ?? []).map((item: any) => ({ id: item.id, label: item.fullName })),
+        data: (res?.items ?? [])
+          .filter((item: any) => item.roleName === 'Teacher')
+          .map((item: any) => ({ id: item.id, label: item.fullName })),
         hasMore: false,
       };
     },
-    [getPrimaryTeacherOptions]
+    [getEmployees]
   );
 
   const fetchSecondaryTeacherOptions = useCallback(
     async (query: string) => {
-      const res = await getSecondaryTeacherOptions({ search: query }).unwrap();
+      const res = await getEmployees({ search: query }).unwrap();
       return {
-        data: (res?.items ?? []).map((item: any) => ({ id: item.id, label: item.fullName })),
+        data: (res?.items ?? [])
+          .filter((item: any) => item.roleName === 'Teacher')
+          .map((item: any) => ({ id: item.id, label: item.fullName })),
         hasMore: false,
       };
     },
-    [getSecondaryTeacherOptions]
+    [getEmployees]
   );
 
   // State to control accordion expansion, initialized once from subject's isSubjectOpen
@@ -196,7 +202,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <ShakingTextField error={!!getError('subjectCode')}>
                 <TextField
                   fullWidth
-                  label="Subject Code"
+                  label="Subject Code *"
                   placeholder="e.g. MATH-101"
                   size="small"
                   value={subject.subjectCode || ''}
@@ -221,6 +227,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 onChange={(_, newValue: any) => {
                   setPrimaryTeacherObj(newValue);
                   formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
+                  formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
+                  formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
                 }}
                 getOptionLabel={(option: any) => option?.label || ''}
                 isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
@@ -261,6 +269,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     `subjects.${index}.secondaryTeacher`,
                     newValues.map((item: any) => item.id)
                   );
+                  formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
+                  formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
                 }}
                 getOptionLabel={(option: any) => option?.label || ''}
                 isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
