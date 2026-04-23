@@ -5,7 +5,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Tab, Tabs, Grid, Card } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Tab, Tabs, Grid, Card, Skeleton, CardContent } from '@mui/material';
