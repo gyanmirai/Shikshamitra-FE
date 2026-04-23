@@ -95,7 +95,7 @@ const SubjectAssignmentForm = ({
   const formik = useFormik<ISubjectAssignmentFormValues>({
     initialValues: getSubjectAssignmentInitialValues(assignmentDetail, selectedClass, classId),
     validationSchema,
-    enableReinitialize: true,
+    enableReinitialize: isInitializing,
     // Handle form submission
     onSubmit: async (values, formikHelpers) => {
       try {
@@ -217,7 +217,7 @@ const SubjectAssignmentForm = ({
           prerequisites: '',
           subjectColor: option.color || '#4169E1',
           documents: [],
-          subjectNo: Date.now() + Math.random(),
+          subjectNo: option.value,
         };
         allSubjects.push(newSubject);
       } else if (option.type === 1) {
@@ -236,7 +236,7 @@ const SubjectAssignmentForm = ({
           prerequisites: '',
           subjectColor: subject.color || '#FFA726',
           documents: [],
-          subjectNo: Date.now() + Math.random(),
+          subjectNo: subject.id,
         }));
         allSubjects.push(...electives);
       }

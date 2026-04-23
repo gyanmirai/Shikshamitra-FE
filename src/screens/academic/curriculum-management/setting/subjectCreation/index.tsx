@@ -168,7 +168,7 @@ const SubjectCreation = () => {
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     subjectsApi.util.updateQueryData(
-                      'getSubjects',
+                      'getCoreSubjectsByMedium',
                       { academicMediumId: (currentMedium as any).id },
                       (draft: any) => {
                         const index = draft.findIndex(
@@ -182,7 +182,7 @@ const SubjectCreation = () => {
                 onUndoRestore: (dispatchFn, index) =>
                   dispatchFn(
                     subjectsApi.util.updateQueryData(
-                      'getSubjects',
+                      'getCoreSubjectsByMedium',
                       { academicMediumId: (currentMedium as any).id },
                       (draft: any) => {
                         if (!draft) return;

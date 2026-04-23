@@ -35,7 +35,7 @@ export const chaptersApi = academicApi.injectEndpoints({
     // PUT - Update chapter
     updateChapter: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/chapters/${id}`,
+        url: `/academic/curriculum/chapters/${id}`,
         method: 'PUT',
         body,
       }),

@@ -235,7 +235,12 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm onSubmit={handleSubmit} onClose={handleClose} data={selectedGrade} />{' '}
+        <GradeForm
+          onSubmit={handleSubmit}
+          onClose={handleClose}
+          data={selectedGrade}
+          viewOnly
+        />{' '}
       </CustomDialog>
 
       <ConfirmDialog

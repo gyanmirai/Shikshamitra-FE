@@ -26,7 +26,7 @@ import { validationSchema } from './validationSchema';
 
 import type { IGrade, IGradingScale, IGradeFormProps } from './type';
 
-const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data }) => {
+const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, viewOnly = false }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [addGradeScaling, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -175,6 +175,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data }) => {
                         type="number"
                         name={`gradingScale.${index}.minMarks`}
                         size="small"
+                        disabled={viewOnly}
                         value={formik.values.gradingScale[index].minMarks}
                         onChange={formik.handleChange}
                         onKeyDown={(e) => {
@@ -224,6 +225,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data }) => {
                         type="number"
                         name={`gradingScale.${index}.maxMarks`}
                         size="small"
+                        disabled={viewOnly}
                         value={formik.values.gradingScale[index].maxMarks}
                         onChange={formik.handleChange}
                         onKeyDown={(e) => {
@@ -284,6 +286,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data }) => {
                         name={`gradingScale.${index}.grade`}
                         size="small"
                         value={formik.values.gradingScale[index].grade}
+                        disabled={viewOnly}
                         onChange={(val) => formik.setFieldValue(`gradingScale.${index}.grade`, val)}
                         error={
                           !!(
@@ -310,24 +313,26 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data }) => {
                     </ShakingTextField>
                   </Grid>
 
-                  <Grid size={{ xs: 12, md: 0.6 }}>
-                    <IconButton
-                      onClick={() => {
-                        const updatedGradingScale = [...formik.values.gradingScale];
-                        updatedGradingScale.splice(index, 1);
-                        formik.setFieldValue('gradingScale', updatedGradingScale);
-                      }}
-                      sx={{ mt: 0.5, color: 'error.main', width: '30px', height: '30px' }}
-                    >
-                      <Iconify icon={GlobalIcons.delete} sx={{ width: '18px', height: '18px' }} />
-                    </IconButton>
-                  </Grid>
+                  {!viewOnly && (
+                    <Grid size={{ xs: 12, md: 0.6 }}>
+                      <IconButton
+                        onClick={() => {
+                          const updatedGradingScale = [...formik.values.gradingScale];
+                          updatedGradingScale.splice(index, 1);
+                          formik.setFieldValue('gradingScale', updatedGradingScale);
+                        }}
+                        sx={{ mt: 0.5, color: 'error.main', width: '30px', height: '30px' }}
+                      >
+                        <Iconify icon={GlobalIcons.delete} sx={{ width: '18px', height: '18px' }} />
+                      </IconButton>
+                    </Grid>
+                  )}
                 </Grid>
               ))}
             </Grid>
           </Grid>
         </Scrollbar>
-        {!data && (
+        {!viewOnly && (
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
