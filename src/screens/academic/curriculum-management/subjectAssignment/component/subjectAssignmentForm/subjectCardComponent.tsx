@@ -163,6 +163,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 onPrimaryChange={(newValue) => {
                   setPrimaryTeacherObj(newValue);
                   formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
+                  formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
+                  formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
                 }}
                 onSecondaryChange={(newValues) => {
                   setSecondaryTeacherObjs(newValues);
@@ -170,6 +172,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     `subjects.${index}.secondaryTeacher`,
                     newValues.map((item) => item.id)
                   );
+                  formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
+                  formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
                 }}
                 getError={getError}
               />

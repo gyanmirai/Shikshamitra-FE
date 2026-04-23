@@ -1,8 +1,15 @@
+import type { AttendanceImportBatchStatus } from 'src/enums/attendance-import-batch-statusType';
+
 import { employeeType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
+export enum AttendanceImportRunSource {
+  FileUpload = 0,
+  Integration = 1,
+  Internal = 2,
+}
 
 export interface AttendanceImportItem {
   id: string;
@@ -10,7 +17,7 @@ export interface AttendanceImportItem {
   importedByUserId: string;
   importedByName: string;
   importedAt: string;
-  status: string;
+  status: AttendanceImportBatchStatus;
   payrollMonth: string;
   totalRows: number;
   validRows: number;
@@ -21,7 +28,7 @@ export interface AttendanceImportItem {
   createdCount: number;
   replacedCount: number;
   canOpen: boolean;
-  runSource: string;
+  runSource: AttendanceImportRunSource;
   externalCorrelationId: string;
   integrationProvider: string;
   isBatchLocked: boolean;
@@ -106,6 +113,22 @@ export const attendanceImportApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.attendanceImport],
     }),
+
+    lockAttendanceImportBatch: builder.mutation<void, { batchId: string }>({
+      query: ({ batchId }) => ({
+        url: `/hr/attendance/automated-runs/${batchId}/lock`,
+        method: 'POST',
+      }),
+      invalidatesTags: [employeeType.attendanceImport],
+    }),
+
+    unlockAttendanceImportBatch: builder.mutation<void, { batchId: string }>({
+      query: ({ batchId }) => ({
+        url: `/hr/attendance/automated-runs/${batchId}/lock`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [employeeType.attendanceImport],
+    }),
   }),
 });
 
@@ -113,4 +136,6 @@ export const {
   useGetAttendanceImportsQuery,
   useGetAttendanceImportByIdQuery,
   useGetAttendanceImportRowsQuery,
+  useLockAttendanceImportBatchMutation,
+  useUnlockAttendanceImportBatchMutation,
 } = attendanceImportApi;

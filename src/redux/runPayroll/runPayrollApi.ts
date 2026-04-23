@@ -6,8 +6,9 @@ export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getRunPayrollPreview: builder.query({
       query: ({ month }) => ({
-        url: `/payroll/run?month=${month}`,
+        url: '/payroll/run',
         method: 'GET',
+        params: { month },
       }),
       providesTags: [employeeType.runPayroll],
     }),

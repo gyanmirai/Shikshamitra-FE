@@ -23,30 +23,20 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
 import {
+  mapTakeAttendanceStatusToUi,
+  MANUAL_ATTENDANCE_UI_STATUS as STATUS,
+} from 'src/screens/hr/attendance/manual-attendance/status-mapper';
+import {
   useGetDayAttendanceQuery,
   useLockDayAttendanceMutation,
   useSaveDayAttendanceMutation,
+  useUnlockDayAttendanceMutation,
 } from 'src/redux/hr/attendanceApi';
 
 // ---------------------------------------------------------------------------
 // Status constants (mirroring AttendanceStatus enum from student module)
 // ---------------------------------------------------------------------------
-const STATUS = {
-  Present: 'Present',
-  HalfDay: 'HalfDay',
-  Absent: 'Absent',
-  Pending: 'Pending',
-} as const;
 type AttendanceStatusType = (typeof STATUS)[keyof typeof STATUS];
-
-// Map statusWire from API to local status constants
-const mapStatusWire = (wire: string): AttendanceStatusType => {
-  const lower = wire?.toLowerCase();
-  if (lower === 'present') return STATUS.Present;
-  if (lower === 'halfday' || lower === 'half_day') return STATUS.HalfDay;
-  if (lower === 'absent') return STATUS.Absent;
-  return STATUS.Pending;
-};
 
 // ---------------------------------------------------------------------------
 // Editing cell type for inline time editing
@@ -79,7 +69,7 @@ const ManualAttendanceScreen = () => {
   const lockConfirmDialog = useBoolean();
   const discardConfirmDialog = useBoolean();
 
-  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [saveDayAttendance, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
@@ -89,6 +79,10 @@ const ManualAttendanceScreen = () => {
   const [lockDayAttendance, { isLoading: isLocking }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLockDayAttendanceMutation,
+  });
+  const [unlockDayAttendance, { isLoading: isUnlocking }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUnlockDayAttendanceMutation,
   });
 
   const [query, setQuery] = useState({
@@ -102,12 +96,11 @@ const ManualAttendanceScreen = () => {
     currentQueryAndMutation: useGetDayAttendanceQuery,
     params: {
       attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
-      educationMediumStageId: (currentMedium as any)?.id,
       search: query.search,
       skipCount: query.skipCount,
       maxResultCount: query.maxResultCount,
     },
-    options: { skip: !date || !(currentMedium as any)?.id },
+    options: { skip: !date },
   });
 
   useEffect(() => {
@@ -124,7 +117,7 @@ const ManualAttendanceScreen = () => {
         remarks: item.remarks || '',
         warnings: item.warnings || [],
         errors: item.errors || [],
-        status: mapStatusWire(item.statusWire),
+        status: mapTakeAttendanceStatusToUi(item.status) as AttendanceStatusType,
       }));
       setEmployeeData(mapped);
       originalDataRef.current = mapped;
@@ -195,7 +188,6 @@ const ManualAttendanceScreen = () => {
     try {
       const payload = {
         attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
-        educationMediumStageId: (currentMedium as any)?.id,
         entries: employeeData.map((emp) => ({
           employeeId: emp.employeeId || emp.id,
           statusWire: emp.status,
@@ -218,11 +210,12 @@ const ManualAttendanceScreen = () => {
 
   const handleLockToggle = async () => {
     try {
-      await lockDayAttendance({
-        educationMediumStageId: (currentMedium as any)?.id,
-        attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
-      }).unwrap();
-      setIsLocked((prev) => !prev);
+      const payload = { attendanceDate: dateConvertor(dayjs(date).format(dateFormat)) };
+      if (isLocked) {
+        await unlockDayAttendance(payload).unwrap();
+      } else {
+        await lockDayAttendance(payload).unwrap();
+      }
       shikshaMitraToast.success({
         message: isLocked ? 'Attendance unlocked successfully' : 'Attendance locked successfully',
       });
@@ -1099,7 +1092,7 @@ const ManualAttendanceScreen = () => {
             variant="contained"
             color={isLocked ? 'error' : 'primary'}
             size="small"
-            loading={isLocking}
+            loading={isLocking || isUnlocking}
             onClick={handleLockToggle}
           >
             Yes, {isLocked ? 'Unlock' : 'Lock'}

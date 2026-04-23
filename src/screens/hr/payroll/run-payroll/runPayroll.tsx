@@ -159,7 +159,7 @@ const RunPayroll = () => {
 
   const handleFetchPreview = () => {
     if (!month) return;
-    fetchRunPayrollPreview({ month: month.format('MMMM-YYYY').toUpperCase() });
+    fetchRunPayrollPreview({ month: month.format('YYYY-MM') });
   };
 
   const columns: IColumn[] = useMemo(
@@ -491,7 +491,7 @@ const RunPayroll = () => {
             onClick={async () => {
               try {
                 const res = await generateAndLockPayroll({
-                  month: month?.format('MMMM-YYYY').toUpperCase(),
+                  month: month?.format('YYYY-MM'),
                   boardId: selectedBoard,
                 }).unwrap();
                 shikshaMitraToast.success({

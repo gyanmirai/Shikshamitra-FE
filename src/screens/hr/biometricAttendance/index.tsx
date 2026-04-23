@@ -36,11 +36,6 @@ import {
   CheckCircleOutline,
 } from '@mui/icons-material';
 import {
-  useGetAttendanceImportsQuery,
-  useGetAttendanceImportByIdQuery,
-  useGetAttendanceImportRowsQuery,
-} from 'src/redux/hr/attendanceImportApi';
-import {
   useConfirmAttendanceMutation,
   usePreviewAttendanceMutation,
   useSaveDayAttendanceMutation,
@@ -62,6 +57,13 @@ import {
   Typography,
   CardContent,
 } from '@mui/material';
+import {
+  useGetAttendanceImportsQuery,
+  useGetAttendanceImportByIdQuery,
+  useGetAttendanceImportRowsQuery,
+  useLockAttendanceImportBatchMutation,
+  useUnlockAttendanceImportBatchMutation,
+} from 'src/redux/hr/attendanceImportApi';
 
 // ─── Inner-table (row-level) attendance status ─────────────────────────────────
 type RowStatusType = AttendanceRowStatus | 'Pending';
@@ -175,27 +177,43 @@ const AttendanceImportHistoryScreen = () => {
   // Selected rows for bulk actions
   const [selectedRows, setSelectedRows] = useState<AttendanceImportItem[]>([]);
 
-  // Local lock state: set of locked import IDs
-  const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [lockConfirmRow, setLockConfirmRow] = useState<AttendanceImportItem | null>(null);
 
   const handleToggleLock = useCallback((row: AttendanceImportItem) => {
     setLockConfirmRow(row);
   }, []);
 
-  const handleConfirmToggleLock = useCallback(() => {
+  const [lockAttendanceImportBatch, { isLoading: isLockingBatch }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useLockAttendanceImportBatchMutation,
+  });
+  const [unlockAttendanceImportBatch, { isLoading: isUnlockingBatch }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUnlockAttendanceImportBatchMutation,
+  });
+
+  const handleConfirmToggleLock = useCallback(async () => {
     if (!lockConfirmRow) return;
-    setLockedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(lockConfirmRow.id)) {
-        next.delete(lockConfirmRow.id);
+    try {
+      if (lockConfirmRow.isBatchLocked) {
+        await unlockAttendanceImportBatch({ batchId: lockConfirmRow.id }).unwrap();
       } else {
-        next.add(lockConfirmRow.id);
+        await lockAttendanceImportBatch({ batchId: lockConfirmRow.id }).unwrap();
       }
-      return next;
-    });
-    setLockConfirmRow(null);
-  }, [lockConfirmRow]);
+      shikshaMitraToast.success({
+        message: lockConfirmRow.isBatchLocked
+          ? 'Automated marking unlocked successfully.'
+          : 'Automated marking locked successfully.',
+      });
+      setLockConfirmRow(null);
+    } catch (error: any) {
+      console.error('Failed to toggle automated marking lock:', error);
+      shikshaMitraToast.error({
+        message:
+          error?.data?.error?.message || error?.data?.message || 'Failed to update lock state.',
+      });
+    }
+  }, [lockAttendanceImportBatch, lockConfirmRow, unlockAttendanceImportBatch]);
 
   // Month picker — null means "no filter"
   const [selectedMonth, setSelectedMonth] = useState<any>(null);
@@ -680,23 +698,22 @@ const AttendanceImportHistoryScreen = () => {
         open={!!lockConfirmRow}
         onClose={() => setLockConfirmRow(null)}
         title={
-          lockConfirmRow && lockedIds.has(lockConfirmRow.id)
-            ? 'Unlock Automated Marking?'
-            : 'Lock Automated Marking?'
+          lockConfirmRow?.isBatchLocked ? 'Unlock Automated Marking?' : 'Lock Automated Marking?'
         }
         content={
-          lockConfirmRow && lockedIds.has(lockConfirmRow.id)
+          lockConfirmRow?.isBatchLocked
             ? 'Are you sure you want to unlock this automated marking import for payroll?'
             : 'Are you sure you want to lock this automated marking import for payroll? This will prevent further edits.'
         }
         action={
           <Button
             variant="contained"
-            color={lockConfirmRow && lockedIds.has(lockConfirmRow.id) ? 'warning' : 'primary'}
+            color={lockConfirmRow?.isBatchLocked ? 'warning' : 'primary'}
             size="small"
+            disabled={isLockingBatch || isUnlockingBatch}
             onClick={handleConfirmToggleLock}
           >
-            Yes, {lockConfirmRow && lockedIds.has(lockConfirmRow.id) ? 'Unlock' : 'Lock'}
+            Yes, {lockConfirmRow?.isBatchLocked ? 'Unlock' : 'Lock'}
           </Button>
         }
       />
