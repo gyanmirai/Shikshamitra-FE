@@ -187,9 +187,11 @@ const AssignmentTypeCreation = () => {
                       'getAssignmentTypes',
                       { academicMediumId: (currentMedium as Medium).id },
                       (draft: any) => {
-                        const index = draft.findIndex((item: any) => item.id === selectedData?.id);
+                        const index = draft?.data?.findIndex(
+                          (item: any) => item.id === selectedData?.id
+                        );
                         setDeleteIndex(index);
-                        if (index !== -1) draft.splice(index, 1);
+                        if (index !== -1 && draft?.data) draft.data.splice(index, 1);
                       }
                     )
                   ),
