@@ -19,6 +19,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
@@ -229,8 +230,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           }
           formData.append('leavePolicyId', formValues.leavePolicyId);
           formData.append('leaveTypeId', formValues.leaveTypeId);
-          formData.append('startDate', dayjs(formValues.startDate).toISOString());
-          formData.append('endDate', dayjs(formValues.endDate).toISOString());
+
+          formData.append(
+            'startDate',
+            dateConvertor(formValues?.startDate?.format(dateFormat) ?? '')
+          );
+          formData.append('endDate', dateConvertor(formValues?.endDate?.format(dateFormat) ?? ''));
           formData.append('reason', formValues.reason);
 
           if (formValues.docs) {

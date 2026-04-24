@@ -31,6 +31,7 @@ export const hrPaths = {
   },
   attendance: {
     root: '',
+    dashboard: '/hr/attendance-dashboard',
     markAttendance: '/hr/manual-attendance',
     biometricAttendance: '/hr/biometric-attendance',
     // leaveManagement: '/hr/leave-requests',
@@ -84,6 +85,7 @@ export const hrPermissions = {
   },
   attendance: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement`,
+    dashboard: `${defaultHrPermissionName}AttendanceAndLeave.Dashboard`,
     markAttendance: `${defaultHrPermissionName}AttendanceAndLeave.MarkAttendance`,
     biometricAttendance: `${defaultHrPermissionName}AttendanceAndLeave.BiometricAttendance`,
     setting: {
@@ -269,6 +271,15 @@ const hrModule = (isDdvs: boolean) => ({
           permissionName: hrPermissions.attendance.root,
           icon: menuIconView('mdi:calendar-clock-outline'),
           children: [
+            {
+              title: 'Dashboard',
+              path: hrPaths.attendance.dashboard,
+              _action: 'attendance-dashboard',
+              shortcutKey: 'Alt+H+A+0',
+              shortcutKeyName: 'Alt+H+A+0',
+              permissionName: hrPermissions.attendance.dashboard,
+              icon: menuIconView('mdi:view-dashboard-outline'),
+            },
             // {
             //   title: 'Import Attendance',
             //   path: hrPaths.attendance.importAttendance,

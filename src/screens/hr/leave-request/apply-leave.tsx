@@ -22,6 +22,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
@@ -45,7 +46,7 @@ const ApplyLeave = () => {
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
       academicYearId: currentYear?.id,
-      'month-year': date?.toISOString(),
+      'month-year': dateConvertor(date?.format(dateFormat) ?? ''),
     },
   });
 
