@@ -141,7 +141,18 @@ export const familyFieldsValidation = Yup.object({
       'Father Name is required',
       (value) => !!(value && value.trim() !== '')
     ),
-  fatherDob: Yup.string().required('Father Date of Birth is Required').nullable(),
+  fatherDob: Yup.mixed()
+    .nullable()
+    .test(
+      'fatherDob-not-future',
+      'Date of Birth cannot be a future date',
+      (value) => !value || !dayjs(value as any).isAfter(dayjs(), 'day')
+    )
+    .test(
+      'fatherDob-min-age',
+      'Father must be at least 18 years old',
+      (value) => !value || dayjs().diff(dayjs(value as any), 'year') >= 18
+    ),
   fatherOccupation: Yup.string(),
   fatherQualification: Yup.string(),
   fatherContactNo: Yup.string()
@@ -206,7 +217,18 @@ export const familyFieldsValidation = Yup.object({
       'Mother Name is required',
       (value) => !!(value && value.trim() !== '')
     ),
-  motherDob: Yup.string().required('Mother DOB is Required').nullable(),
+  motherDob: Yup.mixed()
+    .nullable()
+    .test(
+      'motherDob-not-future',
+      'Date of Birth cannot be a future date',
+      (value) => !value || !dayjs(value as any).isAfter(dayjs(), 'day')
+    )
+    .test(
+      'motherDob-min-age',
+      'Mother must be at least 18 years old',
+      (value) => !value || dayjs().diff(dayjs(value as any), 'year') >= 18
+    ),
   motherOccupation: Yup.string(),
   motherQualification: Yup.string(),
   motherContactNo: Yup.string()
@@ -265,7 +287,18 @@ export const familyFieldsValidation = Yup.object({
   motherAddress2: Yup.string(),
   motherAddress3: Yup.string(),
   guardianName: Yup.string(),
-  guardianDob: Yup.string().required('Guardian DOB is Required').nullable(),
+  guardianDob: Yup.mixed()
+    .nullable()
+    .test(
+      'guardianDob-not-future',
+      'Date of Birth cannot be a future date',
+      (value) => !value || !dayjs(value as any).isAfter(dayjs(), 'day')
+    )
+    .test(
+      'guardianDob-min-age',
+      'Guardian must be at least 18 years old',
+      (value) => !value || dayjs().diff(dayjs(value as any), 'year') >= 18
+    ),
   guardianOccupation: Yup.string(),
   guardianQualification: Yup.string(),
   guardianContactNo: Yup.string()

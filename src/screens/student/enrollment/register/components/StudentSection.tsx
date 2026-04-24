@@ -14,10 +14,10 @@ import {
   Box,
   Grid,
   Radio,
-  FormLabel,
   TextField,
   RadioGroup,
-  FormHelperText,
+  Typography,
+  FormControl,
   FormControlLabel,
 } from '@mui/material';
 
@@ -161,42 +161,47 @@ const StudentSection: React.FC<SectionProps> = ({
           </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Box display="flex" alignItems="center">
-            <FormLabel
-              sx={{
-                color: 'black',
-                marginRight: 2,
-                whiteSpace: 'nowrap',
-                '&.Mui-focused': { color: 'black' },
-                '&.Mui-error': { color: 'error.main' },
-              }}
-            >
-              Gender *
-            </FormLabel>
-
-            <RadioGroup
-              row
-              name="gender"
-              value={String((formik.values as any).gender ?? '')}
-              onChange={(e) => {
-                const num = Number(e.target.value) as GenderType;
-                formik.setFieldValue('gender', num);
-              }}
-            >
-              {GenderTypeArray.map((i) => (
-                <FormControlLabel
-                  key={i}
-                  value={String(i)}
-                  control={<Radio size="small" />}
-                  label={GenderType[i]}
-                  disabled={!isEdit.value}
-                />
-              ))}
-            </RadioGroup>
-          </Box>
-          <FormHelperText error>
-            {(formik.touched as any).gender && (formik.errors as any).gender}
-          </FormHelperText>
+          <ShakingTextField
+            error={(formik.touched as any).gender && Boolean((formik.errors as any).gender)}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, height: 40 }}>
+              <Typography
+                variant="body2"
+                color={
+                  (formik.touched as any).gender && (formik.errors as any).gender
+                    ? 'error.main'
+                    : 'text.secondary'
+                }
+                sx={{ fontWeight: 500 }}
+              >
+                Gender *
+              </Typography>
+              <FormControl
+                component="fieldset"
+                error={!!((formik.touched as any).gender && (formik.errors as any).gender)}
+              >
+                <RadioGroup
+                  row
+                  name="gender"
+                  value={String((formik.values as any).gender ?? '')}
+                  onChange={(e) => {
+                    const num = Number(e.target.value) as GenderType;
+                    formik.setFieldValue('gender', num);
+                  }}
+                >
+                  {GenderTypeArray.map((i) => (
+                    <FormControlLabel
+                      key={i}
+                      value={String(i)}
+                      control={<Radio size="small" />}
+                      label={GenderType[i]}
+                      disabled={!isEdit.value}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+            </Box>
+          </ShakingTextField>
         </Grid>
       </Grid>
     </Grid>

@@ -640,22 +640,25 @@ const LeaveRequestForm = ({
                 fetchOptions={async (query: string, page: number) => {
                   if (!division) return { data: [], hasMore: false };
                   try {
-                    const res = await getStudents({
-                      page,
-                      pageSize: 10,
-                      educationMediumStageId: organization,
-                      standardId: classes,
-                      divisionId: division,
-                      search: query,
-                    }).unwrap();
-                    const hasMore = res.currentPage !== res.totalPages;
+                    const res = await getStudents(division).unwrap();
+
+                    let filteredItems = res?.items || [];
+                    if (query) {
+                      const lowerQuery = query.toLowerCase();
+                      filteredItems = filteredItems.filter((item: any) =>
+                        `${item.firstName || ''} ${item.lastName || ''} ${item.middleName || ''}`
+                          .toLowerCase()
+                          .includes(lowerQuery)
+                      );
+                    }
+
                     return {
-                      data: res?.items?.map((item: any) => ({
+                      data: filteredItems?.map((item: any) => ({
                         label: `${item?.firstName || ''} ${item?.lastName || ''}`,
                         id: item.studentId,
                         originalData: item,
                       })),
-                      hasMore,
+                      hasMore: false,
                     };
                   } catch {
                     return { data: [], hasMore: false };

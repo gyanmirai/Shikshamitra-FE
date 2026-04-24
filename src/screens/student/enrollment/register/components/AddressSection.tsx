@@ -106,6 +106,7 @@ const AddressSection: React.FC<SectionProps> = ({
           value={(formik.values as any).country}
           onChange={(_, value) => {
             formik.setFieldValue('state', { name: '', isoCode: '' });
+            formik.setFieldValue('city', { name: '' });
             formik.setFieldValue('country', { name: value?.name, isoCode: value?.isoCode });
           }}
           name="country"
@@ -136,7 +137,7 @@ const AddressSection: React.FC<SectionProps> = ({
           countryValue={(formik.values as any).country}
           error={(formik.touched as any).state && Boolean((formik.errors as any)?.state?.name)}
           helperText={(formik.touched as any).state && (formik.errors as any)?.state?.name}
-          disabled={!isEdit.value || !(formik.values as any).country}
+          disabled={!isEdit.value || !(formik.values as any).country?.name}
           textFieldProps={{ label: 'State *' }}
         />
       </ShakingTextField>
@@ -153,9 +154,10 @@ const AddressSection: React.FC<SectionProps> = ({
           }}
           onBlur={formik.handleBlur as any}
           stateValue={(formik.values as any).state}
+          countryValue={(formik.values as any).country}
           error={(formik.touched as any).city && Boolean((formik.errors as any)?.city?.name)}
           helperText={(formik.touched as any).city && (formik.errors as any)?.city?.name}
-          disabled={!isEdit.value || !(formik.values as any).state}
+          disabled={!isEdit.value || !(formik.values as any).state?.name}
           textFieldProps={{ label: 'City *' }}
         />
       </ShakingTextField>
