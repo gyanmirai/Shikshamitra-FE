@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
-import type { EventClickArg } from '@fullcalendar/core';
+import type { DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
@@ -13,51 +12,170 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { useGetLeaveRequestsQuery, useGetLeaveRequestByIdQuery } from 'src/redux/hr/leaveApi';
 import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
+import { useGetLeaveRequestByIdQuery, useLazyGetLeaveCalendarQuery } from 'src/redux/hr/leaveApi';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  CALENDAR_MAX_PAGES,
+  CALENDAR_PAGE_SIZE,
+  dedupeCalendarItemsById,
+  shouldMarkCalendarCapReached,
+  buildCalendarVisibleRangePayload,
+} from 'src/screens/hr/leave-request/leave-calendar.utils';
 
 const LeaveCalender = () => {
-  const [organization, setOrganization] = useState<string>('');
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const popover = usePopover();
   const { employee } = useSelector((state: any) => state.auth);
   const { currentMedium: mediumStageId, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeaveRequestsQuery,
-    params: { academicYearId: currentYear?.id },
-  });
+  const [selectedMediumStageId, setSelectedMediumStageId] = useState<string>('');
+  const [calendarVisibleRange, setCalendarVisibleRange] = useState<{
+    rangeStart: string;
+    rangeEnd: string;
+  } | null>(null);
+  const [calendarItems, setCalendarItems] = useState<any[]>([]);
+  const [calendarTotalCount, setCalendarTotalCount] = useState(0);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
+  const [calendarCapReached, setCalendarCapReached] = useState(false);
+  const [triggerCalendarQuery] = useLazyGetLeaveCalendarQuery();
+
+  const onDatesSet = useCallback((arg: DatesSetArg) => {
+    setCalendarVisibleRange(buildCalendarVisibleRangePayload(arg.start, arg.end));
+  }, []);
 
   useEffect(() => {
-    setAllOrganization(mediumStageId?.educationMediumStages || []);
-    setOrganization(mediumStageId?.educationMediumStages?.[0]?.id || '');
-  }, [mediumStageId]);
+    let isActive = true;
+
+    const loadCalendarData = async () => {
+      if (!currentYear?.id || !calendarVisibleRange) {
+        setCalendarItems([]);
+        setCalendarTotalCount(0);
+        setCalendarCapReached(false);
+        setIsCalendarLoading(false);
+        return;
+      }
+
+      setIsCalendarLoading(true);
+      setCalendarCapReached(false);
+
+      try {
+        const allItems: any[] = [];
+
+        const loadPageRecursively = async (
+          page: number,
+          knownTotalCount: number
+        ): Promise<{ totalCount: number; reachedPageLimit: boolean }> => {
+          const response = await triggerCalendarQuery(
+            {
+              academicYearId: currentYear.id,
+              rangeStart: calendarVisibleRange.rangeStart,
+              rangeEnd: calendarVisibleRange.rangeEnd,
+              page,
+              pageSize: CALENDAR_PAGE_SIZE,
+            },
+            false
+          ).unwrap();
+
+          const totalCount = page === 1 ? (response?.totalCount ?? 0) : knownTotalCount;
+
+          const pageItems = Array.isArray(response?.items) ? response.items : [];
+          allItems.push(...pageItems);
+
+          const shouldStop =
+            allItems.length >= totalCount ||
+            pageItems.length === 0 ||
+            pageItems.length < CALENDAR_PAGE_SIZE;
+
+          if (shouldStop) {
+            return { totalCount, reachedPageLimit: false };
+          }
+
+          if (page >= CALENDAR_MAX_PAGES) {
+            return { totalCount, reachedPageLimit: true };
+          }
+
+          return loadPageRecursively(page + 1, totalCount);
+        };
+
+        const { totalCount, reachedPageLimit } = await loadPageRecursively(1, 0);
+
+        if (!isActive) {
+          return;
+        }
+
+        const deduped = dedupeCalendarItemsById(allItems);
+        setCalendarItems(deduped);
+        setCalendarTotalCount(totalCount);
+        setCalendarCapReached(
+          shouldMarkCalendarCapReached(reachedPageLimit, totalCount, deduped.length)
+        );
+      } catch {
+        if (!isActive) {
+          return;
+        }
+        setCalendarItems([]);
+        setCalendarTotalCount(0);
+        setCalendarCapReached(false);
+      } finally {
+        if (isActive) {
+          setIsCalendarLoading(false);
+        }
+      }
+    };
+
+    loadCalendarData();
+
+    return () => {
+      isActive = false;
+    };
+  }, [calendarVisibleRange, currentYear?.id, triggerCalendarQuery]);
+
+  useEffect(() => {
+    if (!selectedMediumStageId) {
+      return;
+    }
+    const stageExists = mediumStageId?.educationMediumStages?.some(
+      (org: any) => String(org?.id ?? '') === selectedMediumStageId
+    );
+    if (!stageExists) {
+      setSelectedMediumStageId('');
+    }
+  }, [mediumStageId?.educationMediumStages, selectedMediumStageId]);
 
   const calendarData = useMemo(
     () =>
-      data?.items.map((i: any) => ({
-        ...i,
-        start: i.startDate,
-        color: i.leavePolicy.color,
-        end: i.endDate,
-        allDay: false,
-        employeeCode: i.employeeCode,
-        textColor: i.leavePolicy.color,
-        title: `${i.leaveType} [${i.name}] ${i.status}`,
-        reason: i.reason || i.description.replace(/<[^>]+>/g, ''),
-        description: i.description.replace(/<[^>]+>/g, ''),
-        viewStartDate: i.startDate,
-        viewEndDate: i.endDate,
-        ...(i.employeeId === employee?.id ? { className: 'ownEvent' } : {}),
-      })) || [],
-    [data?.items, employee?.id]
+      calendarItems
+        .filter((i: any) =>
+          selectedMediumStageId ? String(i?.mediumStageId ?? '') === selectedMediumStageId : true
+        )
+        .map((i: any) => {
+          const color = i.leaveTypeColor || '#2065D1';
+          const desc = String(i.description ?? '');
+          const plainDesc = desc.replace(/<[^>]+>/g, '');
+          return {
+            ...i,
+            start: i.startDate,
+            end: i.endDate,
+            color,
+            allDay: false,
+            employeeCode: i.employeeCode,
+            textColor: color,
+            title: `${i.leaveTypeName ?? i.leaveType ?? ''} [${i.employeeName ?? i.name ?? ''}] ${i.status ?? ''}`,
+            reason: i.reason ?? plainDesc,
+            description: plainDesc,
+            leaveType: i.leaveTypeName ?? i.leaveType,
+            name: i.employeeName ?? i.name,
+            viewStartDate: i.startDate,
+            viewEndDate: i.endDate,
+            ...(i.employeeId === employee?.id ? { className: 'ownEvent' } : {}),
+          };
+        }) || [],
+    [calendarItems, employee?.id, selectedMediumStageId]
   );
   const editData = useMemo(() => {
     if (currentDateClick) {
@@ -66,14 +184,12 @@ const LeaveCalender = () => {
     return null;
   }, [calendarData, currentDateClick]);
 
-  const onChangeView = useCallback((newView: any) => {
-    setOrganization(newView);
-  }, []);
   return (
     <Box sx={{ height: '100%' }}>
       <CommonCalender
         data={calendarData}
-        isLoading={isLoading}
+        isLoading={isCalendarLoading}
+        datesSet={onDatesSet}
         onDateClick={(arg) => {
           setCurrentDateClick(arg);
         }}
@@ -104,6 +220,13 @@ const LeaveCalender = () => {
         ]}
         validRange={{ start: currentYear?.startDate, end: currentYear?.endDate }}
       />
+      {calendarCapReached && (
+        <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
+          {selectedMediumStageId
+            ? `Showing ${calendarData.length} filtered events from ${calendarItems.length} loaded of ${calendarTotalCount} total leave events for this view. Refine filters or date range to load remaining events.`
+            : `Showing ${calendarData.length} of ${calendarTotalCount} leave events for this view. Refine filters or date range to load remaining events.`}
+        </Typography>
+      )}
       <CustomDialog
         open={!!currentDateClick}
         handleClose={() => setCurrentDateClick(null)}
@@ -130,13 +253,23 @@ const LeaveCalender = () => {
         slotProps={{ arrow: { placement: 'top-left' } }}
       >
         <MenuList>
+          <MenuItem
+            selected={!selectedMediumStageId}
+            onClick={() => {
+              setSelectedMediumStageId('');
+              popover.onClose();
+            }}
+          >
+            All Medium Stages
+          </MenuItem>
           {mediumStageId?.educationMediumStages?.map((org: any) => (
             <MenuItem
               key={org.id}
+              selected={selectedMediumStageId === String(org.id)}
               value={org.id}
               onClick={() => {
+                setSelectedMediumStageId(String(org.id));
                 popover.onClose();
-                onChangeView(org.name);
               }}
             >
               {org.name}

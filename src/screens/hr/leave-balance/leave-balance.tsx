@@ -212,6 +212,7 @@ const LeaveBalance = () => {
     type: 'query',
     currentQueryAndMutation: useGetMyLeaveBalanceQuery,
     params: { academicYearId: currentYear?.id, employeeId: employee?.id },
+    options: { skip: !currentYear?.id },
   });
 
   const {
@@ -222,6 +223,7 @@ const LeaveBalance = () => {
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+    options: { skip: !currentYear?.id },
   });
 
   const mergedBalance: LeaveBalanceData = useMemo(() => {
@@ -469,6 +471,14 @@ const LeaveBalance = () => {
             </Box>
           }
         />
+        {historyData &&
+          typeof historyData.totalCount === 'number' &&
+          historyData.totalCount > (historyData.items?.length ?? 0) && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave requests
+              for this academic year (max {100} per page).
+            </Typography>
+          )}
       </Card>
     </Box>
   );
