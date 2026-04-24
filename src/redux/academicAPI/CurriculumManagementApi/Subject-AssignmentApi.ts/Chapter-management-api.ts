@@ -45,7 +45,7 @@ export const chaptersApi = academicApi.injectEndpoints({
     // DELETE - Remove chapter
     deleteChapter: builder.mutation({
       query: (id) => ({
-        url: `/chapters/${id}`,
+        url: `/academic/curriculum/chapters/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: [academicType.chapter],

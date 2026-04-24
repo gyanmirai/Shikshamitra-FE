@@ -1,144 +1,34 @@
-import type { ChartOptions } from 'src/components/chart';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { CONFIG } from 'src/config-global';
-import { useTabs } from 'src/hooks/use-tabs';
+import { Add } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Add, Create } from '@mui/icons-material';
-import { fNumber } from 'src/utils/format-number';
-import { UploadBox } from 'src/components/upload';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { SvgColor } from 'src/components/svg-color';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import { Chart, useChart } from 'src/components/chart';
-import CustomSelect from 'src/components/custom-select';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,
-  Tab,
   Card,
   Grid,
   Button,
   Switch,
   MenuList,
   MenuItem,
-  TextField,
   Typography,
   IconButton,
   DialogActions,
   DialogContent,
-  LinearProgress,
   DialogContentText,
 } from '@mui/material';
 
-const initialCourseData: CourseData[] = [
-  {
-    id: 1,
-    courseName: 'Mathematics 101',
-    className: '1',
-    description: 'An introduction to basic algebra and geometry.',
-    subject: 'Math',
-    resource: 'Textbook',
-    learningGoal: 'Understand basic algebraic equations.',
-    assignedTeacher: 'Jiya',
-    status: 'Active',
-    material: { videos: 20, pdfs: 50 },
-  },
-  {
-    id: 2,
-    courseName: 'English Literature',
-    className: '2',
-    description: 'Study of classical English literature.',
-    subject: 'English',
-    resource: 'Projector',
-    learningGoal: 'Familiarize with classical literature themes.',
-    assignedTeacher: 'Riya',
-    status: 'Inactive',
-    material: { videos: 90, pdfs: 10 },
-  },
-  {
-    id: 3,
-    courseName: 'Physics 101',
-    className: '3',
-    description: 'Introduction to mechanics and thermodynamics.',
-    subject: 'Science',
-    resource: 'Laptop',
-    learningGoal: 'Understand the basics of mechanics and energy transfer.',
-    assignedTeacher: 'Priya',
-    status: 'Active',
-    material: { videos: 60, pdfs: 10 },
-  },
-];
+import AppWidget from './components/AppWidget';
+import CourseCreationForm from './components/CourseCreationForm';
+import { initialCourseData, sampleChapterData } from './sampleData';
+import ViewChaptersComponent from './components/ViewChaptersComponent';
 
-interface CourseData {
-  id: number;
-  courseName: string;
-  className: string;
-  description: string;
-  subject: string;
-  resource: string;
-  learningGoal: string;
-  assignedTeacher: string;
-  status: string;
-  material: { videos: number; pdfs: number };
-}
-
-interface ChapterData {
-  id: number;
-  courseId: number;
-  chapter: string;
-  content: string;
-  progress: number;
-  classId: string;
-  division: string;
-}
-
-const sampleChapterData: ChapterData[] = [
-  {
-    id: 1,
-    courseId: 1,
-    chapter: 'Chapter 1: Introduction to Algebra',
-    content: 'Chapter 1 for div A',
-    progress: 80,
-    classId: '1',
-    division: 'A',
-  },
-  {
-    id: 2,
-    courseId: 1,
-    chapter: 'Chapter 2: Linear Equations',
-    content: 'Chapter 2 for div A',
-    progress: 60,
-    classId: '1',
-    division: 'A',
-  },
-  {
-    id: 3,
-    courseId: 1,
-    chapter: 'Chapter 1: Introduction to Algebra',
-    content: 'Chapter 2 for div B',
-    progress: 30,
-    classId: '1',
-    division: 'B',
-  },
-  {
-    id: 4,
-    courseId: 1,
-    chapter: 'Chapter 2: Linear Equations',
-    content: 'Chapter 2 for div B',
-    progress: 90,
-    classId: '1',
-    division: 'B',
-  },
-];
+import type { CourseData, ChapterData } from './type';
 
 const CourseManagement = (props: TabComponentType) => {
   const [courseData, setCourseData] = useState<CourseData[]>(initialCourseData);
@@ -155,8 +45,6 @@ const CourseManagement = (props: TabComponentType) => {
 
   const [selectedEntry, setSelectedEntry] = useState<CourseData | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-  // const [accordionData1, setAccordionData1] = useState<AccordionItem[]>(initialAccordionData);
-  // const [accordionData2, setAccordionData2] = useState<AccordionItem[]>(initialAccordionData);
 
   const theme = useTheme();
 
@@ -269,7 +157,7 @@ const CourseManagement = (props: TabComponentType) => {
             render: (_, row) => {
               const course = courseData.find((s) => s.id === row.id);
               return (
-                <IconButton onClick={() => course && handleViewChapters(course)} sx={{}}>
+                <IconButton onClick={() => course && handleViewChapters(course)}>
                   <Iconify icon="mdi:eye" />
                 </IconButton>
               );
@@ -278,16 +166,17 @@ const CourseManagement = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render(value: any, row: any) {
+            render(value: string, row: CourseData) {
               return (
                 <ThreeDotsActions
-                  actions={({ popover }: any) => (
+                  actions={(actionProps: { popover: { onClose: () => void } }) => (
                     <MenuList>
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);
                           setSelectedEntry(row);
                           dialog.onTrue();
+                          actionProps.popover.onClose();
                         }}
                       >
                         <Iconify icon="solar:pen-bold" />
@@ -410,455 +299,6 @@ const CourseManagement = (props: TabComponentType) => {
           </Box>
         </Grid>
       </Grid>
-    </Box>
-  );
-};
-
-interface ViewChaptersComponentProps {
-  onClose: () => void;
-  selectedCourse: CourseData | null;
-  chapterData: ChapterData[];
-}
-
-const ViewChaptersComponent: React.FC<ViewChaptersComponentProps> = ({
-  onClose,
-  selectedCourse,
-  chapterData,
-}) => {
-  const [division, setDivision] = useState<string>('');
-
-  const filteredChapters = React.useMemo(() => {
-    if (!selectedCourse || !selectedCourse.className || !division) {
-      return;
-    }
-
-    // eslint-disable-next-line consistent-return
-    return chapterData.filter(
-      (chapter) =>
-        chapter.courseId === selectedCourse.id &&
-        chapter.classId === selectedCourse?.className &&
-        chapter.division === division
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapterData, selectedCourse, selectedCourse?.className, division]);
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2} marginBottom={2}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '500px' }}>
-        <Box display="flex" gap={2}>
-          <CustomSelect
-            label="Division"
-            disabled={!selectedCourse?.className}
-            options={[
-              { value: 'A', label: 'A' },
-              { value: 'B', label: 'B' },
-              { value: 'C', label: 'C' },
-            ]}
-            value={division}
-            onChange={(val) => {
-              setDivision(val as string);
-            }}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: '200px' } }}
-          />
-        </Box>
-        {selectedCourse?.className &&
-          division &&
-          filteredChapters &&
-          filteredChapters?.length > 0 && <ChapterTabsView chapters={filteredChapters} />}
-      </Scrollbar>
-      <DialogActions>
-        <Button>Cancel</Button>
-        <Button type="submit" variant="contained">
-          Save
-        </Button>
-      </DialogActions>
-    </Box>
-  );
-};
-
-interface ChapterTabsViewProps {
-  chapters: ChapterData[];
-}
-
-const ChapterTabsView: React.FC<ChapterTabsViewProps> = ({ chapters }) => {
-  const tabs = useTabs(chapters[0]?.id.toString());
-
-  const CHAPTER_TABS = chapters.map((chapter) => ({
-    value: chapter.id.toString(),
-    label: chapter?.chapter,
-    component: () => (
-      <Box sx={{ marginTop: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              {chapter.chapter} Progress
-            </Typography>
-            <Box
-              sx={{
-                width: '200px',
-                height: '24px',
-                position: 'relative',
-                borderRadius: '12px',
-                bgcolor: '#e0e0e0',
-                overflow: 'hidden',
-              }}
-            >
-              <LinearProgress
-                variant="determinate"
-                value={chapter.progress}
-                sx={{
-                  height: '100%',
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: 'primary',
-                    transition: 'transform 0.4s linear',
-                  },
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  color: '#000',
-                  fontWeight: 'bold',
-                  zIndex: 1,
-                }}
-              >
-                {`${Math.round(chapter.progress)}%`}
-              </Typography>
-            </Box>
-          </Box>
-          {/* Buttons container */}
-          <Box display="flex" alignItems="center" gap={2}>
-            <Button variant="contained" startIcon={<Add />} onClick={() => {}}>
-              Add New Content
-            </Button>
-            <Button variant="contained" onClick={() => {}}>
-              Edit
-            </Button>
-            <Button variant="contained" onClick={() => {}}>
-              Delete
-            </Button>
-          </Box>
-        </Box>
-        <Card sx={{ mt: 2, height: '100%' }}>
-          <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-            <ChapterContent content={chapter.content} />
-          </Scrollbar>
-        </Card>
-      </Box>
-    ),
-  }));
-
-  const CurrentComponent = CHAPTER_TABS.find((tab) => tab.value === tabs.value)?.component;
-
-  return (
-    <Box>
-      <Card
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          marginTop: 2,
-        }}
-      >
-        <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          variant="fullWidth"
-          slotProps={{ tab: { px: 0 } }}
-        >
-          {CHAPTER_TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} />
-          ))}
-        </CustomTabs>
-      </Card>
-      <Box px={1} pt={2}>
-        {CurrentComponent?.()}
-      </Box>
-    </Box>
-  );
-};
-
-const ChapterContent: React.FC<{ content: string }> = ({ content }) => (
-  <Box sx={{ p: 2 }}>
-    <Typography>{content}</Typography>
-  </Box>
-);
-
-interface AppWidgetProps {
-  title: string;
-  total?: number;
-  icon: string;
-  chart: { colors?: string[]; series: number; options?: ChartOptions };
-}
-
-export const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart }) => {
-  const theme = useTheme();
-
-  const chartColors = chart.colors ?? [theme.palette.primary.light, theme.palette.primary.main];
-
-  const chartOptions = useChart({
-    chart: { sparkline: { enabled: true } },
-    stroke: { width: 0 },
-    fill: { type: 'solid', colors: chartColors },
-    plotOptions: {
-      radialBar: {
-        dataLabels: {
-          name: { show: false },
-          value: {
-            offsetY: 6,
-            color: 'black',
-            fontSize: theme.typography.subtitle2.fontSize as string,
-          },
-        },
-      },
-    },
-    ...chart.options,
-  });
-
-  return (
-    <Box
-      sx={{
-        p: 1.5,
-        gap: 2,
-        borderRadius: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        position: 'relative',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'common.white',
-        color: 'common.black',
-        width: '100%',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          position: 'relative',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Chart
-          type="radialBar"
-          series={[chart.series]}
-          options={chartOptions}
-          width={80}
-          height={80}
-          sx={{ zIndex: 1 }}
-        />
-        <SvgColor
-          src={`${CONFIG.site.basePath}/assets/background/shape-circle-3.svg`}
-          sx={{
-            width: 200,
-            height: 200,
-            opacity: 0.08,
-            position: 'absolute',
-            color: 'primary.light',
-          }}
-        />
-      </Box>
-
-      <Box sx={{ textAlign: 'center' }}>
-        {total && <Typography variant="h3">{fNumber(total)}</Typography>}
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mt: 1,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '100%',
-          }}
-        >
-          {title}
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
-
-interface CourseCreationFormProps {
-  onSave: (values: CourseData) => void;
-  onClose: () => void;
-  data: CourseData | null;
-  isEdit: boolean;
-}
-
-const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
-  onSave,
-  onClose,
-  data,
-  isEdit,
-}) => {
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-
-  const formik = useFormik<CourseData>({
-    initialValues: {
-      id: isEdit && data ? data.id : Date.now(),
-      courseName: isEdit && data ? data.courseName : '',
-      className: isEdit && data ? data.className : '',
-      description: isEdit && data ? data.description : '',
-      subject: isEdit && data ? data.subject : '',
-      resource: isEdit && data ? data.resource : '',
-      learningGoal: isEdit && data ? data.learningGoal : '',
-      assignedTeacher: isEdit && data ? data.assignedTeacher : '',
-      status: isEdit && data ? data.status : 'Inactive',
-      material: { videos: 0, pdfs: 0 },
-    },
-    onSubmit: (values) => {
-      onSave(values);
-    },
-  });
-
-  return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Course Name"
-                name="courseName"
-                value={formik.values.courseName}
-                onChange={formik.handleChange}
-                size="small"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                options={classData?.items || []}
-                value={formik.values.className}
-                onChange={(val) => formik.setFieldValue('className', val as string)}
-                label="Class"
-                isLoading={isLoading}
-                labelKey="name"
-                valueKey="name"
-                formControlProps={{ sx: { minWidth: 270 } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                label="Subject"
-                options={[
-                  { value: 'math', label: 'Math' },
-                  { value: 'english', label: 'English' },
-                  { value: 'science', label: 'Science' },
-                ]}
-                name="subject"
-                value={formik.values.subject}
-                onChange={(val) => formik.setFieldValue('subject', val as string)}
-                formControlProps={{ sx: { minWidth: 275 } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                label="Assigned Teacher(s)"
-                options={[
-                  { value: 'Jiya', label: 'Jiya' },
-                  { value: 'Riya', label: 'Riya' },
-                  { value: 'Priya', label: 'Priya' },
-                ]}
-                name="assignedTeacher"
-                value={formik.values.assignedTeacher}
-                onChange={(val) => formik.setFieldValue('assignedTeacher', val as string[])}
-                formControlProps={{ sx: { minWidth: 270 } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Description"
-                name="description"
-                value={formik.values.description}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <UploadBox
-                onDrop={() => {}}
-                placeholder={
-                  <Box
-                    sx={{
-                      gap: 0.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Drag Your Document</Typography>
-                  </Box>
-                }
-                sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CustomSelect
-                label="Resources"
-                options={[
-                  { value: 'laptop', label: 'Laptop' },
-                  { value: 'projector', label: 'Projector' },
-                  { value: 'textbook', label: 'Textbook' },
-                ]}
-                name="resource"
-                value={formik.values.resource}
-                onChange={(val) => formik.setFieldValue('resource', val as string)}
-                formControlProps={{ sx: { minWidth: 275 } }}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                fullWidth
-                label="Learning Goals"
-                name="learningGoal"
-                value={formik.values.learningGoal}
-                onChange={formik.handleChange}
-                size="small"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <CustomSelect
-                label="Status"
-                options={[
-                  { value: 'Active', label: 'Active' },
-                  { value: 'Inactive', label: 'Inactive' },
-                ]}
-                name="status"
-                value={formik.values.status}
-                onChange={(val) => formik.setFieldValue('status', val as string)}
-                formControlProps={{ sx: { minWidth: 275 } }}
-              />
-            </Grid>
-          </Grid>
-        </Scrollbar>
-
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button startIcon={<Create />} type="submit" variant="contained">
-            {isEdit ? 'Update' : 'Create'} Course
-          </Button>
-        </DialogActions>
-      </form>
     </Box>
   );
 };

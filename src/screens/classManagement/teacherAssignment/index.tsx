@@ -13,6 +13,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -34,11 +35,7 @@ import {
   useUpdateTeacherAssignmentsMutation,
 } from 'src/redux/classManagementApi/teacherAssignmentApi/teacherAssignmentApi';
 
-// import { TeacherListPopover } from '../../subject/component/subjectCardComponent/teacherListPopover.';
-
-import sortQueryString from 'src/utils/sort-query-string';
-
-import { TeacherListPopover } from '../../academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/subjectCardComponent';
+import { TeacherListPopover } from '../../academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/TeacherSelectionFields';
 
 import type { ITeacherOption } from '../../academic/curriculum-management/subjectAssignment/component/type';
 

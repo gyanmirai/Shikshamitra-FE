@@ -30,5 +30,6 @@ export const getNoOfLectureInitialValues = (
     className: editData?.className ? editData.className : selectedClass || '',
     subjects,
     totalLectures,
+    classId: '',
   };
 };

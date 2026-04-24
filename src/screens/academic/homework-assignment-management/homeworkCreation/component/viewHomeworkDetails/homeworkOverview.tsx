@@ -12,7 +12,7 @@ import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
-import { TeacherHoverProfile } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/subjectOverview';
+import TeacherHoverProfile from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/TeacherHoverProfile';
 import {
   Box,
   Grid,
@@ -348,7 +348,6 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                             email: homework?.createdBy?.email,
                             experience: homework?.createdBy?.experience,
                             qualification: homework?.createdBy?.qualification,
-                            subjects: homework?.createdBy?.subjects,
                           }}
                         />
                       </ListItemAvatar>

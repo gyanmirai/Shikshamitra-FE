@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AttendanceImportItem } from 'src/redux/hr/attendanceImportApi';
 
@@ -33,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import {
   AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusColors,
   AttendanceImportBatchStatusOptions,
 } from 'src/enums/attendance-import-batch-statusType';
 import {
@@ -543,11 +545,11 @@ const AttendanceImportHistoryScreen = () => {
         filterType: 'enum',
         sticky: true,
         enumOptions: AttendanceImportBatchStatusOptions,
-        // render: (value: number) => (
-        //   <Label color={AttendanceImportBatchStatusColors[value] as LabelColor}>
-        //     {AttendanceImportBatchStatus[value]}
-        //   </Label>
-        // ),
+        render: (value: number) => (
+          <Label color={AttendanceImportBatchStatusColors[value] as LabelColor}>
+            {AttendanceImportBatchStatus[value]}
+          </Label>
+        ),
       },
       {
         id: 'isBatchLocked',

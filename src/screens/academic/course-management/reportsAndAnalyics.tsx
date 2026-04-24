@@ -1,7 +1,5 @@
 'use client';
 
-// Import necessary dependencies and types
-
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
@@ -16,7 +14,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
-// Initial form values for the report generation form
 const initialValues = {
   report: '',
   className: 'All',
@@ -25,7 +22,6 @@ const initialValues = {
   endDate: null,
 };
 
-// Validation schema for form fields using Yup
 const validationSchema = Yup.object().shape({
   report: Yup.string().required('Report is required'),
   className: Yup.string().required('Class is required'),
@@ -35,13 +31,11 @@ const validationSchema = Yup.object().shape({
 });
 
 const Reports = (props: TabComponentType) => {
-  // Custom hook to fetch class data using RTK Query
   const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  // Memoized class options for the dropdown, including 'All' option
   const classOptions = React.useMemo(() => {
     const allOption = { name: 'All', value: 'all' };
     return [allOption, ...(classData?.items || [])];
@@ -57,16 +51,11 @@ const Reports = (props: TabComponentType) => {
           { name: 'Reports' },
         ]}
       />
-      {/* Formik form wrapper for handling form state and validation */}
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={(values, { setSubmitting }) => {
-          // Mock submit handler with timeout
-          setTimeout(() => {
-            alert(JSON.stringify(values, null, 2));
-            setSubmitting(false);
-          }, 400);
+          setSubmitting(false);
         }}
       >
         {({ errors, touched, values, handleChange, setFieldValue }) => (
@@ -74,7 +63,6 @@ const Reports = (props: TabComponentType) => {
             <Form>
               <Box sx={{ p: 2 }}>
                 <Grid container spacing={2}>
-                  {/* Report Type Selection */}
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                       <CustomSelect
@@ -96,7 +84,6 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  {/* Class Selection */}
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.className && errors.className} fullWidth>
                       <CustomSelect
@@ -113,7 +100,6 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  {/* Subject Selection */}
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                       <CustomSelect
@@ -133,7 +119,6 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  {/* Start Date Selection */}
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                       <DatePicker
@@ -148,7 +133,6 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  {/* End Date Selection */}
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                       <DatePicker
@@ -163,7 +147,6 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  {/* Submit Button */}
                   <Grid size={{ xs: 12 }} justifyContent="flex-end" display="flex">
                     <Button
                       startIcon={<Iconify icon={GlobalIcons.generateReport} />}

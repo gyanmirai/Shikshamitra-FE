@@ -59,7 +59,7 @@ const SyllabusSetting = () => {
         </CustomTabs>
       </Card>
       <Box px={1} pt={2}>
-        {currentActiveComponent?.component && <currentActiveComponent.component />}{' '}
+        {currentActiveComponent?.component && <currentActiveComponent.component />}
       </Box>
     </Box>
   );

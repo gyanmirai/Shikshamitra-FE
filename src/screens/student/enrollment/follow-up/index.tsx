@@ -254,7 +254,14 @@ export const CommunicationForm = ({
     validationSchema: Yup.object({
       msg: Yup.string().trim().min(1, 'Notes are required').required('Notes are required'),
       status: Yup.string().required('Status is required'),
-      dueDate: Yup.string().required('Next Reminder Date is required'),
+      dueDate: Yup.mixed()
+        .nullable()
+        .required('Next Reminder Date is required')
+        .test(
+          'isFutureDate',
+          'Next Reminder Date cannot be a past date',
+          (value) => !value || dayjs(value as any).isAfter(dayjs(), 'day')
+        ),
     }),
     enableReinitialize: true,
     onSubmit: async (values) => {

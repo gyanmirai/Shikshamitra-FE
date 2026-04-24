@@ -22,6 +22,19 @@ const ChapterTable = ({
   subjectId,
   standardId,
 }: IChapterTableProps) => {
+  const tableData = useMemo(
+    () =>
+      data?.map((chapter) => ({
+        ...chapter,
+        chapterStartTime: chapter.chapterStartTime
+          ? dayjs(chapter.chapterStartTime).format('DD-MM-YYYY')
+          : '',
+        chapterEndTime: chapter.chapterEndTime
+          ? dayjs(chapter.chapterEndTime).format('DD-MM-YYYY')
+          : '',
+      })) || [],
+    [data]
+  );
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -43,94 +56,40 @@ const ChapterTable = ({
         label: 'Start Date',
         align: 'left',
         filterType: 'date',
-        render: (value, row) => (
-          <Typography fontSize="12px" gutterBottom>
-            {dayjs(value).format('DD MMM YYYY')}
-          </Typography>
-        ),
       },
       {
         id: 'chapterEndTime',
         label: 'End Date',
         align: 'left',
         filterType: 'date',
-        render: (value, row) => (
-          <Typography fontSize="12px" gutterBottom>
-            {dayjs(value).format('DD MMM YYYY')}
-          </Typography>
-        ),
       },
       {
         id: 'description',
         label: 'Description',
         align: 'left',
         filterType: 'string',
-        render: (value, row) => {
-          const plainText = value ? value.replace(/<[^>]*>/g, '').trim() : '';
-          return (
-            <CustomTooltip title={plainText} arrow sx={{ textAlign: 'justify' }}>
-              <Typography
-                variant="inherit"
-                noWrap
-                sx={{
-                  maxWidth: 150,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  display: 'block',
-                }}
-              >
-                {plainText}
-              </Typography>
-            </CustomTooltip>
-          );
-        },
+        render: (value, row) => (
+          <CustomTooltip
+            title={value && <div dangerouslySetInnerHTML={{ __html: value || '' }} />}
+            arrow
+            sx={{ textAlign: 'justify' }}
+          >
+            <Typography
+              variant="inherit"
+              noWrap
+              sx={{
+                maxWidth: 150,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'block',
+              }}
+              dangerouslySetInnerHTML={{ __html: value || '' }}
+            />
+          </CustomTooltip>
+        ),
       },
-      // {
-      //   id: 'viewMaterial',
-      //   label: 'Material',
-      //   isFilter: false,
-      //   isSort: false,
-      //   render(value, row) {
-      //     return (
-      //       <IconButton
-      //         onClick={() => {
 
-      //         }}
-      //       >
-      //         <Iconify icon={GlobalIcons.eye} />
-      //       </IconButton>
-      //     );
-      //   },
-      // },
-      // {
-      //   id: 'progress',
-      //   label: 'Progress',
-      //   filterType: 'number',
-      //   render(value) {
-      //     return (
-      //       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      //         <CircularProgress variant="determinate" value={value} />
-      //         <Box
-      //           sx={{
-      //             top: 0,
-      //             left: 0,
-      //             bottom: 0,
-      //             right: 0,
-      //             position: 'absolute',
-      //             display: 'flex',
-      //             alignItems: 'center',
-      //             justifyContent: 'center',
-      //           }}
-      //         >
-      //           <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-      //             {value}%
-      //           </Typography>
-      //         </Box>
-      //       </Box>
-      //     );
-      //   },
-      // },
       {
         id: 'actions',
         label: 'Actions',
@@ -189,7 +148,7 @@ const ChapterTable = ({
         </>
       }
       columns={columns}
-      data={data}
+      data={tableData}
     />
   );
 };

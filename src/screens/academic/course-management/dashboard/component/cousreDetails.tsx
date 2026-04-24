@@ -32,7 +32,6 @@ const CousreDetails = () => {
             valueKey="id"
             onChange={(val) => {
               const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              // formik.setFieldValue('class', selectedClass?.name || '');
               setClasses(val as string);
               setDivisionOptions(selectedClass?.divisions || []);
             }}
@@ -49,8 +48,6 @@ const CousreDetails = () => {
             options={divisionOptions}
             value={division}
             onChange={(val) => {
-              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-              // formik.setFieldValue('division', selectedDivision?.name || '');
               setDivision(val as string);
             }}
             formControlProps={{
@@ -67,8 +64,6 @@ const CousreDetails = () => {
             ]}
             value={subject}
             onChange={(val) => {
-              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-              // formik.setFieldValue('division', selectedDivision?.name || '');
               setSubject(val as string);
             }}
             formControlProps={{

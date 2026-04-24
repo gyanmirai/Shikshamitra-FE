@@ -1,29 +1,22 @@
-import type { LabelColor } from 'src/components/label';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
 import { varAlpha } from 'src/theme/styles';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { SubjectType } from 'src/enums/subject-type';
 import { Scrollbar } from 'src/components/scrollbar';
 import React, { useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Tab, Tabs, Grid, Card, Typography } from '@mui/material';
-import {
-  PublishUnpublishStatusType,
-  PublishUnpublishStatusTypeColors,
-} from 'src/enums/publishUnpublish-status';
+import { Box, Tab, Tabs, Grid, Card, Skeleton, CardContent } from '@mui/material';
 import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
+import SubjectSidebar from './SubjectSidebar';
 import SubjectOverview from './subjectOverview';
 import SubjectSyllabus from './subjectSyllabus';
 import SubjectDocument from './subjectDocument';
 
 import type { ISubjectDetail, IViewSubjectProps } from '../type';
 
-// Interface for the tab panel props
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
   subject?: ISubjectDetail;
@@ -56,23 +49,21 @@ const TABS = [
   },
 ];
 
-export const ViewSubject = ({ subject }: IViewSubjectProps) => {
+export const ViewSubject = ({ subject, classId, classes }: IViewSubjectProps) => {
   const theme = useTheme();
   const tabs = useTabs('overview');
 
-  const {
-    data: subjectAssignmentData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isFetching,
-  } = useQueryAndMutation({
+  const { data: subjectAssignmentData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
     params: { assignmentId: subject?.id },
   });
 
-  // Find the currently active tab component based on selected tab value
+  /**
+   * Memoization Justification:
+   * TABS is a static array; find operation runs on every render without memo.
+   * Prevents unnecessary object allocation when tab value hasn't changed.
+   */
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
@@ -82,140 +73,178 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
 
   useEffect(() => {
     if (subject?.subjects && subject.subjects.length > 0) {
-      setExpandedSubject(subject.subjects[0].subjectCode); // Open first subject by default
+      setExpandedSubject(subject.subjects[0].subjectCode);
     }
   }, [subject]);
 
-  return (
-    <Grid container spacing={2} sx={{ height: '100%' }}>
-      {/* Left Sidebar: Subject List */}
-      <Grid size={{ xs: 12, md: 3 }} sx={{ height: '100%' }}>
-        <Card
-          sx={{
-            height: '100%',
-            p: 2,
-            boxShadow: 'var(--shadows-10)',
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: 2,
-          }}
-        >
-          {/* Header Section */}
-          <Box
+  if (isLoading) {
+    return (
+      <Grid container spacing={2} sx={{ height: '100%' }}>
+        {/* Sidebar Skeleton */}
+        <Grid size={{ xs: 12, md: 3 }} sx={{ height: '100%' }}>
+          <Card
             sx={{
-              pb: 2,
-              mb: 2,
-              borderBottom: `1px dashed ${theme.palette.divider}`,
+              height: '100%',
+              p: 2,
+              boxShadow: 'var(--shadows-10)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 1.5,
+              borderRadius: 2,
             }}
           >
             <Box
-              sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+              sx={{
+                pb: 2,
+                mb: 2,
+                borderBottom: `1px dashed ${theme.palette.divider}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+              }}
             >
-              <Box>
-                {subjectAssignmentData?.subjectType === 1 && (
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
-                    {subjectAssignmentData?.electiveGroupName}
-                  </Typography>
-                )}
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}
-                >
-                  <Iconify icon="mdi:google-classroom" width={16} />
-                  {subjectAssignmentData?.className || 'N/A'} {' - '}
-                  {subjectAssignmentData?.subjectType !== undefined
-                    ? SubjectType[subjectAssignmentData.subjectType]
-                    : ''}
-                </Typography>
-              </Box>
-
-              <Label
-                variant="soft"
-                color={
-                  PublishUnpublishStatusTypeColors[
-                    subjectAssignmentData?.status as PublishUnpublishStatusType
-                  ] as LabelColor
-                }
+              <Box
+                sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
               >
-                {
-                  PublishUnpublishStatusType[
-                    subjectAssignmentData?.status as PublishUnpublishStatusType
-                  ] as string
-                }
-              </Label>
+                <Box>
+                  <Skeleton variant="text" width={140} height={24} />
+                  <Skeleton variant="text" width={180} height={20} sx={{ mt: 0.5 }} />
+                </Box>
+                <Skeleton variant="rounded" width={72} height={24} sx={{ borderRadius: 1 }} />
+              </Box>
             </Box>
-          </Box>
 
-          {/* Subject List */}
-          <Typography variant="overline" sx={{ color: 'text.disabled', mb: 1, px: 1 }}>
-            Subjects
-          </Typography>
+            <Skeleton variant="text" width={60} height={16} sx={{ mb: 1, px: 1 }} />
 
-          <Scrollbar sx={{ flexGrow: 1 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {subjectAssignmentData?.subjects?.map((sub: any) => {
-                const isSelected = expandedSubject === sub.subjectCode;
-                return (
-                  <Box
-                    key={sub.subjectCode}
-                    onClick={() => setExpandedSubject(sub.subjectCode)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                      p: 1.5,
-                      cursor: 'pointer',
-                      borderRadius: 1.5,
-                      transition: 'all 0.2s',
-                      bgcolor: isSelected
-                        ? () => varAlpha(theme.palette.primary.mainChannel, 0.08)
-                        : 'transparent',
-                      color: isSelected ? 'primary.main' : 'text.secondary',
-                      '&:hover': {
-                        bgcolor: isSelected
-                          ? () => varAlpha(theme.palette.primary.mainChannel, 0.12)
-                          : 'action.hover',
-                      },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: isSelected ? 'primary.main' : 'text.disabled',
-                        transition: 'background-color 0.2s',
-                      }}
-                    />
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        fontWeight: isSelected ? 600 : 500,
-                        color: isSelected ? 'text.primary' : 'text.secondary',
-                      }}
-                    >
-                      {sub.subjectName || 'UNNAMED SUBJECT'}
-                    </Typography>
-
-                    {isSelected && (
-                      <Iconify
-                        icon="eva:arrow-ios-forward-fill"
-                        width={16}
-                        sx={{ ml: 'auto', color: 'primary.main' }}
-                      />
-                    )}
-                  </Box>
-                );
-              })}
+              {[...Array(4)].map((_, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    p: 1.5,
+                    borderRadius: 1.5,
+                  }}
+                >
+                  <Skeleton variant="circular" width={8} height={8} />
+                  <Skeleton variant="text" width={`${60 + i * 10}%`} height={20} />
+                </Box>
+              ))}
             </Box>
-          </Scrollbar>
-        </Card>
+          </Card>
+        </Grid>
+
+        {/* Content Skeleton */}
+        <Grid size={{ xs: 12, md: 9 }} sx={{ height: '100%' }}>
+          <Card
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: 'var(--shadows-10)',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Tabs Skeleton */}
+            <Box
+              sx={{
+                px: 2,
+                pt: 2,
+                bgcolor: () => varAlpha(theme.palette.grey['500Channel'], 0.04),
+                borderBottom: `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <Box sx={{ display: 'flex', gap: 1, pb: 1.5 }}>
+                {[100, 80, 100].map((w, i) => (
+                  <Skeleton
+                    key={i}
+                    variant="rounded"
+                    width={w}
+                    height={36}
+                    sx={{ borderRadius: 1 }}
+                  />
+                ))}
+              </Box>
+            </Box>
+
+            {/* Overview Content Skeleton */}
+            <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 3 }}>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Card sx={{ boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Skeleton variant="text" width={140} height={28} sx={{ mb: 3 }} />
+                      <Grid container spacing={3}>
+                        {[...Array(4)].map((_, i) => (
+                          <Grid size={{ xs: 12, sm: i < 2 ? 6 : 12 }} key={i}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                              <Skeleton
+                                variant="rounded"
+                                width={40}
+                                height={40}
+                                sx={{ borderRadius: 1.5, flexShrink: 0 }}
+                              />
+                              <Box sx={{ flex: 1 }}>
+                                <Skeleton variant="text" width={80} height={16} sx={{ mb: 0.5 }} />
+                                <Skeleton
+                                  variant="text"
+                                  width={i >= 2 ? '100%' : '70%'}
+                                  height={20}
+                                />
+                              </Box>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Card sx={{ boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Skeleton variant="text" width={120} height={28} sx={{ mb: 3 }} />
+
+                      <Skeleton variant="text" width={100} height={14} sx={{ mb: 2 }} />
+                      <Skeleton
+                        variant="rounded"
+                        width="100%"
+                        height={52}
+                        sx={{ borderRadius: 1.5, mb: 4 }}
+                      />
+
+                      <Skeleton variant="text" width={120} height={14} sx={{ mb: 2 }} />
+                      <Skeleton
+                        variant="rounded"
+                        width="100%"
+                        height={52}
+                        sx={{ borderRadius: 1.5 }}
+                      />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Box>
+          </Card>
+        </Grid>
+      </Grid>
+    );
+  }
+
+  return (
+    <Grid container spacing={2} sx={{ height: '100%' }}>
+      <Grid size={{ xs: 12, md: 3 }} sx={{ height: '100%' }}>
+        <SubjectSidebar
+          subjectAssignmentData={subjectAssignmentData}
+          expandedSubject={expandedSubject}
+          onSubjectSelect={setExpandedSubject}
+          classes={classes}
+          classId={classId}
+        />
       </Grid>
 
-      {/* Right Content Area */}
       <Grid size={{ xs: 12, md: 9 }} sx={{ height: '100%' }}>
         <Card
           sx={{
@@ -227,11 +256,10 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             overflow: 'hidden',
           }}
         >
-          {subjectAssignmentData?.subjects?.map(
-            (sub: any) =>
+          {(subjectAssignmentData?.data?.subjects as ISubjectDetail[] | undefined)?.map(
+            (sub: ISubjectDetail) =>
               expandedSubject === sub.subjectCode && (
                 <React.Fragment key={sub.subjectCode}>
-                  {/* Tabs Header */}
                   <Box
                     sx={{
                       px: 2,
@@ -245,11 +273,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                       onChange={tabs.onChange}
                       sx={{
                         '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
-                        '& .MuiTab-root': {
-                          minHeight: 48,
-                          minWidth: 100,
-                          mr: 1,
-                        },
+                        '& .MuiTab-root': { minHeight: 48, minWidth: 100, mr: 1 },
                       }}
                     >
                       {TABS.map((tab) => (
@@ -265,7 +289,6 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                     </Tabs>
                   </Box>
 
-                  {/* Tab Content */}
                   <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 3 }}>
                     <Scrollbar sx={{ height: '100%' }}>
                       {currentActiveComponent?.component && (

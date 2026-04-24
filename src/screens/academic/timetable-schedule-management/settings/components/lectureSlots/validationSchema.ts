@@ -211,18 +211,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                         .oneOf(['short', 'lunch'], 'Invalid break type'),
                     otherwise: (schema) => schema.notRequired(),
                   })
-                  .test(
-                    'break-duration-short',
-                    'Short break should be 5-20 minutes',
-                    // eslint-disable-next-line func-names
-                    function (value) {
-                      const { slotType, startTime, endTime } = this.parent;
-                      if (slotType !== 'break' || value !== 'short') return true;
-                      if (!startTime || !endTime) return true;
-                      const duration = dayjs(endTime).diff(dayjs(startTime), 'minute');
-                      return duration >= 5 && duration <= 20;
-                    }
-                  )
+
                   .test(
                     'break-duration-lunch',
                     'Lunch break should be 20-60 minutes',

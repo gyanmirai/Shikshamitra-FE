@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 
-export const getChapterInitialValues = (editData?: any) => {
+export const getChapterInitialValues = (editData?: Record<string, unknown>) => {
   const initialValues = {
     chapterNo: editData?.chapterNumber ?? editData?.chapterNo ?? null,
     chapterName: editData?.chapterName || '',
