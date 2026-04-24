@@ -45,7 +45,7 @@ const ApplyLeave = () => {
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
       academicYearId: currentYear?.id,
-      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
+      'month-year': date?.toISOString(),
     },
   });
 
