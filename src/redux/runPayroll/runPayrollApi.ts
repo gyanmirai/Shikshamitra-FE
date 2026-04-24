@@ -14,10 +14,10 @@ export const runPayrollApi = employeeApi.injectEndpoints({
     }),
 
     generateAndLockPayroll: builder.mutation({
-      query: ({ month, boardId }) => ({
+      query: ({ month, employeeIds }) => ({
         url: `/payroll/run`,
         method: 'POST',
-        body: { month, boardId },
+        body: { month, employeeIds },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),

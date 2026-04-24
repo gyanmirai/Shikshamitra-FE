@@ -65,7 +65,7 @@ export const hrPermissions = {
     list: `${defaultHrPermissionName}Employee.EmployeeList`,
     iCard: `${defaultHrPermissionName}Employee.ICard`,
     setting: {
-      root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee.Setting.DocumentTypes`,
+      root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee`,
       documentTypes: `${defaultHrPermissionName}Employee.Setting.DocumentTypes`,
     },
   },
@@ -75,7 +75,7 @@ export const hrPermissions = {
     runPayroll: `${defaultHrPermissionName}PayrollManagement.RunPayroll`,
     generateSalarySlip: `${defaultHrPermissionName}PayrollManagement.GenerateSalarySlip`,
     settings: {
-      root: `${defaultModulePermissionName}${defaultHrPermissionName}PayrollManagement.Settings.EarningComponents`,
+      root: `${defaultModulePermissionName}${defaultHrPermissionName}PayrollManagement`,
       earningComponents: `${defaultHrPermissionName}PayrollManagement.Settings.EarningComponents`,
       deductionComponents: `${defaultHrPermissionName}PayrollManagement.Settings.DeductionComponents`,
       pfRule: `${defaultHrPermissionName}PayrollManagement.Settings.PfRule`,
@@ -89,7 +89,7 @@ export const hrPermissions = {
     leaveManagement: `${defaultHrPermissionName}AttendanceAndLeave.LeaveManagement`,
     attendanceTracking: `${defaultHrPermissionName}AttendanceAndLeave.AttendanceTracking`,
     setting: {
-      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceAndLeave.AttendanceTracking`,
+      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceAndLeave`,
       shiftManagement: `${defaultHrPermissionName}AttendanceAndLeave.Setting.ShiftManagement`,
       attendanceConfiguration: `${defaultHrPermissionName}AttendanceAndLeave.AttendanceTracking`,
     },
@@ -101,12 +101,12 @@ export const hrPermissions = {
     leaveBalance: `${defaultHrPermissionName}AttendanceAndLeave.LeaveManagement`,
     leavePolicySetup: `${defaultHrPermissionName}AttendanceAndLeave.Setting.LeavePolicy`,
     setting: {
-      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceAndLeave.Setting.LeavePolicy`,
+      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceAndLeave.LeaveManagement`,
       leaveType: `${defaultHrPermissionName}AttendanceAndLeave.Setting.LeaveType`,
       leavePolicy: `${defaultHrPermissionName}AttendanceAndLeave.Setting.LeavePolicy`,
     },
   },
-  professionalManagement: `${defaultModulePermissionName}${defaultHrPermissionName}ProfessionalManagement.PerformanceReview`,
+  professionalManagement: `${defaultModulePermissionName}${defaultHrPermissionName}ProfessionalManagement`,
   reports: `${defaultModulePermissionName}${defaultHrPermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultHrPermissionName}Notification`,
 };
