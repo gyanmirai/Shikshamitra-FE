@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AttendanceImportItem } from 'src/redux/hr/attendanceImportApi';
 
@@ -24,10 +25,6 @@ import { AttendanceRowStatus } from 'src/enums/attendance-row-status';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
-  AttendanceImportBatchStatus,
-  AttendanceImportBatchStatusOptions,
-} from 'src/enums/attendance-import-batch-statusType';
-import {
   Person,
   Numbers,
   FilePresent,
@@ -35,6 +32,11 @@ import {
   CalendarMonth,
   CheckCircleOutline,
 } from '@mui/icons-material';
+import {
+  AttendanceImportBatchStatus,
+  AttendanceImportBatchStatusColors,
+  AttendanceImportBatchStatusOptions,
+} from 'src/enums/attendance-import-batch-statusType';
 import {
   useConfirmAttendanceMutation,
   usePreviewAttendanceMutation,
@@ -522,11 +524,11 @@ const AttendanceImportHistoryScreen = () => {
         filterType: 'enum',
         sticky: true,
         enumOptions: AttendanceImportBatchStatusOptions,
-        // render: (value: number) => (
-        //   <Label color={AttendanceImportBatchStatusColors[value] as LabelColor}>
-        //     {AttendanceImportBatchStatus[value]}
-        //   </Label>
-        // ),
+        render: (value: number) => (
+          <Label color={AttendanceImportBatchStatusColors[value] as LabelColor}>
+            {AttendanceImportBatchStatus[value]}
+          </Label>
+        ),
       },
       {
         id: 'isBatchLocked',

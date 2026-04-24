@@ -63,7 +63,7 @@ interface FormValues {
   reason: string;
   status?: number;
   rejectionReason: string;
-  docs: string;
+  docs: File;
 }
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
@@ -411,12 +411,13 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             </Grid>
             <Grid size={{ xs: 12 }}>
               <FileUploader
-                disabled={!!editData}
+                // disabled={!!editData}
                 // @ts-ignore
                 value={values.docs}
                 multiple={false}
                 onChange={(value) => {
                   // const reader = new FileReader();
+                  console.log('value', value);
                   setFieldValue('docs', value);
                   // reader.readAsDataURL(value as File);
                   // reader.readAsDataURL(value as File);
