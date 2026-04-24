@@ -1,19 +1,16 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -123,20 +120,7 @@ const RunPayroll = () => {
   const deductionDialog = useBoolean();
   const lockConfirmDialog = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
-  const [selectedBoard, setSelectedBoard] = useState('');
-  const [boards, setBoards] = useState<any[]>([]);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
-
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  useEffect(() => {
-    const currentBoards = currentYear?.boards || [];
-    setBoards(currentBoards);
-    if (!selectedBoard && currentBoards.length > 0) {
-      setSelectedBoard(currentBoards[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentYear?.boards]);
 
   const [
     fetchRunPayrollPreview,
@@ -153,9 +137,47 @@ const RunPayroll = () => {
     });
 
   const tableData = useMemo(
-    () => getRunPayrollPreviewData?.items || [],
+    () =>
+      (getRunPayrollPreviewData?.items || []).map((item: any) => {
+        const totalWorkingDays = Number(item.totalWorkingDays || 0);
+        const payableDays = Number(item.payableDays || 0);
+        const inferredAbsentDays = Math.max(0, totalWorkingDays - payableDays);
+        return {
+          id: item.employeeId,
+          employeeName: item.employeeName,
+          employeeIdentifier: item.employeeIdentifier,
+          employeeGroup: item.isTeaching ? 'Teaching' : 'Non-Teaching',
+          totalWorkingDays,
+          totalPresentDays: Number(item.presentDays || 0),
+          totalAbsentDays: inferredAbsentDays,
+          salary: Number(item.netPay || 0),
+          grossSalary: Number(item.grossSalary || 0),
+          basicSalary: Number(item.basicSalary || 0),
+          totalDeduction: Number(item.totalDeduction || 0),
+          netSalary: Number(item.netPay || 0),
+          lastMonthSalary: 0,
+          profilePicture: '',
+          status: item.isLocked ? PayrollStatus.Locked : PayrollStatus.Pending,
+        };
+      }),
     [getRunPayrollPreviewData?.items]
   );
+
+  useEffect(() => {
+    if (!tableData.length) {
+      setSelectedEmployeeIds([]);
+      return;
+    }
+
+    const pendingEmployeeIds = tableData
+      .filter((employee: any) => employee.status?.toLowerCase() !== 'locked')
+      .map((employee: any) => employee.id);
+
+    setSelectedEmployeeIds((prev) => {
+      const validPrevious = prev.filter((id) => pendingEmployeeIds.includes(id));
+      return validPrevious.length > 0 ? validPrevious : pendingEmployeeIds;
+    });
+  }, [tableData]);
 
   const handleFetchPreview = () => {
     if (!month) return;
@@ -317,7 +339,6 @@ const RunPayroll = () => {
     [deductionDialog, tableData, selectedEmployeeIds]
   );
 
-  const hasData = !!getRunPayrollPreviewData;
   const hasSelectedEmployees = selectedEmployeeIds.length > 0;
 
   return (
@@ -331,16 +352,6 @@ const RunPayroll = () => {
       {/* ── Filter Bar + Pipeline Actions ────────────────────────── */}
       <Card sx={{ p: 1.5, mb: 1 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <CustomSelect
-            label="Board"
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={selectedBoard}
-            onChange={(value) => setSelectedBoard(value as string)}
-            formControlProps={{ sx: { minWidth: 180 } }}
-          />
-
           <DatePicker
             label="Select Month"
             views={['month']}
@@ -438,14 +449,18 @@ const RunPayroll = () => {
           </Box>
         </Box>
 
-        <CustomizableTable
-          showCheckbox={selectedEmployeeIds.length !== 0}
-          noDataText={<>No Data Found For Payroll</>}
-          tableId="employee-salary-table"
-          isLoading={getRunPayrollPreviewLoading}
-          columns={columns}
-          data={tableData || []}
-        />
+        {tableData.length === 0 && !getRunPayrollPreviewLoading ? (
+          <PayrollEngineIdle />
+        ) : (
+          <CustomizableTable
+            showCheckbox={selectedEmployeeIds.length !== 0}
+            noDataText={<>No Data Found For Payroll</>}
+            tableId="employee-salary-table"
+            isLoading={getRunPayrollPreviewLoading}
+            columns={columns}
+            data={tableData || []}
+          />
+        )}
       </Card>
 
       {/* ── Deduction Dialog ─────────────────────────────────────── */}
@@ -492,7 +507,7 @@ const RunPayroll = () => {
               try {
                 const res = await generateAndLockPayroll({
                   month: month?.format('YYYY-MM'),
-                  boardId: selectedBoard,
+                  employeeIds: selectedEmployeeIds,
                 }).unwrap();
                 shikshaMitraToast.success({
                   message: res?.message || 'Payroll locked successfully.',
