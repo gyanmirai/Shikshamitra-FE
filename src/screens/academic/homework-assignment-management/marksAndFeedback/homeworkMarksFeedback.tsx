@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
@@ -9,64 +9,13 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetHomeworksQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { StudentSubmissions } from '../homeworkCreation/studentSubmission/homeworkStudentSubmission';
 
 import type { MarksFeedbackTabProps } from './index';
-
-const SUBJECTS = [
-  { id: '1', name: 'Mathematics' },
-  { id: '2', name: 'Science' },
-  { id: '3', name: 'English' },
-  { id: '4', name: 'History' },
-  { id: '5', name: 'Geography' },
-  { id: '6', name: 'Physics' },
-  { id: '7', name: 'Chemistry' },
-  { id: '8', name: 'Biology' },
-];
-
-const HOMEWORK_OPTIONS = [
-  {
-    value: 'Addition and Subtraction Practice',
-    label: 'Addition and Subtraction Practice',
-    submissionType: 'online_text',
-  },
-  {
-    value: 'Multiplication Tables Exercise',
-    label: 'Multiplication Tables Exercise',
-    submissionType: 'online_text',
-  },
-  {
-    value: 'Summer Vacation Project',
-    label: 'Summer Vacation Project',
-    submissionType: 'file_upload',
-  },
-  {
-    value: 'Chapter 1: Number System Assignment',
-    label: 'Chapter 1: Number System Assignment',
-    submissionType: 'file_upload',
-  },
-  {
-    value: 'Geometry Worksheet',
-    label: 'Geometry Worksheet',
-    submissionType: 'online_text',
-  },
-  {
-    value: 'Problem Solving Challenge',
-    label: 'Problem Solving Challenge',
-    submissionType: 'online_text',
-  },
-  {
-    value: 'Mental Math Quiz Preparation',
-    label: 'Mental Math Quiz Preparation',
-    submissionType: 'file_upload',
-  },
-  {
-    value: 'Real-life Math Applications',
-    label: 'Real-life Math Applications',
-    submissionType: 'file_upload',
-  },
-];
 
 const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // State to store selected subject
@@ -79,14 +28,61 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division
   const [division, setDivision] = useState<string>('');
-  // State to store selected homework type (daily/weekly/project)
-  // const [homeworkType, setHomeworkType] = useState('');
   // State to store homework title
   const [homeworkTitle, setHomeworkTitle] = useState('');
   const [selectedHomework, setSelectedHomework] = useState<any>(null);
 
   // Get current board and medium from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const selectedClassData = allClass.find((c) => c.id === classes);
+  const selectedDivisionData = allDivision.find((d) => d.id === division);
+
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: classes },
+    options: { skip: !classes },
+  });
+
+  const {
+    data: homeworkData,
+    isLoading: isHomeworkDataLoading,
+    isFetching: isHomeworkDataFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworksQuery,
+    params: {
+      academicMediumId: (medium as Medium)?.id,
+      StandardId: selectedClassData?.id,
+      DivisionId: selectedDivisionData?.id,
+      SubjectId: subject,
+    },
+    options: {
+      skip:
+        !(medium as Medium)?.id || !selectedClassData?.id || !selectedDivisionData?.id || !subject,
+    },
+  });
+
+  const homeworkOptions =
+    (homeworkData?.items || []).map((hw: any) => ({
+      id: hw.id,
+      label: hw.title,
+      submissionType: hw.submissionType,
+    })) || [];
+
+  const subjectOptions =
+    subjectOptionsData?.data?.items?.map((item: any) => ({
+      id: item.id,
+      name:
+        item.subjects?.length > 1
+          ? item.electiveGroupName
+          : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName || '',
+    })) || [];
 
   // Effect to update available classes when medium changes
   useEffect(() => {
@@ -101,6 +97,9 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
     const selectedClass = allClass.find((cls) => cls.id === classes);
     setAllDivision(selectedClass?.divisions || []);
     setDivision(selectedClass?.divisions?.[0]?.id || '');
+    setSubject('');
+    setHomeworkTitle('');
+    setSelectedHomework(null);
   }, [allClass, classes]);
 
   return (
@@ -136,12 +135,13 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           disabled={!classes}
         />
         <CustomSelect
-          options={SUBJECTS}
+          options={subjectOptions}
           label="Subject"
           value={subject}
           onChange={(val) => setSubject(val as string)}
           labelKey="name"
           valueKey="id"
+          isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />
@@ -151,14 +151,15 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           title={selectedHomework ? `${selectedHomework.label}` : undefined}
         >
           <Autocomplete
-            options={HOMEWORK_OPTIONS}
+            options={homeworkOptions}
             getOptionLabel={(option: any) => option.label || ''}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
-            value={HOMEWORK_OPTIONS.find((opt) => opt.value === homeworkTitle) || null}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            value={homeworkOptions.find((opt: any) => opt.id === homeworkTitle) || null}
             onChange={(event, newValue) => {
-              setHomeworkTitle(newValue?.value || '');
+              setHomeworkTitle(newValue?.id || '');
               setSelectedHomework(newValue || null);
             }}
+            loading={isHomeworkDataLoading || isHomeworkDataFetching}
             disabled={!subject}
             renderInput={(params) => (
               <TextField

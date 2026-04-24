@@ -20,6 +20,7 @@ export interface DivisionHomeworkMeta {
 }
 
 export interface IHomework {
+  standardId: string;
   chapterId: any;
   homeworkId: any;
   id: string;
@@ -90,6 +91,7 @@ export interface IHomeWorkCreationFormProps {
 
 export interface IHomeworkTableProps {
   homeworkData: any[]; // ideally use proper type like IHomeworkAssignment[]
+  isLoading?: boolean;
   setOpen: (open: boolean) => void;
   dialog: UseBooleanReturn;
   handleSwitchChange: (row: IHomework) => void;

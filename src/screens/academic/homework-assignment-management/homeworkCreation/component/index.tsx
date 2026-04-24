@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
@@ -19,11 +19,13 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   homeworkApi,
   useGetHomeworksQuery,
+  useGetHomeworkByIdQuery,
   useDeleteHomeworkMutation,
-  useUpdateHomeworkMutation,
+  useUpdateHomeworkStatusMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import HomeworkForm from './homeworkForm';
@@ -60,12 +62,12 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteHomeworkMutation,
   });
-  const { confirmWithUndo } = useConfirmWithUndo();
-
-  const [publishHomework, { isLoading: isPublishLoading }] = useQueryAndMutation({
+  const [updateHomeworkStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateHomeworkMutation,
+    currentQueryAndMutation: useUpdateHomeworkStatusMutation,
   });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -76,13 +78,14 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClass(allClasses[0]?.name || '');
+    setClass(allClasses[0]?.id || '');
   }, [medium]);
 
   // Update divisions when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+    setSubject(''); // reset subject when class changes
   }, [allClass, classes]);
 
   // Controls form visibility
@@ -93,23 +96,65 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   // State to track the currently selected homework assignment for editing
   const [selectedHomework, setSelectedHomework] = useState<IHomework | null>(null);
   const [, setViewHomework] = useState<IHomeworkDetail | null>(null);
+  // ID of homework to fetch detail for — drives the GET-by-id query
+  const [viewHomeworkId, setViewHomeworkId] = useState<string | null>(null);
 
   // State to store the list of homework/subject assignments
   // const [homeworkData] = useState<any[]>(homeworkTableData);
   // Redux dispatch
   const dispatch = useDispatch();
 
-  const selectedClassData = allClass.find((c: any) => c?.name === classes);
-  const selectedDivisionData = allDivision.find((d: any) => d?.name === division);
+  const selectedClassData = allClass.find((c: any) => c?.id === classes);
+  const selectedDivisionData = allDivision.find((d: any) => d?.id === division);
 
-  const { data: homeworkData, refetch } = useQueryAndMutation({
+  // Fetch full homework details when a specific homework is selected for viewing
+  const {
+    data: homeworkDetailData,
+    isLoading: isHomeworkDetailLoading,
+    isFetching: isHomeworkDetailFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkByIdQuery,
+    params: {
+      homeworkId: viewHomeworkId,
+      academicMediumId: (medium as Medium)?.id,
+    },
+    options: { skip: !viewHomeworkId },
+  });
+
+  const {
+    data: homeworkData,
+    refetch,
+    isLoading: isHomeworkDataLoading,
+    isFetching: isHomeworkDataFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworksQuery,
     params: {
-      classId: selectedClassData?.id,
-      divisionId: selectedDivisionData?.id,
-      subjectId: subject,
-      homeworkDate: date?.toISOString(),
+      academicMediumId: (medium as Medium)?.id,
+      StandardId: selectedClassData?.id,
+      DivisionId: selectedDivisionData?.id,
+      SubjectId: subject,
+      HomeworkDate: date?.toISOString(),
+    },
+    options: {
+      skip: !(medium as Medium)?.id || !selectedClassData?.id || !selectedDivisionData?.id,
+    },
+  });
+
+  // Fetch subjects for the selected class
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      standardId: classes,
+    },
+    options: {
+      skip: !classes,
     },
   });
 
@@ -155,7 +200,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           value={classes}
           onChange={(val) => setClass(val as string)}
           labelKey="name"
-          valueKey="name"
+          valueKey="id"
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
         <CustomSelect
@@ -164,26 +209,26 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           value={division}
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
-          valueKey="name"
+          valueKey="id"
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!classes}
         />
         <CustomSelect
-          options={[
-            { id: '1', name: 'Mathematics' },
-            { id: '2', name: 'Science' },
-            { id: '3', name: 'English' },
-            { id: '4', name: 'History' },
-            { id: '5', name: 'Geography' },
-            { id: '6', name: 'Physics' },
-            { id: '7', name: 'Chemistry' },
-            { id: '8', name: 'Biology' },
-          ]}
+          options={
+            subjectOptionsData?.data?.items?.map((item: any) => ({
+              id: item.id,
+              name:
+                item.subjects?.length > 1
+                  ? item.electiveGroupName
+                  : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName || '',
+            })) || []
+          }
           label="Subject"
           value={subject}
           onChange={(val) => setSubject(val as string)}
           labelKey="name"
           valueKey="id"
+          isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />
@@ -241,7 +286,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       </CustomDialog>
 
       <HomeworkTable
-        homeworkData={homeworkData || []}
+        homeworkData={homeworkData?.items || []}
+        isLoading={isHomeworkDataLoading || isHomeworkDataFetching}
         selectedDivision={division}
         setOpen={setOpen}
         dialog={addHomeworkDialog}
@@ -259,8 +305,9 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           deleteHomeworkDialog.onTrue();
         }}
         onViewDetails={(row) => {
-          viewHomeworkDetailDialog.onTrue();
+          setViewHomeworkId(row.id);
           setSelectedHomework(row);
+          viewHomeworkDetailDialog.onTrue();
         }}
         onViewSubmission={(row) => {
           viewHomeworkSubmissionDialog.onTrue();
@@ -287,36 +334,16 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             loading={isPublishLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
-              const nextStatus = 'PUBLISHED';
-              confirmWithUndo({
-                item: selectedHomework,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    homeworkApi.util.updateQueryData(
-                      'getHomeworks',
-                      {
-                        classId: selectedClassData?.id,
-                        divisionId: selectedDivisionData?.id,
-                        subjectId: subject,
-                        homeworkDate: date?.toISOString(),
-                      },
-                      (draft: any) => {
-                        const index = draft.findIndex(
-                          (item: any) => item.id === selectedHomework?.id
-                        );
-                        if (index !== -1) {
-                          draft[index].status = nextStatus;
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: () => refetch(),
-                onCommit: () =>
-                  publishHomework({
-                    homeworkId: selectedHomework?.id,
-                    status: nextStatus,
-                  }),
-              });
+              try {
+                await updateHomeworkStatus(selectedHomework?.id).unwrap();
+                shikshaMitraToast.success({
+                  message: `Homework "${selectedHomework?.title}" has been successfully published.`,
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to publish homework.',
+                });
+              }
               publishHomeworkDialog.onFalse();
               setSelectedHomework(null);
             }}
@@ -345,24 +372,38 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             size="small"
             loading={isDeleteLoading}
             onClick={async () => {
-              try {
-                const payload = {
-                  homeworkId: selectedHomework?.id,
-                };
+              const homeworkQueryParams = {
+                academicMediumId: (medium as Medium)?.id,
+                StandardId: selectedClassData?.id,
+                DivisionId: selectedDivisionData?.id,
+                SubjectId: subject,
+                HomeworkDate: date?.toISOString(),
+              };
 
-                await deleteHomework(payload).unwrap();
+              confirmWithUndo({
+                item: selectedHomework,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    homeworkApi.util.updateQueryData(
+                      'getHomeworks',
+                      homeworkQueryParams,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (hw: any) => hw.id === selectedHomework?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () => deleteHomework({ homeworkId: selectedHomework?.id }),
+              });
 
-                shikshaMitraToast.success({
-                  message: `Homework for "${selectedHomework?.title}" has been successfully deleted from Class ${classes} - ${division}.`,
-                });
-
-                deleteHomeworkDialog.onFalse();
-                setSelectedHomework(null);
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to delete homework.',
-                });
-              }
+              deleteHomeworkDialog.onFalse();
+              setSelectedHomework(null);
             }}
           >
             Yes
@@ -388,11 +429,17 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         open={viewHomeworkDetailDialog.value}
         handleClose={() => {
           viewHomeworkDetailDialog.onFalse();
-          setSelectedHomework(null);
+          setTimeout(() => {
+            setSelectedHomework(null);
+            setViewHomeworkId(null);
+          }, 200);
         }}
         maxWidth="md"
       >
-        <ViewHomeworkDetails homework={selectedHomework} />
+        <ViewHomeworkDetails
+          homework={homeworkDetailData?.data ?? selectedHomework}
+          isLoading={isHomeworkDetailLoading || isHomeworkDetailFetching}
+        />
       </CustomDialog>
 
       {/* <CustomDialog

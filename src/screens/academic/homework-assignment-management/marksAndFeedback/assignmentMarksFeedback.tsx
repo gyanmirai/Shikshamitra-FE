@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
@@ -9,23 +9,13 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
 
 import type { MarksFeedbackTabProps } from './index';
-
-const ASSIGNMENT_OPTIONS = [
-  { value: 'Periodic Assessment 1', label: 'Periodic Assessment 1' },
-  { value: 'Mid-Term Examination', label: 'Mid-Term Examination' },
-  { value: 'Final Term Examination', label: 'Final Term Examination' },
-  { value: 'Project Work: Environmental Study', label: 'Project Work: Environmental Study' },
-  { value: 'Research Paper: Scientific Method', label: 'Research Paper: Scientific Method' },
-  { value: 'Laboratory Experiment Report', label: 'Laboratory Experiment Report' },
-  { value: 'Case Study Analysis', label: 'Case Study Analysis' },
-  { value: 'Group Presentation', label: 'Group Presentation' },
-  { value: 'Portfolio Assessment', label: 'Portfolio Assessment' },
-  { value: 'Practical Skills Evaluation', label: 'Practical Skills Evaluation' },
-];
 
 const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // State to store selected assignment data
@@ -62,7 +52,53 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+    setSubject('');
   }, [allClass, classes]);
+
+  useEffect(() => {
+    setAssignmentTitle('');
+    setSelectedAssignment(null);
+  }, [subject]);
+
+  const selectedClassData = allClass.find((c) => c.id === classes);
+  const selectedDivisionData = allDivision.find((d) => d.id === division);
+
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: classes },
+    options: { skip: !classes },
+  });
+
+  const {
+    data: assignmentData,
+    isLoading: isAssignmentDataLoading,
+    isFetching: isAssignmentDataFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentsQuery,
+    params: {
+      academicMediumId: (medium as Medium)?.id,
+      StandardId: selectedClassData?.id,
+      DivisionId: selectedDivisionData?.id,
+      SubjectId: subject,
+    },
+    options: {
+      skip:
+        !(medium as Medium)?.id || !selectedClassData?.id || !selectedDivisionData?.id || !subject,
+    },
+  });
+
+  const assignmentOptions =
+    (assignmentData?.items || []).map((hw: any) => ({
+      id: hw.id,
+      label: hw.title,
+      submissionType: hw.submissionType,
+    })) || [];
 
   // Dialog control for bulk grade assignment
 
@@ -100,16 +136,16 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           disabled={!classes}
         />
         <CustomSelect
-          options={[
-            { id: '1', name: 'Mathematics' },
-            { id: '2', name: 'Science' },
-            { id: '3', name: 'English' },
-            { id: '4', name: 'History' },
-            { id: '5', name: 'Geography' },
-            { id: '6', name: 'Physics' },
-            { id: '7', name: 'Chemistry' },
-            { id: '8', name: 'Biology' },
-          ]}
+          options={
+            subjectOptionsData?.data?.items?.map((item: any) => ({
+              id: item.id,
+              name:
+                item.subjects?.length > 1
+                  ? item.electiveGroupName
+                  : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName || '',
+            })) || []
+          }
+          isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
           label="Subject"
           value={subject}
           onChange={(val) => setSubject(val as string)}
@@ -120,23 +156,19 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
         />
         <CustomTooltip
           placement="top"
-          title={selectedAssignment ? `${selectedAssignment.title}` : undefined}
+          title={selectedAssignment ? `${selectedAssignment.label}` : undefined}
         >
           <Autocomplete
-            options={ASSIGNMENT_OPTIONS}
-            disabled={!subject}
+            options={assignmentOptions}
             getOptionLabel={(option: any) => option.label || ''}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
-            value={ASSIGNMENT_OPTIONS.find((opt) => opt.value === assignmentTitle) || null}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            value={assignmentOptions.find((opt: any) => opt.id === assignmentTitle) || null}
             onChange={(event, newValue) => {
-              const selectedValue = newValue?.value || '';
-              setAssignmentTitle(selectedValue);
-              setSelectedAssignment({
-                id: selectedValue,
-                title: newValue?.label || selectedValue,
-                submissionType: 1, // Default to file upload type
-              });
+              setAssignmentTitle(newValue?.id || '');
+              setSelectedAssignment(newValue || null);
             }}
+            loading={isAssignmentDataLoading || isAssignmentDataFetching}
+            disabled={!subject}
             renderInput={(params) => (
               <TextField
                 {...params}

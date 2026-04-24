@@ -3,7 +3,8 @@ import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Grid, Typography } from '@mui/material';
+import { SubmissionType } from 'src/enums/submission_type';
+import { Box, Card, Grid, Skeleton, Typography } from '@mui/material';
 
 import AssignmentOverview from './assignmentOverview';
 
@@ -50,7 +51,149 @@ export const InfoItem = ({ icon, label, value }: InfoItemProps) => (
   </Box>
 );
 
-const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null }) => {
+const ViewAssignmentDetails = ({
+  assignment,
+  isLoading,
+}: {
+  assignment: IAssignment | null;
+  isLoading?: boolean;
+}) => {
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 1, height: '100%' }}>
+        <Scrollbar sx={{ height: '100%' }}>
+          {/* Top Info Card Skeleton */}
+          <Card
+            sx={{
+              mx: 'auto',
+              boxShadow: 'var(--shadows-10)',
+              borderRadius: 2,
+              ml: 1,
+              mb: 2,
+              mr: 1,
+              mt: 0.5,
+            }}
+          >
+            <Box sx={{ p: 2 }}>
+              <Grid container spacing={2}>
+                {[1, 2, 3, 4].map((item) => (
+                  <Grid size={{ xs: 12, md: 3 }} key={item}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                      <Skeleton
+                        variant="rounded"
+                        width={40}
+                        height={40}
+                        sx={{ borderRadius: 1.5 }}
+                      />
+                      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                        <Skeleton variant="text" width="40%" sx={{ fontSize: '0.875rem' }} />
+                        <Skeleton variant="text" width="70%" sx={{ fontSize: '1rem' }} />
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Card>
+
+          {/* Overview Skeleton */}
+          <Box sx={{ mb: 2 }}>
+            <Grid container spacing={2}>
+              {/* Left Column Skeleton */}
+              <Grid size={{ xs: 12, md: 8 }}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    mx: 'auto',
+                    boxShadow: 'var(--shadows-10)',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Box sx={{ p: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        mb: 2,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Skeleton variant="text" width="30%" height={32} />
+                      <Skeleton variant="rounded" width={80} height={24} sx={{ borderRadius: 4 }} />
+                    </Box>
+                    <Skeleton variant="text" width="15%" sx={{ mb: 1 }} />
+                    <Skeleton variant="rectangular" height={70} sx={{ mb: 3, borderRadius: 1 }} />
+                    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+                      <Skeleton
+                        variant="rounded"
+                        width={110}
+                        height={36}
+                        sx={{ borderRadius: 1 }}
+                      />
+                      <Skeleton
+                        variant="rounded"
+                        width={130}
+                        height={36}
+                        sx={{ borderRadius: 1 }}
+                      />
+                    </Box>
+                    <Skeleton variant="text" width="20%" sx={{ mb: 1.5 }} />
+                    <Skeleton variant="rounded" height={60} sx={{ borderRadius: 1 }} />
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Right Column Skeleton */}
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    mx: 'auto',
+                    boxShadow: 'var(--shadows-10)',
+                    borderRadius: 2,
+                  }}
+                >
+                  <Box sx={{ p: 2 }}>
+                    <Skeleton variant="text" width="40%" height={32} sx={{ mb: 2 }} />
+                    {[1, 2, 3].map((item) => (
+                      <Box
+                        key={item}
+                        sx={{ display: 'flex', gap: 1.5, mb: 2, alignItems: 'center' }}
+                      >
+                        <Skeleton variant="circular" width={24} height={24} />
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Skeleton variant="text" width="50%" />
+                          <Skeleton variant="text" width="70%" />
+                        </Box>
+                      </Box>
+                    ))}
+                    <Skeleton variant="text" width="40%" height={32} sx={{ mt: 4, mb: 2 }} />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 2,
+                        alignItems: 'center',
+                        p: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Skeleton variant="circular" width={36} height={36} />
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Skeleton variant="text" width="60%" />
+                        <Skeleton variant="text" width="40%" />
+                      </Box>
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
+        </Scrollbar>
+      </Box>
+    );
+  }
   if (!assignment) {
     return (
       <Box
@@ -109,14 +252,23 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
                 <InfoItem
                   icon={<Iconify icon="mdi:book-open-page-variant" />}
                   label="Subject"
-                  value={assignment.subjectName}
+                  value={(assignment as any).subjectName || assignment.subjectName}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <InfoItem
                   icon={<Iconify icon="mdi:google-classroom" />}
                   label="Class"
-                  value={assignment.className}
+                  value={
+                    [
+                      (assignment as any).standardName || assignment.className,
+                      assignment.divisionMeta?.divisionName ||
+                        (assignment as any).divisionSchedules?.[0]?.divisionName ||
+                        assignment.divisionMeta?.divisionId,
+                    ]
+                      .filter(Boolean)
+                      .join(' - ') || 'N/A'
+                  }
                 />
               </Grid>
 
@@ -124,14 +276,16 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
                 <InfoItem
                   icon={<Iconify icon="mdi:notebook-edit" />}
                   label="Type"
-                  value={assignment.assignmentsType}
+                  value={(assignment as any).assignmentTypeName || assignment.assignmentsType}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 3 }}>
                 <InfoItem
                   icon={<Iconify icon={GlobalIcons.submit} />}
                   label="Submit Via"
-                  value={assignment.submissionType}
+                  value={
+                    SubmissionType[assignment.submissionType as number] || assignment.submissionType
+                  }
                 />
               </Grid>
             </Grid>

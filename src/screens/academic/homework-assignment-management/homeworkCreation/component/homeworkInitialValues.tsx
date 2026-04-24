@@ -12,7 +12,7 @@ export const getHomeworkInitialValues = (
   title: editData?.title || '',
   description: editData?.description || '',
   class: editData?.class || classes || '',
-  classId: editData?.classId ?? undefined,
+  classId: editData?.classId || '',
 
   divisions:
     editData?.divisions?.map((div) => ({
@@ -35,4 +35,5 @@ export const getHomeworkInitialValues = (
   submission: editData?.submission || '',
   chapterId: undefined,
   homeworkId: undefined,
+  standardId: '',
 });

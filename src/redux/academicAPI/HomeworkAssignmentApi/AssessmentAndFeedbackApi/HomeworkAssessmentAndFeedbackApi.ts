@@ -6,13 +6,15 @@ export const homeworkAssessmentAndFeedbackApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET homework submissions
     getHomeworkSubmissions: builder.query({
-      query: ({ homeworkId, classId, divisionId, subjectId }) => ({
-        url: `homework/${homeworkId}/submissions`,
+      query: ({ academicMediumId, ClassId, DivisionId, SubjectId, HomeworkId }) => ({
+        url: `/homework/submissions`,
         method: 'GET',
         params: {
-          classId,
-          divisionId,
-          subjectId,
+          ...(academicMediumId && { academicMediumId }),
+          ...(ClassId && { ClassId }),
+          ...(DivisionId && { DivisionId }),
+          ...(SubjectId && { SubjectId }),
+          ...(HomeworkId && { HomeworkId }),
         },
       }),
       providesTags: [academicType.homeworkSubmissions],

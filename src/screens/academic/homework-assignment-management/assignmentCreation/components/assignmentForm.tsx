@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -21,6 +21,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
+import { useAddAssignmentMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import {
   Box,
   Grid,
@@ -32,43 +34,12 @@ import {
   Typography,
   FormControl,
 } from '@mui/material';
-import {
-  useAddAssignmentMutation,
-  useUpdateAssignmentMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { getAssignmentInitialValues } from './assignmentInitialValues';
 import { assignmentValidationSchema } from './assignmentValidationSchema';
 
 import type { IAssignmentFormProps } from '../type';
-
-export const allStudentIds = [
-  'st1',
-  'st2',
-  'st3',
-  'st4',
-  'st5',
-  'st6',
-  'st7',
-  'st8',
-  'st9',
-  'st10',
-  'st11',
-  'st12',
-  'st13',
-  'st14',
-  'st15',
-  'st16',
-  'st17',
-  'st18',
-  'st19',
-  'st20',
-  'st21',
-  'st22',
-  'st23',
-  'st24',
-  'st25',
-];
 
 const cardStyle = {
   p: 2,
@@ -122,20 +93,16 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
+
   const [addAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAssignmentMutation,
   });
-  const [updateAssignment, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateAssignmentMutation,
-  });
+
   // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
     setAllClass(allClasses);
   }, [classes, medium]);
 
@@ -143,49 +110,72 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
   }, [allClass, classes]);
-  // Initialize formik form with validation and submission handling
+
   const formik = useFormik({
     initialValues: getAssignmentInitialValues(editData, classes),
     validationSchema: assignmentValidationSchema(currentYear),
     onSubmit: async (values) => {
       try {
-        const payload = {
-          classId: values.classId,
-          subjectId: values.subjectId,
-          title: values.title,
-          description: values.description,
-          assignmentTypeId: values.assignmentTypeId,
-          totalMarks: values.totalMarks,
-          submissionType: values.submissionType,
-          attachment: values.attachments,
-          divisionSchedules: values.divisions.map((division: any) => ({
-            divisionId: division.divisionId,
-            publishAt: division.publishDate.toISOString(),
-            dueAt: division.dueDate.toISOString(),
-          })),
-        };
+        const formData = new FormData();
+        formData.append('StandardId', values.classId);
+        formData.append('SubjectId', values.subjectId);
+        formData.append('Title', values.title);
+        formData.append('AssignmentTypeId', values.assignmentTypeId);
+        formData.append('TotalMarks', String(values.totalMarks));
+        if (values.description) formData.append('Description', values.description);
+        formData.append('SubmissionType', String(values.submissionType));
 
-        if (editData) {
-          // For update, include the assignment ID
-          const updatePayload = {
-            assignmentId: editData.id,
-            body: payload,
-          };
-          await updateAssignment(updatePayload).unwrap();
-          shikshaMitraToast.success({
-            message: `Assignment "${values.title}" has been updated successfully.`,
-          });
-        } else {
-          await addAssignment({ academicMediumId: medium?.id, body: payload }).unwrap();
-          shikshaMitraToast.success({
-            message: `Assignment "${values.title}" has been created successfully.`,
+        if (values.attachments && values.attachments.length > 0) {
+          values.attachments.forEach((file: any) => {
+            formData.append('attachment', file);
           });
         }
+
+        values.divisions.forEach((division: any, index: number) => {
+          formData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
+          formData.append(
+            `DivisionSchedules[${index}].PublishAt`,
+            division.publishDate.toISOString()
+          );
+          formData.append(`DivisionSchedules[${index}].DueAt`, division.dueDate.toISOString());
+        });
+
+        await addAssignment({ academicMediumId: medium?.id, body: formData }).unwrap();
+        shikshaMitraToast.success({
+          message: `Assignment "${values.title}" has been created successfully.`,
+        });
         onClose(null, true);
       } catch (error: any) {
         shikshaMitraToast.error({ message: error?.data?.message || 'Failed to save assignment.' });
       }
     },
+  });
+
+  // Update divisions when class changes in form
+  useEffect(() => {
+    setAllDivision(allClass.find((org: any) => org?.id === formik.values.classId)?.divisions || []);
+  }, [allClass, formik.values.classId]);
+
+  const {
+    data: assignmentTypeData,
+    isLoading: isAssignmentTypeLoading,
+    isFetching: isAssignmentTypeFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: { skip: !(medium as Medium)?.id },
+  });
+
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: formik.values.classId },
+    options: { skip: !formik.values.classId },
   });
 
   return (
@@ -224,9 +214,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       valueKey="id"
                       onChange={(val) => {
                         formik.setFieldValue('classId', val);
-                        const standard = allClass.find((org: any) => org?.id === val);
-                        formik.setFieldValue('className', standard?.name);
-                        setAllDivision(standard?.divisions || []);
+                        formik.setFieldValue('subjectId', '');
+                        formik.setFieldValue('divisions', []);
                       }}
                       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                       error={!!(formik.touched.classId && formik.errors.classId)}
@@ -246,25 +235,20 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       onChange={(val) => {
                         const selectedDivs = val as string[];
                         const existingDivs = formik.values.divisions || [];
-
                         const newDivisions = selectedDivs.map((divId) => {
                           const selectedDivData = allDivision.find((d) => d.id === divId);
-
                           const existing = existingDivs.find((d) => d.divisionId === divId);
-
                           return (
                             existing || {
                               divisionId: divId,
-                              divisionName: selectedDivData?.name || '', // ← store division name here
+                              divisionName: selectedDivData?.name || '',
                               createdAt: dayjs(),
                               publishDate: null,
                               dueDate: null,
                             }
                           );
                         });
-
                         formik.setFieldValue('divisions', newDivisions);
-                        formik.setFieldValue('students', selectedDivs.length ? allStudentIds : []);
                       }}
                       labelKey="name"
                       valueKey="id"
@@ -292,13 +276,21 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     <CustomSelect
                       label="Subject *"
                       disabled={!formik.values.divisions.length}
-                      options={[
-                        { value: 'Mathematics', label: 'Mathematics' },
-                        { value: 'Science', label: 'Science' },
-                        { value: 'History', label: 'History' },
-                        { value: 'English', label: 'English' },
-                      ]}
+                      options={
+                        subjectOptionsData?.data?.items?.map((item: any) => ({
+                          id: item.id,
+                          name:
+                            item.subjects?.length > 1
+                              ? item.electiveGroupName
+                              : item.subjects?.[0]?.subject?.name ||
+                                item.subjects?.[0]?.subjectName ||
+                                '',
+                        })) || []
+                      }
                       value={formik.values.subjectId}
+                      labelKey="name"
+                      valueKey="id"
+                      isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
                       onChange={(val) => formik.setFieldValue('subjectId', val)}
                       formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.subjectId && formik.errors.subjectId)}
@@ -327,28 +319,17 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   </ShakingTextField>
                 </Grid>
 
+                {/* Assignment Type */}
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.assignmentTypeId && formik.errors.assignmentTypeId)}
                   >
                     <CustomSelect
                       label="Assignment Type *"
-                      options={[
-                        { label: 'Regular', value: 'Regular' },
-                        { label: 'Worksheet', value: 'Worksheet' },
-                        { label: 'Activity', value: 'Activity' },
-                        { label: 'Practice', value: 'Practice' },
-                        { label: 'Written Assignment', value: 'written_assignment' },
-                        { label: 'Reading Comprehension', value: 'reading_comprehension' },
-                        { label: 'Worksheet Practice', value: 'worksheet_practice' },
-                        { label: 'Problem Solving', value: 'problem_solving' },
-                        { label: 'Essay Writing', value: 'essay_writing' },
-                        { label: 'Project Work', value: 'project_work' },
-                        { label: 'Research Assignment', value: 'research_assignment' },
-                        { label: 'Lab Report', value: 'lab_report' },
-                        { label: 'Creative Writing', value: 'creative_writing' },
-                        { label: 'Revision Task', value: 'revision_task' },
-                      ]}
+                      options={assignmentTypeData?.data || []}
+                      labelKey="assignmentTypeName"
+                      valueKey="id"
+                      isLoading={isAssignmentTypeLoading || isAssignmentTypeFetching}
                       value={formik.values.assignmentTypeId || ''}
                       onChange={(val) => formik.setFieldValue('assignmentTypeId', val)}
                       formControlProps={{ fullWidth: true }}
@@ -360,6 +341,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   </ShakingTextField>
                 </Grid>
 
+                {/* Total Marks */}
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}
@@ -421,7 +403,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               </SectionCard>
             </Grid>
 
-            {/* Schedule Assignment */}
+            {/* Schedule Section */}
             {formik.values.divisions.length > 0 && (
               <Grid size={{ xs: 12 }}>
                 <SectionCard
@@ -451,7 +433,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                           >
                             <Box sx={{ minWidth: 80 }}>
                               <Chip
-                                label={`Div ${div.divisionName}`}
+                                label={`Div ${div.divisionName || allDivision.find((d) => d.id === div.divisionId)?.name || ''}`}
                                 color="primary"
                                 variant="soft"
                                 size="small"
@@ -463,31 +445,32 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                               <Grid size={{ xs: 12, md: 6 }}>
                                 <ShakingTextField
                                   error={
-                                    !!(
-                                      typeof formik.errors.divisions?.[idx] === 'object' &&
-                                      (formik.errors.divisions?.[idx] as any)?.publishDate &&
-                                      formik.touched.divisions?.[idx]?.publishDate
-                                    )
+                                    typeof formik.errors.divisions?.[idx] === 'object' &&
+                                    !!(formik.errors.divisions?.[idx] as any)?.publishDate &&
+                                    !!formik.touched.divisions?.[idx]?.publishDate
                                   }
                                 >
                                   <DateTimePicker
                                     label="Publish Date *"
-                                    value={div.publishDate}
-                                    onChange={(val) =>
-                                      formik.setFieldValue(`divisions[${idx}].publishDate`, val)
-                                    }
+                                    format="DD/MM/YYYY hh:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
-                                    format="DD/MM/YYYY hh:mm"
+                                    minDateTime={dayjs()}
+                                    value={div.publishDate ? dayjs(div.publishDate) : null}
+                                    onChange={(val) => {
+                                      formik.setFieldValue(`divisions[${idx}].publishDate`, val);
+                                      formik.validateField(`divisions[${idx}].publishDate`);
+                                    }}
+                                    ampm={false}
                                     slotProps={{
+                                      popper: { placement: 'top-start', sx: { zIndex: 1300 } },
                                       textField: {
                                         fullWidth: true,
                                         size: 'small',
-                                        error: !!(
+                                        error:
                                           typeof formik.errors.divisions?.[idx] === 'object' &&
-                                          formik.errors.divisions?.[idx]?.publishDate &&
-                                          formik.touched.divisions?.[idx]?.publishDate
-                                        ),
+                                          !!(formik.errors.divisions?.[idx] as any)?.publishDate &&
+                                          !!formik.touched.divisions?.[idx]?.publishDate,
                                         helperText:
                                           formik.touched.divisions?.[idx]?.publishDate &&
                                           typeof formik.errors.divisions?.[idx] === 'object'
@@ -502,32 +485,31 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                               <Grid size={{ xs: 12, md: 6 }}>
                                 <ShakingTextField
                                   error={
-                                    !!(
-                                      typeof formik.errors.divisions?.[idx] === 'object' &&
-                                      formik.errors.divisions?.[idx]?.dueDate &&
-                                      formik.touched.divisions?.[idx]?.dueDate
-                                    )
+                                    typeof formik.errors.divisions?.[idx] === 'object' &&
+                                    !!(formik.errors.divisions?.[idx] as any)?.dueDate &&
+                                    !!formik.touched.divisions?.[idx]?.dueDate
                                   }
                                 >
                                   <DateTimePicker
                                     label="Due Date *"
-                                    value={div.dueDate}
+                                    format="DD/MM/YYYY hh:mm"
+                                    minDate={dayjs(currentYear?.startDate)}
+                                    maxDate={dayjs(currentYear?.endDate)}
+                                    value={div.dueDate ? dayjs(div.dueDate) : null}
                                     onChange={(val) =>
                                       formik.setFieldValue(`divisions[${idx}].dueDate`, val)
                                     }
                                     disabled={!div.publishDate}
-                                    format="DD/MM/YYYY hh:mm"
-                                    minDate={dayjs(currentYear?.startDate)}
-                                    maxDate={dayjs(currentYear?.endDate)}
+                                    ampm={false}
                                     slotProps={{
+                                      popper: { placement: 'top-start', sx: { zIndex: 1300 } },
                                       textField: {
                                         fullWidth: true,
                                         size: 'small',
-                                        error: !!(
+                                        error:
                                           typeof formik.errors.divisions?.[idx] === 'object' &&
-                                          formik.errors.divisions?.[idx]?.dueDate &&
-                                          formik.touched.divisions?.[idx]?.dueDate
-                                        ),
+                                          !!(formik.errors.divisions?.[idx] as any)?.dueDate &&
+                                          !!formik.touched.divisions?.[idx]?.dueDate,
                                         helperText:
                                           formik.touched.divisions?.[idx]?.dueDate &&
                                           typeof formik.errors.divisions?.[idx] === 'object'
@@ -548,7 +530,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
               </Grid>
             )}
 
-            {/* Submission Type & Action Buttons */}
+            {/* Submission Type */}
             <Grid size={{ xs: 12 }}>
               <SectionCard
                 title="Submission Type"
@@ -559,33 +541,35 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                   </Typography>
                 }
               >
-                <FormControl
-                  component="fieldset"
-                  error={!!(formik.touched.submissionType && formik.errors.submissionType)}
-                  fullWidth
-                >
-                  <Grid container spacing={2}>
-                    {[
-                      { value: 0, label: 'Online Text' },
-                      { value: 1, label: 'File Upload' },
-                      { value: 2, label: 'In-Person' },
-                    ].map((item) => (
-                      <Grid size={{ xs: 12, md: 4 }} key={item.value}>
-                        <SubmissionTypeCard
-                          value={item.value}
-                          label={item.label}
-                          selected={formik.values.submissionType === item.value}
-                          onClick={() => formik.setFieldValue('submissionType', item.value)}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                  {formik.touched.submissionType && formik.errors.submissionType && (
-                    <Typography variant="caption" color="error" sx={{ mt: 1, ml: 1 }}>
-                      {formik.errors.submissionType}
-                    </Typography>
-                  )}
-                </FormControl>
+                <Grid size={{ xs: 12 }}>
+                  <FormControl
+                    component="fieldset"
+                    error={!!(formik.touched.submissionType && formik.errors.submissionType)}
+                    fullWidth
+                  >
+                    <Grid container spacing={2}>
+                      {[
+                        { value: 0, label: 'Online Text' },
+                        { value: 1, label: 'File Upload' },
+                        { value: 2, label: 'In-Person' },
+                      ].map((item) => (
+                        <Grid size={{ xs: 12, md: 4 }} key={item.value}>
+                          <SubmissionTypeCard
+                            value={item.value}
+                            label={item.label}
+                            selected={formik.values.submissionType === item.value}
+                            onClick={() => formik.setFieldValue('submissionType', item.value)}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                    {formik.touched.submissionType && formik.errors.submissionType && (
+                      <Typography variant="caption" color="error" sx={{ mt: 1, ml: 1 }}>
+                        {formik.errors.submissionType}
+                      </Typography>
+                    )}
+                  </FormControl>
+                </Grid>
               </SectionCard>
             </Grid>
           </Grid>
@@ -614,7 +598,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
           <LoadingButton
             size="small"
             variant="contained"
-            loading={isUpdateLoading || isAddLoading}
+            loading={isAddLoading}
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

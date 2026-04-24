@@ -6,14 +6,15 @@ export const assignmentApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET all assignments
     getAssignments: builder.query({
-      query: ({ classId, divisionId, subjectId, assignmentDate }) => ({
-        url: `app/assignment`,
+      query: ({ academicMediumId, StandardId, DivisionId, SubjectId, AssignmentDate }) => ({
+        url: `/academic/assignments`,
         method: 'GET',
         params: {
-          classId,
-          divisionId,
-          subjectId,
-          assignmentDate,
+          ...(academicMediumId && { academicMediumId }),
+          ...(StandardId && { StandardId }),
+          ...(DivisionId && { DivisionId }),
+          ...(SubjectId && { SubjectId }),
+          ...(AssignmentDate && { AssignmentDate }),
         },
       }),
       providesTags: [academicType.assignment],
@@ -21,35 +22,29 @@ export const assignmentApi = academicApi.injectEndpoints({
 
     // GET assignment by id
     getAssignmentById: builder.query({
-      query: (assignmentId) => ({
-        url: `app/assignment/${assignmentId}`,
+      query: ({
+        assignmentId,
+        academicMediumId,
+      }: {
+        assignmentId: string;
+        academicMediumId?: string;
+      }) => ({
+        url: `/academic/assignments/${assignmentId}`,
         method: 'GET',
+        params: {
+          ...(academicMediumId && { academicMediumId }),
+        },
       }),
       providesTags: [academicType.assignment],
     }),
 
-    // CREATE assignment
+    // CREATE assignment (multipart/form-data)
     addAssignment: builder.mutation({
       query: ({ academicMediumId, body }) => ({
-        url: `app/assignment?academicMediumId=${academicMediumId}`,
+        url: `/academic/assignments`,
         method: 'POST',
+        params: { academicMediumId },
         body,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }),
-      invalidatesTags: [academicType.assignment],
-    }),
-
-    // UPDATE assignment
-    updateAssignment: builder.mutation({
-      query: ({ assignmentId, body }) => ({
-        url: `app/assignment/${assignmentId}`,
-        method: 'PUT',
-        body,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [academicType.assignment],
     }),
@@ -57,18 +52,21 @@ export const assignmentApi = academicApi.injectEndpoints({
     // DELETE assignment
     deleteAssignment: builder.mutation({
       query: (assignmentId) => ({
-        url: `app/assignment/${assignmentId}`,
+        url: `/academic/assignments/${assignmentId}`,
         method: 'DELETE',
       }),
       invalidatesTags: [academicType.assignment],
     }),
 
-    // PUBLISH assignment
-    publishAssignment: builder.mutation({
-      query: ({ assignmentId, status }) => ({
-        url: `app/assignment/${assignmentId}/publish`,
-        method: 'POST',
-        data: { status },
+    // UPDATE assignment status
+    updateAssignmentStatus: builder.mutation({
+      query: (assignmentId: string) => ({
+        url: `/academic/assignments/${assignmentId}/status`,
+        method: 'PATCH',
+        body: {},
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       }),
       invalidatesTags: [academicType.assignment],
     }),
@@ -81,7 +79,6 @@ export const {
   useGetAssignmentsQuery,
   useGetAssignmentByIdQuery,
   useAddAssignmentMutation,
-  useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
-  usePublishAssignmentMutation,
+  useUpdateAssignmentStatusMutation,
 } = assignmentApi;
