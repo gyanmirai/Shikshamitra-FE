@@ -31,4 +31,6 @@ export interface ISubjectFormValues {
   className: string;
   subjects: ISubject[];
   totalLectures: number;
+  classId: string;
+  standardId?: string;
 }

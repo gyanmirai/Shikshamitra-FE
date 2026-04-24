@@ -1,27 +1,18 @@
 'use client';
 
-// Client-side component declaration
-
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
-// Import necessary types
-// import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { LoadingButton } from '@mui/lab';
-// Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
-// Import custom components
 import { Iconify } from 'src/components/iconify';
-// Import custom hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-// Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-// Import external dependencies
 import React, { useState, useEffect, useCallback } from 'react';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -36,7 +27,6 @@ import {
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { AddNewChapter } from './addChapterForm';
-// Import mock data
 import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
@@ -44,7 +34,6 @@ import ChapterDocuments from './components/chapterDocuments';
 import type { IChapter } from './type';
 
 const Subjects = () => {
-  // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [deleteChapter, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -52,33 +41,22 @@ const Subjects = () => {
   });
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
   const [subjectId, setSubjectId] = useState<string>('');
-
-  // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  // State for managing selected subject
   const [subject, setSubject] = useState<string>('');
-  // State for managing dialog open/close
-  // Custom hook for chapter dialog visibility
   const chapterDialog = useBoolean();
   const viewDocumentDialog = useBoolean();
   const deleteDialog = useBoolean();
-  // Custom hook for add chapter dialog visibility
   const addChapterDialog = useBoolean();
-  // State for storing subject data with initial temp data
-  const [subjectData] = useState<any>(subjectTempData);
-  // State for storing dialog data
-  const [, setDialogData] = useState<any>([]);
-  // State for managing selected chapter
+  const [subjectData] = useState(subjectTempData);
+  const [, setDialogData] = useState<
+    { divisionName: string; chapters: unknown[]; progress: number }[]
+  >([]);
   const [selectedChapter, setSelectedChapter] = useState<IChapter | null>(null);
-  // State for tracking edit mode
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  // Query hook for fetching class data
-  const { isLoading } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -86,21 +64,26 @@ const Subjects = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
-  // Handler for viewing chapter details
   const handleEyeClick = (subjectName: string) => {
-    const selectedClassData = subjectData.classes.find((cls: any) => cls.name === classes);
+    const selectedClassData = subjectData.classes.find(
+      (cls: { name: string }) => cls.name === classes
+    );
 
-    // Get chapters for all divisions for the selected subject
     const allDivisionChapters =
-      selectedClassData?.divisions.map((division: any) => {
-        const subjectDataOfClass = division.subjects.find((sub: any) => sub.name === subjectName);
+      selectedClassData?.divisions.map(
+        (division: {
+          name: string;
+          subjects: { name: string; chapters?: unknown[]; progress?: number }[];
+        }) => {
+          const subjectDataOfClass = division.subjects.find((sub) => sub.name === subjectName);
 
-        return {
-          divisionName: division.name,
-          chapters: subjectDataOfClass?.chapters || [],
-          progress: subjectDataOfClass?.progress || 0,
-        };
-      }) || [];
+          return {
+            divisionName: division.name,
+            chapters: subjectDataOfClass?.chapters || [],
+            progress: subjectDataOfClass?.progress || 0,
+          };
+        }
+      ) || [];
 
     setDialogData(allDivisionChapters);
     chapterDialog.onTrue();
@@ -108,26 +91,17 @@ const Subjects = () => {
 
   // Menu actions for table rows
   const actions = useCallback(
-    ({ popover: pop }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              // Commented navigation code
-              // setSearchParams?.({
-              //   tab: 'learningResources',
-              //   class: classes,
-              //   subject: row.subjectName,
-              // });
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
-            Add Learning Resources
-          </MenuItem>
-        </MenuList>
-      </>
+    (actionProps: { popover: { onClose: () => void } }) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            actionProps.popover.onClose();
+          }}
+        >
+          <Iconify icon="mdi:arrow-right-circle" sx={{ mr: 2 }} />
+          Add Learning Resources
+        </MenuItem>
+      </MenuList>
     ),
     []
   );
@@ -162,7 +136,7 @@ const Subjects = () => {
     },
   });
 
-  const handleClose = (_e: any, isSubmit?: boolean) => {
+  const handleClose = (_e: unknown, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addChapterDialog.onFalse();
       setIsEditMode(false);
@@ -176,7 +150,6 @@ const Subjects = () => {
   };
 
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
@@ -392,7 +365,9 @@ const Subjects = () => {
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Documents for {selectedChapter?.chapterNo} Chapter</Typography>
+            <Typography variant="h5">
+              Documents for {selectedChapter?.chapterNumber} Chapter
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"

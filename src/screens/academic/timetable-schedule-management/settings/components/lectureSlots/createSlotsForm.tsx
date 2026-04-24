@@ -21,6 +21,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -163,8 +164,8 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
         totalSlots: Number(config.totalSlots) || 0,
         weekRange: Array.isArray(config.weekRange) ? config.weekRange : [config.weekRange],
         timeSlots: config.timeSlots.map((slot: any) => ({
-          startTime: slot.startTime ? dayjs(slot.startTime).toISOString() : null,
-          endTime: slot.endTime ? dayjs(slot.endTime).toISOString() : null,
+          startTime: slot.startTime ? dateConvertor(slot.startTime.format(dateFormat)) : null,
+          endTime: slot.endTime ? dateConvertor(slot.endTime.format(dateFormat)) : null,
           slotType: slotTypeMap[slot.slotType] ?? 0,
           breakType: breakTypeMap[slot.breakType || ''] ?? 0,
         })),

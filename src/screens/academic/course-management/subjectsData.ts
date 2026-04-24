@@ -1,7 +1,5 @@
-// src/data/schoolData.ts
 export type DocumentType = 'pdf' | 'doc' | 'video' | 'image' | 'other';
 
-// Define the Document interface first since it's used in Chapter
 interface Document {
   id: string;
   name: string;
@@ -9,14 +7,12 @@ interface Document {
   file?: File;
 }
 
-// Define the Assignment interface
 interface Assignment {
   title: string;
   dueDate: string;
   status: string;
 }
 
-// Define the Chapter interface
 interface Chapter {
   id: number;
   chapterName: string;
@@ -27,7 +23,6 @@ interface Chapter {
   assignments: Assignment[];
 }
 
-// Define the Subject interface
 interface Subject {
   name: string;
   primaryTeacher: string;
@@ -40,24 +35,20 @@ interface Subject {
   chapters: Chapter[];
 }
 
-// Define the Division interface
 interface Division {
   name: string;
   subjects: Subject[];
 }
 
-// Define the Class interface
 interface Class {
   name: string;
   divisions: Division[];
 }
 
-// Define the root data structure
 interface SubjectData {
   classes: Class[];
 }
 
-// Export all interfaces
 export type { Class, Chapter, Subject, Document, Division, Assignment, SubjectData };
 
 export const subjectTempData = {
