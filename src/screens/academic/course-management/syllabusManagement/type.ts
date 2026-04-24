@@ -12,16 +12,17 @@ export interface IDocument {
 
 export interface IChapter {
   id: string;
-  chapterNo: number;
   chapterName: string;
-  startDate: string; // Format: YYYY-MM-DD
-  endDate: string; // Format: YYYY-MM-DD
-  viewMaterial: {
-    videos: number;
-    pdfs: number;
-  };
-  progress: number; // Percentage from 0 to 100
-  documents?: File[];
+  chapterNumber: number;
+  chapterStartTime: string;
+  chapterEndTime: string;
+  description: string;
+  standardId: string;
+  subjectId: string;
+  creatorId: string;
+  creationTime: string;
+  lastModifierId: string;
+  lastModificationTime: string;
 }
 
 export interface IChapterFormValues {

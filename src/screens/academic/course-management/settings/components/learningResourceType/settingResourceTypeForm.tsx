@@ -13,18 +13,14 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import type { IResourceTypeFormProps } from './type';
 
 const SettingResourceTypeForm: React.FC<IResourceTypeFormProps> = ({ open, onClose, editData }) => {
-  // Initialize formik form with validation schema and submit handler
   const formik = useFormik({
-    // Initial form values, populated with editData if available
     initialValues: {
       resourceTypeName: editData?.resourceTypeName || '',
     },
-    // Validation schema using Yup to ensure required fields
     validationSchema: Yup.object({
       resourceTypeName: Yup.string().trim().required('Resource Type Name is required'),
     }),
-    // Handle form submission
-    onSubmit: (values, formikHelpers) => {},
+    onSubmit: () => {},
   });
 
   return (

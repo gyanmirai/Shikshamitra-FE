@@ -19,6 +19,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -48,7 +49,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
   const theme = useTheme();
-  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
@@ -65,7 +66,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     currentQueryAndMutation: useUploadCurriculumFileMutation,
   });
 
-  // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
     validationSchema: getChapterValidationSchema(currentYear),
@@ -75,11 +75,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           assignedSubjectId: subjectId,
           chapterNumber: values.chapterNo,
           chapterName: values.chapterName,
-          chapterStartTime: values?.startDate?.toISOString(),
-          chapterEndTime: values?.endDate?.toISOString(),
+          chapterStartTime: dateConvertor(values.startDate.format(dateFormat), false),
+          chapterEndTime: dateConvertor(values.endDate.format(dateFormat), false),
           description: values.description,
           documents:
-            formik.values.documents?.map((doc: any) => (typeof doc === 'string' ? doc : doc)) || [],
+            formik.values.documents?.map((doc: File | string) =>
+              typeof doc === 'string' ? doc : doc
+            ) || [],
         };
 
         if (initialValues) {
@@ -99,10 +101,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           });
         }
         onClose(null, true);
-      } catch (error) {
-        console.error('Failed to save chapter', error);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         shikshaMitraToast.error({
-          message: `Failed to save chapter: ${error.message || 'Unknown error'}`,
+          message: `Failed to save chapter: ${errorMessage}`,
         });
       }
     },

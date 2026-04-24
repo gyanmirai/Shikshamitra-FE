@@ -8,7 +8,7 @@ import type { IChapter } from '../type';
 const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => (
   <Box p={2}>
     <Grid container spacing={2}>
-      {documentsList.map((doc: any, index: number) => (
+      {documentsList.map((doc, index: number) => (
         <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
           <DocumentCard file={doc} />
         </Grid>

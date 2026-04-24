@@ -43,9 +43,16 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     fetchPrimaryTeacherOptions,
     fetchSecondaryTeacherOptions,
   } = useTeacherSelection({
-    primaryTeacherId: subject.primaryTeacher,
-    secondaryTeacherIds: subject.secondaryTeacher,
+    primaryTeacherId: subject.primaryTeacherId,
+    secondaryTeacherIds: subject.secondaryTeacherIds,
   });
+
+  console.log(
+    subject,
+    'Rendering SubjectCard for subject:',
+    primaryTeacherObj,
+    secondaryTeacherObjs
+  );
 
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
@@ -155,24 +162,24 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               index={index ?? 0}
               primaryTeacherObj={primaryTeacherObj}
               secondaryTeacherObjs={secondaryTeacherObjs}
-              secondaryTeacherIds={subject.secondaryTeacher}
-              primaryTeacherId={subject.primaryTeacher}
+              secondaryTeacherIds={subject.secondaryTeacherIds}
+              primaryTeacherId={subject.primaryTeacherId}
               fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
               fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
               onPrimaryChange={(newValue) => {
                 setPrimaryTeacherObj(newValue);
-                formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '');
-                formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
-                formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
+                formik.setFieldValue(`subjects.${index}.primaryTeacherId`, newValue?.id ?? '');
+                formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
+                formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
               }}
               onSecondaryChange={(newValues) => {
                 setSecondaryTeacherObjs(newValues);
                 formik.setFieldValue(
-                  `subjects.${index}.secondaryTeacher`,
+                  `subjects.${index}.secondaryTeacherIds`,
                   newValues.map((item) => item.id)
                 );
-                formik.setFieldTouched(`subjects.${index}.secondaryTeacher`, true, false);
-                formik.setFieldTouched(`subjects.${index}.primaryTeacher`, true, false);
+                formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
+                formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
               }}
               getError={getError}
             />

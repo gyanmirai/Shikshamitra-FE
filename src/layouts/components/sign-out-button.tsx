@@ -20,7 +20,7 @@ export function SignOutButton({ onClose, ...other }: Props) {
       setLoading(true);
       // await dispatch(signOutUser() as any).unwrap();
       await signOut({
-        callbackUrl: '/login',
+        callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/login`,
       });
       setLoading(false);
       onClose?.();

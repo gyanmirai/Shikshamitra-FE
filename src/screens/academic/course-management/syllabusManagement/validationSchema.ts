@@ -1,13 +1,7 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-// let currentYear: number;
-
-// Create a function to get current year from redux store
-// export const getCurrentYear = (state: RootState): number => state.globalState.currentYear;
-
-// Validation schema for form fields
-export const getChapterValidationSchema = (currentYear: any) =>
+export const getChapterValidationSchema = (currentYear: { startDate: string; endDate: string }) =>
   Yup.object({
     chapterNo: Yup.number().required('Chapter Number is required'),
     chapterName: Yup.string().required('Chapter Name is required'),

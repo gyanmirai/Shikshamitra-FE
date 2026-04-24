@@ -21,23 +21,15 @@ import SettingResourceTypeForm from './settingResourceTypeForm';
 import type { IResourceType } from './type';
 
 const ResourceTypeCreation = () => {
-  // Dialog state for add/edit resource type form
   const addDialog = useBoolean();
-  // Dialog state for delete confirmation
   const deleteDialog = useBoolean();
-  // State to control the visibility of the dialog
   const [open, setOpen] = useState(false);
-  // State to track if there are unsaved changes from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  // State to store the currently selected resource type for edit/delete
   const [selected, setSelected] = useState<IResourceType | null>(null);
-  // State to store the list of resource types
   const [resourceTypes] = useState<IResourceType[]>(learningResourceData);
-  // Redux dispatch function for dispatching actions
   const dispatch = useDispatch();
 
-  // Handler for closing dialogs with optional submit flag
-  const handleClose = (_e: any, isSubmit?: boolean) => {
+  const handleClose = (_e: unknown, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       setOpen(false);
       dispatch(setIsChanges(false));

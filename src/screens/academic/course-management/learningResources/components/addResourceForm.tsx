@@ -8,9 +8,9 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Upload } from 'src/components/upload';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -19,33 +19,25 @@ import { validationSchema } from '../validationSchema';
 import { getLearningResourceInitialData } from './getLearningResourceInitialData';
 
 import type { IResourceData, ICreateLearningResourcesProps } from '../type';
-// Component for creating and editing learning resources
+
 const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
   data,
   onClose,
   onSave,
   isEdit,
 }) => {
-  // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-
-  // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
     setAllClass(allClasses);
   }, [medium]);
 
-  // Initialize formik for form handling
   const formik = useFormik<IResourceData>({
-    // Set initial form values based on edit mode and existing data
     initialValues: getLearningResourceInitialData(isEdit, data),
     validationSchema,
-    // Handle form submission
     onSubmit: (values) => {
       const updatedValues = {
         ...values,
@@ -56,24 +48,20 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
     },
   });
 
-  // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+  const handleRemoveFile = (setFieldValue: (field: string, value: string) => void) => {
     setFieldValue('document', '');
-  }, []);
+  };
 
-  // Handler to remove all file attachments
-  const handleRemoveAllFiles = useCallback((setFieldValue: (field: string, value: any) => void) => {
+  const handleRemoveAllFiles = (setFieldValue: (field: string, value: string) => void) => {
     setFieldValue('document', '');
-  }, []);
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          {/* Scrollable container for form fields */}
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              {/* Class selection dropdown */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.className && formik.errors.className) || false}
@@ -92,7 +80,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Subject selection dropdown */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.subject && formik.errors.subject) || false}
@@ -138,7 +125,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Resource title input */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.resourceTitle && formik.errors.resourceTitle) || false}
@@ -157,7 +143,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* File upload box */}
               <Grid size={{ xs: 12 }}>
                 <Upload
                   thumbnail
@@ -177,7 +162,6 @@ const CreateNewResource: React.FC<ICreateLearningResourcesProps> = ({
               </Grid>
             </Grid>
           </Scrollbar>
-          {/* Action buttons */}
           <DialogActions>
             <Button
               variant="outlined"

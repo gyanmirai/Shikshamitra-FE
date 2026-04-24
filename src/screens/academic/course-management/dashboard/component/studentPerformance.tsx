@@ -1,6 +1,5 @@
 'use client';
 
-import { color } from '@mui/system';
 import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
@@ -40,7 +39,7 @@ const StudentPerformance = () => {
             p: 3,
             boxShadow: 'none',
             position: 'relative',
-            color: `${color}.darker`,
+            color: `text.primary`,
             backgroundColor: 'common.white',
             transition: 'all 0.3s ease',
             '&:hover': {
@@ -82,7 +81,7 @@ const StudentPerformance = () => {
               height: 240,
               opacity: 0.24,
               position: 'absolute',
-              color: `${color}.main`,
+              color: `secondary.main`,
             }}
           />
         </Card>
@@ -100,7 +99,7 @@ const StudentPerformance = () => {
             p: 3,
             boxShadow: 'none',
             position: 'relative',
-            color: `${color}.darker`,
+            color: `text.primary`,
             backgroundColor: 'common.white',
             transition: 'all 0.3s ease',
             '&:hover': {
@@ -142,7 +141,7 @@ const StudentPerformance = () => {
               height: 240,
               opacity: 0.24,
               position: 'absolute',
-              color: `${color}.main`,
+              color: 'primary.main',
             }}
           />
         </Card>
@@ -160,7 +159,7 @@ const StudentPerformance = () => {
             p: 3,
             boxShadow: 'none',
             position: 'relative',
-            color: `${color}.darker`,
+            color: `text.primary`,
             backgroundColor: 'common.white',
             transition: 'all 0.3s ease',
             '&:hover': {
@@ -202,7 +201,7 @@ const StudentPerformance = () => {
               height: 240,
               opacity: 0.24,
               position: 'absolute',
-              color: `${color}.main`,
+              color: 'warning.main',
             }}
           />
         </Card>
