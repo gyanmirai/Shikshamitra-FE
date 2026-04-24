@@ -281,7 +281,6 @@ const ApplyLeave = () => {
               display: 'flex',
               p: 2,
               gap: 2,
-              mt: 1,
               pl: 1,
               mb: 1,
               justifyContent: 'space-between',

@@ -12,6 +12,10 @@ interface TeacherProfile {
   status?: string;
   email?: string;
   experience?: string;
+  division?: string;
+  class?: string;
+  dailyStatus?: string;
+  qualification?: string;
 }
 
 const TeacherHoverProfile: React.FC<{
