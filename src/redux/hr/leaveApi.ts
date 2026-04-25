@@ -207,6 +207,7 @@ export const {
   useUpdateLeavePolicyMutation,
   useDeleteLeavePolicyMutation,
   useGetLeaveRequestsQuery,
+  useLazyGetLeaveRequestsQuery,
   useGetLeaveCalendarQuery,
   useLazyGetLeaveCalendarQuery,
   useCreateLeaveRequestMutation,
