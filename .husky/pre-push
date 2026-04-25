@@ -1,4 +1,10 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npm run prepush-check
+if [ "$PREPUSH_FULL" = "1" ]; then
+  echo "Running full pre-push checks (build)..."
+  npm run prepush-check:full
+else
+  echo "Running fast pre-push checks (typecheck). Set PREPUSH_FULL=1 for full build."
+  npm run prepush-check
+fi
