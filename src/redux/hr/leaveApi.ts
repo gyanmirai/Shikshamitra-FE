@@ -195,11 +195,13 @@ export const leaveApi = api.injectEndpoints({
 
 export const {
   useGetLeaveTypesQuery,
+  useLazyGetLeaveTypesQuery,
   useCreateLeaveTypeMutation,
   useGetLeaveTypeByIdQuery,
   useUpdateLeaveTypeMutation,
   useDeleteLeaveTypeMutation,
   useGetLeavePoliciesQuery,
+  useLazyGetLeavePoliciesQuery,
   useCreateLeavePolicyMutation,
   useGetLeavePolicyByIdQuery,
   useUpdateLeavePolicyMutation,
