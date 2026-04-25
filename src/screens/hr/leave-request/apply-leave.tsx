@@ -32,13 +32,27 @@ import {
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  getAcademicYearStartMonth,
+  shouldDisableMonthBeforeAcademicYearStart,
+} from 'src/screens/hr/leave-request/leave-request.utils';
 
 import AddLeaveRequest from './leave-requst';
 import LeaveCalender, { LeaveRequestForm } from './leave-calender';
 
 const ApplyLeave = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+  const [date, setDate] = useState<Dayjs | null>(null);
+
+  React.useEffect(() => {
+    if (!currentYear?.startDate) return;
+    setDate(getAcademicYearStartMonth(currentYear.startDate));
+  }, [currentYear?.id, currentYear?.startDate]);
+
+  const shouldDisableMonth = useCallback(
+    (month: Dayjs) => shouldDisableMonthBeforeAcademicYearStart(month, currentYear?.startDate),
+    [currentYear?.startDate]
+  );
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -46,6 +60,9 @@ const ApplyLeave = () => {
     params: {
       academicYearId: currentYear?.id,
       'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
+    },
+    options: {
+      skip: !currentYear?.id || !date,
     },
   });
 
@@ -293,6 +310,7 @@ const ApplyLeave = () => {
               minDate={dayjs(currentYear?.startDate)}
               maxDate={dayjs(currentYear?.endDate)}
               views={['year', 'month']}
+              shouldDisableMonth={shouldDisableMonth}
               slotProps={{
                 textField: {
                   size: 'small',
@@ -422,11 +440,12 @@ const ApplyLeave = () => {
           </Box>
         }
       >
-        {editData ? (
-          <LeaveRequestForm editData={editData} />
-        ) : (
-          <AddLeaveRequest editData={editData} handleClose={handleClose} />
-        )}
+        {addLeaveRequestDialog?.value &&
+          (editData ? (
+            <LeaveRequestForm editData={editData} />
+          ) : (
+            <AddLeaveRequest editData={editData} handleClose={handleClose} />
+          ))}
       </CustomDialog>
     </Box>
   );

@@ -1,3 +1,5 @@
+import type { AcademicYear } from 'src/types/school';
+
 import dayjs from 'dayjs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
@@ -15,6 +17,11 @@ export interface LeaveRequestFormValuesForPayload {
   endDate: dayjs.Dayjs | null;
   reason: string;
   docs: unknown;
+}
+
+function parseApiDateWithoutTimezoneShift(input: string): dayjs.Dayjs {
+  const dateOnly = String(input || '').slice(0, 10);
+  return dayjs(dateOnly || input);
 }
 
 export function buildCreateLeaveRequestFormData(
@@ -35,8 +42,8 @@ export function buildCreateLeaveRequestFormData(
   const docs = values.docs as any;
   if (docs instanceof File) {
     formData.append('File', docs);
-  } else if (Array.isArray(docs) && docs.length > 0) {
-    formData.append('attachment', docs[0]);
+  } else if (Array.isArray(docs) && docs.length > 0 && docs[0] instanceof File) {
+    formData.append('File', docs[0]);
   }
 
   return formData;
@@ -60,6 +67,87 @@ export function isAdminFromProfile(profile: any): boolean {
   }
 
   return String(role || '').toLowerCase() === 'admin';
+}
+
+export function isEmployeeSelectionValidForCreate(
+  employee: EmployeeOption | null,
+  isAdminUser: boolean
+): boolean {
+  if (!employee?.id) {
+    return false;
+  }
+
+  if (isAdminUser) {
+    return employee.id !== SELF_EMPLOYEE_ID;
+  }
+
+  return true;
+}
+
+export function resolveAcademicYearIdForLeaveDate(
+  leaveStartDate: dayjs.Dayjs | null,
+  academicYears: AcademicYear[],
+  fallbackAcademicYearId?: string
+): string | undefined {
+  if (!leaveStartDate || !leaveStartDate.isValid()) {
+    return fallbackAcademicYearId;
+  }
+
+  const selectedDate = dayjs(leaveStartDate.format('YYYY-MM-DD'));
+
+  const matched = academicYears.find((year) => {
+    const yearStart = parseApiDateWithoutTimezoneShift(year.startDate).startOf('day');
+    const yearEnd = parseApiDateWithoutTimezoneShift(year.endDate).endOf('day');
+
+    return (
+      selectedDate.valueOf() >= yearStart.valueOf() && selectedDate.valueOf() <= yearEnd.valueOf()
+    );
+  });
+
+  return matched?.id || fallbackAcademicYearId;
+}
+
+export function isDateWithinAcademicYear(
+  date: dayjs.Dayjs | null,
+  academicYear?: Pick<AcademicYear, 'startDate' | 'endDate'> | null
+): boolean {
+  if (!date || !date.isValid() || !academicYear?.startDate || !academicYear?.endDate) {
+    return false;
+  }
+
+  const normalizedDate = dayjs(date.format('YYYY-MM-DD'));
+  const yearStart = parseApiDateWithoutTimezoneShift(academicYear.startDate).startOf('day');
+  const yearEnd = parseApiDateWithoutTimezoneShift(academicYear.endDate).endOf('day');
+
+  return (
+    normalizedDate.valueOf() >= yearStart.valueOf() && normalizedDate.valueOf() <= yearEnd.valueOf()
+  );
+}
+
+export function getAcademicYearStartMonth(academicYearStartDate?: string): dayjs.Dayjs | null {
+  if (!academicYearStartDate) {
+    return null;
+  }
+
+  const start = parseApiDateWithoutTimezoneShift(academicYearStartDate);
+  return start.isValid() ? start.startOf('month') : null;
+}
+
+export function shouldDisableMonthBeforeAcademicYearStart(
+  candidateMonth: dayjs.Dayjs,
+  academicYearStartDate?: string
+): boolean {
+  const startMonth = getAcademicYearStartMonth(academicYearStartDate);
+
+  if (!startMonth || !candidateMonth?.isValid()) {
+    return false;
+  }
+
+  if (candidateMonth.year() !== startMonth.year()) {
+    return false;
+  }
+
+  return candidateMonth.month() < startMonth.month();
 }
 
 export { parseApiProblemDetail };

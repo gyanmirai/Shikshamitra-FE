@@ -5,17 +5,16 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { useGetYearQuery } from 'src/redux/year/yearApi';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -26,8 +25,8 @@ import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
-  useGetLeaveTypesQuery,
-  useGetLeavePoliciesQuery,
+  useLazyGetLeaveTypesQuery,
+  useLazyGetLeavePoliciesQuery,
   useCreateLeaveRequestMutation,
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
@@ -38,13 +37,13 @@ import {
   isAdminFromProfile,
   type EmployeeOption,
   parseApiProblemDetail,
+  isDateWithinAcademicYear,
   buildEmployeeSelectOptions,
   LEAVE_TARGET_EMPLOYEE_REQUIRED,
   buildCreateLeaveRequestFormData,
+  isEmployeeSelectionValidForCreate,
+  resolveAcademicYearIdForLeaveDate,
 } from './leave-request.utils';
-
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
 
 // ----------------------------------------------------------------------
 
@@ -72,8 +71,11 @@ interface FormValues {
   reason: string;
   status?: number;
   rejectionReason: string;
-  docs: File;
+  docs: unknown;
 }
+
+const leaveTypeOptionsCacheByAcademicYear: Record<string, any[]> = {};
+const leavePolicyOptionsCacheByAcademicYear: Record<string, any[]> = {};
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
@@ -100,27 +102,27 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const {
+    data: yearsData,
+    isLoading: isYearsLoading,
+    isFetching: isYearsFetching,
+  } = useGetYearQuery(undefined, {
+    refetchOnMountOrArgChange: false,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+  });
   const { data: session } = useSession();
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
-  const {
-    data: leaveTypesData,
-    isLoading: isLeaveTypeLoading,
-    isFetching: isLeaveTypeFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeaveTypesQuery,
-    params: { academicYearId: currentYear?.id },
-  });
 
-  const {
-    data: leavePoliciesData,
-    isLoading: isLeavePolicyLoading,
-    isFetching: isLeavePolicyFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeavePoliciesQuery,
-    params: { academicYearId: currentYear?.id },
-  });
+  const [leaveTypeOptions, setLeaveTypeOptions] = useState<any[]>([]);
+  const [leavePolicyOptions, setLeavePolicyOptions] = useState<any[]>([]);
+
+  const [triggerLeaveTypes, { isLoading: isLeaveTypeLoading, isFetching: isLeaveTypeFetching }] =
+    useLazyGetLeaveTypesQuery();
+  const [
+    triggerLeavePolicies,
+    { isLoading: isLeavePolicyLoading, isFetching: isLeavePolicyFetching },
+  ] = useLazyGetLeavePoliciesQuery();
 
   const {
     initialValues,
@@ -159,24 +161,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           'is-valid-dayjs',
           'Start Date must be a valid date',
           (value) => value && dayjs(value as any).isValid()
-        )
-        .test(
-          'min-date',
-          (value) =>
-            `Start Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
-          (value) => {
-            if (!currentYear?.startDate) return false;
-            return value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day');
-          }
-        )
-        .test(
-          'max-date',
-          (value) =>
-            `Start Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
-          (value) => {
-            if (!currentYear?.endDate) return false;
-            return value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day');
-          }
         ),
 
       endDate: Yup.mixed()
@@ -190,26 +174,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         .test('is-after-start-date', 'End Date cannot be before Start Date', function (value) {
           const { startDate } = this.parent;
           if (!value || !startDate) return true;
-          return dayjs(value as any).isSameOrAfter(dayjs(startDate));
-        })
-        .test(
-          'min-date',
-          (value) =>
-            `End Date must be on or after ${dayjs(currentYear?.startDate).format('DD/MM/YYYY')}`,
-          (value) => {
-            if (!currentYear?.startDate) return false;
-            return value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day');
-          }
-        )
-        .test(
-          'max-date',
-          (value) =>
-            `End Date must be on or before ${dayjs(currentYear?.endDate).format('DD/MM/YYYY')}`,
-          (value) => {
-            if (!currentYear?.endDate) return false;
-            return value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day');
-          }
-        ),
+          return dayjs(value as any).valueOf() >= dayjs(startDate as any).valueOf();
+        }),
       reason: Yup.string()
         .min(5, 'Reason must be at least 5 characters')
         .max(500, 'Reason must not exceed 500 characters')
@@ -237,6 +203,41 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             await approveLeave({ id: editData.id, body: {} });
           }
         } else {
+          if (
+            !isEmployeeSelectionValidForCreate(
+              formValues.employee as EmployeeOption | null,
+              isAdminUser
+            )
+          ) {
+            setFieldError('employee', 'Please select an employee to create leave.');
+            return;
+          }
+
+          const isWithinCurrentAcademicYear = isDateWithinAcademicYear(
+            formValues.startDate,
+            currentYear as any
+          );
+          const availableAcademicYears = yearsData?.items || [];
+
+          if (!isWithinCurrentAcademicYear && availableAcademicYears.length === 0) {
+            setFieldError(
+              'startDate',
+              'Academic years are still loading. Please try again in a moment.'
+            );
+            return;
+          }
+
+          const resolvedAcademicYearId = resolveAcademicYearIdForLeaveDate(
+            formValues.startDate,
+            availableAcademicYears,
+            isWithinCurrentAcademicYear ? currentYear?.id : undefined
+          );
+
+          if (!resolvedAcademicYearId) {
+            setFieldError('startDate', 'Unable to resolve academic year for selected start date.');
+            return;
+          }
+
           // --- Create flow: build multipart/form-data body as per API contract ---
           const formData = buildCreateLeaveRequestFormData({
             employee: formValues.employee as EmployeeOption | null,
@@ -249,7 +250,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           });
 
           const createResult: any = await addLeave({
-            academicYearId: currentYear?.id,
+            academicYearId: resolvedAcademicYearId,
             body: formData,
           });
 
@@ -277,6 +278,93 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       resetForm();
     }
   }, [editData, resetForm]);
+
+  const catalogAcademicYearId = useMemo(() => {
+    if (editData || !currentYear?.id) {
+      return currentYear?.id as string | undefined;
+    }
+
+    const isWithinCurrentAcademicYear = isDateWithinAcademicYear(
+      values.startDate,
+      currentYear as any
+    );
+    const resolvedAcademicYearId = resolveAcademicYearIdForLeaveDate(
+      values.startDate,
+      yearsData?.items || [],
+      isWithinCurrentAcademicYear ? currentYear.id : undefined
+    );
+
+    return resolvedAcademicYearId;
+  }, [currentYear, editData, values.startDate, yearsData?.items]);
+
+  useEffect(() => {
+    if (editData) {
+      return;
+    }
+
+    if (!catalogAcademicYearId) {
+      setLeaveTypeOptions([]);
+      setLeavePolicyOptions([]);
+      return;
+    }
+
+    const cacheYearKey = String(catalogAcademicYearId);
+    const cachedLeaveTypes = leaveTypeOptionsCacheByAcademicYear[cacheYearKey];
+    const cachedLeavePolicies = leavePolicyOptionsCacheByAcademicYear[cacheYearKey];
+
+    if (cachedLeaveTypes?.length) {
+      setLeaveTypeOptions(cachedLeaveTypes);
+    } else {
+      setLeaveTypeOptions([]);
+    }
+    if (cachedLeavePolicies?.length) {
+      setLeavePolicyOptions(cachedLeavePolicies);
+    } else {
+      setLeavePolicyOptions([]);
+    }
+
+    const loadDropdownsInBackground = async () => {
+      try {
+        const [typesRes, policiesRes] = await Promise.all([
+          triggerLeaveTypes({ academicYearId: catalogAcademicYearId }).unwrap(),
+          triggerLeavePolicies({ academicYearId: catalogAcademicYearId }).unwrap(),
+        ]);
+
+        const nextLeaveTypes = typesRes?.items || [];
+        const nextLeavePolicies = policiesRes?.items || [];
+
+        leaveTypeOptionsCacheByAcademicYear[cacheYearKey] = nextLeaveTypes;
+        leavePolicyOptionsCacheByAcademicYear[cacheYearKey] = nextLeavePolicies;
+
+        setLeaveTypeOptions(nextLeaveTypes);
+        setLeavePolicyOptions(nextLeavePolicies);
+      } catch (loadError) {
+        console.error(loadError);
+      }
+    };
+
+    loadDropdownsInBackground();
+  }, [catalogAcademicYearId, editData, triggerLeavePolicies, triggerLeaveTypes]);
+
+  useEffect(() => {
+    if (editData) return;
+    if (!values.leaveTypeId) return;
+    const existsInCatalog = leaveTypeOptions.some((item: any) => item?.id === values.leaveTypeId);
+    if (!existsInCatalog) {
+      setFieldValue('leaveTypeId', '');
+    }
+  }, [editData, leaveTypeOptions, setFieldValue, values.leaveTypeId]);
+
+  useEffect(() => {
+    if (editData) return;
+    if (!values.leavePolicyId) return;
+    const existsInCatalog = leavePolicyOptions.some(
+      (item: any) => item?.id === values.leavePolicyId
+    );
+    if (!existsInCatalog) {
+      setFieldValue('leavePolicyId', '');
+    }
+  }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId]);
   return (
     <>
       <DialogScrollContent>
@@ -322,8 +410,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leavePolicyId && !!errors.leavePolicyId}>
                 <CustomSelect
-                  isLoading={isLeavePolicyLoading || isLeavePolicyFetching}
-                  options={leavePoliciesData?.items || []}
+                  isLoading={
+                    isLeavePolicyLoading ||
+                    isLeavePolicyFetching ||
+                    (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
+                  }
+                  options={leavePolicyOptions}
                   label="Leave Policy *"
                   value={values.leavePolicyId}
                   name="leavePolicyId"
@@ -342,8 +434,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leaveTypeId && !!errors.leaveTypeId}>
                 <CustomSelect
-                  isLoading={isLeaveTypeLoading || isLeaveTypeFetching}
-                  options={leaveTypesData?.items || []}
+                  isLoading={
+                    isLeaveTypeLoading ||
+                    isLeaveTypeFetching ||
+                    (!catalogAcademicYearId && (isYearsLoading || isYearsFetching))
+                  }
+                  options={leaveTypeOptions}
                   label="Leave Type *"
                   value={values.leaveTypeId}
                   name="leaveTypeId"
@@ -364,11 +460,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <DatePicker
                   label="Start Date *"
                   value={values.startDate}
-                  disabled={!!editData || !currentYear}
+                  disabled={!!editData}
                   format="DD/MM/YYYY"
                   disablePast
-                  minDate={dayjs(currentYear?.startDate)}
-                  maxDate={dayjs(currentYear?.endDate)}
                   onChange={(value) => setFieldValue('startDate', value)}
                   slotProps={{
                     textField: {
@@ -387,11 +481,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <DatePicker
                   label="End Date *"
                   value={values.endDate}
-                  disabled={!!editData || !currentYear}
+                  disabled={!!editData}
                   format="DD/MM/YYYY"
                   disablePast
-                  minDate={values.startDate || dayjs(currentYear?.startDate)}
-                  maxDate={dayjs(currentYear?.endDate)}
+                  minDate={values.startDate || undefined}
                   onChange={(value) => setFieldValue('endDate', value)}
                   slotProps={{
                     textField: {
@@ -428,17 +521,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 value={values.docs}
                 multiple={false}
                 onChange={(value) => {
-                  // const reader = new FileReader();
-                  console.log('value', value);
                   setFieldValue('docs', value);
-                  // reader.readAsDataURL(value as File);
-                  // reader.readAsDataURL(value as File);
-                  // reader.onload = () => {
-                  //   const base64String = reader.result;
-                  // };
                 }}
-                primaryText="Please Upload Your File"
-                secondaryText="Maximum file size is 5MB"
+                primaryText="Upload Supporting Document (Optional)"
+                secondaryText="Accepted: PNG, JPG, PDF (max 5MB)"
               />
               {/* <UploadBox
                 value={values.docs}
