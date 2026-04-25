@@ -8,6 +8,7 @@ import { useFormik } from 'formik';
 import React, { useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -32,12 +33,20 @@ import {
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
 
+import {
+  SELF_OPTION,
+  isAdminFromProfile,
+  type EmployeeOption,
+  parseApiProblemDetail,
+  buildEmployeeSelectOptions,
+  LEAVE_TARGET_EMPLOYEE_REQUIRED,
+  buildCreateLeaveRequestFormData,
+} from './leave-request.utils';
+
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
 // ----------------------------------------------------------------------
-
-const SELF_OPTION = { id: 'self', label: 'Self' };
 
 export const CALENDAR_COLOR_OPTIONS = [
   primary.main,
@@ -91,6 +100,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: session } = useSession();
+  const isAdminUser = isAdminFromProfile((session as any)?.profile);
   const {
     data: leaveTypesData,
     isLoading: isLeaveTypeLoading,
@@ -120,11 +131,15 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     handleSubmit,
     resetForm,
     isSubmitting,
+    setFieldError,
   } = useFormik({
+    enableReinitialize: true,
     initialValues: {
       employee: editData?.employeeId
         ? { id: editData.employeeId, label: editData.employeeName || '' }
-        : SELF_OPTION,
+        : isAdminUser
+          ? null
+          : SELF_OPTION,
       leavePolicyId: editData?.leavePolicyId || '',
       leaveTypeId: editData?.leaveTypeId || '',
       reason: editData?.reason || editData?.description || '',
@@ -223,31 +238,28 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           }
         } else {
           // --- Create flow: build multipart/form-data body as per API contract ---
-          const formData = new FormData();
-          if (formValues.employee && formValues.employee.id !== 'self') {
-            formData.append('employeeId', formValues.employee.id);
-          }
-          formData.append('leavePolicyId', formValues.leavePolicyId);
-          formData.append('leaveTypeId', formValues.leaveTypeId);
-          formData.append('startDate', dayjs(formValues.startDate).toISOString());
-          formData.append('endDate', dayjs(formValues.endDate).toISOString());
-          formData.append('reason', formValues.reason);
+          const formData = buildCreateLeaveRequestFormData({
+            employee: formValues.employee as EmployeeOption | null,
+            leavePolicyId: formValues.leavePolicyId,
+            leaveTypeId: formValues.leaveTypeId,
+            startDate: formValues.startDate,
+            endDate: formValues.endDate,
+            reason: formValues.reason,
+            docs: formValues.docs,
+          });
 
-          if (formValues.docs) {
-            const docs = formValues.docs as any;
-
-            if (docs instanceof File) {
-              formData.append('File', docs);
-            } else if (Array.isArray(docs) && docs.length > 0) {
-              formData.append('attachment', docs[0]);
-            } else {
-              console.warn('Invalid file format:', docs);
-            }
-          }
-          await addLeave({
+          const createResult: any = await addLeave({
             academicYearId: currentYear?.id,
             body: formData,
           });
+
+          if (createResult?.error) {
+            const parsedError = parseApiProblemDetail(createResult.error);
+            if (parsedError.errorCode === LEAVE_TARGET_EMPLOYEE_REQUIRED) {
+              setFieldError('employee', 'Please select an employee to create leave.');
+            }
+            return;
+          }
         }
 
         handleClose?.(null, true);
@@ -277,14 +289,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   fetchOptions={async (query, page) => {
                     if (page > 1) return { data: [], hasMore: false };
                     const res = await getEmployees({ search: query }).unwrap();
-                    const items = (Array.isArray(res) ? res : res?.items || []).map(
-                      (item: any) => ({
-                        label: item.fullName,
-                        id: item.id,
-                      })
-                    );
+                    const items: EmployeeOption[] = (
+                      Array.isArray(res) ? res : res?.items || []
+                    ).map((item: any) => ({
+                      label: item.fullName,
+                      id: item.id,
+                    }));
                     return {
-                      data: [SELF_OPTION, ...items],
+                      data: buildEmployeeSelectOptions(items, isAdminUser),
                       hasMore: false,
                     };
                   }}
