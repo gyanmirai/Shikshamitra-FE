@@ -290,15 +290,6 @@ const financeModule = {
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
-                  title: 'Expense Category',
-                  path: financePaths.accounts.settings.expenseCategories,
-                  _action: 'expense-category',
-                  shortcutKey: 'Alt+F+3+S+1',
-                  shortcutKeyName: 'Alt+F+3+S+1',
-                  permissionName: financePermissions.accounts.settings.expenseCategory,
-                  icon: menuIconView('mdi:tag-minus-outline'),
-                },
-                {
                   title: 'Income Category',
                   path: financePaths.accounts.settings.incomeCategories,
                   _action: 'income-category',
@@ -307,6 +298,16 @@ const financeModule = {
                   permissionName: financePermissions.accounts.settings.incomeCategory,
                   icon: menuIconView('mdi:tag-text-outline'),
                 },
+                {
+                  title: 'Expense Category',
+                  path: financePaths.accounts.settings.expenseCategories,
+                  _action: 'expense-category',
+                  shortcutKey: 'Alt+F+3+S+1',
+                  shortcutKeyName: 'Alt+F+3+S+1',
+                  permissionName: financePermissions.accounts.settings.expenseCategory,
+                  icon: menuIconView('mdi:tag-minus-outline'),
+                },
+
                 {
                   title: 'Bank Accounts',
                   path: financePaths.accounts.settings.bankAccounts,

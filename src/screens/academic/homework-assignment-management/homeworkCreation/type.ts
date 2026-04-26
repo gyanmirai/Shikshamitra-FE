@@ -40,6 +40,7 @@ export interface IHomework {
   createdBy: TeacherProfile; // includes name, email, avatar, etc.
   divisions: DivisionHomeworkMeta[]; // ✅ Each division with its own dates
   divisionMeta?: DivisionHomeworkMeta;
+  divisionSchedules?: DivisionHomeworkMeta[]; // Replace 'any' with the appropriate type for division schedules
   status?: number;
 }
 
