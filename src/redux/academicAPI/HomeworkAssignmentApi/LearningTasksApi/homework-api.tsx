@@ -51,16 +51,10 @@ export const homeworkApi = academicApi.injectEndpoints({
 
     // UPDATE homework
     updateHomework: builder.mutation({
-      query: ({ id, academicMediumId, body }) => ({
-        url: `app/homework/${id}`,
+      query: ({ id, body }) => ({
+        url: `/academic/homeworks/${id}`,
         method: 'PUT',
         body,
-        params: {
-          academicMediumId,
-        },
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [academicType.homework],
     }),

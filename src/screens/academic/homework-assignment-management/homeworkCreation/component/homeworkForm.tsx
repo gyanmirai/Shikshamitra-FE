@@ -28,21 +28,23 @@ import { useGetHomeworkTypesQuery } from 'src/redux/academics/homeworkAndAssignm
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
-  useAddHomeworkMutation,
-  useUpdateHomeworkMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
-import {
   Box,
   Grid,
   Chip,
   Radio,
   Stack,
   Button,
+  Skeleton,
   TextField,
   Typography,
   FormControl,
   Autocomplete,
 } from '@mui/material';
+import {
+  useAddHomeworkMutation,
+  useGetHomeworkByIdQuery,
+  useUpdateHomeworkMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
@@ -105,17 +107,28 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkMutation,
   });
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const [updateHomework, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkMutation,
+  });
+  const {
+    data: homeworkData,
+    isLoading: isHomeworkLoading,
+    isFetching: isHomeworkFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkByIdQuery,
+    params: { homeworkId: editData?.id, academicMediumId: medium?.id },
+    options: {
+      skip: !editData?.id,
+    },
   });
   // Get current academic year from global state for date validation and filtering
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
-
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // State to store all available divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -135,7 +148,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
   // Initialize formik form with validation and submission handling
   const formik = useFormik({
-    initialValues: getHomeworkInitialValues(editData, classes),
+    initialValues: getHomeworkInitialValues(homeworkData?.data, classes),
+    enableReinitialize: true,
     validateOnChange: true,
     validationSchema: homeworkValidationSchema(currentYear),
     onSubmit: async (values) => {
@@ -159,11 +173,37 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         };
 
         if (editData) {
-          // For update, include the assignment ID
+          // For update, build FormData (PUT endpoint expects multipart/form-data)
+          const updateFormData = new FormData();
+          updateFormData.append('StandardId', values.standardId || activeClassId);
+          updateFormData.append('SubjectId', values.subjectId || values.subject);
+          if (values.chapterId) updateFormData.append('ChapterId', values.chapterId);
+          updateFormData.append('Title', values.title);
+          if (values.description) updateFormData.append('Description', values.description);
+          updateFormData.append('HomeworkTypeId', values.homeworkTypeId);
+          updateFormData.append('SubmissionType', values.submissionType.toString());
+
+          if (values.attachments && values.attachments.length > 0) {
+            values.attachments.forEach((file: any) => {
+              updateFormData.append('attachment', file);
+            });
+          }
+
+          values.divisions.forEach((division: any, index: number) => {
+            updateFormData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
+            updateFormData.append(
+              `DivisionSchedules[${index}].PublishAt`,
+              division.publishDate.toISOString()
+            );
+            updateFormData.append(
+              `DivisionSchedules[${index}].DueAt`,
+              division.dueDate.toISOString()
+            );
+          });
+
           const updatePayload = {
             id: editData.id,
-            academicMediumId: medium?.id,
-            body: payload,
+            body: updateFormData,
           };
           await updateHomework(updatePayload).unwrap();
           shikshaMitraToast.success({
@@ -205,6 +245,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       }
     },
   });
+  console.log('formik----values', formik.values);
+  console.log('formik ---errores====', formik.errors);
 
   // Update divisions when class changes
   useEffect(() => {
@@ -253,6 +295,80 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       skip: !(medium as Medium)?.id,
     },
   });
+
+  const isLoadingData = isHomeworkLoading || isHomeworkFetching;
+
+  if (isLoadingData) {
+    return (
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.neutral',
+        }}
+      >
+        <Scrollbar sx={{ height: '100%', p: 2 }}>
+          <Grid container>
+            {/* Basic Information Skeleton */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ ...cardStyle, mb: 2 }}>
+                <Skeleton variant="text" width={180} height={28} sx={{ mb: 0.5 }} />
+                <Skeleton variant="text" width={260} height={20} sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  {[...Array(6)].map((_, i) => (
+                    <Grid size={{ xs: 12, md: 6 }} key={i}>
+                      <Skeleton variant="rounded" height={40} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+
+            {/* Description & Attachments Skeleton */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ ...cardStyle, mb: 2 }}>
+                <Skeleton variant="text" width={220} height={28} sx={{ mb: 0.5 }} />
+                <Skeleton variant="text" width={300} height={20} sx={{ mb: 2 }} />
+                <Skeleton variant="rounded" height={160} sx={{ mb: 2 }} />
+                <Skeleton variant="rounded" height={80} />
+              </Box>
+            </Grid>
+
+            {/* Submission Type Skeleton */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ ...cardStyle, mb: 2 }}>
+                <Skeleton variant="text" width={160} height={28} sx={{ mb: 0.5 }} />
+                <Skeleton variant="text" width={280} height={20} sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  {[...Array(3)].map((_, i) => (
+                    <Grid size={{ xs: 12, md: 4 }} key={i}>
+                      <Skeleton variant="rounded" height={60} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+          </Grid>
+        </Scrollbar>
+
+        {/* Action Buttons Skeleton */}
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Skeleton variant="rounded" width={90} height={34} />
+          <Skeleton variant="rounded" width={90} height={34} />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -569,7 +685,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                     format="DD/MM/YYYY hh:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
-                                    minDateTime={dayjs()}
+                                    disablePast
                                     value={div.publishDate ? dayjs(div.publishDate) : null}
                                     onChange={(val) => {
                                       formik.setFieldValue(`divisions[${idx}].publishDate`, val);
