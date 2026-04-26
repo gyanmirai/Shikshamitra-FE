@@ -1,6 +1,5 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
@@ -10,23 +9,23 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import { useGetLeaveRequestsQuery, useCancelLeaveRequestMutation } from 'src/redux/hr/leaveApi';
+import { useLazyGetLeaveRequestsQuery, useCancelLeaveRequestMutation } from 'src/redux/hr/leaveApi';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -36,18 +35,98 @@ import {
 import AddLeaveRequest from './leave-requst';
 import LeaveCalender, { LeaveRequestForm } from './leave-calender';
 
+const LEAVE_REQUESTS_PAGE_SIZE = 200;
+
+const dedupeLeaveRequestsById = (items: any[]) => {
+  const byId = new Map<string, any>();
+  const withoutId: any[] = [];
+
+  items.forEach((item) => {
+    if (item?.id == null) {
+      withoutId.push(item);
+      return;
+    }
+    byId.set(String(item.id), item);
+  });
+
+  return [...Array.from(byId.values()), ...withoutId];
+};
+
 const ApplyLeave = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [triggerLeaveRequests] = useLazyGetLeaveRequestsQuery();
 
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLeaveRequestsQuery,
-    params: {
-      academicYearId: currentYear?.id,
-      'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
-    },
-  });
+  useEffect(() => {
+    let isActive = true;
+
+    const loadAcademicYearLeaveRequests = async () => {
+      if (!currentYear?.id) {
+        setLeaveRequests([]);
+        setIsLeaveRequestsLoading(false);
+        return;
+      }
+
+      setLeaveRequests([]);
+      setIsLeaveRequestsLoading(true);
+
+      try {
+        const allItems: any[] = [];
+        const loadPageRecursively = async (page: number, knownTotal: number): Promise<void> => {
+          const response = await triggerLeaveRequests(
+            {
+              academicYearId: currentYear.id,
+              page,
+              pageSize: LEAVE_REQUESTS_PAGE_SIZE,
+            },
+            false
+          ).unwrap();
+
+          if (!isActive) return;
+
+          const pageItems = Array.isArray(response?.items) ? response.items : [];
+          const parsedTotal = Number(response?.totalCount);
+          const totalCount = page === 1 && Number.isFinite(parsedTotal) ? parsedTotal : knownTotal;
+
+          allItems.push(...pageItems);
+
+          const reachedTotal = Number.isFinite(totalCount) && allItems.length >= totalCount;
+          const noMorePages = pageItems.length < LEAVE_REQUESTS_PAGE_SIZE || pageItems.length === 0;
+
+          if (reachedTotal || noMorePages) {
+            return;
+          }
+
+          await loadPageRecursively(page + 1, totalCount);
+        };
+
+        await loadPageRecursively(1, Number.POSITIVE_INFINITY);
+
+        if (!isActive) return;
+
+        setLeaveRequests(dedupeLeaveRequestsById(allItems));
+      } catch (e) {
+        if (!isActive) return;
+        console.error(e);
+        shikshaMitraToast.error({
+          message: 'Unable to load leave requests. Please try again.',
+        });
+        setLeaveRequests([]);
+      } finally {
+        if (isActive) {
+          setIsLeaveRequestsLoading(false);
+        }
+      }
+    };
+
+    loadAcademicYearLeaveRequests();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentYear?.id, reloadKey, triggerLeaveRequests]);
 
   const [deleteLeave, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -93,7 +172,7 @@ const ApplyLeave = () => {
 
   const tableData = useMemo(() => {
     const apiData =
-      data?.items?.map((item: any) => {
+      leaveRequests?.map((item: any) => {
         const start = dayjs(item.startDate);
         const end = dayjs(item.endDate);
 
@@ -113,7 +192,7 @@ const ApplyLeave = () => {
       }) || [];
 
     return apiData;
-  }, [data]);
+  }, [leaveRequests]);
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -126,6 +205,9 @@ const ApplyLeave = () => {
       isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'));
 
     if (confirmLeave()) {
+      if (isSubmit) {
+        setReloadKey((prev) => prev + 1);
+      }
       addLeaveRequestDialog?.onFalse?.();
       resetState();
       dispatch(setIsChanges(false));
@@ -283,25 +365,9 @@ const ApplyLeave = () => {
               gap: 2,
               pl: 1,
               mb: 1,
-              justifyContent: 'space-between',
+              justifyContent: 'flex-end',
             }}
           >
-            <DatePicker
-              label="Month-Year"
-              format="MMM-YYYY"
-              value={date}
-              minDate={dayjs(currentYear?.startDate)}
-              maxDate={dayjs(currentYear?.endDate)}
-              views={['year', 'month']}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                },
-              }}
-              onChange={(newDate) => {
-                setDate(newDate);
-              }}
-            />
             <Box display="flex" gap={2}>
               <Button
                 variant="contained"
@@ -348,7 +414,7 @@ const ApplyLeave = () => {
             }
             onSendNotification={handlerSendNotification}
             showCheckbox={selectedStudents.length !== 0}
-            isLoading={isLoading}
+            isLoading={isLeaveRequestsLoading}
             tableId="apply-leave-table"
             data={tableData}
             columns={columns}
@@ -376,7 +442,10 @@ const ApplyLeave = () => {
             size="small"
             loading={isDeleteLoading}
             onClick={async () => {
-              await deleteLeave(editData?.id);
+              const deleteResult: any = await deleteLeave(editData?.id);
+              if (!deleteResult?.error) {
+                setReloadKey((prev) => prev + 1);
+              }
               cancelConfirmation.onFalse();
               setEditData(null);
             }}
@@ -422,11 +491,12 @@ const ApplyLeave = () => {
           </Box>
         }
       >
-        {editData ? (
-          <LeaveRequestForm editData={editData} />
-        ) : (
-          <AddLeaveRequest editData={editData} handleClose={handleClose} />
-        )}
+        {addLeaveRequestDialog?.value &&
+          (editData ? (
+            <LeaveRequestForm editData={editData} />
+          ) : (
+            <AddLeaveRequest editData={editData} handleClose={handleClose} />
+          ))}
       </CustomDialog>
     </Box>
   );
