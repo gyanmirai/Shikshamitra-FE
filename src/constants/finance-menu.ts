@@ -160,6 +160,15 @@ const financeModule = {
               icon: menuIconView('mdi:cash-plus'),
             },
             {
+              title: 'Refunds',
+              path: financePaths.feeRefund,
+              _action: 'fee-refund',
+              shortcutKey: 'Alt+F+2+R',
+              shortcutKeyName: 'Alt+F+2+R',
+              permissionName: financePermissions.feeRefund,
+              icon: menuIconView('mdi:cash-refund'),
+            },
+            {
               title: 'Invoices & Receipts',
               path: financePaths.fees.invoicesAndReceipts,
               _action: 'invoices-and-receipts',

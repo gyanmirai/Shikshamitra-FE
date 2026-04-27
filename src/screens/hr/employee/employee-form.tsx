@@ -289,6 +289,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [activeStep, setActiveStep] = useState(0);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
+  const formikRef = React.useRef<any>(null);
+  const resetCurrentStepRef = React.useRef<(() => void) | null>(null);
 
   const [addEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -623,6 +625,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       setIsLoading: (val: boolean) => void,
       isSaveButton: boolean = false
     ) => {
+      let saveSucceeded = false;
       try {
         setIsLoading(true);
         if (editData && activeStep === 0) {
@@ -630,6 +633,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           if (isSaveButton) {
             shikshaMitraToast.success({ message: 'Employee details updated successfully' });
           }
+          saveSucceeded = true;
         } else if (activeStep === 0) {
           if (values.employeeId) {
             await handelUpdateEmployee(values, formik, values.employeeId);
@@ -645,36 +649,51 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }
           }
+          saveSucceeded = true;
         } else if (activeStep === 1) {
           await handleFamilyInformation(values, formik);
           if (isSaveButton) {
             shikshaMitraToast.success({ message: 'Family information updated successfully' });
           }
+          saveSucceeded = true;
         } else if (activeStep === 2) {
           await handleAdditionalDetails(values, formik);
           shikshaMitraToast.success({ message: 'Additional details updated successfully' });
+          saveSucceeded = true;
         } else if (activeStep === 4) {
           await handleWorkExperience(values, formik);
           if (isSaveButton) {
             shikshaMitraToast.success({ message: 'Work experience updated successfully' });
           }
+          saveSucceeded = true;
         } else if (activeStep === 5) {
           await handleBankDetailsInformation(values, formik);
           if (isSaveButton) {
             shikshaMitraToast.success({ message: 'Bank details updated successfully' });
           }
+          saveSucceeded = true;
         } else if (activeStep === 6) {
           await handleReportingManager(values, formik, values.employeeId);
           if (isSaveButton) {
             shikshaMitraToast.success({ message: 'Reporting manager updated successfully' });
           }
+          saveSucceeded = true;
         }
         if (isLastStep && !isSaveButton) {
           await handleAcademicPermission(values, formik, values.employeeId);
           shikshaMitraToast.success({
             message: `Employee ${editData ? 'updated' : 'added'}  successfully`,
           });
+          saveSucceeded = true;
         }
+
+        if (saveSucceeded) {
+          // Sync formik's initialValues with the saved state so dirty becomes false,
+          // and clear the initialized flag so fresh API data re-populates on next visit.
+          formik.resetForm({ values: formik.values });
+          resetCurrentStepRef.current?.();
+        }
+
         if (!isSaveButton && !isLastStep) {
           setActiveStep(activeStep + 1);
         }
@@ -698,6 +717,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       handleBankDetailsInformation,
       handleReportingManager,
       handleAcademicPermission,
+      resetCurrentStepRef,
     ]
   );
 
@@ -738,12 +758,20 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           formik: any,
           setIsLoading: (val: boolean) => void
         ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
-        renderItem={({ activeStep: step, formik }: any) => (
-          <>
-            <SyncReduxDirty formik={formik} />
-            <FormSlider step={step} formik={formik} editData={editData} />
-          </>
-        )}
+        renderItem={({ activeStep: step, formik }: any) => {
+          formikRef.current = formik;
+          return (
+            <>
+              <SyncReduxDirty formik={formik} />
+              <FormSlider
+                step={step}
+                formik={formik}
+                editData={editData}
+                resetCurrentStepRef={resetCurrentStepRef}
+              />
+            </>
+          );
+        }}
       />
 
       <ConfirmDialog
@@ -770,6 +798,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             size="small"
             onClick={() => {
               if (pendingStep !== null) {
+                resetCurrentStepRef.current?.();
+                formikRef.current?.resetForm();
                 dispatch(setIsChanges(false));
                 setActiveStep(pendingStep);
                 setPendingStep(null);
@@ -786,7 +816,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
 export default EmployeeFrom;
 
-const FormSlider = ({ step, formik, editData }: any) => {
+const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
@@ -796,6 +826,15 @@ const FormSlider = ({ step, formik, editData }: any) => {
 
   // Track which steps have been populated so background refetches don't re-overwrite user edits
   const initializedStepsRef = React.useRef<Record<number, boolean>>({});
+
+  // Expose a reset function so the parent can clear the initialized flag for the current step
+  React.useEffect(() => {
+    if (resetCurrentStepRef) {
+      resetCurrentStepRef.current = () => {
+        initializedStepsRef.current[step] = false;
+      };
+    }
+  }, [step, resetCurrentStepRef]);
   useEffect(() => {
     initializedStepsRef.current = {};
   }, [editData?.id]);
