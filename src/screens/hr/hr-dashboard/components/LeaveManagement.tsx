@@ -46,36 +46,30 @@ const leaveTypeColor = (type: string): LabelColor => {
 const LeaveCard = ({
   title,
   count,
-  percentage,
   color,
+  icon,
 }: {
   title: string;
   count: number;
-  percentage: number;
   color: string;
+  icon: string;
 }) => (
   <Card
     variant="outlined"
     sx={{
       height: '100%',
-      borderRadius: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
+      borderRadius: 2,
+      border: 'none',
+      bgcolor: 'background.neutral',
     }}
   >
-    <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ width: 4, height: 24, bgcolor: color, borderRadius: 1 }} />
-        <Box>
-          <Typography variant="body2" color="text.secondary">
-            {title}
-          </Typography>
-          <Typography variant="body2" fontWeight="bold">
-            {count}
-          </Typography>
-        </Box>
-      </Stack>
+    <CardContent sx={{ p: 1, '&:last-child': { pb: 2 } }}>
+      <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+        {title}
+      </Typography>
+      <Typography variant="h4" fontWeight="bold">
+        {String(count).padStart(2, '0')}
+      </Typography>
     </CardContent>
   </Card>
 );
@@ -86,8 +80,10 @@ const requests = [
   {
     id: 1,
     name: 'Kanwar Rajan',
+    role: 'Design Lead',
     type: 'Sick Leave',
-    duration: '2 Days',
+    duration: '3 Days',
+    dateRange: '24 Oct - 26 Oct',
     avatar: '',
     pending: true,
     status: 'Pending',
@@ -95,8 +91,10 @@ const requests = [
   {
     id: 2,
     name: 'Kumar Rajes',
+    role: 'Frontend Dev',
     type: 'Casual Leave',
-    duration: '1 Day',
+    duration: '2 Days',
+    dateRange: '28 Oct - 29 Oct',
     avatar: '',
     pending: true,
     status: 'Pending',
@@ -104,8 +102,10 @@ const requests = [
   {
     id: 3,
     name: 'Jinjala Dharmik',
+    role: 'Product Manager',
     type: 'Paid Leave',
-    duration: '3 Days',
+    duration: '4 Days',
+    dateRange: '02 Nov - 05 Nov',
     avatar: '',
     pending: true,
     status: 'Pending',
@@ -113,8 +113,10 @@ const requests = [
   {
     id: 4,
     name: 'Priya Sharma',
+    role: 'HR Manager',
     type: 'Sick Leave',
     duration: '1 Day',
+    dateRange: '10 Nov - 10 Nov',
     avatar: '',
     pending: false,
     status: 'Approved',
@@ -147,7 +149,7 @@ const LeaveManagement = () => {
   const viewPopover = usePopover();
 
   const leaveColumns: any[] = [
-    { id: 'name', label: 'Employee Name', align: 'left' },
+    { id: 'name', label: 'Employee Name', align: 'left', sticky: true },
     {
       id: 'type',
       label: 'Leave Type',
@@ -166,6 +168,7 @@ const LeaveManagement = () => {
       label: 'Status',
       align: 'left',
       filterType: 'enum',
+      sticky: true,
       enumOptions: LeaveStatusOptions,
       render: (value: string) => (
         <Label
@@ -200,29 +203,58 @@ const LeaveManagement = () => {
             </IconButton>
           </CustomTooltip>
         </Stack>
-        <Stack direction="row" spacing={1}>
-          <Label color="warning">Pending : 5</Label>
-          <Label color="success">Approved : 12</Label>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'warning.main' }} />
+            <Typography variant="caption" color="warning.main" fontWeight={600}>
+              Pending: 5
+            </Typography>
+          </Stack>
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+            <Typography variant="caption" color="success.main" fontWeight={600}>
+              Approved: 12
+            </Typography>
+          </Stack>
         </Stack>
       </Stack>
 
       {/* Summary Cards */}
-      <Grid container spacing={1} mb={1}>
+      <Grid container spacing={1.5}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <LeaveCard title="Sick Leave" count={12} percentage={52.2} color="#D81B60" />
+          <LeaveCard title="Sick Leave" count={12} color="#D81B60" icon="solar:stethoscope-bold" />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <LeaveCard title="Casual Leave" count={8} percentage={34.8} color="#1E88E5" />
+          <LeaveCard
+            title="Casual Leave"
+            count={8}
+            color="#1E88E5"
+            icon="solar:calendar-mark-bold"
+          />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <LeaveCard title="Paid Leave" count={3} percentage={13.0} color="#43A047" />
+          <LeaveCard title="Paid Leave" count={3} color="#43A047" icon="solar:wallet-money-bold" />
         </Grid>
       </Grid>
 
       {/* Recent Requests */}
-      <Typography variant="subtitle2" fontWeight={700} mb={1}>
-        Recent Requests
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="subtitle2" fontWeight={700}>
+          Recent Requests
+        </Typography>
+        <Button
+          size="small"
+          startIcon={<Iconify icon="solar:filter-linear" width={16} />}
+          sx={{
+            textTransform: 'none',
+            color: 'text.secondary',
+            fontWeight: 500,
+            fontSize: '0.75rem',
+          }}
+        >
+          Filter
+        </Button>
+      </Stack>
 
       <Scrollbar sx={{ flexGrow: 1, maxHeight: 320 }}>
         <List disablePadding>
@@ -231,88 +263,121 @@ const LeaveManagement = () => {
               key={req.id}
               disableGutters
               sx={{
-                py: 1,
+                py: 1.25,
                 px: 1.5,
                 mb: 1,
                 borderRadius: 1.5,
                 bgcolor: 'background.neutral',
-                alignItems: 'flex-start',
+                alignItems: 'center',
               }}
             >
-              <ListItemAvatar>
-                <Avatar sx={{ width: 36, height: 36, fontSize: '0.875rem' }}>
+              <ListItemAvatar sx={{ minWidth: 52 }}>
+                <Avatar sx={{ width: 40, height: 40, fontSize: '0.95rem' }}>
                   {req.name.charAt(0)}
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
+                sx={{ flex: '0 0 auto', minWidth: 110, mr: 1.5 }}
                 primary={
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {req.name}
-                    </Typography>
-                    <Label
-                      color={leaveTypeColor(req.type)}
-                      variant="soft"
-                      sx={{ fontSize: '0.65rem' }}
-                    >
-                      {req.type}
-                    </Label>
-                  </Stack>
+                  <Typography variant="body2" fontWeight={600} noWrap>
+                    {req.name}
+                  </Typography>
                 }
                 secondary={
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                  >
-                    Duration: {req.duration}
+                  <Typography variant="caption" color="text.disabled" noWrap>
+                    {(req as any).role}
                   </Typography>
                 }
               />
+              <Box sx={{ flex: 1, minWidth: 0, mr: 1.5 }}>
+                <Label
+                  color={leaveTypeColor(req.type)}
+                  variant="soft"
+                  sx={{ fontSize: '0.7rem', mb: 0.25, display: 'inline-flex' }}
+                >
+                  {req.type}
+                </Label>
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  sx={{ display: 'block' }}
+                  noWrap
+                >
+                  {(req as any).dateRange}
+                </Typography>
+              </Box>
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                sx={{ mr: 1.5, flexShrink: 0, minWidth: 40, textAlign: 'right' }}
+              >
+                {req.duration}
+              </Typography>
               {/* Quick Actions */}
               {req.pending ? (
-                <Stack direction="row" spacing={1} sx={{ ml: 1, flexShrink: 0 }}>
+                <Stack direction="row" spacing={0.75} sx={{ flexShrink: 0 }}>
                   <CustomTooltip title="Approve">
                     <IconButton
                       size="small"
-                      color="success"
                       onClick={() => {
                         setIsRejectAction(false);
                         setSelectedRequest({ ...req, type: 'approve' });
                         isConfirmDialog.onTrue();
                       }}
+                      sx={{
+                        border: '1.5px solid',
+                        borderColor: 'success.main',
+                        color: 'success.main',
+                        borderRadius: 1,
+                        p: 0.4,
+                        '&:hover': { bgcolor: 'success.lighter' },
+                      }}
                     >
-                      <Iconify icon="eva:checkmark-outline" width={20} />
+                      <Iconify icon="eva:checkmark-outline" width={16} />
                     </IconButton>
                   </CustomTooltip>
                   <CustomTooltip title="Reject">
                     <IconButton
                       size="small"
-                      color="error"
                       onClick={() => {
                         setIsRejectAction(true);
                         setSelectedRequest({ ...req, type: 'reject' });
                         isConfirmDialog.onTrue();
                       }}
+                      sx={{
+                        border: '1.5px solid',
+                        borderColor: 'error.main',
+                        color: 'error.main',
+                        borderRadius: 1,
+                        p: 0.4,
+                        '&:hover': { bgcolor: 'error.lighter' },
+                      }}
                     >
-                      <Iconify icon="eva:close-outline" width={20} />
+                      <Iconify icon="eva:close-outline" width={16} />
                     </IconButton>
                   </CustomTooltip>
                   <CustomTooltip title="View Details">
                     <IconButton
                       size="small"
-                      color="default"
                       onClick={(event) => {
                         setSelectedRequest(req);
                         viewPopover.onOpen(event);
                       }}
+                      sx={{
+                        border: '1.5px solid',
+                        borderColor: 'divider',
+                        color: 'text.secondary',
+                        borderRadius: 1,
+                        p: 0.4,
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
                     >
-                      <Iconify icon="eva:eye-outline" width={20} />
+                      <Iconify icon="eva:eye-outline" width={16} />
                     </IconButton>
                   </CustomTooltip>
                 </Stack>
               ) : (
-                <Label color="success" variant="soft" sx={{ ml: 1, flexShrink: 0 }}>
+                <Label color="success" variant="soft" sx={{ flexShrink: 0 }}>
                   Approved
                 </Label>
               )}
