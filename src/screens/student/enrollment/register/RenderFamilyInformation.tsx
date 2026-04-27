@@ -110,6 +110,7 @@ function MotherOfficeAddressComponent(props: any) {
           value={formik.values.motherOfficeCity}
           onChange={(_e, value) => formik.setFieldValue('motherOfficeCity', value)}
           stateValue={formik.values.motherOfficeState}
+          countryValue={formik.values.motherOfficeCountry}
           disabled={!!disabled}
         />
       </Grid>
@@ -242,6 +243,7 @@ function GuardianOfficeAddressComponent(props: any) {
           value={formik.values.guardianOfficeCity}
           onChange={(_e, value) => formik.setFieldValue('guardianOfficeCity', value)}
           stateValue={formik.values.guardianOfficeState}
+          countryValue={formik.values.guardianOfficeCountry}
           disabled={!!disabled}
         />
       </Grid>
@@ -358,6 +360,7 @@ function MotherAddressComponent(props: any) {
           value={formik.values.motherLocalCity}
           onChange={(_e, value) => formik.setFieldValue('motherLocalCity', value)}
           stateValue={formik.values.motherLocalState}
+          countryValue={formik.values.motherLocalCountry}
           disabled={!!disabled}
         />
       </Grid>
@@ -472,6 +475,7 @@ function GuardianAddressComponent(props: any) {
           value={formik.values.guardianLocalCity}
           onChange={(_e, value) => formik.setFieldValue('guardianLocalCity', value)}
           stateValue={formik.values.guardianLocalState}
+          countryValue={formik.values.guardianLocalCountry}
           disabled={!!disabled}
         />
       </Grid>
@@ -504,9 +508,6 @@ function RenderFamilyInformation(props: any) {
 
   const [studentSearchData] = useQueryAndMutation({
     type: 'mutation',
-    options: {
-      skip: !student?.length,
-    },
     currentQueryAndMutation: useLazySearchStudentRegistrationsQuery,
   });
 
@@ -525,6 +526,8 @@ function RenderFamilyInformation(props: any) {
   const handleCancel = () => {
     formik.resetForm();
   };
+
+  console.log('--------------->', formik);
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -884,6 +887,7 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.fatherOfficeCity}
             onChange={(_e, value) => formik.setFieldValue('fatherOfficeCity', value)}
             stateValue={formik.values.fatherOfficeState}
+            countryValue={formik.values.fatherOfficeCountry}
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
@@ -988,6 +992,7 @@ function RenderFamilyInformation(props: any) {
             value={formik.values.fatherLocalCity}
             onChange={(_e, value) => formik.setFieldValue('fatherLocalCity', value)}
             stateValue={formik.values.fatherLocalState}
+            countryValue={formik.values.fatherLocalCountry}
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>

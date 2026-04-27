@@ -154,7 +154,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values) => {
-      console.log('Form values on submit:->>>', values);
       const selectedClassName =
         allClass.find((c) => c.id === values.className)?.name || values.className;
       const slotTypeMap: Record<string, number> = { period: 0, break: 1 };

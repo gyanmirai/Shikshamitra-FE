@@ -29,7 +29,7 @@ const StateComponent = ({
     <Autocomplete
       noOptionsText={<Typography variant="caption">No State Found</Typography>}
       fullWidth
-      value={value?.isoCode || value?.name ? value : null}
+      value={value}
       onChange={onChange}
       isOptionEqualToValue={(option, val) =>
         option?.isoCode === val?.isoCode || option?.name === val?.name
