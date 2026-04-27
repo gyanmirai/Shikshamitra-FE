@@ -41,12 +41,24 @@ const HRPayrollSummary = () => {
 
   const chartOptions = useChart({
     colors: [theme.palette.success.main, theme.palette.warning.main, theme.palette.error.main],
-    stroke: { width: 0 },
+    stroke: { lineCap: 'round', width: 0 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        type: 'horizontal',
+        shadeIntensity: 0.3,
+        opacityFrom: 1,
+        opacityTo: 0.75,
+        stops: [0, 100],
+      },
+    },
     plotOptions: {
       bar: {
         horizontal: true,
         barHeight: '40%',
-        borderRadius: 4,
+        borderRadius: 6,
+        borderRadiusApplication: 'end',
         distributed: true,
       },
     },

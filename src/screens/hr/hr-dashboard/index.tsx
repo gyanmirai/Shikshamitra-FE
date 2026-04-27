@@ -7,7 +7,6 @@ import HRStatsCards from './components/HRStatsCards';
 import LeaveManagement from './components/LeaveManagement';
 import HRPayrollSummary from './components/HRPayrollSummary';
 import HRQuickActionsPanel from './components/HRQuickActionsPanel';
-import HRDepartmentOverview from './components/HRDepartmentOverview';
 import HRDashboardAttendanceTrend from './components/HRDashboardAttendanceTrend';
 import HRBirthdaysAndAnniversaries from './components/HRBirthdaysAndAnniversaries';
 
@@ -40,13 +39,6 @@ const HRDashboardScreen = () => (
           <HRBirthdaysAndAnniversaries />
           {/* <HRAlertsWidget /> */}
         </Box>
-      </Grid>
-    </Grid>
-
-    {/* Row 4 – Department Overview | Celebrations */}
-    <Grid container spacing={1}>
-      <Grid size={{ xs: 12 }}>
-        <HRDepartmentOverview />
       </Grid>
     </Grid>
   </Box>

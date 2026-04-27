@@ -56,12 +56,13 @@ export default function CompactKPICard({
   };
 
   const mainColor = theme.palette[status].main;
+  const lightColor = theme.palette[status].light;
   const lighterColor = theme.palette[status].lighter;
 
   const isRadialChart = RADIAL_TYPES.includes(chart?.type || '');
 
   const sparklineOptions = useChart({
-    colors: chart?.colors || [mainColor],
+    colors: chart?.colors || [lightColor],
 
     chart: {
       animations: { enabled: false },
@@ -74,6 +75,7 @@ export default function CompactKPICard({
     },
 
     xaxis: {
+      categories: chart?.labels || [],
       labels: { show: false },
       axisBorder: { show: false },
       axisTicks: { show: false },
@@ -87,6 +89,26 @@ export default function CompactKPICard({
       x: { show: false },
       y: {
         formatter: (val: number) => `${val}`,
+        title: {
+          formatter: (seriesName: string, opts?: any) => {
+            const cats = opts?.w?.config?.xaxis?.categories;
+            const idx = opts?.dataPointIndex ?? 0;
+            const label = cats?.[idx] ?? seriesName;
+            return label ? `${label}: ` : '';
+          },
+        },
+      },
+    },
+
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        type: 'vertical',
+        shadeIntensity: 0.2,
+        opacityFrom: 0.7,
+        opacityTo: 0.4,
+        stops: [0, 100],
       },
     },
 
@@ -94,7 +116,7 @@ export default function CompactKPICard({
   });
 
   const donutOptions = useChart({
-    colors: chart?.colors || [mainColor, lighterColor],
+    colors: chart?.colors || [lightColor, lighterColor],
     labels: chart?.labels || [],
     chart: {
       animations: { enabled: false },
@@ -115,7 +137,18 @@ export default function CompactKPICard({
         enabled: false,
       },
     },
-    stroke: { width: 0 },
+    stroke: { lineCap: 'round', width: 0 },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        type: 'horizontal',
+        shadeIntensity: 0.4,
+        opacityFrom: 1,
+        opacityTo: 0.75,
+        stops: [0, 100],
+      },
+    },
     plotOptions: {
       pie: {
         donut: {
@@ -269,8 +302,25 @@ export default function CompactKPICard({
             >
               <Chart
                 type={(chart.type || 'line') as any}
-                series={[{ data: chart.series as number[] }]}
-                options={sparklineOptions}
+                series={[
+                  {
+                    name: '',
+                    data: (chart.series as number[]).map((v, i) => ({
+                      x: chart.labels?.[i] ?? i,
+                      y: v,
+                    })),
+                  },
+                ]}
+                options={{
+                  ...sparklineOptions,
+                  plotOptions: {
+                    bar: {
+                      distributed: !!(chart.colors && chart.colors.length > 1),
+                      borderRadius: 4,
+                      columnWidth: '60%',
+                    },
+                  },
+                }}
                 width={w}
                 height={h}
                 dir="ltr"
