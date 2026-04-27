@@ -165,7 +165,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
 
             return (
               <CustomTooltip
-                title={value === 0 ? 'Published' : 'Draft'}
+                title={value === PublishUnpublishStatusType.Draft ? 'Draft' : 'Published'}
                 arrow
                 placement="left"
                 PopperProps={{
@@ -227,7 +227,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               showThreeDots={false}
               // actions={(prop) => actions({ ...prop, row })}
               showViewIcon
-              showEditIcon
+              showEditIcon={(row as any).status !== PublishUnpublishStatusType.Published}
               showDeleteIcon
               handleDeleteClick={() => {
                 onDeleteDetails(row as IHomework);

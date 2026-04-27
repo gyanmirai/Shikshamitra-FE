@@ -88,8 +88,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
       SubjectId: subject,
     },
     options: {
-      skip:
-        !(medium as Medium)?.id || !selectedClassData?.id || !selectedDivisionData?.id || !subject,
+      skip: !(medium as Medium)?.id || !classes || !division || !subject,
     },
   });
 
@@ -110,9 +109,10 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          mt: 2,
+          mt: 1,
           p: 1,
           gap: 2,
+          mb: 1,
         }}
       >
         {' '}

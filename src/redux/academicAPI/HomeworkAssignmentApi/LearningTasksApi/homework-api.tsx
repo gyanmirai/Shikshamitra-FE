@@ -10,11 +10,11 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `/academic/homeworks`,
         method: 'GET',
         params: {
-          ...(academicMediumId && { academicMediumId }),
-          ...(StandardId && { StandardId }),
-          ...(DivisionId && { DivisionId }),
-          ...(SubjectId && { SubjectId }),
-          ...(HomeworkDate && { HomeworkDate }),
+          academicMediumId,
+          StandardId,
+          DivisionId,
+          SubjectId,
+          HomeworkDate,
         },
       }),
       providesTags: [academicType.homework],
@@ -32,7 +32,7 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `/academic/homeworks/${homeworkId}`,
         method: 'GET',
         params: {
-          ...(academicMediumId && { academicMediumId }),
+          academicMediumId,
         },
       }),
       providesTags: [academicType.homework],
@@ -79,14 +79,11 @@ export const homeworkApi = academicApi.injectEndpoints({
     }),
 
     // UPDATE homework status
-    updateHomeworkStatus: builder.mutation({
-      query: (homeworkId) => ({
+    updateHomeworkStatus: builder.mutation<any, { homeworkId: string; status: number }>({
+      query: ({ homeworkId, status }) => ({
         url: `/academic/homeworks/${homeworkId}/status`,
         method: 'PATCH',
-        body: {},
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        body: { status },
       }),
       invalidatesTags: [academicType.homework],
     }),

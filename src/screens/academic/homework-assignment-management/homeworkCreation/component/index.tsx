@@ -138,7 +138,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       HomeworkDate: date?.toISOString(),
     },
     options: {
-      skip: !(medium as Medium)?.id || !selectedClassData?.id || !selectedDivisionData?.id,
+      skip: !(medium as Medium)?.id || !classes || !division || !subject,
     },
   });
 
@@ -157,6 +157,15 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       skip: !classes,
     },
   });
+
+  // Auto-select first subject when subjects load
+  useEffect(() => {
+    const firstSubject = subjectOptionsData?.data?.items?.[0]?.id;
+    if (firstSubject && !subject) {
+      setSubject(firstSubject);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectOptionsData]);
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -335,7 +344,10 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
               try {
-                await updateHomeworkStatus(selectedHomework?.id).unwrap();
+                await updateHomeworkStatus({
+                  homeworkId: selectedHomework?.id,
+                  status: 1,
+                }).unwrap();
                 shikshaMitraToast.success({
                   message: `Homework "${selectedHomework?.title}" has been successfully published.`,
                 });

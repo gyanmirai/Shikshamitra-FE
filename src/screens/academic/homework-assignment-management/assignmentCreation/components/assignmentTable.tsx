@@ -141,7 +141,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             return (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <CustomTooltip
-                  title={value === 0 ? 'Published' : 'Draft'}
+                  title={value === PublishUnpublishStatusType.Draft ? 'Draft' : 'Published'}
                   arrow
                   placement="left"
                   PopperProps={{
@@ -216,7 +216,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               // actions={(prop) => actions({ ...prop, row })}
               showThreeDots={false}
               showViewIcon
-              showEditIcon
+              showEditIcon={(row as any).status !== PublishUnpublishStatusType.Published}
               showDeleteIcon
               handleEditClick={() => onEdit(row as IAssignment)}
               handleViewClick={() => {

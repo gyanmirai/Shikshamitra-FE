@@ -10,11 +10,11 @@ export const assignmentApi = academicApi.injectEndpoints({
         url: `/academic/assignments`,
         method: 'GET',
         params: {
-          ...(academicMediumId && { academicMediumId }),
-          ...(StandardId && { StandardId }),
-          ...(DivisionId && { DivisionId }),
-          ...(SubjectId && { SubjectId }),
-          ...(AssignmentDate && { AssignmentDate }),
+          academicMediumId,
+          StandardId,
+          DivisionId,
+          SubjectId,
+          AssignmentDate,
         },
       }),
       providesTags: [academicType.assignment],
@@ -32,7 +32,7 @@ export const assignmentApi = academicApi.injectEndpoints({
         url: `/academic/assignments/${assignmentId}`,
         method: 'GET',
         params: {
-          ...(academicMediumId && { academicMediumId }),
+          academicMediumId,
         },
       }),
       providesTags: [academicType.assignment],
@@ -58,15 +58,22 @@ export const assignmentApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.assignment],
     }),
 
+    // UPDATE assignment (multipart/form-data)
+    updateAssignment: builder.mutation({
+      query: ({ assignmentId, body }: { assignmentId: string; body: FormData }) => ({
+        url: `/academic/assignments/${assignmentId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [academicType.assignment],
+    }),
+
     // UPDATE assignment status
-    updateAssignmentStatus: builder.mutation({
-      query: (assignmentId: string) => ({
+    updateAssignmentStatus: builder.mutation<any, { assignmentId: string; status: number }>({
+      query: ({ assignmentId, status }) => ({
         url: `/academic/assignments/${assignmentId}/status`,
         method: 'PATCH',
-        body: {},
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        body: { status },
       }),
       invalidatesTags: [academicType.assignment],
     }),
@@ -79,6 +86,7 @@ export const {
   useGetAssignmentsQuery,
   useGetAssignmentByIdQuery,
   useAddAssignmentMutation,
+  useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
   useUpdateAssignmentStatusMutation,
 } = assignmentApi;

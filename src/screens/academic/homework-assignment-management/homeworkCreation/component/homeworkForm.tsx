@@ -245,8 +245,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       }
     },
   });
-  console.log('formik----values', formik.values);
-  console.log('formik ---errores====', formik.errors);
+
+  console.log('Formik Values:', formik);
 
   // Update divisions when class changes
   useEffect(() => {
@@ -405,6 +405,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     <CustomSelect
                       label="Class *"
                       options={allClass}
+                      disabled={!!editData?.id}
                       value={formik.values.classId || formik.values.class}
                       labelKey="name"
                       valueKey="id"
@@ -412,6 +413,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         formik.setFieldValue('class', val);
                         formik.setFieldValue('classId', val);
                         formik.setFieldValue('divisions', []);
+                        formik.setFieldValue('subjectId', '');
                       }}
                       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                       error={!!(formik.touched.class && formik.errors.class)}
@@ -427,6 +429,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       labelKey="name"
                       valueKey="id"
                       multiple
+                      disabled={!!editData?.id}
                       options={allDivision}
                       value={formik.values.divisions.map((d) => d.divisionId)}
                       onChange={(val) => {
@@ -469,7 +472,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
                     <CustomSelect
                       label="Subject *"
-                      disabled={!formik.values.divisions || formik.values.divisions.length === 0}
+                      disabled={
+                        !!editData?.id ||
+                        !formik.values.divisions ||
+                        formik.values.divisions.length === 0
+                      }
                       options={
                         subjectOptionsData?.data?.items?.map((item: any) => ({
                           id: item.id,
@@ -481,7 +488,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                 '',
                         })) || []
                       }
-                      value={formik.values.subjectId || formik.values.subject}
+                      value={formik.values.subjectId}
                       labelKey="name"
                       valueKey="id"
                       isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
@@ -492,8 +499,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                         formik.setFieldValue('chapterId', '');
                       }}
                       formControlProps={{ fullWidth: true }}
-                      error={!!(formik.touched.subject && formik.errors.subject)}
-                      helperText={(formik.touched.subject && formik.errors.subject) || ''}
+                      error={!!(formik.touched.subjectId && formik.errors.subjectId)}
+                      helperText={(formik.touched.subjectId && formik.errors.subjectId) || ''}
                     />
                   </ShakingTextField>
                 </Grid>

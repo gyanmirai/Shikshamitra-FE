@@ -87,7 +87,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       AssignmentDate: date?.toISOString(),
     },
     options: {
-      skip: !(medium as Medium)?.id || !selectedClassData?.id || !selectedDivisionData?.id,
+      skip: !(medium as Medium)?.id || !classes || !division || !subject,
     },
   });
 
@@ -183,9 +183,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          mt: 2,
+          mt: 1,
           p: 1,
           gap: 2,
+          mb: 1,
         }}
       >
         {' '}
@@ -396,7 +397,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
               try {
-                await updateAssignmentStatus(selectedAssignment?.id).unwrap();
+                await updateAssignmentStatus({
+                  assignmentId: selectedAssignment?.id,
+                  status: 1,
+                }).unwrap();
                 shikshaMitraToast.success({
                   message: `Assignment "${selectedAssignment?.title}" has been successfully published.`,
                 });

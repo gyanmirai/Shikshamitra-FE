@@ -16,6 +16,7 @@ interface TeacherProfile {
   class?: string;
   dailyStatus?: string;
   qualification?: string;
+  subjects?: string[];
 }
 
 const TeacherHoverProfile: React.FC<{

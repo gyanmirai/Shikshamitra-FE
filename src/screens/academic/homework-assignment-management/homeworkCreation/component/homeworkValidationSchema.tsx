@@ -3,9 +3,12 @@ import * as Yup from 'yup';
 
 export const homeworkValidationSchema = (currentYear: any) =>
   Yup.object().shape({
-    title: Yup.string().required('Homework Title is required'),
+    title: Yup.string()
+      .min(3, 'Homework Title must be at least 3 characters')
+      .required('Homework Title is required'),
     class: Yup.string().required('Class is required'),
     description: Yup.string().required('Description is required'),
+
     divisions: Yup.array()
       .of(
         Yup.object().shape({
