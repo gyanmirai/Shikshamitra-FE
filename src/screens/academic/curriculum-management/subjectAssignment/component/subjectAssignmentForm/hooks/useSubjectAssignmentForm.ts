@@ -152,8 +152,8 @@ export function useSubjectAssignmentForm({
           learningGoal: subj.learningGoal,
           prerequisites: subj.prerequisites,
           description: subj.description,
-          primaryTeacherId: subj.primaryTeacher || null,
-          secondaryTeacherId: subj.secondaryTeacher || [],
+          primaryTeacherId: subj.primaryTeacherId || null,
+          secondaryTeacherIds: subj.secondaryTeacherIds || [],
         }));
 
         const payload = {
@@ -188,22 +188,14 @@ export function useSubjectAssignmentForm({
     },
   });
 
-  const handleSubjectChange = (
-    newValue: Array<{
-      type: number;
-      value: string;
-      label: string;
-      color?: string;
-      subjects?: Array<{ id: string; name: string; color?: string }>;
-    }>
-  ) => {
+  const handleSubjectChange = (newValue: any) => {
     if (!newValue || newValue.length === 0) {
       formik.setFieldValue('subjectType', 0);
       formik.setFieldValue('subjects', []);
       formik.setFieldValue('selectedSubjects', []);
       return;
     }
-
+    console.log('Selected subjects/groups changed:', newValue);
     formik.setFieldValue('selectedSubjects', newValue);
     formik.setFieldTouched('subjectName', false);
 
@@ -212,12 +204,15 @@ export function useSubjectAssignmentForm({
     newValue.forEach((option) => {
       if (option.type === 0) {
         allSubjects.push({
+          ...option,
           subjectId: option.value,
           subjectName: option.label,
           subjectCode: '',
           subjectType: 0,
           primaryTeacher: '',
+          primaryTeacherId: option.primaryTeacherId || '',
           secondaryTeacher: [],
+          secondaryTeacherIds: option.secondaryTeacherIds || [],
           description: '',
           isSubjectOpen: true,
           learningGoal: '',
@@ -228,6 +223,7 @@ export function useSubjectAssignmentForm({
         });
       } else if (option.type === 1) {
         const electives = (option.subjects || []).map((subject) => ({
+          ...subject,
           subjectId: subject.id,
           subjectName: subject.name,
           subjectCode: '',

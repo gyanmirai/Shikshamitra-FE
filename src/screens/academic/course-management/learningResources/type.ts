@@ -1,12 +1,3 @@
-// Interface for form values (currently unused - can be removed if not needed)
-// interface FormikValue {
-//   resourceTitle: string;
-//   attachedCourse: string;
-//   accessPermision: string;
-//   courseAndSubject: string;
-//   dateUploaded: string;
-// }
-
 export interface IResourceData {
   id: string; // Unique identifier for the resource
   resourceTitle: string; // Title of the learning resource

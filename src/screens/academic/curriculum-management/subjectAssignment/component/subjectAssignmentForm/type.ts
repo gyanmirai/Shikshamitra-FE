@@ -7,7 +7,9 @@ export interface ISubjectAssignmentSubject {
 
   // Internal usage for SubjectCard compatibility
   primaryTeacher: string;
+  primaryTeacherId: string;
   secondaryTeacher: string[];
+  secondaryTeacherIds: string[];
 
   learningGoal: string;
   prerequisites: string;

@@ -15,7 +15,7 @@ const StudentCoursePerfoemance = () => {
   const [classes3, setClasses3] = useState<string>('');
   const [classes4, setClasses4] = useState<string>('');
   // const [classes5, setClasses5] = useState<string>('All');
-  const [division, setDivision] = useState<any>('');
+  const [division, setDivision] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({
     type: 'query',

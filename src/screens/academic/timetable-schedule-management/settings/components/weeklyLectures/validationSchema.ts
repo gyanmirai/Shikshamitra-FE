@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 
 export const noOfLectureValidationSchema = Yup.object().shape({
-  className: Yup.string().required('Class is required'),
+  classId: Yup.string().required('Class is required'),
   subjects: Yup.array()
     .of(
       Yup.object().shape({

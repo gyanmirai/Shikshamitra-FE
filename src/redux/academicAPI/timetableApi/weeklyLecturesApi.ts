@@ -33,22 +33,19 @@ export const weeklyLecturesApi = academicApi.injectEndpoints({
 
     getWeeklyLectureSlotById: builder.query({
       query: (lectureSlotId) => ({
-        url: `weekly-lecture-slots/${lectureSlotId}`,
+        url: `/academics/timetable/settings/lecture-slots/${lectureSlotId}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: academicType.weeklyLectureSlot, id }],
+      providesTags: [academicType.weeklyLectureSlot],
     }),
 
     updateWeeklyLectureSlot: builder.mutation({
       query: ({ lectureSlotId, body }) => ({
-        url: `weekly-lecture-slots/${lectureSlotId}`,
+        url: `/academics/timetable/settings/lecture-slots/${lectureSlotId}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: (result, error, { lectureSlotId }) => [
-        academicType.weeklyLectureSlot,
-        { type: academicType.weeklyLectureSlot, id: lectureSlotId },
-      ],
+      invalidatesTags: [academicType.weeklyLectureSlot],
     }),
   }),
   overrideExisting: false,

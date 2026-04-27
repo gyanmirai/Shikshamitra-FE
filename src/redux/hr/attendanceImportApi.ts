@@ -46,7 +46,15 @@ export interface AttendanceImportDetail extends AttendanceImportItem {
   warningsSummary?: string[];
 }
 
+export enum AttendanceImportRowStatusCode {
+  Present = 0,
+  Absent = 1,
+  HalfDay = 2,
+}
+
 export interface AttendanceImportRow {
+  id: string;
+  employeeId?: string | null;
   rowNumber: number;
   action: string;
   attendanceDate: string;
@@ -56,6 +64,7 @@ export interface AttendanceImportRow {
   timeIn: string;
   timeOut: string;
   status: string;
+  statusCode?: AttendanceImportRowStatusCode | null;
   remarks: string;
   errors: string[];
   warnings: string[];

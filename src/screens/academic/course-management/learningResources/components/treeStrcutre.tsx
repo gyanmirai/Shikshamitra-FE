@@ -16,30 +16,21 @@ import { dummyData } from './treeData';
 
 import type { IChapter, ISubject } from '../type';
 
-// Dummy File object creation utility
-
 interface HierarchyTreeProps {
   onEdit: (doc: File) => void;
 }
 
 const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
-  // Boolean state to control document deletion dialog visibility
   const deleteDocumentDialog = useBoolean();
-  // State to track the currently selected class ID in the tree structure
   const [selectedClassId, setSelectedClassId] = React.useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = React.useState<File | null>(null);
 
-  // Effect hook to set initial selected class ID
-  // If no class is selected and dummy data exists, select the first class
   useEffect(() => {
     if (!selectedClassId && dummyData.length > 0) {
       setSelectedClassId(dummyData[0].id);
     }
   }, [selectedClassId]);
 
-  // Renders document items in the tree structure
-  // @param docs - Array of File objects to render
-  // @param parentId - ID of the parent node to create unique keys
   const renderDocuments = (docs: File[], parentId: string) =>
     docs.map((doc, idx) => (
       <TreeItem
@@ -59,7 +50,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
               <IconButton
                 size="small"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent parent tree item selection
+                  e.stopPropagation();
                   onEdit(doc);
                 }}
               >
@@ -69,7 +60,7 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
               <IconButton
                 size="small"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent parent tree item selection
+                  e.stopPropagation();
                   deleteDocumentDialog.onTrue();
                 }}
               >
@@ -113,9 +104,6 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
           </Box>
         }
         onClick={(e) => {
-          // Only update if it's a top-level class node
-
-          // setSelectedClassId(itemId);
           setSelectedDocument(null);
         }}
       >
@@ -141,9 +129,6 @@ const HierarchyTree: React.FC<HierarchyTreeProps> = ({ onEdit }) => {
           <SimpleTreeView
             defaultExpandedItems={[dummyData[0].id]}
             onItemClick={(event, itemId) => {
-              // Only update if it's a top-level class node
-
-              // setSelectedClassId(itemId);
               setSelectedDocument(null);
             }}
             slots={{

@@ -15,12 +15,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
 
 import CreateNoOfLecture from './createWeeklyLectures';
 
-import type { ISubject, ISubjectFormValues } from './type';
+import type { ISubjectFormValues } from './type';
 
 // const data = [
 //   {
@@ -185,22 +184,22 @@ const WeeklyLectures = () => {
         align: 'left',
       },
       {
-        id: 'subjects',
+        id: 'newSubject',
         label: 'Subjects',
         isSort: false,
         align: 'left',
-        render: (value, row) => (
-          <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
-            {row.subjects.map((subject: ISubject) => (
-              <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <SubjectColorIndicator color={subject.subjectColor} />
-                <Typography variant="caption" fontSize="13px">
-                  {`${subject.name} (${subject.noOfLecture})`}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ),
+        // render: (value, row) => (
+        //   <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
+        //     {row.subjects.map((subject: ISubject) => (
+        //       <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        //         <SubjectColorIndicator color={subject.subjectColor} />
+        //         <Typography variant="caption" fontSize="13px">
+        //           {`${subject.name} (${subject.noOfLecture})`}
+        //         </Typography>
+        //       </Box>
+        //     ))}
+        //   </Box>
+        // ),
       },
       {
         id: 'action',
@@ -239,10 +238,10 @@ const WeeklyLectures = () => {
 
   const tableData = useMemo(
     () =>
-      weeklyLectureData?.data?.map((item: { subjects: any[] }, index: any) => ({
+      weeklyLectureData?.items?.map((item: { subjects: any[] }, index: any) => ({
         ...item,
         newSubject: item.subjects
-          .map((subject, ind) => `${subject.name} (${subject.noOfLecture})`)
+          .map((subject, ind) => `${subject.subjectName} (${subject.weeklyLectures})`)
           .join(' '),
       })),
     [weeklyLectureData]

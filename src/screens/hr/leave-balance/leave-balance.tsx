@@ -53,104 +53,6 @@ interface LeaveBalanceData {
 
 // -----------------------------------------------------------------------
 
-const DUMMY_BALANCE_DATA: LeaveBalanceData = {
-  totalLeaves: 40,
-  usedLeaves: 13,
-  remainingLeaves: 25,
-  pendingLeaves: 2,
-  leaveTypeBreakdown: [
-    {
-      leaveTypeId: 'cl',
-      leaveTypeName: 'Casual Leave (CL)',
-      total: 12,
-      used: 5,
-      pending: 1,
-      remaining: 6,
-    },
-    {
-      leaveTypeId: 'sl',
-      leaveTypeName: 'Sick Leave (SL)',
-      total: 10,
-      used: 2,
-      pending: 0,
-      remaining: 8,
-    },
-    {
-      leaveTypeId: 'el',
-      leaveTypeName: 'Earned Leave (EL)',
-      total: 18,
-      used: 6,
-      pending: 1,
-      remaining: 11,
-    },
-  ],
-};
-
-const DUMMY_HISTORY_ROWS = [
-  {
-    id: 'd1',
-    appliedDate: '05-01-2026',
-    leaveType: 'Casual Leave (CL)',
-    startDate: '10-01-2026',
-    endDate: '11-01-2026',
-    totalDays: 2,
-    reason: 'Personal work at home',
-    status: EmployeeLeaveStatusType.Approved,
-  },
-  {
-    id: 'd2',
-    appliedDate: '01-02-2026',
-    leaveType: 'Sick Leave (SL)',
-    startDate: '02-02-2026',
-    endDate: '02-02-2026',
-    totalDays: 1,
-    reason: 'Fever and cold',
-    status: EmployeeLeaveStatusType.Pending,
-  },
-  {
-    id: 'd3',
-    appliedDate: '10-02-2026',
-    leaveType: 'Earned Leave (EL)',
-    startDate: '15-02-2026',
-    endDate: '17-02-2026',
-    totalDays: 3,
-    reason: 'Family function out of city',
-    status: EmployeeLeaveStatusType.Rejected,
-  },
-  {
-    id: 'd4',
-    appliedDate: '01-03-2026',
-    leaveType: 'Casual Leave (CL)',
-    startDate: '05-03-2026',
-    endDate: '05-03-2026',
-    totalDays: 1,
-    reason: 'Bank related work',
-    status: EmployeeLeaveStatusType.Approved,
-  },
-  {
-    id: 'd5',
-    appliedDate: '14-03-2026',
-    leaveType: 'Earned Leave (EL)',
-    startDate: '20-03-2026',
-    endDate: '22-03-2026',
-    totalDays: 3,
-    reason: 'Vacation trip',
-    status: EmployeeLeaveStatusType.Approved,
-  },
-  {
-    id: 'd6',
-    appliedDate: '01-04-2026',
-    leaveType: 'Sick Leave (SL)',
-    startDate: '03-04-2026',
-    endDate: '03-04-2026',
-    totalDays: 1,
-    reason: 'Doctor appointment',
-    status: EmployeeLeaveStatusType.Pending,
-  },
-];
-
-// -----------------------------------------------------------------------
-
 const SUMMARY_CARDS = (data?: LeaveBalanceData) => [
   {
     title: 'Total Leaves',
@@ -310,6 +212,7 @@ const LeaveBalance = () => {
     type: 'query',
     currentQueryAndMutation: useGetMyLeaveBalanceQuery,
     params: { academicYearId: currentYear?.id, employeeId: employee?.id },
+    options: { skip: !currentYear?.id },
   });
 
   const {
@@ -320,10 +223,19 @@ const LeaveBalance = () => {
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+    options: { skip: !currentYear?.id },
   });
 
   const mergedBalance: LeaveBalanceData = useMemo(() => {
-    if (!balanceData?.items?.length) return DUMMY_BALANCE_DATA;
+    if (!balanceData?.items?.length) {
+      return {
+        totalLeaves: 0,
+        usedLeaves: 0,
+        remainingLeaves: 0,
+        pendingLeaves: 0,
+        leaveTypeBreakdown: [],
+      };
+    }
     const { items } = balanceData;
     const totalLeaves = items.reduce((sum: number, i: any) => sum + (i.entitledDays ?? 0), 0);
     const usedLeaves = items.reduce((sum: number, i: any) => sum + (i.usedDays ?? 0), 0);
@@ -347,10 +259,7 @@ const LeaveBalance = () => {
   const summaryCards = useMemo(() => SUMMARY_CARDS(mergedBalance), [mergedBalance]);
 
   const breakdownRows: LeaveTypeBreakdown[] = useMemo(
-    () =>
-      mergedBalance.leaveTypeBreakdown.length > 0
-        ? mergedBalance.leaveTypeBreakdown
-        : DUMMY_BALANCE_DATA.leaveTypeBreakdown,
+    () => mergedBalance.leaveTypeBreakdown,
     [mergedBalance]
   );
 
@@ -437,19 +346,20 @@ const LeaveBalance = () => {
     []
   );
 
-  const historyRows = useMemo(() => {
-    const apiRows = (historyData?.items ?? []).map((item: any) => ({
-      id: item.id,
-      appliedDate: item.appliedDate ? dayjs(item.appliedDate).format('DD-MM-YYYY') : '-',
-      leaveType: item.leaveType ?? '-',
-      startDate: item.startDate ? dayjs(item.startDate).format('DD-MM-YYYY') : '-',
-      endDate: item.endDate ? dayjs(item.endDate).format('DD-MM-YYYY') : '-',
-      totalDays: item.totalDays ?? '-',
-      reason: item.reason ?? item.description ?? '-',
-      status: item.status,
-    }));
-    return [...apiRows, ...DUMMY_HISTORY_ROWS];
-  }, [historyData]);
+  const historyRows = useMemo(
+    () =>
+      (historyData?.items ?? []).map((item: any) => ({
+        id: item.id,
+        appliedDate: item.appliedDate ? dayjs(item.appliedDate).format('DD-MM-YYYY') : '-',
+        leaveType: item.leaveType ?? '-',
+        startDate: item.startDate ? dayjs(item.startDate).format('DD-MM-YYYY') : '-',
+        endDate: item.endDate ? dayjs(item.endDate).format('DD-MM-YYYY') : '-',
+        totalDays: item.totalDays ?? '-',
+        reason: item.reason ?? item.description ?? '-',
+        status: item.status,
+      })),
+    [historyData]
+  );
 
   const isLoadingBalance = isBalanceLoading || isBalanceFetching;
 
@@ -561,6 +471,14 @@ const LeaveBalance = () => {
             </Box>
           }
         />
+        {historyData &&
+          typeof historyData.totalCount === 'number' &&
+          historyData.totalCount > (historyData.items?.length ?? 0) && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave requests
+              for this academic year (max {100} per page).
+            </Typography>
+          )}
       </Card>
     </Box>
   );

@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { Alert } from '@mui/material';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 interface IQueryAndMutation<T> {
   type: 'query' | 'mutation';
@@ -44,6 +45,7 @@ function useQueryAndMutation<T>({
 
   useEffect(() => {
     if (isError && popupConfig.error) {
+      const parsed = parseApiProblemDetail(error);
       toast.custom((t) => (
         <Alert
           severity="error"
@@ -52,7 +54,7 @@ function useQueryAndMutation<T>({
             toast.dismiss(t);
           }}
         >
-          {error?.data?.error?.message || popupConfig.errorMessage}
+          {parsed.detail || popupConfig.errorMessage}
         </Alert>
       ));
       // toast.error(error?.data?.error?.message || popupConfig.errorMessage);
