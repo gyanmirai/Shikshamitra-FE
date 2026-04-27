@@ -42,6 +42,7 @@ export interface IAssignmentFormProps {
 
 export interface IAssignmentTableProps {
   assignmentData: IAssignment[];
+  isLoading?: boolean;
   selectedDivision: string;
   selectedClass: string;
   dialog: UseBooleanReturn;

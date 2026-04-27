@@ -13,17 +13,19 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment-table-data.json';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   assignmentApi,
   useGetAssignmentsQuery,
+  useGetAssignmentByIdQuery,
   useDeleteAssignmentMutation,
-  usePublishAssignmentMutation,
+  useUpdateAssignmentStatusMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 
 import AssignmentForm from './components/assignmentForm';
@@ -34,10 +36,6 @@ import { StudentSubmissions } from './studentSubmission/studentSubmission';
 import type { IAssignment } from './type';
 
 const AssignmentCreation = ({ addAssignmentDialog }: any) => {
-  // State to store list of all assignments
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  const [assignmentData] = useState<any[]>(assignmentTableData);
-
   // Dialog state for add/edit assignment form
   // const addAssignmentDialog = useBoolean();
   // Dialog state for delete assignment confirmation
@@ -52,6 +50,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State to store currently selected assignment for edit/delete/publish
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
+  const [viewAssignmentId, setViewAssignmentId] = useState<string | null>(null);
   // Redux dispatch function
   const dispatch = useDispatch();
   // const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -66,8 +65,14 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const [division, setDivision] = useState<string>('');
   // State to store and update the selected date using dayjs
   const [date, setDate] = useState<Dayjs | null>(dayjs());
+  // Get current board, medium and medium setter from global state
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const selectedClassData = allClass.find((c: any) => c?.id === classes);
+  const selectedDivisionData = allDivision.find((d: any) => d?.id === division);
+
   const {
-    data: tableData,
+    data: assignmentData,
     isLoading,
     isFetching,
     refetch,
@@ -75,29 +80,58 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
     type: 'query',
     currentQueryAndMutation: useGetAssignmentsQuery,
     params: {
-      academicMediumId: (currentMedium as Medium)?.id,
-      classId: classes,
-      divisionId: division,
-      subjectId: subject,
-      assignmentDate: date?.toISOString(),
+      academicMediumId: (medium as Medium)?.id,
+      StandardId: selectedClassData?.id,
+      DivisionId: selectedDivisionData?.id,
+      SubjectId: subject,
+      AssignmentDate: date?.toISOString(),
     },
     options: {
-      skip: !(currentMedium as Medium)?.id,
+      skip: !(medium as Medium)?.id || !classes || !division || !subject,
     },
   });
 
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  // Fetch full assignment details when a specific assignment is selected for viewing
+  const {
+    data: assignmentDetailData,
+    isLoading: isAssignmentDetailLoading,
+    isFetching: isAssignmentDetailFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentByIdQuery,
+    params: {
+      assignmentId: viewAssignmentId,
+      academicMediumId: (medium as Medium)?.id,
+    },
+    options: { skip: !viewAssignmentId },
+  });
+
+  // Fetch subjects for the selected class
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      standardId: classes,
+    },
+    options: {
+      skip: !classes,
+    },
+  });
 
   const [deleteAssignment, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteAssignmentMutation,
   });
 
-  const [publishAssignment, { isLoading: isPublishLoading }] = useQueryAndMutation({
+  const [updateAssignmentStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: usePublishAssignmentMutation,
+    currentQueryAndMutation: useUpdateAssignmentStatusMutation,
   });
+
   const { confirmWithUndo } = useConfirmWithUndo();
 
   // Update classes when organization changes
@@ -113,7 +147,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // Update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.name || '');
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
+    setSubject(''); // reset subject when class changes
   }, [allClass, classes]);
 
   /**
@@ -148,9 +183,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          mt: 2,
+          mt: 1,
           p: 1,
           gap: 2,
+          mb: 1,
         }}
       >
         {' '}
@@ -169,26 +205,26 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           value={division}
           onChange={(val) => setDivision(val as string)}
           labelKey="name"
-          valueKey="name"
+          valueKey="id"
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!classes}
         />
         <CustomSelect
-          options={[
-            { id: '1', name: 'Mathematics' },
-            { id: '2', name: 'Science' },
-            { id: '3', name: 'English' },
-            { id: '4', name: 'History' },
-            { id: '5', name: 'Geography' },
-            { id: '6', name: 'Physics' },
-            { id: '7', name: 'Chemistry' },
-            { id: '8', name: 'Biology' },
-          ]}
+          options={
+            subjectOptionsData?.data?.items?.map((item: any) => ({
+              id: item.id,
+              name:
+                item.subjects?.length > 1
+                  ? item.electiveGroupName
+                  : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName || '',
+            })) || []
+          }
           label="Subject"
           value={subject}
           onChange={(val) => setSubject(val as string)}
           labelKey="name"
           valueKey="id"
+          isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />
@@ -254,7 +290,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       </CustomDialog>
 
       <AssignmentTable
-        assignmentData={assignmentData}
+        assignmentData={assignmentData?.items || []}
+        isLoading={isLoading || isFetching}
         dialog={addAssignmentDialog}
         selectedDivision={division}
         selectedClass={classes}
@@ -271,8 +308,9 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           deleteAssignmentDialog.onTrue();
         }}
         onView={(row) => {
-          viewAssignmentDetails.onTrue();
+          setViewAssignmentId(row.id);
           setSelectedAssignment(row);
+          viewAssignmentDetails.onTrue();
         }}
         onViewSubmission={(row) => {
           viewAssignmentSubmissionDialog.onTrue();
@@ -299,32 +337,36 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             size="small"
             loading={isDeleteLoading}
             onClick={async () => {
+              const assignmentQueryParams = {
+                academicMediumId: (medium as Medium)?.id,
+                StandardId: selectedClassData?.id,
+                DivisionId: selectedDivisionData?.id,
+                SubjectId: subject,
+                AssignmentDate: date?.toISOString(),
+              };
+
               confirmWithUndo({
                 item: selectedAssignment,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     assignmentApi.util.updateQueryData(
                       'getAssignments',
-                      {
-                        classId: allClass.find((org: any) => org?.id === classes)?.id,
-                        divisionId: allClass
-                          .find((org: any) => org?.id === classes)
-                          ?.divisions?.find((d: any) => d?.name === division)?.id,
-                        subjectId: subject,
-                        assignmentDate: date?.toISOString(),
-                      },
+                      assignmentQueryParams,
                       (draft: any) => {
-                        const index = draft.findIndex(
-                          (item: any) => item.id === selectedAssignment?.id
+                        const index = draft.items?.findIndex(
+                          (a: any) => a.id === selectedAssignment?.id
                         );
                         setDeleteIndex(index);
-                        if (index !== -1) draft.splice(index, 1);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
                       }
                     )
                   ),
                 onUndoRestore: () => refetch(),
                 onCommit: () => deleteAssignment(selectedAssignment?.id),
               });
+
               deleteAssignmentDialog.onFalse();
               setSelectedAssignment(null);
             }}
@@ -354,61 +396,19 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             loading={isPublishLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
-              const nextStatus = 'PUBLISHED';
-
-              confirmWithUndo({
-                item: selectedAssignment,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    assignmentApi.util.updateQueryData(
-                      'getAssignments',
-                      {
-                        classId: allClass.find((org: any) => org?.id === classes)?.id,
-                        divisionId: allClass
-                          .find((org: any) => org?.id === classes)
-                          ?.divisions?.find((d: any) => d?.name === division)?.id,
-                        subjectId: subject,
-                        assignmentDate: date?.toISOString(),
-                      },
-                      (draft: any) => {
-                        const index = draft.findIndex(
-                          (item: any) => item.id === selectedAssignment?.id
-                        );
-                        if (index !== -1) {
-                          draft[index].status = nextStatus;
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    assignmentApi.util.updateQueryData(
-                      'getAssignments',
-                      {
-                        classId: allClass.find((org: any) => org?.id === classes)?.id,
-                        divisionId: allClass
-                          .find((org: any) => org?.id === classes)
-                          ?.divisions?.find((d: any) => d?.name === division)?.id,
-                        subjectId: subject,
-                        assignmentDate: date?.toISOString(),
-                      },
-                      (draft: any) => {
-                        const itemIndex = draft.findIndex(
-                          (item: any) => item.id === selectedAssignment?.id
-                        );
-                        if (itemIndex !== -1) {
-                          draft[itemIndex].status = selectedAssignment?.status;
-                        }
-                      }
-                    )
-                  ),
-                onCommit: () =>
-                  publishAssignment({
-                    assignmentId: selectedAssignment?.id,
-                    status: nextStatus,
-                  }),
-              });
-
+              try {
+                await updateAssignmentStatus({
+                  assignmentId: selectedAssignment?.id,
+                  status: 1,
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: `Assignment "${selectedAssignment?.title}" has been successfully published.`,
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to publish assignment.',
+                });
+              }
               publishAssignmentDialog.onFalse();
               setSelectedAssignment(null);
             }}
@@ -454,11 +454,17 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         open={viewAssignmentDetails.value}
         handleClose={() => {
           viewAssignmentDetails.onFalse();
-          setSelectedAssignment(null);
+          setTimeout(() => {
+            setSelectedAssignment(null);
+            setViewAssignmentId(null);
+          }, 200);
         }}
         maxWidth="md"
       >
-        <ViewAssignmentDetails assignment={selectedAssignment} />
+        <ViewAssignmentDetails
+          assignment={assignmentDetailData?.data ?? selectedAssignment}
+          isLoading={isAssignmentDetailLoading || isAssignmentDetailFetching}
+        />
       </CustomDialog>
     </Box>
   );

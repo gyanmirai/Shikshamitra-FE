@@ -6,14 +6,15 @@ export const homeworkApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET all homework
     getHomeworks: builder.query({
-      query: ({ classId, divisionId, subjectId, homeworkDate }) => ({
-        url: `app/homework`,
+      query: ({ academicMediumId, StandardId, DivisionId, SubjectId, HomeworkDate }) => ({
+        url: `/academic/homeworks`,
         method: 'GET',
         params: {
-          classId,
-          divisionId,
-          subjectId,
-          homeworkDate,
+          academicMediumId,
+          StandardId,
+          DivisionId,
+          SubjectId,
+          HomeworkDate,
         },
       }),
       providesTags: [academicType.homework],
@@ -21,46 +22,47 @@ export const homeworkApi = academicApi.injectEndpoints({
 
     // GET homework by id
     getHomeworkById: builder.query({
-      query: (homeworkId) => ({
-        url: `app/homework/${homeworkId}`,
+      query: ({
+        homeworkId,
+        academicMediumId,
+      }: {
+        homeworkId: string;
+        academicMediumId?: string;
+      }) => ({
+        url: `/academic/homeworks/${homeworkId}`,
         method: 'GET',
+        params: {
+          academicMediumId,
+        },
       }),
       providesTags: [academicType.homework],
     }),
 
     // CREATE homework
     addHomework: builder.mutation({
-      query: ({ academicMediumId, ...body }) => ({
-        url: `app/homework?academicMediumId=${academicMediumId}`,
+      query: ({ academicMediumId, body }) => ({
+        url: `/academic/homeworks`,
         method: 'POST',
+        params: { academicMediumId },
         body,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [academicType.homework],
     }),
 
     // UPDATE homework
     updateHomework: builder.mutation({
-      query: ({ id, academicMediumId, body }) => ({
-        url: `app/homework/${id}`,
+      query: ({ id, body }) => ({
+        url: `/academic/homeworks/${id}`,
         method: 'PUT',
         body,
-        params: {
-          academicMediumId,
-        },
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       }),
       invalidatesTags: [academicType.homework],
     }),
 
     // DELETE homework
     deleteHomework: builder.mutation({
-      query: (homeworkId) => ({
-        url: `app/homework/${homeworkId}`,
+      query: ({ homeworkId }) => ({
+        url: `/academic/homeworks/${homeworkId}`,
         method: 'DELETE',
       }),
       invalidatesTags: [academicType.homework],
@@ -72,6 +74,16 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `app/homework/${homeworkId}/publish`,
         method: 'POST',
         data: { status },
+      }),
+      invalidatesTags: [academicType.homework],
+    }),
+
+    // UPDATE homework status
+    updateHomeworkStatus: builder.mutation<any, { homeworkId: string; status: number }>({
+      query: ({ homeworkId, status }) => ({
+        url: `/academic/homeworks/${homeworkId}/status`,
+        method: 'PATCH',
+        body: { status },
       }),
       invalidatesTags: [academicType.homework],
     }),
@@ -87,4 +99,5 @@ export const {
   useUpdateHomeworkMutation,
   useDeleteHomeworkMutation,
   usePublishHomeworkMutation,
+  useUpdateHomeworkStatusMutation,
 } = homeworkApi;

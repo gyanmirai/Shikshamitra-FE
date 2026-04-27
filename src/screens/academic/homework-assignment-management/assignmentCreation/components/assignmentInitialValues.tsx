@@ -1,30 +1,28 @@
 import dayjs from 'dayjs';
 
-import { allStudentIds } from './assignmentForm';
-
 import type { IAssignment } from '../type';
 
 export const getAssignmentInitialValues = (editData: IAssignment | null, classes: string) => ({
   title: editData?.title || '',
   description: editData?.description || '',
   className: editData?.className || '',
-  classId: editData?.classId || classes || '',
+  classId: (editData as any)?.standardId || editData?.classId || classes || '',
 
   totalMarks: editData?.totalMarks || '',
   divisions:
-    editData?.divisions?.map((div) => ({
+    ((editData as any)?.divisionSchedules || editData?.divisions)?.map((div: any) => ({
       divisionId: div.divisionId,
       divisionName: div.divisionName,
       createdAt: div.createdAt ? dayjs(div.createdAt) : null,
-      publishDate: div.publishDate ? dayjs(div.publishDate) : null,
-      dueDate: div.dueDate ? dayjs(div.dueDate) : null,
+      publishDate: div.publishAt
+        ? dayjs(div.publishAt)
+        : div.publishDate
+          ? dayjs(div.publishDate)
+          : null,
+      dueDate: div.dueAt ? dayjs(div.dueAt) : div.dueDate ? dayjs(div.dueDate) : null,
       status: div.status ?? 0,
     })) || [],
-  students: editData?.students?.length
-    ? editData.students
-    : editData?.divisions?.length
-      ? allStudentIds
-      : [],
+  students: editData?.students?.length ? editData.students : [],
   subjectName: editData?.subjectName || '',
   subjectId: editData?.subjectId || '',
 

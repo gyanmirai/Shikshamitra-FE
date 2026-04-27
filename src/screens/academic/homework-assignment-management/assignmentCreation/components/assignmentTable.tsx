@@ -17,6 +17,7 @@ import type { DivisionHomeworkMeta } from '../../homeworkCreation/type';
 
 const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   assignmentData,
+  isLoading,
   selectedDivision,
   selectedClass,
   onSwitchToggle,
@@ -39,32 +40,35 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
   // });
   // Get the theme object from MUI theme provider
   const theme = useTheme();
-  const filteredData = useMemo(() => {
-    if (!selectedDivision) return assignmentData || [];
-
-    return (assignmentData || [])
-      .filter((hw: IAssignment) =>
-        hw.divisions?.some((d: DivisionHomeworkMeta) => d.divisionId === selectedDivision)
-      )
-      .map((hw: IAssignment) => {
-        const currentDivision = hw.divisions.find(
-          (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+  const filteredData = useMemo(
+    () =>
+      (assignmentData || []).map((hw: IAssignment) => {
+        const schedules = (hw as any).divisionSchedules || hw.divisions || [];
+        const currentDivision = schedules.find(
+          (d: any) => !selectedDivision || d.divisionId === selectedDivision
         );
         return {
           ...hw,
+          assignmentType: (hw as any).assignmentTypeName || (hw as any).assignmentType,
           currentDivisionId: currentDivision?.divisionId,
-          createdAt: currentDivision?.createdAt,
-          publishDate: currentDivision?.publishDate,
-          dueDate: currentDivision?.dueDate,
-          status: currentDivision?.status,
+          publishDate: currentDivision?.publishDate || currentDivision?.publishAt,
+          dueDate: currentDivision?.dueDate || currentDivision?.dueAt,
+          status:
+            currentDivision?.status !== undefined
+              ? currentDivision.status
+              : currentDivision?.isPublished
+                ? 1
+                : ((hw as any).status ?? 0),
+          divisions: schedules,
         };
-      });
-  }, [assignmentData, selectedDivision]);
+      }),
+    [assignmentData, selectedDivision]
+  );
 
   return (
     <CustomizableTable
       tableId="assignment-management"
-      // isLoading={isLoading || isFetching}
+      isLoading={isLoading}
       noDataText={
         <>
           Assignment Data Not Found
@@ -137,7 +141,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             return (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <CustomTooltip
-                  title={value === 0 ? 'Published' : 'Draft'}
+                  title={value === PublishUnpublishStatusType.Draft ? 'Draft' : 'Published'}
                   arrow
                   placement="left"
                   PopperProps={{
@@ -212,11 +216,12 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               // actions={(prop) => actions({ ...prop, row })}
               showThreeDots={false}
               showViewIcon
-              showEditIcon
+              showEditIcon={(row as any).status !== PublishUnpublishStatusType.Published}
               showDeleteIcon
               handleEditClick={() => onEdit(row as IAssignment)}
               handleViewClick={() => {
-                const divisionData = row.divisions?.find(
+                const schedules = (row as any).divisionSchedules || row.divisions || [];
+                const divisionData = schedules.find(
                   (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
                 );
 

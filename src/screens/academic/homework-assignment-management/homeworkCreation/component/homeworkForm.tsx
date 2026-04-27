@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -24,10 +24,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  useAddHomeworkMutation,
-  useUpdateHomeworkMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
+import { useGetHomeworkTypesQuery } from 'src/redux/academics/homeworkAndAssignment/homeworkTypeApi';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
   Grid,
@@ -35,11 +34,17 @@ import {
   Radio,
   Stack,
   Button,
+  Skeleton,
   TextField,
   Typography,
   FormControl,
   Autocomplete,
 } from '@mui/material';
+import {
+  useAddHomeworkMutation,
+  useGetHomeworkByIdQuery,
+  useUpdateHomeworkMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
@@ -102,17 +107,28 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkMutation,
   });
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const [updateHomework, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkMutation,
+  });
+  const {
+    data: homeworkData,
+    isLoading: isHomeworkLoading,
+    isFetching: isHomeworkFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkByIdQuery,
+    params: { homeworkId: editData?.id, academicMediumId: medium?.id },
+    options: {
+      skip: !editData?.id,
+    },
   });
   // Get current academic year from global state for date validation and filtering
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
-
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // State to store all available divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -127,23 +143,22 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     setAllClass(allClasses);
   }, [classes, medium]);
 
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
-  }, [allClass, classes]);
   // State to store available division options for selected class
   // const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   // Initialize formik form with validation and submission handling
   const formik = useFormik({
-    initialValues: getHomeworkInitialValues(editData, classes),
+    initialValues: getHomeworkInitialValues(homeworkData?.data, classes),
+    enableReinitialize: true,
     validateOnChange: true,
     validationSchema: homeworkValidationSchema(currentYear),
     onSubmit: async (values) => {
       try {
+        const activeClassId = values.classId || values.class;
         const payload = {
-          classId: values.classId,
-          subjectId: values.subjectId,
+          classId: activeClassId,
+          standardId: values.standardId || activeClassId,
+          subjectId: values.subjectId || values.subject,
           chapterId: values.chapterId,
           title: values.title,
           description: values.description,
@@ -158,18 +173,68 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         };
 
         if (editData) {
-          // For update, include the assignment ID
+          // For update, build FormData (PUT endpoint expects multipart/form-data)
+          const updateFormData = new FormData();
+          updateFormData.append('StandardId', values.standardId || activeClassId);
+          updateFormData.append('SubjectId', values.subjectId || values.subject);
+          if (values.chapterId) updateFormData.append('ChapterId', values.chapterId);
+          updateFormData.append('Title', values.title);
+          if (values.description) updateFormData.append('Description', values.description);
+          updateFormData.append('HomeworkTypeId', values.homeworkTypeId);
+          updateFormData.append('SubmissionType', values.submissionType.toString());
+
+          if (values.attachments && values.attachments.length > 0) {
+            values.attachments.forEach((file: any) => {
+              updateFormData.append('attachment', file);
+            });
+          }
+
+          values.divisions.forEach((division: any, index: number) => {
+            updateFormData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
+            updateFormData.append(
+              `DivisionSchedules[${index}].PublishAt`,
+              division.publishDate.toISOString()
+            );
+            updateFormData.append(
+              `DivisionSchedules[${index}].DueAt`,
+              division.dueDate.toISOString()
+            );
+          });
+
           const updatePayload = {
             id: editData.id,
-            academicMediumId: medium?.id,
-            body: payload,
+            body: updateFormData,
           };
           await updateHomework(updatePayload).unwrap();
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been updated successfully.`,
           });
         } else {
-          await addHomework({ academicMediumId: medium?.id, body: payload }).unwrap();
+          const formData = new FormData();
+          formData.append('StandardId', values.standardId || activeClassId);
+          formData.append('SubjectId', values.subjectId || values.subject);
+          if (values.chapterId) formData.append('ChapterId', values.chapterId);
+          formData.append('Title', values.title);
+          if (values.description) formData.append('Description', values.description);
+          formData.append('HomeworkTypeId', values.homeworkTypeId);
+          formData.append('SubmissionType', values.submissionType.toString());
+
+          if (values.attachments && values.attachments.length > 0) {
+            values.attachments.forEach((file: any) => {
+              formData.append('attachment', file);
+            });
+          }
+
+          values.divisions.forEach((division: any, index: number) => {
+            formData.append(`DivisionSchedules[${index}].DivisionId`, division.divisionId);
+            formData.append(
+              `DivisionSchedules[${index}].PublishAt`,
+              division.publishDate.toISOString()
+            );
+            formData.append(`DivisionSchedules[${index}].DueAt`, division.dueDate.toISOString());
+          });
+
+          await addHomework({ academicMediumId: medium?.id, body: formData }).unwrap();
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been created successfully.`,
           });
@@ -180,6 +245,130 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       }
     },
   });
+
+  console.log('Formik Values:', formik);
+
+  // Update divisions when class changes
+  useEffect(() => {
+    const classId = formik.values.classId || formik.values.class;
+    setAllDivision(allClass.find((org: any) => org?.id === classId)?.divisions || []);
+  }, [allClass, formik.values.class, formik.values.classId]);
+
+  // Fetch subjects for the selected class
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      standardId: formik.values.classId || formik.values.class,
+    },
+    options: {
+      skip: !(formik.values.classId || formik.values.class),
+    },
+  });
+
+  const {
+    data: chapterResponse,
+    isLoading: isChapterLoading,
+    isFetching: isChapterFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersByStandardQuery,
+    params: { assignedStandardId: formik.values.subjectId || formik.values.subject },
+    options: {
+      skip: !(formik.values.subjectId || formik.values.subject),
+    },
+  });
+
+  const {
+    data: homeworkTypeData,
+    isLoading: isHomeworkTypeLoading,
+    isFetching: isHomeworkTypeFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !(medium as Medium)?.id,
+    },
+  });
+
+  const isLoadingData = isHomeworkLoading || isHomeworkFetching;
+
+  if (isLoadingData) {
+    return (
+      <Box
+        sx={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.neutral',
+        }}
+      >
+        <Scrollbar sx={{ height: '100%', p: 2 }}>
+          <Grid container>
+            {/* Basic Information Skeleton */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ ...cardStyle, mb: 2 }}>
+                <Skeleton variant="text" width={180} height={28} sx={{ mb: 0.5 }} />
+                <Skeleton variant="text" width={260} height={20} sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  {[...Array(6)].map((_, i) => (
+                    <Grid size={{ xs: 12, md: 6 }} key={i}>
+                      <Skeleton variant="rounded" height={40} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+
+            {/* Description & Attachments Skeleton */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ ...cardStyle, mb: 2 }}>
+                <Skeleton variant="text" width={220} height={28} sx={{ mb: 0.5 }} />
+                <Skeleton variant="text" width={300} height={20} sx={{ mb: 2 }} />
+                <Skeleton variant="rounded" height={160} sx={{ mb: 2 }} />
+                <Skeleton variant="rounded" height={80} />
+              </Box>
+            </Grid>
+
+            {/* Submission Type Skeleton */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ ...cardStyle, mb: 2 }}>
+                <Skeleton variant="text" width={160} height={28} sx={{ mb: 0.5 }} />
+                <Skeleton variant="text" width={280} height={20} sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  {[...Array(3)].map((_, i) => (
+                    <Grid size={{ xs: 12, md: 4 }} key={i}>
+                      <Skeleton variant="rounded" height={60} />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Grid>
+          </Grid>
+        </Scrollbar>
+
+        {/* Action Buttons Skeleton */}
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Skeleton variant="rounded" width={90} height={34} />
+          <Skeleton variant="rounded" width={90} height={34} />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -216,10 +405,16 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     <CustomSelect
                       label="Class *"
                       options={allClass}
-                      value={formik.values.class}
+                      disabled={!!editData?.id}
+                      value={formik.values.classId || formik.values.class}
                       labelKey="name"
-                      valueKey="name"
-                      onChange={(val) => formik.setFieldValue('class', val)}
+                      valueKey="id"
+                      onChange={(val) => {
+                        formik.setFieldValue('class', val);
+                        formik.setFieldValue('classId', val);
+                        formik.setFieldValue('divisions', []);
+                        formik.setFieldValue('subjectId', '');
+                      }}
                       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                       error={!!(formik.touched.class && formik.errors.class)}
                       helperText={(formik.touched.class && formik.errors.class) || ''}
@@ -232,8 +427,9 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     <CustomSelect
                       label="Division *"
                       labelKey="name"
-                      valueKey="name"
+                      valueKey="id"
                       multiple
+                      disabled={!!editData?.id}
                       options={allDivision}
                       value={formik.values.divisions.map((d) => d.divisionId)}
                       onChange={(val) => {
@@ -276,18 +472,35 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
                     <CustomSelect
                       label="Subject *"
-                      disabled={!formik.values.divisions || formik.values.divisions.length === 0}
-                      options={[
-                        { value: 'Mathematics', label: 'Mathematics' },
-                        { value: 'Science', label: 'Science' },
-                        { value: 'History', label: 'History' },
-                        { value: 'English', label: 'English' },
-                      ]}
-                      value={formik.values.subject}
-                      onChange={(val) => formik.setFieldValue('subject', val)}
+                      disabled={
+                        !!editData?.id ||
+                        !formik.values.divisions ||
+                        formik.values.divisions.length === 0
+                      }
+                      options={
+                        subjectOptionsData?.data?.items?.map((item: any) => ({
+                          id: item.id,
+                          name:
+                            item.subjects?.length > 1
+                              ? item.electiveGroupName
+                              : item.subjects?.[0]?.subject?.name ||
+                                item.subjects?.[0]?.subjectName ||
+                                '',
+                        })) || []
+                      }
+                      value={formik.values.subjectId}
+                      labelKey="name"
+                      valueKey="id"
+                      isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
+                      onChange={(val) => {
+                        formik.setFieldValue('subject', val);
+                        formik.setFieldValue('subjectId', val);
+                        formik.setFieldValue('chapter', '');
+                        formik.setFieldValue('chapterId', '');
+                      }}
                       formControlProps={{ fullWidth: true }}
-                      error={!!(formik.touched.subject && formik.errors.subject)}
-                      helperText={(formik.touched.subject && formik.errors.subject) || ''}
+                      error={!!(formik.touched.subjectId && formik.errors.subjectId)}
+                      helperText={(formik.touched.subjectId && formik.errors.subjectId) || ''}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -295,30 +508,29 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter)}>
                     <Autocomplete
-                      options={[
-                        { id: 'n1', name: '1. Numbers and Number Systems' },
-                        { id: 'a1', name: '2. Algebra' },
-                        { id: 'g1', name: '3. Geometry' },
-                        { id: 'm1', name: '4. Mensuration' },
-                        { id: 'r1', name: '5. Ratio and Proportion' },
-                        { id: 'p1', name: '6. Profit and Loss' },
-                        { id: 'i1', name: '7. Interest' },
-                        { id: 'f1', name: '8. Fractions and Decimals' },
-                        { id: 'e1', name: '9. Equations' },
-                        { id: 's1', name: '10. Sets' },
-                        { id: 't1', name: '11. Time and Work' },
-                        { id: 'd1', name: '12. Data Handling' },
-                      ]}
-                      disabled={!formik.values.subject}
-                      value={
-                        formik.values.chapter
-                          ? { id: formik.values.chapter, name: formik.values.chapter }
-                          : null
+                      options={
+                        Array.isArray(chapterResponse)
+                          ? chapterResponse
+                          : chapterResponse?.data?.items || []
                       }
-                      onChange={(event, newValue) => {
-                        formik.setFieldValue('chapter', newValue?.name || '');
+                      disabled={!(formik.values.subjectId || formik.values.subject)}
+                      loading={isChapterLoading || isChapterFetching}
+                      value={
+                        (Array.isArray(chapterResponse)
+                          ? chapterResponse
+                          : chapterResponse?.data?.items || []
+                        ).find(
+                          (c: any) => c.id === (formik.values.chapterId || formik.values.chapter)
+                        ) || null
+                      }
+                      onChange={(event, newValue: any) => {
+                        formik.setFieldValue(
+                          'chapter',
+                          newValue?.chapterName || newValue?.name || ''
+                        );
+                        formik.setFieldValue('chapterId', newValue?.id || '');
                       }}
-                      getOptionLabel={(option) => option.name}
+                      getOptionLabel={(option: any) => option.chapterName || option.name || ''}
                       renderInput={(params) => (
                         <TextField
                           {...params}
@@ -358,22 +570,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                   >
                     <CustomSelect
                       label="Homework Type *"
-                      options={[
-                        { label: 'Regular', value: 'Regular' },
-                        { label: 'Worksheet', value: 'Worksheet' },
-                        { label: 'Activity', value: 'Activity' },
-                        { label: 'Practice', value: 'Practice' },
-                        { label: 'Written Assignment', value: 'written_assignment' },
-                        { label: 'Reading Comprehension', value: 'reading_comprehension' },
-                        { label: 'Worksheet Practice', value: 'worksheet_practice' },
-                        { label: 'Problem Solving', value: 'problem_solving' },
-                        { label: 'Essay Writing', value: 'essay_writing' },
-                        { label: 'Project Work', value: 'project_work' },
-                        { label: 'Research Assignment', value: 'research_assignment' },
-                        { label: 'Lab Report', value: 'lab_report' },
-                        { label: 'Creative Writing', value: 'creative_writing' },
-                        { label: 'Revision Task', value: 'revision_task' },
-                      ]}
+                      options={homeworkTypeData?.data || []}
+                      labelKey="homeworkTypeName"
+                      valueKey="id"
+                      isLoading={isHomeworkTypeLoading || isHomeworkTypeFetching}
                       value={formik.values.homeworkTypeId || ''}
                       onChange={(val) => formik.setFieldValue('homeworkTypeId', val)}
                       formControlProps={{ fullWidth: true }}
@@ -429,7 +629,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     value={formik.values.attachments as any}
                     multiple={false}
                     showVisibleDocumentCount={1}
-                    onChange={(value) => formik.setFieldValue('attachments', value)}
+                    onChange={(value) => {
+                      const newValue = Array.isArray(value) ? value : value ? [value] : [];
+                      formik.setFieldValue('attachments', newValue);
+                    }}
                     primaryText="Upload Reference File"
                     secondaryText="Supports PDF, DOCX, IMG (Max 5MB)"
                   />
@@ -467,7 +670,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           >
                             <Box sx={{ minWidth: 80 }}>
                               <Chip
-                                label={`Div ${div.divisionId}`}
+                                label={`Div ${allDivision.find((d) => d.id === div.divisionId)?.name || ''}`}
                                 color="primary"
                                 variant="soft"
                                 size="small"
@@ -489,7 +692,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                                     format="DD/MM/YYYY hh:mm"
                                     minDate={dayjs(currentYear?.startDate)}
                                     maxDate={dayjs(currentYear?.endDate)}
-                                    minDateTime={dayjs()}
+                                    disablePast
                                     value={div.publishDate ? dayjs(div.publishDate) : null}
                                     onChange={(val) => {
                                       formik.setFieldValue(`divisions[${idx}].publishDate`, val);

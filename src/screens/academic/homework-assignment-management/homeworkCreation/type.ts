@@ -20,6 +20,7 @@ export interface DivisionHomeworkMeta {
 }
 
 export interface IHomework {
+  standardId: string;
   chapterId: any;
   homeworkId: any;
   id: string;
@@ -39,6 +40,7 @@ export interface IHomework {
   createdBy: TeacherProfile; // includes name, email, avatar, etc.
   divisions: DivisionHomeworkMeta[]; // ✅ Each division with its own dates
   divisionMeta?: DivisionHomeworkMeta;
+  divisionSchedules?: DivisionHomeworkMeta[]; // Replace 'any' with the appropriate type for division schedules
   status?: number;
 }
 
@@ -90,6 +92,7 @@ export interface IHomeWorkCreationFormProps {
 
 export interface IHomeworkTableProps {
   homeworkData: any[]; // ideally use proper type like IHomeworkAssignment[]
+  isLoading?: boolean;
   setOpen: (open: boolean) => void;
   dialog: UseBooleanReturn;
   handleSwitchChange: (row: IHomework) => void;

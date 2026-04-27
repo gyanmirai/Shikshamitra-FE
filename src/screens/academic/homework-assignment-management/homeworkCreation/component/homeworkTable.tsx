@@ -28,6 +28,7 @@ import type { IHomework, IHomeworkTableProps, DivisionHomeworkMeta } from '../ty
  */
 const HomeworkTable: React.FC<IHomeworkTableProps> = ({
   homeworkData,
+  isLoading,
   selectedDivision,
   setOpen,
   dialog,
@@ -62,31 +63,35 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
    * @returns {JSX.Element} Menu list with view submission action
    */
 
-  const filteredData = useMemo(() => {
-    if (!selectedDivision) return homeworkData || [];
-
-    return (homeworkData || [])
-      .filter((hw) =>
-        hw.divisions?.some((d: DivisionHomeworkMeta) => d.divisionId === selectedDivision)
-      )
-      .map((hw) => {
-        const currentDivision = hw.divisions.find(
-          (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
+  const filteredData = useMemo(
+    () =>
+      (homeworkData || []).map((hw) => {
+        const currentDivision = (hw.divisionSchedules || hw.divisions || []).find(
+          (d: any) => !selectedDivision || d.divisionId === selectedDivision
         );
         return {
           ...hw,
+          homeworkType: hw.homeworkType || hw.homeworkTypeName,
           currentDivisionId: currentDivision?.divisionId,
-          createdAt: currentDivision?.createdAt,
-          publishDate: currentDivision?.publishDate,
-          dueDate: currentDivision?.dueDate,
-          status: currentDivision?.status,
+          createdAt: hw.createdAt,
+          publishDate: currentDivision?.publishDate || currentDivision?.publishAt,
+          dueDate: currentDivision?.dueDate || currentDivision?.dueAt,
+          status:
+            currentDivision?.status !== undefined
+              ? currentDivision.status
+              : currentDivision?.isPublished
+                ? 1
+                : (hw.status ?? 0),
+          divisions: hw.divisionSchedules || hw.divisions || [],
         };
-      });
-  }, [selectedDivision, homeworkData]);
+      }),
+    [selectedDivision, homeworkData]
+  );
 
   return (
     <CustomizableTable
       tableId="homework-assignment-management"
+      isLoading={isLoading}
       // Custom no data message with action to create new homework
       noDataText={
         <>
@@ -160,7 +165,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
 
             return (
               <CustomTooltip
-                title={value === 0 ? 'Published' : 'Draft'}
+                title={value === PublishUnpublishStatusType.Draft ? 'Draft' : 'Published'}
                 arrow
                 placement="left"
                 PopperProps={{
@@ -222,7 +227,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               showThreeDots={false}
               // actions={(prop) => actions({ ...prop, row })}
               showViewIcon
-              showEditIcon
+              showEditIcon={(row as any).status !== PublishUnpublishStatusType.Published}
               showDeleteIcon
               handleDeleteClick={() => {
                 onDeleteDetails(row as IHomework);

@@ -89,6 +89,9 @@ const HomeworkTypeCreation = () => {
     type: 'query',
     currentQueryAndMutation: useGetHomeworkTypesQuery,
     params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !(medium as Medium)?.id,
+    },
   });
 
   return (

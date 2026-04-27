@@ -102,6 +102,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                       <Typography
                         variant="body2"
                         color="text.primary"
+                        component="div"
                         sx={{
                           textAlign: 'justify',
                           lineHeight: 1.6,
@@ -109,10 +110,12 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                           WebkitLineClamp: showFullDescription ? 'unset' : 3,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
+                          '& p': { margin: 0 },
+                          '& ul, & ol': { paddingLeft: 2 },
                         }}
-                      >
-                        {assignment?.description}
-                      </Typography>
+                        // eslint-disable-next-line react/no-danger
+                        dangerouslySetInnerHTML={{ __html: assignment?.description || '' }}
+                      />
 
                       {assignment?.description && assignment.description.length > 150 && (
                         <Button
@@ -146,17 +149,51 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                     </Typography>
 
                     <Box>
-                      <DocumentCard
-                        file={{
-                          path: './lecture_notes.pdf',
-                          relativePath: './lecture_notes.pdf',
-                          name: 'Assignment Document 1',
-                          size: '2.5 MB',
-                          uploadDate: '2024-03-15',
-                          type: 'pdf',
-                          url: 'https://example.com/files/lecture_notes.pdf',
-                        }}
-                      />
+                      {(() => {
+                        // API returns either attachment (string) or attachments (array)
+                        const singleAttachment = (assignment as any).attachment;
+                        const attachmentsArray = (assignment as any).attachments;
+
+                        if (Array.isArray(attachmentsArray) && attachmentsArray.length > 0) {
+                          return attachmentsArray.map((att: any, idx: number) => (
+                            <DocumentCard
+                              key={att.id || idx}
+                              file={{
+                                path: att.filePath || att.url || '',
+                                relativePath: att.filePath || att.url || '',
+                                name: att.fileName || att.name || `Document ${idx + 1}`,
+                                size: att.fileSize
+                                  ? `${(att.fileSize / (1024 * 1024)).toFixed(1)} MB`
+                                  : '',
+                                uploadDate: att.createdAt || '',
+                                type: att.fileType || att.type || 'file',
+                                url: att.filePath || att.url || '',
+                              }}
+                            />
+                          ));
+                        }
+                        if (singleAttachment && typeof singleAttachment === 'string') {
+                          const fileName = singleAttachment.split('/').pop() || 'Attachment';
+                          return (
+                            <DocumentCard
+                              file={{
+                                path: singleAttachment,
+                                relativePath: singleAttachment,
+                                name: fileName,
+                                size: '',
+                                uploadDate: '',
+                                type: fileName.split('.').pop() || 'file',
+                                url: singleAttachment,
+                              }}
+                            />
+                          );
+                        }
+                        return (
+                          <Typography variant="body2" color="text.secondary">
+                            No documents attached.
+                          </Typography>
+                        );
+                      })()}
                     </Box>
                   </Box>
 
@@ -210,8 +247,8 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                       icon={<Iconify icon="mdi:calendar-plus" />}
                       label="Created On"
                       value={
-                        assignment?.divisionMeta?.createdAt
-                          ? dayjs(assignment.divisionMeta.createdAt).format('DD MMM YYYY, hh:mm A')
+                        (assignment as any).createdAt
+                          ? dayjs((assignment as any).createdAt).format('DD MMM YYYY, hh:mm A')
                           : 'N/A'
                       }
                     />
@@ -221,10 +258,14 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                       icon={<Iconify icon="mdi:calendar-clock" />}
                       label="Publish Date"
                       value={
-                        assignment?.divisionMeta?.publishDate
-                          ? dayjs(assignment.divisionMeta.publishDate).format(
-                              'DD MMM YYYY, hh:mm A'
-                            )
+                        assignment?.divisionMeta?.publishDate ||
+                        (assignment?.divisionMeta as any)?.publishAt ||
+                        (assignment as any).divisionSchedules?.[0]?.publishAt
+                          ? dayjs(
+                              assignment?.divisionMeta?.publishDate ||
+                                (assignment?.divisionMeta as any)?.publishAt ||
+                                (assignment as any).divisionSchedules?.[0]?.publishAt
+                            ).format('DD MMM YYYY, hh:mm A')
                           : 'N/A'
                       }
                     />
@@ -234,8 +275,14 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                       icon={<Iconify icon="mdi:calendar-clock" />}
                       label="Due Date"
                       value={
-                        assignment?.divisionMeta?.dueDate
-                          ? dayjs(assignment.divisionMeta.dueDate).format('DD MMM YYYY, hh:mm A')
+                        assignment?.divisionMeta?.dueDate ||
+                        (assignment?.divisionMeta as any)?.dueAt ||
+                        (assignment as any).divisionSchedules?.[0]?.dueAt
+                          ? dayjs(
+                              assignment?.divisionMeta?.dueDate ||
+                                (assignment?.divisionMeta as any)?.dueAt ||
+                                (assignment as any).divisionSchedules?.[0]?.dueAt
+                            ).format('DD MMM YYYY, hh:mm A')
                           : 'N/A'
                       }
                     />
@@ -246,79 +293,104 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                     Created By
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ListItem
-                      sx={{
-                        borderRadius: '8px',
-                        p: 1,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        boxShadow: 3,
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <TeacherHoverProfile
-                          avatarComp={
-                            <Badge
-                              key={assignment?.createdBy?.status}
-                              overlap="circular"
-                              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                              badgeContent={
-                                <Box
-                                  sx={{
-                                    width: 12,
-                                    height: 12,
-                                    borderRadius: '50%',
-                                    border: '2px solid #fff',
-                                    bgcolor:
-                                      assignment?.createdBy?.status === 'Active'
-                                        ? 'success.main'
-                                        : assignment?.createdBy?.status === 'Inactive'
-                                          ? 'warning.main'
-                                          : assignment?.createdBy?.status === 'Left'
-                                            ? 'error.main'
-                                            : assignment?.createdBy?.status === 'Retired'
-                                              ? 'grey.500'
-                                              : 'grey.300',
-                                  }}
-                                />
-                              }
-                            >
-                              <Avatar
-                                src={assignment.createdBy.fullName}
-                                alt={assignment.createdBy.fullName}
-                                sx={{ width: 36, height: 36, cursor: 'pointer' }}
-                              />
-                            </Badge>
+                    {typeof assignment?.createdBy === 'string' ? (
+                      <ListItem
+                        sx={{
+                          borderRadius: '8px',
+                          p: 1,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          boxShadow: 3,
+                        }}
+                      >
+                        <ListItemAvatar>
+                          <Avatar sx={{ width: 36, height: 36 }}>
+                            {(assignment.createdBy as unknown as string)?.[0]?.toUpperCase()}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2">
+                              {assignment.createdBy as unknown as string}
+                            </Typography>
                           }
-                          teacher={{
-                            name: assignment?.createdBy?.fullName,
-                            avatarUrl: assignment?.createdBy?.avatarUrl,
-                            designation: assignment?.createdBy?.designation,
-                            department: assignment?.createdBy?.department,
-                            class: assignment?.createdBy?.class,
-                            status: assignment?.createdBy?.status,
-                            division: assignment?.createdBy?.division,
-                            dailyStatus: assignment?.createdBy?.dailyStatus,
-                            email: assignment?.createdBy?.email,
-                            experience: assignment?.createdBy?.experience,
-                            qualification: assignment?.createdBy?.qualification,
-                            subjects: assignment?.createdBy?.subjects,
-                          }}
                         />
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" sx={{ mb: -1 }}>
-                            {assignment?.createdBy?.fullName}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            {assignment?.createdBy?.department}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
+                      </ListItem>
+                    ) : (
+                      <ListItem
+                        sx={{
+                          borderRadius: '8px',
+                          p: 1,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          boxShadow: 3,
+                        }}
+                      >
+                        <ListItemAvatar>
+                          <TeacherHoverProfile
+                            avatarComp={
+                              <Badge
+                                key={assignment?.createdBy?.status}
+                                overlap="circular"
+                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                badgeContent={
+                                  <Box
+                                    sx={{
+                                      width: 12,
+                                      height: 12,
+                                      borderRadius: '50%',
+                                      border: '2px solid #fff',
+                                      bgcolor:
+                                        assignment?.createdBy?.status === 'Active'
+                                          ? 'success.main'
+                                          : assignment?.createdBy?.status === 'Inactive'
+                                            ? 'warning.main'
+                                            : assignment?.createdBy?.status === 'Left'
+                                              ? 'error.main'
+                                              : assignment?.createdBy?.status === 'Retired'
+                                                ? 'grey.500'
+                                                : 'grey.300',
+                                    }}
+                                  />
+                                }
+                              >
+                                <Avatar
+                                  src={assignment.createdBy.fullName}
+                                  alt={assignment.createdBy.fullName}
+                                  sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                                />
+                              </Badge>
+                            }
+                            teacher={{
+                              name: assignment?.createdBy?.fullName,
+                              avatarUrl: assignment?.createdBy?.avatarUrl,
+                              designation: assignment?.createdBy?.designation,
+                              department: assignment?.createdBy?.department,
+                              class: assignment?.createdBy?.class,
+                              status: assignment?.createdBy?.status,
+                              division: assignment?.createdBy?.division,
+                              dailyStatus: assignment?.createdBy?.dailyStatus,
+                              email: assignment?.createdBy?.email,
+                              experience: assignment?.createdBy?.experience,
+                              qualification: assignment?.createdBy?.qualification,
+                              subjects: assignment?.createdBy?.subjects,
+                            }}
+                          />
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ mb: -1 }}>
+                              {assignment?.createdBy?.fullName}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography variant="caption" color="text.secondary">
+                              {assignment?.createdBy?.department}
+                            </Typography>
+                          }
+                        />
+                      </ListItem>
+                    )}
                   </Box>
                 </Box>
               </CardContent>

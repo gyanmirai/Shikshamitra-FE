@@ -4,7 +4,9 @@ import * as Yup from 'yup';
 // Assignment validation schema
 export const assignmentValidationSchema = (currentYear: any) =>
   Yup.object({
-    title: Yup.string().required('Assignment Title is required'),
+    title: Yup.string()
+      .min(3, 'Assignment Title must be at least 3 characters')
+      .required('Assignment Title is required'),
     classId: Yup.string().required('Class is required'),
     divisions: Yup.array()
       .of(
@@ -70,6 +72,7 @@ export const assignmentValidationSchema = (currentYear: any) =>
       }),
     totalMarks: Yup.number().required('Total Marks is required'),
     subjectId: Yup.string().required('Subject is required'),
+    description: Yup.string().required('Description is required'),
     submissionType: Yup.string().required('Submission type is required'),
     startDate: Yup.date().required('Start Date is required'),
     assignmentTypeId: Yup.string().required('Assignment Type is required'),

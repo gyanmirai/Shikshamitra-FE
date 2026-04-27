@@ -3,8 +3,12 @@ import { homeworkType } from 'src/redux/tagTypes';
 
 export const homeworkTypeApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getHomeworkTypes: builder.query<any, void>({
-      query: () => ({ url: '/homework-type', method: 'GET' }),
+    getHomeworkTypes: builder.query<any, { academicMediumId?: string } | void>({
+      query: (params) => ({
+        url: '/homework-type',
+        method: 'GET',
+        params: params ? { academicMediumId: params.academicMediumId } : undefined,
+      }),
       providesTags: [homeworkType.homeworkType],
     }),
     getHomeworkTypeById: builder.query<any, string | number>({
