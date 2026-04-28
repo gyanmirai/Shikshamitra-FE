@@ -262,23 +262,26 @@ const AdmissionScreen = () => {
         align: 'left',
         isFilter: true,
         filterType: 'number',
-        render: (value, row) => (
-          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-            <Typography
-              variant="inherit"
-              noWrap
-              sx={{
-                maxWidth: 150,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-              }}
-            >
-              {value}
-            </Typography>
-          </CustomTooltip>
-        ),
+        render: (value, row) =>
+          value && value !== '-' ? (
+            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="inherit"
+                noWrap
+                sx={{
+                  maxWidth: 150,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}
+              >
+                {value}
+              </Typography>
+            </CustomTooltip>
+          ) : (
+            <Typography variant="inherit">{value || '-'}</Typography>
+          ),
       },
       { id: 'genderValue', label: 'Gender', align: 'left' },
       { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left', filterType: 'number' },
@@ -311,23 +314,26 @@ const AdmissionScreen = () => {
         label: 'Address',
         minWidth: '180px',
         align: 'left',
-        render: (value, row) => (
-          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-            <Typography
-              variant="inherit"
-              noWrap
-              sx={{
-                maxWidth: 150,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-              }}
-            >
-              {value}
-            </Typography>
-          </CustomTooltip>
-        ),
+        render: (value, row) =>
+          value && value !== '-' ? (
+            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="inherit"
+                noWrap
+                sx={{
+                  maxWidth: 150,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}
+              >
+                {value}
+              </Typography>
+            </CustomTooltip>
+          ) : (
+            <Typography variant="inherit">{value || '-'}</Typography>
+          ),
       },
       {
         id: 'primaryContactNo',
@@ -346,23 +352,26 @@ const AdmissionScreen = () => {
         label: 'Previous School',
         minWidth: '170px',
         align: 'left',
-        render: (value, row) => (
-          <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-            <Typography
-              variant="inherit"
-              noWrap
-              sx={{
-                maxWidth: 150,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-              }}
-            >
-              {value}
-            </Typography>
-          </CustomTooltip>
-        ),
+        render: (value, row) =>
+          value && value !== '-' ? (
+            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="inherit"
+                noWrap
+                sx={{
+                  maxWidth: 150,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}
+              >
+                {value}
+              </Typography>
+            </CustomTooltip>
+          ) : (
+            <Typography variant="inherit">{value || '-'}</Typography>
+          ),
       },
       {
         id: 'inquiryPreference',
@@ -422,7 +431,7 @@ const AdmissionScreen = () => {
                       popover.onClose();
                     }}
                   >
-                    <Iconify icon="clarity:note-edit-line" color="default.main" sx={{ mr: 2 }} />
+                    <Iconify icon="clarity:note-edit-line" color="default.main" />
                     Note
                   </MenuItem>
                 </MenuList>
@@ -559,7 +568,19 @@ const AdmissionScreen = () => {
       <CustomDialog
         open={dialogForAssignFeeStructure.value}
         handleClose={dialogForAssignFeeStructure.onFalse}
-        title="Assign Fee Structure"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Assign Fee Structure</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         maxWidth="sm"
       >
         <FeeStructureAssignmentForm student={editData} handleClose={handleClose} />
@@ -1038,7 +1059,7 @@ const AssignDivisionForm = ({
           },
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${selectedDivision} division assign to ${selectedStudent?.firstName} ${selectedStudent?.lastName}`,
+          message: `Division "${selectedDivision}" has been successfully assigned to ${selectedStudent?.firstName} ${selectedStudent?.lastName}.`,
         });
         handleClose();
       } catch (error) {

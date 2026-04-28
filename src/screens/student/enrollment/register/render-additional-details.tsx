@@ -86,19 +86,6 @@ const RenderAdditionalDetails = (props: any) => {
       )}
 
       <Grid size={{ xs: 12, sm: 4 }}>
-        <CustomSelect
-          disabled={!isAdditionalDetailsEditable.value}
-          options={YesNoArray as any}
-          label="Person With Disability"
-          value={formik.values.personWithDisability}
-          onChange={(value) => formik.setFieldValue('personWithDisability', value)}
-          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-          error={formik.touched.personWithDisability && Boolean(formik.errors.personWithDisability)}
-          helperText={formik.touched.personWithDisability && formik.errors.personWithDisability}
-        />
-      </Grid>
-
-      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           fullWidth
           label="Second Language"
