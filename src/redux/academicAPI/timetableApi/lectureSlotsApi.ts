@@ -6,7 +6,7 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     getLectureSlotsByMedium: builder.query({
       query: (mediumId) => ({
-        url: `academics/timetable/lecture-slots/by-medium/${mediumId}`,
+        url: `/academics/timetable/lecture-slots/by-medium/${mediumId}`,
         method: 'GET',
       }),
       providesTags: [academicType.lectureSlot],
@@ -32,22 +32,19 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
 
     getLectureSlotById: builder.query({
       query: (lectureSlotId) => ({
-        url: `academics/timetable/lecture-slots/${lectureSlotId}`,
+        url: `/academics/timetable/settings/lecture-slots/${lectureSlotId}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: academicType.lectureSlot, id }],
+      providesTags: [academicType.lectureSlot],
     }),
 
     updateLectureSlot: builder.mutation({
       query: ({ lectureSlotId, body }) => ({
-        url: `academics/timetable/lecture-slots/${lectureSlotId}`,
+        url: `/academics/timetable/settings/lecture-slots/${lectureSlotId}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: (result, error, { lectureSlotId }) => [
-        academicType.lectureSlot,
-        { type: academicType.lectureSlot, id: lectureSlotId },
-      ],
+      invalidatesTags: [academicType.lectureSlot],
     }),
 
     assignLectureSlotToClasses: builder.mutation({

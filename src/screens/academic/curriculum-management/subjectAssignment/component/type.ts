@@ -38,8 +38,9 @@ export interface ISubjectDetail {
   };
   subjectName?: string; // Kept optional for backward compatibility or flat structures if any
 
-  primaryTeacher: string;
-  secondaryTeachers: string[] | null; // Renamed from secondaryTeacher
+  primaryTeacher: { id: string; name: string }; // Changed to object for better data handling
+  primaryTeacherId: string;
+  secondaryTeachers: { id: string; name: string }[] | null; // Renamed from secondaryTeacher
   documents?: (File | string)[];
   prerequisites: string;
   learningGoals: string;

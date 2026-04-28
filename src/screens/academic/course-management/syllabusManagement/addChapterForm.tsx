@@ -75,8 +75,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           assignedSubjectId: subjectId,
           chapterNumber: values.chapterNo,
           chapterName: values.chapterName,
-          chapterStartTime: dateConvertor(values.startDate.format(dateFormat), false),
-          chapterEndTime: dateConvertor(values.endDate.format(dateFormat), false),
+          chapterStartTime: dateConvertor(values?.startDate?.format(dateFormat) || '', false),
+          chapterEndTime: dateConvertor(values?.endDate?.format(dateFormat) || '', false),
           description: values.description,
           documents:
             formik.values.documents?.map((doc: File | string) =>
