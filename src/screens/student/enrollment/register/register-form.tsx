@@ -7,6 +7,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { MotherTongueType } from 'src/enums/mother-tongue';
 import { getBase64String } from 'src/utils/get-base64-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -35,6 +36,7 @@ import {
 } from 'src/redux/student/registration/registration-api';
 
 import { allFields } from './register-fields';
+import { StepSkeleton } from './register-form-skeleton';
 import { validationSchemas } from './register-form-validation';
 import {
   bankDetailsInitialValues,
@@ -199,7 +201,10 @@ const RegisterForm = ({
               castCategory: values.castCategory,
               nationality: values.nationality || undefined,
               birthPlace: values.birthPlace || undefined,
-              motherTongue: values.motherTongue || undefined,
+              motherTongue:
+                values.motherTongue != null && values.motherTongue !== ''
+                  ? MotherTongueType[values.motherTongue as keyof typeof MotherTongueType]
+                  : undefined,
               address1: values.addressLine1,
               address2: values.addressLine2,
               address3: values.addressLine3 || undefined,
@@ -243,7 +248,10 @@ const RegisterForm = ({
             castCategory: values.castCategory,
             nationality: values.nationality || undefined,
             birthPlace: values.birthPlace || undefined,
-            motherTongue: values.motherTongue || undefined,
+            motherTongue:
+              values.motherTongue != null && values.motherTongue !== ''
+                ? MotherTongueType[values.motherTongue as keyof typeof MotherTongueType]
+                : undefined,
             address1: values.addressLine1,
             address2: values.addressLine2,
             address3: values.addressLine3 || undefined,
@@ -292,18 +300,30 @@ const RegisterForm = ({
                 address1: values.fatherOfficeAddress1,
                 address2: values.fatherOfficeAddress2,
                 address3: values.fatherOfficeAddress3,
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                city: values?.city?.name,
+                country: {
+                  name: values?.fatherOfficeCountry?.name,
+                  isoCode: values?.fatherOfficeCountry?.isoCode,
+                },
+                state: {
+                  name: values?.fatherOfficeState?.name,
+                  isoCode: values?.fatherOfficeState?.isoCode,
+                },
+                city: values?.fatherOfficeCity?.name,
                 pincode: values.fatherOfficePincode,
               },
               localAddress: {
                 address1: values.fatherAddress1,
                 address2: values.fatherAddress2,
                 address3: values.fatherAddress3,
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                city: values?.city?.name,
+                country: {
+                  name: values?.fatherLocalCountry?.name,
+                  isoCode: values?.fatherLocalCountry?.isoCode,
+                },
+                state: {
+                  name: values?.fatherLocalState?.name,
+                  isoCode: values?.fatherLocalState?.isoCode,
+                },
+                city: values?.fatherLocalCity?.name,
                 pincode: values.fatherLocalPincode,
               },
               remarks: values.fatherRemarks,
@@ -330,18 +350,30 @@ const RegisterForm = ({
                 address1: values.motherOfficeAddress1,
                 address2: values.motherOfficeAddress2,
                 address3: values.motherOfficeAddress3,
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                city: values?.city?.name,
+                country: {
+                  name: values?.motherOfficeCountry?.name,
+                  isoCode: values?.motherOfficeCountry?.isoCode,
+                },
+                state: {
+                  name: values?.motherOfficeState?.name,
+                  isoCode: values?.motherOfficeState?.isoCode,
+                },
+                city: values?.motherOfficeCity?.name,
                 pincode: values.motherOfficePincode,
               },
               localAddress: {
                 address1: values.motherAddress1,
                 address2: values.motherAddress2,
                 address3: values.motherAddress3,
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                city: values?.city?.name,
+                country: {
+                  name: values?.motherLocalCountry?.name,
+                  isoCode: values?.motherLocalCountry?.isoCode,
+                },
+                state: {
+                  name: values?.motherLocalState?.name,
+                  isoCode: values?.motherLocalState?.isoCode,
+                },
+                city: values?.motherLocalCity?.name,
                 pincode: values.motherLocalPincode,
               },
             },
@@ -367,18 +399,30 @@ const RegisterForm = ({
                 address1: values.guardianOfficeAddress1,
                 address2: values.guardianOfficeAddress2,
                 address3: values.guardianOfficeAddress3,
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                city: values?.city?.name,
+                country: {
+                  name: values?.guardianOfficeCountry?.name,
+                  isoCode: values?.guardianOfficeCountry?.isoCode,
+                },
+                state: {
+                  name: values?.guardianOfficeState?.name,
+                  isoCode: values?.guardianOfficeState?.isoCode,
+                },
+                city: values?.guardianOfficeCity?.name,
                 pincode: values.guardianOfficePincode,
               },
               localAddress: {
                 address1: values.guardianAddress1,
                 address2: values.guardianAddress2,
                 address3: values.guardianAddress3,
-                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-                city: values?.city?.name,
+                country: {
+                  name: values?.guardianLocalCountry?.name,
+                  isoCode: values?.guardianLocalCountry?.isoCode,
+                },
+                state: {
+                  name: values?.guardianLocalState?.name,
+                  isoCode: values?.guardianLocalState?.isoCode,
+                },
+                city: values?.guardianLocalCity?.name,
                 pincode: values.guardianLocalPincode,
               },
             },
@@ -915,62 +959,68 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
 
   return (
     <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-      <Grid container spacing={2.5} sx={{ height: '100%' }}>
-        {allFields[step].map((field: FieldsType) => (
-          <Grid size={4} key={field.name} {...(field.gridProps || {})}>
-            {field.renderComp ? (
-              field.renderComp({
-                formik,
-                field,
-                isEdit: true,
-                isMainForm: true,
-                editData,
-                isLoading,
-              })
-            ) : field.type === 'date' ? (
-              <DatePicker
-                label={field.label}
-                name={field.name}
-                value={formik.values[field.name]}
-                format="DD-MM-YYYY"
-                onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                slotProps={{
-                  textField: {
-                    placeholder: field.placeholder,
-                    fullWidth: true,
-                    size: 'small',
-                    helperText: formik.touched[field.name] && formik.errors[field.name],
-                    error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                  },
-                }}
-              />
-            ) : (
-              <ShakingTextField
-                error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-              >
-                <TextField
-                  key={field.name}
-                  type={field.type}
-                  size="small"
+      {isLoading ? (
+        <Box sx={{ height: '100%' }}>
+          <StepSkeleton step={step} />
+        </Box>
+      ) : (
+        <Grid container spacing={2.5} sx={{ height: '100%' }}>
+          {allFields[step].map((field: FieldsType) => (
+            <Grid size={4} key={field.name} {...(field.gridProps || {})}>
+              {field.renderComp ? (
+                field.renderComp({
+                  formik,
+                  field,
+                  isEdit: true,
+                  isMainForm: true,
+                  editData,
+                  isLoading,
+                })
+              ) : field.type === 'date' ? (
+                <DatePicker
                   label={field.label}
                   name={field.name}
-                  placeholder={field.placeholder}
                   value={formik.values[field.name]}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                  helperText={formik.touched[field.name] && formik.errors[field.name]}
-                  fullWidth
-                  // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                  {...((typeof field?.otherProps === 'function'
-                    ? field?.otherProps({ formik })
-                    : field?.otherProps) || {})}
+                  format="DD-MM-YYYY"
+                  onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                  slotProps={{
+                    textField: {
+                      placeholder: field.placeholder,
+                      fullWidth: true,
+                      size: 'small',
+                      helperText: formik.touched[field.name] && formik.errors[field.name],
+                      error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                    },
+                  }}
                 />
-              </ShakingTextField>
-            )}
-          </Grid>
-        ))}
-      </Grid>
+              ) : (
+                <ShakingTextField
+                  error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                >
+                  <TextField
+                    key={field.name}
+                    type={field.type}
+                    size="small"
+                    label={field.label}
+                    name={field.name}
+                    placeholder={field.placeholder}
+                    value={formik.values[field.name]}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                    helperText={formik.touched[field.name] && formik.errors[field.name]}
+                    fullWidth
+                    // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                    {...((typeof field?.otherProps === 'function'
+                      ? field?.otherProps({ formik })
+                      : field?.otherProps) || {})}
+                  />
+                </ShakingTextField>
+              )}
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </FormSlider>
   );
 };

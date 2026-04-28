@@ -390,7 +390,7 @@ const RegistrationTable = ({
       <ConfirmDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Move</Typography>
+            <Typography variant="h5">Move To Admission</Typography>
             <CustomTooltip arrow placement="right" title="Transfer student to Admission.">
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

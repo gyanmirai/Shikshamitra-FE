@@ -118,7 +118,7 @@ const EntranceExamScreen = () => {
   });
 
   // Mutation hook for moving students to admission
-  const [moveToAdmission] = useQueryAndMutation({
+  const [moveToAdmission, { isLoading: isMoveLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
     popupConfig: { successMessage: 'Student moved to Admission successfully.', success: true },
@@ -400,7 +400,7 @@ const EntranceExamScreen = () => {
         showCheckbox={selectedStudents.length !== 0}
         tableId="entrance-exam-table"
         noDataText={<>No Entrance Exam Data Found </>}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || isFetching || isMoveLoading}
         columns={columns}
         serverSide
         onServerSort={(column, sortData) => {
@@ -443,7 +443,7 @@ const EntranceExamScreen = () => {
         // title="Move"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Move</Typography>
+            <Typography variant="h5">Move to Admission</Typography>
             <CustomTooltip
               arrow
               placement="right"

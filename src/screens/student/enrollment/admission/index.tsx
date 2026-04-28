@@ -175,7 +175,7 @@ const AdmissionScreen = () => {
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
-        studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
+        studentName: [item.lastName, item.firstName, item.middleName].filter(Boolean).join(' '),
         secondaryContactNo: item.secondaryContactNumber || undefined,
         genderValue: GenderType[item?.gender as any],
         remarks: item?.remarks || '-',
