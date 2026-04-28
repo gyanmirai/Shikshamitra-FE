@@ -172,6 +172,9 @@ export function useChart(options?: ChartOptions): NonNullable<ChartOptions> {
 
       // plotOptions: Pie + Donut
       pie: {
+        // Modern rounded slice corners (ApexCharts v4+). Users can still
+        // override by passing their own `plotOptions.pie.borderRadius`.
+        expandOnClick: true,
         ...options?.plotOptions?.pie,
         donut: {
           ...options?.plotOptions?.pie?.donut,

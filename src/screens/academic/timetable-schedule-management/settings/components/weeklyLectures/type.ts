@@ -1,13 +1,25 @@
 import type { IData } from 'src/components/customizabaleTable/types';
 
+/**
+ * Domain type representing a single subject row inside the weekly-lectures form.
+ *
+ * NOTE: `noOfLecture` is kept as `string | number` because the underlying
+ * `<TextField type="number" />` produces strings until coerced on submit.
+ */
 export interface ISubject {
   id: string;
   subjectId?: string;
-  name: string;
+  subjectName?: string;
+  /** Display name used inside the form table (subjectName or elective group name). */
+  name?: string;
   subjectColor: string;
-  subjectCode: string;
-  noOfLecture: number;
+  subjectCode?: string;
+  weeklyLectures?: number;
+  noOfLecture: number | string;
   electiveGroupId?: string | null;
+  subjectType?: number;
+  subjects?: Array<{ subjectId: string; subjectName: string; subjectCode: string }>;
+  subjectCount?: number;
 }
 
 export interface IWeeklyLecture extends IData {
@@ -17,15 +29,6 @@ export interface IWeeklyLecture extends IData {
   subjects: ISubject[];
 }
 
-export interface ICreateNoOfLectureProps {
-  open?: boolean;
-  onClose?: (event: any, isSubmit?: boolean) => void;
-  disabled?: boolean;
-  editData: ISubjectFormValues | null;
-  selectedClass?: string;
-  isEdit: boolean;
-}
-
 export interface ISubjectFormValues {
   id?: string;
   className: string;
@@ -33,4 +36,28 @@ export interface ISubjectFormValues {
   totalLectures: number;
   classId: string;
   standardId?: string;
+  standardName?: string;
+}
+
+export interface ICreateNoOfLectureProps {
+  open?: boolean;
+  onClose?: (event: unknown, isSubmit?: boolean) => void;
+  disabled?: boolean;
+  editData: ISubjectFormValues | null;
+  selectedClass?: string;
+  isEdit: boolean;
+  tableData: ISubjectFormValues[] | undefined;
+}
+
+/** Minimal shape of a class/standard option produced from the medium selector. */
+export interface IClassOption {
+  id: string;
+  name: string;
+}
+
+/** Row payload sent to the create/update mutation. */
+export interface ISubjectPayload {
+  subjectId: string | undefined;
+  weeklyLectures: number;
+  electiveGroupId: string | null;
 }

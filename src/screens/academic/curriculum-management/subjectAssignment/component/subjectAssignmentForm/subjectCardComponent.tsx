@@ -47,13 +47,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     secondaryTeacherIds: subject.secondaryTeacherIds,
   });
 
-  console.log(
-    subject,
-    'Rendering SubjectCard for subject:',
-    primaryTeacherObj,
-    secondaryTeacherObjs
-  );
-
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
@@ -124,7 +117,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 )}
                 {subject.primaryTeacher && (
                   <Chip
-                    label={`Lead: ${primaryTeacherObj?.label || subject.primaryTeacher}`}
+                    label={`Lead: ${primaryTeacherObj?.label || subject.primaryTeacher?.name}`}
                     size="small"
                     variant="soft"
                     color="info"

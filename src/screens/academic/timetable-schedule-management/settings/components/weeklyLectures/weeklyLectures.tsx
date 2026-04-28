@@ -1,124 +1,25 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import React, { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
 
 import CreateNoOfLecture from './createWeeklyLectures';
+import { useWeeklyLectureColumns } from './hooks/useWeeklyLectureColumns';
+import { useWeeklyLecturesDialogs } from './hooks/useWeeklyLecturesDialogs';
 
-import type { ISubjectFormValues } from './type';
-
-// const data = [
-//   {
-//     id: '1',
-//     className: 1,
-//     totalLectures: 52,
-//     subjects: [
-//       {
-//         name: 'Mathematics',
-//         subjectCode: 'MATH101',
-//         subjectColor: '#FFB74D',
-//         noOfLecture: 10,
-//       },
-//       { name: 'Science', subjectCode: 'SCI101', subjectColor: '#81C784', noOfLecture: 8 },
-//       { name: 'English', subjectCode: 'ENG101', subjectColor: '#64B5F6', noOfLecture: 8 },
-//       { name: 'Hindi', subjectCode: 'HIN101', subjectColor: '#E57373', noOfLecture: 6 },
-//       { name: 'Computer', subjectCode: 'COM101', subjectColor: '#4DB6AC', noOfLecture: 6 },
-//       { name: 'Art', subjectCode: 'ART101', subjectColor: '#FF8A65', noOfLecture: 4 },
-//       {
-//         name: 'Physical Education',
-//         subjectCode: 'PHY101',
-//         subjectColor: '#9575CD',
-//         noOfLecture: 4,
-//       },
-//       {
-//         name: 'Environmental Studies',
-//         subjectCode: 'EVS101',
-//         subjectColor: '#7CB342',
-//         noOfLecture: 6,
-//       },
-//     ],
-//   },
-//   {
-//     id: '2',
-//     className: 2,
-//     totalLectures: 54,
-//     subjects: [
-//       {
-//         name: 'Mathematics',
-//         subjectCode: 'MATH201',
-//         subjectColor: '#FFB74D',
-//         noOfLecture: 10,
-//       },
-//       { name: 'Science', subjectCode: 'SCI201', subjectColor: '#81C784', noOfLecture: 8 },
-//       { name: 'English', subjectCode: 'ENG201', subjectColor: '#64B5F6', noOfLecture: 8 },
-//       { name: 'Hindi', subjectCode: 'HIN201', subjectColor: '#E57373', noOfLecture: 7 },
-//       { name: 'Computer', subjectCode: 'COM201', subjectColor: '#4DB6AC', noOfLecture: 6 },
-//       { name: 'Art', subjectCode: 'ART201', subjectColor: '#FF8A65', noOfLecture: 4 },
-//       {
-//         name: 'Physical Education',
-//         subjectCode: 'PHY201',
-//         subjectColor: '#9575CD',
-//         noOfLecture: 5,
-//       },
-//       {
-//         name: 'Environmental Studies',
-//         subjectCode: 'EVS201',
-//         subjectColor: '#7CB342',
-//         noOfLecture: 6,
-//       },
-//     ],
-//   },
-//   {
-//     id: '3',
-//     className: 3,
-//     totalLectures: 56,
-//     subjects: [
-//       {
-//         name: 'Mathematics',
-//         subjectCode: 'MATH301',
-//         subjectColor: '#FFB74D',
-//         noOfLecture: 10,
-//       },
-//       { name: 'Science', subjectCode: 'SCI301', subjectColor: '#81C784', noOfLecture: 9 },
-//       { name: 'English', subjectCode: 'ENG301', subjectColor: '#64B5F6', noOfLecture: 8 },
-//       { name: 'Hindi', subjectCode: 'HIN301', subjectColor: '#E57373', noOfLecture: 7 },
-//       { name: 'Computer', subjectCode: 'COM301', subjectColor: '#4DB6AC', noOfLecture: 6 },
-//       { name: 'Art', subjectCode: 'ART301', subjectColor: '#FF8A65', noOfLecture: 4 },
-//       {
-//         name: 'Physical Education',
-//         subjectCode: 'PHY301',
-//         subjectColor: '#9575CD',
-//         noOfLecture: 5,
-//       },
-//       {
-//         name: 'Environmental Studies',
-//         subjectCode: 'EVS301',
-//         subjectColor: '#7CB342',
-//         noOfLecture: 7,
-//       },
-//     ],
-//   },
-// ];
+import type { ISubject, ISubjectFormValues } from './type';
 
 const WeeklyLectures = () => {
-  const [selectedWeeklyLecture, setSelectedWeeklyLecture] = useState<ISubjectFormValues | null>(
-    null
-  );
-
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const {
@@ -129,127 +30,42 @@ const WeeklyLectures = () => {
     type: 'query',
     currentQueryAndMutation: useGetWeeklyLectureSlotsQuery,
     params: { AcademicMediumId: medium?.id },
-    options: {
-      skip: !medium?.id,
-    },
+    options: { skip: !medium?.id },
   });
 
-  // Dialog state to control the visibility of create lecture number dialog
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  // Redux dispatch hook for dispatching actions
-  const dispatch = useDispatch();
-  const [isEdit, setIsEdit] = useState(false);
-  // Custom boolean hook to control create lecture number dialog visibility
-  // const addWeeklyLectureDialog = useBoolean();
+  const {
+    selected,
+    isEdit,
+    disabled,
+    formDialog,
+    viewDialog,
+    openCreate,
+    openEdit,
+    openView,
+    closeForm,
+    closeView,
+  } = useWeeklyLecturesDialogs();
 
-  // State to control form field disabled status
-  const [disabled, setDisabled] = React.useState(false);
-  const addWeeklyLectureDialog = useBoolean(false);
-
-  // Custom boolean hook to control view weekly lectures dialog visibility
-  const viewWeeklyLecturesDialog = useBoolean();
+  const columns = useWeeklyLectureColumns({ onView: openView, onEdit: openEdit });
 
   /**
-   * Handles closing of the create lecture dialog
-   * @param _e - Event object (unused)
-   * @param isSubmit - Boolean indicating if form was submitted
+   * `useMemo` is justified: `tableData` is the row source for a memoized
+   * `CustomizableTable` and is also passed into the dialog. Recomputing on
+   * every parent render would invalidate downstream memos.
    */
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    const resetState = () => {
-      setTimeout(() => {
-        setIsEdit(false);
-        setDisabled(false);
-        setSelectedWeeklyLecture(null);
-        dispatch(setIsChanges(false));
-      }, 200); // Adjust timing if needed to match dialog animation
-    };
-
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addWeeklyLectureDialog.onFalse();
-      resetState();
-    } else if (!isChanges) {
-      addWeeklyLectureDialog.onFalse();
-      resetState();
-    }
-  };
-
-  const columns: IColumn[] = useMemo(
-    () => [
-      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
-      {
-        id: 'totalLectures',
-        label: 'Total Lectures',
-        minWidth: 150,
-        filterType: 'number',
-        align: 'left',
-      },
-      {
-        id: 'newSubject',
-        label: 'Subjects',
-        isSort: false,
-        align: 'left',
-        // render: (value, row) => (
-        //   <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
-        //     {row.subjects.map((subject: ISubject) => (
-        //       <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        //         <SubjectColorIndicator color={subject.subjectColor} />
-        //         <Typography variant="caption" fontSize="13px">
-        //           {`${subject.name} (${subject.noOfLecture})`}
-        //         </Typography>
-        //       </Box>
-        //     ))}
-        //   </Box>
-        // ),
-      },
-      {
-        id: 'action',
-        label: 'Actions',
-        minWidth: 60,
-        sticky: true,
-        align: 'left',
-        isSort: false,
-        isFilter: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              // actions={(prop) => actions({ ...prop, row })}
-              showViewIcon
-              handleViewClick={() => {
-                setSelectedWeeklyLecture(row as ISubjectFormValues);
-                viewWeeklyLecturesDialog.onTrue();
-                setDisabled(true);
-              }}
-              showEditIcon
-              showThreeDots={false}
-              handleEditClick={() => {
-                setSelectedWeeklyLecture(row as ISubjectFormValues);
-                setIsEdit(true);
-                addWeeklyLectureDialog.onTrue();
-                setDisabled(false);
-              }}
-              placement="right-top"
-            />
-          );
-        },
-      },
-    ],
-    [addWeeklyLectureDialog, viewWeeklyLecturesDialog]
-  );
-
-  const tableData = useMemo(
+  const tableData = useMemo<ISubjectFormValues[]>(
     () =>
-      weeklyLectureData?.items?.map((item: { subjects: any[] }, index: any) => ({
+      weeklyLectureData?.items?.map((item: ISubjectFormValues & { subjects: ISubject[] }) => ({
         ...item,
         newSubject: item.subjects
-          .map((subject, ind) => `${subject.subjectName} (${subject.weeklyLectures})`)
+          .map((subject) => `${subject.subjectName} (${subject.weeklyLectures})`)
           .join(' '),
-      })),
+      })) ?? [],
     [weeklyLectureData]
   );
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {/* Weekly Lectures Slots Breadcrumb */}
       <CustomBreadcrumbs
         heading="Weekly Lectures Slots"
         description="Configure and manage weekly lecture slots for each class."
@@ -264,7 +80,7 @@ const WeeklyLectures = () => {
             startIcon={<Iconify icon="mdi:plus" />}
             variant="contained"
             size="small"
-            onClick={addWeeklyLectureDialog.onTrue}
+            onClick={openCreate}
             sx={{ px: '32px' }}
           >
             Weekly Lectures
@@ -279,10 +95,7 @@ const WeeklyLectures = () => {
           <>
             Weekly Lectures Data Not Found{' '}
             <Box
-              onClick={() => {
-                addWeeklyLectureDialog.onTrue();
-                // setEditData(null);
-              }}
+              onClick={openCreate}
               color="primary.main"
               fontWeight={600}
               sx={{
@@ -298,7 +111,7 @@ const WeeklyLectures = () => {
           </>
         }
         columns={columns}
-        data={tableData || []}
+        data={tableData}
       />
 
       <CustomDialog
@@ -321,26 +134,16 @@ const WeeklyLectures = () => {
             </CustomTooltip>
           </Box>
         }
-        open={addWeeklyLectureDialog.value}
-        handleClose={() => {
-          addWeeklyLectureDialog.onFalse();
-          setTimeout(() => {
-            setSelectedWeeklyLecture(null);
-            setIsEdit(false);
-            setDisabled(false);
-          }, 200); // Adjust duration if your dialog animation is longer
-        }}
+        open={formDialog.value}
+        handleClose={() => closeForm(null, false)}
         maxWidth="sm"
       >
         <CreateNoOfLecture
-          // onSave={handleSave}
-          // dialogValue={dialog.value}
           disabled={disabled}
-          onClose={handleClose}
-          editData={selectedWeeklyLecture}
-          // data={selectedEntry}
+          onClose={closeForm}
+          editData={selected}
           isEdit={isEdit}
-          // allData={roomData}
+          tableData={tableData}
         />
       </CustomDialog>
 
@@ -358,32 +161,16 @@ const WeeklyLectures = () => {
             </CustomTooltip>
           </Box>
         }
-        open={viewWeeklyLecturesDialog.value}
-        handleClose={() => {
-          setIsEdit(false);
-          setDisabled(false);
-          setSelectedWeeklyLecture(null);
-          viewWeeklyLecturesDialog.onFalse();
-        }}
+        open={viewDialog.value}
+        handleClose={closeView}
         maxWidth="sm"
       >
         <CreateNoOfLecture
           disabled={disabled}
           isEdit={false}
-          onClose={handleClose}
-          editData={selectedWeeklyLecture}
-          // onSave={handleSave}
-          // dialogValue={dialog.value}
-          // onClose={closeDialog}
-          // data={selectedEntry}
-          // isEdit={isEdit}
-          // allData={roomData}
-          // onSave={handleSave}
-          // dialogValue={dialog.value}
-          // onClose={closeDialog}
-          // data={selectedEntry}
-          // isEdit={isEdit}
-          // allData={roomData}
+          onClose={closeForm}
+          editData={selected}
+          tableData={tableData}
         />
       </CustomDialog>
     </Box>

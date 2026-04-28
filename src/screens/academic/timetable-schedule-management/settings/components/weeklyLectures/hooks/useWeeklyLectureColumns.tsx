@@ -1,0 +1,65 @@
+'use client';
+
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
+import { useMemo } from 'react';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+
+import type { ISubjectFormValues } from '../type';
+
+interface UseWeeklyLectureColumnsArgs {
+  onView: (row: ISubjectFormValues) => void;
+  onEdit: (row: ISubjectFormValues) => void;
+}
+
+/**
+ * Memoized column definition for the weekly-lectures list table.
+ *
+ * `useMemo` is justified here:
+ * - the columns array is consumed by a heavy memoized table component
+ * - re-creating the array on every parent render would invalidate row memo
+ *   and trigger a full table re-render.
+ */
+export function useWeeklyLectureColumns({
+  onView,
+  onEdit,
+}: UseWeeklyLectureColumnsArgs): IColumn[] {
+  return useMemo<IColumn[]>(
+    () => [
+      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
+      {
+        id: 'totalLectures',
+        label: 'Total Lectures',
+        minWidth: 150,
+        filterType: 'number',
+        align: 'left',
+      },
+      {
+        id: 'newSubject',
+        label: 'Subjects',
+        isSort: false,
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 60,
+        sticky: true,
+        align: 'left',
+        isSort: false,
+        isFilter: false,
+        render: (_value, row) => (
+          <ThreeDotsActions
+            showViewIcon
+            handleViewClick={() => onView(row as ISubjectFormValues)}
+            showEditIcon
+            showThreeDots={false}
+            handleEditClick={() => onEdit(row as ISubjectFormValues)}
+            placement="right-top"
+          />
+        ),
+      },
+    ],
+    [onView, onEdit]
+  );
+}

@@ -40,7 +40,7 @@ const LectureSlots = () => {
     options: { skip: !medium?.id },
   });
 
-  const tableData = lectureSlotsData?.data?.items ?? [];
+  const tableData = lectureSlotsData?.items ?? [];
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -84,206 +84,58 @@ const LectureSlots = () => {
   };
 
   // Mock data with proper structure
-  const mockData = [
-    {
-      id: 1,
-      className: '1',
-      schoolHours: '07:00 AM - 12:30 PM',
-      previousClassSlots: '',
-      totalSlots: 15,
-      periodSlots: 12,
-      breakSlots: 3,
-      slotConfigurations: [
-        {
-          id: 'c1-config-0-2',
-          totalSlots: 8,
-          periodSlots: 6,
-          breakSlots: 2,
-          weekRange: [0, 2],
-          timeSlots: [
-            { id: '0', startTime: '07:00', endTime: '08:40', slotType: 'period' },
-            { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
-            {
-              id: '2',
-              startTime: '09:20',
-              endTime: '09:30',
-              slotType: 'break',
-              breakType: 'short',
-            },
-            { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
-            { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
-            { id: '5', startTime: '10:50', endTime: '11:30', slotType: 'period' },
-            {
-              id: '6',
-              startTime: '11:30',
-              endTime: '12:00',
-              slotType: 'break',
-              breakType: 'lunch',
-            },
-            { id: '7', startTime: '12:00', endTime: '12:30', slotType: 'period' },
-          ],
-        },
-        {
-          id: 'c1-config-3-5',
-          totalSlots: 7,
-          periodSlots: 5,
-          breakSlots: 2,
-          weekRange: [3, 5],
-          timeSlots: [
-            { id: '0', startTime: '07:30', endTime: '08:30', slotType: 'period' },
-            { id: '1', startTime: '08:30', endTime: '09:10', slotType: 'period' },
-            {
-              id: '2',
-              startTime: '09:10',
-              endTime: '09:25',
-              slotType: 'break',
-              breakType: 'short',
-            },
-            { id: '3', startTime: '09:25', endTime: '10:05', slotType: 'period' },
-            { id: '4', startTime: '10:05', endTime: '10:45', slotType: 'period' },
-            {
-              id: '5',
-              startTime: '10:45',
-              endTime: '11:15',
-              slotType: 'break',
-              breakType: 'lunch',
-            },
-            { id: '6', startTime: '11:15', endTime: '12:00', slotType: 'period' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 2,
-      className: '2',
-      schoolHours: '07:30 AM - 01:00 PM',
-      previousClassSlots: '1',
-      totalSlots: 13,
-      periodSlots: 11,
-      breakSlots: 2,
-      slotConfigurations: [
-        {
-          id: 'c2-config-1-4',
-          totalSlots: 9,
-          periodSlots: 7,
-          breakSlots: 2,
-          weekRange: [0, 4],
-          timeSlots: [
-            { id: '0', startTime: '07:30', endTime: '08:20', slotType: 'period' },
-            { id: '1', startTime: '08:20', endTime: '09:10', slotType: 'period' },
-            {
-              id: '2',
-              startTime: '09:10',
-              endTime: '09:30',
-              slotType: 'break',
-              breakType: 'short',
-            },
-            { id: '3', startTime: '09:30', endTime: '10:20', slotType: 'period' },
-            { id: '4', startTime: '10:20', endTime: '11:10', slotType: 'period' },
-            { id: '5', startTime: '11:10', endTime: '12:00', slotType: 'period' },
-            {
-              id: '6',
-              startTime: '12:00',
-              endTime: '12:20',
-              slotType: 'break',
-              breakType: 'lunch',
-            },
-            { id: '7', startTime: '12:20', endTime: '12:40', slotType: 'period' },
-            { id: '8', startTime: '12:40', endTime: '01:00', slotType: 'period' },
-          ],
-        },
-        {
-          id: 'c2-config-5-only',
-          totalSlots: 4,
-          periodSlots: 4,
-          breakSlots: 0,
-          weekRange: [5, 5],
-          timeSlots: [
-            { id: '0', startTime: '08:00', endTime: '08:45', slotType: 'period' },
-            { id: '1', startTime: '08:45', endTime: '09:30', slotType: 'period' },
-            { id: '2', startTime: '09:30', endTime: '10:15', slotType: 'period' },
-            { id: '3', startTime: '10:15', endTime: '11:00', slotType: 'period' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 3,
-      className: '3',
-      schoolHours: '08:00 AM - 01:30 PM',
-      previousClassSlots: '2',
-      totalSlots: 14,
-      periodSlots: 12,
-      breakSlots: 2,
-      slotConfigurations: [
-        {
-          id: 'c3-config-0-1',
-          totalSlots: 8,
-          periodSlots: 6,
-          breakSlots: 2,
-          weekRange: [0, 1],
-          timeSlots: [
-            { id: '0', startTime: '08:00', endTime: '08:50', slotType: 'period' },
-            { id: '1', startTime: '08:50', endTime: '09:40', slotType: 'period' },
-            {
-              id: '2',
-              startTime: '09:40',
-              endTime: '09:55',
-              slotType: 'break',
-              breakType: 'short',
-            },
-            { id: '3', startTime: '09:55', endTime: '10:45', slotType: 'period' },
-            { id: '4', startTime: '10:45', endTime: '11:35', slotType: 'period' },
-            {
-              id: '5',
-              startTime: '11:35',
-              endTime: '12:05',
-              slotType: 'break',
-              breakType: 'lunch',
-            },
-            { id: '6', startTime: '12:05', endTime: '12:45', slotType: 'period' },
-            { id: '7', startTime: '12:45', endTime: '01:30', slotType: 'period' },
-          ],
-        },
-        {
-          id: 'c3-config-2-5',
-          totalSlots: 6,
-          periodSlots: 6,
-          breakSlots: 0,
-          weekRange: [2, 5],
-          timeSlots: [
-            { id: '0', startTime: '08:30', endTime: '09:15', slotType: 'period' },
-            { id: '1', startTime: '09:15', endTime: '10:00', slotType: 'period' },
-            { id: '2', startTime: '10:00', endTime: '10:45', slotType: 'period' },
-            { id: '3', startTime: '10:45', endTime: '11:30', slotType: 'period' },
-            { id: '4', startTime: '11:30', endTime: '12:15', slotType: 'period' },
-            { id: '5', startTime: '12:15', endTime: '01:00', slotType: 'period' },
-          ],
-        },
-      ],
-    },
-  ];
+
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'className', label: 'Class', filterType: 'number' },
+      { id: 'standardName', label: 'Class', filterType: 'number' },
       {
-        id: 'slotConfiguration',
+        id: 'slotConfigurations',
         label: 'Slot Configuration',
         isSort: false,
+        isFilter: false,
         render: (_: any, row: any) => (
-          <Box>
-            {row.slotConfigurations?.map((item: any, index: number) => {
-              const [start, end] = item.weekRange;
-
-              const startLabel = getDayLabel(start);
-              const endLabel = getDayLabel(end);
-
+          <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 1 }}>
+            {row?.slotConfigurations?.map((item: any, index: number) => {
+              const { fromDay, toDay, totalSlots } = item;
+              const startLabel = getDayLabel(fromDay);
+              const endLabel = getDayLabel(toDay);
               return (
-                <Typography key={index} variant="body2">
-                  {start === end ? startLabel : `${startLabel} To ${endLabel}`}
-                  {' : '}
-                  {item.totalSlots}
-                </Typography>
+                <Box
+                  key={index}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.2,
+                    p: 1,
+                    borderRadius: 1.5,
+                    bgcolor: (theme) => theme.vars.palette.background.paper,
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      px: 1.1,
+                      py: 0.1,
+                      borderRadius: 1,
+                      bgcolor: (theme) => theme.palette.action.selected,
+                      color: 'text.primary',
+                      fontWeight: 500,
+                      fontSize: '0.93em',
+                      letterSpacing: 0.1,
+                      mr: 0.5,
+                    }}
+                  >
+                    {fromDay === toDay ? startLabel : `${startLabel} → ${endLabel}`}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 600, color: (theme) => theme.palette.text.secondary, ml: 1 }}
+                  >
+                    {totalSlots} slot{totalSlots > 1 ? 's' : ''}
+                  </Typography>
+                </Box>
               );
             })}
           </Box>

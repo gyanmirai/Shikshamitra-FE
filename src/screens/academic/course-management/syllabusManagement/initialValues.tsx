@@ -1,20 +1,14 @@
 import dayjs from 'dayjs';
 
-export const getChapterInitialValues = (editData?: Record<string, unknown>) => {
+import type { IChapter } from './type';
+
+export const getChapterInitialValues = (editData?: IChapter | null) => {
   const initialValues = {
-    chapterNo: editData?.chapterNumber ?? editData?.chapterNo ?? null,
+    chapterNo: editData?.chapterNumber || undefined,
     chapterName: editData?.chapterName || '',
     description: editData?.description || '',
-    startDate: editData?.chapterStartTime
-      ? dayjs(editData.chapterStartTime)
-      : editData?.startDate
-        ? dayjs(editData.startDate, 'DD-MM-YYYY')
-        : null,
-    endDate: editData?.chapterEndTime
-      ? dayjs(editData.chapterEndTime)
-      : editData?.endDate
-        ? dayjs(editData.endDate, 'DD-MM-YYYY')
-        : null,
+    startDate: editData?.chapterStartTime ? dayjs(editData.chapterStartTime, 'DD-MM-YYYY') : null,
+    endDate: editData?.chapterEndTime ? dayjs(editData.chapterEndTime, 'DD-MM-YYYY') : null,
   };
   return initialValues;
 };

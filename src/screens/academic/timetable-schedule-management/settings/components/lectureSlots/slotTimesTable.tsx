@@ -1,0 +1,271 @@
+import type { Dayjs } from 'dayjs';
+
+import dayjs from 'dayjs';
+import { Box, Typography } from '@mui/material';
+import React, { useMemo, useCallback } from 'react';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+
+export interface ITimeSlot {
+  id: string;
+  startTime: Dayjs | null;
+  endTime: Dayjs | null;
+  slotType: 'period' | 'break' | string;
+  breakType: '' | 'short' | 'lunch' | string;
+}
+
+interface ISlotErrors {
+  [index: number]: { startTime?: string; endTime?: string };
+}
+
+interface ISlotTimesTableProps {
+  configId: React.Key;
+  slots: ITimeSlot[];
+  disabled?: boolean;
+  isEdit?: boolean;
+  errors?: ISlotErrors;
+  onChange: (next: ITimeSlot[]) => void;
+  onTouchField?: (slotIndex: number, field: 'startTime' | 'endTime') => void;
+}
+
+const toDayjs = (v: unknown): Dayjs | null => {
+  if (!v || v === '-') return null;
+  const d = dayjs(v as Dayjs);
+  return d.isValid() ? d : null;
+};
+
+const slotDurationMin = (s: ITimeSlot, fallback = 30): number => {
+  if (!s.startTime || !s.endTime) return fallback;
+  const diff = dayjs(s.endTime).diff(dayjs(s.startTime), 'minute');
+  return diff > 0 ? diff : fallback;
+};
+
+const cascadeFromIndex = (slots: ITimeSlot[], fromIndex: number): ITimeSlot[] => {
+  const next = slots.map((s) => ({ ...s }));
+  for (let i = fromIndex + 1; i < next.length; i += 1) {
+    const prev = next[i - 1];
+    if (!prev.endTime) break;
+    const dur = slotDurationMin(next[i]);
+    next[i].startTime = dayjs(prev.endTime);
+    next[i].endTime = next[i].startTime!.add(dur, 'minute');
+  }
+  return next;
+};
+
+const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
+  configId,
+  slots,
+  disabled,
+  isEdit,
+  errors,
+  onChange,
+  onTouchField,
+}) => {
+  const pickerDisabled = !!disabled && !isEdit;
+
+  const updateSlot = useCallback(
+    (index: number, patch: Partial<ITimeSlot>, cascade = false) => {
+      if (index < 0 || index >= slots.length) return;
+      const updated = slots.map((s, i) => (i === index ? { ...s, ...patch } : { ...s }));
+      onChange(cascade ? cascadeFromIndex(updated, index) : updated);
+    },
+    [slots, onChange]
+  );
+
+  const handleStartChange = useCallback(
+    (index: number, newStart: Dayjs | null) => {
+      if (index < 0 || index >= slots.length) return;
+      const cur = slots[index];
+      const dur = slotDurationMin(cur);
+      const newEnd = newStart ? newStart.add(dur, 'minute') : cur.endTime;
+      const updated = slots.map((s, i) =>
+        i === index ? { ...s, startTime: newStart, endTime: newEnd } : { ...s }
+      );
+      onChange(cascadeFromIndex(updated, index));
+      onTouchField?.(index, 'startTime');
+    },
+    [slots, onChange, onTouchField]
+  );
+
+  const handleEndChange = useCallback(
+    (index: number, newEnd: Dayjs | null) => {
+      if (index < 0 || index >= slots.length) return;
+      const updated = slots.map((s, i) => (i === index ? { ...s, endTime: newEnd } : s));
+      onChange(cascadeFromIndex(updated, index));
+      onTouchField?.(index, 'endTime');
+    },
+    [slots, onChange, onTouchField]
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        id: 'startTime',
+        label: 'Start Time',
+        minWidth: 150,
+        render(value: unknown, row: ITimeSlot) {
+          const index = slots.findIndex((s) => s.id === row.id);
+          if (index < 0) return null;
+          const err = errors?.[index]?.startTime;
+          return (
+            <TimePicker
+              value={toDayjs(value) ?? toDayjs(row.startTime)}
+              format="hh:mm a"
+              views={['hours', 'minutes']}
+              disabled={pickerDisabled}
+              ampm
+              onChange={(t) => handleStartChange(row.id as any, t?.isValid?.() ? dayjs(t) : null)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  sx: { width: '135px' },
+                  error: !!err,
+                  helperText: err,
+                },
+              }}
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+            />
+          );
+        },
+      },
+      {
+        id: 'endTime',
+        label: 'End Time',
+        minWidth: 150,
+        render(value: any, row: ITimeSlot) {
+          const index = slots.findIndex((s) => s.id === row.id);
+          if (index < 0) return null;
+          const isLast = index === slots.length - 1;
+          const err = errors?.[index]?.endTime;
+          return (
+            <TimePicker
+              value={value}
+              format="hh:mm a"
+              views={['hours', 'minutes']}
+              disabled={pickerDisabled || isLast}
+              ampm
+              onChange={(t) => handleEndChange(row.id as any, t?.isValid?.() ? dayjs(t) : null)}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  sx: { width: '140px' },
+                  error: !!err,
+                  helperText: err,
+                },
+              }}
+              viewRenderers={{
+                hours: renderTimeViewClock,
+                minutes: renderTimeViewClock,
+                seconds: renderTimeViewClock,
+              }}
+            />
+          );
+        },
+      },
+      {
+        id: 'totalTime',
+        label: 'Total Time',
+        minWidth: 150,
+        render(_v: unknown, row: ITimeSlot) {
+          const start = row.startTime ? dayjs(row.startTime) : null;
+          let end = row.endTime ? dayjs(row.endTime) : null;
+
+          if (!start || !end || !start.isValid() || !end.isValid()) {
+            return (
+              <Typography variant="body2" color="text.secondary">
+                —
+              </Typography>
+            );
+          }
+
+          // handle crossing midnight
+          if (end.isBefore(start)) {
+            end = end.add(1, 'day');
+          }
+
+          const totalMinutes = end.diff(start, 'minute');
+          if (totalMinutes <= 0) {
+            return (
+              <Typography variant="body2" color="text.secondary">
+                —
+              </Typography>
+            );
+          }
+
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+
+          const formatted = `${hours}:${minutes.toString().padStart(2, '0')}`;
+          return <Typography variant="body2">{formatted}</Typography>;
+        },
+      },
+      {
+        id: 'slotType',
+        label: 'Slot Type',
+        minWidth: 350,
+        align: 'left' as const,
+        render(_v: unknown, row: ITimeSlot) {
+          const index = slots.findIndex((s) => s.id === row.id);
+          if (index < 0) return null;
+          const slotType = row.slotType ?? 'period';
+          const breakType = row.breakType ?? '';
+          return (
+            <Box sx={{ display: 'flex', gap: 1, minWidth: '320px' }}>
+              <CustomSelect
+                label="Slot *"
+                options={[
+                  { value: 'period', label: 'Period' },
+                  { value: 'break', label: 'Break' },
+                ]}
+                disabled={pickerDisabled}
+                value={slotType}
+                onChange={(val) =>
+                  updateSlot(index, {
+                    slotType: val as string,
+                    breakType: val === 'break' ? row.breakType : '',
+                  })
+                }
+                formControlProps={{ sx: { minWidth: '150px' }, size: 'small' }}
+              />
+              {slotType === 'break' && (
+                <CustomSelect
+                  label="Break *"
+                  options={[
+                    { value: 'short', label: 'Short Break' },
+                    { value: 'lunch', label: 'Lunch Break' },
+                  ]}
+                  disabled={pickerDisabled}
+                  value={breakType}
+                  onChange={(val) => updateSlot(index, { breakType: val as string })}
+                  formControlProps={{ sx: { minWidth: '150px' }, size: 'small' }}
+                />
+              )}
+            </Box>
+          );
+        },
+      },
+    ],
+    [slots, errors, pickerDisabled, handleStartChange, handleEndChange, updateSlot]
+  );
+
+  return (
+    <Box sx={{ overflowX: 'auto', width: '100%' }}>
+      <CustomizableTable
+        tableContainerProps={{ sx: { maxHeight: '300px', minWidth: '800px' } }}
+        tableId={`time-schedule-${String(configId)}`}
+        isSearch={false}
+        isFilter={false}
+        isPagination={false}
+        columns={columns as any}
+        data={slots as any}
+      />
+    </Box>
+  );
+};
+
+export default SlotTimesTable;
