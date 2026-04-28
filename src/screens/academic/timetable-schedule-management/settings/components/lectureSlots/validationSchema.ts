@@ -3,27 +3,45 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-const parseTime = (timeString: string): Dayjs => dayjs(timeString, 'hh:mm A');
+// Parse "hh:mm AM/PM" -> minutes since midnight (date-independent)
+const parseTimeToMinutes = (timeString: string): number | null => {
+  const match = timeString.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
+  if (!match) return null;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) return null;
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+};
+
+// Convert any dayjs value to minutes-of-day
+const toMinutesOfDay = (value: unknown): number | null => {
+  const d = dayjs(value as Dayjs);
+  if (!d.isValid()) return null;
+  return d.hour() * 60 + d.minute();
+};
 
 // Helper function to parse school hours string
 const parseSchoolHours = (schoolHours: string) => {
-  const match = schoolHours.match(/(\d{2}:\d{2}\s[AP]M)\s*-\s*(\d{2}:\d{2}\s[AP]M)/);
+  const match = schoolHours.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
   if (!match) return null;
-  return {
-    start: parseTime(match[1]),
-    end: parseTime(match[2]),
-  };
+  const start = parseTimeToMinutes(match[1].trim());
+  const end = parseTimeToMinutes(match[2].trim());
+  if (start == null || end == null) return null;
+  return { start, end };
 };
 
 export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr: string) => {
-  const schoolStart = parseTime(schoolStartTimeStr);
-  const schoolEnd = parseTime(schoolEndTimeStr);
+  const schoolStartMin = parseTimeToMinutes(schoolStartTimeStr);
+  const schoolEndMin = parseTimeToMinutes(schoolEndTimeStr);
 
-  if (!schoolStart.isValid() || !schoolEnd.isValid()) {
+  if (schoolStartMin == null || schoolEndMin == null || schoolEndMin <= schoolStartMin) {
     throw new Error('Invalid school hours provided');
   }
 
-  const schoolDurationMinutes = schoolEnd.diff(schoolStart, 'minute');
+  const schoolDurationMinutes = schoolEndMin - schoolStartMin;
 
   return Yup.object().shape({
     // ============ GENERAL INFORMATION VALIDATIONS ============
@@ -40,14 +58,13 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
         if (!value) return false;
         const parsed = parseSchoolHours(value);
         if (!parsed) return false;
-        const duration = parsed.end.diff(parsed.start, 'minute');
-        return duration >= 120; // At least 2 hours
+        return parsed.end - parsed.start >= 120; // At least 2 hours
       })
       .test('logical-time', 'End time must be after start time', (value) => {
         if (!value) return false;
         const parsed = parseSchoolHours(value);
         if (!parsed) return false;
-        return parsed.end.isAfter(parsed.start);
+        return parsed.end > parsed.start;
       }),
 
     previousClassSlots: Yup.string().test(
@@ -128,12 +145,9 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                     'Start time must be within school hours',
                     (value) => {
                       if (!value) return false;
-                      const start = dayjs(value as Dayjs);
-                      return (
-                        start.isValid() &&
-                        start.isSameOrAfter(schoolStart, 'minute') &&
-                        start.isBefore(schoolEnd, 'minute')
-                      );
+                      const startMin = toMinutesOfDay(value);
+                      if (startMin == null) return false;
+                      return startMin >= schoolStartMin && startMin < schoolEndMin;
                     }
                   ),
 
@@ -148,12 +162,9 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                     'End time must be within school hours',
                     (value) => {
                       if (!value) return false;
-                      const end = dayjs(value as Dayjs);
-                      return (
-                        end.isValid() &&
-                        end.isAfter(schoolStart, 'minute') &&
-                        end.isSameOrBefore(schoolEnd, 'minute')
-                      );
+                      const endMin = toMinutesOfDay(value);
+                      if (endMin == null) return false;
+                      return endMin > schoolStartMin && endMin <= schoolEndMin;
                     }
                   )
                   .test(
@@ -163,9 +174,10 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                     function (endTime) {
                       const { startTime } = this.parent;
                       if (!startTime || !endTime) return true;
-                      const start = dayjs(startTime);
-                      const end = dayjs(endTime as Dayjs);
-                      return start.isValid() && end.isValid() && end.isAfter(start);
+                      const startMin = toMinutesOfDay(startTime);
+                      const endMin = toMinutesOfDay(endTime);
+                      if (startMin == null || endMin == null) return true;
+                      return endMin > startMin;
                     }
                   )
                   .test(
@@ -175,10 +187,10 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                     function (endTime) {
                       const { startTime } = this.parent;
                       if (!startTime || !endTime) return true;
-                      const start = dayjs(startTime);
-                      const end = dayjs(endTime as Dayjs);
-                      const duration = end.diff(start, 'minute');
-                      return duration >= 5;
+                      const startMin = toMinutesOfDay(startTime);
+                      const endMin = toMinutesOfDay(endTime);
+                      if (startMin == null || endMin == null) return true;
+                      return endMin - startMin >= 5;
                     }
                   )
                   .test(
@@ -188,10 +200,10 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                     function (endTime) {
                       const { startTime } = this.parent;
                       if (!startTime || !endTime) return true;
-                      const start = dayjs(startTime);
-                      const end = dayjs(endTime as Dayjs);
-                      const duration = end.diff(start, 'minute');
-                      return duration <= 180; // 3 hours max
+                      const startMin = toMinutesOfDay(startTime);
+                      const endMin = toMinutesOfDay(endTime);
+                      if (startMin == null || endMin == null) return true;
+                      return endMin - startMin <= 180;
                     }
                   ),
 
@@ -220,7 +232,10 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                       const { slotType, startTime, endTime } = this.parent;
                       if (slotType !== 'break' || value !== 'lunch') return true;
                       if (!startTime || !endTime) return true;
-                      const duration = dayjs(endTime).diff(dayjs(startTime), 'minute');
+                      const startMin = toMinutesOfDay(startTime);
+                      const endMin = toMinutesOfDay(endTime);
+                      if (startMin == null || endMin == null) return true;
+                      const duration = endMin - startMin;
                       return duration >= 20 && duration <= 60;
                     }
                   ),
@@ -239,15 +254,15 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   const current = slots[i];
                   const next = slots[i + 1];
 
-                  const currentEnd = dayjs(current.endTime as Dayjs);
-                  const nextStart = dayjs(next.startTime as Dayjs);
+                  const currentEndMin = toMinutesOfDay(current.endTime);
+                  const nextStartMin = toMinutesOfDay(next.startTime);
 
-                  if (!currentEnd.isValid() || !nextStart.isValid()) {
+                  if (currentEndMin == null || nextStartMin == null) {
                     // eslint-disable-next-line no-continue
                     continue;
                   }
 
-                  if (!currentEnd.isSame(nextStart, 'minute')) {
+                  if (currentEndMin !== nextStartMin) {
                     return this.createError({
                       path: `timeSlots[${i + 1}].startTime`,
                       message: `Slot ${i + 2} must start exactly when slot ${i + 1} ends`,
@@ -355,10 +370,10 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                 let totalBreakMinutes = 0;
 
                 slots.forEach((slot) => {
-                  const duration = dayjs(slot.endTime as Dayjs).diff(
-                    dayjs(slot.startTime as Dayjs),
-                    'minute'
-                  );
+                  const startMin = toMinutesOfDay(slot.startTime);
+                  const endMin = toMinutesOfDay(slot.endTime);
+                  if (startMin == null || endMin == null) return;
+                  const duration = endMin - startMin;
                   if (slot.slotType === 'period') {
                     totalPeriodMinutes += duration;
                   } else {

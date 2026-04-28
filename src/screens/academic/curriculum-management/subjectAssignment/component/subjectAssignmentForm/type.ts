@@ -6,9 +6,9 @@ export interface ISubjectAssignmentSubject {
   subjectCode: string;
 
   // Internal usage for SubjectCard compatibility
-  primaryTeacher: string;
+  primaryTeacher: { id: string; name: string };
   primaryTeacherId: string;
-  secondaryTeacher: string[];
+  secondaryTeacher: { id: string; name: string }[];
   secondaryTeacherIds: string[];
 
   learningGoal: string;

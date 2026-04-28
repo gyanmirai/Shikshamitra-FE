@@ -1,35 +1,39 @@
-import type { ISubjectFormValues } from './type';
-
-export const getNoOfLectureInitialValues = (
-  editData: ISubjectFormValues | null,
-  selectedClass?: string
-): any => {
+export const getNoOfLectureInitialValues = (editData: any | null, selectedClass?: string): any => {
   const subjects =
     editData?.subjects?.map(
       (
-        { id, subjectId, name, subjectCode, subjectColor, noOfLecture, electiveGroupId },
-        index
+        {
+          subjectId,
+          subjectName,
+          subjectCode,
+          subjectColor,
+          weeklyLectures,
+          electiveGroupId,
+          subjectType,
+        }: any,
+        index: any
       ) => ({
-        id: id || `subject-${index}`,
-        subjectId: subjectId || id,
-        name,
+        id: subjectId || `subject-${index}`,
+        subjectId,
+        name: subjectName || '',
         subjectCode,
         subjectColor,
-        noOfLecture,
+        noOfLecture: weeklyLectures || 0,
         electiveGroupId: electiveGroupId || null,
+        subjectType: electiveGroupId ? 1 : 0,
       })
     ) ?? [];
 
-  const totalLectures = subjects.reduce<number>(
-    (sum, subj) => sum + (Number(subj.noOfLecture) || 0),
+  const totalLectures = subjects.reduce(
+    (sum: any, subj: any) => sum + (Number(subj.noOfLecture) || 0),
     0
   );
 
   return {
-    id: editData?.id,
-    className: editData?.className ? editData.className : selectedClass || '',
+    id: editData?.id || '',
+    className: editData?.standardName ? editData.standardName : selectedClass || '',
     subjects,
     totalLectures,
-    classId: '',
+    classId: editData?.standardId || selectedClass || '',
   };
 };
