@@ -136,6 +136,7 @@ const RegisterForm = ({
   isComeFromIssueForm?: boolean;
 }) => {
   const dispatch = useDispatch();
+  const formikRef = useRef<any>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -662,17 +663,20 @@ const RegisterForm = ({
           formik: any,
           setIsLoading: (val: boolean) => void
         ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
-        renderItem={({ activeStep: step, formik, isBackClick }: any) => (
-          <>
-            <SyncReduxDirty formik={formik} />
-            <RegisterStepForm
-              activeStep={step}
-              formik={formik}
-              isBackClick={isBackClick}
-              editData={editData}
-            />
-          </>
-        )}
+        renderItem={({ activeStep: step, formik, isBackClick }: any) => {
+          formikRef.current = formik;
+          return (
+            <>
+              <SyncReduxDirty formik={formik} />
+              <RegisterStepForm
+                activeStep={step}
+                formik={formik}
+                isBackClick={isBackClick}
+                editData={editData}
+              />
+            </>
+          );
+        }}
       />
 
       <ConfirmDialog
@@ -699,6 +703,7 @@ const RegisterForm = ({
             size="small"
             onClick={() => {
               if (pendingStep !== null) {
+                formikRef.current?.resetForm();
                 dispatch(setIsChanges(false));
                 setActiveStep(pendingStep);
                 setPendingStep(null);
@@ -722,6 +727,14 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
   // const formDialog = useBoolean();
 
   const initializedStepsRef = useRef<Record<number, boolean>>({});
+  const prevStepRef = useRef<number>(step);
+
+  useEffect(() => {
+    if (prevStepRef.current !== step) {
+      initializedStepsRef.current[prevStepRef.current] = false;
+      prevStepRef.current = step;
+    }
+  }, [step]);
 
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
     type: 'query',
@@ -731,7 +744,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 0),
-      refetchOnMountOrArgChange: false,
+      refetchOnMountOrArgChange: true,
       refetchOnFocus: false,
     },
   });
@@ -744,7 +757,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 2),
-      refetchOnMountOrArgChange: false,
+      refetchOnMountOrArgChange: true,
       refetchOnFocus: false,
     },
   });
@@ -757,7 +770,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 3),
-        refetchOnMountOrArgChange: false,
+        refetchOnMountOrArgChange: true,
         refetchOnFocus: false,
       },
     });
@@ -771,7 +784,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 4),
-        refetchOnMountOrArgChange: false,
+        refetchOnMountOrArgChange: true,
         refetchOnFocus: false,
       },
     });
@@ -785,7 +798,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 5),
-        refetchOnMountOrArgChange: false,
+        refetchOnMountOrArgChange: true,
         refetchOnFocus: false,
       },
     });
@@ -798,7 +811,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
       },
       options: {
         skip: !(editData?.studentId && step === 6),
-        refetchOnMountOrArgChange: false,
+        refetchOnMountOrArgChange: true,
         refetchOnFocus: false,
       },
     });
@@ -811,7 +824,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     },
     options: {
       skip: !(editData?.studentId && step === 7),
-      refetchOnMountOrArgChange: false,
+      refetchOnMountOrArgChange: true,
       refetchOnFocus: false,
     },
   });
