@@ -22,7 +22,6 @@ import {
   Box,
   Card,
   Grid,
-  Stack,
   Button,
   Avatar,
   Divider,
@@ -78,106 +77,99 @@ const PaySlipGenerationScreen = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Generate Salary Slip"
+        heading="Payslips"
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Generate Salary Slip' },
+          { name: 'Payslips' },
         ]}
-        description="Generate and download salary slips by selecting the pay period and employee details."
+        description="View, download, print, or email finalized salary slips after payroll lock."
       />
 
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        alignItems={{ xs: 'stretch', md: 'center' }}
-        justifyContent="space-between"
-        spacing={1}
-      >
-        <Card sx={{ width: '100%' }}>
-          <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap" p={1.5}>
-            {/* Filters */}
-            <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-              <PaginatedSearchSelect
-                label="Select Employee"
-                fetchOptions={async (query, page) => {
-                  const res = await getEmployees({ page, pageSize: 10 }).unwrap();
-                  const hasMore = res.currentPage !== res.totalPages;
-                  return {
-                    data: res?.items?.map((item: any) => ({
-                      label: item.fullName,
-                      id: item.id,
-                    })),
-                    hasMore,
-                  };
-                }}
-                value={employee}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                getOptionLabel={(option: any) => option?.label || ''}
-                minChars={2}
-                onChange={(_, value) => setEmployee(value)}
-                debounceMs={400}
-                placeholder="Search by name or email"
-                helperText="Start typing to search for employees"
-                error={false}
-                sx={{ maxWidth: 300, minWidth: 250 }}
-                size="small"
-              />
+      <Card variant="outlined" sx={{ p: 2, width: '100%' }}>
+        <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap">
+          {/* Filters */}
+          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+            <PaginatedSearchSelect
+              label="Select Employee"
+              fetchOptions={async (query, page) => {
+                const res = await getEmployees({ page, pageSize: 10 }).unwrap();
+                const hasMore = res.currentPage !== res.totalPages;
+                return {
+                  data: res?.items?.map((item: any) => ({
+                    label: item.fullName,
+                    id: item.id,
+                  })),
+                  hasMore,
+                };
+              }}
+              value={employee}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderOption={(prop, option: any) => (
+                <li {...prop} key={option.id}>
+                  {option.label}
+                </li>
+              )}
+              getOptionLabel={(option: any) => option?.label || ''}
+              minChars={2}
+              onChange={(_, value) => setEmployee(value)}
+              debounceMs={400}
+              placeholder="Search by name or email"
+              helperText="Start typing to search for employees"
+              error={false}
+              sx={{ maxWidth: 300, minWidth: 250 }}
+              size="small"
+            />
 
-              <DatePicker
-                minDate={dayjs(currentYear?.startDate)}
-                maxDate={dayjs(currentYear?.endDate)}
-                value={monthYear}
-                onChange={(val) => setMonthYear(val)}
-                views={['month', 'year']}
-                label="Select Pay Period"
-                format="MMMM-YYYY"
-                sx={{ maxWidth: 200, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                  },
-                }}
-              />
-            </Box>
-
-            {/* Actions */}
-            <Box display="flex" gap={1} alignItems="center" ml="auto">
-              <Button
-                size="small"
-                startIcon={<Iconify icon="ion:download-outline" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!employee?.id}
-              >
-                Download
-              </Button>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="ion:print-outline" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!employee?.id}
-              >
-                Print
-              </Button>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="iconamoon:email-thin" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!employee?.id}
-              >
-                Email
-              </Button>
-            </Box>
+            <DatePicker
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
+              value={monthYear}
+              onChange={(val) => setMonthYear(val)}
+              views={['month', 'year']}
+              label="Select Pay Period"
+              format="MMMM-YYYY"
+              sx={{ maxWidth: 200, width: '100%' }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                },
+              }}
+            />
           </Box>
-        </Card>
-      </Stack>
+
+          {/* Actions */}
+          <Box display="flex" gap={1} alignItems="center" ml="auto">
+            <Button
+              size="small"
+              startIcon={<Iconify icon="ion:download-outline" />}
+              variant="outlined"
+              color="inherit"
+              disabled={!employee?.id}
+            >
+              Download
+            </Button>
+            <Button
+              size="small"
+              startIcon={<Iconify icon="ion:print-outline" />}
+              variant="outlined"
+              color="inherit"
+              disabled={!employee?.id}
+            >
+              Print
+            </Button>
+            <Button
+              size="small"
+              startIcon={<Iconify icon="iconamoon:email-thin" />}
+              variant="outlined"
+              color="inherit"
+              disabled={!employee?.id}
+            >
+              Email
+            </Button>
+          </Box>
+        </Box>
+      </Card>
 
       {employee?.id && !employeeSalarySlipLoading ? (
         <>

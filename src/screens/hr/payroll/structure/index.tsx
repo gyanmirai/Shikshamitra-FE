@@ -1,64 +1,55 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
-import type { UsePopoverReturn } from 'src/components/custom-popover';
-import type { PayrollStructureType } from 'src/enums/payroll-structure-tyep';
-
-import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
-import { Search } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { useMemo, useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Grid, Paper, Typography } from '@mui/material';
+import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-// import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
-import {
-  Box,
-  Grid,
-  Paper,
-  Stack,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
-import {
-  useAddPayrollStructureMutation,
-  useDeletePayrollStructureMutation,
-  useUpdatePayrollStructureMutation,
-  useGetPayrollStructureByOrganizationQuery,
-} from 'src/redux/payrollStructure/payrollStructureApi';
+import { useGetEmployeeSalaryStructureQuery } from 'src/redux/hr/employee-salary-structure-api';
 
 const EmployeeSalaryStructureScreen = () => {
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  const [organization, setOrganization] = useState<string>('');
+  const [employeeId, setEmployeeId] = useState<string>('');
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
-  }, [medium]);
-
-  const { data: payrollStructure, isLoading } = useQueryAndMutation({
+  const { data: employees, isLoading: isEmployeesLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetPayrollStructureByOrganizationQuery,
-    params: organization,
-    options: {
-      skip: !organization,
-    },
+    currentQueryAndMutation: useGetEmployeeQuery,
+    params: { page: 1, pageSize: 200, search: '' },
   });
+
+  const employeeOptions = useMemo(
+    () =>
+      (employees?.items || []).map((item: any) => ({
+        id: item?.id,
+        name: `${item?.fullName || 'Unknown'}${item?.employeeIdentifier ? ` (${item.employeeIdentifier})` : ''}`,
+      })),
+    [employees?.items]
+  );
+
+  const { data: structureData, isLoading: isStructureLoading } = useGetEmployeeSalaryStructureQuery(
+    { employeeId },
+    { skip: !employeeId }
+  );
+
+  const payrollStructureRows = useMemo(() => {
+    const earningRows = (structureData?.earningComponents || []).map((item: any) => ({
+      id: item?.id || item?.componentId,
+      payElement: { name: item?.name || '-' },
+      amount: item?.amount || 0,
+      payrollStructureType: 0,
+    }));
+
+    const deductionRows = (structureData?.deductionComponents || []).map((item: any) => ({
+      id: item?.id || item?.componentId,
+      payElement: { name: item?.name || '-' },
+      amount: item?.amount || 0,
+      payrollStructureType: 1,
+    }));
+
+    return [...earningRows, ...deductionRows];
+  }, [structureData]);
 
   return (
     <Box>
@@ -66,278 +57,87 @@ const EmployeeSalaryStructureScreen = () => {
         heading="Payroll Structure"
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Payroll Structure' }]}
       />
+
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
         <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
+          options={employeeOptions}
+          label="Employee"
+          value={employeeId}
+          onChange={(val) => setEmployeeId(val as string)}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-          disabled={!medium}
+          formControlProps={{ sx: { maxWidth: '420px', width: '100%' } }}
+          disabled={isEmployeesLoading}
         />
-        <Button variant="contained" startIcon={<Search />}>
-          Search
-        </Button>
       </Box>
-      {organization && (
+
+      {!employeeId ? (
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            Select an employee to view salary structure.
+          </Typography>
+        </Paper>
+      ) : (
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Sections
+            <Section
               title="Earning"
-              data={payrollStructure || []}
-              isLoading={isLoading}
+              rows={payrollStructureRows}
               type={0}
-              organization={organization}
+              isLoading={isStructureLoading}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Sections
+            <Section
               title="Deduction"
-              data={payrollStructure || []}
-              isLoading={isLoading}
+              rows={payrollStructureRows}
               type={1}
-              organization={organization}
+              isLoading={isStructureLoading}
             />
           </Grid>
-          {/* <Grid size={{ xs: 12, md: 6 }}>
-      
-  </Grid> */}
         </Grid>
       )}
     </Box>
   );
 };
-export default EmployeeSalaryStructureScreen;
 
-export const Sections = ({
+const Section = ({
   title,
-  data,
+  rows,
   type,
-  organization,
-  isLoading = false,
+  isLoading,
 }: {
-  title?: string;
-  data?: any;
-  type: PayrollStructureType;
-  organization: string;
-  isLoading?: boolean;
-}) => {
-  const dialog = useBoolean();
-  const confirm = useBoolean(false);
-  const [editData, setEditData] = useState<any>(null);
-  const [deleteInformation, setDeleteInformation] = useState<any>(null);
-
-  const [deletePayrollStructure, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useDeletePayrollStructureMutation,
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const actions = useCallback(
-    // eslint-disable-next-line react/no-unused-prop-types
-    ({ popover }: { popover: UsePopoverReturn }, row: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            setDeleteInformation(row);
-            confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
-        <MenuItem
-          onClick={async () => {
-            setEditData(row);
-
-            dialog.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-      </MenuList>
-    ),
-    [confirm, dialog]
-  );
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
-  };
-
-  return (
-    <Paper elevation={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
-        <Typography variant="h5">{title}</Typography>
-        <Button
-          sx={{
-            height: '35px',
-            width: '35px',
-            borderRadius: '50%',
-            minWidth: 'unset',
-          }}
-          variant="contained"
-          onClick={dialog.onTrue}
-        >
-          <Iconify icon="material-symbols:add" width={20} height={20} />
-        </Button>
-      </Box>
-      <Box p={2} pt={0}>
-        <CustomizableTable
-          tableId="payroll-structure"
-          isFilter={false}
-          isPagination={false}
-          isSearch={false}
-          isShowedDense={false}
-          isLoading={isLoading}
-          columns={[
-            { id: 'payElement.name', label: 'Type' },
-            {
-              id: 'amount',
-              label: 'Amount',
-              render(value, row) {
-                return formatCurrency(value);
-              },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    placement="right-top"
-                    showDeleteIcon
-                    showEditIcon
-                    showThreeDots={false}
-                    handleEditClick={() => {
-                      setEditData(row);
-                      dialog.onTrue();
-                    }}
-                    handleDeleteClick={() => {
-                      setDeleteInformation(row);
-                      confirm.onTrue();
-                    }}
-                  />
-                );
-              },
-            },
-          ]}
-          data={data?.filter((i: any) => i.payrollStructureType === type) || []}
-        />
-      </Box>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          setEditData(null);
-          confirm.onFalse();
-        }}
-        title="Delete"
-        content="Are you sure you want to delete?"
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isDeleteLoading}
-            color="error"
-            onClick={async () => {
-              await deletePayrollStructure(deleteInformation?.id || '');
-              confirm.onFalse();
-              setEditData(null);
-              setDeleteInformation(null);
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
-      <CustomDialog title="Add Structure" open={dialog.value} handleClose={handleClose}>
-        <SectionForm
-          handleClose={handleClose}
-          type={type}
-          organization={organization}
-          editData={editData}
-        />
-      </CustomDialog>
-    </Paper>
-  );
-};
-
-export const SectionForm = ({ handleClose, type, organization, editData }: any) => {
-  const [addStructure, { isLoading }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useAddPayrollStructureMutation,
-  });
-
-  const [updateStructure, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useUpdatePayrollStructureMutation,
-  });
-
-  // const { data: payElements } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetPayElementsQuery,
-  // });
-  const { values, handleChange, handleSubmit, setFieldValue } = useFormik({
-    initialValues: {
-      type: editData?.payElementId || '',
-      amount: editData?.amount || '',
-    },
-    onSubmit: async (val) => {
-      if (editData) {
-        await updateStructure({
-          id: editData?.id || '',
-          body: {
-            educationMediumStageId: organization,
-            payElementId: val.type,
-            payrollStructureType: type,
-            amount: val.amount,
-          },
-        });
-      } else {
-        await addStructure({
-          educationMediumStageId: organization,
-          payElementId: val.type,
-          payrollStructureType: type,
-          amount: val.amount,
-        });
-      }
-      handleClose();
-    },
-  });
-
-  return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ bgcolor: 'background.neutral', p: 2 }}>
-      <Stack spacing={2} direction="column" sx={{ bgcolor: 'background.neutral' }}>
-        <CustomSelect
-          label="Select Type"
-          options={[]}
-          labelKey="name"
-          valueKey="id"
-          value={values?.type}
-          onChange={(val) => setFieldValue('type', val)}
-          formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-        />
-        <TextField
-          size="small"
-          fullWidth
-          label="Amount"
-          name="amount"
-          value={values?.amount}
-          onChange={handleChange}
-        />
-      </Stack>
-      <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>
-          Cancel
-        </Button>
-        <LoadingButton loading={isUpdateLoading || isLoading} variant="contained" type="submit">
-          Submit
-        </LoadingButton>
-      </DialogActions>
+  title: string;
+  rows: any[];
+  type: number;
+  isLoading: boolean;
+}) => (
+  <Paper elevation={3}>
+    <Box display="flex" justifyContent="space-between" alignItems="center" p={2}>
+      <Typography variant="h5">{title}</Typography>
     </Box>
-  );
-};
+    <Box p={2} pt={0}>
+      <CustomizableTable
+        tableId={`payroll-structure-${type}`}
+        isFilter={false}
+        isPagination={false}
+        isSearch={false}
+        isShowedDense={false}
+        isLoading={isLoading}
+        columns={[
+          { id: 'payElement.name', label: 'Type' },
+          {
+            id: 'amount',
+            label: 'Amount',
+            render(value) {
+              return formatCurrency(value);
+            },
+          },
+        ]}
+        data={rows.filter((i: any) => i.payrollStructureType === type)}
+      />
+    </Box>
+  </Paper>
+);
+
+export default EmployeeSalaryStructureScreen;

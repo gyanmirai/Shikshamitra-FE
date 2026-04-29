@@ -78,26 +78,46 @@ export const Logo = forwardRef<HTMLDivElement, LogoProps>(
           />
         }
       >
-        <Box
-          ref={ref}
-          component={RouterLink}
-          href={href}
-          width={width}
-          height={height}
-          className={logoClasses.root.concat(className ? ` ${className}` : '')}
-          aria-label="logo"
-          sx={{
-            flexShrink: 0,
-            display: 'inline-flex',
-            verticalAlign: 'middle',
-            fill: theme.palette.primary.main,
-            ...(disableLink && { pointerEvents: 'none' }),
-            ...sx,
-          }}
-          {...other}
-        >
-          {logo}
-        </Box>
+        {disableLink ? (
+          <Box
+            ref={ref}
+            width={width}
+            height={height}
+            className={logoClasses.root.concat(className ? ` ${className}` : '')}
+            aria-label="logo"
+            sx={{
+              flexShrink: 0,
+              display: 'inline-flex',
+              verticalAlign: 'middle',
+              fill: theme.palette.primary.main,
+              pointerEvents: 'none',
+              ...sx,
+            }}
+            {...other}
+          >
+            {logo}
+          </Box>
+        ) : (
+          <Box
+            ref={ref}
+            component={RouterLink}
+            href={href}
+            width={width}
+            height={height}
+            className={logoClasses.root.concat(className ? ` ${className}` : '')}
+            aria-label="logo"
+            sx={{
+              flexShrink: 0,
+              display: 'inline-flex',
+              verticalAlign: 'middle',
+              fill: theme.palette.primary.main,
+              ...sx,
+            }}
+            {...other}
+          >
+            {logo}
+          </Box>
+        )}
       </NoSsr>
     );
   }

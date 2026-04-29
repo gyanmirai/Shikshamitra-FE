@@ -12,7 +12,7 @@ export const leaveRequestInitialValues = (editData: any) => ({
   endTime: editData?.endTime || '',
   isHalfDay: editData?.halfDay || false,
   rejectionReason: editData?.rejectionReason || '',
-  status: editData?.status || 0,
+  status: editData?.status || 'PENDING',
 
   docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
 });

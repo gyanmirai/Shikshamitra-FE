@@ -1,6 +1,5 @@
-import React from 'react';
-import ApplyLeave from 'src/screens/hr/leave-request/apply-leave';
+import { redirect } from 'next/navigation';
 
-const page = () => <ApplyLeave />;
+const page = () => redirect('/hr/leave-center');
 
 export default page;

@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
@@ -15,7 +14,7 @@ import { DashboardCard } from 'src/components/dashboard-card';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetLeaveRequestsQuery, useGetMyLeaveBalanceQuery } from 'src/redux/hr/leaveApi';
+import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import {
   Box,
   Card,
@@ -27,10 +26,17 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusOptions,
-  EmployeeLeaveStatusTypeColor,
-} from 'src/enums/employee-leave-status';
+  useGetLeaveRequestsQuery,
+  useGetMyLeaveBalanceQuery,
+  useGetMyLeaveRequestsQuery,
+  useGetSelfLeaveBalanceQuery,
+} from 'src/redux/hr/leaveApi';
+
+import {
+  getLeaveStatusColor,
+  getLeaveStatusLabel,
+  normalizeLeaveStatus,
+} from '../leave-request/leave-status.utils';
 
 // -----------------------------------------------------------------------
 
@@ -200,31 +206,61 @@ const BREAKDOWN_COLUMNS: IColumn[] = [
 
 // -----------------------------------------------------------------------
 
-const LeaveBalance = () => {
+type LeaveBalanceProps = {
+  mode?: 'hr' | 'self';
+  showBreadcrumbs?: boolean;
+};
+
+const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true }: LeaveBalanceProps) => {
+  const isSelfMode = mode === 'self';
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { employee } = useSelector((state: any) => state.auth);
 
   const {
-    data: balanceData,
-    isLoading: isBalanceLoading,
-    isFetching: isBalanceFetching,
+    data: balanceDataForHr,
+    isLoading: isBalanceLoadingForHr,
+    isFetching: isBalanceFetchingForHr,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetMyLeaveBalanceQuery,
     params: { academicYearId: currentYear?.id, employeeId: employee?.id },
-    options: { skip: !currentYear?.id },
+    options: { skip: !currentYear?.id || isSelfMode },
+  });
+  const {
+    data: balanceDataForSelf,
+    isLoading: isBalanceLoadingForSelf,
+    isFetching: isBalanceFetchingForSelf,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSelfLeaveBalanceQuery,
+    params: { academicYearId: currentYear?.id },
+    options: { skip: !currentYear?.id || !isSelfMode },
   });
 
   const {
-    data: historyData,
-    isLoading: isHistoryLoading,
-    isFetching: isHistoryFetching,
+    data: historyDataForHr,
+    isLoading: isHistoryLoadingForHr,
+    isFetching: isHistoryFetchingForHr,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
-    options: { skip: !currentYear?.id },
+    options: { skip: !currentYear?.id || isSelfMode },
   });
+  const {
+    data: historyDataForSelf,
+    isLoading: isHistoryLoadingForSelf,
+    isFetching: isHistoryFetchingForSelf,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetMyLeaveRequestsQuery,
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+    options: { skip: !currentYear?.id || !isSelfMode },
+  });
+  const balanceData = isSelfMode ? balanceDataForSelf : balanceDataForHr;
+  const historyData = isSelfMode ? historyDataForSelf : historyDataForHr;
+  const isHistoryLoading = isSelfMode ? isHistoryLoadingForSelf : isHistoryLoadingForHr;
+  const isHistoryFetching = isSelfMode ? isHistoryFetchingForSelf : isHistoryFetchingForHr;
 
   const mergedBalance: LeaveBalanceData = useMemo(() => {
     if (!balanceData?.items?.length) {
@@ -240,21 +276,27 @@ const LeaveBalance = () => {
     const totalLeaves = items.reduce((sum: number, i: any) => sum + (i.entitledDays ?? 0), 0);
     const usedLeaves = items.reduce((sum: number, i: any) => sum + (i.usedDays ?? 0), 0);
     const remainingLeaves = items.reduce((sum: number, i: any) => sum + (i.remainingDays ?? 0), 0);
+    const pendingLeaves = (historyData?.items ?? []).filter(
+      (item: any) => normalizeLeaveStatus(item?.status) === 'PENDING'
+    ).length;
     return {
       totalLeaves,
       usedLeaves,
       remainingLeaves,
-      pendingLeaves: 0,
+      pendingLeaves,
       leaveTypeBreakdown: items.map((i: any) => ({
         leaveTypeId: i.leaveTypeMasterId,
         leaveTypeName: i.leaveTypeName ?? i.policyName ?? '-',
         total: i.entitledDays ?? 0,
         used: i.usedDays ?? 0,
-        pending: 0,
+        pending: (historyData?.items ?? []).filter((item: any) => {
+          const matchesLeaveType = String(item?.leaveType ?? '') === String(i?.leaveTypeName ?? '');
+          return matchesLeaveType && normalizeLeaveStatus(item?.status) === 'PENDING';
+        }).length,
         remaining: i.remainingDays ?? 0,
       })),
     };
-  }, [balanceData]);
+  }, [balanceData, historyData?.items]);
 
   const summaryCards = useMemo(() => SUMMARY_CARDS(mergedBalance), [mergedBalance]);
 
@@ -336,10 +378,7 @@ const LeaveBalance = () => {
         sticky: true,
         minWidth: '110px',
         render(value) {
-          const color = EmployeeLeaveStatusTypeColor[
-            value as EmployeeLeaveStatusType
-          ] as LabelColor;
-          return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
+          return <Label color={getLeaveStatusColor(value)}>{getLeaveStatusLabel(value)}</Label>;
         },
       },
     ],
@@ -361,20 +400,28 @@ const LeaveBalance = () => {
     [historyData]
   );
 
-  const isLoadingBalance = isBalanceLoading || isBalanceFetching;
+  const isLoadingBalance = isSelfMode
+    ? isBalanceLoadingForSelf || isBalanceFetchingForSelf
+    : isBalanceLoadingForHr || isBalanceFetchingForHr;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {/* Breadcrumbs */}
-      <CustomBreadcrumbs
-        heading="Leave Balance"
-        links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
-          { name: 'Leave Balance' },
-        ]}
-        description="View your leave quota, breakdown by leave type, and full leave history."
-      />
+      {showBreadcrumbs && (
+        <CustomBreadcrumbs
+          heading={isSelfMode ? 'My Leave Balance' : 'Leave Balance'}
+          links={
+            isSelfMode
+              ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave Balance' }]
+              : [
+                  { name: 'HR/Staff', href: '/hr/dashboard/' },
+                  { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+                  { name: 'Leave Balance' },
+                ]
+          }
+          description="View your leave quota, breakdown by leave type, and full leave history."
+        />
+      )}
 
       {/* ── Section A: Summary Stat Cards ── */}
       <Grid container spacing={1} sx={{ mt: 0.5 }}>

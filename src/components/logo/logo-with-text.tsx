@@ -33,39 +33,72 @@ export const LogoWithText = forwardRef<HTMLDivElement, LogoWithTextProps>(
           />
         }
       >
-        <Box
-          ref={ref}
-          component={RouterLink}
-          href={href}
-          className={logoClasses.root.concat(className ? ` ${className}` : '')}
-          aria-label="logo"
-          sx={{
-            flexShrink: 0,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 1.5,
-            verticalAlign: 'middle',
-            textDecoration: 'none',
-            ...(disableLink && { pointerEvents: 'none' }),
-            ...sx,
-          }}
-          {...other}
-        >
-          <Logo width={height} height={height} disableLink sx={{ mr: 0 }} />
+        {disableLink ? (
           <Box
-            component="span"
+            ref={ref}
+            className={logoClasses.root.concat(className ? ` ${className}` : '')}
+            aria-label="logo"
             sx={{
-              color: theme.palette.primary.main,
-              fontFamily: theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: typeof height === 'number' ? height * 0.7 : 28,
-              lineHeight: 1,
-              userSelect: 'none',
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1.5,
+              verticalAlign: 'middle',
+              textDecoration: 'none',
+              pointerEvents: 'none',
+              ...sx,
             }}
+            {...other}
           >
-            GyanMirai
+            <Logo width={height} height={height} disableLink sx={{ mr: 0 }} />
+            <Box
+              component="span"
+              sx={{
+                color: theme.palette.primary.main,
+                fontFamily: theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: typeof height === 'number' ? height * 0.7 : 28,
+                lineHeight: 1,
+                userSelect: 'none',
+              }}
+            >
+              GyanMirai
+            </Box>
           </Box>
-        </Box>
+        ) : (
+          <Box
+            ref={ref}
+            component={RouterLink}
+            href={href}
+            className={logoClasses.root.concat(className ? ` ${className}` : '')}
+            aria-label="logo"
+            sx={{
+              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 1.5,
+              verticalAlign: 'middle',
+              textDecoration: 'none',
+              ...sx,
+            }}
+            {...other}
+          >
+            <Logo width={height} height={height} disableLink sx={{ mr: 0 }} />
+            <Box
+              component="span"
+              sx={{
+                color: theme.palette.primary.main,
+                fontFamily: theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: typeof height === 'number' ? height * 0.7 : 28,
+                lineHeight: 1,
+                userSelect: 'none',
+              }}
+            >
+              GyanMirai
+            </Box>
+          </Box>
+        )}
       </NoSsr>
     );
   }

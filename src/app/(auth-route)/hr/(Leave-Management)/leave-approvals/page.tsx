@@ -1,6 +1,5 @@
-import React from 'react';
-import LeaveApprovals from 'src/screens/hr/leave-request/leave-approvals';
+import { redirect } from 'next/navigation';
 
-const page = () => <LeaveApprovals />;
+const page = () => redirect('/hr/leave-center?tab=approvals');
 
 export default page;
