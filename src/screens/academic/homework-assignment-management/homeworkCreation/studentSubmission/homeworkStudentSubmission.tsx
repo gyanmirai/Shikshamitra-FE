@@ -40,12 +40,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: homeworkSubmissions,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: isSubmissionsLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     refetch: refetchHomeworkSubmissions,
+    isFetching: isfetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkSubmissionsQuery,
@@ -73,74 +71,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
 
-  // Dummy data for students
-  // Dummy data for students
-  const studentData = [
-    {
-      id: '1',
-      rollNumber: '1',
-      grNumber: 'GR0001',
-      studentName: 'Sharma Priya Rajesh',
-      homework: selectedHomework?.value || '',
-      homeworkType: 'Written Assignment',
-      submissionType: selectedHomework?.submissionType || 'online_text',
-      submissionDate: '20-05-2025',
-      dueDate: '25-05-2025',
-      marks: 45,
-      totalMarks: 50,
-      feedback: 'Excellent analysis!',
-      remarks: 'Well done on the assignment.',
-      status: ScheduleExamStatus.Reviewed,
-    },
-    {
-      id: '2',
-      rollNumber: '2',
-      grNumber: 'GR0002',
-      studentName: 'Kumar Arjun Dinesh',
-      homework: selectedHomework?.value || '',
-      homeworkType: 'Written Assignment',
-      submissionType: selectedHomework?.submissionType || 'online_text',
-      submissionDate: '21-05-2025',
-      dueDate: '25-05-2025',
-      marks: 28,
-      totalMarks: 30,
-      feedback: 'Great understanding of concepts',
-      remarks: 'Keep up the good work.',
-      status: ScheduleExamStatus.Reviewed,
-    },
-    {
-      id: '3',
-      rollNumber: '3',
-      grNumber: 'GR0003',
-      studentName: 'Gupta Ananya Suresh',
-      homework: selectedHomework?.value || '',
-      homeworkType: 'Written Assignment',
-      submissionType: selectedHomework?.submissionType || 'online_text',
-      submissionDate: '23-05-2025',
-      dueDate: '25-05-2025',
-      marks: 0,
-      totalMarks: 40,
-      feedback: '',
-      remarks: '',
-      status: ScheduleExamStatus['Needs Review'],
-    },
-    {
-      id: '4',
-      rollNumber: '4',
-      grNumber: 'GR0004',
-      studentName: 'Singh Rohan Vikram',
-      homework: selectedHomework?.value || '',
-      homeworkType: 'Written Assignment',
-      submissionType: selectedHomework?.submissionType || 'online_text',
-      submissionDate: '24-05-2025',
-      dueDate: '25-05-2025',
-      marks: 24,
-      totalMarks: 25,
-      feedback: 'Excellent analysis!',
-      remarks: 'Well done on the assignment.',
-      status: ScheduleExamStatus.Reviewed,
-    },
-  ];
+  const studentData = homeworkSubmissions?.data || [];
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -408,6 +339,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           },
         ]}
+        isLoading={isSubmissionsLoading || isfetching}
         data={studentData}
       />
 

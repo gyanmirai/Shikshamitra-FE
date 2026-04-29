@@ -84,7 +84,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       StandardId: selectedClassData?.id,
       DivisionId: selectedDivisionData?.id,
       SubjectId: subject,
-      AssignmentDate: date?.toISOString(),
+      AssignmentDate: date?.isValid() ? date.toISOString() : undefined,
     },
     options: {
       skip: !(medium as Medium)?.id || !classes || !division || !subject,
@@ -342,7 +342,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
                 SubjectId: subject,
-                AssignmentDate: date?.toISOString(),
+                AssignmentDate: date?.isValid() ? date.toISOString() : undefined,
               };
 
               confirmWithUndo({

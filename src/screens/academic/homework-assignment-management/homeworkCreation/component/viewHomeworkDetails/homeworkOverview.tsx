@@ -12,7 +12,6 @@ import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
-import TeacherHoverProfile from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/TeacherHoverProfile';
 import {
   Box,
   Grid,
@@ -20,20 +19,39 @@ import {
   Badge,
   Button,
   Avatar,
-  ListItem,
+  Divider,
   Typography,
   CardContent,
-  ListItemText,
-  ListItemAvatar,
 } from '@mui/material';
+import TeacherHoverProfile from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/TeacherHoverProfile';
 
 import type { IHomework } from '../../type';
 
 const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
+
+  const { createdAt } = homework as any;
+  const publishDate =
+    homework?.divisionMeta?.publishDate ||
+    (homework?.divisionMeta as any)?.publishAt ||
+    (homework as any).divisionSchedules?.[0]?.publishAt;
+  const dueDate =
+    homework?.divisionMeta?.dueDate ||
+    (homework?.divisionMeta as any)?.dueAt ||
+    (homework as any).divisionSchedules?.[0]?.dueAt;
+
+  const formatDate = (date: any) => (date ? dayjs(date).format('DD MMM YYYY') : 'N/A');
+  const formatTime = (date: any) => (date ? dayjs(date).format('hh:mm A') : '');
+
+  const timelineItems = [
+    { label: 'Created', date: createdAt, color: 'text.disabled', variant: 'outlined' as const },
+    { label: 'Published', date: publishDate, color: 'success.main', variant: 'filled' as const },
+    { label: 'Due', date: dueDate, color: 'warning.main', variant: 'filled' as const },
+  ];
+
   return (
-    <Box sx={{ height: '100%' }}>
-      <Grid container spacing={2}>
+    <Box sx={{ height: '100%', m: 1 }}>
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Card
             sx={{
@@ -44,213 +62,177 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
               overflow: 'hidden',
             }}
           >
-            <CardContent sx={{ p: 2 }}>
-              {/* Main Info Row */}
+            <CardContent sx={{ p: 2.5 }}>
+              {/* Title + Status */}
               <Box
                 sx={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'flex-start',
+                  alignItems: 'center',
+                  mb: 2,
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                  {/* assignment Type */}
-                  <Box
+                <Typography variant="subtitle1" fontWeight={700}>
+                  {homework?.title}
+                </Typography>
+                <Label
+                  variant="soft"
+                  color={
+                    PublishUnpublishStatusTypeColors[
+                      homework?.status as PublishUnpublishStatusType
+                    ] as LabelColor
+                  }
+                >
+                  {
+                    PublishUnpublishStatusType[
+                      homework?.status as PublishUnpublishStatusType
+                    ] as string
+                  }
+                </Label>
+              </Box>
+
+              {/* Description */}
+              <Box sx={{ mb: 2.5 }}>
+                <Typography
+                  variant="overline"
+                  sx={{ color: 'text.secondary', letterSpacing: 1.5, display: 'block', mb: 1 }}
+                >
+                  Description
+                </Typography>
+                <Box
+                  sx={{
+                    borderLeft: '3px solid',
+                    borderColor: 'primary.main',
+                    pl: 1.5,
+                    py: 0.5,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    component="div"
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      width: '100%',
-                      gap: 2,
+                      textAlign: 'justify',
+                      lineHeight: 1.7,
+                      display: '-webkit-box',
+                      WebkitLineClamp: showFullDescription ? 'unset' : 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      '& p': { margin: 0 },
+                      '& ul, & ol': { paddingLeft: 2 },
                     }}
-                  >
-                    {/* Homework Type */}
-                    <Typography variant="subtitle1" component="span">
-                      {homework?.title}
-                    </Typography>
-
-                    {/* Status Label from divisionMeta */}
-                    <Label
-                      variant="soft"
-                      color={
-                        PublishUnpublishStatusTypeColors[
-                          homework?.divisionMeta?.status as PublishUnpublishStatusType
-                        ] as LabelColor
-                      }
-                    >
-                      {
-                        PublishUnpublishStatusType[
-                          homework?.divisionMeta?.status as PublishUnpublishStatusType
-                        ] as string
-                      }
-                    </Label>
-                  </Box>
-
-                  {/* Description */}
-                  <Box sx={{ mb: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}
-                    >
-                      Description :
-                    </Typography>
-
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        color="text.primary"
-                        component="div"
-                        sx={{
-                          textAlign: 'justify',
-                          lineHeight: 1.6,
-                          display: '-webkit-box',
-                          WebkitLineClamp: showFullDescription ? 'unset' : 3,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          '& p': { margin: 0 },
-                          '& ul, & ol': { paddingLeft: 2 },
-                        }}
-                        // eslint-disable-next-line react/no-danger
-                        dangerouslySetInnerHTML={{ __html: homework?.description || '' }}
-                      />
-
-                      {homework?.description && homework.description.length > 150 && (
-                        <Button
-                          onClick={() => setShowFullDescription(!showFullDescription)}
-                          sx={{
-                            color: 'primary.main',
-                            p: 0,
-                            '&:hover': {
-                              background: 'none',
-                            },
-                          }}
-                        >
-                          {showFullDescription ? 'Show Less' : 'Show More'}
-                        </Button>
-                      )}
-                    </Box>
-                  </Box>
-
-                  {/* Type & Submit Via */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        backgroundColor: 'background.neutral',
-                        borderRadius: 1,
-                        px: 1.5,
-                        py: 0.75,
-                      }}
-                    >
-                      <Iconify
-                        icon="mdi:notebook-edit"
-                        sx={{ color: 'text.secondary', width: 20, height: 20, mr: 0.5 }}
-                      />
-                      <Typography
-                        variant="body2"
-                        component="span"
-                        sx={{ fontWeight: 600, color: 'text.secondary' }}
-                      >
-                        Type :
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {(homework as any).homeworkTypeName || homework.homeworkType || 'N/A'}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        backgroundColor: 'background.neutral',
-                        borderRadius: 1,
-                        px: 1.5,
-                        py: 0.75,
-                      }}
-                    >
-                      <Iconify
-                        icon={GlobalIcons.submit}
-                        sx={{ color: 'text.secondary', width: 20, height: 20, mr: 0.5 }}
-                      />
-                      <Typography
-                        variant="body2"
-                        component="span"
-                        sx={{ fontWeight: 600, color: 'text.secondary' }}
-                      >
-                        Submit Via :
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {SubmissionType[homework?.submissionType]}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Document */}
-                  <Box>
-                    <Typography
-                      variant="body1"
-                      gutterBottom
-                      sx={{ display: 'flex', alignItems: 'center' }}
-                    >
-                      <Iconify
-                        icon={GlobalIcons.documentIcon}
-                        sx={{ mr: 1, height: '22px', width: '22px' }}
-                      />
-                      Document
-                    </Typography>
-
-                    <Box>
-                      {(() => {
-                        // API returns either attachment (string) or attachments (array)
-                        const singleAttachment = (homework as any).attachment;
-                        const attachmentsArray = (homework as any).attachments;
-
-                        if (Array.isArray(attachmentsArray) && attachmentsArray.length > 0) {
-                          return attachmentsArray.map((att: any, idx: number) => (
-                            <DocumentCard
-                              key={att.id || idx}
-                              file={{
-                                path: att.filePath || att.url || '',
-                                relativePath: att.filePath || att.url || '',
-                                name: att.fileName || att.name || `Document ${idx + 1}`,
-                                size: att.fileSize
-                                  ? `${(att.fileSize / (1024 * 1024)).toFixed(1)} MB`
-                                  : '',
-                                uploadDate: att.createdAt || '',
-                                type: att.fileType || att.type || 'file',
-                                url: att.filePath || att.url || '',
-                              }}
-                            />
-                          ));
-                        }
-                        if (singleAttachment && typeof singleAttachment === 'string') {
-                          const fileName = singleAttachment.split('/').pop() || 'Attachment';
-                          return (
-                            <DocumentCard
-                              file={{
-                                path: singleAttachment,
-                                relativePath: singleAttachment,
-                                name: fileName,
-                                size: '',
-                                uploadDate: '',
-                                type: fileName.split('.').pop() || 'file',
-                                url: singleAttachment,
-                              }}
-                            />
-                          );
-                        }
-                        return (
-                          <Typography variant="body2" color="text.secondary">
-                            No documents attached.
-                          </Typography>
-                        );
-                      })()}
-                    </Box>
-                  </Box>
+                    // eslint-disable-next-line react/no-danger
+                    dangerouslySetInnerHTML={{ __html: homework?.description || '' }}
+                  />
                 </Box>
+                {homework?.description && homework.description.length > 150 && (
+                  <Button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    sx={{ p: 0, mt: 0.5, color: 'primary.main', '&:hover': { background: 'none' } }}
+                  >
+                    {showFullDescription ? 'Show less' : 'Show more'}
+                  </Button>
+                )}
+              </Box>
+
+              {/* Type & Submit Via chips */}
+              <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5, flexWrap: 'wrap' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 6,
+                    bgcolor: 'background.neutral',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Iconify
+                    icon="mdi:notebook-edit"
+                    sx={{ color: 'text.secondary', width: 16, height: 16 }}
+                  />
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {(homework as any).homeworkTypeName || homework.homeworkType || 'N/A'}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 6,
+                    bgcolor: 'background.neutral',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Iconify
+                    icon={GlobalIcons.submit}
+                    sx={{ color: 'text.secondary', width: 16, height: 16 }}
+                  />
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {SubmissionType[homework?.submissionType]}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Document */}
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{ color: 'text.secondary', letterSpacing: 1.5, display: 'block', mb: 1 }}
+                >
+                  Document
+                </Typography>
+                {(() => {
+                  const singleAttachment = (homework as any).attachment;
+                  const attachmentsArray = (homework as any).attachments;
+
+                  if (Array.isArray(attachmentsArray) && attachmentsArray.length > 0) {
+                    return attachmentsArray.map((att: any, idx: number) => (
+                      <DocumentCard
+                        key={att.id || idx}
+                        file={{
+                          path: att.filePath || att.url || '',
+                          relativePath: att.filePath || att.url || '',
+                          name: att.fileName || att.name || `Document ${idx + 1}`,
+                          size: att.fileSize
+                            ? `${(att.fileSize / (1024 * 1024)).toFixed(1)} MB`
+                            : '',
+                          uploadDate: att.createdAt || '',
+                          type: att.fileType || att.type || 'file',
+                          url: att.filePath || att.url || '',
+                        }}
+                      />
+                    ));
+                  }
+                  if (singleAttachment && typeof singleAttachment === 'string') {
+                    const fileName = singleAttachment.split('/').pop() || 'Attachment';
+                    return (
+                      <DocumentCard
+                        file={{
+                          path: singleAttachment,
+                          relativePath: singleAttachment,
+                          name: fileName,
+                          size: '',
+                          uploadDate: '',
+                          type: fileName.split('.').pop() || 'file',
+                          url: singleAttachment,
+                        }}
+                      />
+                    );
+                  }
+                  return (
+                    <Typography variant="body2" color="text.secondary">
+                      No documents attached.
+                    </Typography>
+                  );
+                })()}
               </Box>
             </CardContent>
           </Card>
@@ -266,178 +248,164 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
             }}
           >
             <Scrollbar sx={{ height: '100%' }}>
-              <CardContent sx={{ p: 2 }}>
-                {/* Timeline & Created By */}
+              <CardContent sx={{ p: 2.5 }}>
+                {/* Timeline */}
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="overline"
+                    sx={{ color: 'text.secondary', letterSpacing: 1.5, display: 'block', mb: 2 }}
+                  >
                     Timeline
                   </Typography>
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    {/* Created At */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi:calendar-plus" sx={{ color: 'text.secondary' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Created On
-                        </Typography>
-                        <Typography variant="body2">
-                          {(homework as any).createdAt
-                            ? dayjs((homework as any).createdAt).format('DD MMM YYYY, hh:mm A')
-                            : 'N/A'}
-                        </Typography>
-                      </Box>
-                    </Box>
+                  <Box sx={{ position: 'relative', pl: 3 }}>
+                    {/* Connecting line */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        left: 5,
+                        top: 8,
+                        bottom: 8,
+                        width: 2,
+                        bgcolor: 'text.disabled',
+                        opacity: 0.3,
+                        zIndex: 0,
+                      }}
+                    />
 
-                    {/* Publish Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi:calendar-clock" sx={{ color: 'text.secondary' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Published On
+                    {timelineItems.map((item, idx) => (
+                      <Box
+                        key={item.label}
+                        sx={{ position: 'relative', mb: idx < timelineItems.length - 1 ? 2.5 : 0 }}
+                      >
+                        {/* Dot */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: -22,
+                            top: 4,
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            zIndex: 1,
+                            ...(item.variant === 'outlined'
+                              ? {
+                                  border: '2px solid',
+                                  borderColor: 'text.disabled',
+                                  bgcolor: 'background.paper',
+                                }
+                              : {
+                                  bgcolor: item.color,
+                                }),
+                          }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'text.secondary',
+                            textTransform: 'uppercase',
+                            letterSpacing: 1,
+                            fontWeight: 600,
+                            display: 'block',
+                          }}
+                        >
+                          {item.label}
                         </Typography>
-                        <Typography variant="body2">
-                          {homework?.divisionMeta?.publishDate ||
-                          (homework?.divisionMeta as any)?.publishAt ||
-                          (homework as any).divisionSchedules?.[0]?.publishAt
-                            ? dayjs(
-                                homework?.divisionMeta?.publishDate ||
-                                  (homework?.divisionMeta as any)?.publishAt ||
-                                  (homework as any).divisionSchedules?.[0]?.publishAt
-                              ).format('DD MMM YYYY, hh:mm A')
-                            : 'N/A'}
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                          {formatDate(item.date)}
                         </Typography>
+                        {item.date && (
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            {formatTime(item.date)}
+                          </Typography>
+                        )}
                       </Box>
-                    </Box>
-
-                    {/* Due Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi:calendar-check" sx={{ color: 'text.secondary' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Due On
-                        </Typography>
-                        <Typography variant="body2">
-                          {homework?.divisionMeta?.dueDate ||
-                          (homework?.divisionMeta as any)?.dueAt ||
-                          (homework as any).divisionSchedules?.[0]?.dueAt
-                            ? dayjs(
-                                homework?.divisionMeta?.dueDate ||
-                                  (homework?.divisionMeta as any)?.dueAt ||
-                                  (homework as any).divisionSchedules?.[0]?.dueAt
-                              ).format('DD MMM YYYY, hh:mm A')
-                            : 'N/A'}
-                        </Typography>
-                      </Box>
-                    </Box>
+                    ))}
                   </Box>
                 </Box>
 
+                <Divider sx={{ mb: 2.5 }} />
+
                 {/* Created By */}
                 <Box>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="overline"
+                    sx={{ color: 'text.secondary', letterSpacing: 1.5, display: 'block', mb: 1.5 }}
+                  >
                     Created By
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {typeof homework?.createdBy === 'string' ? (
-                      // API returns createdBy as a plain string (e.g. "admin")
-                      <ListItem
-                        sx={{
-                          borderRadius: '8px',
-                          p: 1,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          boxShadow: 3,
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Avatar sx={{ width: 36, height: 36 }}>
-                            {(homework.createdBy as unknown as string)?.[0]?.toUpperCase()}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2">
-                              {homework.createdBy as unknown as string}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                    ) : (
-                      <ListItem
-                        sx={{
-                          borderRadius: '8px',
-                          p: 1,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          boxShadow: 3,
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <TeacherHoverProfile
-                            avatarComp={
-                              <Badge
-                                key={homework?.createdBy?.status}
-                                overlap="circular"
-                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                badgeContent={
-                                  <Box
-                                    sx={{
-                                      width: 12,
-                                      height: 12,
-                                      borderRadius: '50%',
-                                      border: '2px solid #fff',
-                                      bgcolor:
-                                        homework?.createdBy?.status === 'Active'
-                                          ? 'success.main'
-                                          : homework?.createdBy?.status === 'Inactive'
-                                            ? 'warning.main'
-                                            : homework?.createdBy?.status === 'Left'
-                                              ? 'error.main'
-                                              : homework?.createdBy?.status === 'Retired'
-                                                ? 'grey.500'
-                                                : 'grey.300',
-                                    }}
-                                  />
-                                }
-                              >
-                                <Avatar
-                                  src={homework.createdBy.fullName}
-                                  alt={homework.createdBy.fullName}
-                                  sx={{ width: 36, height: 36, cursor: 'pointer' }}
-                                />
-                              </Badge>
+                  {typeof homework?.createdBy === 'string' ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Avatar sx={{ width: 36, height: 36 }}>
+                        {(homework.createdBy as unknown as string)?.[0]?.toUpperCase()}
+                      </Avatar>
+                      <Typography variant="body2" fontWeight={600}>
+                        {homework.createdBy as unknown as string}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <TeacherHoverProfile
+                        avatarComp={
+                          <Badge
+                            key={homework?.createdBy?.status}
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                              <Box
+                                sx={{
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: '50%',
+                                  border: '2px solid',
+                                  borderColor: 'background.paper',
+                                  bgcolor:
+                                    homework?.createdBy?.status === 'Active'
+                                      ? 'success.main'
+                                      : homework?.createdBy?.status === 'Inactive'
+                                        ? 'warning.main'
+                                        : homework?.createdBy?.status === 'Left'
+                                          ? 'error.main'
+                                          : homework?.createdBy?.status === 'Retired'
+                                            ? 'grey.500'
+                                            : 'grey.300',
+                                }}
+                              />
                             }
-                            teacher={{
-                              name: homework?.createdBy?.fullName,
-                              avatarUrl: homework?.createdBy?.avatarUrl,
-                              designation: homework?.createdBy?.designation,
-                              department: homework?.createdBy?.department,
-                              class: homework?.createdBy?.class,
-                              status: homework?.createdBy?.status,
-                              division: homework?.createdBy?.division,
-                              dailyStatus: homework?.createdBy?.dailyStatus,
-                              email: homework?.createdBy?.email,
-                              experience: homework?.createdBy?.experience,
-                              qualification: homework?.createdBy?.qualification,
-                            }}
-                          />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ mb: -1 }}>
-                              {homework?.createdBy?.fullName}
-                            </Typography>
-                          }
-                          secondary={
-                            <Typography variant="caption" color="text.secondary">
-                              {homework?.createdBy?.department}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                    )}
-                  </Box>
+                          >
+                            <Avatar
+                              src={homework.createdBy.avatarUrl}
+                              alt={homework.createdBy.fullName}
+                              sx={{ width: 36, height: 36, cursor: 'pointer' }}
+                            />
+                          </Badge>
+                        }
+                        teacher={{
+                          name: homework?.createdBy?.fullName,
+                          avatarUrl: homework?.createdBy?.avatarUrl,
+                          designation: homework?.createdBy?.designation,
+                          department: homework?.createdBy?.department,
+                          class: homework?.createdBy?.class,
+                          status: homework?.createdBy?.status,
+                          division: homework?.createdBy?.division,
+                          dailyStatus: homework?.createdBy?.dailyStatus,
+                          email: homework?.createdBy?.email,
+                          experience: homework?.createdBy?.experience,
+                          qualification: homework?.createdBy?.qualification,
+                        }}
+                      />
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>
+                          {homework?.createdBy?.fullName}
+                        </Typography>
+                        {homework?.createdBy?.department && (
+                          <Typography variant="caption" color="text.secondary">
+                            {homework?.createdBy?.department}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  )}
                 </Box>
               </CardContent>
             </Scrollbar>

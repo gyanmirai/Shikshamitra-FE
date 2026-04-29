@@ -135,7 +135,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       StandardId: selectedClassData?.id,
       DivisionId: selectedDivisionData?.id,
       SubjectId: subject,
-      HomeworkDate: date?.toISOString(),
+      HomeworkDate: date?.isValid() ? date.toISOString() : undefined,
     },
     options: {
       skip: !(medium as Medium)?.id || !classes || !division || !subject,
@@ -389,7 +389,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
                 SubjectId: subject,
-                HomeworkDate: date?.toISOString(),
+                HomeworkDate: date?.isValid() ? date.toISOString() : undefined,
               };
 
               confirmWithUndo({
