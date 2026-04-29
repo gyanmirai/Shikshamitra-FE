@@ -2,7 +2,6 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
@@ -24,6 +23,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
+  EmployeeLeaveStatusType,
+  EmployeeLeaveStatusOptions,
+} from 'src/enums/employee-leave-status';
+import {
   Box,
   Card,
   Button,
@@ -38,16 +41,16 @@ import {
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
-import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusOptions,
-  EmployeeLeaveStatusTypeColor,
-} from 'src/enums/employee-leave-status';
 
 import { LeaveRequestForm } from './leave-calender';
+import { getLeaveStatusColor, getLeaveStatusLabel } from './leave-status.utils';
 
-const LeaveApprovals = () => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+type LeaveApprovalsProps = {
+  showBreadcrumbs?: boolean;
+};
+
+const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
   const { data, isLoading } = useQueryAndMutation({
@@ -111,13 +114,18 @@ const LeaveApprovals = () => {
 
         return {
           id: item.id,
-          name: item.name,
-          employeeIdentifier: item.employeeIdentifier,
+          name: item.name || item.employeeName,
+          employeeIdentifier: item.employeeIdentifier || item.employeeCode,
           leaveType: item.leaveType,
           startDate: start.format('DD-MM-YYYY'),
           endDate: end.format('DD-MM-YYYY'),
           totalDays: item.totalDays,
-          organization: item.mediumStageName,
+          organization:
+            item.mediumStageName ||
+            currentMedium?.educationMediumStages?.find(
+              (org: any) => String(org?.id ?? '') === String(item?.mediumStageId ?? '')
+            )?.name ||
+            '-',
           description: item.description,
           remarks: item.remarks,
           status: item.status,
@@ -125,7 +133,7 @@ const LeaveApprovals = () => {
       }) || [];
 
     return apiData;
-  }, [data]);
+  }, [currentMedium?.educationMediumStages, data]);
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -202,11 +210,7 @@ const LeaveApprovals = () => {
         sticky: true,
         minWidth: '100px',
         render(value) {
-          const color = EmployeeLeaveStatusTypeColor[
-            value as EmployeeLeaveStatusType
-          ] as LabelColor;
-
-          return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
+          return <Label color={getLeaveStatusColor(value)}>{getLeaveStatusLabel(value)}</Label>;
         },
       },
       {
@@ -225,15 +229,17 @@ const LeaveApprovals = () => {
 
   return (
     <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
-        heading="Leave Approvals"
-        links={[
-          { name: 'HR/Staff', href: '/hr/dashboard/' },
-          { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
-          { name: 'Leave Approvals' },
-        ]}
-        description="Review and approve or reject employee leave requests."
-      />
+      {showBreadcrumbs && (
+        <CustomBreadcrumbs
+          heading="Leave Approvals"
+          links={[
+            { name: 'HR/Staff', href: '/hr/dashboard/' },
+            { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
+            { name: 'Leave Approvals' },
+          ]}
+          description="Review and approve or reject employee leave requests."
+        />
+      )}
       <Card
         sx={{
           display: 'flex',

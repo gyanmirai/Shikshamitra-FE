@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
+
+import { normalizeLeaveStatus } from './leave-status.utils';
 
 // will add type tommorrow working on it
 const leaveValidationSchema = (editData: any) =>
@@ -34,7 +35,7 @@ const leaveValidationSchema = (editData: any) =>
       // eslint-disable-next-line func-names
       function (value) {
         const { status } = this.parent;
-        if (editData && status === EmployeeLeaveStatusType.Rejected) {
+        if (editData && normalizeLeaveStatus(status) === 'REJECTED') {
           return !!value || this.createError({ message: 'Rejection reason is required' });
         }
         return true;

@@ -1,6 +1,5 @@
-import React from 'react';
-import LeaveBalance from 'src/screens/hr/leave-balance/leave-balance';
+import { redirect } from 'next/navigation';
 
-const page = () => <LeaveBalance />;
+const page = () => redirect('/hr/leave-center?tab=balance');
 
 export default page;

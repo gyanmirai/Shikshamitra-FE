@@ -6,7 +6,7 @@ export interface LeaveRequestType {
   halfDay: boolean;
   startDate: string;
   endDate: string;
-  status: number;
+  status: string | number;
   description: string;
   rejectionReason: string;
   isDeleted: boolean;

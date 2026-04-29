@@ -20,7 +20,6 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
-import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
@@ -30,8 +29,10 @@ import {
   useCreateLeaveRequestMutation,
   useRejectLeaveRequestMutation,
   useApproveLeaveRequestMutation,
+  useCreateMyLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
 
+import { normalizeLeaveStatus } from './leave-status.utils';
 import {
   SELF_OPTION,
   isAdminFromProfile,
@@ -59,6 +60,7 @@ export const CALENDAR_COLOR_OPTIONS = [
 ];
 type AddLeaveRequestProps = {
   editData?: any;
+  mode?: 'hr' | 'self';
   handleClose?: (e: any, isSubmit: boolean) => void;
 };
 
@@ -69,7 +71,7 @@ interface FormValues {
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   reason: string;
-  status?: number;
+  status?: string | number;
   rejectionReason: string;
   docs: unknown;
 }
@@ -79,7 +81,8 @@ const leavePolicyOptionsCacheByAcademicYear: Record<string, any[]> = {};
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
-  const { editData, handleClose } = props;
+  const { editData, handleClose, mode = 'hr' } = props;
+  const isSelfMode = mode === 'self';
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeQuery,
@@ -88,7 +91,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Mutation hook for adding new leave request
   const [addLeave, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useCreateLeaveRequestMutation,
+    currentQueryAndMutation: isSelfMode
+      ? useCreateMyLeaveRequestMutation
+      : useCreateLeaveRequestMutation,
   });
 
   // Mutation hooks for approving / rejecting an existing leave request
@@ -113,6 +118,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
   const { data: session } = useSession();
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
+  const shouldUseAdminSelectionRules = isAdminUser && !isSelfMode;
 
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<any[]>([]);
   const [leavePolicyOptions, setLeavePolicyOptions] = useState<any[]>([]);
@@ -139,7 +145,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     initialValues: {
       employee: editData?.employeeId
         ? { id: editData.employeeId, label: editData.employeeName || '' }
-        : isAdminUser
+        : shouldUseAdminSelectionRules
           ? null
           : SELF_OPTION,
       leavePolicyId: editData?.leavePolicyId || '',
@@ -182,7 +188,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         .required('Reason for leave is required'),
       status: Yup.string().nullable(),
       rejectionReason: Yup.string().when('status', {
-        is: EmployeeLeaveStatusType.Rejected,
+        is: (status: unknown) => normalizeLeaveStatus(status) === 'REJECTED',
         then: (schema) => schema.required('Rejection reason is required'),
         otherwise: (schema) => schema.nullable(),
       }),
@@ -193,7 +199,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
         if (editData) {
           // --- Update flow: approve or reject the existing leave request ---
-          if (formValues.status === EmployeeLeaveStatusType.Rejected) {
+          if (normalizeLeaveStatus(formValues.status) === 'REJECTED') {
             await rejectLeave({
               id: editData.id,
               body: { rejectionReason: formValues.rejectionReason },
@@ -206,7 +212,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           if (
             !isEmployeeSelectionValidForCreate(
               formValues.employee as EmployeeOption | null,
-              isAdminUser
+              shouldUseAdminSelectionRules
             )
           ) {
             setFieldError('employee', 'Please select an employee to create leave.');
@@ -284,17 +290,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       return currentYear?.id as string | undefined;
     }
 
-    const isWithinCurrentAcademicYear = isDateWithinAcademicYear(
-      values.startDate,
-      currentYear as any
-    );
+    if (!values.startDate) {
+      return currentYear.id;
+    }
+
     const resolvedAcademicYearId = resolveAcademicYearIdForLeaveDate(
       values.startDate,
       yearsData?.items || [],
-      isWithinCurrentAcademicYear ? currentYear.id : undefined
+      currentYear.id
     );
 
-    return resolvedAcademicYearId;
+    return resolvedAcademicYearId || currentYear.id;
   }, [currentYear, editData, values.startDate, yearsData?.items]);
 
   useEffect(() => {
@@ -370,42 +376,44 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       <DialogScrollContent>
         <BackPopUpChecked initialValues={initialValues} currentValues={values}>
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!touched.employee && !!errors.employee}>
-                <PaginatedSearchSelect
-                  label="Employee *"
-                  fetchOptions={async (query, page) => {
-                    if (page > 1) return { data: [], hasMore: false };
-                    const res = await getEmployees({ search: query }).unwrap();
-                    const items: EmployeeOption[] = (
-                      Array.isArray(res) ? res : res?.items || []
-                    ).map((item: any) => ({
-                      label: item.fullName,
-                      id: item.id,
-                    }));
-                    return {
-                      data: buildEmployeeSelectOptions(items, isAdminUser),
-                      hasMore: false,
-                    };
-                  }}
-                  value={values.employee}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  renderOption={(prop, option: any) => (
-                    <li {...prop} key={option.id}>
-                      {option.label}
-                    </li>
-                  )}
-                  getOptionLabel={(option: any) => option?.label || ''}
-                  minChars={0}
-                  onChange={(_, value) => setFieldValue('employee', value)}
-                  debounceMs={400}
-                  error={!!touched.employee && !!errors.employee}
-                  helperText={(touched.employee && (errors.employee as string)) || ''}
-                  disabled={!!editData}
-                  size="small"
-                />
-              </ShakingTextField>
-            </Grid>
+            {!isSelfMode && (
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField error={!!touched.employee && !!errors.employee}>
+                  <PaginatedSearchSelect
+                    label="Employee *"
+                    fetchOptions={async (query, page) => {
+                      if (page > 1) return { data: [], hasMore: false };
+                      const res = await getEmployees({ search: query }).unwrap();
+                      const items: EmployeeOption[] = (
+                        Array.isArray(res) ? res : res?.items || []
+                      ).map((item: any) => ({
+                        label: item.fullName,
+                        id: item.id,
+                      }));
+                      return {
+                        data: buildEmployeeSelectOptions(items, shouldUseAdminSelectionRules),
+                        hasMore: false,
+                      };
+                    }}
+                    value={values.employee}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    renderOption={(prop, option: any) => (
+                      <li {...prop} key={option.id}>
+                        {option.label}
+                      </li>
+                    )}
+                    getOptionLabel={(option: any) => option?.label || ''}
+                    minChars={0}
+                    onChange={(_, value) => setFieldValue('employee', value)}
+                    debounceMs={400}
+                    error={!!touched.employee && !!errors.employee}
+                    helperText={(touched.employee && (errors.employee as string)) || ''}
+                    disabled={!!editData}
+                    size="small"
+                  />
+                </ShakingTextField>
+              </Grid>
+            )}
 
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!touched.leavePolicyId && !!errors.leavePolicyId}>
@@ -675,7 +683,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           </LoadingButton>
         )}
 
-        {editData && values.status !== EmployeeLeaveStatusType.Approved && (
+        {editData && normalizeLeaveStatus(values.status) !== 'APPROVED' && (
           <LoadingButton
             loading={isSubmitting || isApproveLoading || isRejectLoading}
             onClick={(e: any) => {
@@ -685,7 +693,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             disabled={isSubmitting || isApproveLoading || isRejectLoading}
             size="small"
           >
-            {values.status === EmployeeLeaveStatusType.Rejected ? 'Approve' : 'Update Status'}
+            {normalizeLeaveStatus(values.status) === 'REJECTED' ? 'Approve' : 'Update Status'}
           </LoadingButton>
         )}
       </DialogActions>

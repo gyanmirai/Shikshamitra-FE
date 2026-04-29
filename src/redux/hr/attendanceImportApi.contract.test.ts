@@ -9,8 +9,8 @@ describe('attendance import enums', () => {
   it('matches backend numeric status values', () => {
     expect(AttendanceImportBatchStatus.Preview).toBe(1);
     expect(AttendanceImportBatchStatus.Confirmed).toBe(2);
-    expect(AttendanceImportBatchStatus.BatchLocked).toBe(3);
-    expect(AttendanceImportBatchStatus.PayrollLocked).toBe(4);
+    expect(AttendanceImportBatchStatus['Batch Locked']).toBe(3);
+    expect(AttendanceImportBatchStatus['Payroll Locked']).toBe(4);
   });
 
   it('uses numeric run source values', () => {

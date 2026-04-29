@@ -5,10 +5,15 @@ import { employeeApi } from '../hr/employeeApi';
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getRunPayrollPreview: builder.query({
-      query: ({ month }) => ({
+      query: ({ month, page, pageSize, forceRefresh }) => ({
         url: '/payroll/run',
         method: 'GET',
-        params: { month },
+        params: {
+          month,
+          ...(page !== undefined ? { page } : {}),
+          ...(pageSize !== undefined ? { pageSize } : {}),
+          ...(forceRefresh !== undefined ? { forceRefresh } : {}),
+        },
       }),
       providesTags: [employeeType.runPayroll],
     }),
@@ -17,6 +22,24 @@ export const runPayrollApi = employeeApi.injectEndpoints({
       query: ({ month, employeeIds }) => ({
         url: `/payroll/run`,
         method: 'POST',
+        body: { month, employeeIds },
+      }),
+      invalidatesTags: [employeeType.runPayroll],
+    }),
+
+    markPayrollReviewed: builder.mutation({
+      query: ({ month, employeeIds }) => ({
+        url: `/payroll/run/reviews`,
+        method: 'POST',
+        body: { month, employeeIds },
+      }),
+      invalidatesTags: [employeeType.runPayroll],
+    }),
+
+    unmarkPayrollReviewed: builder.mutation({
+      query: ({ month, employeeIds }) => ({
+        url: `/payroll/run/reviews`,
+        method: 'DELETE',
         body: { month, employeeIds },
       }),
       invalidatesTags: [employeeType.runPayroll],
@@ -37,6 +60,8 @@ export const {
   useGetRunPayrollPreviewQuery,
   useLazyGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
+  useMarkPayrollReviewedMutation,
+  useUnmarkPayrollReviewedMutation,
   useGetEmployeeSalarySlipQuery,
   useLazyGetEmployeeSalarySlipQuery,
 } = runPayrollApi;

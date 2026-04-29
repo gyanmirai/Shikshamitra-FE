@@ -1,5 +1,4 @@
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
 import type { DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
@@ -13,11 +12,15 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
-import { useGetLeaveRequestByIdQuery, useLazyGetLeaveCalendarQuery } from 'src/redux/hr/leaveApi';
 import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusTypeColor,
-} from 'src/enums/employee-leave-status';
+  getLeaveStatusColor,
+  getLeaveStatusLabel,
+} from 'src/screens/hr/leave-request/leave-status.utils';
+import {
+  useGetLeaveRequestByIdQuery,
+  useLazyGetLeaveCalendarQuery,
+  useGetMyLeaveRequestByIdQuery,
+} from 'src/redux/hr/leaveApi';
 import {
   CALENDAR_MAX_PAGES,
   CALENDAR_PAGE_SIZE,
@@ -283,14 +286,59 @@ const LeaveCalender = () => {
 
 export default LeaveCalender;
 
-export const LeaveRequestForm = ({ editData }: any) => {
-  const { data: leaveDetail, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
+type LeaveDetailHook = (arg: any, options?: any) => any;
+
+type LeaveRequestFormProps = {
+  editData: any;
+  mode?: 'hr' | 'self';
+  hrDetailHook?: LeaveDetailHook;
+  selfDetailHook?: LeaveDetailHook;
+};
+
+export const LeaveRequestForm = ({
+  editData,
+  mode = 'hr',
+  hrDetailHook = useGetLeaveRequestByIdQuery,
+  selfDetailHook = useGetMyLeaveRequestByIdQuery,
+}: LeaveRequestFormProps) => {
+  const isSelfMode = mode === 'self';
+  const { currentMedium, currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data: leaveDetailForHr, isLoading: isHrLeaveDetailLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetLeaveRequestByIdQuery,
+    currentQueryAndMutation: hrDetailHook,
     params: { id: editData?.id },
+    options: { skip: !editData?.id || isSelfMode },
   });
+  const { data: leaveDetailForSelf, isLoading: isSelfLeaveDetailLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: selfDetailHook,
+    params: { id: editData?.id },
+    options: { skip: !editData?.id || !isSelfMode },
+  });
+  const leaveDetail = isSelfMode ? leaveDetailForSelf : leaveDetailForHr;
+  const isLeavePolicyLoading = isSelfMode ? isSelfLeaveDetailLoading : isHrLeaveDetailLoading;
 
   const detail = leaveDetail || editData;
+  const submittedByLabel = detail?.submittedByEmployeeCode
+    ? `${detail?.submittedByName || '-'} (${detail.submittedByEmployeeCode})`
+    : (detail?.submittedByName ?? '-');
+  const organizationFromStore = currentMedium?.educationMediumStages?.find(
+    (org: any) =>
+      String(org?.id ?? '') === String(detail?.mediumStageId ?? editData?.mediumStageId ?? '')
+  )?.name;
+  const academicYearLabel =
+    detail?.academicYearName ||
+    detail?.academicYear?.name ||
+    detail?.academicYear ||
+    editData?.academicYearName ||
+    editData?.academicYear?.name ||
+    detail?.mediumStageName ||
+    detail?.organizationName ||
+    organizationFromStore ||
+    editData?.organization ||
+    editData?.employee?.educationMediumStage?.name ||
+    currentYear?.name ||
+    '-';
 
   return isLeavePolicyLoading ? (
     <TableRow>
@@ -324,13 +372,20 @@ export const LeaveRequestForm = ({ editData }: any) => {
 
         <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            Organization
+            Submitted By
           </Typography>
         </Grid>
         <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.mediumStageName || editData?.employee?.educationMediumStage?.name}
+          <Typography variant="body2">{submittedByLabel}</Typography>
+        </Grid>
+
+        <Grid size={{ xs: 4 }}>
+          <Typography variant="body2" fontWeight={600}>
+            Academic Year
           </Typography>
+        </Grid>
+        <Grid size={{ xs: 8 }}>
+          <Typography variant="body2">{academicYearLabel}</Typography>
         </Grid>
 
         <Grid size={{ xs: 4 }}>
@@ -418,14 +473,8 @@ export const LeaveRequestForm = ({ editData }: any) => {
           </Typography>
         </Grid>
         <Grid size={{ xs: 8 }}>
-          <Label
-            color={
-              EmployeeLeaveStatusTypeColor[
-                (detail?.status ?? editData?.status) as EmployeeLeaveStatusType
-              ] as LabelColor
-            }
-          >
-            {EmployeeLeaveStatusType[detail?.status ?? editData?.status]}
+          <Label color={getLeaveStatusColor(detail?.status ?? editData?.status)}>
+            {getLeaveStatusLabel(detail?.status ?? editData?.status)}
           </Label>
         </Grid>
 

@@ -113,6 +113,32 @@ export const leaveApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.employee],
     }),
+    getMyLeaveRequests: builder.query({
+      query: ({
+        academicYearId,
+        'month-year': monthYear,
+        page = 1,
+        pageSize = 20,
+        search,
+        status,
+        leavePolicyId,
+        leaveTypeMasterId,
+      }) => ({
+        url: '/leave-management/my',
+        method: 'GET',
+        params: {
+          academicYearId,
+          ...(monthYear != null && monthYear !== '' ? { 'month-year': monthYear } : {}),
+          page,
+          pageSize,
+          search,
+          status,
+          leavePolicyId,
+          leaveTypeMasterId,
+        },
+      }),
+      providesTags: [employeeType.employee],
+    }),
     getLeaveCalendar: builder.query({
       query: ({
         academicYearId,
@@ -150,6 +176,15 @@ export const leaveApi = api.injectEndpoints({
       }),
       invalidatesTags: [employeeType.employee],
     }),
+    createMyLeaveRequest: builder.mutation({
+      query: ({ academicYearId, body }) => ({
+        url: '/leave-management/my',
+        method: 'POST',
+        params: { academicYearId },
+        body,
+      }),
+      invalidatesTags: [employeeType.employee],
+    }),
     getLeaveRequestById: builder.query({
       query: ({ id }) => ({
         url: `/leave-management/${id}`,
@@ -157,9 +192,23 @@ export const leaveApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.employee],
     }),
+    getMyLeaveRequestById: builder.query({
+      query: ({ id }) => ({
+        url: `/leave-management/my/${id}`,
+        method: 'GET',
+      }),
+      providesTags: [employeeType.employee],
+    }),
     cancelLeaveRequest: builder.mutation({
       query: (id) => ({
         url: `/leave-management/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [employeeType.employee],
+    }),
+    cancelMyLeaveRequest: builder.mutation({
+      query: (id) => ({
+        url: `/leave-management/my/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: [employeeType.employee],
@@ -190,6 +239,14 @@ export const leaveApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.employee],
     }),
+    getSelfLeaveBalance: builder.query({
+      query: ({ academicYearId }) => ({
+        url: '/leave-management/my/balances',
+        method: 'GET',
+        params: { academicYearId },
+      }),
+      providesTags: [employeeType.employee],
+    }),
   }),
 });
 
@@ -207,13 +264,19 @@ export const {
   useUpdateLeavePolicyMutation,
   useDeleteLeavePolicyMutation,
   useGetLeaveRequestsQuery,
+  useGetMyLeaveRequestsQuery,
+  useLazyGetMyLeaveRequestsQuery,
   useLazyGetLeaveRequestsQuery,
   useGetLeaveCalendarQuery,
   useLazyGetLeaveCalendarQuery,
   useCreateLeaveRequestMutation,
+  useCreateMyLeaveRequestMutation,
   useGetLeaveRequestByIdQuery,
+  useGetMyLeaveRequestByIdQuery,
   useCancelLeaveRequestMutation,
+  useCancelMyLeaveRequestMutation,
   useApproveLeaveRequestMutation,
   useRejectLeaveRequestMutation,
   useGetMyLeaveBalanceQuery,
+  useGetSelfLeaveBalanceQuery,
 } = leaveApi;

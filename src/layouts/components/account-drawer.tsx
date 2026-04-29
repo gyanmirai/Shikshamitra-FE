@@ -12,6 +12,7 @@ import Drawer from '@mui/material/Drawer';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'src/routes/hooks';
 import { useState, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import HrProfile from 'src/screens/hr/profile';
@@ -47,6 +48,7 @@ export type AccountDrawerProps = IconButtonProps & {
 export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
   const theme = useTheme();
   const profileDialog = useBoolean();
+  const router = useRouter();
 
   // const router = useRouter();
 
@@ -178,17 +180,33 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
               borderBottom: `dashed 1px ${theme.vars.palette.divider}`,
             }}
           >
-            {profile?.role !== 'admin' &&
-              profile?.role !== 'student' &&
+            {profile?.role !== 'student' &&
               [
-                {
-                  label: 'Profile',
-                  icon: <Iconify icon="mdi:user-box" />,
-                  info: null,
-                  onClick: () => {
-                    profileDialog.onTrue();
-                  },
-                },
+                ...(employee?.id
+                  ? [
+                      {
+                        label: 'My Leave',
+                        icon: <Iconify icon="mdi:calendar-account" />,
+                        info: null,
+                        onClick: () => {
+                          handleCloseDrawer();
+                          router.push('/dashboard/my-leave');
+                        },
+                      },
+                    ]
+                  : []),
+                ...(profile?.role !== 'admin'
+                  ? [
+                      {
+                        label: 'Profile',
+                        icon: <Iconify icon="mdi:user-box" />,
+                        info: null,
+                        onClick: () => {
+                          profileDialog.onTrue();
+                        },
+                      },
+                    ]
+                  : []),
               ].map((option) => (
                 // const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
 
