@@ -2,8 +2,8 @@
 
 import type { SelectChangeEvent } from '@mui/material';
 
-import { useSession } from 'next-auth/react';
 import React, { useState, useEffect } from 'react';
+import { useAuthSession } from 'src/hooks/useAuthSession';
 import {
   Box,
   Card,
@@ -22,7 +22,7 @@ import MainDashboardTeacher from './teacher/main-dashboard-teacher';
 import MainDashboardPrincipal from './principal/main-dashboard-principal';
 
 const MainDashboard = () => {
-  const { data: session, status } = useSession() as any;
+  const { data: session, status } = useAuthSession() as any;
   const actualRole = session?.profile?.role?.toLowerCase() || 'admin';
 
   const [selectedRole, setSelectedRole] = useState<string>('');

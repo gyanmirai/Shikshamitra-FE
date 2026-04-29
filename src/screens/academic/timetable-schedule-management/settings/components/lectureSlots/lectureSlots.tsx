@@ -62,12 +62,10 @@ const LectureSlots = () => {
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
-      setTimeout(() => {
-        setIsEdit(false);
-        setDisabled(false);
-        setEditData(null);
-        dispatch(setIsChanges(false));
-      }, 200);
+      setIsEdit(false);
+      setDisabled(false);
+      setEditData(null);
+      dispatch(setIsChanges(false));
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {

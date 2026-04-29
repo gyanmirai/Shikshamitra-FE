@@ -14,9 +14,9 @@ export const getInitialValues = (classes: string, editData?: any) => {
             timeSlots: config.timeSlots
               ? config.timeSlots.map((slot: any, index: number) => ({
                   id: slot.id || index,
-                  startTime: slot.startTime ? dayjs(slot.startTime) : null,
-                  endTime: slot.endTime ? dayjs(slot.endTime) : null,
-                  slotType: slot.slotType || 'period',
+                  startTime: slot.startTime ? dayjs(slot.startTime, 'HH:mm:ss') : null,
+                  endTime: slot.endTime ? dayjs(slot.endTime, 'HH,mm:ss') : null,
+                  slotType: slot.slotType || 0,
                   breakType: slot.breakType || '',
                 }))
               : [],
@@ -32,7 +32,7 @@ export const getInitialValues = (classes: string, editData?: any) => {
                     id: `1-${index}`,
                     startTime: slot.startTime ? dayjs(slot.startTime) : null,
                     endTime: slot.endTime ? dayjs(slot.endTime) : null,
-                    slotType: slot.slotType || 'period',
+                    slotType: slot.slotType || 0,
                     breakType: slot.breakType || '',
                   }))
                 : [],

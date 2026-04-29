@@ -145,6 +145,8 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
     },
   });
 
+  console.log(formik, '[]][][][][][]');
+
   return (
     <Accordion
       expanded={config.expanded}
@@ -243,28 +245,34 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             >
               <Chip
                 size="small"
+                variant="soft"
                 icon={<Iconify icon="mdi:clock-outline" width={14} />}
                 label={`Total Slots: ${String(config.totalSlots || 0)}`}
-                sx={chipSx('info')}
+                color="primary"
+                // sx={chipSx('info')}
               />
 
               {Array.isArray(config.weekRange) && config.weekRange.length === 2 && (
                 <Chip
                   size="small"
+                  variant="soft"
                   icon={<Iconify icon="mdi:calendar-week" width={14} />}
+                  color="info"
                   label={`${getDayLabel(config.weekRange[0])} – ${getDayLabel(config.weekRange[1])}`}
-                  sx={chipSx('info')}
+                  // sx={chipSx('info')}
                 />
               )}
 
               {config.timeSlots?.length > 0 && (
                 <Chip
                   size="small"
+                  variant="soft"
                   icon={<Iconify icon="mdi:clock-time-four-outline" width={14} />}
                   label={`${dayjs(config.timeSlots[0].startTime).format('hh:mm A')} – ${dayjs(
                     config.timeSlots[config.timeSlots.length - 1].endTime
                   ).format('hh:mm A')}`}
-                  sx={chipSx('success')}
+                  color="warning"
+                  // sx={chipSx('success')}
                 />
               )}
 

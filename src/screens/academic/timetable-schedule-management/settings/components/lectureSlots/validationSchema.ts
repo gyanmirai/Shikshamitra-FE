@@ -208,19 +208,16 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   ),
 
                 // Slot Type Validation
-                slotType: Yup.string()
-                  .required('Slot type is required')
-                  .oneOf(['period', 'break'], 'Invalid slot type'),
+                slotType: Yup.string().required('Slot type is required'),
 
                 // Break Type Validation
                 breakType: Yup.string()
                   // eslint-disable-next-line func-names
                   .when('slotType', {
-                    is: 'break',
+                    is: 1,
                     then: (schema) =>
-                      schema
-                        .required('Break type is required when slot type is break')
-                        .oneOf(['short', 'lunch'], 'Invalid break type'),
+                      schema.required('Break type is required when slot type is break'),
+
                     otherwise: (schema) => schema.notRequired(),
                   })
 
@@ -306,7 +303,8 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
               // eslint-disable-next-line func-names
               function (slots) {
                 if (!slots) return false;
-                const periodCount = slots.filter((slot) => slot.slotType === 'period').length;
+                const periodCount = slots.filter((slot) => (+slot.slotType as any) === 0).length;
+                console.log(periodCount, 'periodCount', slots);
                 if (periodCount < 3) {
                   return this.createError({
                     message: 'At least 3 periods are required in the schedule',
@@ -374,7 +372,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   const endMin = toMinutesOfDay(slot.endTime);
                   if (startMin == null || endMin == null) return;
                   const duration = endMin - startMin;
-                  if (slot.slotType === 'period') {
+                  if (+slot.slotType === 0) {
                     totalPeriodMinutes += duration;
                   } else {
                     totalBreakMinutes += duration;

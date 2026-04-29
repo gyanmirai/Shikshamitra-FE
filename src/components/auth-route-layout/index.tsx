@@ -5,7 +5,7 @@ import type React from 'react';
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuthSession } from 'src/hooks/useAuthSession';
 
 import { SplashScreen } from '../loading-screen';
 
@@ -21,7 +21,7 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
 
   const { loading } = useSelector((state: any) => state.auth);
 
-  const session: any = useSession();
+  const session: any = useAuthSession();
   const { data: sessionData, status } = session;
 
   // Initialize Next.js router for navigation

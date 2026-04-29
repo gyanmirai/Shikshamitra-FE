@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { Box, Tooltip, IconButton } from '@mui/material';
+import { useAuthSession } from 'src/hooks/useAuthSession';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 
@@ -15,7 +15,7 @@ import { navSectionClasses } from '../nav-section/classes';
 // ----------------------------------------------------------------------
 
 const SubLayout = ({ children }: any) => {
-  const session: any = useSession();
+  const session: any = useAuthSession();
   const { data: user } = session;
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');

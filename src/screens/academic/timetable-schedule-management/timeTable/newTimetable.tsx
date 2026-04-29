@@ -675,6 +675,7 @@ const TimeTableForm = ({
   isSlotConfigLoading?: boolean;
   onClose: () => void;
 }) => {
+  console.log('Slot Config Data in Form:--->', slotConfigData);
   const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateTimetableMutation,
@@ -735,6 +736,8 @@ const TimeTableForm = ({
       console.log(values);
     },
   });
+
+  console.log('Formik Values:--->', formik.values);
 
   return (
     <DialogScrollContent

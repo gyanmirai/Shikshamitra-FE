@@ -9,6 +9,7 @@ import { useMemo, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  useGetSubjectAssignmentsQuery,
   useAddSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
   useGetCoreElectiveSubjectsQuery,
@@ -36,7 +37,6 @@ export function useSubjectAssignmentForm({
   isEdit = false,
   selectedClass,
   classId,
-  subjectTableData,
 }: UseSubjectAssignmentFormParams) {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -67,72 +67,6 @@ export function useSubjectAssignmentForm({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
   });
-
-  /**
-   * Memoization Justification:
-   * Checks if a subject/group already exists in the table to prevent duplicates.
-   * Depends on subjectTableData which changes on refetch — memoizing avoids
-   * recalculating the filter closure on every render.
-   */
-  const checkIfSubjectExists = useCallback(
-    (currentId: string) =>
-      subjectTableData?.some(
-        (subject: {
-          subjectType?: number;
-          subjects?: Array<{ subjectId?: string }>;
-          electiveGroupId?: string;
-        }) => {
-          if (subject.subjectType === SubjectType.Core) {
-            return subject.subjects?.[0]?.subjectId === currentId;
-          }
-          return subject.electiveGroupId === currentId;
-        }
-      ),
-    [subjectTableData]
-  );
-
-  /**
-   * Memoization Justification:
-   * Transforms raw API response into dropdown-compatible option objects.
-   * Prevents re-mapping on every render when source data hasn't changed.
-   */
-  const subjectsOptions = useMemo(
-    () =>
-      (!isEdit
-        ? subjectOptionsData?.data?.filter((item: { id: string }) => checkIfSubjectExists(item.id))
-        : subjectOptionsData?.data
-      )?.map(
-        (item: {
-          id: string;
-          name: string;
-          subjectType: number;
-          color: string;
-          subjects: unknown[];
-        }) => ({
-          ...item,
-          label: item.name,
-          value: item.id,
-          type: item.subjectType,
-          color: item.color,
-          subjects: item.subjects,
-        })
-      ) || [],
-    [isEdit, subjectOptionsData?.data, checkIfSubjectExists]
-  );
-
-  /**
-   * Memoization Justification:
-   * Flattens medium stages into class dropdown options.
-   * Only recalculates when medium changes, avoiding repeated flatMap on each render.
-   */
-  const classOptions = useMemo(() => {
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    return allClasses.map((cls: { name: string; id: string }) => ({
-      label: cls.name,
-      value: cls.id,
-    }));
-  }, [medium]);
 
   const formik = useFormik<ISubjectAssignmentFormValues>({
     enableReinitialize: true,
@@ -187,6 +121,86 @@ export function useSubjectAssignmentForm({
       }
     },
   });
+
+  const {
+    data: subjectTableData = [],
+    isLoading: isSubjectLoading,
+    refetch,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: formik?.values?.classId || classId, page: 0, pageSize: 20 },
+    options: { skip: !classId },
+  });
+
+  console.log(subjectOptionsData, '[][][][');
+
+  /**
+   * Memoization Justification:
+   * Checks if a subject/group already exists in the table to prevent duplicates.
+   * Depends on subjectTableData which changes on refetch — memoizing avoids
+   * recalculating the filter closure on every render.
+   */
+  const checkIfSubjectExists = useCallback(
+    (currentId: string) =>
+      subjectTableData?.data?.items?.some(
+        (subject: {
+          subjectType?: number;
+          subjects?: Array<{ subjectId?: string }>;
+          electiveGroupId?: string;
+        }) => {
+          if (subject.subjectType === SubjectType.Core) {
+            return subject.subjects?.[0]?.subjectId === currentId;
+          }
+          return subject.electiveGroupId === currentId;
+        }
+      ),
+    [subjectTableData?.data?.items]
+  );
+
+  /**
+   * Memoization Justification:
+   * Transforms raw API response into dropdown-compatible option objects.
+   * Prevents re-mapping on every render when source data hasn't changed.
+   */
+  const subjectsOptions = useMemo(
+    () =>
+      (!isEdit
+        ? subjectOptionsData?.data?.filter((item: { id: string }) => !checkIfSubjectExists(item.id))
+        : subjectOptionsData?.data
+      )?.map(
+        (item: {
+          id: string;
+          name: string;
+          subjectType: number;
+          color: string;
+          subjects: unknown[];
+        }) => ({
+          ...item,
+          label: item.name,
+          value: item.id,
+          type: item.subjectType,
+          color: item.color,
+          subjects: item.subjects,
+        })
+      ) || [],
+    [isEdit, subjectOptionsData?.data, checkIfSubjectExists]
+  );
+
+  /**
+   * Memoization Justification:
+   * Flattens medium stages into class dropdown options.
+   * Only recalculates when medium changes, avoiding repeated flatMap on each render.
+   */
+  const classOptions = useMemo(() => {
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    return allClasses.map((cls: { name: string; id: string }) => ({
+      label: cls.name,
+      value: cls.id,
+    }));
+  }, [medium]);
 
   const handleSubjectChange = (newValue: any) => {
     if (!newValue || newValue.length === 0) {
@@ -257,6 +271,7 @@ export function useSubjectAssignmentForm({
   };
 
   const handleFileUpload = async (files: (File | string)[], index: number | null) => {
+    if (!files || files.length === 0 || index === null) return;
     const formData = new FormData();
     formData.append('FileName', (files[0] as File)?.name);
     formData.append('File', files[0] as File);

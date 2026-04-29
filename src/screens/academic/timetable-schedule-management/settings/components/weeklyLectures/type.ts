@@ -17,6 +17,7 @@ export interface ISubject {
   weeklyLectures?: number;
   noOfLecture: number | string;
   electiveGroupId?: string | null;
+  electiveGroupName?: string | null;
   subjectType?: number;
   subjects?: Array<{ subjectId: string; subjectName: string; subjectCode: string }>;
   subjectCount?: number;

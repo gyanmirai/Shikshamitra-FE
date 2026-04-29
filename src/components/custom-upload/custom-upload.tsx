@@ -37,6 +37,10 @@ interface CustomUploadProps {
   secondaryText?: string;
 }
 
+function isImageUrl(url) {
+  return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+}
+
 const CustomUpload: React.FC<CustomUploadProps> = ({
   multiple = false,
   previewCount = 3,
@@ -52,6 +56,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   const [files, setFiles] = useState<(FileWithPreview | string)[]>(
     Array.isArray(value) ? value : value ? [value] : []
   );
+
   const [previewDialog, setPreviewDialog] = useState<{
     open: boolean;
     file?: FileWithPreview | string;
@@ -134,6 +139,11 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   const renderFilePreview = (file: FileWithPreview | string) => {
     const isImage =
       typeof file === 'string' ? file.includes('image/') : file.type.startsWith('image/');
+
+    const isUrlOfImage =
+      typeof file === 'string' &&
+      (file.startsWith('http://') || file.startsWith('https://')) &&
+      isImageUrl(file);
     return (
       <Box sx={{ position: 'relative', m: 1 }}>
         {/* Close Icon Button outside Card */}
@@ -169,7 +179,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
           }}
           onClick={() => handlePreview(file)}
         >
-          {isImage ? (
+          {isImage || isUrlOfImage ? (
             <CardMedia
               component="img"
               image={getFilePreview(file)}
@@ -180,7 +190,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
               component={Iconify}
               icon="eva:file-text-outline"
               width={28}
-              color={isImage ? 'default.main' : 'action.active'}
+              color={isImage || isUrlOfImage ? 'default.main' : 'action.active'}
               sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           )}
@@ -294,7 +304,10 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                     style={{ width: '100%', height: '600px' }}
                     title="PDF Preview"
                   />
-                ) : previewDialog.file.includes('image/') ? (
+                ) : previewDialog.file.includes('image/') ||
+                  ((previewDialog.file.startsWith('https://') ||
+                    previewDialog.file.startsWith('http://')) &&
+                    isImageUrl(previewDialog.file)) ? (
                   <Box
                     component="img"
                     src={previewDialog.file}
@@ -309,6 +322,8 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
                       component="a"
                       href={previewDialog.file}
                       download
+                      target="_blank"
+                      rel="noopener noreferrer"
                       sx={{
                         display: 'inline-flex',
                         alignItems: 'center',

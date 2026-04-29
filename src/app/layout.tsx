@@ -3,6 +3,7 @@ import 'src/global.css';
 
 import type { Viewport } from 'next';
 
+import { auth } from 'src/auth';
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
 import { Snackbar } from 'src/components/snackbar';
@@ -30,6 +31,9 @@ type Props = { children: React.ReactNode };
 
 export default async function RootLayout({ children }: Props) {
   const settings = CONFIG.isStaticExport ? defaultSettings : await detectSettings();
+  // Resolve the session on the server so the SessionProvider is hydrated with
+  // initial data and the client doesn't need to call /api/auth/session on mount.
+  const session = CONFIG.isStaticExport ? null : await auth();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -39,7 +43,7 @@ export default async function RootLayout({ children }: Props) {
           modeStorageKey="theme-mode"
           defaultMode={defaultSettings.colorScheme}
         />
-        <NextAuthSessionProvider>
+        <NextAuthSessionProvider session={session}>
           <ReduxProvider>
             <KeyboardShortcut />
             <LocalizationProvider>

@@ -7,13 +7,13 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { useAuthSession } from 'src/hooks/useAuthSession';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -116,7 +116,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     refetchOnFocus: false,
     refetchOnReconnect: false,
   });
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
   const shouldUseAdminSelectionRules = isAdminUser && !isSelfMode;
 

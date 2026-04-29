@@ -58,7 +58,10 @@ const WeeklyLectures = () => {
       weeklyLectureData?.items?.map((item: ISubjectFormValues & { subjects: ISubject[] }) => ({
         ...item,
         newSubject: item.subjects
-          .map((subject) => `${subject.subjectName} (${subject.weeklyLectures})`)
+          .map(
+            (subject) =>
+              `${subject.electiveGroupName || subject.subjectName} (${subject.weeklyLectures})`
+          )
           .join(' '),
       })) ?? [],
     [weeklyLectureData]

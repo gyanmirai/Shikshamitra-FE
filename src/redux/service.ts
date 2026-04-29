@@ -3,7 +3,7 @@
 import type { FetchArgs } from '@reduxjs/toolkit/query/react';
 
 import { toast } from 'sonner';
-import { signOut, getSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import { tagTypes } from './tagTypes';
@@ -27,8 +27,11 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     };
 
     if (typeof window !== 'undefined') {
-      const session: any = await getSession();
-      const token = session?.accessToken;
+      // Read the access token directly from the Redux store (kept in sync by
+      // ReduxProvider via NextAuth's useSession). This avoids a network call
+      // to /api/auth/session on every request that getSession() would trigger.
+      const state = api.getState() as { auth?: { session?: { accessToken?: string } } };
+      const token = state?.auth?.session?.accessToken;
 
       if (token) {
         headers.Authorization = `Bearer ${token}`;
