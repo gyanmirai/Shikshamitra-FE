@@ -60,7 +60,8 @@ export const CALENDAR_COLOR_OPTIONS = [
 ];
 type AddLeaveRequestProps = {
   editData?: any;
-  mode?: 'hr' | 'self';
+  mode?: 'hr' | 'self' | 'employee-team';
+  managedEmployees?: { id: string; employeeCode?: string; fullName?: string }[];
   handleClose?: (e: any, isSubmit: boolean) => void;
 };
 
@@ -81,8 +82,9 @@ const leavePolicyOptionsCacheByAcademicYear: Record<string, any[]> = {};
 
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
-  const { editData, handleClose, mode = 'hr' } = props;
+  const { editData, handleClose, mode = 'hr', managedEmployees = [] } = props;
   const isSelfMode = mode === 'self';
+  const isTeamMode = mode === 'employee-team';
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeQuery,
@@ -118,7 +120,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
   const { data: session } = useAuthSession();
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
-  const shouldUseAdminSelectionRules = isAdminUser && !isSelfMode;
+  const shouldUseAdminSelectionRules = (isAdminUser || isTeamMode) && !isSelfMode;
 
   const [leaveTypeOptions, setLeaveTypeOptions] = useState<any[]>([]);
   const [leavePolicyOptions, setLeavePolicyOptions] = useState<any[]>([]);
@@ -379,38 +381,70 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             {!isSelfMode && (
               <Grid size={{ xs: 12 }}>
                 <ShakingTextField error={!!touched.employee && !!errors.employee}>
-                  <PaginatedSearchSelect
-                    label="Employee *"
-                    fetchOptions={async (query, page) => {
-                      if (page > 1) return { data: [], hasMore: false };
-                      const res = await getEmployees({ search: query }).unwrap();
-                      const items: EmployeeOption[] = (
-                        Array.isArray(res) ? res : res?.items || []
-                      ).map((item: any) => ({
-                        label: item.fullName,
+                  {isTeamMode ? (
+                    <CustomSelect
+                      label="Employee *"
+                      options={managedEmployees.map((item) => ({
                         id: item.id,
-                      }));
-                      return {
-                        data: buildEmployeeSelectOptions(items, shouldUseAdminSelectionRules),
-                        hasMore: false,
-                      };
-                    }}
-                    value={values.employee}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    renderOption={(prop, option: any) => (
-                      <li {...prop} key={option.id}>
-                        {option.label}
-                      </li>
-                    )}
-                    getOptionLabel={(option: any) => option?.label || ''}
-                    minChars={0}
-                    onChange={(_, value) => setFieldValue('employee', value)}
-                    debounceMs={400}
-                    error={!!touched.employee && !!errors.employee}
-                    helperText={(touched.employee && (errors.employee as string)) || ''}
-                    disabled={!!editData}
-                    size="small"
-                  />
+                        label: item.employeeCode
+                          ? `${item.fullName || '-'} (${item.employeeCode})`
+                          : item.fullName || '-',
+                      }))}
+                      value={values.employee?.id || ''}
+                      valueKey="id"
+                      labelKey="label"
+                      onChange={(value) => {
+                        const option = managedEmployees.find((item) => item.id === value);
+                        setFieldValue(
+                          'employee',
+                          option
+                            ? {
+                                id: option.id,
+                                label: option.employeeCode
+                                  ? `${option.fullName || '-'} (${option.employeeCode})`
+                                  : option.fullName || '-',
+                              }
+                            : null
+                        );
+                      }}
+                      error={!!touched.employee && !!errors.employee}
+                      helperText={(touched.employee && (errors.employee as string)) || ''}
+                      disabled={!!editData}
+                    />
+                  ) : (
+                    <PaginatedSearchSelect
+                      label="Employee *"
+                      fetchOptions={async (query, page) => {
+                        if (page > 1) return { data: [], hasMore: false };
+                        const res = await getEmployees({ search: query }).unwrap();
+                        const items: EmployeeOption[] = (
+                          Array.isArray(res) ? res : res?.items || []
+                        ).map((item: any) => ({
+                          label: item.fullName,
+                          id: item.id,
+                        }));
+                        return {
+                          data: buildEmployeeSelectOptions(items, shouldUseAdminSelectionRules),
+                          hasMore: false,
+                        };
+                      }}
+                      value={values.employee}
+                      isOptionEqualToValue={(option, value) => option.id === value.id}
+                      renderOption={(prop, option: any) => (
+                        <li {...prop} key={option.id}>
+                          {option.label}
+                        </li>
+                      )}
+                      getOptionLabel={(option: any) => option?.label || ''}
+                      minChars={0}
+                      onChange={(_, value) => setFieldValue('employee', value)}
+                      debounceMs={400}
+                      error={!!touched.employee && !!errors.employee}
+                      helperText={(touched.employee && (errors.employee as string)) || ''}
+                      disabled={!!editData}
+                      size="small"
+                    />
+                  )}
                 </ShakingTextField>
               </Grid>
             )}

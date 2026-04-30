@@ -1,26 +1,12 @@
 import type { RootState } from 'src/redux/store';
 import type { DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
-import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
+import { useLazyGetLeaveCalendarQuery } from 'src/redux/hr/leaveApi';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
-import {
-  getLeaveStatusColor,
-  getLeaveStatusLabel,
-} from 'src/screens/hr/leave-request/leave-status.utils';
-import {
-  useGetLeaveRequestByIdQuery,
-  useLazyGetLeaveCalendarQuery,
-  useGetMyLeaveRequestByIdQuery,
-} from 'src/redux/hr/leaveApi';
 import {
   CALENDAR_MAX_PAGES,
   CALENDAR_PAGE_SIZE,
@@ -29,7 +15,19 @@ import {
   buildCalendarVisibleRangePayload,
 } from 'src/screens/hr/leave-request/leave-calendar.utils';
 
-const LeaveCalender = () => {
+import LeaveRequestDetailsViewModal from './leave-request-details-modal';
+
+type LeaveCalenderProps = {
+  mode?: 'hr' | 'self';
+  canReviewLeaves?: boolean;
+  onActionSuccess?: () => void;
+};
+
+const LeaveCalender = ({
+  mode = 'hr',
+  canReviewLeaves = false,
+  onActionSuccess,
+}: LeaveCalenderProps) => {
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const popover = usePopover();
   const { employee } = useSelector((state: any) => state.auth);
@@ -85,7 +83,6 @@ const LeaveCalender = () => {
           ).unwrap();
 
           const totalCount = page === 1 ? (response?.totalCount ?? 0) : knownTotalCount;
-
           const pageItems = Array.isArray(response?.items) ? response.items : [];
           allItems.push(...pageItems);
 
@@ -142,9 +139,11 @@ const LeaveCalender = () => {
     if (!selectedMediumStageId) {
       return;
     }
+
     const stageExists = mediumStageId?.educationMediumStages?.some(
       (org: any) => String(org?.id ?? '') === selectedMediumStageId
     );
+
     if (!stageExists) {
       setSelectedMediumStageId('');
     }
@@ -153,38 +152,40 @@ const LeaveCalender = () => {
   const calendarData = useMemo(
     () =>
       calendarItems
-        .filter((i: any) =>
-          selectedMediumStageId ? String(i?.mediumStageId ?? '') === selectedMediumStageId : true
+        .filter((item: any) =>
+          selectedMediumStageId ? String(item?.mediumStageId ?? '') === selectedMediumStageId : true
         )
-        .map((i: any) => {
-          const color = i.leaveTypeColor || '#2065D1';
-          const desc = String(i.description ?? '');
-          const plainDesc = desc.replace(/<[^>]+>/g, '');
+        .map((item: any) => {
+          const color = item.leaveTypeColor || '#2065D1';
+          const plainDesc = String(item.description ?? '').replace(/<[^>]+>/g, '');
+
           return {
-            ...i,
-            start: i.startDate,
-            end: i.endDate,
+            ...item,
+            start: item.startDate,
+            end: item.endDate,
             color,
             allDay: false,
-            employeeCode: i.employeeCode,
+            employeeCode: item.employeeCode,
             textColor: color,
-            title: `${i.leaveTypeName ?? i.leaveType ?? ''} [${i.employeeName ?? i.name ?? ''}] ${i.status ?? ''}`,
-            reason: i.reason ?? plainDesc,
+            title: `${item.leaveTypeName ?? item.leaveType ?? ''} [${item.employeeName ?? item.name ?? ''}] ${item.status ?? ''}`,
+            reason: item.reason ?? plainDesc,
             description: plainDesc,
-            leaveType: i.leaveTypeName ?? i.leaveType,
-            name: i.employeeName ?? i.name,
-            viewStartDate: i.startDate,
-            viewEndDate: i.endDate,
-            ...(i.employeeId === employee?.id ? { className: 'ownEvent' } : {}),
+            leaveType: item.leaveTypeName ?? item.leaveType,
+            name: item.employeeName ?? item.name,
+            viewStartDate: item.startDate,
+            viewEndDate: item.endDate,
+            ...(item.employeeId === employee?.id ? { className: 'ownEvent' } : {}),
           };
         }) || [],
     [calendarItems, employee?.id, selectedMediumStageId]
   );
+
   const editData = useMemo(() => {
-    if (currentDateClick) {
-      return calendarData.find((i: any) => i.id === currentDateClick.event.id);
+    if (!currentDateClick) {
+      return null;
     }
-    return null;
+
+    return calendarData.find((item: any) => item.id === currentDateClick.event.id);
   }, [calendarData, currentDateClick]);
 
   return (
@@ -206,13 +207,13 @@ const LeaveCalender = () => {
         }}
         views={{
           timeGridWeek: {
-            dayHeaderFormat: { weekday: 'short', day: '2-digit' }, // Sun, 01
+            dayHeaderFormat: { weekday: 'short', day: '2-digit' },
           },
           dayGridMonth: {
-            titleFormat: { year: 'numeric', month: 'long' }, // June 2025
+            titleFormat: { year: 'numeric', month: 'long' },
           },
           dayGridDay: {
-            titleFormat: { day: '2-digit', month: 'long', year: 'numeric' }, // 18 June 2025
+            titleFormat: { day: '2-digit', month: 'long', year: 'numeric' },
           },
         }}
         allDaySlot={false}
@@ -230,24 +231,15 @@ const LeaveCalender = () => {
             : `Showing ${calendarData.length} of ${calendarTotalCount} leave events for this view. Refine filters or date range to load remaining events.`}
         </Typography>
       )}
-      <CustomDialog
+
+      <LeaveRequestDetailsViewModal
         open={!!currentDateClick}
-        handleClose={() => setCurrentDateClick(null)}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Leave Request Details</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Displays detailed information about the employee’s leave request, including type, dates, reason, and approval status."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <LeaveRequestForm editData={editData} />
-      </CustomDialog>
+        onClose={() => setCurrentDateClick(null)}
+        editData={editData}
+        mode={mode}
+        canReviewLeaves={canReviewLeaves}
+        onActionSuccess={onActionSuccess}
+      />
 
       <CustomPopover
         open={popover.open}
@@ -285,216 +277,3 @@ const LeaveCalender = () => {
 };
 
 export default LeaveCalender;
-
-type LeaveDetailHook = (arg: any, options?: any) => any;
-
-type LeaveRequestFormProps = {
-  editData: any;
-  mode?: 'hr' | 'self';
-  hrDetailHook?: LeaveDetailHook;
-  selfDetailHook?: LeaveDetailHook;
-};
-
-export const LeaveRequestForm = ({
-  editData,
-  mode = 'hr',
-  hrDetailHook = useGetLeaveRequestByIdQuery,
-  selfDetailHook = useGetMyLeaveRequestByIdQuery,
-}: LeaveRequestFormProps) => {
-  const isSelfMode = mode === 'self';
-  const { currentMedium, currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: leaveDetailForHr, isLoading: isHrLeaveDetailLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: hrDetailHook,
-    params: { id: editData?.id },
-    options: { skip: !editData?.id || isSelfMode },
-  });
-  const { data: leaveDetailForSelf, isLoading: isSelfLeaveDetailLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: selfDetailHook,
-    params: { id: editData?.id },
-    options: { skip: !editData?.id || !isSelfMode },
-  });
-  const leaveDetail = isSelfMode ? leaveDetailForSelf : leaveDetailForHr;
-  const isLeavePolicyLoading = isSelfMode ? isSelfLeaveDetailLoading : isHrLeaveDetailLoading;
-
-  const detail = leaveDetail || editData;
-  const submittedByLabel = detail?.submittedByEmployeeCode
-    ? `${detail?.submittedByName || '-'} (${detail.submittedByEmployeeCode})`
-    : (detail?.submittedByName ?? '-');
-  const organizationFromStore = currentMedium?.educationMediumStages?.find(
-    (org: any) =>
-      String(org?.id ?? '') === String(detail?.mediumStageId ?? editData?.mediumStageId ?? '')
-  )?.name;
-  const academicYearLabel =
-    detail?.academicYearName ||
-    detail?.academicYear?.name ||
-    detail?.academicYear ||
-    editData?.academicYearName ||
-    editData?.academicYear?.name ||
-    detail?.mediumStageName ||
-    detail?.organizationName ||
-    organizationFromStore ||
-    editData?.organization ||
-    editData?.employee?.educationMediumStage?.name ||
-    currentYear?.name ||
-    '-';
-
-  return isLeavePolicyLoading ? (
-    <TableRow>
-      <TableCell sx={{ height: '50px' }}>
-        <Box className="loader" height={24} />
-      </TableCell>
-    </TableRow>
-  ) : (
-    <Box sx={{ p: 2 }} bgcolor="background.neutral">
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Employee
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.employeeName ||
-              `${editData?.employee?.firstName || ''} ${editData?.employee?.lastName || ''}`}
-          </Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Employee Code
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{detail?.employeeCode || '-'}</Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Submitted By
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{submittedByLabel}</Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Academic Year
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{academicYearLabel}</Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Leave Type
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.leaveType || editData?.leavePolicy?.leaveType || '-'}
-          </Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Start Date
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {dayjs(detail?.startDate || editData?.viewStartDate).format('DD-MM-YYYY')}
-          </Typography>
-        </Grid>
-
-        {!detail?.halfDay && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                End Date
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">
-                {dayjs(detail?.endDate || editData?.viewEndDate).format('DD-MM-YYYY')}
-              </Typography>
-            </Grid>
-          </>
-        )}
-
-        {detail?.totalDays != null && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                Total Days
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">{detail.totalDays}</Typography>
-            </Grid>
-          </>
-        )}
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Reason
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.description ||
-              editData?.reason ||
-              (editData?.description && (
-                // eslint-disable-next-line react/no-danger
-                <span dangerouslySetInnerHTML={{ __html: editData.description }} />
-              ))}
-          </Typography>
-        </Grid>
-
-        {detail?.remarks && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                Remarks
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">{detail.remarks}</Typography>
-            </Grid>
-          </>
-        )}
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Status
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Label color={getLeaveStatusColor(detail?.status ?? editData?.status)}>
-            {getLeaveStatusLabel(detail?.status ?? editData?.status)}
-          </Label>
-        </Grid>
-
-        {detail?.attachmentUrl && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                Document
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Iconify
-                icon="eva:eye-fill"
-                sx={{ mr: 0.5, cursor: 'pointer' }}
-                onClick={() => window.open(detail.attachmentUrl, '_blank')}
-              />
-            </Grid>
-          </>
-        )}
-      </Grid>
-    </Box>
-  );
-};

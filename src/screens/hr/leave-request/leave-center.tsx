@@ -10,13 +10,14 @@ import { useRouter, useSearchParams } from 'src/routes/hooks';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import LeaveBalance from 'src/screens/hr/leave-balance/leave-balance';
+import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 
 import ApplyLeave from './apply-leave';
 import LeaveApprovals from './leave-approvals';
 import { isAdminFromProfile } from './leave-request.utils';
 
-type LeaveCenterContext = 'hr' | 'self';
-type LeaveCenterTab = 'my-requests' | 'approvals' | 'balance';
+type LeaveCenterContext = 'hr' | 'employee';
+type LeaveCenterTab = 'my-requests' | 'team-requests' | 'approvals' | 'balance';
 
 type LeaveCenterProps = {
   context: LeaveCenterContext;
@@ -28,24 +29,37 @@ const HR_ROUTE = hrPaths.leaveManagement.leaveCenter;
 const SELF_ROUTE = '/dashboard/my-leave';
 
 const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) => {
-  const isSelfContext = context === 'self';
+  const isEmployeeContext = context === 'employee';
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const { permissions } = useSelector((state: RootState) => state.auth);
+  const { data: managedEmployeesResponse } = useGetMyEmployeesUnderManagerQuery(undefined, {
+    skip: !isEmployeeContext,
+  });
 
   const isAdminUser = isAdminFromProfile((session as any)?.profile);
   const hasApprovalPermission = permissions?.some(
     (permission: any) =>
       permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
   );
-  const canReviewLeaves = !isSelfContext && Boolean(isAdminUser || hasApprovalPermission);
+  const managedEmployees = useMemo(
+    () => managedEmployeesResponse?.employees || [],
+    [managedEmployeesResponse]
+  );
+  const hasManagedEmployees = managedEmployees.length > 0;
+  const canReviewLeaves = !isEmployeeContext && Boolean(isAdminUser || hasApprovalPermission);
 
   const requestedTab = useMemo<LeaveCenterTab>(() => {
-    if (isSelfContext) {
+    if (isEmployeeContext) {
       const tabFromQuery = searchParams.get('tab');
+      if (tabFromQuery === 'team-requests' && hasManagedEmployees) return 'team-requests';
       if (tabFromQuery === 'balance') return 'balance';
-      return initialTab === 'balance' ? 'balance' : 'my-requests';
+      return initialTab === 'team-requests' && hasManagedEmployees
+        ? 'team-requests'
+        : initialTab === 'balance'
+          ? 'balance'
+          : 'my-requests';
     }
 
     const tabFromQuery = searchParams.get('tab');
@@ -53,16 +67,18 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     if (tabFromQuery === 'balance') return 'balance';
     if (tabFromQuery === 'my-requests') return 'my-requests';
     return initialTab;
-  }, [initialTab, isSelfContext, searchParams]);
+  }, [hasManagedEmployees, initialTab, isEmployeeContext, searchParams]);
 
   const activeTab: LeaveCenterTab =
     requestedTab === 'approvals' && !canReviewLeaves ? 'my-requests' : requestedTab;
 
   const handleTabChange = (_event: React.SyntheticEvent, nextTab: LeaveCenterTab) => {
-    if (isSelfContext) {
+    if (isEmployeeContext) {
       const nextParams = new URLSearchParams(searchParams.toString());
       if (nextTab === 'balance') {
         nextParams.set('tab', 'balance');
+      } else if (nextTab === 'team-requests') {
+        nextParams.set('tab', 'team-requests');
       } else if (nextTab === 'approvals') {
         nextParams.set('tab', 'approvals');
       } else {
@@ -73,7 +89,10 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
       return;
     }
 
-    if (nextTab === 'approvals' && !canReviewLeaves) {
+    if (
+      (nextTab === 'approvals' && !canReviewLeaves) ||
+      (nextTab === 'team-requests' && !hasManagedEmployees)
+    ) {
       router.push(HR_ROUTE);
       return;
     }
@@ -89,11 +108,19 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        height: '100%',
+        minHeight: 0,
+      }}
+    >
       <CustomBreadcrumbs
-        heading={isSelfContext ? 'My Leave' : 'Leave Center'}
+        heading={isEmployeeContext ? 'My Leave' : 'Leave Center'}
         links={
-          isSelfContext
+          isEmployeeContext
             ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
             : [
                 { name: 'HR/Staff', href: '/hr/dashboard/' },
@@ -102,9 +129,11 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
                   name:
                     activeTab === 'approvals'
                       ? 'Leave Approvals'
-                      : activeTab === 'balance'
-                        ? 'Leave Balance'
-                        : 'Apply Leave',
+                      : activeTab === 'team-requests'
+                        ? 'Team Requests'
+                        : activeTab === 'balance'
+                          ? 'Leave Balance'
+                          : 'Apply Leave',
                 },
               ]
         }
@@ -119,18 +148,38 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
           scrollButtons="auto"
         >
           <Tab label="My Requests" value="my-requests" />
+          {isEmployeeContext && hasManagedEmployees && (
+            <Tab label="Team Requests" value="team-requests" />
+          )}
           {canReviewLeaves && <Tab label="Approvals" value="approvals" />}
           <Tab label="Balance" value="balance" />
         </Tabs>
       </Card>
 
-      {activeTab === 'my-requests' && (
-        <ApplyLeave mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
-      )}
-      {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
-      {activeTab === 'balance' && (
-        <LeaveBalance mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
-      )}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {activeTab === 'my-requests' && (
+          <ApplyLeave mode={isEmployeeContext ? 'self' : 'hr'} showBreadcrumbs={false} />
+        )}
+        {activeTab === 'team-requests' && isEmployeeContext && hasManagedEmployees && (
+          <ApplyLeave
+            mode="employee-team"
+            showBreadcrumbs={false}
+            canReviewLeavesOverride
+            managedEmployees={managedEmployees}
+          />
+        )}
+        {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
+        {activeTab === 'balance' && (
+          <LeaveBalance mode={isEmployeeContext ? 'self' : 'hr'} showBreadcrumbs={false} />
+        )}
+      </Box>
     </Box>
   );
 };

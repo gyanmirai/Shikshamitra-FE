@@ -30,18 +30,17 @@ import {
   EmployeeLeaveStatusOptions,
 } from 'src/enums/employee-leave-status';
 import {
-  useGetLeaveRequestByIdQuery,
   useLazyGetLeaveRequestsQuery,
   useCancelLeaveRequestMutation,
-  useGetMyLeaveRequestByIdQuery,
   useLazyGetMyLeaveRequestsQuery,
   useCancelMyLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
 
 import AddLeaveRequest from './leave-requst';
+import LeaveCalender from './leave-calender';
 import { ApproveRejectForm } from './leave-approvals';
 import { isAdminFromProfile } from './leave-request.utils';
-import LeaveCalender, { LeaveRequestForm } from './leave-calender';
+import LeaveRequestDetailsViewModal from './leave-request-details-modal';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
@@ -67,12 +66,20 @@ const dedupeLeaveRequestsById = (items: any[]) => {
 };
 
 type ApplyLeaveProps = {
-  mode?: 'hr' | 'self';
+  mode?: 'hr' | 'self' | 'employee-team';
   showBreadcrumbs?: boolean;
+  canReviewLeavesOverride?: boolean;
+  managedEmployees?: { id: string; employeeCode?: string; fullName?: string }[];
 };
 
-const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) => {
+const ApplyLeave = ({
+  mode = 'hr',
+  showBreadcrumbs = true,
+  canReviewLeavesOverride = false,
+  managedEmployees = [],
+}: ApplyLeaveProps) => {
   const isSelfMode = mode === 'self';
+  const isTeamMode = mode === 'employee-team';
   const { data: session } = useSession();
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const { employee, permissions } = useSelector((state: RootState) => state.auth);
@@ -81,7 +88,8 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
     (permission: any) =>
       permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
   );
-  const canReviewLeaves = !isSelfMode && Boolean(isAdminUser || hasApprovalPermission);
+  const canReviewLeaves =
+    canReviewLeavesOverride || (!isSelfMode && Boolean(isAdminUser || hasApprovalPermission));
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -221,17 +229,19 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               Reject
             </MenuItem>
           )}
-        <MenuItem
-          onClick={() => {
-            setEditData(row);
-            cancelConfirmation.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon={GlobalIcons.delete} sx={{ height: '16px', width: '16px' }} />
-          Cancel
-        </MenuItem>
+        {(String(row?.employeeId ?? '') === String(employee?.id ?? '') || isAdminUser) && (
+          <MenuItem
+            onClick={() => {
+              setEditData(row);
+              cancelConfirmation.onTrue();
+              popover.onClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
+            <Iconify icon={GlobalIcons.delete} sx={{ height: '16px', width: '16px' }} />
+            Cancel
+          </MenuItem>
+        )}
       </MenuList>
     ),
     [
@@ -240,6 +250,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
       canReviewLeaves,
       cancelConfirmation,
       employee?.id,
+      isAdminUser,
     ]
   );
 
@@ -440,11 +451,25 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
             />
           )}
           <Box display="flex" flexDirection="column" gap={2}>
-            <LeaveCalender />
+            <LeaveCalender
+              mode={mode}
+              canReviewLeaves={canReviewLeaves}
+              onActionSuccess={() => {
+                setReloadKey((prev) => prev + 1);
+              }}
+            />
           </Box>
         </>
       ) : (
-        <>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+          }}
+        >
           {showBreadcrumbs && (
             <CustomBreadcrumbs
               heading={isSelfMode ? 'My Leave' : 'Apply Leave'}
@@ -467,10 +492,10 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           <Card
             sx={{
               display: 'flex',
+              flexShrink: 0,
               p: 2,
               gap: 2,
               pl: 1,
-              mb: 1,
               justifyContent: 'flex-end',
             }}
           >
@@ -486,7 +511,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               >
                 Leave Request
               </Button>
-              {!isSelfMode && (
+              {!isSelfMode && !isTeamMode && (
                 <Button
                   variant="contained"
                   size="small"
@@ -501,33 +526,42 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               )}
             </Box>
           </Card>
-          <CustomizableTable
-            noDataText={
-              <>
-                No Leave Request Found{' '}
-                <Box
-                  onClick={() => addLeaveRequestDialog.onTrue?.()}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Leave Request
-                </Box>
-              </>
-            }
-            onSendNotification={handlerSendNotification}
-            showCheckbox={selectedStudents.length !== 0}
-            isLoading={isLeaveRequestsLoading}
-            tableId="apply-leave-table"
-            data={tableData}
-            columns={columns}
-          />
-        </>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <CustomizableTable
+              noDataText={
+                <>
+                  No Leave Request Found{' '}
+                  <Box
+                    onClick={() => addLeaveRequestDialog.onTrue?.()}
+                    color="primary.main"
+                    fontWeight={600}
+                    sx={{
+                      '&:hover': {
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Leave Request
+                  </Box>
+                </>
+              }
+              onSendNotification={handlerSendNotification}
+              showCheckbox={selectedStudents.length !== 0}
+              isLoading={isLeaveRequestsLoading}
+              tableId="apply-leave-table"
+              data={tableData}
+              columns={columns}
+            />
+          </Box>
+        </Box>
       )}
 
       <ConfirmDialog
@@ -615,44 +649,53 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         />
       )}
 
-      <CustomDialog
-        open={addLeaveRequestDialog?.value}
-        handleClose={() => {
-          addLeaveRequestDialog?.onFalse?.();
-          setEditData(null);
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {editData ? 'View Leave Request' : 'Add Leave Request'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                editData
-                  ? 'Review the request to see all leave information.'
-                  : 'Create a leave request by entering all required fields.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        {addLeaveRequestDialog?.value &&
-          (editData ? (
-            <LeaveRequestForm
+      {editData ? (
+        <LeaveRequestDetailsViewModal
+          open={addLeaveRequestDialog?.value}
+          onClose={() => {
+            addLeaveRequestDialog?.onFalse?.();
+            setEditData(null);
+          }}
+          editData={editData}
+          historyItems={leaveRequests}
+          mode={mode}
+          canReviewLeaves={canReviewLeaves}
+          allowCancel={!isTeamMode}
+          onActionSuccess={async () => {
+            setReloadKey((prev) => prev + 1);
+          }}
+        />
+      ) : (
+        <CustomDialog
+          open={addLeaveRequestDialog?.value}
+          handleClose={() => {
+            addLeaveRequestDialog?.onFalse?.();
+            setEditData(null);
+          }}
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">Add Leave Request</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="Create a leave request by entering all required fields."
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
+        >
+          {addLeaveRequestDialog?.value && (
+            <AddLeaveRequest
               editData={editData}
               mode={mode}
-              hrDetailHook={useGetLeaveRequestByIdQuery}
-              selfDetailHook={useGetMyLeaveRequestByIdQuery}
+              handleClose={handleClose}
+              managedEmployees={managedEmployees}
             />
-          ) : (
-            <AddLeaveRequest editData={editData} mode={mode} handleClose={handleClose} />
-          ))}
-      </CustomDialog>
+          )}
+        </CustomDialog>
+      )}
     </Box>
   );
 };

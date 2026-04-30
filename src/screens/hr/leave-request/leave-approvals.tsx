@@ -42,7 +42,7 @@ import {
   useApproveLeaveRequestMutation,
 } from 'src/redux/hr/leaveApi';
 
-import { LeaveRequestForm } from './leave-calender';
+import LeaveRequestDetailsViewModal from './leave-request-details-modal';
 import { getLeaveStatusColor, getLeaveStatusLabel } from './leave-status.utils';
 
 type LeaveApprovalsProps = {
@@ -53,7 +53,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
-  const { data, isLoading } = useQueryAndMutation({
+  const { data, isLoading, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
     params: {
@@ -278,28 +278,18 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
       />
 
       {/* View Dialog */}
-      <CustomDialog
+      <LeaveRequestDetailsViewModal
         open={viewDialog.value}
-        handleClose={() => {
+        onClose={() => {
           viewDialog.onFalse();
           setEditData(null);
         }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Leave Request</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Review the request to see all leave information."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <LeaveRequestForm editData={editData} />
-      </CustomDialog>
+        editData={editData}
+        canReviewLeaves
+        onActionSuccess={async () => {
+          await refetch();
+        }}
+      />
 
       {/* Approve / Reject Dialog */}
       {editData?.type && (
