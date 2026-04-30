@@ -2,6 +2,11 @@ import type { CssVarsTheme } from '@mui/material/styles';
 import type { SettingsState } from 'src/components/settings';
 
 import { extendTheme } from '@mui/material/styles';
+import {
+  FONT_SIZE_MIN,
+  FONT_SIZE_MAX,
+  FONT_SIZE_DEFAULT,
+} from 'src/components/settings/config-settings';
 
 import { setFont } from './styles/utils';
 import { overridesTheme } from './overrides-theme';
@@ -10,7 +15,14 @@ import { updateCoreWithSettings, updateComponentsWithSettings } from './with-set
 
 // ----------------------------------------------------------------------
 
+function clampFontSize(value: number | undefined): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) return FONT_SIZE_DEFAULT;
+  return Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, value));
+}
+
 export function createTheme(settings: SettingsState): CssVarsTheme {
+  const fontSize = clampFontSize(settings.fontSize);
+
   const initialTheme = {
     colorSchemes,
     shadows: shadows(settings.colorScheme),
@@ -18,7 +30,13 @@ export function createTheme(settings: SettingsState): CssVarsTheme {
     direction: settings.direction,
     shape: { borderRadius: 8 },
     components,
-    typography: { ...typography, fontFamily: setFont(settings.fontFamily) },
+    typography: {
+      ...typography,
+      fontFamily: setFont(settings.fontFamily),
+      // Drives MUI's pxToRem helper and is used by components that derive
+      // sizes from `theme.typography.fontSize` (default MUI value is 14).
+      fontSize,
+    },
     cssVarPrefix: '',
     shouldSkipGeneratingVar,
     colorSchemeSelector: 'data-mui-color-scheme',
