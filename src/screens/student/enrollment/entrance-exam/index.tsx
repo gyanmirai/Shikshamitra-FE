@@ -42,23 +42,26 @@ import {
   EntranceExamStatusTypeColors,
 } from 'src/enums/entranceExam-type';
 import {
-  Box,
-  Paper,
-  Radio,
-  Button,
-  MenuItem,
-  MenuList,
-  TextField,
-  Typography,
-  DialogActions,
-  CircularProgress,
-} from '@mui/material';
-import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
   useUpdateEntranceExamMutation,
   useLazyGetStudentForSlotByDateQuery,
 } from 'src/redux/student/entrance-exam/entrance-exam-api';
+import {
+  Box,
+  Paper,
+  Radio,
+  Avatar,
+  Button,
+  Divider,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+  DialogActions,
+  LinearProgress,
+  CircularProgress,
+} from '@mui/material';
 
 import { ExamTypeForm } from '../setting/exam-type';
 import { SlotsForm } from '../setting/entrance-exam-slots';
@@ -89,8 +92,10 @@ const EntranceExamScreen = () => {
 
   // Dialog control hooks
   const resultDialog = useBoolean();
+  const viewDialog = useBoolean();
   // State for controlling the visibility of the move confirmation popup
   const confirmMovePopup = useBoolean();
+  const [viewData, setViewData] = useState<any | null>(null);
 
   const [query, setQuery] = useState({
     sorting: '',
@@ -216,6 +221,7 @@ const EntranceExamScreen = () => {
       // { id: 'board', label: 'Board', align: 'left' },
       // { id: 'medium', label: 'Medium', align: 'left' },
       { id: 'class', label: 'Class', align: 'left' },
+      { id: 'formNo', label: 'Form No.', align: 'left' },
       { id: 'date', label: 'Date', filterType: 'date' },
       { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
       {
@@ -243,7 +249,7 @@ const EntranceExamScreen = () => {
       },
       {
         id: 'progress',
-        label: 'Progress',
+        label: 'Profile Completion',
         align: 'left',
         filterType: 'number',
         render(value, row) {
@@ -293,7 +299,7 @@ const EntranceExamScreen = () => {
         align: 'left',
         render(value, row) {
           const isNum = value !== '' && value !== null && !Number.isNaN(Number(value));
-          const displayValue = isNum ? parseFloat(Number(value).toFixed(2)) : value;
+          const displayValue = isNum ? parseFloat(Number(value).toFixed(2)) : 0;
           const ringValue = isNum ? Number(value) : 0;
           return (
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -352,7 +358,15 @@ const EntranceExamScreen = () => {
         sticky: true,
         isSort: false,
         render: (value, row) => (
-          <ThreeDotsActions placement="right-top" actions={(props) => actions(props, row)} />
+          <ThreeDotsActions
+            placement="right-top"
+            actions={(props) => actions(props, row)}
+            showViewIcon
+            handleViewClick={() => {
+              setViewData(row);
+              viewDialog.onTrue();
+            }}
+          />
         ),
       },
     ],
@@ -501,11 +515,316 @@ const EntranceExamScreen = () => {
           userList={selectedStudents}
         />
       )}
+      <CustomDialog
+        open={viewDialog.value}
+        handleClose={() => {
+          setViewData(null);
+          viewDialog.onFalse();
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Entrance Exam Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="View detailed entrance exam information for the selected student."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="sm"
+      >
+        <EntranceExamViewDetails
+          data={viewData}
+          onClose={() => {
+            setViewData(null);
+            viewDialog.onFalse();
+          }}
+        />
+      </CustomDialog>
     </Box>
   );
 };
 
 export default EntranceExamScreen;
+
+const EntranceExamViewDetails = ({ data, onClose }: { data: any; onClose: () => void }) => {
+  if (!data) return null;
+
+  const initials = (data.studentName || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w: string) => w[0].toUpperCase())
+    .join('');
+
+  const totalMarks = Number(data.totalMarks) || 0;
+  const obtainedMarks =
+    data.obtainedMarks !== null && data.obtainedMarks !== undefined
+      ? Number(data.obtainedMarks)
+      : null;
+  const passingMark = Number(data.passingMark) || 0;
+  const percentage =
+    data.percentage !== null && data.percentage !== undefined && data.percentage !== ''
+      ? parseFloat(Number(data.percentage).toFixed(2))
+      : null;
+  const progress =
+    data.progress !== null && data.progress !== undefined && data.progress !== ''
+      ? parseFloat(Number(data.progress).toFixed(2))
+      : 0;
+
+  const passLinePercent = totalMarks > 0 ? (passingMark / totalMarks) * 100 : 0;
+  const barValue = Math.min(percentage ?? 0, 100);
+  const diff = obtainedMarks !== null ? obtainedMarks - passingMark : null;
+
+  const statusColor = EntranceExamStatusTypeColors[
+    data.status as EntranceExamStatusType
+  ] as LabelColor;
+  const statusLabel = EntranceExamStatusType[data.status as EntranceExamStatusType];
+  const isPass = statusLabel === 'Pass';
+
+  const detailRows = [
+    { label: 'Form No.', value: data.formNo || '—' },
+    { label: 'Exam Date', value: data.date || '—' },
+    { label: 'Exam Time', value: data.examTime || '—' },
+  ];
+
+  return (
+    <>
+      <DialogScrollContent>
+        <Box display="flex" flexDirection="column" gap={2}>
+          {/* Header card */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              p: 1.5,
+              borderRadius: 2,
+              bgcolor: 'background.neutral',
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: 'primary.lighter',
+                color: 'primary.main',
+                fontWeight: 700,
+                fontSize: '1rem',
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Box flex={1}>
+              <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
+                {data.studentName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {data.class} · {data.date}
+              </Typography>
+            </Box>
+            <Label color={statusColor}>{statusLabel}</Label>
+          </Box>
+
+          {/* Marks stats grid */}
+          <Box
+            display="grid"
+            gridTemplateColumns="1fr 1fr 1fr"
+            sx={{
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}
+          >
+            {[
+              { label: 'TOTAL', value: totalMarks, color: 'text.primary' },
+              {
+                label: 'OBTAINED',
+                value: obtainedMarks ?? '—',
+                color: isPass ? 'success.main' : 'error.main',
+              },
+              { label: 'PASSING', value: passingMark, color: 'text.primary' },
+            ].map((stat, i) => (
+              <Box
+                key={stat.label}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  py: 2,
+                  borderRight: i < 2 ? '1px solid' : 'none',
+                  borderColor: 'divider',
+                }}
+              >
+                <Typography variant="h4" fontWeight={700} color={stat.color} lineHeight={1}>
+                  {stat.value}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  fontWeight={600}
+                  sx={{ letterSpacing: 1, mt: 0.5 }}
+                >
+                  {stat.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Performance bar */}
+          {percentage !== null && (
+            <Box>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.75}>
+                <Typography variant="body2" fontWeight={600}>
+                  Performance
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color={isPass ? 'success.main' : 'error.main'}
+                  fontWeight={600}
+                >
+                  {percentage}%
+                  {diff !== null && (
+                    <Box
+                      component="span"
+                      sx={{ ml: 0.5, color: 'text.secondary', fontWeight: 400 }}
+                    >
+                      · {diff >= 0 ? `+${diff} above pass` : `${Math.abs(diff)} below pass`}
+                    </Box>
+                  )}
+                </Typography>
+              </Box>
+
+              {/* Bar with pass-line marker */}
+              <Box sx={{ position: 'relative' }}>
+                <Box
+                  sx={{
+                    position: 'relative',
+                    height: 8,
+                    borderRadius: 4,
+                    bgcolor: 'action.hover',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      height: '100%',
+                      width: `${barValue}%`,
+                      borderRadius: 4,
+                      bgcolor: isPass ? 'success.main' : 'error.main',
+                      transition: 'width 0.4s ease',
+                    }}
+                  />
+                </Box>
+                {passLinePercent > 0 && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -2,
+                      left: `${passLinePercent}%`,
+                      transform: 'translateX(-50%)',
+                      width: 2,
+                      height: 12,
+                      bgcolor: 'error.main',
+                      borderRadius: 1,
+                    }}
+                  />
+                )}
+              </Box>
+
+              {/* Bar labels */}
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                mt={0.5}
+                sx={{ position: 'relative' }}
+              >
+                <Typography variant="caption" color="text.disabled">
+                  0
+                </Typography>
+                {passLinePercent > 0 && (
+                  <Typography
+                    variant="caption"
+                    color="error.main"
+                    sx={{
+                      position: 'absolute',
+                      left: `${passLinePercent}%`,
+                      transform: 'translateX(-50%)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Pass line: {passingMark}
+                  </Typography>
+                )}
+                <Typography variant="caption" color="text.disabled">
+                  {totalMarks}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
+          <Divider />
+
+          {/* Detail rows */}
+          {detailRows.map((row) => (
+            <Box key={row.label} display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {row.label}
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {row.value}
+              </Typography>
+            </Box>
+          ))}
+
+          {/* Profile Completion */}
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+              Profile Completion
+            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                sx={{
+                  width: 80,
+                  height: 6,
+                  borderRadius: 3,
+                  bgcolor: 'action.hover',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 3,
+                    bgcolor: progress >= 50 ? 'success.main' : 'warning.main',
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                color={progress >= 50 ? 'success.main' : 'warning.main'}
+              >
+                {progress}%
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </DialogScrollContent>
+
+      <DialogActions>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          Close
+        </Button>
+      </DialogActions>
+    </>
+  );
+};
 
 // Component for handling exam form functionality including scheduling exams and managing slots
 export const ExamForm = ({

@@ -527,8 +527,6 @@ function RenderFamilyInformation(props: any) {
     formik.resetForm();
   };
 
-  console.log('--------------->', formik);
-
   return (
     <Box sx={{ width: '100%' }}>
       <SectionCard
@@ -1580,6 +1578,7 @@ function RenderFamilyInformation(props: any) {
             multiple
             value={student}
             fetchOptions={async (query) => {
+              if (!query || query.trim().length === 0) return { data: [], hasMore: false };
               const res = await studentSearchData({ searchTerm: query }).unwrap();
               return {
                 data: (res?.data ?? []).map((item: any) => ({

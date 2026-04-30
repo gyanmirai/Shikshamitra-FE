@@ -446,6 +446,7 @@ export const previousSchoolValidation = Yup.object({
   tcNumber: Yup.string(),
   previousClass: Yup.string(),
   percentage: Yup.string(),
+  schoolIndexNumber: Yup.string().matches(/^SCH-\d{4}-\d{4}$/, 'Format must be SCH-YYYY-XXXX'),
 });
 
 export const bankDetailsValidation = Yup.object({

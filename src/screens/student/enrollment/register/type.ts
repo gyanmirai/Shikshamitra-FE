@@ -61,10 +61,6 @@ export interface IGeneralInformationResponse {
     isoCode: string;
   };
   pincode: string;
-
-  previousSchool: 'string';
-  lastClassPassed: 'string';
-
   inquiryPreference: string;
   inquiryPreferenceId: string;
 }
@@ -274,7 +270,6 @@ export interface IAdditionalInformationResponse {
   isBPLStudent: boolean;
   bplCardNo: string;
   secondLanguage: string;
-  haveDisability: boolean;
   emergencyRelativeName: string;
   emergencyRelation: string;
   emergencyContactNo: string;
@@ -292,6 +287,8 @@ export interface IMedicalInformationResponse {
   bodyMassIndex: number;
   pulseRate: number;
   hemoglobin: number;
+  haveDisability: boolean;
+  disabilityDetails: string;
   allergies: string;
   childImmunization: string;
   covidVaccinationDoses: number;
@@ -308,7 +305,10 @@ export interface IPreviousSchoolResponse {
   schoolAddress: string;
   board: string;
   medium: string;
+  schoolIndexNumber: string;
   lastClassAttended: string;
+  previousSchool: string;
+  lastClassPassed: string;
   tcNumber: string;
   dateOfLeaving: string;
   percentageObtained: number;

@@ -5,7 +5,6 @@ import StudentSection from './components/StudentSection';
 import AddressSection from './components/AddressSection';
 import ContactDetailsSection from './components/ContactDetailsSection';
 import IdentificationSection from './components/IdentificationSection';
-import PreviousSchoolSection from './components/PreviousSchoolSection';
 import InquiryAdmissionSection from './components/InquiryAdmissionSection';
 
 import type { FieldsType } from './type';
@@ -147,13 +146,6 @@ const RenderGeneralFormFields = (props: GeneralFormProps) => {
         formik={formik}
         isMainForm={isMainForm}
         isEdit={isAddressEditable}
-        onSave={handleSave}
-        onCancel={handleCancel}
-      />
-      <PreviousSchoolSection
-        formik={formik}
-        isMainForm={isMainForm}
-        isEdit={isPreviousSchoolEditable}
         onSave={handleSave}
         onCancel={handleCancel}
       />

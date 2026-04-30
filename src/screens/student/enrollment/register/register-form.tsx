@@ -108,7 +108,45 @@ const SyncReduxDirty = ({ formik }: { formik: any }) => {
   return null;
 };
 
-const steps = [
+// Required field keys per step (derived from each step's validation schema)
+const REQUIRED_FIELD_KEYS: string[][] = [
+  // Step 0 – General
+  [
+    'formNo',
+    'firstName',
+    'lastName',
+    'dob',
+    'gender',
+    'familyCast',
+    'castCategory',
+    'primaryContactNumber',
+    'addressLine1',
+    'addressLine2',
+    'medium',
+    'board',
+    'academicYear',
+    'class',
+    'country',
+    'city',
+    'state',
+  ],
+  // Step 1 – Documents (no required fields)
+  [],
+  // Step 2 – Family
+  ['fatherName', 'motherName'],
+  // Step 3 – Communication (no required fields)
+  [],
+  // Step 4 – Additional Details (no required fields)
+  [],
+  // Step 5 – Medical Records
+  ['covidVaccination'],
+  // Step 6 – Prev. School Details (no required fields)
+  [],
+  // Step 7 – Bank Details (no required fields)
+  [],
+];
+
+const BASE_STEPS = [
   'General',
   'Documents',
   'Family',
@@ -119,6 +157,45 @@ const steps = [
   'Prev. School Details',
   'Bank Details',
 ];
+
+function isFieldFilled(value: any): boolean {
+  if (value === null || value === undefined || value === '') return false;
+  if (dayjs.isDayjs(value)) return value.isValid();
+  if (typeof value === 'object' && !Array.isArray(value)) return !!(value as any).name;
+  if (typeof value === 'string') return value.trim() !== '';
+  if (typeof value === 'number') return !Number.isNaN(value);
+  return Boolean(value);
+}
+
+function computeStepFieldCounts(values: any): { completed: number; total: number }[] {
+  return REQUIRED_FIELD_KEYS.map((keys) => ({
+    total: keys.length,
+    completed: keys.filter((key) => isFieldFilled(values[key])).length,
+  }));
+}
+
+/**
+ * Watches formik values and notifies parent when required-field counts change.
+ * Avoids triggering unnecessary state updates via a string-keyed comparison.
+ */
+const StepCountSyncer = ({
+  formikValues,
+  onCountChange,
+}: {
+  formikValues: any;
+  onCountChange: (counts: { completed: number; total: number }[]) => void;
+}) => {
+  const prevKeyRef = useRef('');
+  useEffect(() => {
+    const newCounts = computeStepFieldCounts(formikValues);
+    const newKey = newCounts.map((c) => `${c.completed}/${c.total}`).join(',');
+    if (prevKeyRef.current !== newKey) {
+      prevKeyRef.current = newKey;
+      onCountChange(newCounts);
+    }
+  }, [formikValues, onCountChange]);
+  return null;
+};
 
 const RegisterForm = ({
   editData,
@@ -140,6 +217,17 @@ const RegisterForm = ({
   const dispatch = useDispatch();
   const formikRef = useRef<any>(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [stepCounts, setStepCounts] = useState<{ completed: number; total: number }[]>(
+    BASE_STEPS.map((_, i) => ({ completed: 0, total: REQUIRED_FIELD_KEYS[i].length }))
+  );
+  const handleCountChange = useCallback(
+    (counts: { completed: number; total: number }[]) => setStepCounts(counts),
+    []
+  );
+  const stepsWithCounts = BASE_STEPS.map((label, i) => {
+    const { completed, total } = stepCounts[i];
+    return total > 0 ? `${label} (${completed}/${total})` : label;
+  });
   const [pendingStep, setPendingStep] = useState<number | null>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
@@ -213,11 +301,8 @@ const RegisterForm = ({
               state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
               country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
               pincode: String(values.pinCode) || undefined,
-              previousSchool: values.previousSchool || undefined,
-              lastClassPassed: values.lastClassPassed || undefined,
               academicMediumId: values.medium,
               standardId: values.class,
-
               formNumber: values.formNo,
               // academicYearId: values.academicYear,
               // educationBoardId: values.board,
@@ -488,6 +573,9 @@ const RegisterForm = ({
             bodyMassIndex: +values.bmi,
             pulseRate: +values.pulseRate,
             hemoglobin: +values.haemoglobin,
+            boodGroup: values.bloodGroup,
+            haveDisability: values.personWithDisability,
+            disabilityDetails: values.disabilityDetails,
             allergies: values.allergies,
             covidVaccinationDoses: values.covidVaccination,
             childImmunization: values.childImmunisation,
@@ -514,6 +602,9 @@ const RegisterForm = ({
             lastClassAttended: String(values.previousClass),
             percentageObtained: +values.percentage,
             reasonForLeaving: values.reasonForLeaving || undefined,
+            previousSchool: values.previousSchool || undefined,
+            lastClassPassed: values.lastClassPassed || undefined,
+            schoolIndexNumber: values.schoolIndexNumber || undefined,
           },
         }).unwrap();
       } catch (error) {
@@ -563,7 +654,6 @@ const RegisterForm = ({
             isBPLStudent: values.bplStudent,
             bplCardNo: values.bplCardNo,
             secondLanguage: values.secondLanguage,
-            haveDisability: values.personWithDisability,
             emergencyRelativeName: values.relationName,
             emergencyRelation: values.relation,
             emergencyContactNo: values.emergencyContactNo,
@@ -667,7 +757,7 @@ const RegisterForm = ({
     <>
       <CustomStepperWithFormik
         showSaveButton={isChanges}
-        disableSubmit={!isChanges && activeStep !== steps.length - 1}
+        disableSubmit={!isChanges && activeStep !== BASE_STEPS.length - 1}
         onStepClick={(index) => {
           if (editData) {
             if (isChanges) {
@@ -689,7 +779,7 @@ const RegisterForm = ({
           ...previousSchoolFieldsInitialValues(),
           ...bankDetailsInitialValues(),
         }}
-        steps={steps}
+        steps={stepsWithCounts}
         activeStep={activeStep}
         handleBack={() => {
           setActiveStep(activeStep - 1);
@@ -712,6 +802,7 @@ const RegisterForm = ({
           return (
             <>
               <SyncReduxDirty formik={formik} />
+              <StepCountSyncer formikValues={formik.values} onCountChange={handleCountChange} />
               <RegisterStepForm
                 activeStep={step}
                 formik={formik}
@@ -958,7 +1049,7 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
   const isLoading = stepLoadings[step] || false;
 
   return (
-    <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
+    <FormSlider step={step} steps={BASE_STEPS} isBackClick={isBackClick}>
       {isLoading ? (
         <Box sx={{ height: '100%' }}>
           <StepSkeleton step={step} />

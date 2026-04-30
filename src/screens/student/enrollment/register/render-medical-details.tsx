@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
+import { YesNoArray } from 'src/enums/yes-no';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomSelect from 'src/components/custom-select';
+import { BloodGroupArray } from 'src/enums/blood-group';
 import { Grid, MenuItem, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
@@ -254,6 +257,49 @@ const RenderMedicalFields = (props: any) => {
           </TextField>
         </ShakingTextField>
       </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <CustomSelect
+          disabled={!isMedicalEditable.value}
+          options={BloodGroupArray as any}
+          label="Blood Group"
+          value={formik.values.bloodGroup}
+          onChange={(value) => formik.setFieldValue('bloodGroup', value)}
+          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={formik.touched.bloodGroup && Boolean(formik.errors.bloodGroup)}
+          helperText={formik.touched.bloodGroup && formik.errors.bloodGroup}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <CustomSelect
+          disabled={!isMedicalEditable.value}
+          options={YesNoArray as any}
+          label="Person With Disability"
+          value={formik.values.personWithDisability}
+          onChange={(value) => formik.setFieldValue('personWithDisability', value)}
+          formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+          error={formik.touched.personWithDisability && Boolean(formik.errors.personWithDisability)}
+          helperText={formik.touched.personWithDisability && formik.errors.personWithDisability}
+        />
+      </Grid>
+
+      {(formik.values.personWithDisability === 'true' ||
+        formik.values.personWithDisability === true) && (
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <TextField
+            fullWidth
+            label="Details of Disability"
+            multiline
+            name="disabilityDetails"
+            size="small"
+            value={formik.values.disabilityDetails}
+            onChange={formik.handleChange}
+            disabled={!isMedicalEditable.value}
+          />
+        </Grid>
+      )}
+
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth

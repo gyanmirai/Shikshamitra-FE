@@ -56,11 +56,16 @@ export function PaginatedSearchSelect<
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       openOnFocus
+      clearOnBlur={false}
+      inputValue={inputValue}
       options={options || []}
       loading={loading}
       onInputChange={(_, newInputValue, reason) => {
         if (reason === 'input') {
           handleInputChange(newInputValue);
+        }
+        if (reason === 'clear') {
+          handleInputChange('');
         }
       }}
       ListboxProps={{

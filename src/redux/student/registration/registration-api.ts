@@ -194,7 +194,7 @@ export const StudentRegistrationApi = api.injectEndpoints({
     }),
     searchStudentRegistrations: builder.query({
       query: ({ searchTerm }) => ({
-        url: `/student/enrollment/registrations/search?searchTerm=${searchTerm}`,
+        url: `/student/enrollment/registrations/search`,
         method: 'GET',
         params: { searchTerm },
       }),

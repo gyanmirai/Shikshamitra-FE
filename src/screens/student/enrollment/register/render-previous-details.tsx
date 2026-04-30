@@ -1,6 +1,8 @@
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { Grid, TextField, Typography } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { toNumericWithMax, toAlphanumericTitleCase } from 'src/utils/input-format';
 import {
   CardActions,
   SectionCard,
@@ -143,6 +145,99 @@ const RenderPreviousSchoolFields = (props: any) => {
           disabled={!isEditable.value}
         />
       </Grid>
+
+      <Grid size={{ xs: 12, sm: 4, md: 3 }}>
+        <ShakingTextField
+          error={
+            (formik.touched as any).schoolIndexNumber &&
+            Boolean((formik.errors as any).schoolIndexNumber)
+          }
+        >
+          <TextField
+            size="small"
+            fullWidth
+            label="School Index Number"
+            name="schoolIndexNumber"
+            value={formik.values.schoolIndexNumber || ''}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              let val = e.target.value.toUpperCase();
+              val = val.replace(/[^A-Z0-9-]/g, '');
+              val = val.replace(/-{2,}/g, '-');
+              formik.setFieldValue('schoolIndexNumber', val.slice(0, 20));
+            }}
+            error={
+              (formik.touched as any).schoolIndexNumber &&
+              Boolean((formik.errors as any).schoolIndexNumber)
+            }
+            helperText={
+              (formik.touched as any).schoolIndexNumber && (formik.errors as any).schoolIndexNumber
+            }
+            disabled={!isEditable.value}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <ShakingTextField
+          error={
+            (formik.touched as any).previousSchool && Boolean((formik.errors as any).previousSchool)
+          }
+        >
+          <TextField
+            key="previousSchool"
+            size="small"
+            label="Previous School"
+            name="previousSchool"
+            value={(formik.values as any).previousSchool}
+            onBlur={formik.handleBlur}
+            error={
+              (formik.touched as any).previousSchool &&
+              Boolean((formik.errors as any).previousSchool)
+            }
+            helperText={
+              (formik.touched as any).previousSchool && (formik.errors as any).previousSchool
+            }
+            fullWidth
+            onChange={(e) => {
+              formik.setFieldValue('previousSchool', toAlphanumericTitleCase(e.target.value));
+              formik.setFieldTouched('previousSchool', true, true);
+            }}
+            disabled={!isEditable.value}
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 3 }}>
+        <ShakingTextField
+          error={
+            (formik.touched as any).lastClassPassed &&
+            Boolean((formik.errors as any).lastClassPassed)
+          }
+        >
+          <TextField
+            key="lastClassPassed"
+            size="small"
+            label="Last Class Passed"
+            name="lastClassPassed"
+            value={(formik.values as any).lastClassPassed}
+            onBlur={formik.handleBlur}
+            error={
+              (formik.touched as any).lastClassPassed &&
+              Boolean((formik.errors as any).lastClassPassed)
+            }
+            helperText={
+              (formik.touched as any).lastClassPassed && (formik.errors as any).lastClassPassed
+            }
+            fullWidth
+            onChange={(e) => {
+              formik.setFieldValue('lastClassPassed', toNumericWithMax(e.target.value, 10));
+              formik.setFieldTouched('lastClassPassed', true, true);
+            }}
+            disabled={!isEditable.value}
+          />
+        </ShakingTextField>
+      </Grid>
+
       {/* Academic Info Section */}
       <Grid size={{ xs: 12 }}>
         <Typography variant="subtitle1">Academic Info</Typography>
@@ -193,7 +288,6 @@ const RenderPreviousSchoolFields = (props: any) => {
           size="small"
           fullWidth
           multiline
-          minRows={2}
           label="Reason for Leaving"
           name="reasonForLeaving"
           value={formik.values.reasonForLeaving ?? ''}

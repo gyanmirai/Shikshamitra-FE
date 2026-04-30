@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { ReligionType } from 'src/enums/religion';
 import calculateAge from 'src/utils/calculate-age';
 import { Category } from 'src/enums/studnet-category';
-import { MotherTongueType } from 'src/enums/mother-tongue';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
@@ -18,107 +17,53 @@ import type {
   ICommunicationInformationResponse,
 } from './type';
 
-// export const generalFieldsInitialValues = (editData?: IGeneralInformationResponse | null) => ({
-//   inquiryNo: editData?.inquiryNo || '',
-//   formNo: editData?.formNo || '',
-//   firstName: editData?.firstName || '',
-//   lastName: editData?.lastName || '',
-//   middleName: editData?.middleName || '',
-//   dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
-//   age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
-//   gender: editData?.gender as GenderType,
-//   adharNo: editData?.adharNo || '',
-//   religion: editData?.religion ?? ReligionType.Hinduism,
-//   familyCast: editData ? editData?.familyCast : '',
-//   castCategory: editData ? editData?.castCategory : null,
-//   motherTongue: editData?.motherTongue ?? undefined,
-//   nationality: editData?.nationality || 'Indian',
-//   birthPlace: editData?.birthPlace || '',
-//   // temporaryGr: editData?.temporaryGr || '',
-//   // remarks: editData?.remarks || '',
-//   primaryContactNumber: editData?.primaryContactNo || '',
-//   secondaryContactNumber: editData?.secondaryContactNo
-//     ? validatePhoneNumber(editData?.secondaryContactNo)
-//     : '',
-//   email: editData?.email || '',
-//   userId: editData?.studentId || null,
-//   id: editData?.studentId || null,
-//   medium: editData?.academicMediumId || '',
-//   board: editData?.academicBoardId || '',
-//   academicYear: editData?.academicYearId || '',
-//   class: editData?.standardId || '',
-//   previousSchool: editData?.previousSchool || '',
-//   photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
-//   city: editData?.city ? { name: editData?.city } : { name: '' },
-//   state: editData?.state
-//     ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
-//     : { name: '', isoCode: '' },
-//   country: editData?.country
-//     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-//     : { name: 'India', isoCode: 'IN' },
-//   addressLine1: editData?.address1 || '',
+export const generalFieldsInitialValues = (editData?: IGeneralInformationResponse | null) => ({
+  inquiryNo: editData?.inquiryNo || '',
+  formNo: editData?.formNo || '',
+  firstName: editData?.firstName || '',
+  lastName: editData?.lastName || '',
+  middleName: editData?.middleName || '',
+  dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
+  age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
+  gender: editData?.gender as GenderType,
+  adharNo: editData?.adharNo || '',
+  religion: editData?.religion ?? ReligionType.Hinduism,
+  familyCast: editData ? editData?.familyCast : '',
+  castCategory: editData ? editData?.castCategory : null,
+  motherTongue: editData?.motherTongue ?? undefined,
+  nationality: editData?.nationality || 'Indian',
+  birthPlace: editData?.birthPlace || '',
+  // temporaryGr: editData?.temporaryGr || '',
+  // remarks: editData?.remarks || '',
+  primaryContactNumber: editData?.primaryContactNo || '',
+  secondaryContactNumber: editData?.secondaryContactNo
+    ? validatePhoneNumber(editData?.secondaryContactNo)
+    : '',
+  email: editData?.email || '',
+  userId: editData?.studentId || null,
+  id: editData?.studentId || null,
+  medium: editData?.academicMediumId || '',
+  board: editData?.academicBoardId || '',
+  academicYear: editData?.academicYearId || '',
+  class: editData?.standardId || '',
+  photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
+  city: editData?.city ? { name: editData?.city } : { name: '' },
+  state: editData?.state
+    ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
+    : { name: '', isoCode: '' },
+  country: editData?.country
+    ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
+    : { name: 'India', isoCode: 'IN' },
+  addressLine1: editData?.address1 || '',
 
-//   addressLine2: editData?.address2 || '',
-//   addressLine3: editData?.address3 || '',
-//   pinCode: editData?.pincode || '',
-//   inquiryPreference: editData?.inquiryPreferenceId || null,
-//   apparId: editData?.apparId || '',
-//   panNo: editData?.panNo || '',
-//   pennNo: editData?.pennNo || '',
-//   lastClassPassed: editData?.lastClassPassed || '',
-// });
-
-export const generalFieldsInitialValues = (editData?: IGeneralInformationResponse | null) => {
-  console.log('🔥 general editData:', editData);
-
-  return {
-    inquiryNo: editData?.inquiryNo || '',
-    formNo: editData?.formNo || '',
-    firstName: editData?.firstName || '',
-    lastName: editData?.lastName || '',
-    middleName: editData?.middleName || '',
-    dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
-    age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
-    gender: editData?.gender as GenderType,
-    adharNo: editData?.adharNo || '',
-    religion: editData?.religion ?? ReligionType.Hinduism,
-    familyCast: editData ? editData?.familyCast : '',
-    castCategory: editData ? editData?.castCategory : null,
-    motherTongue:
-      editData?.motherTongue != null ? MotherTongueType[editData.motherTongue] : undefined,
-    nationality: editData?.nationality || 'Indian',
-    birthPlace: editData?.birthPlace || '',
-    primaryContactNumber: editData?.primaryContactNo || '',
-    secondaryContactNumber: editData?.secondaryContactNo
-      ? validatePhoneNumber(editData?.secondaryContactNo)
-      : '',
-    email: editData?.email || '',
-    userId: editData?.studentId || null,
-    id: editData?.studentId || null,
-    medium: editData?.academicMediumId || '',
-    board: editData?.academicBoardId || '',
-    academicYear: editData?.academicYearId || '',
-    class: editData?.standardId || '',
-    previousSchool: editData?.previousSchool || '',
-    photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
-    city: editData?.city ? { name: editData?.city } : { name: '' },
-    state: editData?.state
-      ? { name: editData?.state?.name, isoCode: editData?.state?.isoCode }
-      : { name: '', isoCode: '' },
-    country: editData?.country
-      ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
-      : { name: 'India', isoCode: 'IN' },
-    addressLine1: editData?.address1 || '',
-    addressLine2: editData?.address2 || '',
-    addressLine3: editData?.address3 || '',
-    pinCode: editData?.pincode || '',
-    inquiryPreference: editData?.inquiryPreferenceId || null,
-    apparId: editData?.apparId || '',
-    panNo: editData?.panNo || '',
-    pennNo: editData?.pennNo || '',
-    lastClassPassed: editData?.lastClassPassed || '',
-  };
-};
+  addressLine2: editData?.address2 || '',
+  addressLine3: editData?.address3 || '',
+  pinCode: editData?.pincode || '',
+  inquiryPreference: editData?.inquiryPreferenceId || null,
+  apparId: editData?.apparId || '',
+  panNo: editData?.panNo || '',
+  pennNo: editData?.pennNo || '',
+});
 
 export const documentFieldsInitialValues = () => ({
   documents: [],
@@ -356,7 +301,6 @@ export const additionalDetailsInitialValues = (
   RTE: editData?.category !== Category.General,
   bplStudent: editData?.isBPLStudent || false,
   bplCardNo: editData?.bplCardNo || '',
-  personWithDisability: editData?.haveDisability || false,
   secondLanguage: editData?.secondLanguage || '',
   emergencyContactNo: editData?.emergencyContactNo
     ? validatePhoneNumber(editData?.emergencyContactNo)
@@ -377,6 +321,9 @@ export const medicalFieldsInitialValues = (editData?: IMedicalInformationRespons
   haemoglobin: editData?.hemoglobin || '',
   allergies: editData?.allergies || '',
   covidVaccination: editData?.covidVaccinationDoses || '',
+  haveDisability: editData?.haveDisability || false,
+  disabilityDetails: editData?.disabilityDetails || '',
+  bloodGroup: editData?.bloodGroup || '',
   childImmunisation: editData?.childImmunization || '',
   immunisationRemarks: editData?.immunizationRemarks || '',
 });
@@ -387,9 +334,12 @@ export const previousSchoolFieldsInitialValues = (editData?: IPreviousSchoolResp
   schoolBoard: editData?.board || '',
   schoolMedium: editData?.medium || '',
   tcNumber: editData?.tcNumber || '',
+  lastClassPassed: editData?.lastClassPassed || '',
+  previousSchool: editData?.previousSchool || '',
   previousClass: editData?.lastClassAttended || '',
   percentage: editData?.percentageObtained || '',
   reasonForLeaving: editData?.reasonForLeaving || '',
+  schoolIndexNumber: editData?.schoolIndexNumber || '',
 });
 
 export const bankDetailsInitialValues = (editData?: IBankDetailsResponse | null) => ({
