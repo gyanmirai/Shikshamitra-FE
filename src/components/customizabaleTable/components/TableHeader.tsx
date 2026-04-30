@@ -55,7 +55,7 @@ export const TableHeader = React.memo(
                     });
                   }}
                   sx={{
-                    fontSize: '13px',
+                    // fontSize: '13px',
                     fontWeight: 600,
                     color: 'text.secondary',
                     width: column.minWidth,
@@ -108,7 +108,7 @@ export const TableHeader = React.memo(
                     onClick={() => column.isSort !== false && onSort(column.id, column?.originalId)}
                   >
                     <Box
-                      fontSize="14px"
+                      // fontSize="14px"
                       display="block"
                       textAlign={column.align}
                       gap={1}

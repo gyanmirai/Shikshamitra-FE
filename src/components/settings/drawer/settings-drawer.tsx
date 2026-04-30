@@ -22,6 +22,7 @@ import { useSettingsContext } from '../context';
 import { PresetsOptions } from './presets-options';
 import { defaultSettings } from '../config-settings';
 import { FullScreenButton } from './fullscreen-button';
+import { FontSizeOptionsConnected } from './font-size-options';
 
 import type { SettingsDrawerProps } from '../types';
 
@@ -180,6 +181,7 @@ export function SettingsDrawer({
           {!(hideNavLayout && hideNavColor) && renderNav}
           {!hidePresets && renderPresets}
           {!hideFont && renderFont}
+          {!hideFont && <FontSizeOptionsConnected />}
         </Stack>
       </Scrollbar>
     </Drawer>

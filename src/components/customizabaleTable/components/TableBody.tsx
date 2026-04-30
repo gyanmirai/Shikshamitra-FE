@@ -112,7 +112,7 @@ export const TableBody = ({
             {...rowProps(row, index)}
           >
             {columns.some((column) => column.children) && (
-              <TableCell sx={{ fontSize: '13px' }}>
+              <TableCell>
                 <IconButton size="small" onClick={() => onExpandRow(index)}>
                   {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
@@ -126,7 +126,7 @@ export const TableBody = ({
                     align={column.align}
                     sx={{
                       alignItems: 'center',
-                      fontSize: '14px',
+                      // fontSize: '14px',
                       py: dense ? 1.5 : 2,
                       px: 2,
                       color: 'text.primary',

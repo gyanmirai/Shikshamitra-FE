@@ -19,6 +19,11 @@ export type SettingsDrawerProps = {
 
 export type SettingsState = {
   fontFamily: string;
+  /**
+   * Base font size in px. Controlled via the FontSize slider in the
+   * settings drawer. Allowed range: 12 - 16. Default: 12.
+   */
+  fontSize: number;
   compactLayout: boolean;
   direction: ThemeDirection;
   colorScheme: ThemeColorScheme;
