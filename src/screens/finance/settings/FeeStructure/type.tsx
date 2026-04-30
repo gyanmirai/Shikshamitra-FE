@@ -9,6 +9,8 @@ export interface IClassWiseFeeItem {
   amount: number;
   isOneTime: boolean;
   isOptional: boolean;
+  isRefundable?: boolean;
+  paymentTermId?: string;
 }
 
 export interface IClassWiseFeeData {

@@ -12,7 +12,6 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
     <Card
       sx={{
         borderRadius: 2,
-        mt: 2,
         border: (theme) => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
         boxShadow: (theme) => `0 4px 12px ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
         overflow: 'hidden',

@@ -23,18 +23,6 @@ export const getInitialFeeStructureData = (
 });
 
 export const standardFeeStructureInitialValues = (data: any) => ({
-  standardFeeStructures:
-    data?.standardFeeStructures?.map((fs: any) => ({
-      _id: crypto.randomUUID(),
-      name: fs.name,
-      feeHeads:
-        fs.feeHeads?.map((fh: any) => ({
-          feeHeadId: fh.feeHeadId,
-          feeHeadName: fh.feeHeadName,
-          categoryName: fh.categoryName,
-          amount: fh.amount,
-          isOneTime: fh.isOneTime,
-          isOptional: fh.isOptional,
-        })) || [],
-    })) || [],
+  id: data?.id || undefined,
+  feeStructureClasses: data?.standardFeeStructures || [],
 });

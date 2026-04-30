@@ -62,7 +62,6 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         align: 'left',
         filterType: 'string',
       },
-      { id: 'receiptBookName', label: 'Receipt Book', align: 'left', filterType: 'string' },
       {
         id: 'totalClassValue',
         label: 'Total Classes',

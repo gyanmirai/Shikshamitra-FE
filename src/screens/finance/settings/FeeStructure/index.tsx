@@ -13,7 +13,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useUpdateFeeStructureStatusMutation } from 'src/redux/finance/financeFeeStructure';
+import {
+  useGenerateFeeStructureMutation,
+  useUpdateFeeStructureStatusMutation,
+} from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureTable from './Components/FeeStructureTable';
 import FeeStructureEditForm from './Components/FeeStructureEditForm';
@@ -28,6 +31,13 @@ const FeeStructure = () => {
   const editFeeStructureDialog = useBoolean();
   const confirmDialog = useBoolean();
   const viewFeeStructureDialog = useBoolean();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  // POST mutation for generating fee structure
+  const [generateFeeStructure, { isLoading: isGenerating }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useGenerateFeeStructureMutation,
+  });
 
   // PATCH mutation for status change
   const [patchFeeStructureStatus, { isLoading: isUpdating }] = useQueryAndMutation({
@@ -133,6 +143,35 @@ const FeeStructure = () => {
             },
             { name: 'Fee Structure' },
           ]}
+          action={
+            <LoadingButton
+              variant="contained"
+              loading={isGenerating}
+              startIcon={<Iconify icon="mdi:plus" />}
+              onClick={async () => {
+                if (!currentYear?.id) {
+                  shikshaMitraToast.error({
+                    message: 'Please select an academic year before generating fee structure.',
+                  });
+                  return;
+                }
+                try {
+                  await generateFeeStructure({ academicYearId: currentYear.id }).unwrap();
+                  shikshaMitraToast.success({
+                    message: 'Fee structure generated successfully.',
+                  });
+                } catch (error) {
+                  console.error('Failed to generate fee structure:', error);
+                  shikshaMitraToast.error({
+                    message: 'Failed to generate fee structure.',
+                  });
+                }
+              }}
+              size="small"
+            >
+              Generate Fee Structure
+            </LoadingButton>
+          }
         />
       )}
       <>

@@ -19,6 +19,7 @@ export const financePaths = {
       feeCategory: '/finance/settings/fee-category',
       feeHead: '/finance/settings/fee-head',
       receiptBook: '/finance/settings/receipt-book',
+      paymentTerms: '/finance/settings/payment-term',
       feeStructure: '/finance/settings/create-fee-structure',
       concessionType: '/finance/settings/concession-type',
       chargeCategory: '/finance/settings/chargeCategory',
@@ -75,6 +76,7 @@ export const financePermissions = {
       feeCategory: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.FeeCategory`,
       feeHead: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.FeeHead`,
       receiptBook: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.ReceiptBook`,
+      paymentTerms: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.PaymentTerms`,
       feeStructure: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.FeeStructure`,
       concessionType: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.ConcessionType`,
       chargeCategory: `${defaultModulePermissionName}${defaultFinancePermissionName}Settings.ChargeCategory`,
@@ -223,6 +225,15 @@ const financeModule = {
                   icon: menuIconView('mdi:book-open-outline'),
                 },
                 {
+                  title: 'Payment Terms',
+                  path: financePaths.fees.settings.paymentTerms,
+                  _action: 'payment-terms',
+                  shortcutKey: 'Alt+F+2+S+4',
+                  shortcutKeyName: 'Alt+F+2+S+4',
+                  permissionName: financePermissions.fees.settings.paymentTerms,
+                  icon: menuIconView('mdi:calendar-check-outline'),
+                },
+                {
                   title: 'Fee Structure',
                   path: financePaths.fees.settings.feeStructure,
                   _action: 'fee-structure-setting',
@@ -316,7 +327,6 @@ const financeModule = {
                   permissionName: financePermissions.accounts.settings.expenseCategory,
                   icon: menuIconView('mdi:tag-minus-outline'),
                 },
-
                 {
                   title: 'Bank Accounts',
                   path: financePaths.accounts.settings.bankAccounts,
