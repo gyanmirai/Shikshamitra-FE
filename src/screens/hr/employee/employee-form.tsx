@@ -8,6 +8,7 @@ import { ReligionType } from 'src/enums/religion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -15,6 +16,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { expandAccessibleHierarchy } from 'src/utils/academicHierarchyUtils';
 import { Box, Grid, Slide, Button, TextField, Typography } from '@mui/material';
 import {
   useGetBankDetailsQuery,
@@ -897,6 +899,18 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
     params: { userId: editData?.id, academicYearId: currentYear?.id },
     options: { skip: !(editData?.id && currentYear?.id && step === 7) },
   });
+
+  // Full boards tree for the current academic year — needed to expand the
+  // BE access-control response when it compresses branches via `hasFull*Access`.
+  const { data: boardsData, isLoading: boardsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+    options: { skip: step !== 7 },
+  });
+  const allBoardsForYear = useMemo(
+    () => boardsData?.items?.filter((b: any) => b.academicYearId === currentYear?.id),
+    [boardsData?.items, currentYear?.id]
+  );
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (!editData?.id) return;
@@ -956,62 +970,9 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
       });
       initializedStepsRef.current[step] = true;
     } else if (accessControl && step === 7) {
-      if (accessControl?.accessibleHierarchy) {
-        const data = {
-          boards: [] as any,
-          mediums: [] as any,
-          organizations: [] as any,
-          standards: [] as any,
-          divisions: [] as any,
-        };
-
-        const keyMapping: any = {
-          0: 'hasFullMediumAccess',
-          1: 'hasFullMediumStageAccess',
-          2: 'hasFullStandardAccess',
-          3: 'hasFullDivisionAccess',
-        };
-
-        const idMapping: any = {
-          0: 'boardId',
-          1: 'mediumId',
-          2: 'mediumStageId',
-          3: 'standardId',
-          4: 'divisionId',
-        };
-
-        const levelMapping: any = {
-          0: 'mediums',
-          1: 'mediumStages',
-          2: 'standards',
-          3: 'divisions',
-        };
-
-        const recursionFn = (academicData: any[], level = 0, isParentFullyAccessible = false) => {
-          academicData?.forEach((element) => {
-            const hasFullAccessHere = !!element?.[(keyMapping as any)?.[level]];
-            const isAccessible = element.hasAccess || hasFullAccessHere || isParentFullyAccessible;
-
-            if (isAccessible) {
-              if (level === 0) data.boards.push(element?.[idMapping[level]] as any);
-              if (level === 1) data.mediums.push(element?.[idMapping[level]]);
-              if (level === 2) data.organizations.push(element?.[idMapping[level]]);
-              if (level === 3) data.standards.push(element?.[idMapping[level]]);
-              if (level === 4) data.divisions.push(element?.[idMapping[level]]);
-            }
-
-            if (element?.[levelMapping[level]]?.length) {
-              recursionFn(
-                element[levelMapping[level]],
-                level + 1,
-                isParentFullyAccessible || hasFullAccessHere
-              );
-            }
-          });
-        };
-
-        recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards, 0, false);
-
+      // Need full boards tree to expand BE-compressed `hasFull*Access` branches.
+      if (accessControl?.accessibleHierarchy && allBoardsForYear?.length) {
+        const data = expandAccessibleHierarchy(accessControl, allBoardsForYear);
         const updatedFields = academicPermissionInitialValues(data);
 
         formikRef.current.resetForm({
@@ -1032,6 +993,7 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
     bankDetails,
     reportingManagerDetails,
     accessControl,
+    allBoardsForYear,
     step,
   ]);
   return (
@@ -1076,7 +1038,8 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
                     workExperienceLoading ||
                     bankDetailsLoading ||
                     reportingManagerDetailsLoading ||
-                    accessControlLoading ? (
+                    accessControlLoading ||
+                    boardsLoading ? (
                       <StepSkeleton step={step} />
                     ) : (
                       <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
