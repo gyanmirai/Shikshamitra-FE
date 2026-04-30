@@ -1,7 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -12,24 +11,12 @@ import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
-import {
-  Box,
-  Grid,
-  Card,
-  Badge,
-  Button,
-  Avatar,
-  Divider,
-  Typography,
-  CardContent,
-} from '@mui/material';
+import { Box, Grid, Card, Badge, Avatar, Divider, Typography, CardContent } from '@mui/material';
 import TeacherHoverProfile from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/TeacherHoverProfile';
 
 import type { IHomework } from '../../type';
 
 const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-
   const { createdAt } = homework as any;
   const publishDate =
     homework?.divisionMeta?.publishDate ||
@@ -107,32 +94,22 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                     py: 0.5,
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.primary"
-                    component="div"
-                    sx={{
-                      textAlign: 'justify',
-                      lineHeight: 1.7,
-                      display: '-webkit-box',
-                      WebkitLineClamp: showFullDescription ? 'unset' : 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      '& p': { margin: 0 },
-                      '& ul, & ol': { paddingLeft: 2 },
-                    }}
-                    // eslint-disable-next-line react/no-danger
-                    dangerouslySetInnerHTML={{ __html: homework?.description || '' }}
-                  />
+                  <Scrollbar sx={{ maxHeight: 150 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      component="div"
+                      sx={{
+                        textAlign: 'justify',
+                        lineHeight: 1.7,
+                        '& p': { margin: 0 },
+                        '& ul, & ol': { paddingLeft: 2 },
+                      }}
+                      // eslint-disable-next-line react/no-danger
+                      dangerouslySetInnerHTML={{ __html: homework?.description || '' }}
+                    />
+                  </Scrollbar>
                 </Box>
-                {homework?.description && homework.description.length > 150 && (
-                  <Button
-                    onClick={() => setShowFullDescription(!showFullDescription)}
-                    sx={{ p: 0, mt: 0.5, color: 'primary.main', '&:hover': { background: 'none' } }}
-                  >
-                    {showFullDescription ? 'Show less' : 'Show more'}
-                  </Button>
-                )}
               </Box>
 
               {/* Type & Submit Via chips */}

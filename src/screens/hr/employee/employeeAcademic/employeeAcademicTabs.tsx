@@ -20,44 +20,46 @@ const EmployeeAcademicTabs = () => {
   );
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
-    <Card>
-      <CustomTabs
-        value={tabs.value}
-        onChange={(...rest) => {
-          const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
-          if (currentIndex > newIndex) {
-            setIsBackClick(true);
-          } else {
-            setIsBackClick(false);
-          }
-          tabs.onChange(...rest);
-        }}
-        variant="fullWidth"
-        slotProps={{ tab: { px: 0 } }}
-      >
-        {TABS.map((tab) => (
-          <Tab key={tab.value} value={tab.value} label={tab.label} />
-        ))}
-      </CustomTabs>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
+      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
+        <Card>
+          <CustomTabs
+            value={tabs.value}
+            onChange={(...rest) => {
+              const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
+              if (currentIndex > newIndex) {
+                setIsBackClick(true);
+              } else {
+                setIsBackClick(false);
+              }
+              tabs.onChange(...rest);
+            }}
+            variant="fullWidth"
+            slotProps={{ tab: { px: 0 } }}
+          >
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} />
+            ))}
+          </CustomTabs>
 
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-          },
-        }}
-      >
-        <Scrollbar sx={{ minHeight: 384 }}>
-          <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-            {tabs.value === 'timetable' && <TeacherSchedule />}
-            {tabs.value === 'subjectPerformace' && <CourseProgress />}
-          </Box>
-        </Scrollbar>
-      </FormSlider>
-    </Card>
+          <FormSlider
+            steps={TABS}
+            isBackClick={isBackClick}
+            step={currentIndex}
+            containerProps={{
+              sx: {
+                p: 0,
+              },
+            }}
+          >
+            <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
+              {tabs.value === 'timetable' && <TeacherSchedule />}
+              {tabs.value === 'subjectPerformace' && <CourseProgress />}
+            </Box>
+          </FormSlider>
+        </Card>
+      </Scrollbar>
+    </Box>
   );
 };
 

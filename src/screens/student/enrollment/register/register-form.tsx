@@ -216,6 +216,7 @@ const RegisterForm = ({
 }) => {
   const dispatch = useDispatch();
   const formikRef = useRef<any>(null);
+  const resetCurrentStepRef = useRef<(() => void) | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [stepCounts, setStepCounts] = useState<{ completed: number; total: number }[]>(
     BASE_STEPS.map((_, i) => ({ completed: 0, total: REQUIRED_FIELD_KEYS[i].length }))
@@ -725,6 +726,8 @@ const RegisterForm = ({
             message: `${values.firstName} ${values.lastName}'s  Moved to Registration Successfully`,
           });
         }
+        formik.resetForm({ values: formik.values });
+        resetCurrentStepRef.current?.();
         if (!isLastStep) {
           if (!isSaveButton) {
             setActiveStep(activeStep + 1);
@@ -750,6 +753,7 @@ const RegisterForm = ({
       handlePreviousSchoolFormSubmit,
       isComeFromIssueForm,
       editData,
+      resetCurrentStepRef,
     ]
   );
 
@@ -808,6 +812,7 @@ const RegisterForm = ({
                 formik={formik}
                 isBackClick={isBackClick}
                 editData={editData}
+                resetCurrentStepRef={resetCurrentStepRef}
               />
             </>
           );
@@ -838,6 +843,7 @@ const RegisterForm = ({
             size="small"
             onClick={() => {
               if (pendingStep !== null) {
+                resetCurrentStepRef.current?.();
                 formikRef.current?.resetForm();
                 dispatch(setIsChanges(false));
                 setActiveStep(pendingStep);
@@ -855,7 +861,13 @@ const RegisterForm = ({
 
 export default RegisterForm;
 
-const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: any) => {
+const RegisterStepForm = ({
+  activeStep: step,
+  formik,
+  isBackClick,
+  editData,
+  resetCurrentStepRef,
+}: any) => {
   // const [editData, setEditData] = useState<null | IInquiryResponse>(null);
 
   // // Custom boolean hook to manage form dialog visibility
@@ -863,6 +875,16 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
 
   const initializedStepsRef = useRef<Record<number, boolean>>({});
   const prevStepRef = useRef<number>(step);
+  const formikRef = React.useRef(formik);
+  formikRef.current = formik;
+
+  useEffect(() => {
+    if (resetCurrentStepRef) {
+      resetCurrentStepRef.current = () => {
+        initializedStepsRef.current[step] = false;
+      };
+    }
+  }, [step, resetCurrentStepRef]);
 
   useEffect(() => {
     if (prevStepRef.current !== step) {
@@ -967,57 +989,57 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (basicDetails?.data && step === 0) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...generalFieldsInitialValues(basicDetails?.data),
         },
       });
       initializedStepsRef.current[step] = true;
     } else if (familyDetails?.data && step === 2) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...familyFieldsInitialValues(familyDetails?.data),
         },
       });
       initializedStepsRef.current[step] = true;
     } else if (studentCommunicationDetails?.data && step === 3) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...CommunicationFieldsInitialValues(studentCommunicationDetails?.data),
         },
       });
       initializedStepsRef.current[step] = true;
     } else if (studentAdditionalDetails?.data && step === 4) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...additionalDetailsInitialValues(studentAdditionalDetails?.data),
         },
       });
       initializedStepsRef.current[step] = true;
     } else if (studentMedicalDetails?.data && step === 5) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...medicalFieldsInitialValues(studentMedicalDetails?.data),
         },
       });
       initializedStepsRef.current[step] = true;
     } else if (previousSchoolDetails?.data && step === 6) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...previousSchoolFieldsInitialValues(previousSchoolDetails?.data),
         },
       });
       initializedStepsRef.current[step] = true;
     } else if (parentBankDetails?.data && step === 7) {
-      formik.resetForm({
+      formikRef.current.resetForm({
         values: {
-          ...formik.values,
+          ...formikRef.current.values,
           ...bankDetailsInitialValues(parentBankDetails?.data),
         },
       });

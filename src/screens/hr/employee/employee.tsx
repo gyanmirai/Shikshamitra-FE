@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
+import UserHoverProfile from 'src/components/student-popover';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -201,15 +202,41 @@ const HrEmployee = () => {
         align: 'left',
         render(value, row) {
           return (
-            <Box display="flex" alignItems="center" gap={1}>
-              <Avatar
-                alt={value}
-                src={convertBase64Format(row.profilePicture)}
-                sx={{
-                  height: 32,
-                  width: 32,
-                  border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              onClick={() => setSearchParams('employee', row?.id)}
+              sx={{
+                cursor: 'pointer',
+                '&:hover': { color: 'primary.main', textDecoration: 'underline' },
+              }}
+            >
+              <UserHoverProfile
+                user={{
+                  name: value,
+                  email: row.email,
+                  role: row.roleValue,
+                  avatarUrl: convertBase64Format(row.profilePicture),
+                  organization: row.organization,
+                  mobileNo: row.mobileNo,
+                  department: row.department,
+                  shift: row.shiftName,
+                  joinDate: row.doi,
+                  employeeId: row.employeeIdentifier,
                 }}
+                onViewProfile={() => setSearchParams('employee', row?.id)}
+                avatarComp={
+                  <Avatar
+                    alt={value}
+                    src={convertBase64Format(row.profilePicture)}
+                    sx={{
+                      height: 32,
+                      width: 32,
+                      border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
+                    }}
+                  />
+                }
               />{' '}
               {value} ({row.employeeIdentifier})
             </Box>
@@ -260,7 +287,7 @@ const HrEmployee = () => {
         label: 'Status',
         filterType: 'enum',
         enumOptions: EmployeeStatusTypeOptions,
-        minWidth: '90px',
+        minWidth: '70px',
         align: 'left',
         sticky: true,
         render(value, row) {

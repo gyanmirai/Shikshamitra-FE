@@ -5,7 +5,6 @@ import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Tab, Card } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -75,7 +74,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
     switch (tabs.value) {
       case 'borrowed-books':
         return (
-          <Box>
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
               tableId="employee-borrowed-books-table"
               noDataText="No Borrowed Books Data Found"
@@ -93,7 +92,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         );
       case 'reserved-books':
         return (
-          <Box>
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
               tableId="employee-reserved-books-table"
               noDataText="No Reserved Books Data Found"
@@ -110,7 +109,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         );
       case 'charges':
         return (
-          <Box>
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
               tableId="employee-fines-charges-table"
               noDataText="No Fines or Charges Data Found"
@@ -163,7 +162,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
         );
       case 'borrow-history':
         return (
-          <Box>
+          <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <CustomizableTable
               tableId="employee-issued-books-table"
               noDataText="No Borrowed History Data Found"
@@ -185,10 +184,19 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 280px)',
+        minHeight: 0,
+        gap: 1,
+      }}
+    >
       {/* Tabs */}
       <Card
         sx={{
+          flexShrink: 0,
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
@@ -212,7 +220,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
       </Card>
 
       {/* Tab Content */}
-      <Scrollbar sx={{ pt: 1 }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={tabs.value}
@@ -220,11 +228,12 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
           >
             {renderTabContent()}
           </motion.div>
         </AnimatePresence>
-      </Scrollbar>
+      </Box>
     </Box>
   );
 };

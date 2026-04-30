@@ -67,7 +67,7 @@ export const RenderDocuments = (props: any) => {
     }
   };
   return (
-    <Box sx={{ height: '100%', minHeight: 0 }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomizableTable
         isLoading={isEmployeeDocLoading}
         tableTitle="Documents"
