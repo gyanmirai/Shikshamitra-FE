@@ -6,13 +6,15 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET assignment submissions
     getAssignmentSubmissions: builder.query({
-      query: ({ assignmentId, classId, divisionId, subjectId }) => ({
-        url: `assignment/${assignmentId}/submissions`,
+      query: ({ academicMediumId, ClassId, DivisionId, SubjectId, AssignmentId }) => ({
+        url: `/assignments/submissions`,
         method: 'GET',
         params: {
-          classId,
-          divisionId,
-          subjectId,
+          academicMediumId,
+          ClassId,
+          DivisionId,
+          SubjectId,
+          AssignmentId,
         },
       }),
       providesTags: [academicType.assignmentSubmissions],

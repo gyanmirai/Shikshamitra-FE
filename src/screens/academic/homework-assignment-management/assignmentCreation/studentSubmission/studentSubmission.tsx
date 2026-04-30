@@ -44,6 +44,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     data: assignmentSubmissions,
     isLoading: isSubmissionsLoading,
     refetch: refetchAssignmentSubmissions,
+    isfetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAssignmentSubmissionsQuery,
@@ -68,69 +69,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
 
-  // Dummy data for students
-  const studentData = [
-    {
-      id: '1',
-      grNo: 'GR001',
-      rollNumber: '101',
-      studentName: 'Mehta Aarav Kumar',
-      assignment: 'Math Assignment 1',
-      assignmentType: 'Practice',
-      submissionType: 'online',
-      submissionDate: '20-05-2025',
-      dueDate: '25-05-2025',
-      marks: 18,
-      totalMarks: 25,
-      feedback: 'Well done!',
-      status: ScheduleExamStatus.Reviewed,
-    },
-    {
-      id: '2',
-      grNo: 'GR002',
-      rollNumber: '102',
-      studentName: 'Patel Nisha Rajesh',
-      assignment: 'Science Homework',
-      assignmentType: 'Practice',
-      submissionType: 'file_upload',
-      submissionDate: '20-05-2025',
-      dueDate: '22-05-2025',
-      marks: null,
-      totalMarks: 25,
-      feedback: '',
-      status: ScheduleExamStatus['Needs Review'],
-    },
-    {
-      id: '3',
-      grNo: 'GR003',
-      rollNumber: '103',
-      studentName: 'Shah Ravi Mukesh',
-      assignment: 'English Essay',
-      assignmentType: 'Practice',
-      submissionType: 'online',
-      submissionDate: '20-05-2025',
-      dueDate: '23-05-2025',
-      marks: 15,
-      totalMarks: 25,
-      feedback: 'Good effort.',
-      status: ScheduleExamStatus.Reviewed,
-    },
-    {
-      id: '4',
-      grNo: 'GR004',
-      rollNumber: '104',
-      studentName: 'Desai Sneha Prakash',
-      assignment: 'History Worksheet',
-      assignmentType: 'Practice',
-      submissionType: 'file_upload',
-      submissionDate: '20-05-2025',
-      dueDate: '21-05-2025',
-      marks: 20,
-      totalMarks: 25,
-      feedback: '',
-      status: ScheduleExamStatus.Reviewed,
-    },
-  ];
+  const studentData = assignmentSubmissions?.data || [];
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -392,6 +331,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           },
         ]}
+        isLoading={isSubmissionsLoading || isfetching}
         data={studentData}
       />
 

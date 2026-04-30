@@ -1,10 +1,9 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { SubmissionType } from 'src/enums/submission_type';
-import { Box, Card, Grid, Skeleton, Typography } from '@mui/material';
+import { Box, Card, Grid, Divider, Skeleton, Typography } from '@mui/material';
 
 import HomeworkOverview from './viewHomeworkDetails/homeworkOverview';
 
@@ -244,60 +243,65 @@ const ViewHomeworkDetails = ({
       <Scrollbar sx={{ height: '100%' }}>
         <Card
           sx={{
-            height: '100%',
-            mx: 'auto',
+            mx: 1,
+            mb: 2,
+            mt: 0.5,
             boxShadow: 'var(--shadows-10)',
             borderRadius: 2,
-            ml: 1,
-            mb: 2,
-            mr: 1,
-            mt: 0.5,
+            overflow: 'hidden',
           }}
         >
-          {/* Body */}
-          <Box sx={{ p: 2 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <InfoItem
-                  icon={<Iconify icon="mdi:book-open-page-variant" />}
-                  label="Subject"
-                  value={(homework as any).subjectName || homework.subject}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <InfoItem
-                  icon={<Iconify icon="mdi:google-classroom" />}
-                  label="Class"
-                  value={
-                    [
-                      (homework as any).standardName || homework.class,
-                      homework.divisionMeta?.divisionName ||
-                        (homework as any).divisionSchedules?.[0]?.divisionName ||
-                        homework.divisionMeta?.divisionId,
-                    ]
-                      .filter(Boolean)
-                      .join(' - ') || 'N/A'
-                  }
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 3 }}>
-                <InfoItem
-                  icon={<Iconify icon="solar:bookmark-circle-bold" />}
-                  label="Chapter"
-                  value={(homework as any).chapterName || homework.chapter}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <InfoItem
-                  icon={<Iconify icon={GlobalIcons.submit} />}
-                  label="Submit Via"
-                  value={
-                    SubmissionType[homework.submissionType as number] || homework.submissionType
-                  }
-                />
-              </Grid>
-            </Grid>
+          <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+            {[
+              {
+                label: 'Subject',
+                value: (homework as any).subjectName || homework.subject || 'N/A',
+              },
+              {
+                label: 'Class',
+                value:
+                  [
+                    (homework as any).standardName || homework.class,
+                    homework.divisionMeta?.divisionName ||
+                      (homework as any).divisionSchedules?.[0]?.divisionName ||
+                      homework.divisionMeta?.divisionId,
+                  ]
+                    .filter(Boolean)
+                    .join(' - ') || 'N/A',
+              },
+              {
+                label: 'Chapter',
+                value: (homework as any).chapterName || homework.chapter || 'N/A',
+              },
+              {
+                label: 'Submit Via',
+                value:
+                  SubmissionType[homework.submissionType as number] ||
+                  homework.submissionType ||
+                  'N/A',
+              },
+            ].map((item, idx, arr) => (
+              <React.Fragment key={item.label}>
+                <Box sx={{ flex: 1, px: 3, py: 2 }}>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      color: 'text.secondary',
+                      display: 'block',
+                      letterSpacing: 1.5,
+                      fontSize: '0.65rem',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {item.label}
+                  </Typography>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 0.5 }}>
+                    {item.value}
+                  </Typography>
+                </Box>
+                {idx < arr.length - 1 && <Divider orientation="vertical" flexItem />}
+              </React.Fragment>
+            ))}
           </Box>
         </Card>
 

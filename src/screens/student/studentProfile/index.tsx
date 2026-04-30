@@ -13,6 +13,7 @@ import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -399,8 +400,53 @@ export function StudentProfile() {
                 align: 'left',
                 filterType: 'date',
               },
-              { id: 'age', label: 'Age', minWidth: '8vw', align: 'left', filterType: 'number' },
-              { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
+              {
+                id: 'age',
+                label: 'Age',
+                minWidth: '8vw',
+                align: 'left',
+                filterType: 'number',
+                render: (value, row) => (
+                  <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+                    <Typography
+                      variant="inherit"
+                      noWrap
+                      sx={{
+                        maxWidth: 150,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'block',
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                  </CustomTooltip>
+                ),
+              },
+              {
+                id: 'address',
+                label: 'Address',
+                minWidth: '14vw',
+                align: 'left',
+                render: (value, row) => (
+                  <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+                    <Typography
+                      variant="inherit"
+                      noWrap
+                      sx={{
+                        maxWidth: 150,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'block',
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                  </CustomTooltip>
+                ),
+              },
               { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
               // { id: 'class', label: 'Class' },
               // { id: 'division', label: 'Division' },

@@ -247,7 +247,7 @@ const AdmissionScreen = () => {
       // { id: 'educationBoard.name', label: 'Board', align: 'left' },
       // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
       { id: 'standard', label: 'Class', align: 'left' },
-      { id: 'divisionId', label: 'Division', align: 'left' },
+      { id: 'division', label: 'Division', align: 'left' },
       {
         id: 'dobValue',
         label: 'Date of Birth',
