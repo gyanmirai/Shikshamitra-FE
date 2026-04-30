@@ -10,12 +10,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import React, { useMemo, useState, useEffect } from 'react';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { expandAccessibleHierarchy } from 'src/utils/academicHierarchyUtils';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetAccessControlQuery, useAddAccessControlMutation } from 'src/redux/hr/employeeApi';
 import {
   Box,
@@ -114,77 +115,27 @@ export const AccessControlForm = ({
     options: { skip: !(user?.id && currentYear?.id) },
   });
 
+  // Full boards tree for the current academic year — needed to expand the
+  // BE response when it compresses branches via `hasFull*Access` flags.
+  const { data: boardsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  const allBoards = useMemo(
+    () => boardsData?.items?.filter((b: Board) => b.academicYearId === currentYear?.id),
+    [boardsData?.items, currentYear?.id]
+  );
+
   // Effect to populate form with existing access control data
   useEffect(() => {
-    if (accessControl?.accessibleHierarchy) {
-      const keyMapping: any = {
-        0: 'hasFullMediumAccess',
-        1: 'hasFullMediumStageAccess',
-        2: 'hasFullStandardAccess',
-        3: 'hasFullDivisionAccess',
-      };
-      const idMapping: any = {
-        0: 'boardId',
-        1: 'mediumId',
-        2: 'mediumStageId',
-        3: 'standardId',
-        4: 'divisionId',
-      };
-      const levelMapping: any = {
-        0: 'mediums',
-        1: 'mediumStages',
-        2: 'standards',
-        3: 'divisions',
-      };
-      const data: {
-        boards: string[];
-        mediums: string[];
-        organizations: string[];
-        standards: string[];
-        divisions: string[];
-      } = {
-        boards: [],
-        mediums: [],
-        organizations: [],
-        standards: [],
-        divisions: [],
-      };
-      const recursionFn = (academicData: any[], level = 0, isParentFullyAccessible = false) => {
-        academicData?.forEach((element) => {
-          const hasFullAccessHere = !!element?.[(keyMapping as any)[level]];
-          const isAccessible = element.hasAccess || hasFullAccessHere || isParentFullyAccessible;
-
-          if (isAccessible) {
-            if (level === 0) {
-              data.boards.push(element?.[idMapping[level]]);
-            }
-            if (level === 1) {
-              data.mediums.push(element?.[idMapping[level]]);
-            }
-            if (level === 2) {
-              data.organizations.push(element?.[idMapping[level]]);
-            }
-            if (level === 3) {
-              data.standards.push(element?.[idMapping[level]]);
-            }
-            if (level === 4) {
-              data.divisions.push(element?.[idMapping[level]]);
-            }
-          }
-
-          if (element?.[levelMapping[level]]?.length) {
-            recursionFn(
-              element?.[levelMapping[level]],
-              level + 1,
-              isParentFullyAccessible || hasFullAccessHere
-            );
-          }
-        });
-      };
-      recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards, 0, false);
-      setCheckedItem(data);
-    }
-  }, [accessControl?.accessibleHierarchy]);
+    if (!accessControl?.accessibleHierarchy || !allBoards?.length) return;
+    const expanded = expandAccessibleHierarchy(accessControl, allBoards);
+    setCheckedItem(expanded);
+    // Seed the API payload too so a submit-without-changes still sends the
+    // currently-granted set. The first user toggle will recompute it via
+    // the all-or-null compression in BoardScreenStep.generateFinalSelection.
+    setSelectedData(expanded);
+  }, [accessControl, allBoards]);
 
   // Handler for form submission
   const handleSubmit = async () => {
@@ -264,10 +215,106 @@ const color = {
   divisions: 'default',
 };
 
-// Component for rendering individual tree nodes
-const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0 }: any) => {
-  // Check if node is selected in checkedItem state
-  const isSelected = checkedItem[`${node.type}` as keyof typeof checkedItem]?.includes(node.id);
+type CheckedItemMap = {
+  boards: string[];
+  mediums: string[];
+  organizations: string[];
+  standards: string[];
+  divisions: string[];
+};
+
+type CheckedItemSets = {
+  boards: Set<string>;
+  mediums: Set<string>;
+  organizations: Set<string>;
+  standards: Set<string>;
+  divisions: Set<string>;
+};
+
+type SelectionStatus = 'full' | 'partial' | 'none';
+
+// Build a Set-based view of `checkedItem` once per render for O(1) lookups.
+const toCheckedItemSets = (ci: CheckedItemMap): CheckedItemSets => ({
+  boards: new Set(ci.boards),
+  mediums: new Set(ci.mediums),
+  organizations: new Set(ci.organizations),
+  standards: new Set(ci.standards),
+  divisions: new Set(ci.divisions),
+});
+
+// Single post-order pass that computes each node's selection status in O(N).
+// The resulting Map can be queried in O(1) by RenderNode and by the API
+// payload generator, replacing the previous per-node recursive helpers.
+const buildSelectionMap = (roots: any[], ciSets: CheckedItemSets): Map<string, SelectionStatus> => {
+  const map = new Map<string, SelectionStatus>();
+
+  const visit = (node: any): SelectionStatus => {
+    const { children } = node as { children?: any[] };
+    if (!children || children.length === 0) {
+      const set = ciSets[node.type as keyof CheckedItemSets];
+      const status: SelectionStatus = set?.has(node.id) ? 'full' : 'none';
+      map.set(node.id, status);
+      return status;
+    }
+
+    let fullCount = 0;
+    let noneCount = 0;
+    for (let i = 0; i < children.length; i += 1) {
+      const childStatus = visit(children[i]);
+      if (childStatus === 'full') fullCount += 1;
+      else if (childStatus === 'none') noneCount += 1;
+    }
+
+    let status: SelectionStatus;
+    if (fullCount === children.length) status = 'full';
+    else if (noneCount === children.length) status = 'none';
+    else status = 'partial';
+
+    map.set(node.id, status);
+    return status;
+  };
+
+  roots.forEach(visit);
+  return map;
+};
+
+// Collect every node id in the subtree (including the node itself), grouped by type.
+const collectSubtreeIds = (node: any): CheckedItemMap => {
+  const acc: CheckedItemMap = {
+    boards: [],
+    mediums: [],
+    organizations: [],
+    standards: [],
+    divisions: [],
+  };
+  const walk = (n: any) => {
+    (acc[n.type as keyof CheckedItemMap] as string[]).push(n.id);
+    n.children?.forEach(walk);
+  };
+  walk(node);
+  return acc;
+};
+
+// Component for rendering individual tree nodes.
+//
+// IMPORTANT for perf: this component is memoized so that nodes whose own
+// `status` did not change skip re-render entirely. To make memo effective:
+//   - `node` must be a stable reference (achieved via memoized nodeData).
+//   - `status` is a primitive string (cheap to compare).
+//   - `getStatus` and `onToggle` are stable across renders (ref-backed).
+const RenderNode = React.memo(function RenderNode({
+  node,
+  status,
+  getStatus,
+  onToggle,
+}: {
+  node: any;
+  status: SelectionStatus;
+  getStatus: (id: string) => SelectionStatus;
+  onToggle: (n: any) => void;
+}) {
+  const isSelected = status === 'full';
+  const isIndeterminate = status === 'partial';
 
   // State for node expansion
   const isExpanded = useBoolean(true);
@@ -335,8 +382,10 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
 
         <Checkbox
           checked={isSelected}
-          onChange={() => handleNodeSelect(node)}
+          indeterminate={isIndeterminate}
+          onChange={() => onToggle(node)}
           size="small"
+          disableRipple
           sx={{ p: 0.5, mr: 1 }}
         />
 
@@ -361,17 +410,16 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
             <RenderNode
               key={child.id}
               node={child}
-              checkedItem={checkedItem}
-              toggleNode={toggleNode}
-              handleNodeSelect={handleNodeSelect}
-              level={level + 1}
+              status={getStatus(child.id)}
+              getStatus={getStatus}
+              onToggle={onToggle}
             />
           ))}
         </Box>
       )}
     </Box>
   );
-};
+});
 
 // Component for managing board selection step
 export const BoardScreenStep = ({
@@ -418,9 +466,12 @@ export const BoardScreenStep = ({
     currentQueryAndMutation: useGetBoardsQuery,
   });
 
-  // Filter boards for current academic year
-  const allBoards = boards?.items?.filter(
-    (board: Board) => board.academicYearId === currentYear?.id
+  // Filter boards for current academic year. Memoized so `nodeData` keeps a
+  // stable reference between renders — this is what lets RenderNode's React.memo
+  // actually skip re-renders for unchanged nodes.
+  const allBoards = useMemo(
+    () => boards?.items?.filter((board: Board) => board.academicYearId === currentYear?.id),
+    [boards?.items, currentYear?.id]
   );
 
   // Memoized hierarchical data structure for boards
@@ -459,101 +510,105 @@ export const BoardScreenStep = ({
     [allBoards]
   );
 
-  // Helper function to find all child nodes
-  const findAllChildren = (node: any, step = 0): any[] => {
-    let childIds: string[] = step > 0 ? [node] : [];
-    if (node.children) {
-      node.children.forEach((child: any) => {
-        childIds = [...childIds, ...findAllChildren(child, step + 1)];
-      });
-    }
-    return childIds;
-  };
+  // Single O(N) post-order pass that derives every node's selection status.
+  // Replaces per-node recursive isNodeFullySelected/isNodePartiallySelected
+  // calls (which were O(N^2)) and is consumed by both the UI and the API
+  // payload builder.
+  const selectionMap = useMemo(
+    () => buildSelectionMap(nodeData, toCheckedItemSets(checkedItem)),
+    [nodeData, checkedItem]
+  );
 
-  // Helper function to find parent nodes
-  function findParents(tree: any[], targetId: string, path: any[] = []): null | any[] {
-    for (let i = 0; i < tree.length; i += 1) {
-      const node = tree[i];
-      const newPath = [...path, node];
+  // Build the API payload using the "all-or-null" compression rule:
+  // walk the tree top-down; if a node is fully selected, push only its id and
+  // skip recursion (children are implied by the parent at the API layer).
+  const generateFinalSelection = useCallback(
+    (map: Map<string, SelectionStatus>) => {
+      const output: CheckedItemMap = {
+        boards: [],
+        mediums: [],
+        organizations: [],
+        standards: [],
+        divisions: [],
+      };
 
-      if (node.id === targetId) {
-        return newPath.slice(0, -1);
-      }
-
-      if (node.children) {
-        const result = findParents(node.children, targetId, newPath);
-        if (result) {
-          return result;
+      const processNode = (node: any) => {
+        if (map.get(node.id) === 'full') {
+          (output[node.type as keyof CheckedItemMap] as string[]).push(node.id);
+          return;
         }
-      }
-    }
-    return null;
-  }
+        node.children?.forEach(processNode);
+      };
 
-  const generateFinalSelection = (uiState: any) => {
-    const output: any = {
-      boards: [],
-      mediums: [],
-      organizations: [],
-      standards: [],
-      divisions: [],
-    };
+      nodeData.forEach(processNode);
+      setSelectedData(output);
+    },
+    [nodeData, setSelectedData]
+  );
 
-    const processNode = (node: any) => {
-      // Add the node to the final output if it is selected in uiState
-      if (uiState[node.type]?.includes(node.id)) {
-        if (!output[node.type].includes(node.id)) {
-          output[node.type].push(node.id);
+  // Handler for node selection/deselection.
+  // Toggling a node toggles the entire subtree underneath it (range select).
+  //
+  // The handler itself is kept *stable* across renders (empty useCallback deps)
+  // by reading the latest checkedItem / nodeData / selectionMap from refs.
+  // This is critical: RenderNode is memoized, and a changing onToggle prop
+  // would force every node to re-render on every keystroke/toggle.
+  const checkedItemRef = useRef(checkedItem);
+  const nodeDataRef = useRef(nodeData);
+  const selectionMapRef = useRef(selectionMap);
+  checkedItemRef.current = checkedItem;
+  nodeDataRef.current = nodeData;
+  selectionMapRef.current = selectionMap;
+
+  // Stable lookup used by every checkbox to read its own / a child's status.
+  const getStatus = useCallback(
+    (id: string): SelectionStatus => selectionMapRef.current.get(id) ?? 'none',
+    []
+  );
+
+  const handleNodeSelect = useCallback(
+    (node: any) => {
+      const ci = checkedItemRef.current;
+      const nd = nodeDataRef.current;
+      const sm = selectionMapRef.current;
+
+      const fully = sm.get(node.id) === 'full';
+      const subtree = collectSubtreeIds(node);
+      const updated: CheckedItemMap = {
+        boards: ci.boards,
+        mediums: ci.mediums,
+        organizations: ci.organizations,
+        standards: ci.standards,
+        divisions: ci.divisions,
+      };
+
+      (Object.keys(updated) as Array<keyof CheckedItemMap>).forEach((key) => {
+        const ids = subtree[key];
+        if (!ids.length) return;
+        if (fully) {
+          // Uncheck the whole subtree (Set lookup → O(M))
+          const removeSet = new Set(ids);
+          updated[key] = updated[key].filter((x) => !removeSet.has(x));
+        } else {
+          // Check the whole subtree (Set merge avoids O(N) array spread)
+          const merged = new Set(updated[key]);
+          for (let i = 0; i < ids.length; i += 1) merged.add(ids[i]);
+          updated[key] = Array.from(merged);
         }
-      }
-
-      // Always process children to ensure all selected descendants are included
-      const childNodes = node.children || [];
-      childNodes.forEach((child: any) => processNode(child));
-    };
-
-    nodeData.forEach((root: any) => processNode(root));
-    setSelectedData(output);
-  };
-
-  // Handler for node selection/deselection
-  const handleNodeSelect = (node: any) => {
-    const { id, type } = node;
-    const updated: any = { ...checkedItem };
-
-    const isChecked = updated[type].includes(id);
-
-    if (!isChecked) {
-      // check parent + children
-      updated[type] = [...updated[type], id];
-
-      const childNodes = findAllChildren(node);
-      childNodes.forEach((c) => {
-        updated[c.type] = [...new Set([...updated[c.type], c.id])];
       });
 
-      // parents
-      const parentNodes = findParents(nodeData, id);
-      parentNodes?.forEach((p) => {
-        updated[p.type] = [...new Set([...updated[p.type], p.id])];
-      });
-    } else {
-      // uncheck
-      updated[type] = updated[type].filter((x: any) => x !== id);
+      setCheckedItem(updated);
+      // Recompute payload using the same fast selection-map logic.
+      const nextMap = buildSelectionMap(nd, toCheckedItemSets(updated));
+      generateFinalSelectionRef.current(nextMap);
+    },
+    [setCheckedItem]
+  );
 
-      const childNodes = findAllChildren(node);
-      childNodes.forEach((c: any) => {
-        updated[c.type] = updated[c.type].filter((x: any) => x !== c.id);
-      });
-    }
-
-    setCheckedItem(updated);
-    generateFinalSelection(updated);
-  };
-
-  // Handler for expanding/collapsing nodes
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const toggleNode = (nodeId: string) => {};
+  // Hold the latest generateFinalSelection in a ref so handleNodeSelect can
+  // remain stable while still invoking the freshest payload builder.
+  const generateFinalSelectionRef = useRef(generateFinalSelection);
+  generateFinalSelectionRef.current = generateFinalSelection;
 
   return (
     <>
@@ -579,8 +634,10 @@ export const BoardScreenStep = ({
                     subheader="Board"
                     action={
                       <Checkbox
-                        checked={checkedItem.boards.includes(boardNode.id)}
+                        checked={selectionMap.get(boardNode.id) === 'full'}
+                        indeterminate={selectionMap.get(boardNode.id) === 'partial'}
                         onChange={() => handleNodeSelect(boardNode)}
+                        disableRipple
                       />
                     }
                     sx={{
@@ -598,10 +655,9 @@ export const BoardScreenStep = ({
                         <RenderNode
                           key={child.id}
                           node={child}
-                          checkedItem={checkedItem}
-                          toggleNode={toggleNode}
-                          handleNodeSelect={handleNodeSelect}
-                          level={1}
+                          status={getStatus(child.id)}
+                          getStatus={getStatus}
+                          onToggle={handleNodeSelect}
                         />
                       ))}
                       {(!boardNode.children || boardNode.children.length === 0) && (
