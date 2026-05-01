@@ -319,7 +319,7 @@ export function EmployeeCard({ employee }: any) {
   );
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       <motion.div variants={fadeSlideUp} initial="hidden" animate="show">
         <Paper
           sx={{
@@ -440,13 +440,19 @@ export function EmployeeCard({ employee }: any) {
         variants={fadeSlideUp}
         initial="hidden"
         animate="show"
-        style={{ transitionDelay: '160ms' }}
+        style={{
+          transitionDelay: '160ms',
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         <FormSlider
           steps={TABS}
           isBackClick={isBackClick}
           step={currentIndex}
-          containerProps={{ sx: { p: 0, minHeight: 0 } }}
+          containerProps={{ sx: { p: 0, minHeight: 0, flex: 1 } }}
         >
           <Box sx={{ height: '100%' }}>
             {currentActiveComponent?.component && (
@@ -455,7 +461,7 @@ export function EmployeeCard({ employee }: any) {
           </Box>
         </FormSlider>
       </motion.div>
-    </>
+    </Box>
   );
 }
 

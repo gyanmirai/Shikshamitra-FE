@@ -1,7 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
@@ -16,7 +15,6 @@ import {
   Chip,
   Badge,
   Avatar,
-  Button,
   Divider,
   Typography,
   CardContent,
@@ -26,8 +24,6 @@ import TeacherHoverProfile from 'src/screens/academic/curriculum-management/subj
 import type { IAssignment } from '../type';
 
 const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-
   const { createdAt } = assignment as any;
   const publishDate =
     assignment?.divisionMeta?.publishDate ||
@@ -77,13 +73,13 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                   variant="soft"
                   color={
                     PublishUnpublishStatusTypeColors[
-                      assignment?.divisionMeta?.status as PublishUnpublishStatusType
+                      assignment?.status as PublishUnpublishStatusType
                     ] as LabelColor
                   }
                 >
                   {
                     PublishUnpublishStatusType[
-                      assignment?.divisionMeta?.status as PublishUnpublishStatusType
+                      assignment?.status as PublishUnpublishStatusType
                     ] as string
                   }
                 </Label>
@@ -105,32 +101,22 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                     py: 0.5,
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.primary"
-                    component="div"
-                    sx={{
-                      textAlign: 'justify',
-                      lineHeight: 1.7,
-                      display: '-webkit-box',
-                      WebkitLineClamp: showFullDescription ? 'unset' : 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      '& p': { margin: 0 },
-                      '& ul, & ol': { paddingLeft: 2 },
-                    }}
-                    // eslint-disable-next-line react/no-danger
-                    dangerouslySetInnerHTML={{ __html: assignment?.description || '' }}
-                  />
+                  <Scrollbar sx={{ maxHeight: 150 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      component="div"
+                      sx={{
+                        textAlign: 'justify',
+                        lineHeight: 1.7,
+                        '& p': { margin: 0 },
+                        '& ul, & ol': { paddingLeft: 2 },
+                      }}
+                      // eslint-disable-next-line react/no-danger
+                      dangerouslySetInnerHTML={{ __html: assignment?.description || '' }}
+                    />
+                  </Scrollbar>
                 </Box>
-                {assignment?.description && assignment.description.length > 150 && (
-                  <Button
-                    onClick={() => setShowFullDescription(!showFullDescription)}
-                    sx={{ p: 0, mt: 0.5, color: 'primary.main', '&:hover': { background: 'none' } }}
-                  >
-                    {showFullDescription ? 'Show less' : 'Show more'}
-                  </Button>
-                )}
               </Box>
 
               {/* Document */}

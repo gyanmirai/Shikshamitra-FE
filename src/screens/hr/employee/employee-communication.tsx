@@ -5,6 +5,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyContent } from 'src/components/empty-content';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
@@ -415,178 +416,182 @@ const EmployeeCommunication = ({ employee }: any) => {
   const rest = filtered.filter((c) => !actionRequired.find((a) => a.id === c.id));
 
   return (
-    <Box sx={{ pb: 1 }}>
-      {/* ── Top 3 Summary Cards ── */}
-      <motion.div variants={staggerContainer} initial="hidden" animate="show">
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-            gap: 1,
-            mb: 1,
-          }}
-        >
-          <motion.div variants={slideUpItem}>
-            <DashboardCard
-              title="Unread messages"
-              value={unreadCount}
-              icon="solar:letter-linear"
-              color="primary.main"
-              bgColor="primary.lighter"
-            />
-          </motion.div>
-          <motion.div variants={slideUpItem}>
-            <DashboardCard
-              title="Pending acknowledgements"
-              value={pendingAckCount}
-              icon="solar:clock-circle-linear"
-              color="warning.main"
-              bgColor="warning.lighter"
-            />
-          </motion.div>
-          <motion.div variants={slideUpItem}>
-            <DashboardCard
-              title="Today's events"
-              value={todayEventsCount}
-              icon="solar:calendar-linear"
-              color="info.main"
-              bgColor="info.lighter"
-            />
-          </motion.div>
-        </Box>
-      </motion.div>
-
-      {/* ── Filter Tabs ── */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 1,
-          mb: 1,
-        }}
-      >
-        {FILTER_TABS.map((tab) => (
-          <Chip
-            key={tab.value}
-            label={
-              <Stack direction="row" alignItems="center" spacing={0.5}>
-                {tab.dotColor && (
-                  <Box
-                    sx={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
-                      bgcolor: tab.dotColor,
-                    }}
-                  />
-                )}
-                <span>{tab.label}</span>
-              </Stack>
-            }
-            onClick={() => setActiveFilter(tab.value)}
-            variant={activeFilter === tab.value ? 'filled' : 'outlined'}
-            color={
-              activeFilter === tab.value
-                ? tab.value === 'urgent'
-                  ? 'error'
-                  : 'primary'
-                : 'default'
-            }
-            size="small"
-            sx={{
-              fontWeight: 600,
-              fontSize: '0.78rem',
-              borderRadius: 3,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          />
-        ))}
-      </Box>
-
-      {/* ── Action Required Section ── */}
-      {actionRequired.length > 0 && (
-        <Box mb={1}>
-          <Typography
-            variant="caption"
-            fontWeight={800}
-            sx={{
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-              display: 'block',
-              mb: 1.5,
-            }}
-          >
-            Action Required
-          </Typography>
-          <AnimatePresence mode="popLayout">
-            {actionRequired.map((item, i) => (
-              <motion.div
-                key={item.id}
-                variants={cardVariant}
-                initial="hidden"
-                animate="show"
-                exit="exit"
-                style={{ transitionDelay: `${i * 50}ms` }}
-              >
-                <CommunicationCard item={item} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </Box>
-      )}
-
-      {/* ── All Other Communications ── */}
-      {rest.length > 0 && (
-        <Box>
-          {actionRequired.length > 0 && (
-            <Typography
-              variant="caption"
-              fontWeight={800}
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
+      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
+        <Box sx={{ pb: 1 }}>
+          {/* ── Top 3 Summary Cards ── */}
+          <motion.div variants={staggerContainer} initial="hidden" animate="show">
+            <Box
               sx={{
-                textTransform: 'uppercase',
-                color: 'text.secondary',
-                display: 'block',
-                mb: 1.5,
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+                gap: 1,
+                mb: 1,
               }}
             >
-              All Communications
-            </Typography>
-          )}
-          <AnimatePresence mode="popLayout">
-            {rest.map((item, i) => (
-              <motion.div
-                key={item.id}
-                variants={cardVariant}
-                initial="hidden"
-                animate="show"
-                exit="exit"
-                style={{ transitionDelay: `${i * 50}ms` }}
-              >
-                <CommunicationCard item={item} />
+              <motion.div variants={slideUpItem}>
+                <DashboardCard
+                  title="Unread messages"
+                  value={unreadCount}
+                  icon="solar:letter-linear"
+                  color="primary.main"
+                  bgColor="primary.lighter"
+                />
               </motion.div>
-            ))}
-          </AnimatePresence>
-        </Box>
-      )}
+              <motion.div variants={slideUpItem}>
+                <DashboardCard
+                  title="Pending acknowledgements"
+                  value={pendingAckCount}
+                  icon="solar:clock-circle-linear"
+                  color="warning.main"
+                  bgColor="warning.lighter"
+                />
+              </motion.div>
+              <motion.div variants={slideUpItem}>
+                <DashboardCard
+                  title="Today's events"
+                  value={todayEventsCount}
+                  icon="solar:calendar-linear"
+                  color="info.main"
+                  bgColor="info.lighter"
+                />
+              </motion.div>
+            </Box>
+          </motion.div>
 
-      {/* ── Empty State ── */}
-      {filtered.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: enterCurve }}
-        >
-          <Box sx={{ mt: 6 }}>
-            <EmptyContent
-              title="No communications found"
-              imgUrl="/assets/icons/empty/ic_content.svg"
-              description="Try a different filter or check back later."
-            />
+          {/* ── Filter Tabs ── */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 1,
+              mb: 1,
+            }}
+          >
+            {FILTER_TABS.map((tab) => (
+              <Chip
+                key={tab.value}
+                label={
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    {tab.dotColor && (
+                      <Box
+                        sx={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          bgcolor: tab.dotColor,
+                        }}
+                      />
+                    )}
+                    <span>{tab.label}</span>
+                  </Stack>
+                }
+                onClick={() => setActiveFilter(tab.value)}
+                variant={activeFilter === tab.value ? 'filled' : 'outlined'}
+                color={
+                  activeFilter === tab.value
+                    ? tab.value === 'urgent'
+                      ? 'error'
+                      : 'primary'
+                    : 'default'
+                }
+                size="small"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '0.78rem',
+                  borderRadius: 3,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              />
+            ))}
           </Box>
-        </motion.div>
-      )}
+
+          {/* ── Action Required Section ── */}
+          {actionRequired.length > 0 && (
+            <Box mb={1}>
+              <Typography
+                variant="caption"
+                fontWeight={800}
+                sx={{
+                  textTransform: 'uppercase',
+                  color: 'text.secondary',
+                  display: 'block',
+                  mb: 1.5,
+                }}
+              >
+                Action Required
+              </Typography>
+              <AnimatePresence mode="popLayout">
+                {actionRequired.map((item, i) => (
+                  <motion.div
+                    key={item.id}
+                    variants={cardVariant}
+                    initial="hidden"
+                    animate="show"
+                    exit="exit"
+                    style={{ transitionDelay: `${i * 50}ms` }}
+                  >
+                    <CommunicationCard item={item} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </Box>
+          )}
+
+          {/* ── All Other Communications ── */}
+          {rest.length > 0 && (
+            <Box>
+              {actionRequired.length > 0 && (
+                <Typography
+                  variant="caption"
+                  fontWeight={800}
+                  sx={{
+                    textTransform: 'uppercase',
+                    color: 'text.secondary',
+                    display: 'block',
+                    mb: 1.5,
+                  }}
+                >
+                  All Communications
+                </Typography>
+              )}
+              <AnimatePresence mode="popLayout">
+                {rest.map((item, i) => (
+                  <motion.div
+                    key={item.id}
+                    variants={cardVariant}
+                    initial="hidden"
+                    animate="show"
+                    exit="exit"
+                    style={{ transitionDelay: `${i * 50}ms` }}
+                  >
+                    <CommunicationCard item={item} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </Box>
+          )}
+
+          {/* ── Empty State ── */}
+          {filtered.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, ease: enterCurve }}
+            >
+              <Box sx={{ mt: 6 }}>
+                <EmptyContent
+                  title="No communications found"
+                  imgUrl="/assets/icons/empty/ic_content.svg"
+                  description="Try a different filter or check back later."
+                />
+              </Box>
+            </motion.div>
+          )}
+        </Box>
+      </Scrollbar>
     </Box>
   );
 };

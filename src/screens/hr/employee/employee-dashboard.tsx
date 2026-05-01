@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Box, Grid } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 import AllInfoCalendar from 'src/screens/mainDashboard/admin/Components/AllInfoCalendar';
 
 import EmployeeProfileOverview from './profileDashboardComponent/ProfileOverview';
@@ -20,33 +21,35 @@ const slideUpItem = {
 };
 
 const EmployeeProfileDashboard = ({ editData }: { editData: any }) => (
-  <Box sx={{ pb: 1 }}>
-    <motion.div variants={staggerContainer} initial="hidden" animate="show">
-      <Grid container spacing={1} sx={{ alignItems: 'stretch' }}>
-        <Grid size={12}>
-          <motion.div variants={slideUpItem}>
-            <EmployeeProfileOverview />
-          </motion.div>
-        </Grid>
+  <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
+    <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
+      <motion.div variants={staggerContainer} initial="hidden" animate="show">
+        <Grid container spacing={1} sx={{ alignItems: 'stretch' }}>
+          <Grid size={12}>
+            <motion.div variants={slideUpItem}>
+              <EmployeeProfileOverview />
+            </motion.div>
+          </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <motion.div variants={slideUpItem} style={{ height: '100%' }}>
-            <ProfileDashboardAttendance />
-          </motion.div>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <motion.div variants={slideUpItem} style={{ height: '100%' }}>
-            <AllInfoCalendar />
-          </motion.div>
-        </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <motion.div variants={slideUpItem} style={{ height: '100%' }}>
+              <ProfileDashboardAttendance />
+            </motion.div>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <motion.div variants={slideUpItem} style={{ height: '100%' }}>
+              <AllInfoCalendar />
+            </motion.div>
+          </Grid>
 
-        <Grid size={12}>
-          <motion.div variants={slideUpItem}>
-            <ProfileDashboardAttendanceTrend />
-          </motion.div>
+          <Grid size={12}>
+            <motion.div variants={slideUpItem}>
+              <ProfileDashboardAttendanceTrend />
+            </motion.div>
+          </Grid>
         </Grid>
-      </Grid>
-    </motion.div>
+      </motion.div>
+    </Scrollbar>
   </Box>
 );
 
