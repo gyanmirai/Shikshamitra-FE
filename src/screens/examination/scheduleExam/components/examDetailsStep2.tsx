@@ -15,12 +15,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
   const formik = props;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
+  console.log('formik values in exam details step 2', formik.values);
   return (
-    <motion.div
+    <Box
+      component={motion.div}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
+      sx={{ height: '100%' }}
     >
       <CustomizableTable
         isFilter={false}
@@ -28,6 +30,11 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         isScrollbar={false}
         isShowedDense={false}
         isSearch={false}
+        wrapperProps={{
+          sx: {
+            height: '100%',
+          },
+        }}
         tableId="examschedule-table"
         columns={[
           {
@@ -395,7 +402,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
         ]}
         data={formik.values.subjects}
       />
-    </motion.div>
+    </Box>
   );
 };
 export default ExamDetails;

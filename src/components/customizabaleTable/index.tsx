@@ -94,6 +94,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     columns: memoizedColumns,
     columnVisibility,
     headerRefs,
+    paginatedData,
   });
 
   useEffect(() => {

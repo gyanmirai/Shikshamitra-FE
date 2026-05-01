@@ -51,15 +51,13 @@ export function PaginatedSearchSelect<
 
   return (
     <Autocomplete
-      {...props}
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       openOnFocus
-      clearOnBlur={false}
-      inputValue={inputValue}
       options={options || []}
       loading={loading}
+      // inputValue={inputValue}
       onInputChange={(_, newInputValue, reason) => {
         if (reason === 'input') {
           handleInputChange(newInputValue);
@@ -109,6 +107,7 @@ export function PaginatedSearchSelect<
           }}
         />
       )}
+      {...props}
     />
   );
 }
