@@ -5,6 +5,7 @@ import type { LabelColor } from 'src/components/label';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Checkbox, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
@@ -38,20 +39,6 @@ export const STATUS_COLOR: Record<string, LabelColor> = {
 export const toPeriod = (month: string, year: number): string =>
   `${year}-${String(MONTH_TO_NUM[month] ?? 0).padStart(2, '0')}`;
 
-export const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
-
-export const getFeeHeadConfig = (name: string): { icon: string; color: string; bg: string } => {
-  const n = name.toLowerCase();
-  if (n.includes('tuition')) return { icon: 'solar:book-bold', color: '#1565C0', bg: '#E3F2FD' };
-  if (n.includes('hostel')) return { icon: 'solar:home-2-bold', color: '#B71C1C', bg: '#FFEBEE' };
-  if (n.includes('transport')) return { icon: 'solar:bus-bold', color: '#1B5E20', bg: '#E8F5E9' };
-  if (n.includes('library')) return { icon: 'solar:library-bold', color: '#E65100', bg: '#FFF3E0' };
-  if (n.includes('exam')) return { icon: 'solar:document-bold', color: '#4A148C', bg: '#F3E5F5' };
-  if (n.includes('sport')) return { icon: 'solar:football-bold', color: '#004D40', bg: '#E0F2F1' };
-  if (n.includes('lab')) return { icon: 'solar:test-tube-bold', color: '#880E4F', bg: '#FCE4EC' };
-  return { icon: 'solar:wallet-bold', color: '#01579B', bg: '#E1F5FE' };
-};
-
 // ─── ColHeader ─────────────────────────────────────────────────────────────────
 
 export const ColHeader = ({
@@ -64,8 +51,8 @@ export const ColHeader = ({
   <Box
     display="flex"
     alignItems="center"
+    pl={1}
     gap={1}
-    pl={2.5}
     pr={1.5}
     py={0.5}
     sx={{ bgcolor: 'action.hover' }}
@@ -138,8 +125,8 @@ export const FeeRow = ({
       display="flex"
       alignItems="center"
       gap={1}
-      pl={2}
-      pr={1}
+      pl={5}
+      pr={2.5}
       py={0.625}
       sx={{
         cursor: isDisabled ? 'default' : 'pointer',
@@ -163,10 +150,10 @@ export const FeeRow = ({
         </Typography>
       </Box>
       <Typography variant="body2" sx={{ width: 72, textAlign: 'right' }}>
-        {fmt(total)}
+        ₹ {formatNumber(total)}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ width: 72, textAlign: 'right' }}>
-        {fmt(paid)}
+        ₹ {formatNumber(paid)}
       </Typography>
       <Typography
         variant="body2"
@@ -174,7 +161,7 @@ export const FeeRow = ({
         color={due > 0 ? 'error.main' : 'text.secondary'}
         sx={{ width: 72, textAlign: 'right' }}
       >
-        {fmt(due)}
+        ₹ {formatNumber(due)}
       </Typography>
 
       <Box sx={{ width: 84, display: 'flex', justifyContent: 'center' }}>
@@ -220,7 +207,7 @@ export const GroupHeader = ({
       display="flex"
       alignItems="center"
       gap={1}
-      px={1.5}
+      px={1}
       py={1}
       sx={{
         bgcolor: isAllSelected ? alpha(theme.palette.primary.main, 0.06) : 'background.neutral',
@@ -257,7 +244,7 @@ export const GroupHeader = ({
       <Box flex={1} />
       {totalDue > 0 && (
         <Typography variant="caption" fontWeight={700} color="error.main" sx={{ mr: 0.5 }}>
-          Due: {fmt(totalDue)}
+          Due: ₹ {formatNumber(totalDue)}
         </Typography>
       )}
       <IconButton

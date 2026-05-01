@@ -2,11 +2,12 @@
 
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Checkbox, Typography } from '@mui/material';
 
 import ByMonthView from './FeeLedgerByMonth';
+import { toPeriod } from './FeeLedgerShared';
 import ByFeeHeadView from './FeeLedgerByFeeHead';
-import { fmt, toPeriod } from './FeeLedgerShared';
 
 import type { FeeLedgerTab } from './FeeLedgerFilterBar';
 import type {
@@ -85,7 +86,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
               {charge.chargeName}
             </Typography>
             <Typography variant="body2" fontWeight={600} color="error.main">
-              {fmt(charge.amount)}
+              ₹ {formatNumber(charge.amount)}
             </Typography>
           </Box>
         );

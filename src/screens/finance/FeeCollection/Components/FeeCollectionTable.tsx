@@ -128,11 +128,32 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     },
   });
   useEffect(() => {
-    // Filter boards based on academic year ID from edit data
-    setBoards(currentYear?.boards);
-    const board = boards?.find((item: any) => item.id === selectedBoard);
-    setMediums((board as unknown as Board)?.educationMediums || []);
-  }, [boards, currentYear?.boards, selectedBoard]);
+    const yearBoards = currentYear?.boards || [];
+    setBoards(yearBoards);
+
+    // Auto-select first board if none selected
+    if (!selectedBoard && yearBoards.length > 0) {
+      const firstBoard = yearBoards[0] as unknown as Board;
+      setSelectedBoard(firstBoard.id);
+      const firstMediums = firstBoard.educationMediums || [];
+      setMediums(firstMediums);
+      // Auto-select first medium of the first board
+      if (firstMediums.length > 0) {
+        setSelectedMedium(firstMediums[0].id);
+      }
+      return;
+    }
+
+    // Update mediums when board changes
+    const board = yearBoards.find((item: any) => item.id === selectedBoard);
+    const boardMediums = (board as unknown as Board)?.educationMediums || [];
+    setMediums(boardMediums);
+
+    // Auto-select first medium if none selected for the current board
+    if (selectedBoard && !selectedMedium && boardMediums.length > 0) {
+      setSelectedMedium(boardMediums[0].id);
+    }
+  }, [currentYear?.boards, selectedBoard, selectedMedium, setSelectedBoard, setSelectedMedium]);
 
   const actions = ({ row }: any) => (
     <MenuList>
