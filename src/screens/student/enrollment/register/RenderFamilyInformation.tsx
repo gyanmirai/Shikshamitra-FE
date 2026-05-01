@@ -1588,6 +1588,11 @@ function RenderFamilyInformation(props: any) {
                 hasMore: false,
               };
             }}
+            slotProps={{
+              chip: {
+                variant: 'soft',
+              },
+            }}
             isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
             getOptionLabel={(option: any) => option?.label || ''}
             renderOption={(prop, option: any) => (
@@ -1599,6 +1604,7 @@ function RenderFamilyInformation(props: any) {
             minChars={1}
             debounceMs={400}
             size="small"
+            clearOnBlur={false}
           />
         </Grid>
       </SectionCard>

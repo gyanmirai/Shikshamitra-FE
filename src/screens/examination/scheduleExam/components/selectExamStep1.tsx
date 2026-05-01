@@ -1,23 +1,25 @@
 import type { FormikProps } from 'formik';
 import type { Variants } from 'framer-motion';
 import type { RootState } from 'src/redux/store';
-import type { Standards, Organization } from 'src/types/school';
+import type { Medium, Standards, Organization } from 'src/types/school';
 
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
-import { Grid, TextField } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 
-import type { IRoomDetails, IExamFormValues, IDivisionRoomDetail } from '../type';
+import type { IExamFormValues, IDivisionRoomDetail } from '../type';
 
 // Framer Motion stagger variants for form fields
 const formContainerVariants: Variants = {
@@ -32,46 +34,6 @@ const formItemVariants: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: 'easeOut' } },
 };
-
-const subjectOptions = [
-  // Core subjects
-  { subjectName: 'Mathematics', subjectCode: 'MATH', subjectColor: '#DEB887', type: 'Core' },
-  { subjectName: 'Science', subjectCode: 'SCI', subjectColor: '#00CED1', type: 'Core' },
-  {
-    subjectName: 'Social Science',
-    subjectCode: 'SSCI',
-    subjectColor: '#B22222',
-    type: 'Core',
-  },
-  { subjectName: 'English', subjectCode: 'ENG', subjectColor: '#4682B4', type: 'Core' },
-  { subjectName: 'Gujarati', subjectCode: 'GUJ', subjectColor: '#3CB371', type: 'Core' },
-
-  // Elective subjects (group name included in subjectName)
-  {
-    subjectName: 'Computer (Tech & Fitness Group)',
-    subjectCode: 'COMP',
-    subjectColor: '#4169E1',
-    type: 'Elective',
-  },
-  {
-    subjectName: 'Physical Training (Tech & Fitness Group)',
-    subjectCode: 'PHYS',
-    subjectColor: '#FF69B4',
-    type: 'Elective',
-  },
-  {
-    subjectName: 'Sanskrit (Language Enrichment Group)',
-    subjectCode: 'SANS',
-    subjectColor: '#DA70D6',
-    type: 'Elective',
-  },
-  {
-    subjectName: 'Hindi (Language Enrichment Group)',
-    subjectCode: 'HIND',
-    subjectColor: '#FF4500',
-    type: 'Elective',
-  },
-];
 
 const SelectExam = (props: FormikProps<IExamFormValues>) => {
   // Dialog state to control exam type creation modal visibility
@@ -95,6 +57,45 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
     // setClasses(allClasses[0]?.id || '');
   }, [medium]);
 
+  const {
+    data: examTypeData,
+    isLoading,
+    isFetching,
+    refetch: refetchExamTypes,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExaminationTypesQuery,
+    params: { academicMediumId: (medium as Medium)?.id },
+    options: {
+      skip: !(medium as Medium)?.id,
+    },
+  });
+
+  const [query, setQuery] = useState<{ page: number; pageSize: number }>({
+    page: 0,
+    pageSize: 10,
+  });
+
+  const {
+    data: subjectTableData = [],
+    isLoading: isTableLoading,
+    refetch,
+    isFetching: isFetchingSubjects,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: formik.values.className, ...query },
+    options: { skip: !formik.values.className },
+  });
+
+  const subjectOptions: any = useMemo(
+    () =>
+      subjectTableData?.data?.items.map((item: any) => ({
+        ...item,
+      })) || [],
+    [subjectTableData]
+  );
+
   return (
     <Grid container>
       <Grid size={{ xs: 12 }}>
@@ -112,16 +113,15 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     error={formik.touched.examType && Boolean(formik.errors.examType)}
                   >
                     <CustomSelect
-                      options={[
-                        { value: 'Mid', label: 'Mid' },
-                        { value: 'Practical', label: 'Practical' },
-                        { value: 'Final', label: 'Final' },
-                      ]}
+                      options={examTypeData?.items || []}
+                      isLoading={isLoading || isFetching}
                       value={formik.values.examType}
                       onChange={(val) => {
                         formik.setFieldValue('examType', val);
                         formik.setFieldTouched(`examType`, false);
                       }}
+                      labelKey="examType"
+                      valueKey="id"
                       label="Exam Type *"
                       formControlProps={{ fullWidth: true }}
                       error={formik.touched.examType && Boolean(formik.errors.examType)}
@@ -262,102 +262,41 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   <ShakingTextField
                     error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
                   >
-                    <ResponsiveMultiSelect
-                      label="Subjects *"
-                      disabled={formik.values.divisions.length === 0}
-                      options={[
-                        {
-                          subjectName: 'All',
-                          subjectCode: 'all',
-                          subjectColor: '#000000',
-                          type: 'All',
-                        },
-                        ...subjectOptions,
-                      ]}
-                      value={formik.values.selectedSubjects}
-                      getOptionLabel={(opt) => opt?.subjectName}
-                      getOptionValue={(opt) => opt?.subjectCode}
-                      onChange={(selectedCodes: string[]) => {
-                        const isAllSelected = selectedCodes.includes('all');
-                        const wasAllPreviouslySelected =
-                          formik.values.selectedSubjects.includes('all');
-
-                        let updatedSelectedSubjects: string[] = [];
-
-                        if (isAllSelected && !wasAllPreviouslySelected) {
-                          updatedSelectedSubjects = [
-                            'all',
-                            ...subjectOptions.map((s) => s.subjectCode),
-                          ];
-                        } else if (!isAllSelected && wasAllPreviouslySelected) {
-                          updatedSelectedSubjects = [];
-                        } else if (
-                          isAllSelected &&
-                          selectedCodes.length !== subjectOptions.length + 1
-                        ) {
-                          updatedSelectedSubjects = [
-                            'all',
-                            ...subjectOptions.map((s) => s.subjectCode),
-                          ];
-                        } else {
-                          updatedSelectedSubjects = selectedCodes.filter((code) => code !== 'all');
-                        }
-
-                        formik.setFieldValue('selectedSubjects', updatedSelectedSubjects);
-                        formik.setFieldTouched(`selectedSubjects`, false);
-
-                        const updatedSubjects = updatedSelectedSubjects
-                          .filter((code) => code !== 'all')
-                          .map((code, index) => {
-                            const subject = subjectOptions.find((s) => s.subjectCode === code);
-                            return {
-                              id: index,
-                              subjectName: subject?.subjectName || '',
-                              subjectCode: subject?.subjectCode || '',
-                              subjectColor: subject?.subjectColor || '#000000',
-                              examDate: null,
-                              startTime: null,
-                              endTime: null,
-                              totalMarks: null,
-                              passingMarks: null,
-                            };
-                          });
-                        formik.setFieldValue('subjects', updatedSubjects);
-
-                        const updatedRoomDetails: IRoomDetails = updatedSelectedSubjects.reduce(
-                          (acc, subjectCode) => {
-                            if (subjectCode === 'all') return acc;
-                            const subject = subjectOptions.find(
-                              (s) => s.subjectCode === subjectCode
-                            );
-                            if (!subject) return acc;
-
-                            acc[subject.subjectName] = {
-                              copyPastSubject: '',
-                              divisions: (formik.values.divisions || [])
-                                .filter((code) => code !== 'all')
-                                .reduce(
-                                  (divAcc, divisionId) => {
-                                    divAcc[divisionId] = { roomIds: [], capacity: 0 };
-                                    return divAcc;
-                                  },
-                                  {} as Record<string, IDivisionRoomDetail>
-                                ),
-                              examDate: acc[subject.subjectName]?.examDate || null,
-                            };
-                            return acc;
-                          },
-                          {} as IRoomDetails
-                        );
-                        formik.setFieldValue('roomDetails', updatedRoomDetails);
-                      }}
-                      error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
-                      helperText={
-                        formik.touched.selectedSubjects &&
-                        typeof formik.errors.selectedSubjects === 'string'
-                          ? formik.errors.selectedSubjects
-                          : undefined
+                    <Autocomplete
+                      multiple
+                      options={subjectOptions}
+                      getOptionLabel={(option: any) =>
+                        option?.electiveGroupName || option?.subjects?.[0]?.subjectName || ''
                       }
+                      size="small"
+                      value={formik.values.selectedSubjects}
+                      onChange={(event, value) => {
+                        formik.setFieldValue('selectedSubjects', value);
+                        formik.setFieldTouched(`selectedSubjects`, false);
+                      }}
+                      slotProps={{
+                        chip: {
+                          variant: 'soft',
+                        },
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Subjects *"
+                          size="small"
+                          error={
+                            formik.touched.selectedSubjects &&
+                            Boolean(formik.errors.selectedSubjects)
+                          }
+                          helperText={
+                            formik.touched.selectedSubjects && formik.errors.selectedSubjects
+                              ? formik.errors.selectedSubjects instanceof Array
+                                ? formik.errors.selectedSubjects.join(', ')
+                                : formik.errors.selectedSubjects
+                              : undefined
+                          }
+                        />
+                      )}
                     />
                   </ShakingTextField>
                 </motion.div>

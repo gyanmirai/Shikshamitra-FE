@@ -119,6 +119,7 @@ const PaySlipGenerationScreen = () => {
               error={false}
               sx={{ maxWidth: 300, minWidth: 250 }}
               size="small"
+              clearOnBlur={false}
             />
 
             <DatePicker

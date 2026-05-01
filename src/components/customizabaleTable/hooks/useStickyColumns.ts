@@ -1,25 +1,24 @@
-import { useTheme } from '@mui/material/styles';
 import { useState, useEffect, useCallback } from 'react';
 
-import type { IColumn } from '../types';
+import type { IData, IColumn } from '../types';
 
 interface UseStickyColumnsProps {
   columns: IColumn[];
   columnVisibility: Record<string, boolean>;
   headerRefs: (number | null)[];
+  paginatedData: IData[];
 }
 
 export const useStickyColumns = ({
   columns,
   columnVisibility,
   headerRefs,
+  paginatedData,
 }: UseStickyColumnsProps) => {
-  const theme = useTheme();
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
     right: Record<string, number>;
   }>({ left: {}, right: {} });
-  // const clonedHeaderRefs = _.cloneDeep(headerRefs);
   useEffect(() => {
     setTimeout(() => {
       const leftSticky: { col: IColumn; idx: number }[] = [];
@@ -60,7 +59,7 @@ export const useStickyColumns = ({
 
       setStickyMap({ left: leftOffsets, right: rightOffsets });
     }, 100);
-  }, [columnVisibility, columns, headerRefs]);
+  }, [columnVisibility, columns, headerRefs, paginatedData]);
 
   /**
    * Memoization Justification:

@@ -48,7 +48,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     type: 'query',
     currentQueryAndMutation: useGetExamsQuery,
     params: {
-      academicMediumId: medium?.id,
+      AcademicMediumId: medium?.id,
     },
   });
 
@@ -66,7 +66,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         dispatchFn(
           scheduleExamApi.util.updateQueryData(
             'getExams',
-            { academicMediumId: medium?.id },
+            { AcademicMediumId: medium?.id },
             (draft: any) => {
               const index = draft.findIndex((item: any) => item.id === selectedExam?.id);
               setDeleteIndex(index);
@@ -78,7 +78,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       onCommit: async () => {
         await deleteExam({
           examId: selectedExam?.id,
-          academicMediumId: medium?.id,
         });
       },
     });
@@ -152,12 +151,19 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             </Card>
           </motion.div>
         ) : (
-          <motion.div
+          <Box
+            component={motion.div}
             key="exam-table"
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={{ duration: 0.28, ease: 'easeOut' }}
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '0',
+            }}
           >
             <ScheduledExamTable
               onDelete={(data) => {
@@ -173,7 +179,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
                 setSelectedExam(data);
               }}
             />
-          </motion.div>
+          </Box>
         )}
       </AnimatePresence>
       <ConfirmDialog

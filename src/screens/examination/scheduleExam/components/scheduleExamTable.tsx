@@ -43,7 +43,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetExamsQuery,
     params: {
-      academicMediumId: medium?.id,
+      AcademicMediumId: medium?.id,
     },
   });
 
@@ -74,43 +74,31 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   };
 
   // Calculate counts of exams by status
-  const examCounts = useMemo(
-    () => ({
-      pending:
-        getExams?.data?.data?.filter((i: any) => i.status === ScheduleExamStatus.Pending)?.length ||
-        0,
-      completed:
-        getExams?.data?.data?.filter((i: any) => i.status === ScheduleExamStatus.Completed)
-          ?.length || 0,
-    }),
-    [getExams?.data?.data]
-  );
+  const examCounts = useMemo(() => {
+    const items = getExams?.data?.items || [];
+    return {
+      pending: items.filter((i: any) => i.status === 0).length || 0,
+      completed: items.filter((i: any) => i.status === 1).length || 0,
+    };
+  }, [getExams?.data?.items]);
 
   // Define tab configuration with labels, values, counts and colors
   const TABS = useMemo(
     () => [
       {
         label: 'Pending',
-        value: ScheduleExamStatus.Pending,
+        value: 0,
         count: examCounts.pending,
         color: 'warning',
       },
       {
-        label: 'Completed',
-        value: ScheduleExamStatus.Completed,
-        count: examCounts.completed,
-        color: 'success',
-      },
-      {
         label: 'Published',
-        value: ScheduleExamStatus.Published,
-        count:
-          getExams?.data?.data?.filter((i: any) => i.status === ScheduleExamStatus.Published)
-            ?.length || 0,
+        value: 1,
+        count: examCounts.completed,
         color: 'info',
       },
     ],
-    [examCounts, getExams?.data?.data]
+    [examCounts]
   );
 
   // Handle tab change event
@@ -120,8 +108,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   // Filter table data based on selected tab value
   const tableData = useMemo(
-    () => getExams?.data?.data?.filter((i: any) => i.status === tabs.value),
-    [getExams?.data?.data, tabs.value]
+    () => (getExams?.data?.items || []).filter((i: any) => i.status === tabs.value),
+    [getExams?.data?.items, tabs.value]
   );
 
   // Actions component for the three dots menu
@@ -172,13 +160,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <motion.div variants={headerItemVariant}>
-            <Tabs
-              value={tabs.value}
-              onChange={handleTabChange}
-              sx={{
-                '& .MuiTabs-flexContainer': { gap: 2 },
-              }}
-            >
+            <Tabs value={tabs.value} onChange={handleTabChange}>
               {TABS.map((tab) => (
                 <Tab
                   sx={{ fontSize: '12px' }}

@@ -58,8 +58,9 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         examName: values.examName,
         standardId: values.className,
         divisionIds: values.divisions,
-        subjectIds: values.selectedSubjects,
-        description: values.description,
+        subjectIds: values.selectedSubjects.map(
+          (sub: any) => sub.electiveGroupId || sub?.subjects?.[0]?.subjectId
+        ),
       };
       if (editData || values.examId) {
         const res = await updateExamBasicDetails({
@@ -72,7 +73,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         body: payload,
       }).unwrap();
 
-      formik.setFieldValue('examId', res.id);
+      formik.setFieldValue('examId', res?.id);
       return res;
     },
     [addExamBasicDetails, editData, updateExamBasicDetails]
@@ -83,9 +84,9 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       const payload = {
         subjects: values.subjects.map((sub: any) => ({
           subjectId: sub.id || sub.subjectId,
-          examDate: sub.examDate ? sub.examDate.format('YYYY-MM-DD') : null,
-          startTime: sub.startTime ? sub.startTime.format('HH:mm') : null,
-          endTime: sub.endTime ? sub.endTime.format('HH:mm') : null,
+          examDate: sub.examDate ? sub.examDate.toISOString() : null,
+          startTime: sub.startTime ? sub.startTime.toISOString() : null,
+          endTime: sub.endTime ? sub.endTime.toISOString() : null,
           totalMarks: Number(sub.totalMarks),
           passingMarks: Number(sub.passingMarks),
           notes: sub.notes,
@@ -113,10 +114,9 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
             capacity: divRoomData?.capacity || 0,
           };
         });
-
         return {
           subjectId: sub.id || sub.subjectId,
-          examDate: sub.examDate ? sub.examDate.format('YYYY-MM-DD') : null,
+          examDate: sub.examDate ? sub.examDate.toISOString() : null,
           divisions,
         };
       });
@@ -141,13 +141,13 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         setIsLoading(true);
 
         if (activeStep === 0) {
-          // await handleBasicDetails(values, formik);
+          await handleBasicDetails(values, formik);
           shikshaMitraToast.success({ message: 'Basic details saved successfully' });
         } else if (activeStep === 1) {
-          // await handleExamSchedule(values, formik);
+          await handleExamSchedule(values, formik);
           shikshaMitraToast.success({ message: 'Exam schedule saved successfully' });
         } else if (activeStep === 2) {
-          // await handleRoomAssignment(values, formik);
+          await handleRoomAssignment(values, formik);
           shikshaMitraToast.success({ message: 'Room assignments saved successfully' });
         }
 
@@ -162,7 +162,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         setIsLoading(false);
       }
     },
-    [activeStep, onClose]
+    [activeStep, handleBasicDetails, handleExamSchedule, handleRoomAssignment, onClose]
   );
 
   const allTimetableSteps = [SelectExam, ExamDetails, RoomDetails, ExamReviewStep4];
@@ -189,6 +189,9 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       validateOnChange={false}
       validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
       handleNext={(isLastStep, values, formik, setIsLoading) => {
+        handleSave(isLastStep, values, formik, setIsLoading);
+      }}
+      onSave={(isLastStep, values, formik, setIsLoading) => {
         handleSave(isLastStep, values, formik, setIsLoading);
       }}
       renderItem={({ formik, activeStep: step }) => (
@@ -259,7 +262,7 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps }: any) 
   const StepComponent = allSteps[step];
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box p={2}>
+      <Box p={2} height="100%">
         <StepComponent {...formik} />
       </Box>
     </BackPopUpChecked>
