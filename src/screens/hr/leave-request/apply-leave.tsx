@@ -501,6 +501,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               )}
             </Box>
           </Card>
+
           <CustomizableTable
             noDataText={
               <>

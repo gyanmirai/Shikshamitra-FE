@@ -359,7 +359,6 @@ export const DocumentForm = ({
       }
     },
   });
-
   const { values, touched, errors, setFieldValue, handleSubmit } = formik;
 
   return (

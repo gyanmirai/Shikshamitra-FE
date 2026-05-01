@@ -209,12 +209,19 @@ const BREAKDOWN_COLUMNS: IColumn[] = [
 type LeaveBalanceProps = {
   mode?: 'hr' | 'self';
   showBreadcrumbs?: boolean;
+  /** When provided, displays leave data for this specific employee instead of the logged-in user. */
+  employeeId?: string;
 };
 
-const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true }: LeaveBalanceProps) => {
+const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: LeaveBalanceProps) => {
   const isSelfMode = mode === 'self';
+  const isEmployeeProfileMode = Boolean(employeeId);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { employee } = useSelector((state: any) => state.auth);
+
+  // When viewing a specific employee's profile, always use HR endpoints with the given employeeId.
+  // Fall back to the authenticated employee's ID for the standard HR global view.
+  const resolvedEmployeeId = isEmployeeProfileMode ? employeeId : employee?.id;
 
   const {
     data: balanceDataForHr,
@@ -223,7 +230,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true }: LeaveBalanceProps
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetMyLeaveBalanceQuery,
-    params: { academicYearId: currentYear?.id, employeeId: employee?.id },
+    params: { academicYearId: currentYear?.id, employeeId: resolvedEmployeeId },
     options: { skip: !currentYear?.id || isSelfMode },
   });
   const {
@@ -244,7 +251,12 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true }: LeaveBalanceProps
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLeaveRequestsQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
+    params: {
+      academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 100,
+      ...(isEmployeeProfileMode ? { employeeId } : {}),
+    },
     options: { skip: !currentYear?.id || isSelfMode },
   });
   const {

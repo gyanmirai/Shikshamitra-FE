@@ -386,7 +386,7 @@ const AttendanceShiftMonitoring = () => {
       />
 
       <Box sx={{ px: 2, pb: 2 }}>
-        <Box sx={{ my: 1 }}>
+        <Box sx={{ my: 1, maxWidth: 280, mx: 'auto' }}>
           <DonutShade
             series={chartSeries}
             labels={chartLabels}

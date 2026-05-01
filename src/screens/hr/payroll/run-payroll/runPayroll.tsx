@@ -5,6 +5,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
+import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -104,6 +105,7 @@ const resolveIssueSeverity = (codes: string[]): PayrollRow['issueSeverity'] => {
 };
 
 const RunPayroll = () => {
+  const router = useRouter();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
   const [loadedMonthKey, setLoadedMonthKey] = useState<string | null>(null);
   const [previewItems, setPreviewItems] = useState<any[]>([]);
@@ -420,7 +422,7 @@ const RunPayroll = () => {
             state === 'CRITICAL' ? 'error' : state === 'WARNING' ? 'warning' : 'info';
           const title = issues
             .slice(0, 5)
-            .map((code) => ISSUE_LABELS[code]?.label || code)
+            .map((code: string | number) => ISSUE_LABELS[code]?.label || code)
             .join(', ');
 
           return (
@@ -620,6 +622,14 @@ const RunPayroll = () => {
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <LoadingButton
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="solar:calendar-mark-linear" />}
+              onClick={() => router.push('/hr/manual-attendance')}
+            >
+              Move to Attendance
+            </LoadingButton>
             <LoadingButton
               size="small"
               variant="outlined"
