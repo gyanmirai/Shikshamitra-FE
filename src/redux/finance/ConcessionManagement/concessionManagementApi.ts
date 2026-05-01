@@ -143,6 +143,15 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
+
+    cancelConcessionRequest: builder.mutation({
+      query: ({ studentConcessionTypeRequestId, body }) => ({
+        url: `/concession-request/${studentConcessionTypeRequestId}/cancel`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [financeModuleType.concessionRequest],
+    }),
   }),
   overrideExisting: false,
 });
@@ -164,4 +173,5 @@ export const {
   useGetConcessionRequestByIdQuery,
   useGetConcessionRequestValueEntriesQuery,
   useGetConcessionRequestFeeHeadsQuery,
+  useCancelConcessionRequestMutation,
 } = concessionManagementApi;

@@ -16,6 +16,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FeeMonthOptions } from 'src/enums/fee-collection-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
@@ -30,6 +31,7 @@ import {
   Stack,
   Paper,
   Button,
+  Checkbox,
   Skeleton,
   TextField,
   Typography,
@@ -38,6 +40,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
+  useCancelConcessionRequestMutation,
   useRejectConcessionRequestMutation,
   useApproveConcessionRequestMutation,
   useGetStudentConcessionDetailsQuery,
@@ -53,13 +56,16 @@ import type { IConcessionRequestItem, IViewConcessionRequestProps } from './type
 
 interface IReasonDialogProps {
   open: boolean;
-  mode: 'Approve' | 'Reject';
+  mode: 'Approve' | 'Reject' | 'Cancel';
   onClose: () => void;
   selectedItem: IConcessionRequestItem | null;
 }
 
 const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selectedItem }) => {
   const isReject = mode === 'Reject';
+  const isCancel = mode === 'Cancel';
+  const needsReason = isReject || isCancel;
+
   const [approveConcession, { isLoading: isApproving }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useApproveConcessionRequestMutation,
@@ -69,27 +75,43 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
     type: 'mutation',
     currentQueryAndMutation: useRejectConcessionRequestMutation,
   });
+
+  const [cancelConcession, { isLoading: isCancelling }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCancelConcessionRequestMutation,
+  });
+
   const formik = useFormik({
-    initialValues: { reason: '' },
+    initialValues: { reason: '', months: [] as number[] },
     validationSchema: Yup.object({
-      reason: isReject
+      reason: needsReason
         ? Yup.string()
             .required('Reason is required')
             .min(10, 'Reason must be at least 10 characters')
-        : Yup.string(),
+        : Yup.string().optional(),
+      months: isReject
+        ? Yup.array().optional()
+        : Yup.array().of(Yup.number()).min(1, 'Please select at least one month'),
     }),
     enableReinitialize: true,
-    onSubmit: async (values, helpers) => {
+    onSubmit: async (values) => {
+      const body = { message: values.reason, months: values.months };
       if (isReject) {
         await rejectConcession({
           studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
-          body: { message: values.reason },
+          body,
         }).unwrap();
         shikshaMitraToast.success({ message: 'Concession rejected successfully' });
+      } else if (isCancel) {
+        await cancelConcession({
+          studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
+          body,
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Concession cancelled successfully' });
       } else {
         await approveConcession({
           studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
-          body: { message: values.reason },
+          body,
         }).unwrap();
         shikshaMitraToast.success({ message: 'Concession approved successfully' });
       }
@@ -97,16 +119,76 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
     },
   });
 
+  const toggleMonth = (value: number) => {
+    const curr = formik.values.months;
+    formik.setFieldValue(
+      'months',
+      curr.includes(value) ? curr.filter((m) => m !== value) : [...curr, value]
+    );
+  };
+
   return (
     <>
       <DialogScrollContent>
+        {/* ── Month Selection (Approve & Cancel only) ───────────────────────────────────── */}
+        {!isReject && (
+          <Box mb={2}>
+            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mb: 1 }}>
+              Select Months *
+            </Typography>
+            <Grid container spacing={1}>
+              {FeeMonthOptions.map((month) => {
+                const selected = formik.values.months.includes(month.value);
+                return (
+                  <Grid key={month.value} size={{ xs: 3 }}>
+                    <Paper
+                      variant="outlined"
+                      onClick={() => toggleMonth(month.value)}
+                      sx={{
+                        p: '8px 10px',
+                        borderRadius: 1,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        userSelect: 'none',
+                        bgcolor: selected
+                          ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1)
+                          : 'background.paper',
+                        borderColor: selected ? 'primary.main' : 'divider',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <Checkbox
+                        size="small"
+                        checked={selected}
+                        onChange={() => toggleMonth(month.value)}
+                        sx={{ p: 0, '& .MuiSvgIcon-root': { fontSize: 16 } }}
+                      />
+                      <Typography variant="body2" fontWeight={600}>
+                        {month.label.slice(0, 3)}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                );
+              })}
+            </Grid>
+            {formik.touched.months && formik.errors.months && (
+              <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                {formik.errors.months as string}
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {/* ── Reason ────────────────────────────────────────────── */}
         <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
           <TextField
             fullWidth
             multiline
             rows={3}
             size="small"
-            label={`Reason${isReject ? ' *' : ' (optional)'}`}
+            label={`Reason${needsReason ? ' *' : ' (optional)'}`}
             name="reason"
             value={formik.values.reason}
             onChange={formik.handleChange}
@@ -123,15 +205,17 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
           onClick={onClose}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
-          Cancel
+          Close
         </Button>
         <LoadingButton
-          loading={isApproving || isRejecting}
+          loading={isApproving || isRejecting || isCancelling}
           variant="contained"
           size="small"
-          color={isReject ? 'error' : 'success'}
+          color={isReject || isCancel ? 'error' : 'success'}
           onClick={(e: any) => formik.handleSubmit(e)}
-          startIcon={isReject ? <Cancel fontSize="small" /> : <CheckCircle fontSize="small" />}
+          startIcon={
+            isReject || isCancel ? <Cancel fontSize="small" /> : <CheckCircle fontSize="small" />
+          }
         >
           {mode}
         </LoadingButton>
@@ -191,6 +275,7 @@ interface IConcessionCardProps {
   item: IConcessionRequestItem;
   onApprove: (item: IConcessionRequestItem) => void;
   onReject: (item: IConcessionRequestItem) => void;
+  onCancel: (item: IConcessionRequestItem) => void;
   onOpenDocs: (item: IConcessionRequestItem) => void;
   onDelete: (item: IConcessionRequestItem) => void;
 }
@@ -199,11 +284,13 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   item,
   onApprove,
   onReject,
+  onCancel,
   onOpenDocs,
   onDelete,
 }) => {
   const isApproved = item.status === ConcessionStatusType.Approved;
   const isRejected = item.status === ConcessionStatusType.Rejected;
+  const isCancelled = item.status === ConcessionStatusType.Cancelled;
   const statusLabel = ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType;
   const statusColor = ConcessionStatusTypeColors[item.status as ConcessionStatusType] as LabelColor;
 
@@ -219,8 +306,16 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           ? (theme) => varAlpha(theme.palette.success.mainChannel, 0.04)
           : isRejected
             ? (theme) => varAlpha(theme.palette.error.mainChannel, 0.04)
-            : 'background.paper',
-        borderColor: isApproved ? 'success.light' : isRejected ? 'error.light' : 'divider',
+            : isCancelled
+              ? (theme) => varAlpha(theme.palette.warning.mainChannel, 0.04)
+              : 'background.paper',
+        borderColor: isApproved
+          ? 'success.light'
+          : isRejected
+            ? 'error.light'
+            : isCancelled
+              ? 'warning.light'
+              : 'divider',
       }}
     >
       <CardContent sx={{ p: 1, flex: 1 }}>
@@ -322,17 +417,16 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                       {doc.documentName}
                     </Typography>
                   </Box>
-                  {doc.url && (
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`${process.env.NEXT_PUBLIC_API_URL}${doc.url}`, '_blank');
-                      }}
-                    >
-                      <Visibility sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  )}
+
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`${process.env.NEXT_PUBLIC_API_URL}${doc.url}`, '_blank');
+                    }}
+                  >
+                    <Visibility sx={{ fontSize: 18 }} />
+                  </IconButton>
                 </Box>
               ))}
             </Stack>
@@ -400,22 +494,33 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           size="small"
           variant={isApproved ? 'soft' : 'contained'}
           color="success"
-          disabled={isApproved || isRejected}
+          disabled={isApproved || isRejected || isCancelled}
           startIcon={<CheckCircle fontSize="small" />}
           onClick={() => onApprove(item)}
         >
-          {isApproved ? 'Approved' : 'Approve'}
+          Approve
         </LoadingButton>
         <LoadingButton
           fullWidth
           size="small"
           variant="soft"
           color="error"
-          disabled={isApproved || isRejected}
+          disabled={isApproved || isRejected || isCancelled}
           startIcon={<Cancel fontSize="small" />}
           onClick={() => onReject(item)}
         >
-          {isRejected ? 'Rejected' : 'Reject'}
+          Reject
+        </LoadingButton>
+        <LoadingButton
+          fullWidth
+          size="small"
+          variant="soft"
+          color="warning"
+          disabled={isApproved || isRejected || isCancelled}
+          startIcon={<Iconify icon="mdi:cancel" width={16} />}
+          onClick={() => onCancel(item)}
+        >
+          Cancel
         </LoadingButton>
         <IconButton onClick={() => onDelete(item)} color="error" sx={{ mt: -0.5 }}>
           <Iconify icon={GlobalIcons.delete} />
@@ -433,7 +538,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
   const [selectedItem, setSelectedItem] = useState<IConcessionRequestItem | null>(null);
-  const [dialogMode, setDialogMode] = useState<'Approve' | 'Reject'>('Approve');
+  const [dialogMode, setDialogMode] = useState<'Approve' | 'Reject' | 'Cancel'>('Approve');
   const [deleteConcessionApplication, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionApplicationMutation,
@@ -448,8 +553,6 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     params: { studentId: student?.studentId },
     options: { skip: !student?.studentId },
   }) as { data: any; isLoading: boolean; isFetching: boolean };
-
-  const stats = data?.concessionBasicDetail;
 
   // Dummy data for development
   const dummyItems: IConcessionRequestItem[] = [
@@ -523,6 +626,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     confirmDialog.onTrue();
   };
 
+  const handleCancelClick = (item: IConcessionRequestItem) => {
+    setSelectedItem(item);
+    setDialogMode('Cancel');
+    confirmDialog.onTrue();
+  };
+
   const handleOpenDocs = (item: IConcessionRequestItem) => {
     setSelectedItem(item);
     docDialog.onTrue();
@@ -576,12 +685,27 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               />
             ))}
           </Box>
-        ) : stats ? (
+        ) : data?.concessionBasicDetail ? (
           <Box display="flex" gap={2} mb={1} flexWrap="wrap">
-            <StatCard label="Total Applications" value={stats.totalApplications} />
-            <StatCard label="Pending Review" value={stats.pendingApplications} color="warning" />
-            <StatCard label="Approved" value={stats.approvedApplications} color="success" />
-            <StatCard label="Rejected" value={stats.rejectedApplications} color="error" />
+            <StatCard
+              label="Total Applications"
+              value={data?.concessionBasicDetail.totalApplications}
+            />
+            <StatCard
+              label="Pending Review"
+              value={data?.concessionBasicDetail.pendingApplications}
+              color="warning"
+            />
+            <StatCard
+              label="Approved"
+              value={data?.concessionBasicDetail.approvedApplications}
+              color="success"
+            />
+            <StatCard
+              label="Rejected"
+              value={data?.concessionBasicDetail.rejectedApplications}
+              color="error"
+            />
           </Box>
         ) : null}
 
@@ -631,6 +755,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
                   label: 'Rejected',
                   value: ConcessionStatusType.Rejected,
                   count: allItems.filter((i) => i.status === ConcessionStatusType.Rejected).length,
+                  color: 'error' as LabelColor,
+                },
+                {
+                  label: 'Cancelled',
+                  value: ConcessionStatusType.Cancelled,
+                  count: allItems.filter((i) => i.status === ConcessionStatusType.Cancelled).length,
                   color: 'error' as LabelColor,
                 },
               ].map((tab) => (
@@ -722,6 +852,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
                   item={item}
                   onApprove={handleApproveClick}
                   onReject={handleRejectClick}
+                  onCancel={handleCancelClick}
                   onOpenDocs={handleOpenDocs}
                   onDelete={handleDelete}
                 />
@@ -778,12 +909,19 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
       {/* ── Reason Dialog ────────────────────────────────────────────── */}
       <CustomDialog
         open={confirmDialog.value}
-        handleClose={onClose}
+        handleClose={() => {
+          confirmDialog.onFalse();
+          setSelectedItem(null);
+        }}
         maxWidth="xs"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h6">
-              {dialogMode === 'Reject' ? 'Reject Concession' : 'Approve Concession'}
+              {dialogMode === 'Reject'
+                ? 'Reject Concession'
+                : dialogMode === 'Cancel'
+                  ? 'Cancel Concession'
+                  : 'Approve Concession'}
             </Typography>
             <CustomTooltip
               arrow
