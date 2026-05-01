@@ -22,6 +22,87 @@ import {
 
 import type { IFeeData, IFeeTableProps } from './type';
 
+const DUMMY_FEE_COLLECTION_DATA = [
+  {
+    id: '1',
+    studentName: 'Aarav Sharma',
+    grNo: 'GR001',
+    standardName: '10',
+    divisionName: 'A',
+    rollNo: '01',
+    totalFees: 45000,
+    paidFees: 45000,
+    pendingFees: 0,
+    overdueFees: 0,
+    status: FeeCollectionStatusType.Paid,
+  },
+  {
+    id: '2',
+    studentName: 'Priya Mehta',
+    grNo: 'GR002',
+    standardName: '10',
+    divisionName: 'A',
+    rollNo: '02',
+    totalFees: 45000,
+    paidFees: 20000,
+    pendingFees: 25000,
+    overdueFees: 0,
+    status: FeeCollectionStatusType.Pending,
+  },
+  {
+    id: '3',
+    studentName: 'Rohan Patel',
+    grNo: 'GR003',
+    standardName: '9',
+    divisionName: 'B',
+    rollNo: '15',
+    totalFees: 42000,
+    paidFees: 10000,
+    pendingFees: 20000,
+    overdueFees: 12000,
+    status: FeeCollectionStatusType.Overdue,
+  },
+  {
+    id: '4',
+    studentName: 'Sneha Joshi',
+    grNo: 'GR004',
+    standardName: '8',
+    divisionName: 'C',
+    rollNo: '08',
+    totalFees: 38000,
+    paidFees: 38000,
+    pendingFees: 0,
+    overdueFees: 0,
+    status: FeeCollectionStatusType.Paid,
+  },
+  {
+    id: '5',
+    studentName: 'Karan Desai',
+    grNo: 'GR005',
+    standardName: '11',
+    divisionName: 'A',
+    rollNo: '22',
+    totalFees: 52000,
+    paidFees: 30000,
+    pendingFees: 22000,
+    overdueFees: 0,
+    status: FeeCollectionStatusType.Pending,
+  },
+  {
+    id: '6',
+    studentName: 'Ananya Singh',
+    grNo: 'GR006',
+    standardName: '12',
+    divisionName: 'B',
+    rollNo: '05',
+    totalFees: 55000,
+    paidFees: 15000,
+    pendingFees: 20000,
+    overdueFees: 20000,
+    status: FeeCollectionStatusType.Overdue,
+  },
+];
+
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onAddFee,
   selectedBoard,
@@ -68,7 +149,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
 
   const tableData = useMemo(
     () =>
-      ((feeCollectionData?.items || []) as any[]).map((item) => ({
+      (
+        (feeCollectionData?.items?.length
+          ? feeCollectionData.items
+          : DUMMY_FEE_COLLECTION_DATA) as any[]
+      ).map((item) => ({
         ...item,
         nameValue: `${item.studentName || '-'}${item.grNo ? ` (${item.grNo})` : ''}`,
         classDivValue: `${item.standardName || '-'}-${item.divisionName || ''}`,
@@ -83,7 +168,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
 
   return (
     <>
-      <Card sx={{ p: 1.5, mb: 1 }}>
+      <Card sx={{ p: 1, mb: 1, overflow: 'visible' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <CustomSelect
             label="Board"

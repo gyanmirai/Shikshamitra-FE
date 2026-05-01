@@ -136,7 +136,7 @@ export const StudentFeeSummaryCard: React.FC<{
                 md: 'repeat(2, 1fr)',
                 lg: 'repeat(4, 1fr)',
               }}
-              gap={2}
+              gap={1}
             >
               {[
                 {
@@ -176,7 +176,7 @@ export const StudentFeeSummaryCard: React.FC<{
                   transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
                   whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } }}
                   sx={{
-                    p: 1,
+                    p: 0.75,
                     borderRadius: 1,
                     bgcolor: (theme) =>
                       alpha((theme.palette as any)[item.color.split('.')[0]].main, 0.04),
@@ -203,8 +203,8 @@ export const StudentFeeSummaryCard: React.FC<{
                       {item.label}
                     </Typography>
                     <Typography
-                      variant="subtitle1"
-                      sx={{ color: 'text.primary', fontWeight: 800, fontSize: '1rem' }}
+                      variant="body2"
+                      sx={{ color: 'text.primary', fontWeight: 800, fontSize: '0.875rem' }}
                     >
                       {formatNumber(item.value ?? 0, 'INR')}
                     </Typography>
@@ -212,7 +212,7 @@ export const StudentFeeSummaryCard: React.FC<{
 
                   <Iconify
                     icon={item.icon}
-                    width={25}
+                    width={20}
                     sx={{
                       color: item.color,
                       filter: (theme) =>

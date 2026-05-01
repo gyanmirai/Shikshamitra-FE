@@ -156,3 +156,75 @@ export type IPaymentMethodsConfig = Record<string, IPaymentFieldConfig[]>;
 export interface IPaymentData {
   [method: string]: Record<string, string | number | null>;
 }
+
+// ─── Fee Ledger Data Types ─────────────────────────────────────────────────────
+
+export type FeeEntryStatus = 'Pending' | 'Partial' | 'Paid' | 'Overdue';
+
+export type PaymentModeType = 'Cash' | 'Cheque' | 'UPI' | 'Card' | 'Demand Draft (DD)';
+
+export interface MonthWiseFeeItem {
+  feeHeadId: string;
+  feeHeadName: string;
+  total: number;
+  paid: number;
+  due: number;
+  status: FeeCollectionStatusType;
+}
+
+export interface MonthWiseGroup {
+  month: string; // e.g. "April"
+  totalDue: number;
+  items: MonthWiseFeeItem[];
+}
+
+export interface FeeHeadWiseFeeItem {
+  month: string;
+  total: number;
+  paid: number;
+  due: number;
+  status: FeeCollectionStatusType;
+}
+
+export interface FeeHeadWiseGroup {
+  feeHeadId: string;
+  feeHeadName: string;
+  months: number;
+  totalDue: number;
+  items: FeeHeadWiseFeeItem[];
+}
+
+export interface FeeLedgerData {
+  monthWise: MonthWiseGroup[];
+  feeHeadWise: FeeHeadWiseGroup[];
+}
+
+// ─── Fee Collection Form Value Types ──────────────────────────────────────────
+
+export interface SelectedItem {
+  feeHeadId: string;
+  period: string; // e.g. "2026-04"
+  dueAmount: number;
+}
+
+export interface PaymentMode {
+  mode: PaymentModeType;
+  amount: number;
+  reference?: string;
+}
+
+export interface FeeCollectionPayment {
+  paymentMethod: string;
+  amount: string | number;
+  details: Record<string, any>;
+}
+
+export interface FeeCollectionFormValues {
+  studentId: string;
+  selectedItems: SelectedItem[];
+  charges: string[]; // array of charge IDs
+  subtotal: number;
+  finalAmount: number;
+  payments: FeeCollectionPayment[];
+  remarks?: string;
+}

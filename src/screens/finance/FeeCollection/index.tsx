@@ -3,15 +3,16 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { Box, Card } from '@mui/material';
+import { Box } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
-import FeeCollectComponent from './Components/FeeCollectComponent';
+import FeeCollectComponentForm from './FeeCollectionComponent/FeeCollectionForm';
 
 import type { IStudentFee } from './Components/type';
 
@@ -113,11 +114,19 @@ const FeeCollection = () => {
           }}
         />
       )}
-      {studentDialog.value && selectedStudent && (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <FeeCollectComponent student={selectedStudent} onCancel={handleClose} />
-        </Card>
-      )}
+      <CustomDialog
+        open={studentDialog.value}
+        title="Fee Details"
+        fullScreen
+        handleClose={() => {
+          studentDialog.onFalse();
+          setSelectedStudent(null);
+        }}
+      >
+        {selectedStudent && (
+          <FeeCollectComponentForm student={selectedStudent} onCancel={handleClose} />
+        )}
+      </CustomDialog>
       {viewDialog.value && selectedStudent && (
         <ViewFeeDetails
           student={selectedStudent}
