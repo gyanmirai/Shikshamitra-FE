@@ -5,14 +5,14 @@ export enum ConcessionStatusType {
   Pending,
   Approved,
   Rejected,
-  Draft,
+  Cancelled,
 }
 // Options for dropdowns / select inputs
 export const ConcessionStatusOptions = [
   { label: 'Pending', value: ConcessionStatusType.Pending },
   { label: 'Approved', value: ConcessionStatusType.Approved },
   { label: 'Rejected', value: ConcessionStatusType.Rejected },
-  { label: 'Draft', value: ConcessionStatusType.Draft },
+  { label: 'Cancelled', value: ConcessionStatusType.Cancelled },
 ];
 
 // Colors (matching your screenshot styling)
@@ -20,5 +20,5 @@ export const ConcessionStatusTypeColors: Record<ConcessionStatusType, LabelColor
   [ConcessionStatusType.Pending]: 'warning',
   [ConcessionStatusType.Approved]: 'success',
   [ConcessionStatusType.Rejected]: 'error',
-  [ConcessionStatusType.Draft]: 'info',
+  [ConcessionStatusType.Cancelled]: 'error',
 };

@@ -18,7 +18,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Tab, Tabs, Button, Typography } from '@mui/material';
-import { ConcessionStatusType, ConcessionStatusTypeColors } from 'src/enums/concession-status-type';
+import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { useDeleteConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
   concessionManagementApi,
@@ -246,6 +246,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
       pending: allItems.filter((i: any) => i.status === ConcessionStatusType.Pending).length,
       approved: allItems.filter((i: any) => i.status === ConcessionStatusType.Approved).length,
       rejected: allItems.filter((i: any) => i.status === ConcessionStatusType.Rejected).length,
+      cancelled: allItems.filter((i: any) => i.status === ConcessionStatusType.Cancelled).length,
     }),
     [allItems]
   );
@@ -270,6 +271,12 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
         count: concessionCounts.rejected,
         color: 'error',
       },
+      {
+        label: 'Cancelled',
+        value: ConcessionStatusType.Cancelled,
+        count: concessionCounts.cancelled,
+        color: 'error',
+      },
     ],
     [concessionCounts]
   );
@@ -279,7 +286,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
       [ConcessionStatusType.Pending]: 'Pending',
       [ConcessionStatusType.Approved]: 'Approved',
       [ConcessionStatusType.Rejected]: 'Rejected',
-      [ConcessionStatusType.Draft]: 'Draft',
+      [ConcessionStatusType.Cancelled]: 'Cancelled',
     };
     return map[status] || 'Unknown';
   };
@@ -387,10 +394,9 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           {
             id: 'concessionAmount',
             label: 'Amount',
-            align: 'right',
             minWidth: 110,
             render: (value) => (
-              <Typography variant="caption" fontSize="13px" fontWeight={600} color="primary.main">
+              <Typography variant="caption" fontSize="13px">
                 {formatNumber(value || 0, 'INR')}
               </Typography>
             ),
@@ -408,25 +414,6 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
               ) : (
                 '-'
               ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            minWidth: 100,
-            filterType: 'enum',
-            enumOptions: [
-              { label: 'Pending', value: ConcessionStatusType.Pending },
-              { label: 'Approved', value: ConcessionStatusType.Approved },
-            ],
-            sticky: true,
-            render: (value) => (
-              <Label
-                color={ConcessionStatusTypeColors[value as ConcessionStatusType] || 'default'}
-                variant="soft"
-              >
-                {getStatusLabel(value)}
-              </Label>
-            ),
           },
           {
             id: 'actions',
