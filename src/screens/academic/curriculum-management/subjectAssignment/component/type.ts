@@ -50,6 +50,8 @@ export interface ISubjectDetail {
   subjectNo?: number;
   secondaryTeacher?: string[] | null;
   isSubjectOpen?: boolean;
+
+  assignedSubjectId?: string; // New field to link with assigned subject for syllabus fetching
 }
 
 export interface ISubjectFormValues {

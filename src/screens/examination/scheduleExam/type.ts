@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 export interface IScheduledExam {
   id: string;
+  examId: string;
   class: string;
   subjectName: string;
   examType: string;
@@ -14,46 +15,57 @@ export interface IScheduledExam {
   status: number;
 }
 
-export interface IExamTime {
-  id: number;
+/**
+ * Single source of truth for a subject across all steps.
+ * Step 1 populates identity fields; Step 2 populates schedule fields.
+ * Never duplicated into a separate array.
+ */
+export interface IExamSubject {
+  subjectId: string;
   subjectName: string;
   subjectColor: string;
   subjectCode?: string;
-  examDate: string | Dayjs | null;
-  startTime: string | Dayjs | null;
-  endTime: string | Dayjs | null;
-  totalMarks: string;
-  passingMarks: string;
-  notes?: string;
+  electiveGroupId?: string;
+  // Step 2 schedule fields — null until the user fills them
+  examDate: Dayjs | null;
+  startTime: Dayjs | null;
+  endTime: Dayjs | null;
+  totalMarks: number | '';
+  passingMarks: number | '';
+  notes: string;
 }
-// Represents room data for a single division
+
+/** Room details keyed by subjectId → divisionId */
+export type IRoomDetails = Record<string, Record<string, IDivisionRoomDetail>>;
+
 export interface IDivisionRoomDetail {
   roomIds: string[];
   capacity: number;
 }
 
-// Represents room assignment for a subject with multiple divisions
-export interface ISubjectRoomDetail {
-  divisions: Record<string, IDivisionRoomDetail>; // key: division ID (string)
-  copyPastSubject: string;
-  examDate: string | Dayjs | null; // Exam date for the subject
-}
-
-// Represents the whole structure: key is subjectName (e.g. "Science", "Maths")
-export type IRoomDetails = Record<string, ISubjectRoomDetail>;
-
 export interface IExamFormValues {
-  id?: string;
-  selectedSubjects: string[];
+  examId: string;
   examType: string;
   examName: string;
   className: string;
   divisions: string[];
-  subjects: IExamTime[];
-  roomDetails?: IRoomDetails;
+  /** Single array for ALL steps — replaces the old selectedSubjects + subjects split */
+  subjects: IExamSubject[];
   description: string;
+  isRoomAssign: boolean;
+  /** key: subjectId → divisionId → { roomIds, capacity } */
+  roomDetails: IRoomDetails;
   status?: number;
-  isRoomAssign?: boolean;
+}
+
+// Legacy aliases kept for gradual migration — remove after all consumers are updated
+/** @deprecated Use IExamSubject */
+export type IExamTime = IExamSubject;
+/** @deprecated Use IDivisionRoomDetail inside IRoomDetails */
+export interface ISubjectRoomDetail {
+  divisions: Record<string, IDivisionRoomDetail>;
+  copyPastSubject: string;
+  examDate: string | Dayjs | null;
 }
 
 export interface IScheduledExamTableProps {
@@ -66,6 +78,7 @@ export interface IScheduledExamTableProps {
   setEditData?: (value: IExamFormValues | null) => void;
   onDelete: (data: IExamFormValues) => void;
   onViewTimetable: (data: IExamFormValues) => void;
+  getExams: any;
 }
 
 export interface INewExamFormProps {

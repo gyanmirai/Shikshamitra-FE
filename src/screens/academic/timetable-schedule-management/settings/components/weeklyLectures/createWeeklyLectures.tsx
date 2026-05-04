@@ -27,7 +27,6 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     tableData,
     onClose,
   });
-
   const handleCancel = () => onClose?.(null, false);
   const handleSubmit = () => formik.handleSubmit();
 

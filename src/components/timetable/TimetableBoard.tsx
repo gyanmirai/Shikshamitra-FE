@@ -371,6 +371,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           placedCounts={subjectCounts}
           selectedClass={selectedClass}
           selectedDivision={selectedDivision}
+          subjects={subjects}
         />
       )}
 

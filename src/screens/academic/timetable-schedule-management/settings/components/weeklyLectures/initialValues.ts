@@ -11,9 +11,11 @@ export const getNoOfLectureInitialValues = (editData: any | null, selectedClass?
           electiveGroupId,
           subjectType,
           electiveGroupName,
+          ...rest
         }: any,
         index: any
       ) => ({
+        ...rest,
         id: subjectId || `subject-${index}`,
         subjectId,
         name: electiveGroupName || subjectName || '',

@@ -217,12 +217,12 @@ const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) =
               icon={<Subject />}
               label="Subjects"
               value={
-                values.selectedSubjects.length > 0 ? (
+                values.subjects.length > 0 ? (
                   <Box display="flex" flexWrap="wrap" gap={0.5}>
-                    {values.selectedSubjects.map((subject) => (
+                    {values.subjects.map((subject) => (
                       <Chip
-                        key={subject}
-                        label={subject}
+                        key={subject.subjectId}
+                        label={subject.subjectName}
                         size="small"
                         variant="soft"
                         sx={{ fontSize: '0.75rem', height: 24 }}

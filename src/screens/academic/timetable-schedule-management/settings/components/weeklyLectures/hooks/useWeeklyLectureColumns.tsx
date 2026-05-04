@@ -39,19 +39,20 @@ export function useWeeklyLectureColumns({
         label: 'Subjects',
         isSort: false,
         align: 'left',
+        isFilter: false,
       },
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 60,
+        minWidth: 40,
         sticky: true,
         align: 'left',
         isSort: false,
         isFilter: false,
         render: (_value, row) => (
           <ThreeDotsActions
-            showViewIcon
-            handleViewClick={() => onView(row as ISubjectFormValues)}
+            // showViewIcon
+            // handleViewClick={() => onView(row as ISubjectFormValues)}
             showEditIcon
             showThreeDots={false}
             handleEditClick={() => onEdit(row as ISubjectFormValues)}
@@ -60,6 +61,6 @@ export function useWeeklyLectureColumns({
         ),
       },
     ],
-    [onView, onEdit]
+    [onEdit]
   );
 }

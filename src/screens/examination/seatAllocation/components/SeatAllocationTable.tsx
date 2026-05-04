@@ -1,10 +1,7 @@
 // --- existing imports ---
-import type { Medium } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { motion } from 'framer-motion';
-import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -17,58 +14,12 @@ import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/Examin
 
 import type { IExamAllocation } from '../type';
 
-const tableData = [
-  {
-    examName: 'Mid Term Exam',
-    examType: 'Mid',
-    className: 1,
-    divisions: ['A', 'B'],
-    totalStudents: 500,
-    allocatedStudents: 300,
-    pendingStudents: 200,
-    status: 'pending',
-  },
-  {
-    examName: 'Final Exam',
-    examType: 'Final',
-    className: 3,
-    divisions: ['A', 'B', 'C'],
-    totalStudents: 500,
-    allocatedStudents: 250,
-    pendingStudents: 250,
-    status: 'pending',
-  },
-  {
-    examName: 'Final Exam',
-    examType: 'Final',
-    className: 7,
-    divisions: ['C', 'D'],
-    totalStudents: 500,
-    allocatedStudents: 350,
-    pendingStudents: 150,
-    status: 'update',
-  },
-  {
-    examName: 'Mid Term Exam',
-    examType: 'Mid',
-    className: 10,
-    divisions: ['A', 'C'],
-    totalStudents: 500,
-    allocatedStudents: 400,
-    pendingStudents: 100,
-    status: 'update',
-  },
-  {
-    examName: 'Mid Term Exam',
-    examType: 'Mid',
-    className: 12,
-    divisions: ['A', 'D'],
-    totalStudents: 500,
-    allocatedStudents: 500,
-    pendingStudents: 0,
-    status: 'allocated',
-  },
-];
+// status: 0=pending, 1=partial, 2=allocated
+const statusConfig: Record<number, { label: string; color: 'warning' | 'info' | 'success' }> = {
+  0: { label: 'Pending', color: 'warning' },
+  1: { label: 'Partial', color: 'info' },
+  2: { label: 'Allocated', color: 'success' },
+};
 
 interface SeatAllocationTableProps {
   openSeatAllocation: UseBooleanReturn;
@@ -81,17 +32,14 @@ const SeatAllocationTable = ({
   onSeatAllocate,
   classId,
 }: SeatAllocationTableProps) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: seatAllocationData,
     isLoading,
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSeatAllocationTableDataQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id, classId },
+    params: { standardId: classId },
   });
 
   const actions = useCallback(
@@ -106,10 +54,10 @@ const SeatAllocationTable = ({
         >
           <>
             <Iconify
-              icon={row.status === 'pending' ? 'clarity:form-line' : GlobalIcons.edit}
+              icon={row.status === 0 ? 'clarity:form-line' : GlobalIcons.edit}
               sx={{ mr: 1 }}
             />
-            {row.status === 'pending' ? 'Allocate Seats' : 'Update Seats'}
+            {row.status === 0 ? 'Allocate Seats' : 'Update Seats'}
           </>
         </MenuItem>
       </MenuList>
@@ -130,18 +78,17 @@ const SeatAllocationTable = ({
           isLoading={isLoading || isFetching}
           columns={[
             { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 120, sticky: true },
-            { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 110 },
+            { id: 'examTypeName', label: 'Exam Type', align: 'left', minWidth: 110 },
             {
-              id: 'className',
+              id: 'standardName',
               label: 'Class',
               align: 'left',
-              filterType: 'number',
             },
             {
               id: 'divisions',
               label: 'Divisions',
               align: 'left',
-              render: (value) => <Box>{value.join(', ')}</Box>,
+              render: (value) => <Box>{(value as string[]).join(', ')}</Box>,
             },
             {
               id: 'totalStudents',
@@ -168,9 +115,13 @@ const SeatAllocationTable = ({
               id: 'status',
               label: 'Status',
               align: 'left',
-              render: (value, row) => (
-                <Label color={value === 'pending' ? 'warning' : 'primary'}>{value}</Label>
-              ),
+              render: (value) => {
+                const cfg = statusConfig[value as number] ?? {
+                  label: String(value),
+                  color: 'default' as any,
+                };
+                return <Label color={cfg.color}>{cfg.label}</Label>;
+              },
             },
             {
               id: 'actions',
@@ -189,7 +140,7 @@ const SeatAllocationTable = ({
               },
             },
           ]}
-          data={tableData || []}
+          data={seatAllocationData?.items || []}
         />
       </Box>
     </motion.div>

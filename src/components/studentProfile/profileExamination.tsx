@@ -12,7 +12,7 @@ import type { ChartOptions } from '../chart';
 
 const ProfileExamination = () => {
   // State to store all exam data, initialized with data from JSON
-  const examData = examTableData as IExamFormValues[];
+  const examData = examTableData as unknown as IExamFormValues[];
 
   return (
     <ScheduledExamTable
@@ -21,6 +21,7 @@ const ProfileExamination = () => {
       onDelete={(data) => {}}
       data={examData}
       onViewTimetable={(data) => {}}
+      getExams={() => {}}
     />
   );
 };

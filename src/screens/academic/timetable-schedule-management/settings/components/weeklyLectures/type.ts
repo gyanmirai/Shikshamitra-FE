@@ -19,8 +19,15 @@ export interface ISubject {
   electiveGroupId?: string | null;
   electiveGroupName?: string | null;
   subjectType?: number;
-  subjects?: Array<{ subjectId: string; subjectName: string; subjectCode: string }>;
+  subjects?: Array<{ subjectId: string; subjectName: string; subjectCode: string; name?: string }>;
+  electiveGroupSubjects?: Array<{
+    subjectId: string;
+    subjectName: string;
+    subjectCode: string;
+    name?: string;
+  }>;
   subjectCount?: number;
+  electiveGroupColor?: string;
 }
 
 export interface IWeeklyLecture extends IData {

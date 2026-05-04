@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Standards, Organization } from 'src/types/school';
+import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -16,6 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
+  useSaveSeatAllocationMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import SeatAllocationTable from './components/SeatAllocationTable';
@@ -29,12 +30,14 @@ const SeatAllocation = () => {
   const openSeatAllocation = useBoolean();
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [room, setRoom] = useState<string>('');
-  // State to store selected class/standard ID
+  // classes stores the selected standard UUID
   const [classes, setClasses] = useState<string>('');
   const [division, setDivision] = useState<string>('');
 
-  // const [selectedClass, setSelectedClass] = useState('');
   const [selectedExam, setSelectedExam] = useState<IExamAllocation | null>(null);
+  const [droppedData, setDroppedData] = useState<IDroppedData>({ roomId: '', students: [] });
+
+  const [saveSeatAllocation, { isLoading: isSaving }] = useSaveSeatAllocationMutation();
 
   const {
     data: examDivisionsData,
@@ -43,10 +46,9 @@ const SeatAllocation = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamDivisionsQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id, classId: selectedExam?.classId },
-  }); // Update classes when organization changes
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [droppedData, setDroppedData] = useState<IDroppedData>({ roomId: '', students: [] });
+    params: { examId: selectedExam?.examId, standardId: classes },
+  });
+
   const {
     data: examRoomsData,
     isLoading: examRoomsLoading,
@@ -54,8 +56,8 @@ const SeatAllocation = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamRoomsQuery,
-    params: { examId: selectedExam?.id, divisionId: division },
-  }); // Update classes when organization changes
+    params: { examId: selectedExam?.examId, divisionId: division },
+  });
 
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -65,8 +67,14 @@ const SeatAllocation = () => {
       ) || [];
 
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.name || '');
+    setClasses(allClasses[0]?.id || '');
   }, [currentMedium]);
+
+  const handleSubmit = async () => {
+    if (!selectedExam?.examId || droppedData.students.length === 0) return;
+    await saveSeatAllocation({ examId: selectedExam.examId, body: droppedData });
+    openSeatAllocation.onFalse();
+  };
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -76,7 +84,6 @@ const SeatAllocation = () => {
           description="This table lists all scheduled exams eligible for seat allocation. Click 'Allocate Seat' to assign students to exam halls for a specific exam."
           isBack
           onBack={() => {
-            // handleClose(null, false);
             openSeatAllocation.onFalse();
           }}
           links={[
@@ -103,7 +110,6 @@ const SeatAllocation = () => {
           handleClose={openSeatAllocation.onFalse}
           fullScreen
         >
-          {/* <SectionCard title="Allocation Details"> */}
           <Box
             sx={{
               display: 'flex',
@@ -114,23 +120,23 @@ const SeatAllocation = () => {
           >
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <CustomSelect
-                options={examDivisionsData?.data?.divisions || []}
+                options={examDivisionsData?.items || []}
                 label="Division"
                 value={division}
                 isLoading={isLoading || isFetching}
                 onChange={(val) => setDivision(val as string)}
                 labelKey="name"
-                valueKey="name"
+                valueKey="id"
                 formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
                 disabled={!classes}
               />
               <CustomSelect
-                options={examRoomsData?.data?.rooms || []}
+                options={examRoomsData?.items || []}
                 label="Room"
                 value={room}
                 isLoading={examRoomsLoading || examRoomsFetching}
                 onChange={(val) => setRoom(val as string)}
-                labelKey="name"
+                labelKey="roomName"
                 valueKey="id"
                 formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
                 disabled={!division}
@@ -144,9 +150,7 @@ const SeatAllocation = () => {
                 startIcon={<Iconify icon={GlobalIcons.cancel} />}
                 variant="outlined"
                 size="small"
-                onClick={() => {
-                  // draftTimetableDialog.onTrue();
-                }}
+                onClick={openSeatAllocation.onFalse}
               >
                 Cancel
               </Button>
@@ -154,15 +158,13 @@ const SeatAllocation = () => {
                 startIcon={<Iconify icon={GlobalIcons.submit} />}
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  // publishTimetableDialog.onTrue();
-                }}
+                disabled={isSaving}
+                onClick={handleSubmit}
               >
                 Submit
               </Button>
             </Box>
           </Box>
-          {/* </SectionCard> */}
           <SeatAllocationSection
             division={division}
             classRoom={room}
@@ -179,7 +181,7 @@ const SeatAllocation = () => {
               value={classes}
               onChange={(val) => setClasses(val as string)}
               labelKey="name"
-              valueKey="name"
+              valueKey="id"
               formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
           </Card>
@@ -187,6 +189,9 @@ const SeatAllocation = () => {
             openSeatAllocation={openSeatAllocation}
             onSeatAllocate={(examData) => {
               setSelectedExam(examData);
+              setDivision('');
+              setRoom('');
+              setDroppedData({ roomId: '', students: [] });
             }}
             classId={classes}
           />

@@ -26,7 +26,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
-import { MOCK_SUBJECTS, DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
+import { DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
 import {
   TimetableStatusType,
   TimetableStatusColors,
@@ -564,11 +564,10 @@ const TimeTableGrid = () => {
       >
         <TimeTableForm
           selectedClass={classes}
+          classId={selectedStandardId}
           selectedDivision={division}
           standardId={selectedStandardId}
           divisionId={selectedDivisionId}
-          slotConfigData={slotConfigData}
-          isSlotConfigLoading={isSlotConfigLoading || isSlotConfigFetching}
           onClose={() => {
             setOpen(false);
             setIsEdit(false);
@@ -660,21 +659,31 @@ export default TimeTableGrid;
 
 const TimeTableForm = ({
   selectedClass,
+  classId,
   selectedDivision,
   standardId,
   divisionId,
-  slotConfigData,
-  isSlotConfigLoading,
   onClose,
 }: {
   selectedClass: string;
+  classId: string;
   selectedDivision: string;
   standardId: string;
   divisionId: string;
-  slotConfigData?: any;
-  isSlotConfigLoading?: boolean;
   onClose: () => void;
 }) => {
+  const {
+    data: slotConfigData,
+    isLoading: isSlotConfigLoading,
+    isFetching: isSlotConfigFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTimetableByStandardDivisionQuery,
+    params: { standardId: classId, divisionId },
+    options: {
+      skip: !classId || !divisionId,
+    },
+  });
   console.log('Slot Config Data in Form:--->', slotConfigData);
   const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
@@ -739,6 +748,20 @@ const TimeTableForm = ({
 
   console.log('Formik Values:--->', formik.values);
 
+  const subjects = useMemo(
+    () =>
+      slotConfigData?.subjectSummary.map((subject: any) => ({
+        id: subject?.id,
+        name: subject?.name,
+        color: subject?.color,
+        defaultDuration: 60,
+        totalLectures: subject?.totalSlots,
+      })) || [],
+    [slotConfigData]
+  );
+
+  console.log('Subjects for Timetable Board:--->', subjects);
+
   return (
     <DialogScrollContent
       sx={{ paddingBottom: '16px', height: '100%', p: 2 }}
@@ -800,7 +823,7 @@ const TimeTableForm = ({
         <TimetableBoard
           slots={formik.values.slots}
           onChange={(value) => formik.setFieldValue('slots', value)}
-          subjects={MOCK_SUBJECTS}
+          subjects={subjects}
           readOnly={false}
           selectedClass={selectedClass}
           selectedDivision={selectedDivision}

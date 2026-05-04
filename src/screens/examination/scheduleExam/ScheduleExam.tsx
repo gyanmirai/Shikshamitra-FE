@@ -57,6 +57,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     currentQueryAndMutation: useDeleteExamMutation,
   });
 
+  console.log('ScheduleExam render - selectedExam:', selectedExam, 'isChanges:', isChanges);
+
   const { confirmWithUndo } = useConfirmWithUndo();
 
   const handleDeleteExam = async () => {
@@ -68,16 +70,18 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             'getExams',
             { AcademicMediumId: medium?.id },
             (draft: any) => {
-              const index = draft.findIndex((item: any) => item.id === selectedExam?.id);
+              const index = draft?.items?.findIndex(
+                (item: any) => item.examId === selectedExam?.examId
+              );
               setDeleteIndex(index);
-              if (index !== -1) draft.splice(index, 1);
+              if (index !== -1) draft?.items?.splice(index, 1);
             }
           )
         ),
       onUndoRestore: () => getExams.refetch(),
       onCommit: async () => {
         await deleteExam({
-          examId: selectedExam?.id,
+          examId: selectedExam?.examId,
         });
       },
     });
@@ -147,6 +151,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
                 onClose={() => {
                   setOpen(false);
                 }}
+                editData={selectedExam as any}
               />
             </Card>
           </motion.div>
@@ -178,6 +183,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
                 viewTimeDialog.onTrue();
                 setSelectedExam(data);
               }}
+              getExams={getExams}
             />
           </Box>
         )}

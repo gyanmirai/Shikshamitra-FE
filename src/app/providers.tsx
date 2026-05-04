@@ -13,7 +13,7 @@ const NextAuthSessionProvider = ({ children, session }: Props) => (
   <SessionProvider
     session={session ?? undefined}
     // Disable polling — we don't need to refetch the session on an interval.
-    refetchInterval={0}
+    refetchInterval={5 * 60}
     // Don't refetch when the tab regains focus.
     refetchOnWindowFocus={false}
     // Avoid refetching when the browser comes back online.

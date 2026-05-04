@@ -59,10 +59,8 @@ const SeatAllocationSection = ({
     type: 'query',
     currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
     params: {
-      examId: selectedExam?.id,
+      examId: selectedExam?.examId,
       divisionId: division,
-      academicMediumId: 1,
-      classNameId: selectedExam?.classId,
     },
   });
 
@@ -75,7 +73,7 @@ const SeatAllocationSection = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSeatLayoutQuery,
-    params: { examId: selectedExam?.id, divisionId: division, roomId: classRoom },
+    params: { examId: selectedExam?.examId, divisionId: division, roomId: classRoom },
   });
 
   // State to manage seat assignment data, tracking which students are assigned to which seats
@@ -84,25 +82,46 @@ const SeatAllocationSection = ({
   // Tracks student details including assignment status and bench allocation
   const [students, setStudents] = useState<IStudentRoomAssignment[]>([]);
 
+  // Reset assigned data when room changes
   React.useEffect(() => {
-    if (seatLayoutData) {
-      setAssignedData(seatLayoutData);
+    setAssignedData([]);
+  }, [classRoom]);
+
+  // Reset students when division changes
+  React.useEffect(() => {
+    setStudents([]);
+  }, [division]);
+
+  React.useEffect(() => {
+    if (seatLayoutData?.items) {
+      setAssignedData(seatLayoutData.items);
     }
   }, [seatLayoutData]);
 
   React.useEffect(() => {
-    if (seatAllocationStudentsData) {
-      setStudents(seatAllocationStudentsData);
+    if (seatAllocationStudentsData?.items) {
+      setStudents(
+        seatAllocationStudentsData.items.map((s: any) => ({
+          studentId: s.studentId,
+          studentName: s.studentName,
+          rollNo: s.rollNo,
+          standardName: s.standardName,
+          isSeatAllocate: s.isSeatAllocate,
+          seatNumber: s.seatNumber,
+        }))
+      );
     }
   }, [seatAllocationStudentsData]);
 
-  const handleStudentRemove = (studentId: number | null) => {
+  const handleStudentRemove = (studentId: string | null) => {
     // Remove from assigned seats
     setAssignedData((prev) => prev.filter((seat) => seat.studentId !== studentId));
 
     // Update student status
     setStudents((prev) =>
-      prev?.map((s) => (s.id === studentId ? { ...s, isRoomAssign: false, bench: undefined } : s))
+      prev?.map((s) =>
+        s.studentId === studentId ? { ...s, isSeatAllocate: false, bench: undefined } : s
+      )
     );
 
     // Sync droppedData
@@ -119,12 +138,12 @@ const SeatAllocationSection = ({
       return; // Don't allow drop on occupied seat
     }
     // Add new assignment
-    const newAssignment = {
+    const newAssignment: ISeatAllocation = {
       seatNumber,
-      studentName: student.name,
-      class: division || 'I',
-      rollNo: Number(student.rollNo),
-      studentId: student.id,
+      studentName: student.studentName,
+      standardName: student.standardName,
+      rollNo: student.rollNo,
+      studentId: student.studentId,
       isRoomAssign: false,
     };
 
@@ -133,8 +152,8 @@ const SeatAllocationSection = ({
     // Update student status
     setStudents((prev) =>
       prev.map((s) =>
-        s.id === student.id
-          ? { ...s, isRoomAssign: true, bench: Math.ceil(seatNumber / 2).toString() }
+        s.studentId === student.studentId
+          ? { ...s, isSeatAllocate: true, bench: String(seatNumber) }
           : s
       )
     );
@@ -144,9 +163,9 @@ const SeatAllocationSection = ({
       students: [
         ...(prev?.students || []),
         {
-          studentId: student.id,
+          studentId: student.studentId,
           seatNumber,
-          benchId: Math.ceil(seatNumber / 2).toString(),
+          benchId: null,
           isRoomAssign: true,
         },
       ],
@@ -178,7 +197,7 @@ const SeatAllocationSection = ({
             justifyContent="space-between"
             sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
           >
-            Total Students : {seatAllocationStudentsData?.length}
+            Total Students : {seatAllocationStudentsData?.totalCount ?? 0}
           </Box>
           <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
             <motion.div
@@ -194,9 +213,9 @@ const SeatAllocationSection = ({
               }}
             >
               {[...students]
-                .sort((a, b) => Number(a.isRoomAssign) - Number(b.isRoomAssign))
+                .sort((a, b) => Number(a.isSeatAllocate) - Number(b.isSeatAllocate))
                 .map((student) => (
-                  <motion.div key={student.id} variants={itemVariants}>
+                  <motion.div key={student.studentId} variants={itemVariants}>
                     <StudentCard student={student} theme={theme} />
                   </motion.div>
                 ))}
@@ -208,17 +227,12 @@ const SeatAllocationSection = ({
         <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
           <SeatManagement
             selectedRoom={{
-              id: 1,
-              roomName: 'A101',
-              capacity: 24,
-              building: 'Main',
-              floor: '1st',
-              roomType: 'Exam',
-              totalBenches: 12,
-              benchCapacity: 2,
+              id: classRoom,
+              roomName: seatLayoutData?.roomId ?? classRoom,
+              capacity: seatLayoutData?.totalSeats ?? 0,
               rows: 6,
               columns: 2,
-              features: ['Projector'],
+              benchCapacity: 2,
             }}
             onStudentRemove={handleStudentRemove}
             assignedData={assignedData}

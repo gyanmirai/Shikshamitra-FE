@@ -9,7 +9,7 @@ import { Iconify } from 'src/components/iconify';
 import { MeetingRoom, ClassOutlined } from '@mui/icons-material';
 import { Box, Card, Chip, Grid, Divider, Typography } from '@mui/material';
 
-import type { IRoomDetails, IExamFormValues, ISubjectRoomDetail } from '../type';
+import type { IRoomDetails, IExamFormValues } from '../type';
 
 // ----------------------------------------------------------------------
 
@@ -136,17 +136,18 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
       <Box sx={{ p: 3 }}>
         <Grid container spacing={3}>
           {Object.entries(roomDetails as IRoomDetails).map(
-            ([subjectName, subjectDetail]: [string, ISubjectRoomDetail], index, arr) => {
-              // Only render subjects that have rooms assigned, if strictly needed,
-              // but existing logic rendered all in roomDetails. We keep map logic.
-              const subjectHasRooms = Object.values(subjectDetail.divisions).some(
+            ([subjectId, divisionMap], index, arr) => {
+              const subjectInfo = formik.values.subjects.find((s) => s.subjectId === subjectId);
+              const subjectName = subjectInfo?.subjectName ?? subjectId;
+
+              const subjectHasRooms = Object.values(divisionMap).some(
                 (div) => div.roomIds && div.roomIds.length > 0
               );
 
               if (!subjectHasRooms) return null;
 
               return (
-                <React.Fragment key={subjectName}>
+                <React.Fragment key={subjectId}>
                   <Grid size={{ xs: 12 }}>
                     <Typography
                       variant="subtitle1"
@@ -157,39 +158,36 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
                     </Typography>
 
                     <Grid container spacing={2}>
-                      {Object.entries(subjectDetail.divisions).map(
-                        ([divisionName, divisionData]) => {
-                          if (!divisionData.roomIds || divisionData.roomIds.length === 0)
-                            return null;
+                      {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
+                        if (!divisionData.roomIds || divisionData.roomIds.length === 0) return null;
 
-                          const divisionLabel =
-                            divisions?.find((div: Division) => div.id === divisionName)?.name ||
-                            divisionName;
+                        const divisionLabel =
+                          divisions?.find((div: Division) => div.id === divisionName)?.name ||
+                          divisionName;
 
-                          return (
-                            <Grid size={{ xs: 12, md: 6 }} key={`${subjectName}-${divisionName}`}>
-                              <InfoItem
-                                icon={<ClassOutlined />}
-                                label={`Division ${divisionLabel}`}
-                                value={
-                                  <Box display="flex" flexWrap="wrap" gap={0.5}>
-                                    {divisionData.roomIds.map((room: string, idx: number) => (
-                                      <Chip
-                                        key={idx}
-                                        label={room}
-                                        size="small"
-                                        variant="outlined"
-                                        icon={<MeetingRoom style={{ fontSize: '1rem' }} />}
-                                        sx={{ borderRadius: 1 }}
-                                      />
-                                    ))}
-                                  </Box>
-                                }
-                              />
-                            </Grid>
-                          );
-                        }
-                      )}
+                        return (
+                          <Grid size={{ xs: 12, md: 6 }} key={`${subjectName}-${divisionName}`}>
+                            <InfoItem
+                              icon={<ClassOutlined />}
+                              label={`Division ${divisionLabel}`}
+                              value={
+                                <Box display="flex" flexWrap="wrap" gap={0.5}>
+                                  {divisionData.roomIds.map((room: string, idx: number) => (
+                                    <Chip
+                                      key={idx}
+                                      label={room}
+                                      size="small"
+                                      variant="outlined"
+                                      icon={<MeetingRoom style={{ fontSize: '1rem' }} />}
+                                      sx={{ borderRadius: 1 }}
+                                    />
+                                  ))}
+                                </Box>
+                              }
+                            />
+                          </Grid>
+                        );
+                      })}
                     </Grid>
                   </Grid>
                   {index < arr.length - 1 && (
