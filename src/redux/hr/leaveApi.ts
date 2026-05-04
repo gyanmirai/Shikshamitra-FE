@@ -97,6 +97,7 @@ export const leaveApi = api.injectEndpoints({
         status,
         leavePolicyId,
         leaveTypeMasterId,
+        employeeId,
       }) => ({
         url: '/leave-management',
         method: 'GET',
@@ -109,6 +110,7 @@ export const leaveApi = api.injectEndpoints({
           status,
           leavePolicyId,
           leaveTypeMasterId,
+          employeeId,
         },
       }),
       providesTags: [employeeType.employee],

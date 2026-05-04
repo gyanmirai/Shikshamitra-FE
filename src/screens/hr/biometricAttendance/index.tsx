@@ -640,7 +640,7 @@ const AttendanceImportHistoryScreen = () => {
             sx={{
               p: 1,
               gap: 2,
-              borderRadius: '8px',
+              borderRadius: '12px',
               bgcolor: 'background.paper',
               boxShadow: 'var(--shadows-3)',
               mb: 1,

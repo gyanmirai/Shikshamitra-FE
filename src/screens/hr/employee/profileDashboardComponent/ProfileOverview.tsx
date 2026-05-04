@@ -1,9 +1,8 @@
-import type { JSX } from 'react';
 import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
 
 import { useState } from 'react';
+import { Grid } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
-import CustomizableView from 'src/components/customizable-view';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
 
 // ----------------------------------------------------------------------
@@ -67,27 +66,22 @@ const EmployeeProfileOverview = () => {
     },
   ]);
 
-  const dashBoardSections = cards.reduce((acc: { [key: string]: JSX.Element }, card) => {
-    acc[card.id] = (
-      <DashboardCard
-        icon={card.icon}
-        title={card.title}
-        value={card.count}
-        color={card.color}
-        bgColor={card.bgColor}
-        href={card.href}
-        labels={card.labels}
-      />
-    );
-    return acc;
-  }, {});
-
   return (
-    <CustomizableView
-      sections={cards}
-      setSections={setCards}
-      dashBoardSections={dashBoardSections}
-    />
+    <Grid container spacing={2}>
+      {cards.map((card) => (
+        <Grid key={card.id} size={{ xs: 12, sm: 6, md: card.width }}>
+          <DashboardCard
+            icon={card.icon}
+            title={card.title}
+            value={card.count}
+            color={card.color}
+            bgColor={card.bgColor}
+            href={card.href}
+            labels={card.labels}
+          />
+        </Grid>
+      ))}
+    </Grid>
   );
 };
 

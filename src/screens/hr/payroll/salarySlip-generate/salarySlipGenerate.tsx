@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -30,9 +30,15 @@ import {
   Typography,
 } from '@mui/material';
 
+import PaySlipPrintView from './payslip-print-view';
+import { usePayslipActions } from './use-payslip-actions';
+
+// ---------------------------------------------------------------------------
+// Main screen
+// ---------------------------------------------------------------------------
+
 const PaySlipGenerationScreen = () => {
   const [employee, setEmployee] = useState<any>(null);
-  // const [employeeCode, setEmployeeCode] = useState<string>('');
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
   const [, setAllOrganization] = useState<Organization[]>([]);
   const [, setOrganization] = useState<string>('');
@@ -40,6 +46,8 @@ const PaySlipGenerationScreen = () => {
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
+
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -74,6 +82,16 @@ const PaySlipGenerationScreen = () => {
       });
     }
   }, [employee?.id, getEmployeeSalarySlip, monthYear]);
+
+  const { handlePrint, handleDownload } = usePayslipActions({
+    printRef,
+    employee,
+    monthYear,
+    employeeSalarySlip,
+  });
+
+  const hasData = !!employee?.id && !employeeSalarySlipLoading && !!employeeSalarySlip;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
@@ -146,7 +164,8 @@ const PaySlipGenerationScreen = () => {
               startIcon={<Iconify icon="ion:download-outline" />}
               variant="outlined"
               color="inherit"
-              disabled={!employee?.id}
+              disabled={!hasData}
+              onClick={handleDownload}
             >
               Download
             </Button>
@@ -155,7 +174,8 @@ const PaySlipGenerationScreen = () => {
               startIcon={<Iconify icon="ion:print-outline" />}
               variant="outlined"
               color="inherit"
-              disabled={!employee?.id}
+              disabled={!hasData}
+              onClick={() => handlePrint()}
             >
               Print
             </Button>
@@ -205,7 +225,7 @@ const PaySlipGenerationScreen = () => {
           </Grid>
           <Divider />
           {/* Tables Section */}
-          <Grid container spacing={1}>
+          <Grid container spacing={1} alignItems="stretch">
             <Grid size={{ xs: 12, md: 6 }}>
               <SalaryDetailsTableCard
                 title="Earnings"
@@ -274,11 +294,24 @@ const PaySlipGenerationScreen = () => {
       ) : (
         <EmptyContent title="No Data Found Search the Employee" />
       )}
+      {/* Hidden print component */}
+      <Box sx={{ display: 'none', displayPrint: 'block' }}>
+        <PaySlipPrintView
+          ref={printRef}
+          employee={employee}
+          monthYear={monthYear}
+          slip={employeeSalarySlip}
+        />
+      </Box>
     </Box>
   );
 };
 
 export default PaySlipGenerationScreen;
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
 interface SalaryDetailsTableCardProps {
   title: string;
@@ -301,7 +334,7 @@ export const SalaryDetailsTableCard = ({
   nameColumnLabel,
   noDataText,
 }: SalaryDetailsTableCardProps) => (
-  <Card>
+  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
     <CardHeader
       title={title}
       subheader={subheader}
@@ -320,7 +353,7 @@ export const SalaryDetailsTableCard = ({
       sx={{ p: 2 }}
     />
 
-    <Box sx={{ px: 1, py: 1, pt: 0 }}>
+    <Box sx={{ px: 1, py: 1, pt: 0, flex: 1 }}>
       <CustomizableTable
         noDataText={noDataText}
         isSearch={false}
@@ -332,7 +365,7 @@ export const SalaryDetailsTableCard = ({
           {
             id: 'name',
             label: nameColumnLabel,
-            render(value, row) {
+            render(value) {
               return (
                 <Typography
                   variant="subtitle2"

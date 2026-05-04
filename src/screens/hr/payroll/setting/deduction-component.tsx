@@ -678,7 +678,6 @@ const DeductionComponentForm = ({
                           fontWeight: 600,
                           fontSize: '14px',
                           color: 'text.primary',
-                          backgroundColor: '#f5f5f5',
                         }}
                       >
                         {params.group}

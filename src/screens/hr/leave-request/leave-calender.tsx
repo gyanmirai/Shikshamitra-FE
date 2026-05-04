@@ -48,7 +48,13 @@ const LeaveCalender = () => {
   const [triggerCalendarQuery] = useLazyGetLeaveCalendarQuery();
 
   const onDatesSet = useCallback((arg: DatesSetArg) => {
-    setCalendarVisibleRange(buildCalendarVisibleRangePayload(arg.start, arg.end));
+    const newRange = buildCalendarVisibleRangePayload(arg.start, arg.end);
+    setCalendarVisibleRange((prev) => {
+      if (prev && prev.rangeStart === newRange.rangeStart && prev.rangeEnd === newRange.rangeEnd) {
+        return prev;
+      }
+      return newRange;
+    });
   }, []);
 
   useEffect(() => {

@@ -19,6 +19,7 @@ import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
 import EmployeeLibrary from './EmployeeLibrary';
 import EmployeeCalendar from './EmployeeCalendar';
+import LeaveBalance from '../leave-balance/leave-balance';
 import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
@@ -112,6 +113,14 @@ export const TABS = [
     icon: <Icon icon="radix-icons:calendar" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeCalendar employee={props.employee} />
+    ),
+  },
+  {
+    value: 'leaveBalance',
+    label: 'Leave Balance',
+    icon: <Icon icon="solar:calendar-mark-linear" width={18} height={18} />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <LeaveBalance employeeId={props.employee?.id} showBreadcrumbs={false} />
     ),
   },
 ];
