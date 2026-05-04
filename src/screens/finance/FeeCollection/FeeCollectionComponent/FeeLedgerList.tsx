@@ -69,19 +69,6 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
               onClick={(e) => e.stopPropagation()}
               sx={{ p: 0.5, color: 'error.light', '&.Mui-checked': { color: 'error.main' } }}
             />
-            <Box
-              sx={{
-                width: 26,
-                height: 26,
-                borderRadius: 0.75,
-                bgcolor: alpha(theme.palette.error.main, 0.1),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Iconify icon="solar:bill-bold" sx={{ color: 'error.main', width: 14, height: 14 }} />
-            </Box>
             <Typography variant="body2" fontWeight={500} flex={1}>
               {charge.chargeName}
             </Typography>

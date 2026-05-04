@@ -146,7 +146,7 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   );
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box>
       {selectedTypes.map((ct: any) => (
         <ValueEntryStepItem key={ct.id} concessionType={ct} values={values} setEntry={setEntry} />
       ))}
@@ -228,10 +228,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
     }).format(amount);
 
   return (
-    <Card
-      sx={{ mb: 1, borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
-      variant="outlined"
-    >
+    <Card sx={{ borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }} variant="outlined">
       <Box
         sx={{
           p: 1,

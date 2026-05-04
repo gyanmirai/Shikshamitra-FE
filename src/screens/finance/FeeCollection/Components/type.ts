@@ -225,6 +225,6 @@ export interface FeeCollectionFormValues {
   charges: string[]; // array of charge IDs
   subtotal: number;
   finalAmount: number;
-  payments: FeeCollectionPayment[];
+  payment: FeeCollectionPayment;
   remarks?: string;
 }
