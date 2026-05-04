@@ -58,6 +58,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
 
 export const {
   useGetFeeHeadsQuery,
+  useLazyGetFeeHeadsQuery,
   useAddFeeHeadMutation,
   useUpdateFeeHeadMutation,
   useDeleteFeeHeadMutation,
