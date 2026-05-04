@@ -1,25 +1,18 @@
 // import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
 import { useFormik } from 'formik';
-import { Icon } from '@iconify/react';
-import { useTabs } from 'src/hooks/use-tabs';
+import { Iconify } from 'src/components/iconify';
+import { ReligionType } from 'src/enums/religion';
+import { Scrollbar } from 'src/components/scrollbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { Box, Card, Grid, Button, TextField } from '@mui/material';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Card,
-  Grid,
-  List,
-  Paper,
-  TextField,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton,
-} from '@mui/material';
 import {
   useGetBankDetailsQuery,
   useUpdateEmployeeMutation,
@@ -34,14 +27,6 @@ import {
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
 } from 'src/redux/hr/employeeApi';
-
-// import {
-//   FamilyFields,
-//   PayrollFields,
-
-import { ReligionType } from 'src/enums/religion';
-import { Scrollbar } from 'src/components/scrollbar';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { infoValidations } from './employee-form-validation';
 import { FamilyFields } from './employee-form-fields/FamilyFields';
@@ -109,35 +94,91 @@ const TABS = [
   {
     value: 'personalInformation',
     label: 'Personal Information',
-    icon: 'solar:user-id-outline',
+    icon: <Iconify icon="solar:user-id-outline" width={20} />,
   },
   {
     value: 'familyInformation',
     label: 'Family Information',
-    icon: 'solar:users-group-rounded-outline',
+    icon: <Iconify icon="solar:users-group-rounded-outline" width={20} />,
   },
   {
     value: 'additionalFields',
     label: 'Additional Information',
-    icon: 'solar:document-text-outline',
+    icon: <Iconify icon="solar:document-text-outline" width={20} />,
   },
-  { value: 'workExperience', label: 'Work Experience', icon: 'solar:case-outline' },
-  { value: 'payroll', label: 'Payroll', icon: 'solar:wallet-outline' },
+  {
+    value: 'workExperience',
+    label: 'Work Experience',
+    icon: <Iconify icon="solar:case-outline" width={20} />,
+  },
+  {
+    value: 'payroll',
+    label: 'Payroll',
+    icon: <Iconify icon="solar:wallet-outline" width={20} />,
+  },
   {
     value: 'assignReportingManager',
     label: 'Assign Reporting Manager',
-    icon: 'solar:user-check-outline',
+    icon: <Iconify icon="solar:user-check-outline" width={20} />,
   },
-  //   { value: 'performanceAndDevelopment', label: 'Performance and Development' },
 ];
 
+const TabButton = React.memo(
+  ({
+    tab,
+    isSelected,
+    onTabChange,
+  }: {
+    tab: (typeof TABS)[0];
+    isSelected: boolean;
+    onTabChange: (value: string) => void;
+  }) => (
+    <Button
+      onClick={() => onTabChange(tab.value)}
+      variant="text"
+      color="inherit"
+      startIcon={tab.icon}
+      sx={{
+        position: 'relative',
+        justifyContent: 'flex-start',
+        px: 2,
+        py: 1.5,
+        textAlign: 'left',
+        backgroundColor: (theme) => (isSelected ? theme.palette.action.hover : 'transparent'),
+        color: isSelected ? 'inherit' : 'text.secondary',
+        ...(isSelected
+          ? {
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: '2px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '4px',
+                height: '80%',
+                borderLeft: (theme) =>
+                  isSelected ? `4px solid ${theme.palette.primary.main}` : 'none',
+              },
+            }
+          : {}),
+      }}
+    >
+      {tab.label}
+    </Button>
+  )
+);
+
 const EmployeeInformation = ({ editData }: { editData: any }) => {
-  const tabs = useTabs('personalInformation');
+  const { getAllParams, setParam } = useCustomSearchParams({ infoTab: 'personalInformation' });
+  const searchParams = getAllParams();
+
   // Find the index of the active tab based on the current tab value
-  const activeTabIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
+  const activeTabIndex = useMemo(() => {
+    const index = TABS.findIndex(
+      (tab) => tab.value === (searchParams.infoTab || 'personalInformation')
+    );
+    return index === -1 ? 0 : index;
+  }, [searchParams.infoTab]);
   // State to control edit mode
   const [isEdit, setIsEdit] = useState(false);
 
@@ -283,16 +324,19 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
 
   // Handler for tab changes - resets edit mode when switching tabs
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
-    const newIndex = TABS.findIndex((tab) => tab.value === newValue);
-    if (activeTabIndex > newIndex) {
-      setIsBackClick(true);
-    } else {
-      setIsBackClick(false);
-    }
-    setIsEdit(false);
-    tabs.setValue(newValue);
-  };
+  const handleTabChange = useCallback(
+    (tabValue: string) => {
+      const newIndex = TABS.findIndex((tab) => tab.value === tabValue);
+      if (activeTabIndex > newIndex) {
+        setIsBackClick(true);
+      } else {
+        setIsBackClick(false);
+      }
+      setIsEdit(false);
+      setParam('infoTab', tabValue);
+    },
+    [activeTabIndex, setParam]
+  );
 
   // handler TO update experience
   const handleWorkExperience = useCallback(
@@ -435,102 +479,71 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     },
   });
   return (
-    <Box
+    <Grid
+      container
+      spacing={1}
       sx={{
+        mt: 0,
+        flexGrow: 1,
+        display: 'flex',
+        flexDirection: 'column',
         height: '100%',
+        minHeight: '0',
       }}
-      // sx={{
-      //   '& input': { fontSize: '12px' },
-      //   '& label': { fontSize: '12px' },
-      // }}
     >
-      {/* <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}> */}
-      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Card
-          sx={{
-            px: 0,
-            display: 'flex',
-            flexDirection: 'row',
-            height: '100%', // Ensure there's enough height for vertical tabs
-            // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          }}
-        >
+      {/* Left Section - Navigation List */}
+      <Grid size={{ xs: 12, md: 4, lg: 2.3 }} sx={{ height: '100%' }}>
+        <Card sx={{ height: '100%', p: 1 }}>
           <Box
             sx={{
-              borderRight: 1,
-              borderColor: 'divider',
-              minWidth: 240,
-              maxWidth: 240,
-              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
             }}
           >
-            <Paper
-              elevation={0}
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Box sx={{ overflowY: 'auto', px: 1, py: 1, flexGrow: 1 }}>
-                <List sx={{ p: 0 }}>
-                  {TABS.map((tab) => (
-                    <ListItemButton
-                      key={tab.value}
-                      selected={tabs.value === tab.value}
-                      onClick={(e) => handleTabChange(e, tab.value)}
-                      sx={{
-                        borderRadius: 1,
-                        mb: 0.5,
-                        '&.Mui-selected': {
-                          bgcolor: 'primary',
-                          color: 'primary.main',
-                          '&:hover': {
-                            bgcolor: 'primary',
-                          },
-                          '& .MuiListItemIcon-root': {
-                            color: 'primary.main',
-                          },
-                        },
-                      }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 20 }}>
-                        <Icon icon={tab.icon} width={20} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={tab.label}
-                        primaryTypographyProps={{
-                          variant: 'body2',
-                          fontWeight: tabs.value === tab.value ? 600 : 400,
-                          fontSize: '13px',
-                        }}
-                      />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Box>
-            </Paper>
+            {TABS.map((tab) => (
+              <TabButton
+                key={tab.value}
+                tab={tab}
+                isSelected={searchParams.infoTab === tab.value}
+                onTabChange={handleTabChange}
+              />
+            ))}
           </Box>
-
-          <Scrollbar
-            sx={{ flexGrow: 1, width: 'calc(100% - 240px)', height: '100%', overflow: 'auto' }}
-          >
-            <ViewInformationScreen
-              isBackClick={isBackClick}
-              activeTabIndex={activeTabIndex}
-              allFields={fields}
-              formik={formik}
-              editData={editData}
-              isEdit={isEdit}
-            />
-          </Scrollbar>
-          {/* </CardContent>
-          </Card> */}
         </Card>
-      </form>
-      {/* </BackPopUpChecked> */}
-    </Box>
+      </Grid>
+
+      {/* Right Section - Content */}
+      <Grid size={{ xs: 12, md: 8, lg: 9.7 }} sx={{ height: '100%' }}>
+        <Box
+          sx={{
+            gap: 1,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '0',
+          }}
+        >
+          <Card sx={{ p: 1, flexGrow: 1, height: '100%', overflow: 'hidden' }}>
+            <Scrollbar sx={{ height: '100%' }}>
+              <Box sx={{ p: 2 }}>
+                <form onSubmit={formik.handleSubmit}>
+                  <ViewInformationScreen
+                    isBackClick={isBackClick}
+                    activeTabIndex={activeTabIndex}
+                    allFields={fields}
+                    formik={formik}
+                    editData={editData}
+                    isEdit={isEdit}
+                    setIsEdit={setIsEdit}
+                  />
+                </form>
+              </Box>
+            </Scrollbar>
+          </Card>
+        </Box>
+      </Grid>
+    </Grid>
   );
 };
 
@@ -543,6 +556,7 @@ const ViewInformationScreen = ({
   formik,
   editData,
   isEdit,
+  setIsEdit,
 }: any) => {
   const initializedStepsRef = React.useRef<Record<number, boolean>>({});
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
@@ -669,7 +683,7 @@ const ViewInformationScreen = ({
           ) : (
             <Grid container spacing={2}>
               {' '}
-              {allFields[activeTabIndex].map((field: FieldsType, index: number) => (
+              {allFields[activeTabIndex]?.map((field: FieldsType, index: number) => (
                 <Grid
                   size={{
                     xs: [1, 2, 3].includes(activeTabIndex) ? 12 : 4,

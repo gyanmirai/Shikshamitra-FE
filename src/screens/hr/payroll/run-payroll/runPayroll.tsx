@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
+import { RouterLink } from 'src/routes/components';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -226,8 +228,11 @@ const RunPayroll = () => {
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
-        const shouldOpen = window.scrollY < 80;
-        setInsightsOpen(shouldOpen);
+        if (window.scrollY > 120) {
+          setInsightsOpen(false);
+        } else if (window.scrollY < 20) {
+          /* empty */
+        }
         ticking = false;
       });
     };
@@ -266,6 +271,12 @@ const RunPayroll = () => {
 
         setPreviewItems(allItems);
         setLoadedMonthKey(selectedMonthKey);
+        // Auto-collapse insights once data is loaded to focus on the table after 3 seconds
+        if (allItems.length > 0) {
+          setTimeout(() => {
+            setInsightsOpen(false);
+          }, 3000);
+        }
       } catch (error: any) {
         setPreviewItems([]);
         setLoadedMonthKey(null);
@@ -350,7 +361,21 @@ const RunPayroll = () => {
             <Stack direction="row" spacing={1} alignItems="center">
               <Avatar sx={{ width: 32, height: 32 }}>{String(value || '?').slice(0, 1)}</Avatar>
               <Box>
-                <Typography variant="subtitle2">{value}</Typography>
+                <Typography
+                  component={RouterLink}
+                  href={`${hrPaths.employee.list}?employee=${row.id}&tab=leaveBalance`}
+                  variant="subtitle2"
+                  sx={{
+                    color: 'inherit',
+                    textDecoration: 'none',
+                    '&:hover': {
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {value}
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {row.employeeIdentifier} • {row.employeeGroup}
                 </Typography>
@@ -533,65 +558,77 @@ const RunPayroll = () => {
         </LoadingButton>
       </Stack>
 
-      <Card variant="outlined" sx={{ mb: 1.25, p: 1 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Card variant="outlined" sx={{ mb: 1.25, p: 0 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          onClick={() => setInsightsOpen((prev) => !prev)}
+          sx={{
+            p: 1,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+          }}
+        >
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="subtitle2">Payroll insights</Typography>
             <Chip size="small" label="Summary + AI" variant="outlined" />
           </Stack>
-          <IconButton size="small" onClick={() => setInsightsOpen((prev) => !prev)}>
+          <IconButton size="small">
             <Iconify
               icon={insightsOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
               width={18}
             />
           </IconButton>
         </Stack>
-        <Collapse in={insightsOpen} timeout={300} unmountOnExit>
-          <Grid container spacing={1.25} sx={{ mt: 0.25 }}>
-            {[
-              ['Employees', stats.total],
-              ['Pending review', stats.pending],
-              ['Reviewed', stats.reviewed],
-              ['Locked', stats.locked],
-              ['Net preview', formatCurrency(stats.net)],
-            ].map(([label, value]) => (
-              <Grid key={label} size={{ xs: 6, md: 2.4 }}>
-                <Card variant="outlined" sx={{ p: 1.25, height: '100%' }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {label}
-                  </Typography>
-                  <Typography variant="h6">{value}</Typography>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-          <Divider sx={{ my: 1 }} />
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1.25}
-            alignItems={{ md: 'center' }}
-            sx={{ mt: 0.5 }}
-          >
-            <Box
-              sx={{
-                width: 38,
-                height: 38,
-                borderRadius: 1.25,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'action.hover',
-              }}
+        <Collapse in={insightsOpen} timeout={800} unmountOnExit>
+          <Box sx={{ p: 1, pt: 0 }}>
+            <Grid container spacing={1.25} sx={{ mt: 0.25 }}>
+              {[
+                ['Employees', stats.total],
+                ['Pending review', stats.pending],
+                ['Reviewed', stats.reviewed],
+                ['Locked', stats.locked],
+                ['Net preview', formatCurrency(stats.net)],
+              ].map(([label, value]) => (
+                <Grid key={label} size={{ xs: 6, md: 2.4 }}>
+                  <Card variant="outlined" sx={{ p: 1.25, height: '100%' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography variant="h6">{value}</Typography>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+            <Divider sx={{ my: 1 }} />
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1.25}
+              alignItems={{ md: 'center' }}
+              sx={{ mt: 0.5 }}
             >
-              <Iconify icon="solar:magic-stick-3-bold-duotone" width={24} />
+              <Box
+                sx={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 1.25,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'action.hover',
+                }}
+              >
+                <Iconify icon="solar:magic-stick-3-bold-duotone" width={24} />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Today we flag deterministic issues and month-on-month variance. Later, AI agents can
+                explain unusual salary changes and suggest what to inspect before lock.
+              </Typography>
+            </Stack>
+            <Box sx={{ mt: 1 }}>
+              <Chip size="small" label="AI anomaly review placeholder" variant="outlined" />
             </Box>
-            <Typography variant="body2" color="text.secondary">
-              Today we flag deterministic issues and month-on-month variance. Later, AI agents can
-              explain unusual salary changes and suggest what to inspect before lock.
-            </Typography>
-          </Stack>
-          <Box sx={{ mt: 1 }}>
-            <Chip size="small" label="AI anomaly review placeholder" variant="outlined" />
           </Box>
         </Collapse>
       </Card>

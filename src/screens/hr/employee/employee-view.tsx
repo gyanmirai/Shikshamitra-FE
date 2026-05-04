@@ -117,7 +117,7 @@ export const TABS = [
   },
   {
     value: 'leaveBalance',
-    label: 'Leave Balance',
+    label: 'Leave Center',
     icon: <Icon icon="solar:calendar-mark-linear" width={18} height={18} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <LeaveBalance employeeId={props.employee?.id} showBreadcrumbs={false} />
@@ -316,8 +316,16 @@ function EmployeeViewSkeleton() {
   );
 }
 
-export function EmployeeCard({ employee }: any) {
-  const tabs = useTabs('dashboard');
+export function EmployeeCard({
+  employee,
+  initialTab,
+  setSearchParams,
+}: {
+  employee: any;
+  initialTab?: string;
+  setSearchParams: any;
+}) {
+  const tabs = useTabs(initialTab || 'dashboard');
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
@@ -423,6 +431,7 @@ export function EmployeeCard({ employee }: any) {
                 setIsBackClick(false);
               }
               tabs.onChange(...rest);
+              setSearchParams('tab', rest[1]);
             }}
             sx={{
               px: 1.5,
@@ -513,7 +522,12 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
           }
         }}
       />
-      <EmployeeCard employee={employee} />
+      <EmployeeCard
+        key={employee?.id}
+        employee={employee}
+        initialTab={searchParams?.tab || 'dashboard'}
+        setSearchParams={setSearchParams}
+      />
       {/* </Scrollbar> */}
     </>
   );

@@ -328,7 +328,15 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           : {
               p: isMobile ? 1 : 0,
               '& .MuiStepLabel-label': {
-                display: isMobile ? 'none' : 'block',
+                display: 'block',
+                fontSize: isMobile ? '10px' : '12px',
+                mt: '4px !important',
+                textAlign: 'center',
+                lineHeight: 1.2,
+                wordBreak: 'break-word',
+              },
+              '& .MuiStepLabel-labelContainer': {
+                width: '100%',
               },
             }
       }

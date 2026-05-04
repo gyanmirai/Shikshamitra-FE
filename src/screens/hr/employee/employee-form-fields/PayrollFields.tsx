@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
-import { alpha } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { formatNumber } from 'src/utils/formate_number';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Card, Grid, Paper, Button, TextField, IconButton, Typography } from '@mui/material';
+import { Box, Grid, Paper, Button, TextField, Typography } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
 import { isSalaryComponentFixed } from '../salary-utils';
@@ -21,19 +21,19 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const components = values[name] || [];
   const isDialogOpen = useBoolean();
   const isAddingTemp = useBoolean(false);
+
   const handleAdd = (selectedComponents: any[]) => {
-    // Ensure amount defaults to 0 for all newly added components
     const normalized = selectedComponents.map((c: any) => ({
       ...c,
       amount: c.amount ?? 0,
       applicableMonth: c.applicableMonth ?? dayjs().toISOString(),
     }));
     formik.setFieldValue(name, normalized);
-    // Reset temp add mode after adding
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
     }
   };
+
   const handleAddTemp = (selectedValues: any) => {
     const updatedComponents = [...components, selectedValues];
     formik.setFieldValue(name, updatedComponents);
@@ -45,19 +45,36 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     formik.setFieldValue(name, updatedComponents);
   };
 
+  // Build table rows — attach original index for edit/delete
+  const tableRows = components.map((c: any, idx: number) => ({
+    _idx: idx,
+    _raw: c,
+    name: c?.earningComponentName || c?.deductionComponentName || c?.name || '-',
+    amount: c?.amount ?? 0,
+    isFixed: isSalaryComponentFixed(c),
+    isTemp: !!c?.isTemp,
+    applicableMonth: c?.applicableMonth,
+  }));
+
+  const accentColor = type === 'earning' ? 'success.main' : 'error.main';
+
   return (
-    <Box mt={2}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+    <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', mt: 2 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" p={2} pb={1}>
         <Typography
           variant="h6"
           sx={{
             borderLeft: (theme) =>
-              `4px solid ${type === 'earning' ? theme.palette.success.main : theme.palette.error.main}`,
+              `4px solid ${
+                type === 'earning' ? theme.palette.success.main : theme.palette.error.main
+              }`,
             pl: 1,
           }}
         >
           {label}
         </Typography>
+
         <Box display="flex" alignItems="center" gap={1}>
           {showTempAdd && (
             <Button
@@ -87,147 +104,136 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         </Box>
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={2}>
-        {components.map((component: any, index: number) => {
-          const isFixed = isSalaryComponentFixed(component);
-          // If it's fixed, we don't show inputs. If it's not fixed, we show Amount.
-          // We never show "Type" dropdown as per requirement.
-
-          return (
-            <Card
-              key={index}
-              sx={{
-                p: 2.5,
-                position: 'relative',
-                borderRadius: 2,
-                borderWidth: 1,
-                borderStyle: 'dashed',
-                borderColor: (theme) => alpha(theme.palette.grey[500], 0.2),
-                boxShadow: 'none',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.4),
-                  borderColor: (theme) => alpha(theme.palette.grey[500], 0.4),
-                },
-              }}
-            >
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                // mb={isFixed ? 0 : 2}
-              >
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography
-                    variant="body1"
-                    fontWeight={600}
-                    sx={{
-                      borderLeft: (theme) =>
-                        `4px solid ${component.isTemp ? theme.palette.warning.main : type === 'earning' ? theme.palette.success.main : theme.palette.error.main}`,
-                      pl: 1,
-                    }}
-                  >
-                    {component?.earningComponentName ||
-                      component?.deductionComponentName ||
-                      component?.name}
-                  </Typography>
-
-                  {isFixed && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'text.secondary',
-                        bgcolor: 'background.neutral',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                      }}
-                    >
-                      ₹ {formatNumber(component.amount) || '10,000'}
-                    </Typography>
-                  )}
-
-                  {!isFixed && (
-                    <ShakingTextField
-                      error={
-                        formik.touched[name]?.[index]?.amount &&
-                        Boolean((formik.errors[name] as any)?.[index]?.amount)
-                      }
-                    >
-                      <NumericFormatCustom
-                        fullWidth
-                        size="small"
-                        required
-                        variant="standard"
-                        label="Amount"
-                        name={`${name}.${index}.amount`}
-                        value={component.amount ?? 0}
-                        onChange={(e: any) => {
-                          let val = e.target.value;
-                          val = val.replace(/[₹,\s]/g, '');
-                          if (!/^\d*$/.test(val)) return;
-                          formik.setFieldValue(
-                            `${name}.${index}.amount`,
-                            val !== '' ? Number(val) : 0
-                          );
-                          formik.setFieldTouched(`${name}.${index}.amount`, true, false);
-                        }}
-                        error={
-                          formik.touched[name]?.[index]?.amount &&
-                          Boolean((formik.errors[name] as any)?.[index]?.amount)
-                        }
-                        helperText={
-                          formik.touched[name]?.[index]?.amount &&
-                          (formik.errors[name] as any)?.[index]?.amount
-                        }
-                        sx={{ ml: 2 }}
-                      />
-                    </ShakingTextField>
-                  )}
-
-                  {component.applicableMonth && dayjs(component.applicableMonth).isValid() && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'text.secondary',
-                        bgcolor: 'background.neutral',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                      }}
-                    >
-                      {dayjs(component.applicableMonth).format('MMM-YYYY')}
-                    </Typography>
-                  )}
-                </Box>
-                <IconButton size="small" color="error" onClick={() => handleRemove(index)}>
-                  <Iconify icon="solar:trash-bin-trash-bold" />
-                </IconButton>
-              </Box>
-              {component.isTemp && (
-                <Typography variant="caption" color="text.secondary">
-                  This component will be applicable only for{' '}
-                  {dayjs(component.applicableMonth).format('MMM-YYYY')} payroll
-                </Typography>
-              )}
-            </Card>
-          );
-        })}
-
-        {components.length === 0 && (
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 1,
-              textAlign: 'center',
-              borderStyle: 'dashed',
-            }}
-          >
+      {/* Table */}
+      <Box px={2} pb={2} sx={{ flex: 1 }}>
+        <CustomizableTable
+          tableId={`${name}-components-table`}
+          isFilter={false}
+          isPagination={false}
+          isSearch={false}
+          isShowedDense={false}
+          data={tableRows}
+          noDataText={
             <Typography variant="body2" color="text.secondary">
               No {type} components added yet. Click the button above to add.
             </Typography>
-          </Paper>
-        )}
+          }
+          columns={[
+            {
+              id: 'name',
+              label: 'Component',
+              render(value: any, row: any) {
+                return (
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{
+                        borderLeft: (theme) =>
+                          `3px solid ${
+                            row.isTemp
+                              ? theme.palette.warning.main
+                              : type === 'earning'
+                                ? theme.palette.success.main
+                                : theme.palette.error.main
+                          }`,
+                        pl: 1,
+                      }}
+                    >
+                      {value}
+                    </Typography>
+                    {row.isTemp && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          bgcolor: 'warning.soft',
+                          color: 'warning.dark',
+                          px: 0.75,
+                          py: 0.25,
+                          borderRadius: 1,
+                          fontSize: '10px',
+                        }}
+                      >
+                        Temp
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              },
+            },
+            {
+              id: 'amount',
+              label: 'Amount',
+              render(value: any, row: any) {
+                if (row.isFixed) {
+                  return (
+                    <Typography variant="body2" fontWeight={500}>
+                      {formatCurrency(value)}
+                    </Typography>
+                  );
+                }
+                return (
+                  <NumericFormatCustom
+                    size="small"
+                    variant="standard"
+                    label=""
+                    name={`${name}.${row._idx}.amount`}
+                    value={value ?? 0}
+                    onChange={(e: any) => {
+                      let val = e.target.value;
+                      val = val.replace(/[₹,\s]/g, '');
+                      if (!/^\d*$/.test(val)) return;
+                      formik.setFieldValue(
+                        `${name}.${row._idx}.amount`,
+                        val !== '' ? Number(val) : 0
+                      );
+                      formik.setFieldTouched(`${name}.${row._idx}.amount`, true, false);
+                    }}
+                    sx={{ width: 110 }}
+                  />
+                );
+              },
+            },
+            {
+              id: 'applicableMonth',
+              label: 'Month',
+              render(value: any) {
+                if (!value || !dayjs(value).isValid()) return '-';
+                return (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      bgcolor: 'background.neutral',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    {dayjs(value).format('MMM-YYYY')}
+                  </Typography>
+                );
+              },
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              minWidth: '80px',
+              render(_value: any, row: any) {
+                return (
+                  <ThreeDotsActions
+                    showThreeDots={false}
+                    showDeleteIcon
+                    handleDeleteClick={() => handleRemove(row._idx)}
+                  />
+                );
+              },
+            },
+          ]}
+        />
       </Box>
 
       {isDialogOpen.value && (
@@ -248,7 +254,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           initialValues={components}
         />
       )}
-    </Box>
+    </Paper>
   );
 };
 
