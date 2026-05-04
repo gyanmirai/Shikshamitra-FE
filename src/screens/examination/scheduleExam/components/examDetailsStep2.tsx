@@ -9,11 +9,11 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 
-import type { IExamFormValues, ISubjectRoomDetail } from '../type';
+import type { IExamFormValues } from '../type';
 
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
-  const formik = props;
+  const formik: any = props;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   console.log('formik values in exam details step 2', formik.values);
   return (
@@ -44,6 +44,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             align: 'left',
             isFilter: false,
             isSort: false,
+            sticky: true,
             render(value, row) {
               return (
                 <Box key={row.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -56,7 +57,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     }}
                   />
                   <Typography variant="caption" fontWeight="13px">
-                    {value} ({row.subjectCode})
+                    {value} {row.subjectCode && `(${row.subjectCode})`}
                   </Typography>
                 </Box>
               );
@@ -68,13 +69,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
+            minWidth: 100,
             render(value, row) {
               return (
                 <ShakingTextField
                   error={
-                    typeof formik.errors.subjects?.[row.id] === 'object' &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.examDate &&
-                    !!formik.touched.subjects?.[row.id]?.examDate
+                    typeof formik.errors.subjects?.[row.index] === 'object' &&
+                    !!(formik.errors.subjects?.[row.index] as any)?.examDate &&
+                    !!formik.touched.subjects?.[row.index]?.examDate
                   }
                 >
                   <DatePicker
@@ -82,20 +84,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     format="DD/MM/YYYY"
                     label="Date *"
                     onChange={(newTime) => {
-                      formik.setFieldValue(`subjects.${row.id}.examDate`, newTime);
-                      formik.setFieldTouched(`subjects.${row.id}.examDate`, false, false);
-
-                      const updatedRoomDetails = {
-                        ...(formik.values.roomDetails as unknown as Record<
-                          string,
-                          ISubjectRoomDetail
-                        >),
-                      };
-                      updatedRoomDetails[row.subjectName] = {
-                        ...updatedRoomDetails[row.subjectName],
-                        examDate: newTime || null,
-                      };
-                      formik.setFieldValue('roomDetails', updatedRoomDetails);
+                      formik.setFieldValue(`subjects.${row.index}.examDate`, newTime);
+                      formik.setFieldTouched(`subjects.${row.index}.examDate`, false, false);
                     }}
                     minDate={dayjs()}
                     maxDate={dayjs(currentYear?.endDate)}
@@ -104,13 +94,13 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                         size: 'small',
 
                         error:
-                          typeof formik.errors.subjects?.[row.id] === 'object' &&
-                          !!(formik.errors.subjects?.[row.id] as any)?.examDate &&
-                          !!formik.touched.subjects?.[row.id]?.examDate,
+                          typeof formik.errors.subjects?.[row.index] === 'object' &&
+                          !!(formik.errors.subjects?.[row.index] as any)?.examDate &&
+                          !!formik.touched.subjects?.[row.index]?.examDate,
                         helperText:
-                          formik.touched.subjects?.[row.id]?.examDate &&
-                          typeof formik.errors.subjects?.[row.id] === 'object'
-                            ? (formik.errors.subjects?.[row.id] as any)?.examDate
+                          formik.touched.subjects?.[row.index]?.examDate &&
+                          typeof formik.errors.subjects?.[row.index] === 'object'
+                            ? (formik.errors.subjects?.[row.index] as any)?.examDate
                             : ' ',
                         FormHelperTextProps: {
                           sx: {
@@ -119,6 +109,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                             position: 'static',
                             // lineHeight: '1.25rem',
                             whiteSpace: 'normal',
+                            width: '100%',
                           },
                         },
                         InputLabelProps: {
@@ -128,7 +119,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     }}
                   />
                 </ShakingTextField>
-                // </Box>
               );
             },
           },
@@ -142,9 +132,9 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               return (
                 <ShakingTextField
                   error={
-                    typeof formik.errors.subjects?.[row.id] === 'object' &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.startTime &&
-                    !!formik.touched.subjects?.[row.id]?.startTime
+                    typeof formik.errors.subjects?.[row.index] === 'object' &&
+                    !!(formik.errors.subjects?.[row.index] as any)?.startTime &&
+                    !!formik.touched.subjects?.[row.index]?.startTime
                   }
                 >
                   <TimePicker
@@ -152,10 +142,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     format="hh:mm a"
                     label="Start Time *"
                     onChange={(newTime) => {
-                      formik.setFieldValue(`subjects.${row.id}.startTime`, newTime);
-                      formik.setFieldTouched(`subjects.${row.id}.startTime`, false, false);
-
-                      // formik.validateField(`subjects.${row.id}.startTime`);
+                      formik.setFieldValue(`subjects.${row.index}.startTime`, newTime);
+                      formik.setFieldTouched(`subjects.${row.index}.startTime`, false, false);
                     }}
                     viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
                     slotProps={{
@@ -163,13 +151,13 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                         size: 'small',
 
                         error:
-                          typeof formik.errors.subjects?.[row.id] === 'object' &&
-                          !!(formik.errors.subjects?.[row.id] as any)?.startTime &&
-                          !!formik.touched.subjects?.[row.id]?.startTime,
+                          typeof formik.errors.subjects?.[row.index] === 'object' &&
+                          !!(formik.errors.subjects?.[row.index] as any)?.startTime &&
+                          !!formik.touched.subjects?.[row.index]?.startTime,
                         helperText:
-                          formik.touched.subjects?.[row.id]?.startTime &&
-                          typeof formik.errors.subjects?.[row.id] === 'object'
-                            ? (formik.errors.subjects?.[row.id] as any)?.startTime
+                          formik.touched.subjects?.[row.index]?.startTime &&
+                          typeof formik.errors.subjects?.[row.index] === 'object'
+                            ? (formik.errors.subjects?.[row.index] as any)?.startTime
                             : ' ',
                         FormHelperTextProps: {
                           sx: {
@@ -199,9 +187,9 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               return (
                 <ShakingTextField
                   error={
-                    typeof formik.errors.subjects?.[row.id] === 'object' &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.endTime &&
-                    !!formik.touched.subjects?.[row.id]?.endTime
+                    typeof formik.errors.subjects?.[row.index] === 'object' &&
+                    !!(formik.errors.subjects?.[row.index] as any)?.endTime &&
+                    !!formik.touched.subjects?.[row.index]?.endTime
                   }
                 >
                   <TimePicker
@@ -209,22 +197,21 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     format="hh:mm a"
                     label="End Time *"
                     onChange={(newTime) => {
-                      formik.setFieldValue(`subjects.${row.id}.endTime`, newTime);
-                      formik.setFieldTouched(`subjects.${row.id}.endTime`, false, false);
-                      // formik.validateField(`subjects.${row.id}.endTime`);
+                      formik.setFieldValue(`subjects.${row.index}.endTime`, newTime);
+                      formik.setFieldTouched(`subjects.${row.index}.endTime`, false, false);
                     }}
                     viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
                     slotProps={{
                       textField: {
                         size: 'small',
                         error:
-                          typeof formik.errors.subjects?.[row.id] === 'object' &&
-                          !!(formik.errors.subjects?.[row.id] as any)?.endTime &&
-                          !!formik.touched.subjects?.[row.id]?.endTime,
+                          typeof formik.errors.subjects?.[row.index] === 'object' &&
+                          !!(formik.errors.subjects?.[row.index] as any)?.endTime &&
+                          !!formik.touched.subjects?.[row.index]?.endTime,
                         helperText:
-                          formik.touched.subjects?.[row.id]?.endTime &&
-                          typeof formik.errors.subjects?.[row.id] === 'object'
-                            ? (formik.errors.subjects?.[row.id] as any)?.endTime
+                          formik.touched.subjects?.[row.index]?.endTime &&
+                          typeof formik.errors.subjects?.[row.index] === 'object'
+                            ? (formik.errors.subjects?.[row.index] as any)?.endTime
                             : ' ',
                         FormHelperTextProps: {
                           sx: {
@@ -249,13 +236,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
+            minWidth: 150,
             render(value, row) {
               return (
                 <ShakingTextField
                   error={
-                    typeof formik.errors.subjects?.[row.id] === 'object' &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.totalMarks &&
-                    !!formik.touched.subjects?.[row.id]?.totalMarks
+                    typeof formik.errors.subjects?.[row.index] === 'object' &&
+                    !!(formik.errors.subjects?.[row.index] as any)?.totalMarks &&
+                    !!formik.touched.subjects?.[row.index]?.totalMarks
                   }
                 >
                   <TextField
@@ -263,8 +251,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     type="number"
                     label="Total Marks *"
                     onChange={(e) => {
-                      formik.setFieldValue(`subjects.${row.id}.totalMarks`, e.target.value);
-                      formik.setFieldTouched(`subjects.${row.id}.totalMarks`, false, false);
+                      formik.setFieldValue(`subjects.${row.index}.totalMarks`, e.target.value);
+                      formik.setFieldTouched(`subjects.${row.index}.totalMarks`, false, false);
                     }}
                     onKeyDown={(e) => {
                       if (['e', 'E', '+', '-', '.'].includes(e.key)) {
@@ -273,13 +261,13 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     }}
                     size="small"
                     error={
-                      Boolean(formik.touched.subjects?.[row.id]?.totalMarks) &&
-                      !!(formik.errors.subjects?.[row.id] as any)?.totalMarks
+                      Boolean(formik.touched.subjects?.[row.index]?.totalMarks) &&
+                      !!(formik.errors.subjects?.[row.index] as any)?.totalMarks
                     }
                     helperText={
-                      formik.touched.subjects?.[row.id]?.totalMarks &&
-                      (formik.errors.subjects?.[row.id] as any)?.totalMarks
-                        ? (formik.errors.subjects?.[row.id] as any)?.totalMarks
+                      formik.touched.subjects?.[row.index]?.totalMarks &&
+                      (formik.errors.subjects?.[row.index] as any)?.totalMarks
+                        ? (formik.errors.subjects?.[row.index] as any)?.totalMarks
                         : ' '
                     }
                     FormHelperTextProps={{
@@ -306,14 +294,14 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
-            minWidth: 100,
+            minWidth: 150,
             render(value, row) {
               return (
                 <ShakingTextField
                   error={
-                    typeof formik.errors.subjects?.[row.id] === 'object' &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.passingMarks &&
-                    !!formik.touched.subjects?.[row.id]?.passingMarks
+                    typeof formik.errors.subjects?.[row.index] === 'object' &&
+                    !!(formik.errors.subjects?.[row.index] as any)?.passingMarks &&
+                    !!formik.touched.subjects?.[row.index]?.passingMarks
                   }
                 >
                   <TextField
@@ -326,18 +314,18 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                       }
                     }}
                     onChange={(e) => {
-                      formik.setFieldValue(`subjects.${row.id}.passingMarks`, e.target.value);
-                      formik.setFieldTouched(`subjects.${row.id}.passingMarks`, false, false);
+                      formik.setFieldValue(`subjects.${row.index}.passingMarks`, e.target.value);
+                      formik.setFieldTouched(`subjects.${row.index}.passingMarks`, false, false);
                     }}
                     size="small"
                     error={
-                      Boolean(formik.touched.subjects?.[row.id]?.passingMarks) &&
-                      !!(formik.errors.subjects?.[row.id] as any)?.passingMarks
+                      Boolean(formik.touched.subjects?.[row.index]?.passingMarks) &&
+                      !!(formik.errors.subjects?.[row.index] as any)?.passingMarks
                     }
                     helperText={
-                      formik.touched.subjects?.[row.id]?.passingMarks &&
-                      (formik.errors.subjects?.[row.id] as any)?.passingMarks
-                        ? (formik.errors.subjects?.[row.id] as any)?.passingMarks
+                      formik.touched.subjects?.[row.index]?.passingMarks &&
+                      (formik.errors.subjects?.[row.index] as any)?.passingMarks
+                        ? (formik.errors.subjects?.[row.index] as any)?.passingMarks
                         : ' '
                     }
                     FormHelperTextProps={{
@@ -363,24 +351,26 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
-            minWidth: 150,
+            minWidth: 250,
             render(value, row) {
               return (
                 <TextField
                   value={value}
+                  multiline
+                  rows={2}
                   label="Notes"
                   onChange={(e) => {
-                    formik.setFieldValue(`subjects.${row.id}.notes`, e.target.value);
+                    formik.setFieldValue(`subjects.${row.index}.notes`, e.target.value);
                   }}
                   size="small"
                   error={
-                    Boolean(formik.touched.subjects?.[row.id]?.notes) &&
-                    !!(formik.errors.subjects?.[row.id] as any)?.notes
+                    Boolean(formik.touched.subjects?.[row.index]?.notes) &&
+                    !!(formik.errors.subjects?.[row.index] as any)?.notes
                   }
                   helperText={
-                    formik.touched.subjects?.[row.id]?.notes &&
-                    (formik.errors.subjects?.[row.id] as any)?.notes
-                      ? (formik.errors.subjects?.[row.id] as any)?.notes
+                    formik.touched.subjects?.[row.index]?.notes &&
+                    (formik.errors.subjects?.[row.index] as any)?.notes
+                      ? (formik.errors.subjects?.[row.index] as any)?.notes
                       : ' '
                   }
                   FormHelperTextProps={{
@@ -400,7 +390,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             },
           },
         ]}
-        data={formik.values.subjects}
+        data={formik.values.subjects.map((s: any, i: number) => ({ ...s, index: i }))}
       />
     </Box>
   );

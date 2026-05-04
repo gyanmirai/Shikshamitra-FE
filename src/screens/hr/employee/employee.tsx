@@ -197,7 +197,7 @@ const HrEmployee = () => {
       {
         id: 'fullName',
         label: 'Name',
-        minWidth: 300,
+        minWidth: '16vw',
         sticky: true,
         align: 'left',
         render(value, row) {

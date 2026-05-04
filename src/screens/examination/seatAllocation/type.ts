@@ -3,62 +3,65 @@ export interface ISeat {
   isAssigned: boolean;
   studentName?: string;
   benchNumber: number;
-  class?: string;
+  standardName?: string;
   rollNo?: number;
   column: number; // for display grouping
   row: number;
-  studentId: number | null;
+  studentId: string | null; // uuid
+  benchId?: string; // uuid
 }
 
 export interface IRoom {
-  id: number;
+  id: string; // uuid
   roomName: string;
+  roomNumber?: string;
   capacity: number;
-  building: string;
-  floor: string;
-  roomType: string;
-  totalBenches: number;
-  benchCapacity: number;
-  rows: number;
-  columns: number;
-  features: string[];
+  allocatedSeats?: number;
+  availableSeats?: number;
+  isAllocationCompleted?: boolean;
+  // FE-only display fields for seat grid layout
+  rows?: number;
+  columns?: number;
+  benchCapacity?: number;
 }
 
 export interface IStudentRoomAssignment {
-  id: number;
-  name: string;
-  rollNo: string;
-  bench?: string;
-  room?: string;
-  isRoomAssign: boolean;
+  studentId: string; // uuid
+  studentName: string;
+  rollNo: number;
+  standardName?: string;
+  isSeatAllocate: boolean;
+  bench?: string; // FE-only display
+  room?: string; // FE-only display
+  seatNumber?: number;
 }
 
 export interface ISeatAllocation {
   seatNumber: number;
-  studentName: string;
-  class: string;
-  rollNo: number;
-  studentId: number;
+  studentName?: string;
+  standardName?: string;
+  rollNo?: number;
+  studentId: string | null; // uuid
   isRoomAssign: boolean;
+  benchId?: string; // uuid
 }
 
 export interface IExamAllocation {
-  id: string;
+  examId: string; // uuid
   examName: string;
-  examType: string;
-  className: number;
-  classId: string;
+  examTypeName: string;
+  standardName: string;
   divisions: string[];
   totalStudents: number;
   allocatedStudents: number;
   pendingStudents: number;
-  status: string;
+  status: number; // 0=pending, 1=partial, 2=allocated
 }
 
 export interface IDroppedStudent {
-  studentId: number;
+  studentId: string; // uuid
   seatNumber: number;
-  benchId: string;
+  benchId: string | null; // uuid, nullable
   isRoomAssign: boolean;
 }
 

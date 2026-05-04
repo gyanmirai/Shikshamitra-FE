@@ -15,7 +15,7 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const isAssigned = student.isRoomAssign;
+  const isAssigned = student.isSeatAllocate;
 
   return (
     <Card
@@ -53,12 +53,12 @@ const StudentCard = ({ student, theme }: { student: IStudentRoomAssignment; them
           fontSize: '0.875rem',
         }}
       >
-        {student.name?.split(' ')?.[0]?.[0] || '?'}
+        {student.studentName?.split(' ')?.[0]?.[0] || '?'}
       </Avatar>
 
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600, mb: 0.5 }}>
-          {student.name}
+          {student.studentName}
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
           <Typography

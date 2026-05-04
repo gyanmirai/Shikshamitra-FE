@@ -58,7 +58,7 @@ export const TableHeader = React.memo(
                     // fontSize: '13px',
                     fontWeight: 600,
                     color: 'text.secondary',
-                    width: column.minWidth,
+                    minWidth: column.minWidth,
                     whiteSpace: 'nowrap',
                     py: 1.5,
                     px: 2,

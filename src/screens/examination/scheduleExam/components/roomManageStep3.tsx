@@ -8,10 +8,11 @@ import { alpha } from '@mui/system';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
-import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Grid, Chip, Paper, Switch, Typography } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Box, Grid, Chip, Paper, Switch, TextField, Typography, Autocomplete } from '@mui/material';
 
 import type { IExamFormValues } from '../type';
 
@@ -103,17 +104,10 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
             exit="exit"
           >
             <Grid container spacing={3}>
-              {(formik.values.roomDetails && typeof formik.values.roomDetails === 'object'
-                ? Object.entries(formik.values.roomDetails)
-                : []
-              ).map(([subjectName, subjectDetails]) => (
-                <Grid size={{ xs: 12 }} key={subjectName}>
+              {(formik.values.subjects ?? []).map((subject: any) => (
+                <Grid size={{ xs: 12 }} key={subject.subjectId}>
                   <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
-                    <RoomAssignmentCard
-                      subjectName={subjectName}
-                      subjectData={subjectDetails}
-                      formik={formik}
-                    />
+                    <RoomAssignmentCard subject={subject} formik={formik} />
                   </motion.div>
                 </Grid>
               ))}
@@ -126,59 +120,68 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
 };
 export default RoomDetails;
 
-const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
-  // Get current board, medium and medium setter from global state
+const RoomAssignmentCard = ({ subject, formik }: any) => {
+  const { subjectId, subjectName, examDate } = subject;
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
 
-  // Flatten all standards/classes from education medium stages into a single array
-  // This creates a comprehensive list of all available classes across different stages
   const allClass = useMemo(
     () => medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],
     [medium]
   );
 
-  // Get divisions for the currently selected class from formik values
-  // Finds the specific class and extracts its divisions for dropdown/selection purposes
   const divisions = useMemo(
     () => allClass.find((cls: any) => cls.id === formik.values.className)?.divisions || [],
     [allClass, formik.values.className]
   );
 
-  // Transform subject division data into table-ready format
-  // Maps division IDs to their names and includes room assignment data (roomIds, capacity)
-  const tableData = subjectData?.divisions
-    ? Object.entries(subjectData.divisions).map(([divisionId, divisionData]) => ({
-        divisionId,
-        division: divisions?.find((div: Division) => div.id === divisionId)?.name || divisionId,
-        ...(divisionData as { roomIds: string[]; capacity: number }),
-      }))
-    : [];
+  const tableData = divisions.map((div: Division) => ({
+    divisionId: div.id,
+    division: div.name,
+    ...(formik.values.roomDetails?.[subjectId]?.[div.id] ?? { roomIds: [], capacity: 0 }),
+  }));
 
-  // Static mock data for available rooms
-  // TODO: Replace with API call to fetch actual room data from backend
-  const roomsData = [
-    { id: 'room-101', name: 'Room 101', building: 'Main Building', capacity: 30 },
-    { id: 'room-102', name: 'Room 102', building: 'Main Building', capacity: 30 },
-    { id: 'room-103', name: 'Room 103', building: 'Main Building', capacity: 30 },
-  ];
+  // Fetch rooms from API
+  const { data: roomsApiData, isLoading: roomsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomsQuery,
+  });
+
+  // Flatten and sort: group by building → floor → room for display
+  const roomOptions = useMemo(
+    () =>
+      (roomsApiData?.items ?? []).map((room: any) => ({
+        id: room.id,
+        roomName: room.roomName ?? '',
+        buildingName: room.buildingName ?? '',
+        floorName: room.floorName ?? '',
+        capacity: room.capacity ?? 0,
+        // Label shown in dropdown option
+        label: `${room.buildingName ?? ''} › ${room.floorName ?? ''} › ${room.roomName ?? ''}`,
+        // Group header for Autocomplete groupBy
+        group: `${room.buildingName ?? 'Unknown Building'} › ${room.floorName ?? 'Unknown Floor'}`,
+      })),
+    [roomsApiData]
+  );
 
   return (
     <SectionCard
       title={subjectName}
       headerContent={
-        <Chip
-          label={subjectData.examDate.format('dddd, DD MMM YYYY')}
-          size="small"
-          variant="outlined"
-          sx={{
-            fontWeight: 600,
-            borderRadius: 1,
-            color: 'primary.main',
-            borderColor: alpha(theme.palette.primary.main, 0.2),
-            bgcolor: alpha(theme.palette.primary.main, 0.08),
-          }}
-        />
+        examDate ? (
+          <Chip
+            label={examDate.format('dddd, DD MMM YYYY')}
+            size="small"
+            variant="outlined"
+            sx={{
+              fontWeight: 600,
+              borderRadius: 1,
+              color: 'primary.main',
+              borderColor: alpha(theme.palette.primary.main, 0.2),
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+            }}
+          />
+        ) : null
       }
       paperProps={{
         sx: {
@@ -217,34 +220,36 @@ const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
               isFilter: false,
               isSort: false,
               render: (value, row) => {
-                const fieldPath = `roomDetails.${subjectName}.divisions.${row.divisionId}.roomIds`;
-                const selectedRoomId =
-                  formik.values.roomDetails?.[subjectName]?.divisions?.[row.divisionId]?.roomIds ||
-                  [];
+                const fieldPath = `roomDetails.${subjectId}.${row.divisionId}.roomIds`;
+                const selectedRoomIds: string[] =
+                  formik.values.roomDetails?.[subjectId]?.[row.divisionId]?.roomIds ?? [];
+                const selectedRooms = roomOptions.filter((r: any) =>
+                  selectedRoomIds.includes(r.id)
+                );
 
                 return (
-                  <CustomSelect
-                    label="Select Room"
-                    value={selectedRoomId}
-                    options={roomsData}
-                    labelKey="name"
+                  <Autocomplete
                     multiple
-                    valueKey="id"
-                    onChange={(val) => {
-                      const totalCapacity = val.reduce((sum, roomId) => {
-                        const room = roomsData.find((r) => r.id === roomId);
-                        return Number(sum) + (room?.capacity || 0);
-                      }, 0);
-
-                      formik.setFieldValue(fieldPath, val);
+                    size="small"
+                    loading={roomsLoading}
+                    options={roomOptions}
+                    groupBy={(option: any) => option.group}
+                    getOptionLabel={(option: any) => option.label}
+                    isOptionEqualToValue={(option: any, val: any) => option.id === val.id}
+                    value={selectedRooms}
+                    onChange={(_e, newVal: any[]) => {
+                      const ids = newVal.map((r) => r.id);
+                      const totalCapacity = newVal.reduce((sum, r) => sum + (r.capacity || 0), 0);
+                      formik.setFieldValue(fieldPath, ids);
                       formik.setFieldValue(
-                        `roomDetails.${subjectName}.divisions.${row.divisionId}.capacity`,
+                        `roomDetails.${subjectId}.${row.divisionId}.capacity`,
                         totalCapacity
                       );
                     }}
-                    formControlProps={{
-                      sx: { width: '100%', minWidth: { xs: '200px', md: '350px' } },
-                    }}
+                    sx={{ minWidth: { xs: 220, md: 380 } }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Select Room(s)" size="small" />
+                    )}
                   />
                 );
               },
@@ -256,8 +261,7 @@ const RoomAssignmentCard = ({ subjectName, subjectData, formik }: any) => {
               isSort: false,
               render: (_: any, row: any) => (
                 <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  {formik.values.roomDetails?.[subjectName]?.divisions?.[row.divisionId]
-                    ?.capacity || '-'}
+                  {formik.values.roomDetails?.[subjectId]?.[row.divisionId]?.capacity || '-'}
                 </Typography>
               ),
             },

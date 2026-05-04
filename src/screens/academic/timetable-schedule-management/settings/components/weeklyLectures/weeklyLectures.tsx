@@ -4,9 +4,9 @@ import type { RootState } from 'src/redux/store';
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -78,17 +78,17 @@ const WeeklyLectures = () => {
           { name: 'Settings' },
           { name: 'Weekly Lectures Slots' },
         ]}
-        action={
-          <Button
-            startIcon={<Iconify icon="mdi:plus" />}
-            variant="contained"
-            size="small"
-            onClick={openCreate}
-            sx={{ px: '32px' }}
-          >
-            Weekly Lectures
-          </Button>
-        }
+        // action={
+        //   <Button
+        //     startIcon={<Iconify icon="mdi:plus" />}
+        //     variant="contained"
+        //     size="small"
+        //     onClick={openCreate}
+        //     sx={{ px: '32px' }}
+        //   >
+        //     Weekly Lectures
+        //   </Button>
+        // }
       />
 
       <CustomizableTable

@@ -93,12 +93,14 @@ interface PaletteProps {
   placedCounts: Record<string, number>;
   selectedClass: string;
   selectedDivision: string;
+  subjects: Subject[];
 }
 
 const SubjectPalette: React.FC<PaletteProps> = ({
   placedCounts,
   selectedClass,
   selectedDivision,
+  subjects,
 }) => {
   const weeklyLecturesDialog = useBoolean();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -126,28 +128,28 @@ const SubjectPalette: React.FC<PaletteProps> = ({
     },
   });
 
-  const subjects: Subject[] = React.useMemo(() => {
-    if (!subjectTableData?.data?.items) return [];
-    return subjectTableData.data.items.flatMap((item: any) => {
-      const totalLectures = item.totalLectures ?? 0;
-      if (item.subjectType === 1) {
-        return item.subjects.map((sub: any) => ({
-          id: sub.assignedId || sub.subjectId,
-          name: sub.subject?.name || sub.subjectName,
-          color: sub.subject?.color || sub.color || '#90caf9',
-          totalLectures,
-        }));
-      }
-      return [
-        {
-          id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
-          name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
-          color: item.subjects[0]?.subject?.color || item.subjects[0]?.color || '#90caf9',
-          totalLectures,
-        },
-      ];
-    });
-  }, [subjectTableData]);
+  // const subjects: Subject[] = React.useMemo(() => {
+  //   if (!subjectTableData?.data?.items) return [];
+  //   return subjectTableData.data.items.flatMap((item: any) => {
+  //     const totalLectures = item.totalLectures ?? 0;
+  //     if (item.subjectType === 1) {
+  //       return item.subjects.map((sub: any) => ({
+  //         id: sub.assignedId || sub.subjectId,
+  //         name: sub.subject?.name || sub.subjectName,
+  //         color: sub.subject?.color || sub.color || '#90caf9',
+  //         totalLectures,
+  //       }));
+  //     }
+  //     return [
+  //       {
+  //         id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
+  //         name: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
+  //         color: item.subjects[0]?.subject?.color || item.subjects[0]?.color || '#90caf9',
+  //         totalLectures,
+  //       },
+  //     ];
+  //   });
+  // }, [subjectTableData]);
 
   return (
     <Card
@@ -173,7 +175,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
             <Skeleton key={i} variant="rounded" height={52} sx={{ borderRadius: 1 }} />
           ))}
         </Box>
-      ) : subjects.length > 0 ? (
+      ) : subjects?.length > 0 ? (
         <>
           <Box sx={{ mb: 1 }}>
             <Typography variant="h6" fontWeight="600">

@@ -28,9 +28,13 @@ const SeatManagement = ({
   selectedRoom: IRoom;
   assignedData: ISeatAllocation[];
   onStudentDrop: (student: IStudentRoomAssignment, seatNumber: number) => void;
-  onStudentRemove: (studentId: number | null) => void;
+  onStudentRemove: (studentId: string | null) => void;
   onSeatSwap: (from: number, to: number) => void;
 }) => {
+  const roomRows = selectedRoom.rows ?? 6;
+  const roomColumns = selectedRoom.columns ?? 2;
+  const roomBenchCapacity = selectedRoom.benchCapacity ?? 2;
+
   const generateDummySeats = (room: { rows: number; columns: number; benchCapacity: number }) => {
     const seats: ISeat[] = [];
     let seatNumber = 1;
@@ -46,8 +50,8 @@ const SeatManagement = ({
             column: col,
             isAssigned: false,
             studentId: null,
-            studentName: undefined, // Add missing properties
-            class: undefined,
+            studentName: undefined,
+            standardName: undefined,
             rollNo: undefined,
           });
           seatNumber += 1;
@@ -58,7 +62,11 @@ const SeatManagement = ({
   };
 
   // Generate base seats and merge with assigned data
-  const baseSeatList = generateDummySeats(selectedRoom);
+  const baseSeatList = generateDummySeats({
+    rows: roomRows,
+    columns: roomColumns,
+    benchCapacity: roomBenchCapacity,
+  });
 
   const seatList = baseSeatList.map((seat) => {
     const assigned = assignedData.find((s) => s.seatNumber === seat.seatNumber);
@@ -68,8 +76,9 @@ const SeatManagement = ({
         isAssigned: true,
         studentId: assigned.studentId,
         studentName: assigned.studentName,
-        class: assigned.class,
+        standardName: assigned.standardName,
         rollNo: assigned.rollNo,
+        benchId: assigned.benchId,
       };
     }
     return seat;
@@ -155,7 +164,7 @@ const SeatManagement = ({
       >
         <motion.div variants={containerVariants} initial="hidden" animate="show">
           <Grid container spacing={4} justifyContent="center">
-            {Array.from({ length: selectedRoom.columns }).map((_, colIdx) => {
+            {Array.from({ length: roomColumns }).map((_, colIdx) => {
               // Filter seats for this column and group by bench
               const columnSeats = seatList.filter((s) => s.column === colIdx);
 

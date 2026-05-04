@@ -30,23 +30,25 @@ interface SubjectsLectureTableProps {
  * `useCallback` for the cell renderers is justified for the same reason.
  */
 export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectureTableProps) {
-  const renderSubjectName = useCallback(
-    (value: unknown, row: ISubject) => (
+  const renderSubjectName: any = useCallback((value: unknown, row: ISubject) => {
+    const subjects = row?.subjects || row?.electiveGroupSubjects || [];
+    return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
         <ListItemText
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={row.subjectColor} />
+              <SubjectColorIndicator color={row.subjectColor || row.electiveGroupColor} />
               <Typography variant="caption" fontSize="13px">
                 {value as string}
               </Typography>
-              {row?.subjects && row.subjects.length > 0 && (
+              {subjects && subjects.length > 0 && (
                 <CustomTooltip
                   title={
-                    <Box display="flex" flexDirection="column" gap={0.5}>
-                      {row.subjects.map((sub) => (
+                    <Box display="flex" flexDirection="column" gap={1} p={1}>
+                      {subjects.map((sub) => (
                         <Typography key={sub.subjectId} variant="caption">
-                          {sub.subjectName} ({sub.subjectCode})
+                          {sub.subjectName || (sub?.name as any)}{' '}
+                          {sub.subjectCode && `(${sub.subjectCode})`}
                         </Typography>
                       ))}
                     </Box>
@@ -58,7 +60,7 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
                     sx={{ cursor: 'pointer' }}
                     color="primary"
                   >
-                    ({row.subjectCount})
+                    ({subjects.length})
                   </Typography>
                 </CustomTooltip>
               )}
@@ -67,11 +69,10 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
           secondary={`(${SubjectType[row.subjectType ?? 0]})`}
         />
       </Box>
-    ),
-    []
-  );
+    );
+  }, []);
 
-  const renderLectureCell = useCallback(
+  const renderLectureCell: any = useCallback(
     (_value: unknown, row: ISubject) => {
       const index = formik.values.subjects.findIndex((item) => item.id === row.id);
       if (index < 0) return null;
@@ -100,6 +101,8 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
     ],
     [renderSubjectName, renderLectureCell]
   );
+
+  console.log('SubjectsLectureTable render with subjects:', formik.values.subjects); // Debug log
 
   return (
     <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">

@@ -18,7 +18,7 @@ const SeatBox = ({
 }: {
   seat: ISeat;
   onStudentDrop: (student: IStudentRoomAssignment, seatNumber: number) => void;
-  onStudentRemove: (studentId: number | null) => void;
+  onStudentRemove: (studentId: string | null) => void;
   onSeatSwap: (fromSeatNumber: number, toSeatNumber: number) => void;
 }) => {
   const theme = useTheme();
@@ -76,15 +76,15 @@ const SeatBox = ({
         }
 
         // Only allow move from occupied seat to empty seat
-        if (fromSeat.isAssigned && !seat.isAssigned) {
+        if (fromSeat.isAssigned && !seat.isAssigned && fromSeat.studentId) {
           // First remove from old seat
           onStudentRemove(fromSeat.studentId);
           // Then add to new seat
           const studentToMove = {
-            id: fromSeat.studentId,
-            name: fromSeat.studentName,
+            studentId: fromSeat.studentId,
+            studentName: fromSeat.studentName,
             rollNo: fromSeat.rollNo,
-            isRoomAssign: false,
+            isSeatAllocate: false,
           };
           onStudentDrop(studentToMove, seat.seatNumber);
         }
@@ -196,7 +196,7 @@ const SeatBox = ({
                     borderRadius: 0.5,
                   }}
                 >
-                  {seat.class}
+                  {seat.standardName}
                 </Typography>
                 <Typography
                   variant="caption"

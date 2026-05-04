@@ -18,10 +18,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
 import { Box, Tab, Card, Tabs, Button, MenuList, MenuItem } from '@mui/material';
-import {
-  useGetExamsQuery,
-  usePublishExamMutation,
-} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import { usePublishExamMutation } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import ViewTimetableComp from './viewTimetableComp';
 
@@ -36,16 +33,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   onViewTimetable,
   isScheduleExamButton = true,
   isAction = true,
+  getExams,
 }) => {
   const publishExamDialog = useBoolean();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const getExams = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExamsQuery,
-    params: {
-      AcademicMediumId: medium?.id,
-    },
-  });
 
   const [publishExam] = useQueryAndMutation({
     type: 'mutation',
@@ -59,9 +50,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   const handlePublishExam = async () => {
     try {
-      if (selectedTimetable?.id) {
+      if (selectedTimetable?.examId) {
         await publishExam({
-          examId: selectedTimetable.id,
+          examId: selectedTimetable.examId,
           body: { status: 1 }, // Published status
         }).unwrap();
         shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
@@ -221,7 +212,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             { id: 'examName', label: 'Exam Name', align: 'left' },
             { id: 'examType', label: 'Exam Type', align: 'left' },
             {
-              id: 'className',
+              id: 'z',
               label: 'Class',
               align: 'left',
               filterType: 'number',

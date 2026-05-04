@@ -219,27 +219,25 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
                         // Update room details
                         const updatedRoomDetails = { ...(formik.values.roomDetails || {}) };
-                        formik.values.subjects.forEach((subject) => {
-                          const { subjectName } = subject;
-                          const divisionsObj = value
-                            .filter((code) => code !== 'all')
-                            .reduce(
-                              (acc, divisionId: string) => {
-                                acc[divisionId] = updatedRoomDetails?.[subjectName]?.divisions?.[
-                                  divisionId
-                                ] ?? {
-                                  roomIds: [],
-                                  capacity: 0,
-                                };
-                                return acc;
-                              },
-                              {} as Record<string, IDivisionRoomDetail>
-                            );
-                          updatedRoomDetails[subjectName] = {
-                            ...updatedRoomDetails[subjectName],
-                            divisions: divisionsObj,
-                            examDate: subject.examDate || null,
-                          };
+                        formik.values.subjects.forEach((subject: any) => {
+                          const key =
+                            subject.subjectId ||
+                            subject.electiveGroupId ||
+                            subject?.subjects?.[0]?.subjectId;
+                          if (!key) return;
+                          const existing = updatedRoomDetails?.[key] ?? {};
+                          const divisionIds = value.filter((code: string) => code !== 'all');
+                          const divisionsObj = divisionIds.reduce(
+                            (acc: Record<string, IDivisionRoomDetail>, divisionId: string) => {
+                              acc[divisionId] = existing[divisionId] ?? {
+                                roomIds: [],
+                                capacity: 0,
+                              };
+                              return acc;
+                            },
+                            {} as Record<string, IDivisionRoomDetail>
+                          );
+                          updatedRoomDetails[key] = divisionsObj;
                         });
                         formik.setFieldValue('roomDetails', updatedRoomDetails);
                       }}
@@ -259,20 +257,51 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
               <Grid size={{ xs: 12, md: 4 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
-                  >
+                  <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects)}>
                     <Autocomplete
                       multiple
                       options={subjectOptions}
                       getOptionLabel={(option: any) =>
-                        option?.electiveGroupName || option?.subjects?.[0]?.subjectName || ''
+                        option?.electiveGroupName ||
+                        option?.subjects?.[0]?.subjectName ||
+                        option?.subjectName ||
+                        option?.name ||
+                        ''
                       }
+                      isOptionEqualToValue={(option: any, val: any) => {
+                        const optId =
+                          option?.electiveGroupId || option?.subjects?.[0]?.subjectId || option?.id;
+                        const valId =
+                          val?.subjectId ||
+                          val?.electiveGroupId ||
+                          val?.subjects?.[0]?.subjectId ||
+                          val?.id;
+                        return !!optId && optId === valId;
+                      }}
                       size="small"
-                      value={formik.values.selectedSubjects}
+                      value={formik.values.subjects}
                       onChange={(event, value) => {
-                        formik.setFieldValue('selectedSubjects', value);
-                        formik.setFieldTouched(`selectedSubjects`, false);
+                        const normalizedSubjects = value.map((sub: any, index: number) => ({
+                          ...sub,
+                          subjectId:
+                            sub.electiveGroupId || sub?.subjects?.[0]?.subjectId || sub.subjectId,
+                          subjectName:
+                            sub?.electiveGroupName ||
+                            sub.subjects?.[0]?.subjectName ||
+                            sub.subjectName ||
+                            '',
+                          examDate: sub?.examDate || null,
+                          startTime: sub?.startTime || null,
+                          endTime: sub?.endTime || null,
+                          totalMarks: sub?.totalMarks ?? '',
+                          passingMarks: sub?.passingMarks ?? '',
+                          notes: sub?.notes || '',
+                          subjectCode: sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
+                          subjectColor: sub?.subjectColor || '#9E9E9E',
+                        }));
+
+                        formik.setFieldValue('subjects', normalizedSubjects);
+                        formik.setFieldTouched('subjects', false);
                       }}
                       slotProps={{
                         chip: {
@@ -284,15 +313,12 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           {...params}
                           label="Subjects *"
                           size="small"
-                          error={
-                            formik.touched.selectedSubjects &&
-                            Boolean(formik.errors.selectedSubjects)
-                          }
+                          error={formik.touched.subjects && Boolean(formik.errors.subjects)}
                           helperText={
-                            formik.touched.selectedSubjects && formik.errors.selectedSubjects
-                              ? formik.errors.selectedSubjects instanceof Array
-                                ? formik.errors.selectedSubjects.join(', ')
-                                : formik.errors.selectedSubjects
+                            formik.touched.subjects && formik.errors.subjects
+                              ? formik.errors.subjects instanceof Array
+                                ? formik.errors.subjects.join(', ')
+                                : formik.errors.subjects
                               : undefined
                           }
                         />
