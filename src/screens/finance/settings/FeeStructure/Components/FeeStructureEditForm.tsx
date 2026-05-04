@@ -16,7 +16,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { useSaveStandardFeeStructuresMutation } from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureStep from './FeeStructureStep2';
-import { getInitialFeeStructureData } from './FeeStructureInitialValues';
+import { standardFeeStructureInitialValues } from './FeeStructureInitialValues';
 
 import type { IFeeStructureEditFormProps } from '../type';
 
@@ -38,10 +38,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
   });
 
   // Initial values from editData
-  const initialValues = useMemo(
-    () => getInitialFeeStructureData(currentYear, editData),
-    [currentYear, editData]
-  );
+  const initialValues = useMemo(() => standardFeeStructureInitialValues(editData), [editData]);
 
   const formik = useFormik({
     initialValues,
@@ -89,6 +86,8 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
     },
   });
 
+  console.log('Formik values:', formik.values); // Debug log to trace form values
+
   // Fetch classes when medium is available from editData
   useEffect(() => {
     if (editData?.mediumId) {
@@ -115,16 +114,25 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
           <Box display="flex" flexDirection="column" height="100%">
-            <Scrollbar sx={{ p: 2, height: '100%' }}>
+            <Scrollbar sx={{ p: 2, height: '100%', flex: 1 }}>
               <FeeStructureStep formik={formik as any} classList={classList} />
             </Scrollbar>
 
-            <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            <DialogActions
+              sx={{
+                p: 2,
+                gap: 1,
+                borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                boxShadow: '0 -2px 12px rgba(0,0,0,0.06)',
+                bgcolor: 'background.paper',
+              }}
+            >
               <Button
                 startIcon={<Iconify icon={GlobalIcons.cancel} />}
                 onClick={() => onClose(null, false)}
                 variant="outlined"
                 size="small"
+                color="inherit"
               >
                 Cancel
               </Button>
@@ -136,7 +144,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
                 startIcon={<Iconify icon={GlobalIcons.submit} />}
                 loading={isSubmitting}
               >
-                Submit
+                Save Changes
               </LoadingButton>
             </DialogActions>
           </Box>

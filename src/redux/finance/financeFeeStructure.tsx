@@ -66,6 +66,15 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
       }),
       providesTags: [financeModuleType.feeStructure],
     }),
+
+    generateFeeStructure: builder.mutation({
+      query: ({ academicYearId }) => ({
+        url: '/fee-structures/generate',
+        method: 'POST',
+        params: { academicYearId },
+      }),
+      invalidatesTags: [financeModuleType.feeStructure],
+    }),
   }),
   overrideExisting: false,
 });
@@ -78,4 +87,5 @@ export const {
   useUpdateFeeStructureStatusMutation,
   useSaveStandardFeeStructuresMutation,
   useGetStandardFeeStructureQuery,
+  useGenerateFeeStructureMutation,
 } = financeFeeStructureApi;

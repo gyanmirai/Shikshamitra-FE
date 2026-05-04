@@ -91,9 +91,9 @@ export default function CompactKPICard({
         formatter: (val: number) => `${val}`,
         title: {
           formatter: (seriesName: string, opts?: any) => {
-            const cats = opts?.w?.config?.xaxis?.categories;
             const idx = opts?.dataPointIndex ?? 0;
-            const label = cats?.[idx] ?? seriesName;
+            const cats = opts?.w?.config?.xaxis?.categories;
+            const label = cats?.[idx] ?? opts?.w?.config?.series?.[0]?.data?.[idx]?.x ?? seriesName;
             return label ? `${label}: ` : '';
           },
         },
@@ -313,10 +313,16 @@ export default function CompactKPICard({
                 ]}
                 options={{
                   ...sparklineOptions,
+                  ...(chart.type === 'bar'
+                    ? {
+                        fill: { type: 'solid', opacity: 1 },
+                        colors: chart.colors?.length ? chart.colors : [lightColor],
+                      }
+                    : {}),
                   plotOptions: {
                     bar: {
                       distributed: !!(chart.colors && chart.colors.length > 1),
-                      borderRadius: 4,
+                      borderRadius: 1,
                       columnWidth: '60%',
                     },
                   },
