@@ -18,6 +18,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { DEFAULT_CONFIG } from 'src/components/timetable/utils';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,8 +26,7 @@ import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
-import { DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
+import { Box, Card, Paper, Button, Skeleton, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   TimetableStatusType,
   TimetableStatusColors,
@@ -657,6 +657,191 @@ const TimeTableGrid = () => {
 
 export default TimeTableGrid;
 
+const TimetableBoardSkeleton = () => {
+  const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  const TIMELINE_START_MIN = 7 * 60;
+  const MINUTE_HEIGHT = 50 / 30;
+  const totalHeight = (15 - 7) * 60 * MINUTE_HEIGHT; // 800px
+
+  const parseTime = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const calcPosition = (startTime: string, endTime: string) => {
+    const top = (parseTime(startTime) - TIMELINE_START_MIN) * MINUTE_HEIGHT;
+    const height = (parseTime(endTime) - parseTime(startTime)) * MINUTE_HEIGHT;
+    return { top, height };
+  };
+
+  const timeStamps: string[] = [];
+  for (let h = 7; h <= 15; h += 1) {
+    timeStamps.push(`${h.toString().padStart(2, '0')}:00`);
+    if (h !== 15) timeStamps.push(`${h.toString().padStart(2, '0')}:30`);
+  }
+
+  const weekdaySlots = DEFAULT_CONFIG[0].timeSlots;
+  const saturdaySlots = DEFAULT_CONFIG[1].timeSlots;
+
+  return (
+    <Box
+      sx={{ display: 'flex', height: '100%', overflow: 'hidden', bgcolor: 'background.default' }}
+    >
+      {/* Left Panel Skeleton (matches SubjectPalette) */}
+      <Card
+        sx={{
+          width: '280px',
+          height: '100%',
+          ml: 1,
+          mt: 1,
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 10,
+          boxShadow: 'var(--shadows-4)',
+          flexShrink: 0,
+        }}
+      >
+        <Skeleton variant="text" width={100} height={32} />
+        <Skeleton variant="text" width={140} height={20} sx={{ mb: 1 }} />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} variant="rounded" height={52} sx={{ borderRadius: 1, mb: 1.5 }} />
+        ))}
+      </Card>
+
+      {/* Main Area Skeleton */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          overflow: 'auto',
+          position: 'relative',
+          bgcolor: 'background.paper',
+          height: '100%',
+          mt: 1,
+        }}
+      >
+        {/* Time Column (matches sticky Paper in TimetableBoard) */}
+        <Paper
+          elevation={1}
+          sx={{
+            width: '80px',
+            flexShrink: 0,
+            bgcolor: 'background.paper',
+            borderRight: 1,
+            borderColor: 'divider',
+            position: 'sticky',
+            left: 0,
+            zIndex: 5,
+            pt: '40px',
+            borderRadius: 0,
+            height: '100%',
+          }}
+        >
+          {timeStamps.map((_, i) => (
+            <Box
+              key={i}
+              sx={{
+                height: '50px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                pr: 1.5,
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  width: '6px',
+                  height: '1px',
+                  bgcolor: 'divider',
+                },
+              }}
+            >
+              <Skeleton variant="text" width={38} height={12} />
+            </Box>
+          ))}
+        </Paper>
+
+        {/* Days Grid (matches DayColumn layout) */}
+        <Box sx={{ display: 'flex', flex: 1, width: '100%', gap: 0.5 }}>
+          {days.map((day) => {
+            const slots = day === 'SATURDAY' ? saturdaySlots : weekdaySlots;
+            return (
+              <Box
+                key={day}
+                sx={{
+                  flex: 1,
+                  borderRight: 1,
+                  borderColor: 'divider',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: '140px',
+                }}
+              >
+                {/* Day Header (matches DayColumn header) */}
+                <Box
+                  sx={{
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'background.paper',
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 4,
+                    gap: 1,
+                  }}
+                >
+                  <Skeleton variant="text" width={40} height={20} />
+                  <Skeleton
+                    variant="rounded"
+                    width={30}
+                    height={18}
+                    sx={{ borderRadius: '10px' }}
+                  />
+                </Box>
+
+                {/* Slot Area (absolute positioned skeletons match actual slot positions) */}
+                <Box
+                  sx={{
+                    position: 'relative',
+                    height: `${totalHeight}px`,
+                    bgcolor: 'background.neutral',
+                  }}
+                >
+                  {slots.map((slot, i) => {
+                    const { top, height } = calcPosition(slot.startTime, slot.endTime);
+                    const isBreak = (slot.type as string) === 'BREAK';
+                    return (
+                      <Skeleton
+                        key={i}
+                        variant="rounded"
+                        sx={{
+                          position: 'absolute',
+                          top: `${top + 1}px`,
+                          left: '4px',
+                          right: '4px',
+                          height: `${height - 2}px`,
+                          borderRadius: 1,
+                          ...(isBreak && { bgcolor: 'action.selected', animation: 'none' }),
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
 const TimeTableForm = ({
   selectedClass,
   classId,
@@ -707,8 +892,8 @@ const TimeTableForm = ({
         const apiDay = dayNameMap[day];
         timetable[apiDay] = slots[day].map((slot, index) => ({
           sequence: slot.sequence ?? index,
-          startTime: dayjs(slot.startTime, 'HH:mm').toISOString(),
-          endTime: dayjs(slot.endTime, 'HH:mm').toISOString(),
+          startTime: slot.startTime,
+          endTime: slot.endTime,
           type: slot.type === 'LECTURE' ? 0 : 1,
           breakType: slot.breakType === 'SHORT' ? 0 : slot.breakType === 'LUNCH' ? 1 : 0,
           subjectType: slot.subjectType ?? 0,
@@ -729,7 +914,7 @@ const TimeTableForm = ({
   const handleSubmit = useCallback(
     async (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
       const body = transformSlotsToPayload(slots, status);
-      await createTimetable({ standardId, divisionId, body });
+      await createTimetable({ standardId, divisionId, body }).unwrap();
       shikshaMitraToast.success({ message: 'Timetable published successfully.' });
       onClose();
     },
@@ -738,8 +923,16 @@ const TimeTableForm = ({
 
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
-      slots: generateWeeklySlots(DEFAULT_CONFIG),
+      slots: slotConfigData?.days || {
+        MONDAY: [],
+        TUESDAY: [],
+        WEDNESDAY: [],
+        THURSDAY: [],
+        FRIDAY: [],
+        SATURDAY: [],
+      },
     },
+    enableReinitialize: true,
     onSubmit: (values) => {
       // eslint-disable-next-line no-console
       console.log(values);
@@ -751,8 +944,11 @@ const TimeTableForm = ({
   const subjects = useMemo(
     () =>
       slotConfigData?.subjectSummary.map((subject: any) => ({
-        id: subject?.id,
-        name: subject?.name,
+        ...subject,
+        id: subject?.electiveGroupId ? subject?.electiveGroupId : subject?.subjects?.[0]?.subjectId,
+        name: subject?.electiveGroupId
+          ? subject?.electiveGroupName
+          : subject?.subjects?.[0]?.subjectName,
         color: subject?.color,
         defaultDuration: 60,
         totalLectures: subject?.totalSlots,
@@ -820,14 +1016,18 @@ const TimeTableForm = ({
             </Button>
           </Box>
         </Box>
-        <TimetableBoard
-          slots={formik.values.slots}
-          onChange={(value) => formik.setFieldValue('slots', value)}
-          subjects={subjects}
-          readOnly={false}
-          selectedClass={selectedClass}
-          selectedDivision={selectedDivision}
-        />
+        {isSlotConfigLoading || isSlotConfigFetching ? (
+          <TimetableBoardSkeleton />
+        ) : (
+          <TimetableBoard
+            slots={formik.values.slots}
+            onChange={(value) => formik.setFieldValue('slots', value)}
+            subjects={subjects}
+            readOnly={false}
+            selectedClass={selectedClass}
+            selectedDivision={selectedDivision}
+          />
+        )}
       </Box>
     </DialogScrollContent>
   );

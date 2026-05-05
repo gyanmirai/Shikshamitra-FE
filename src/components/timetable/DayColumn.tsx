@@ -15,8 +15,8 @@ interface DayColumnProps {
   day: DayOfWeek;
   slots: TimeSlot[];
   onDropSubject: (dayIndex: string, slotId: string, subject: Subject, fromSlotId?: string) => void;
-  onRemoveSubject: (slotId: string, subject: Subject) => void;
-  onAssignTeacher: (slotId: string, subject: Subject) => void;
+  onRemoveSubject: (day: DayOfWeek, slotId: number, subject: Subject) => void;
+  onAssignTeacher: (day: DayOfWeek, slotId: string, subject: Subject) => void;
   onAssignRoom: (slotId: string, subject: Subject) => void;
   readOnly?: boolean;
 }
@@ -87,18 +87,20 @@ const DayColumn: React.FC<DayColumnProps> = ({
           backgroundColor: theme.vars.palette.background.neutral,
         }}
       >
-        {slots.map((slot) => (
+        {slots.map((slot, index) => (
           <TimetableSlot
             key={slot.id}
             slot={slot}
             onDrop={(slotId, subject, fromSlotId) =>
-              onDropSubject(day.toString(), slotId, subject, fromSlotId)
+              onDropSubject(day, slotId, subject, fromSlotId)
             }
             attachedSubject={slot._attachedSubject}
             onRemoveSubject={onRemoveSubject}
             onAssignTeacher={onAssignTeacher}
             onAssignRoom={onAssignRoom}
             readOnly={readOnly}
+            day={day}
+            index={index}
           />
         ))}
       </Box>

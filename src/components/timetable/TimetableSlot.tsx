@@ -13,16 +13,18 @@ import { SlotType, ItemTypes } from './types';
 import CustomTooltip from '../custom-tooltip';
 import { calculateSlotPosition } from './utils';
 
-import type { Subject, TimeSlot, DragItem } from './types';
+import type { Subject, TimeSlot, DragItem, DayOfWeek } from './types';
 
 interface TimetableSlotProps {
   slot: TimeSlot;
   onDrop: (slotId: string, subject: Subject, fromSlotId?: string) => void;
   attachedSubject?: Subject | null;
-  onRemoveSubject?: (slotId: string, subject: Subject) => void;
-  onAssignTeacher?: (slotId: string, subject: Subject) => void;
+  onRemoveSubject?: (day: DayOfWeek, slotId: number, subject: Subject) => void;
+  onAssignTeacher?: (day: DayOfWeek, slotId: string, subject: Subject) => void;
   onAssignRoom?: (slotId: string, subject: Subject) => void;
   readOnly?: boolean;
+  day: DayOfWeek;
+  index: number;
 }
 
 const TimetableSlot: React.FC<TimetableSlotProps> = ({
@@ -33,6 +35,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   onAssignTeacher,
   onAssignRoom,
   readOnly = false,
+  day,
+  index,
 }) => {
   const deleteDialog = useBoolean();
 
@@ -40,7 +44,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     e.stopPropagation();
     if (onRemoveSubject && (attachedSubject || (slot.subjects && slot.subjects[0]))) {
       const subjectToRemove = attachedSubject || ((slot.subjects && slot.subjects[0]) as any);
-      onRemoveSubject(slot.id, subjectToRemove);
+      onRemoveSubject(day, index, subjectToRemove);
     }
     deleteDialog.onFalse();
   };
@@ -48,7 +52,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const teacherDialog = {
     onTrue: () => {
       if (onAssignTeacher && (attachedSubject || slot.subjects?.[0])) {
-        onAssignTeacher(slot.id, attachedSubject || (slot.subjects![0] as any));
+        onAssignTeacher(day, String(index), attachedSubject || (slot.subjects![0] as any));
       }
     },
   };
@@ -61,7 +65,10 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     },
   };
 
-  const { top, height } = calculateSlotPosition(slot.startTime, slot.endTime);
+  const { top, height } = calculateSlotPosition(
+    slot.startTime.format('HH:mm'),
+    slot.endTime.format('HH:mm')
+  );
   const isBreak = slot.type === SlotType.BREAK;
   const hasSubjects = slot.subjects && slot.subjects.length > 0;
   const isFilled = hasSubjects || !!attachedSubject;
@@ -76,7 +83,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
       id: attachedSubject?.id || displaySubjects[0]?.id || 'temp',
       type: ItemTypes.SUBJECT,
       subject: attachedSubject || displaySubjects[0],
-      fromSlotId: slot.id,
+      fromSlotId: `${day}-${index}`,
     }),
     canDrag: () => isFilled && !isBreak,
     collect: (monitor) => ({
@@ -89,7 +96,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     canDrop: () => !isBreak && !isFilled,
     drop: (item: DragItem) => {
       if (item.subject) {
-        onDrop(slot.id, item.subject, item.fromSlotId);
+        onDrop(String(index), item.subject, item.fromSlotId);
       }
     },
     collect: (monitor) => ({
@@ -170,7 +177,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   };
 
   const getTooltipContent = () => {
-    if (isBreak) return `${slot.breakType} Break (${slot.startTime} - ${slot.endTime})`;
+    if (isBreak)
+      return `${slot.breakType} Break (${slot.startTime.format('HH:mm')} - ${slot.endTime.format('HH:mm')})`;
     if (!isFilled) return 'Empty Slot';
 
     const hasAnyTeacher = displaySubjects.some((s) => s.teacherName);
@@ -204,7 +212,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             pt: 0.5,
           }}
         >
-          {slot.startTime} - {slot.endTime}
+          {slot.startTime.format('HH:mm')} - {slot.endTime.format('HH:mm')}
         </Typography>
       </Box>
     );
@@ -239,7 +247,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               }}
             >
               <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>
-                {slot.startTime} - {slot.endTime}
+                {slot.startTime.format('HH:mm')} - {slot.endTime.format('HH:mm')}
               </Typography>
             </Box>
           )}
