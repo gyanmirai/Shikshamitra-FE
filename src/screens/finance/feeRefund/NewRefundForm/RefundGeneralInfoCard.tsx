@@ -1,202 +1,208 @@
 import type { RootState } from 'src/redux/store';
-import type { Board, Medium, Division } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Chip, Grid, TextField, Autocomplete } from '@mui/material';
+import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-const RefundGeneralInfoCard: React.FC<any> = ({ formik }) => {
-  //   const { currentYear } = useSelector((state: RootState) => state.globalState);
+import type { RefundFormik } from './types';
+
+const RefundGeneralInfoCard: React.FC<{ formik: RefundFormik }> = ({
+  formik,
+}): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // Lazy query hook to fetch classes by medium
-  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
+  const { values, touched, errors, setFieldValue } = formik;
+
+  const [boards, setBoards] = useState<any[]>([]);
+  const [mediums, setMediums] = useState<any[]>([]);
+  const [allDivisions, setAllDivisions] = useState<any[]>([]);
+
+  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
-  // Local state to store filtered boards based on academic year
-  const [boards, setBoards] = useState([]);
-  const [mediums, setMediums] = useState<Medium[]>([]);
 
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-
-  useEffect(() => {
-    setBoards(currentYear?.boards);
-    const selectedBoard = boards?.find((item: any) => item.id === formik.values.board);
-
-    setMediums((selectedBoard as unknown as Board)?.educationMediums || []);
-    if (formik.values.medium) {
-      getClassByMedium(formik.values.medium);
-    }
-  }, [boards, currentYear?.boards, formik.values.board, formik.values.medium, getClassByMedium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(
-      classes?.find((org: any) => org?.id === formik.values.className)?.divisions || []
-    );
-  }, [classes, formik.values.className]);
-
-  // Initialize query hook for fetching students
-  const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
+  const [
+    getStudents,
+    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
 
-  // Fetch students when division, class and organization are all selected
-  useEffect(() => {
-    if (formik.values.className && formik.values.division) {
-      getStudents({
-        standardId: formik.values.className,
-        divisionId: formik.values.division,
-      });
-    }
-  }, [classes, formik.values.className, formik.values.division, getStudents]);
-
-  // Transform student data to include full name
-  const tableData = useMemo(
+  const studentOptions = useMemo(
     () =>
-      StudentsData?.items?.map((item: any) => ({
+      studentsData?.items?.map((item: any) => ({
         ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+        name: `${item.firstName}${item.middleName ? ` ${item.middleName}` : ''} ${item.lastName}`,
       })) || [],
-    [StudentsData?.items]
+    [studentsData?.items]
   );
 
+  // ── Side effects ──────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    setBoards(currentYear?.boards || []);
+  }, [currentYear]);
+
+  useEffect(() => {
+    const board = boards.find((b: any) => b.id === values.boardId);
+    setMediums(board?.educationMediums || []);
+  }, [values.boardId, boards]);
+
+  useEffect(() => {
+    if (values.mediumId) getClassByMedium(values.mediumId);
+  }, [values.mediumId, getClassByMedium]);
+
+  useEffect(() => {
+    setAllDivisions(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
+  }, [values.standardId, classes]);
+
+  useEffect(() => {
+    if (values.divisionId) getStudents(values.divisionId);
+  }, [values.divisionId, getStudents]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <DialogScrollContent>
-        <Grid container spacing={3}>
-          {/* Board */}
-          <Grid size={6}>
-            <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
-              <CustomSelect
-                name="board"
-                label="Board *"
-                // isLoading={boardLoading}
-                options={boards || []}
-                labelKey="name"
-                valueKey="id"
-                value={formik.values.board || ''}
-                onChange={(value) => {
-                  formik.setFieldValue('medium', '');
-                  formik.setFieldValue('className', '');
-                  formik.setFieldValue('division', '');
-                  formik.setFieldValue('board', value);
-                }}
-                error={!!(formik.touched.board && formik.errors.board) || false}
-                helperText={(formik.touched.board && formik.errors.board) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
-          </Grid>
+    <Grid container spacing={2}>
+      {/* Board */}
+      <Grid size={{ xs: 6, md: 3 }}>
+        <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
+          <CustomSelect
+            label="Board *"
+            options={boards}
+            labelKey="name"
+            valueKey="id"
+            value={values.boardId}
+            onChange={(val) => {
+              setFieldValue('boardId', val);
+              setFieldValue('mediumId', '');
+              setFieldValue('standardId', '');
+              setFieldValue('divisionId', '');
+              setFieldValue('studentId', '');
+              setFieldValue('studentName', '');
+              setFieldValue('feeHeadRefunds', []);
+            }}
+            error={!!errors.boardId && touched.boardId}
+            helperText={(touched.boardId && errors.boardId) as string}
+            formControlProps={{ fullWidth: true }}
+          />
+        </ShakingTextField>
+      </Grid>
 
-          {/* Medium */}
-          <Grid size={6}>
-            <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
-              <CustomSelect
-                label="Medium *"
-                options={mediums || []}
-                labelKey="name"
-                disabled={!formik.values.board}
-                valueKey="id"
-                value={formik.values.medium}
-                onChange={(val) => formik.setFieldValue('medium', val)}
-                error={!!(formik.touched.medium && formik.errors.medium)}
-                helperText={(formik.touched.medium && formik.errors.medium) as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
+      {/* Medium */}
+      <Grid size={{ xs: 6, md: 3 }}>
+        <ShakingTextField error={!!(touched.mediumId && errors.mediumId)}>
+          <CustomSelect
+            label="Medium *"
+            disabled={!values.boardId}
+            options={mediums}
+            labelKey="name"
+            valueKey="id"
+            value={values.mediumId}
+            onChange={(val) => {
+              setFieldValue('mediumId', val);
+              setFieldValue('standardId', '');
+              setFieldValue('divisionId', '');
+              setFieldValue('studentId', '');
+              setFieldValue('studentName', '');
+              setFieldValue('feeHeadRefunds', []);
+            }}
+            error={!!errors.mediumId && touched.mediumId}
+            helperText={(touched.mediumId && errors.mediumId) as string}
+            formControlProps={{ fullWidth: true }}
+          />
+        </ShakingTextField>
+      </Grid>
 
-          {/* Class */}
-          <Grid size={6}>
-            <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-              <CustomSelect
-                label="Class *"
-                options={classes || []}
-                labelKey="name"
-                valueKey="id"
-                disabled={!formik.values.medium}
-                value={formik.values.className}
-                onChange={(val) => formik.setFieldValue('className', val)}
-                error={!!(formik.touched.className && formik.errors.className)}
-                helperText={(formik.touched.className && formik.errors.className) as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
+      {/* Class */}
+      <Grid size={{ xs: 6, md: 3 }}>
+        <ShakingTextField error={!!(touched.standardId && errors.standardId)}>
+          <CustomSelect
+            label="Class *"
+            disabled={!values.mediumId}
+            options={classes || []}
+            isLoading={classLoading}
+            labelKey="name"
+            valueKey="id"
+            value={values.standardId}
+            onChange={(val) => {
+              setFieldValue('standardId', val);
+              setFieldValue('divisionId', '');
+              setFieldValue('studentId', '');
+              setFieldValue('studentName', '');
+              setFieldValue('feeHeadRefunds', []);
+            }}
+            error={!!errors.standardId && touched.standardId}
+            helperText={(touched.standardId && errors.standardId) as string}
+            formControlProps={{ fullWidth: true }}
+          />
+        </ShakingTextField>
+      </Grid>
 
-          {/* Division */}
-          <Grid size={6}>
-            <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-              <CustomSelect
-                label="Division *"
-                options={allDivision}
-                labelKey="name"
-                valueKey="id"
-                disabled={!formik.values.className}
-                value={formik.values.division}
-                onChange={(val) => formik.setFieldValue('division', val)}
-                error={!!(formik.touched.division && formik.errors.division)}
-                helperText={(formik.touched.division && formik.errors.division) as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
+      {/* Division */}
+      <Grid size={{ xs: 6, md: 3 }}>
+        <ShakingTextField error={!!(touched.divisionId && errors.divisionId)}>
+          <CustomSelect
+            label="Division *"
+            disabled={!values.standardId}
+            options={allDivisions}
+            labelKey="name"
+            valueKey="id"
+            value={values.divisionId}
+            onChange={(val) => {
+              setFieldValue('divisionId', val);
+              setFieldValue('studentId', '');
+              setFieldValue('studentName', '');
+              setFieldValue('feeHeadRefunds', []);
+            }}
+            error={!!errors.divisionId && touched.divisionId}
+            helperText={(touched.divisionId && errors.divisionId) as string}
+            formControlProps={{ fullWidth: true }}
+          />
+        </ShakingTextField>
+      </Grid>
 
-          {/* Student */}
-          <Grid size={6}>
-            <ShakingTextField error={!!(formik.touched.student && formik.errors.student) || false}>
-              <Autocomplete
-                loading={isLoading}
-                disabled={!formik.values.division}
-                noOptionsText="No Student Found"
+      {/* Student */}
+      <Grid size={{ xs: 12 }}>
+        <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
+          <Autocomplete
+            loading={studentLoading || studentFetching}
+            noOptionsText={values.divisionId ? 'No Student Found' : 'Select a division first'}
+            fullWidth
+            disabled={!values.divisionId}
+            options={studentOptions}
+            value={studentOptions.find((s: any) => s.studentId === values.studentId) || null}
+            onChange={(_e, value: any) => {
+              setFieldValue('studentId', value?.studentId || '');
+              setFieldValue('studentName', value?.name || '');
+              setFieldValue('feeHeadRefunds', []);
+            }}
+            getOptionLabel={(option: any) => option.name || ''}
+            renderOption={(props, option: any) => (
+              <li {...props} key={option.studentId}>
+                {option.name}
+              </li>
+            )}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                size="small"
+                label="Student *"
                 fullWidth
-                value={tableData.find((s: any) => s.name === formik.values.student) || null}
-                onChange={(e, value: any) => {
-                  formik.setFieldValue('student', value?.name || '');
-                }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      variant="soft"
-                      size="small"
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                options={tableData}
-                getOptionLabel={(option: any) => option?.name || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Student *"
-                    fullWidth
-                    error={!!(formik.touched.student && formik.errors.student)}
-                    helperText={(formik.touched.student && formik.errors.student) as string}
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.name}
-                  </li>
-                )}
+                error={!!(touched.studentId && errors.studentId)}
+                helperText={(touched.studentId && errors.studentId) as string}
               />
-            </ShakingTextField>
-          </Grid>
-        </Grid>
-      </DialogScrollContent>
-    </BackPopUpChecked>
+            )}
+          />
+        </ShakingTextField>
+      </Grid>
+    </Grid>
   );
 };
 

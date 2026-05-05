@@ -8,75 +8,117 @@ import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConf
 
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
-export const buildRefundInitialValues = (editData?: Partial<any> | null) => {
-  const initialValues: Record<string, any> = {
-    board: editData?.board || '',
-    medium: editData?.medium || '',
-    className: editData?.className || '',
-    division: editData?.division || '',
-    student: editData?.student || '',
-    paidTerms: editData?.paidTerms || '',
-    amountApplicable: editData?.amountApplicable || '',
-    refundMethod: editData?.refundMethod || '',
-    selectedTerms: editData?.selectedTerms || [],
-    selectedFeeHeads: editData?.selectedFeeHeads || [],
-    selectedCharges: editData?.selectedCharges || [],
+// ─── Internal types ───────────────────────────────────────────────────────────
 
-    totalAmount: editData?.totalAmount || '', // calculated
-    refundAmount: editData?.refundAmount || '', // user input
-    reason: editData?.reason || '',
-    notes: editData?.notes || '',
-    paymentDetails: {
-      ...getInitialPaymentDetails(editData?.refundMethod),
-      ...(editData?.paymentDetails || {}), // merge if student already has values
-    },
-  };
+interface ICurrentYear {
+  startDate?: string | Date;
+  endDate?: string | Date;
+}
 
-  return initialValues;
-};
+interface IPaymentDetailsContext {
+  totalAmount?: number;
+}
 
-export const buildRefundValidationSchema = (currentYear: any) =>
+export interface IFeeRefundEditData {
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
+  divisionId?: string;
+  studentId?: string;
+  studentName?: string;
+  refundMethod?: string;
+  notes?: string;
+  paymentDetails?: Record<string, unknown>;
+  feeHeadRefunds?: IFeeHeadRefundItem[];
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface IFeeHeadMonthRefund {
+  month: string;
+  amount: number;
+}
+
+export interface IFeeHeadRefundItem {
+  feeHeadId: string;
+  months: IFeeHeadMonthRefund[];
+}
+
+export interface IFeeRefundPayload {
+  studentId: string;
+  studentName: string;
+  refundMethod: string;
+  paymentDetails: Record<string, unknown>;
+  notes: string;
+  feeHeadRefunds: IFeeHeadRefundItem[];
+}
+
+export interface IRefundFormValues {
+  boardId: string;
+  mediumId: string;
+  standardId: string;
+  divisionId: string;
+  studentId: string;
+  studentName: string;
+  refundMethod: string;
+  notes: string;
+  paymentDetails: Record<string, unknown>;
+  feeHeadRefunds: IFeeHeadRefundItem[];
+}
+
+// ─── Build payload from formik values ────────────────────────────────────────
+// feeHeadRefunds is already in the correct array format — pass through directly.
+
+export const buildFeeRefundPayload = (values: IRefundFormValues): IFeeRefundPayload => ({
+  studentId: values.studentId,
+  studentName: values.studentName,
+  refundMethod: values.refundMethod,
+  paymentDetails: values.paymentDetails,
+  notes: values.notes,
+  feeHeadRefunds: (values.feeHeadRefunds || []) as IFeeHeadRefundItem[],
+});
+
+// ─── Initial Values ───────────────────────────────────────────────────────────
+
+export const buildRefundInitialValues = (
+  editData?: IFeeRefundEditData | null
+): IRefundFormValues => ({
+  boardId: editData?.boardId || '',
+  mediumId: editData?.mediumId || '',
+  standardId: editData?.standardId || '',
+  divisionId: editData?.divisionId || '',
+  studentId: editData?.studentId || '',
+  studentName: editData?.studentName || '',
+  refundMethod: editData?.refundMethod || '',
+  notes: editData?.notes || '',
+  paymentDetails: {
+    ...getInitialPaymentDetails(editData?.refundMethod),
+    ...(editData?.paymentDetails || {}),
+  },
+  // Array of { feeHeadId, months: { month, amount }[] } — populated when student is selected
+  feeHeadRefunds: (editData?.feeHeadRefunds || []) as IFeeHeadRefundItem[],
+});
+
+// ─── Validation Schema ────────────────────────────────────────────────────────
+
+export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
   Yup.object({
-    board: Yup.string().required('Board is required'),
-    medium: Yup.string().required('Medium is required'),
-    className: Yup.string().required('Class is required'),
-    division: Yup.string().required('Division is required'),
-    student: Yup.string().required('Student is required'),
-    paidTerms: Yup.string().required('Paid terms are required'),
-    amountApplicable: Yup.number()
-      .transform((value, originalValue) => {
-        if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s]/g, '');
-          return Number(cleaned);
-        }
-        return value;
-      })
-      .required('Applicable amount is required')
-      .positive('Amount must be positive'),
+    boardId: Yup.string().required('Board is required'),
+    mediumId: Yup.string().required('Medium is required'),
+    standardId: Yup.string().required('Class is required'),
+    divisionId: Yup.string().required('Division is required'),
+    studentId: Yup.string().required('Student is required'),
     refundMethod: Yup.string().required('Select a refund method'),
-    selectedTerms: Yup.array().min(1, 'Select at least one term to refund'),
-    totalAmount: Yup.number()
-      .transform((value, originalValue) => {
-        if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s]/g, '');
-          return Number(cleaned);
-        }
-        return value;
-      })
-      .required('Total amount is required')
-      .positive('Amount must be positive'),
-    refundAmount: Yup.number()
-      .transform((value, originalValue) => {
-        if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s]/g, '');
-          return Number(cleaned);
-        }
-        return value;
-      })
-      .required('Refund amount is required')
-      .positive('Amount must be positive'),
-    reason: Yup.string().required('Reason is required'),
     notes: Yup.string(),
+    feeHeadRefunds: Yup.mixed().test(
+      'at-least-one-refund',
+      'Enter a refund amount for at least one month',
+      (value) => {
+        if (!Array.isArray(value)) return false;
+        const refunds = value as IFeeHeadRefundItem[];
+        return refunds.some((fh) => fh.months.some((m) => Number(m.amount) > 0));
+      }
+    ),
     paymentDetails: Yup.object().when(['refundMethod'], ([refundMethod], schema, context) => {
       if (!refundMethod || !paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig])
         return schema;
@@ -94,10 +136,10 @@ export const buildRefundValidationSchema = (currentYear: any) =>
 
 export const buildFieldValidation = (
   field: IPaymentFieldConfig,
-  currentYear: any,
-  formValues: any
+  currentYear: ICurrentYear,
+  formValues: IPaymentDetailsContext
 ) => {
-  let schema: Yup.Schema<any>;
+  let schema: Yup.Schema<unknown>;
 
   if (field.type === 'date') {
     schema = field.required
@@ -157,7 +199,7 @@ export const buildFieldValidation = (
       (value) => {
         if (value == null) return true;
         const total = formValues?.totalAmount;
-        return total == null || value <= total;
+        return total == null || Number(value) <= total;
       }
     );
     if (field.required) schema = schema.required(`${field.label} is required`);

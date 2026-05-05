@@ -435,16 +435,14 @@ const FeeCollectComponentForm = ({
                           justifyContent="space-between"
                           py={0.5}
                         >
-                          <Box flex={1} minWidth={0}>
-                            <Typography variant="caption" fontWeight={600} noWrap>
-                              {feeHeadName}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                          <Box display="flex" gap={1}>
+                            <Typography variant="body2">{feeHeadName}</Typography>
+                            <Typography variant="caption" color="text.secondary">
                               ({periodLabel})
                             </Typography>
                           </Box>
                           <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
-                            <Typography variant="caption" fontWeight={600}>
+                            <Typography variant="body2">
                               ₹ {formatNumber(item.dueAmount)}
                             </Typography>
                             <IconButton
@@ -478,20 +476,16 @@ const FeeCollectComponentForm = ({
                               display="flex"
                               alignItems="center"
                               justifyContent="space-between"
-                              py={0.5}
                             >
                               <Box flex={1} minWidth={0}>
-                                <Typography variant="caption" fontWeight={600} noWrap>
-                                  {charge.chargeName}
-                                </Typography>
+                                <Typography variant="body2">{charge.chargeName}</Typography>
                               </Box>
-                              <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
-                                <Typography variant="caption" fontWeight={600}>
+                              <Box display="flex" alignItems="center">
+                                <Typography variant="body2">
                                   ₹ {formatNumber(charge.amount)}
                                 </Typography>
                                 <IconButton
                                   size="small"
-                                  sx={{ p: 0.25 }}
                                   onClick={() => {
                                     const newCharges = formik.values.charges.filter(
                                       (id) => id !== charge.chargeId
@@ -500,8 +494,8 @@ const FeeCollectComponentForm = ({
                                   }}
                                 >
                                   <Iconify
-                                    icon="solar:trash-bin-trash-bold"
-                                    width={14}
+                                    icon={GlobalIcons.cancel}
+                                    width={25}
                                     sx={{ color: 'error.main' }}
                                   />
                                 </IconButton>

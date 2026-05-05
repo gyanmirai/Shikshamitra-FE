@@ -12,7 +12,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
 
       <Grid container spacing={2}>
         {/* Student Name */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Student Name
           </Typography>
@@ -22,7 +22,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         </Grid>
 
         {/* Roll No */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Roll No.
           </Typography>
@@ -32,7 +32,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         </Grid>
 
         {/* Board */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Board
           </Typography>
@@ -42,7 +42,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         </Grid>
 
         {/* Total Paid Fees */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Total Paid Fees
           </Typography>
@@ -52,7 +52,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         </Grid>
 
         {/* Class / Division */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Class/Division
           </Typography>
@@ -62,7 +62,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         </Grid>
 
         {/* Medium */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Medium
           </Typography>
@@ -72,7 +72,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         </Grid>
 
         {/* Total Pending Fees */}
-        <Grid size={{ xs: 4 }}>
+        <Grid size={{ xs: 3 }}>
           <Typography variant="body2" color="text.secondary">
             Total Pending Fees
           </Typography>
