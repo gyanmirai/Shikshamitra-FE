@@ -5,17 +5,29 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CommonCalender from 'src/components/calender';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
 } from 'src/screens/hr/leave-request/leave-status.utils';
+import {
+  Box,
+  Chip,
+  Stack,
+  Divider,
+  TableRow,
+  MenuList,
+  MenuItem,
+  TableCell,
+  Typography,
+} from '@mui/material';
 import {
   useGetLeaveRequestByIdQuery,
   useLazyGetLeaveCalendarQuery,
@@ -245,7 +257,7 @@ const LeaveCalender = () => {
             <CustomTooltip
               arrow
               placement="right"
-              title="Displays detailed information about the employee’s leave request, including type, dates, reason, and approval status."
+              title="Displays detailed information about the employeeâ€™s leave request, including type, dates, reason, and approval status."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -308,6 +320,7 @@ export const LeaveRequestForm = ({
   selfDetailHook = useGetMyLeaveRequestByIdQuery,
 }: LeaveRequestFormProps) => {
   const isSelfMode = mode === 'self';
+  const theme = useTheme();
   const { currentMedium, currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: leaveDetailForHr, isLoading: isHrLeaveDetailLoading } = useQueryAndMutation({
     type: 'query',
@@ -346,6 +359,36 @@ export const LeaveRequestForm = ({
     currentYear?.name ||
     '-';
 
+  const employeeName =
+    detail?.employeeName ||
+    `${editData?.employee?.firstName || ''} ${editData?.employee?.lastName || ''}`.trim() ||
+    '-';
+
+  // eslint-disable-next-line react/no-unstable-nested-components
+  const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0, mr: 2 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={600} textAlign="right">
+        {value}
+      </Typography>
+    </Box>
+  );
+
+  // eslint-disable-next-line react/no-unstable-nested-components
+  const SectionHeader = ({ icon, label }: { icon: string; label: string }) => (
+    <Stack direction="row" alignItems="center" spacing={0.75} mb={2}>
+      <Iconify icon={icon} width={15} color="text.disabled" />
+      <Typography
+        variant="overline"
+        sx={{ color: 'text.disabled', letterSpacing: 1.2, lineHeight: 1, fontSize: '0.68rem' }}
+      >
+        {label}
+      </Typography>
+    </Stack>
+  );
+
   return isLeavePolicyLoading ? (
     <TableRow>
       <TableCell sx={{ height: '50px' }}>
@@ -353,154 +396,184 @@ export const LeaveRequestForm = ({
       </TableCell>
     </TableRow>
   ) : (
-    <Box sx={{ p: 2 }} bgcolor="background.neutral">
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Employee
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.employeeName ||
-              `${editData?.employee?.firstName || ''} ${editData?.employee?.lastName || ''}`}
-          </Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Employee Code
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{detail?.employeeCode || '-'}</Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Submitted By
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{submittedByLabel}</Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Academic Year
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">{academicYearLabel}</Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Leave Type
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.leaveType || editData?.leavePolicy?.leaveType || '-'}
-          </Typography>
-        </Grid>
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Start Date
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {dayjs(detail?.startDate || editData?.viewStartDate).format('DD-MM-YYYY')}
-          </Typography>
-        </Grid>
-
-        {!detail?.halfDay && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                End Date
+    <Scrollbar sx={{ maxHeight: 520 }}>
+      {/* â”€â”€ Header â”€â”€ */}
+      <Box sx={{ px: 3, pt: 2.5, pb: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
+          <Box minWidth={0}>
+            <Typography variant="h5" fontWeight={700} mb={0.5}>
+              {employeeName}
+            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {detail?.employeeCode || '-'}
               </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">
-                {dayjs(detail?.endDate || editData?.viewEndDate).format('DD-MM-YYYY')}
-              </Typography>
-            </Grid>
-          </>
-        )}
-
-        {detail?.totalDays != null && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                Total Days
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">{detail.totalDays}</Typography>
-            </Grid>
-          </>
-        )}
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Reason
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Typography variant="body2">
-            {detail?.description ||
-              editData?.reason ||
-              (editData?.description && (
-                // eslint-disable-next-line react/no-danger
-                <span dangerouslySetInnerHTML={{ __html: editData.description }} />
-              ))}
-          </Typography>
-        </Grid>
-
-        {detail?.remarks && (
-          <>
-            <Grid size={{ xs: 4 }}>
-              <Typography variant="body2" fontWeight={600}>
-                Remarks
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Typography variant="body2">{detail.remarks}</Typography>
-            </Grid>
-          </>
-        )}
-
-        <Grid size={{ xs: 4 }}>
-          <Typography variant="body2" fontWeight={600}>
-            Status
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 8 }}>
-          <Label color={getLeaveStatusColor(detail?.status ?? editData?.status)}>
+              {submittedByLabel && (
+                <>
+                  <Box
+                    sx={{
+                      width: 3,
+                      height: 3,
+                      borderRadius: '50%',
+                      bgcolor: 'text.disabled',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Submitted by {submittedByLabel}
+                  </Typography>
+                </>
+              )}
+            </Stack>
+          </Box>
+          <Label
+            color={getLeaveStatusColor(detail?.status ?? editData?.status)}
+            sx={{ flexShrink: 0, mt: 0.5 }}
+          >
+            <Box
+              sx={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                bgcolor: 'currentColor',
+                mr: 0.75,
+                display: 'inline-block',
+                opacity: 0.85,
+              }}
+            />
             {getLeaveStatusLabel(detail?.status ?? editData?.status)}
           </Label>
-        </Grid>
+        </Box>
+      </Box>
 
-        {detail?.attachmentUrl && (
-          <>
-            <Grid size={{ xs: 4 }}>
+      <Divider />
+
+      {/* â”€â”€ Section: Employee Information â”€â”€ */}
+      <Box sx={{ px: 3, py: 2.5 }}>
+        <SectionHeader icon="mdi:account-outline" label="Employee Information" />
+        <Stack spacing={1.5}>
+          <InfoRow label="Academic year" value={academicYearLabel} />
+          <InfoRow label="Employee code" value={detail?.employeeCode || '-'} />
+          <InfoRow label="Submitted by" value={submittedByLabel} />
+        </Stack>
+      </Box>
+
+      <Divider />
+
+      {/* â”€â”€ Section: Leave Details â”€â”€ */}
+      <Box sx={{ px: 3, py: 2.5 }}>
+        <SectionHeader icon="mdi:calendar-outline" label="Leave Details" />
+        <Stack spacing={1.5}>
+          <InfoRow
+            label="Leave type"
+            value={detail?.leaveType || editData?.leavePolicy?.leaveType || '-'}
+          />
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0, mr: 2 }}>
+              Duration
+            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
               <Typography variant="body2" fontWeight={600}>
-                Document
+                {dayjs(detail?.startDate || editData?.viewStartDate).format('DD MMM YYYY')}
               </Typography>
-            </Grid>
-            <Grid size={{ xs: 8 }}>
-              <Iconify
-                icon="eva:eye-fill"
-                sx={{ mr: 0.5, cursor: 'pointer' }}
-                onClick={() => window.open(detail.attachmentUrl, '_blank')}
-              />
-            </Grid>
-          </>
-        )}
-      </Grid>
-    </Box>
+              {!detail?.halfDay && (
+                <>
+                  <Iconify icon="mdi:arrow-right" width={14} color="text.disabled" />
+                  <Typography variant="body2" fontWeight={600}>
+                    {dayjs(detail?.endDate || editData?.viewEndDate).format('DD MMM YYYY')}
+                  </Typography>
+                </>
+              )}
+              {detail?.totalDays != null && (
+                <Chip
+                  label={`${detail.totalDays} ${detail.totalDays === 1 ? 'day' : 'days'}`}
+                  size="small"
+                  sx={{ height: 22, fontSize: '0.68rem', fontWeight: 700 }}
+                />
+              )}
+            </Stack>
+          </Box>
+          <InfoRow label="Session" value={detail?.halfDay ? 'Half day' : 'Full day'} />
+        </Stack>
+      </Box>
+
+      {/* â”€â”€ Section: Reason â”€â”€ */}
+      {(detail?.description || editData?.reason || editData?.description) && (
+        <>
+          <Divider />
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon="mdi:format-list-text" label="Reason" />
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1.5,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.neutral',
+              }}
+            >
+              <Typography variant="body2" lineHeight={1.85}>
+                {detail?.description ||
+                  editData?.reason ||
+                  (editData?.description && (
+                    // eslint-disable-next-line react/no-danger
+                    <span dangerouslySetInnerHTML={{ __html: editData.description }} />
+                  ))}
+              </Typography>
+            </Box>
+          </Box>
+        </>
+      )}
+
+      {/* â”€â”€ Section: Remarks â”€â”€ */}
+      {detail?.remarks && (
+        <>
+          <Divider />
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon="mdi:comment-text-outline" label="Remarks" />
+            <Typography variant="body2" color="text.secondary" lineHeight={1.75}>
+              {detail.remarks}
+            </Typography>
+          </Box>
+        </>
+      )}
+
+      {/* â”€â”€ Section: Attachment â”€â”€ */}
+      {detail?.attachmentUrl && (
+        <>
+          <Divider />
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon="mdi:paperclip" label="Attachment" />
+            <Box
+              component="button"
+              onClick={() => window.open(detail.attachmentUrl, '_blank')}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 2,
+                py: 0.875,
+                borderRadius: 5,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.neutral',
+                cursor: 'pointer',
+                transition: 'border-color 0.15s, background-color 0.15s',
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.06),
+                  borderColor: 'primary.main',
+                },
+              }}
+            >
+              <Iconify icon="mdi:file-document-outline" width={14} color="primary.main" />
+              <Typography variant="body2" fontWeight={500} color="text.primary">
+                {detail.attachmentUrl.split('/').pop() || 'View Document'}
+              </Typography>
+              <Iconify icon="mdi:arrow-right" width={14} color="text.disabled" />
+            </Box>
+          </Box>
+        </>
+      )}
+    </Scrollbar>
   );
 };

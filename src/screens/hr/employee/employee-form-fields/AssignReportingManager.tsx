@@ -1,14 +1,14 @@
 import type { LabelColor } from 'src/components/label';
 
-import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useEffect } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType, EmployeeStatusTypeColor } from 'src/enums/employee-status-type';
 import {
   Box,
@@ -19,6 +19,7 @@ import {
   TextField,
   Typography,
   Autocomplete,
+  CircularProgress,
 } from '@mui/material';
 
 import { CardActions } from './InformationFields';
@@ -85,6 +86,36 @@ const RightEmptyState = () => {
     </motion.div>
   );
 };
+
+// ─── Right Panel: Loading State ───────────────────────────────────────────────
+
+const RightLoadingState = () => (
+  <motion.div
+    key="loading"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.15 }}
+  >
+    <Box display="flex" alignItems="center" gap={2} mb={2.5}>
+      <Skeleton variant="circular" width={52} height={52} />
+      <Box flex={1}>
+        <Skeleton width="60%" height={20} sx={{ mb: 0.5 }} />
+        <Skeleton width="40%" height={16} />
+      </Box>
+      <Skeleton width={60} height={24} sx={{ borderRadius: 1 }} />
+    </Box>
+    {[1, 2, 3, 4].map((i) => (
+      <Box key={i} display="flex" alignItems="center" gap={1.5} mb={1.5}>
+        <Skeleton variant="rounded" width={30} height={30} />
+        <Box flex={1}>
+          <Skeleton width="30%" height={14} sx={{ mb: 0.25 }} />
+          <Skeleton width="60%" height={16} />
+        </Box>
+      </Box>
+    ))}
+  </motion.div>
+);
 
 // ─── Status Label helper ─────────────────────────────────────────────────────
 
@@ -210,7 +241,8 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
 
   const [employeeParams, setEmployeeParams] = useState({ search: '' });
 
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(
+  // ── State 1: basic dropdown selection (lightweight list data) ──────────────
+  const [selectedManager, setSelectedManager] = useState<any>(
     formik.values.reportingManager
       ? {
           id: formik.values.reportingManager,
@@ -220,9 +252,40 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
       : null
   );
 
+  // ── State 2: full employee details for the preview panel ──────────────────
+  const [selectedManagerDetails, setSelectedManagerDetails] = useState<any>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(false);
+
+  // Track the last fetched ID to avoid duplicate calls
+  const lastFetchedIdRef = useRef<string | null>(null);
+
+  const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
+
+  // ── Fetch full manager details ─────────────────────────────────────────────
+  const fetchManagerDetails = async (managerId: string) => {
+    if (!managerId) return;
+    // Skip if we already have details for this exact manager
+    if (lastFetchedIdRef.current === managerId && selectedManagerDetails?.id === managerId) return;
+
+    lastFetchedIdRef.current = managerId;
+    setIsDetailLoading(true);
+    setDetailError(false);
+    try {
+      const data = await getEmployeeById(managerId).unwrap();
+      setSelectedManagerDetails(data);
+    } catch {
+      setDetailError(true);
+      setSelectedManagerDetails(null);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  // ── Sync selectedManager when formik values change externally ─────────────
   useEffect(() => {
     if (formik.values.reportingManager) {
-      setSelectedEmployee((prev: any) => {
+      setSelectedManager((prev: any) => {
         if (prev?.id === formik.values.reportingManager) return prev;
         return {
           id: formik.values.reportingManager,
@@ -231,13 +294,27 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
         };
       });
     } else {
-      setSelectedEmployee(null);
+      setSelectedManager(null);
+      setSelectedManagerDetails(null);
+      lastFetchedIdRef.current = null;
     }
   }, [
     formik.values.reportingManager,
     formik.values.reportingManagerName,
     formik.values.reportingManagerStatus,
   ]);
+
+  // ── Fetch details whenever the assigned manager ID changes (including async initial load) ─
+  // formik.values.reportingManager is populated asynchronously by the parent after the
+  // reporting-manager API resolves, so a mount-only effect would fire too early.
+  // We watch the value reactively and fetch only when we don't already have matching details.
+  useEffect(() => {
+    const managerId = formik.values.reportingManager;
+    if (managerId && lastFetchedIdRef.current !== managerId) {
+      fetchManagerDetails(managerId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.reportingManager]);
 
   const {
     data: employees,
@@ -260,6 +337,16 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   };
 
   const handleCancel = () => formik.resetForm();
+
+  // Exclude the current employee from the dropdown options
+  const currentEmployeeId = formik.values.employeeId;
+  const filteredOptions = (employees?.items || []).filter(
+    (emp: any) => emp?.id !== currentEmployeeId
+  );
+
+  // ── Determine what to show in the right panel ──────────────────────────────
+  // Prefer full details; fall back to basic dropdown data for name/status while loading
+  const previewEmployee = selectedManagerDetails ?? (selectedManager?.id ? selectedManager : null);
 
   // ── Page heading ──────────────────────────────────────────────────────────
   return (
@@ -318,9 +405,9 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
               {isLoading ? (
                 <Skeleton height={40} width="100%" sx={{ borderRadius: 1 }} />
               ) : (
-                <CustomTooltip placement="top" title={selectedEmployee?.fullName || ''}>
+                <CustomTooltip placement="top" title={selectedManager?.fullName || ''}>
                   <Autocomplete
-                    options={employees?.items || []}
+                    options={filteredOptions}
                     getOptionLabel={(option: any) => option?.fullName || ''}
                     isOptionEqualToValue={(option: any, value: any) => option?.id === value?.id}
                     filterOptions={(x) => x}
@@ -338,14 +425,33 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                         size="small"
                         fullWidth
                         disabled={!isEditable.value}
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {isFetching ? <CircularProgress color="inherit" size={16} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
                       />
                     )}
-                    value={selectedEmployee}
+                    value={selectedManager}
                     onChange={(_e, value) => {
-                      setSelectedEmployee(value || null);
-                      setFieldValue('reportingManager', value?.id || '');
+                      const newManagerId = value?.id || '';
+                      setSelectedManager(value || null);
+                      setFieldValue('reportingManager', newManagerId);
                       setFieldValue('reportingManagerName', value?.fullName || '');
                       setFieldValue('reportingManagerStatus', value?.status ?? null);
+
+                      // Clear stale details immediately
+                      setSelectedManagerDetails(null);
+                      lastFetchedIdRef.current = null;
+
+                      // Fetch full details for the newly selected manager
+                      if (newManagerId) {
+                        fetchManagerDetails(newManagerId);
+                      }
                     }}
                   />
                 </CustomTooltip>
@@ -354,7 +460,7 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
 
             {/* Card 2: Currently assigned */}
             <AnimatePresence>
-              {selectedEmployee?.id && (
+              {selectedManager?.id && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -390,7 +496,7 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                           borderRadius: 1.5,
                         }}
                       >
-                        {getInitials(selectedEmployee?.fullName)}
+                        {getInitials(selectedManager?.fullName)}
                       </Avatar>
 
                       <Box flex={1} minWidth={0}>
@@ -400,22 +506,14 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
                           color="text.primary"
                           noWrap
                         >
-                          {selectedEmployee?.fullName}
+                          {selectedManager?.fullName}
                         </Typography>
                         <Typography variant="caption" color="text.secondary" noWrap>
-                          {[selectedEmployee?.roleName, selectedEmployee?.employeeIdentifier]
+                          {[selectedManager?.roleName, selectedManager?.employeeIdentifier]
                             .filter(Boolean)
                             .join(' · ')}
                         </Typography>
                       </Box>
-
-                      <Label
-                        color={getStatusColor(selectedEmployee?.status)}
-                        variant="soft"
-                        sx={{ flexShrink: 0 }}
-                      >
-                        {getStatusLabel(selectedEmployee?.status)}
-                      </Label>
                     </Box>
                   </Paper>
                 </motion.div>
@@ -450,8 +548,13 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
             {/* Right panel body */}
             <Box flex={1} display="flex" flexDirection="column" justifyContent="center">
               <AnimatePresence mode="wait">
-                {selectedEmployee?.id ? (
-                  <RightManagerProfile key={selectedEmployee.id} employee={selectedEmployee} />
+                {isDetailLoading ? (
+                  <RightLoadingState key="loading" />
+                ) : detailError && selectedManager?.id ? (
+                  // Graceful fallback: show basic info from dropdown when detail API fails
+                  <RightManagerProfile key={selectedManager.id} employee={selectedManager} />
+                ) : previewEmployee ? (
+                  <RightManagerProfile key={previewEmployee.id} employee={previewEmployee} />
                 ) : (
                   <RightEmptyState key="empty" />
                 )}

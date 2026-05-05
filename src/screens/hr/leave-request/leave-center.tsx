@@ -89,7 +89,13 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+      }}
+    >
       <CustomBreadcrumbs
         heading={isSelfContext ? 'My Leave' : 'Leave Center'}
         links={
@@ -111,7 +117,7 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
         description="Apply leave, track requests, review approvals, and monitor leave balance."
       />
 
-      <Card sx={{ px: 1, py: 0.5 }}>
+      <Card sx={{ px: 1 }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
