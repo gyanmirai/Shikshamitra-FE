@@ -70,12 +70,14 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
     // -- HANDLE MOVE (Remove from old slot) --
     if (fromSlotId) {
-      const [fromDayStr] = fromSlotId.split('-'); // e.g., "MONDAY-2"
+      const [fromDayStr, fromDayIndex] = fromSlotId.split('-'); // e.g., "MONDAY-2"
       const fromDay = fromDayStr as DayOfWeek;
 
-      if (newWeeklySlots[fromDay]) {
-        newWeeklySlots[fromDay] = newWeeklySlots[fromDay].map((s) => {
-          if (s.id === fromSlotId) {
+      const fromSlots = newWeeklySlots[fromDay];
+
+      if (fromSlots) {
+        newWeeklySlots[fromDay] = newWeeklySlots[fromDay].map((s, index) => {
+          if (index === parseInt(fromDayIndex, 10)) {
             return {
               ...s,
               subjectId: null,
@@ -93,7 +95,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
     // -- HANDLE DROP (Add to new slot) --
     const daySlots = [...(newWeeklySlots[dayKey as DayOfWeek] || [])];
-    const slotIndex = daySlots.findIndex((s) => s.id === slotId);
+    const slotIndex = daySlots.findIndex((_, index) => index === parseInt(slotId, 10));
 
     if (slotIndex !== -1) {
       // Check for composite name (e.g., "Computer | Physical Training")
@@ -137,14 +139,14 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     onChange(newWeeklySlots);
   };
 
-  const handleRemoveSubject = (slotId: string, subject: Subject) => {
+  const handleRemoveSubject = (day: DayOfWeek, slotId: number, subject: Subject) => {
     if (readOnly) return;
-    const dayKey = slotId.split('-')[0] as DayOfWeek;
+    const dayKey = day as DayOfWeek;
     const newWeeklySlots = { ...slots };
 
     if (newWeeklySlots[dayKey]) {
-      newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((s) => {
-        if (s.id === slotId) {
+      newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((s, index) => {
+        if (index === slotId) {
           return {
             ...s,
             subjectId: null,
@@ -161,9 +163,9 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     }
   };
 
-  const handleAssignTeacher = (slotId: string, subject: Subject) => {
-    const dayKey = slotId.split('-')[0] as DayOfWeek;
-    const slot = slots[dayKey]?.find((s) => s.id === slotId);
+  const handleAssignTeacher = (day: DayOfWeek, slotId: string, subject: Subject) => {
+    const dayKey = day as DayOfWeek;
+    const slot = slots[dayKey]?.find((_, index) => index === parseInt(slotId, 10));
     if (!slot || !slot.subjects) return;
 
     // Lazily split if we detect composite names (and it wasn't split yet)
@@ -345,7 +347,8 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         //   });
         // }
         // Fallback or legacy check
-        const subjectKey = slot.subjectId || slot.electiveGroupId;
+
+        const subjectKey = slot.electiveGroupId || slot?.subjects?.[0]?.id; // Prioritize elective group, then new subjects array, then old subjectId
         if (subjectKey) {
           counts[subjectKey] = (counts[subjectKey] || 0) + 1;
         }

@@ -1,3 +1,5 @@
+import type { Dayjs } from 'dayjs';
+
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY';
 
 export const SlotType = {
@@ -33,6 +35,7 @@ export interface Subject {
   totalSubjects?: number;
   className?: string;
   division?: string;
+  occupiedSlots?: number;
 }
 
 // --- New API Response Types ---
@@ -74,8 +77,8 @@ export interface SlotSubject {
 export interface TimeSlot {
   id: string; // Unique ID for the slot instance
   sequence: number;
-  startTime: string; // "HH:mm"
-  endTime: string; // "HH:mm"
+  startTime: Dayjs; // "HH:mm"
+  endTime: Dayjs; // "HH:mm"
   type: SlotTypes;
   breakType?: BreakTypes;
   day: DayOfWeek;

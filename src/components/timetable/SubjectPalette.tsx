@@ -26,7 +26,7 @@ interface SubjectCardProps {
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
   const totalLectures = subject.totalLectures ?? 0;
-  const isFull = totalLectures > 0 && placedCount >= totalLectures;
+  const isFull = placedCount >= totalLectures;
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.SUBJECT,
@@ -243,6 +243,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
           editData={null}
           onClose={weeklyLecturesDialog.onFalse}
           selectedClass={selectedClass}
+          tableData={subjectTableData?.data?.items}
         />
       </CustomDialog>
     </Card>
