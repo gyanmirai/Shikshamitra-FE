@@ -15,7 +15,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
       providesTags: [academicType.seatAllocation],
     }),
 
-    // Save Seat Allocation (Bulk)
+    // Save Seating Plan (Bulk)
     // POST /api/academics/exams/{examId}/seat-allocation/save
     saveSeatAllocation: builder.mutation({
       query: ({ examId, body }) => ({
@@ -46,7 +46,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
       providesTags: [academicType.seatAllocation],
     }),
 
-    // Get Seat Allocation Dashboard Table
+    // Get Seating Plan Dashboard Table
     // GET /api/academics/exams/seat-allocation → SeatAllocationDashboardResponseDto
     getSeatAllocationTableData: builder.query({
       query: ({ standardId, page = 1, pageSize = 10 }) => ({
@@ -57,7 +57,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
       providesTags: [academicType.seatAllocation],
     }),
 
-    // Get Students for Seat Allocation (per division)
+    // Get Students for Seating Plan (per division)
     // GET /api/academics/exams/{examId}/seat-allocation/divisions/{divisionId}/students → SeatStudentPagedResponseDto
     getSeatAllocationStudents: builder.query({
       query: ({ examId, divisionId, standardId }) => ({

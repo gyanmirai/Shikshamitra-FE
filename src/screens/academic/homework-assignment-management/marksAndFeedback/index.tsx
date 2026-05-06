@@ -50,7 +50,7 @@ const MarksFeedbackHomeworkAssignment = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        heading="Assessment & Feedback"
+        heading="Evaluation & Feedback"
         description={
           currentActiveComponent?.value === 'homeworkMarks'
             ? 'Record and manage marks and feedback for homework tasks.'
@@ -59,7 +59,7 @@ const MarksFeedbackHomeworkAssignment = () => {
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
-          { name: 'Assessment & Feedback' },
+          { name: 'Evaluation & Feedback' },
         ]}
       />
       <Paper

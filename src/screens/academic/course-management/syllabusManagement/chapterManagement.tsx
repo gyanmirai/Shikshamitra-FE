@@ -164,7 +164,7 @@ const Subjects = () => {
       {addChapterDialog.value ? (
         <CustomBreadcrumbs
           // heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
-          heading="Chapters Management"
+          heading="Syllabus"
           description={
             selectedChapter
               ? 'Edit chapter details including name, sequence, and learning materials. Review and update chapter content to maintain curriculum accuracy and effectiveness.'
@@ -173,8 +173,8 @@ const Subjects = () => {
           links={[
             // Links for form view (adding/editing chapter)
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Chapters Management' },
+            { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+            { name: 'Syllabus' },
             // { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
           ]}
           isBack
@@ -185,12 +185,12 @@ const Subjects = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Chapters Management"
+          heading="Syllabus"
           description="Select a class and subject to manage chapters, including the chapter name, number, and associated learning materials."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Chapters Management' },
+            { name: 'Curriculum', href: '/academic/curriculumSubjects' },
+            { name: 'Syllabus' },
           ]}
         />
       )}

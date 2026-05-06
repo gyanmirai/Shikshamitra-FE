@@ -86,7 +86,7 @@ const SeatAllocation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       {openSeatAllocation.value ? (
         <CustomBreadcrumbs
-          heading="Seat Allocation"
+          heading="Seating Plan"
           description="This table lists all scheduled exams eligible for seat allocation. Click 'Allocate Seat' to assign students to exam halls for a specific exam."
           isBack
           onBack={() => {
@@ -95,17 +95,17 @@ const SeatAllocation = () => {
           links={[
             { name: 'Academic', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/examination' },
-            { name: 'Seat Allocation', href: '/academic/examination/seat-allocation' },
+            { name: 'Seating Plan', href: '/academic/examination/seat-allocation' },
           ]}
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Seat Allocation"
+          heading="Seating Plan"
           description="This table lists all scheduled exams eligible for seat allocation. Click 'Allocate Seat' to assign students to exam halls for a specific exam."
           links={[
             { name: 'Academic', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/examination' },
-            { name: 'Seat Allocation' },
+            { name: 'Seating Plan' },
           ]}
         />
       )}

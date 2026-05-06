@@ -75,7 +75,7 @@ const SubjectCreation = () => {
         description="Create and manage subjects for your curriculum. Add, edit, or delete subjects as needed."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Settings' },
           { name: 'Subject Creation' },
         ]}

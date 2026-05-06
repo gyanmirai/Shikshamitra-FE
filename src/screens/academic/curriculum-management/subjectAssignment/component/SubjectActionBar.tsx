@@ -43,7 +43,7 @@ const SubjectActionBar = ({
         onClick={onAddNew}
         sx={{ px: '32px' }}
       >
-        Subjects Assignment
+        Subject Allocation
       </Button>
     </Box>
   </Card>
