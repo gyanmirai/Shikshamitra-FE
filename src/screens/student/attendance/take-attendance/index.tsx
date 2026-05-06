@@ -63,6 +63,14 @@ const TakeAttendanceScreen = () => {
     (state: RootState) => state.globalState
   );
 
+  const now = dayjs().valueOf();
+  const start = currentYear?.startDate
+    ? dayjs(currentYear.startDate).startOf('day').valueOf()
+    : null;
+  const end = currentYear?.endDate ? dayjs(currentYear.endDate).endOf('day').valueOf() : null;
+
+  const isCurrentYearActive = start && end ? now >= start && now <= end : true;
+
   // const [markAttendance] = useMarkAttendanceMutation();
 
   const [markAttendance, { isLoading: isMarkAttendanceLoading }] = useQueryAndMutation({
@@ -215,17 +223,32 @@ const TakeAttendanceScreen = () => {
           alignItems: 'center',
         }}
       >
-        <DatePicker
-          label="Date"
-          value={date}
-          minDate={dayjs(currentYear?.startDate)}
-          maxDate={dayjs(currentYear?.endDate)}
-          onChange={(val) => {
-            setDate(val);
-          }}
-          format="DD-MM-YYYY"
-          slotProps={{ textField: { size: 'small', sx: { maxWidth: '200px', width: '100%' } } }}
-        />
+        <CustomTooltip
+          title={
+            !isCurrentYearActive
+              ? `You are currently viewing the academic year ${currentYear?.name || ''}. Attendance dates are restricted to this active global academic year.`
+              : ''
+          }
+          placement="top"
+          arrow
+          disableHoverListener={isCurrentYearActive}
+          disableTouchListener={isCurrentYearActive}
+          disableFocusListener={isCurrentYearActive}
+        >
+          <Box>
+            <DatePicker
+              label="Date"
+              value={date}
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
+              onChange={(val) => {
+                setDate(val);
+              }}
+              format="DD-MM-YYYY"
+              slotProps={{ textField: { size: 'small', sx: { maxWidth: '200px', width: '100%' } } }}
+            />
+          </Box>
+        </CustomTooltip>
 
         <CustomSelect
           options={allOrganization}
@@ -257,86 +280,97 @@ const TakeAttendanceScreen = () => {
           formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
           disabled={!classes}
         />
-        {/* Reset Button */}
-        {!isLocked && (
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
-            onClick={() => {
-              resetConfirmDialog.onTrue();
-            }}
-            disabled={
-              isLockLoading ||
-              isUnlockLoading ||
-              studentData.length === 0 ||
-              studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
-            }
-            sx={{
-              minWidth: '90px',
-              fontWeight: 500,
-              fontSize: '0.875rem',
-            }}
-          >
-            Reset
-          </Button>
-        )}
-
-        {/* Lock / Unlock Button */}
-        <CustomTooltip
-          title={
-            isLocked ? 'Attendance is locked and cannot be modified' : 'Click to lock attendance'
-          }
-          arrow
-          placement="top"
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            ml: 'auto',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            mr: 1,
+          }}
         >
-          <span>
+          {/* Reset Button */}
+          {!isLocked && (
             <Button
               size="small"
-              variant={isLocked ? 'contained' : 'outlined'}
-              color={isLocked ? 'error' : 'inherit'}
-              loading={isLockLoading || isUnlockLoading}
-              disabled={isLocked || !attendanceDayId || isLockLoading || isUnlockLoading}
-              startIcon={
-                <Iconify
-                  icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
-                  sx={{ fontSize: '16px' }}
-                />
+              variant="outlined"
+              color="inherit"
+              startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
+              onClick={() => {
+                resetConfirmDialog.onTrue();
+              }}
+              disabled={
+                isLockLoading ||
+                isUnlockLoading ||
+                studentData.length === 0 ||
+                studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
               }
-              onClick={() => lockConfirmDialog.onTrue()}
-              sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
+              sx={{
+                minWidth: '90px',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+              }}
             >
-              {isLocked ? 'Locked' : 'Lock'}
+              Reset
             </Button>
-          </span>
-        </CustomTooltip>
+          )}
 
-        {/* Save Button */}
-        {!isLocked && (
-          <Button
-            size="small"
-            variant="contained"
-            loading={isMarkAttendanceLoading}
-            startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
-            onClick={() => {
-              handleSave();
-            }}
-            disabled={
-              isLockLoading ||
-              isUnlockLoading ||
-              studentData.length === 0 ||
-              studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
+          {/* Lock / Unlock Button */}
+          <CustomTooltip
+            title={
+              isLocked ? 'Attendance is locked and cannot be modified' : 'Click to lock attendance'
             }
-            sx={{
-              minWidth: '90px',
-              fontWeight: 500,
-              fontSize: '0.875rem',
-            }}
+            arrow
+            placement="top"
           >
-            Save
-          </Button>
-        )}
+            <span>
+              <Button
+                size="small"
+                variant={isLocked ? 'contained' : 'outlined'}
+                color={isLocked ? 'error' : 'inherit'}
+                loading={isLockLoading || isUnlockLoading}
+                disabled={isLocked || !attendanceDayId || isLockLoading || isUnlockLoading}
+                startIcon={
+                  <Iconify
+                    icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
+                    sx={{ fontSize: '16px' }}
+                  />
+                }
+                onClick={() => lockConfirmDialog.onTrue()}
+                sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
+              >
+                {isLocked ? 'Locked' : 'Lock'}
+              </Button>
+            </span>
+          </CustomTooltip>
+
+          {/* Save Button */}
+          {!isLocked && (
+            <Button
+              size="small"
+              variant="contained"
+              loading={isMarkAttendanceLoading}
+              startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
+              onClick={() => {
+                handleSave();
+              }}
+              disabled={
+                isLockLoading ||
+                isUnlockLoading ||
+                studentData.length === 0 ||
+                studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
+              }
+              sx={{
+                minWidth: '90px',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+              }}
+            >
+              Save
+            </Button>
+          )}
+        </Box>
       </Card>
 
       <ListView
@@ -547,617 +581,709 @@ const ListView = ({
               );
             },
           },
-          {
-            id: 'isPresent',
-            label: (
-              <Stack spacing={0.75} alignItems="center">
-                {/* Count Badges Row - Positioned Above Buttons */}
-                <Stack direction="row" spacing={4} alignItems="center" justifyContent="center">
-                  {/* Present Count Badge */}
-                  <Box
-                    sx={{
-                      minWidth: '28px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '10px',
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.16),
-                      color: 'success.dark',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      px: 0.75,
-                    }}
-                  >
-                    {
-                      studentData.filter((item: any) => item.isPresent === AttendanceStatus.Present)
-                        .length
-                    }
-                  </Box>
-
-                  {/* Pending Count Badge */}
-                  <Box
-                    sx={{
-                      minWidth: '28px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '10px',
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.16),
-                      color: 'warning.dark',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      px: 0.75,
-                    }}
-                  >
-                    {
-                      studentData.filter((item: any) => item.isPresent === AttendanceStatus.Pending)
-                        .length
-                    }
-                  </Box>
-
-                  {/* Absent Count Badge */}
-                  <Box
-                    sx={{
-                      minWidth: '28px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '10px',
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.16),
-                      color: 'error.dark',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      px: 0.75,
-                    }}
-                  >
-                    {
-                      studentData.filter((item: any) => item.isPresent === AttendanceStatus.Absent)
-                        .length
-                    }
-                  </Box>
-                </Stack>
-
-                {/* Action Buttons Row - Grouped Segmented Control */}
-                <Box
-                  sx={{
-                    position: 'relative',
-                    display: 'flex',
-                    width: '180px',
-                    height: '32px',
-                    bgcolor: (theme) => theme.vars.palette.background.neutral,
-                    borderRadius: '6px',
-                    p: 0.25,
-                    gap: 0.25,
-                  }}
-                >
-                  {/* Present Button with Tooltip - Clickable to Mark All */}
-                  <CustomTooltip
-                    title={
-                      studentData.filter((item: any) => item.isPresent === AttendanceStatus.Present)
-                        .length > 0 ? (
-                        <Box sx={{ p: 1, maxWidth: 300 }}>
-                          <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
-                            Present Students (
-                            {
-                              studentData.filter(
-                                (item: any) => item.isPresent === AttendanceStatus.Present
-                              ).length
-                            }
-                            )
-                          </Typography>
-                          {studentData
-                            .filter((item: any) => item.isPresent === AttendanceStatus.Present)
-                            .slice(0, 10)
-                            .map((student: any) => (
-                              <Typography key={student.studentId} variant="caption" display="block">
-                                • {student.rollNo} - {student.name}
-                              </Typography>
-                            ))}
-                          {studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Present
-                          ).length > 10 && (
-                            <Typography
-                              variant="caption"
-                              display="block"
-                              sx={{ fontStyle: 'italic', mt: 0.5 }}
-                            >
-                              +
-                              {studentData.filter(
-                                (item: any) => item.isPresent === AttendanceStatus.Present
-                              ).length - 10}{' '}
-                              more
-                            </Typography>
-                          )}
-                          <Typography
-                            variant="caption"
-                            display="block"
-                            mt={1}
-                            sx={{ fontStyle: 'italic', opacity: 0.8 }}
-                          >
-                            Click to mark all as Present
-                          </Typography>
-                        </Box>
-                      ) : (
-                        'Click to mark all as Present'
-                      )
-                    }
-                    arrow
-                    placement="top"
-                    slotProps={{
-                      tooltip: {
-                        sx: {
-                          bgcolor: 'background.paper',
-                          color: 'text.primary',
-                          boxShadow: (theme) => theme.shadows[8],
-                          border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                          '& .MuiTooltip-arrow': {
-                            color: 'background.paper',
-                            '&::before': {
-                              border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                            },
-                          },
-                        },
-                      },
-                    }}
-                  >
-                    <Box
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (
-                          isLocked ||
-                          data.length === 0 ||
-                          data.every((item: any) => item.isPresent === AttendanceStatus.Present)
-                        ) {
-                          return;
+          ...(isLocked
+            ? [
+                {
+                  id: 'status',
+                  label: 'Status',
+                  minWidth: '200px',
+                  align: 'left' as const,
+                  isSort: false,
+                  sticky: true,
+                  isFilter: false,
+                  render(_value: any, row: any) {
+                    return (
+                      <Label
+                        color={
+                          row.isPresent === AttendanceStatus.Present
+                            ? 'success'
+                            : row.isPresent === AttendanceStatus.Absent
+                              ? 'error'
+                              : 'warning'
                         }
-                        setStudentData((pre: any) =>
-                          pre.map((item: any) => ({ ...item, isPresent: AttendanceStatus.Present }))
-                        );
-                      }}
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        bgcolor: (theme) =>
-                          studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Present
-                          ).length > 0
-                            ? theme.vars.palette.success.main
-                            : 'transparent',
-                        color: (theme) =>
-                          studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Present
-                          ).length > 0
-                            ? theme.vars.palette.success.contrastText
-                            : theme.vars.palette.text.secondary,
-                        cursor:
-                          isLocked ||
-                          data.length === 0 ||
-                          data.every((item: any) => item.isPresent === AttendanceStatus.Present)
-                            ? 'not-allowed'
-                            : 'pointer',
-                        opacity:
-                          isLocked ||
-                          data.length === 0 ||
-                          data.every((item: any) => item.isPresent === AttendanceStatus.Present)
-                            ? 0.5
-                            : 1,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor: (theme) =>
-                            isLocked ||
-                            data.length === 0 ||
-                            data.every((item: any) => item.isPresent === AttendanceStatus.Present)
-                              ? studentData.filter(
+                      >
+                        {row.isPresent === AttendanceStatus.Present
+                          ? 'Present'
+                          : row.isPresent === AttendanceStatus.Absent
+                            ? 'Absent'
+                            : 'Not Yet Marked'}
+                      </Label>
+                    );
+                  },
+                },
+              ]
+            : [
+                {
+                  id: 'isPresent',
+                  label: (
+                    <Stack spacing={0.75} alignItems="center">
+                      {/* Count Badges Row - Positioned Above Buttons */}
+                      <Stack
+                        direction="row"
+                        spacing={4}
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+                        {/* Present Count Badge */}
+                        <Box
+                          sx={{
+                            minWidth: '28px',
+                            height: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '10px',
+                            bgcolor: (theme) =>
+                              varAlpha(theme.vars.palette.success.mainChannel, 0.16),
+                            color: 'success.dark',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            px: 0.75,
+                          }}
+                        >
+                          {
+                            studentData.filter(
+                              (item: any) => item.isPresent === AttendanceStatus.Present
+                            ).length
+                          }
+                        </Box>
+
+                        {/* Pending Count Badge */}
+                        <Box
+                          sx={{
+                            minWidth: '28px',
+                            height: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '10px',
+                            bgcolor: (theme) =>
+                              varAlpha(theme.vars.palette.warning.mainChannel, 0.16),
+                            color: 'warning.dark',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            px: 0.75,
+                          }}
+                        >
+                          {
+                            studentData.filter(
+                              (item: any) => item.isPresent === AttendanceStatus.Pending
+                            ).length
+                          }
+                        </Box>
+
+                        {/* Absent Count Badge */}
+                        <Box
+                          sx={{
+                            minWidth: '28px',
+                            height: '20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '10px',
+                            bgcolor: (theme) =>
+                              varAlpha(theme.vars.palette.error.mainChannel, 0.16),
+                            color: 'error.dark',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            px: 0.75,
+                          }}
+                        >
+                          {
+                            studentData.filter(
+                              (item: any) => item.isPresent === AttendanceStatus.Absent
+                            ).length
+                          }
+                        </Box>
+                      </Stack>
+
+                      {/* Action Buttons Row - Grouped Segmented Control */}
+                      <Box
+                        sx={{
+                          position: 'relative',
+                          display: 'flex',
+                          width: '180px',
+                          height: '32px',
+                          bgcolor: (theme) => theme.vars.palette.background.neutral,
+                          borderRadius: '6px',
+                          p: 0.25,
+                          gap: 0.25,
+                        }}
+                      >
+                        {/* Present Button with Tooltip - Clickable to Mark All */}
+                        <CustomTooltip
+                          title={
+                            studentData.filter(
+                              (item: any) => item.isPresent === AttendanceStatus.Present
+                            ).length > 0 ? (
+                              <Box sx={{ p: 1, maxWidth: 300 }}>
+                                <Typography
+                                  variant="caption"
+                                  fontWeight={600}
+                                  display="block"
+                                  mb={0.5}
+                                >
+                                  Present Students (
+                                  {
+                                    studentData.filter(
+                                      (item: any) => item.isPresent === AttendanceStatus.Present
+                                    ).length
+                                  }
+                                  )
+                                </Typography>
+                                {studentData
+                                  .filter(
+                                    (item: any) => item.isPresent === AttendanceStatus.Present
+                                  )
+                                  .slice(0, 10)
+                                  .map((student: any) => (
+                                    <Typography
+                                      key={student.studentId}
+                                      variant="caption"
+                                      display="block"
+                                    >
+                                      • {student.rollNo} - {student.name}
+                                    </Typography>
+                                  ))}
+                                {studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Present
+                                ).length > 10 && (
+                                  <Typography
+                                    variant="caption"
+                                    display="block"
+                                    sx={{ fontStyle: 'italic', mt: 0.5 }}
+                                  >
+                                    +
+                                    {studentData.filter(
+                                      (item: any) => item.isPresent === AttendanceStatus.Present
+                                    ).length - 10}{' '}
+                                    more
+                                  </Typography>
+                                )}
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  mt={1}
+                                  sx={{ fontStyle: 'italic', opacity: 0.8 }}
+                                >
+                                  Click to mark all as Present
+                                </Typography>
+                              </Box>
+                            ) : (
+                              'Click to mark all as Present'
+                            )
+                          }
+                          arrow
+                          placement="top"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: 'background.paper',
+                                color: 'text.primary',
+                                boxShadow: (theme) => theme.shadows[8],
+                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                '& .MuiTooltip-arrow': {
+                                  color: 'background.paper',
+                                  '&::before': {
+                                    border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                  },
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (
+                                data.length === 0 ||
+                                data.every(
+                                  (item: any) => item.isPresent === AttendanceStatus.Present
+                                )
+                              ) {
+                                return;
+                              }
+                              setStudentData((pre: any) =>
+                                pre.map((item: any) => ({
+                                  ...item,
+                                  isPresent: AttendanceStatus.Present,
+                                }))
+                              );
+                            }}
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              bgcolor: (theme) =>
+                                studentData.filter(
                                   (item: any) => item.isPresent === AttendanceStatus.Present
                                 ).length > 0
-                                ? theme.vars.palette.success.main
-                                : 'transparent'
-                              : studentData.filter(
+                                  ? theme.vars.palette.success.main
+                                  : 'transparent',
+                              color: (theme) =>
+                                studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Present
+                                ).length > 0
+                                  ? theme.vars.palette.success.contrastText
+                                  : theme.vars.palette.text.secondary,
+                              cursor:
+                                data.length === 0 ||
+                                data.every(
+                                  (item: any) => item.isPresent === AttendanceStatus.Present
+                                )
+                                  ? 'not-allowed'
+                                  : 'pointer',
+                              opacity:
+                                data.length === 0 ||
+                                data.every(
+                                  (item: any) => item.isPresent === AttendanceStatus.Present
+                                )
+                                  ? 0.5
+                                  : 1,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                bgcolor: (theme) =>
+                                  data.length === 0 ||
+                                  data.every(
                                     (item: any) => item.isPresent === AttendanceStatus.Present
-                                  ).length > 0
-                                ? theme.vars.palette.success.dark
-                                : varAlpha(theme.vars.palette.success.mainChannel, 0.08),
-                        },
-                      }}
-                    >
-                      <Iconify icon="eva:checkmark-fill" width={18} />
-                    </Box>
-                  </CustomTooltip>
-
-                  {/* Pending Button with Tooltip */}
-                  <CustomTooltip
-                    title={
-                      studentData.filter((item: any) => item.isPresent === AttendanceStatus.Pending)
-                        .length > 0 ? (
-                        <Box sx={{ p: 1, maxWidth: 300 }}>
-                          <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
-                            Pending Students (
-                            {
-                              studentData.filter(
-                                (item: any) => item.isPresent === AttendanceStatus.Pending
-                              ).length
-                            }
-                            )
-                          </Typography>
-                          {studentData
-                            .filter((item: any) => item.isPresent === AttendanceStatus.Pending)
-                            .slice(0, 10)
-                            .map((student: any) => (
-                              <Typography key={student.studentId} variant="caption" display="block">
-                                • {student.rollNo} - {student.name}
-                              </Typography>
-                            ))}
-                          {studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Pending
-                          ).length > 10 && (
-                            <Typography
-                              variant="caption"
-                              display="block"
-                              sx={{ fontStyle: 'italic', mt: 0.5 }}
-                            >
-                              +
-                              {studentData.filter(
-                                (item: any) => item.isPresent === AttendanceStatus.Pending
-                              ).length - 10}{' '}
-                              more
-                            </Typography>
-                          )}
-                        </Box>
-                      ) : (
-                        'No pending students'
-                      )
-                    }
-                    arrow
-                    placement="top"
-                    slotProps={{
-                      tooltip: {
-                        sx: {
-                          bgcolor: 'background.paper',
-                          color: 'text.primary',
-                          boxShadow: (theme) => theme.shadows[8],
-                          border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                          '& .MuiTooltip-arrow': {
-                            color: 'background.paper',
-                            '&::before': {
-                              border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                            },
-                          },
-                        },
-                      },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        bgcolor: (theme) =>
-                          studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Pending
-                          ).length > 0
-                            ? theme.vars.palette.warning.main
-                            : 'transparent',
-                        color: (theme) =>
-                          studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Pending
-                          ).length > 0
-                            ? theme.vars.palette.warning.contrastText
-                            : theme.vars.palette.text.secondary,
-                        cursor: 'default',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <Iconify icon="eva:minus-fill" width={18} />
-                    </Box>
-                  </CustomTooltip>
-
-                  {/* Absent Button with Tooltip - Clickable to Mark All */}
-                  <CustomTooltip
-                    title={
-                      studentData.filter((item: any) => item.isPresent === AttendanceStatus.Absent)
-                        .length > 0 ? (
-                        <Box sx={{ p: 1, maxWidth: 300 }}>
-                          <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
-                            Absent Students (
-                            {
-                              studentData.filter(
-                                (item: any) => item.isPresent === AttendanceStatus.Absent
-                              ).length
-                            }
-                            )
-                          </Typography>
-                          {studentData
-                            .filter((item: any) => item.isPresent === AttendanceStatus.Absent)
-                            .slice(0, 10)
-                            .map((student: any) => (
-                              <Typography key={student.studentId} variant="caption" display="block">
-                                • {student.rollNo} - {student.name}
-                              </Typography>
-                            ))}
-                          {studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Absent
-                          ).length > 10 && (
-                            <Typography
-                              variant="caption"
-                              display="block"
-                              sx={{ fontStyle: 'italic', mt: 0.5 }}
-                            >
-                              +
-                              {studentData.filter(
-                                (item: any) => item.isPresent === AttendanceStatus.Absent
-                              ).length - 10}{' '}
-                              more
-                            </Typography>
-                          )}
-                          <Typography
-                            variant="caption"
-                            display="block"
-                            mt={1}
-                            sx={{ fontStyle: 'italic', opacity: 0.8 }}
+                                  )
+                                    ? studentData.filter(
+                                        (item: any) => item.isPresent === AttendanceStatus.Present
+                                      ).length > 0
+                                      ? theme.vars.palette.success.main
+                                      : 'transparent'
+                                    : studentData.filter(
+                                          (item: any) => item.isPresent === AttendanceStatus.Present
+                                        ).length > 0
+                                      ? theme.vars.palette.success.dark
+                                      : varAlpha(theme.vars.palette.success.mainChannel, 0.08),
+                              },
+                            }}
                           >
-                            Click to mark all as Absent
-                          </Typography>
-                        </Box>
-                      ) : (
-                        'Click to mark all as Absent'
-                      )
-                    }
-                    arrow
-                    placement="top"
-                    slotProps={{
-                      tooltip: {
-                        sx: {
-                          bgcolor: 'background.paper',
-                          color: 'text.primary',
-                          boxShadow: (theme) => theme.shadows[8],
-                          border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                          '& .MuiTooltip-arrow': {
-                            color: 'background.paper',
-                            '&::before': {
-                              border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                            <Iconify icon="eva:checkmark-fill" width={18} />
+                          </Box>
+                        </CustomTooltip>
+
+                        {/* Pending Button with Tooltip */}
+                        <CustomTooltip
+                          title={
+                            studentData.filter(
+                              (item: any) => item.isPresent === AttendanceStatus.Pending
+                            ).length > 0 ? (
+                              <Box sx={{ p: 1, maxWidth: 300 }}>
+                                <Typography
+                                  variant="caption"
+                                  fontWeight={600}
+                                  display="block"
+                                  mb={0.5}
+                                >
+                                  Pending Students (
+                                  {
+                                    studentData.filter(
+                                      (item: any) => item.isPresent === AttendanceStatus.Pending
+                                    ).length
+                                  }
+                                  )
+                                </Typography>
+                                {studentData
+                                  .filter(
+                                    (item: any) => item.isPresent === AttendanceStatus.Pending
+                                  )
+                                  .slice(0, 10)
+                                  .map((student: any) => (
+                                    <Typography
+                                      key={student.studentId}
+                                      variant="caption"
+                                      display="block"
+                                    >
+                                      • {student.rollNo} - {student.name}
+                                    </Typography>
+                                  ))}
+                                {studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Pending
+                                ).length > 10 && (
+                                  <Typography
+                                    variant="caption"
+                                    display="block"
+                                    sx={{ fontStyle: 'italic', mt: 0.5 }}
+                                  >
+                                    +
+                                    {studentData.filter(
+                                      (item: any) => item.isPresent === AttendanceStatus.Pending
+                                    ).length - 10}{' '}
+                                    more
+                                  </Typography>
+                                )}
+                              </Box>
+                            ) : (
+                              'No pending students'
+                            )
+                          }
+                          arrow
+                          placement="top"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: 'background.paper',
+                                color: 'text.primary',
+                                boxShadow: (theme) => theme.shadows[8],
+                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                '& .MuiTooltip-arrow': {
+                                  color: 'background.paper',
+                                  '&::before': {
+                                    border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                  },
+                                },
+                              },
                             },
-                          },
-                        },
-                      },
-                    }}
-                  >
-                    <Box
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (
-                          isLocked ||
-                          data.length === 0 ||
-                          data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
-                        ) {
-                          return;
-                        }
-                        setStudentData((pre: any) =>
-                          pre.map((item: any) => ({ ...item, isPresent: AttendanceStatus.Absent }))
-                        );
-                      }}
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        bgcolor: (theme) =>
-                          studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Absent
-                          ).length > 0
-                            ? theme.vars.palette.error.main
-                            : 'transparent',
-                        color: (theme) =>
-                          studentData.filter(
-                            (item: any) => item.isPresent === AttendanceStatus.Absent
-                          ).length > 0
-                            ? theme.vars.palette.error.contrastText
-                            : theme.vars.palette.text.secondary,
-                        cursor:
-                          isLocked ||
-                          data.length === 0 ||
-                          data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
-                            ? 'not-allowed'
-                            : 'pointer',
-                        opacity:
-                          isLocked ||
-                          data.length === 0 ||
-                          data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
-                            ? 0.5
-                            : 1,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor: (theme) =>
-                            isLocked ||
-                            data.length === 0 ||
-                            data.every((item: any) => item.isPresent === AttendanceStatus.Absent)
-                              ? studentData.filter(
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              bgcolor: (theme) =>
+                                studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Pending
+                                ).length > 0
+                                  ? theme.vars.palette.warning.main
+                                  : 'transparent',
+                              color: (theme) =>
+                                studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Pending
+                                ).length > 0
+                                  ? theme.vars.palette.warning.contrastText
+                                  : theme.vars.palette.text.secondary,
+                              cursor: 'default',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <Iconify icon="eva:minus-fill" width={18} />
+                          </Box>
+                        </CustomTooltip>
+
+                        {/* Absent Button with Tooltip - Clickable to Mark All */}
+                        <CustomTooltip
+                          title={
+                            studentData.filter(
+                              (item: any) => item.isPresent === AttendanceStatus.Absent
+                            ).length > 0 ? (
+                              <Box sx={{ p: 1, maxWidth: 300 }}>
+                                <Typography
+                                  variant="caption"
+                                  fontWeight={600}
+                                  display="block"
+                                  mb={0.5}
+                                >
+                                  Absent Students (
+                                  {
+                                    studentData.filter(
+                                      (item: any) => item.isPresent === AttendanceStatus.Absent
+                                    ).length
+                                  }
+                                  )
+                                </Typography>
+                                {studentData
+                                  .filter((item: any) => item.isPresent === AttendanceStatus.Absent)
+                                  .slice(0, 10)
+                                  .map((student: any) => (
+                                    <Typography
+                                      key={student.studentId}
+                                      variant="caption"
+                                      display="block"
+                                    >
+                                      • {student.rollNo} - {student.name}
+                                    </Typography>
+                                  ))}
+                                {studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Absent
+                                ).length > 10 && (
+                                  <Typography
+                                    variant="caption"
+                                    display="block"
+                                    sx={{ fontStyle: 'italic', mt: 0.5 }}
+                                  >
+                                    +
+                                    {studentData.filter(
+                                      (item: any) => item.isPresent === AttendanceStatus.Absent
+                                    ).length - 10}{' '}
+                                    more
+                                  </Typography>
+                                )}
+                                <Typography
+                                  variant="caption"
+                                  display="block"
+                                  mt={1}
+                                  sx={{ fontStyle: 'italic', opacity: 0.8 }}
+                                >
+                                  Click to mark all as Absent
+                                </Typography>
+                              </Box>
+                            ) : (
+                              'Click to mark all as Absent'
+                            )
+                          }
+                          arrow
+                          placement="top"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                bgcolor: 'background.paper',
+                                color: 'text.primary',
+                                boxShadow: (theme) => theme.shadows[8],
+                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                '& .MuiTooltip-arrow': {
+                                  color: 'background.paper',
+                                  '&::before': {
+                                    border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+                                  },
+                                },
+                              },
+                            },
+                          }}
+                        >
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (
+                                data.length === 0 ||
+                                data.every(
+                                  (item: any) => item.isPresent === AttendanceStatus.Absent
+                                )
+                              ) {
+                                return;
+                              }
+                              setStudentData((pre: any) =>
+                                pre.map((item: any) => ({
+                                  ...item,
+                                  isPresent: AttendanceStatus.Absent,
+                                }))
+                              );
+                            }}
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              bgcolor: (theme) =>
+                                studentData.filter(
                                   (item: any) => item.isPresent === AttendanceStatus.Absent
                                 ).length > 0
-                                ? theme.vars.palette.error.main
-                                : 'transparent'
-                              : studentData.filter(
+                                  ? theme.vars.palette.error.main
+                                  : 'transparent',
+                              color: (theme) =>
+                                studentData.filter(
+                                  (item: any) => item.isPresent === AttendanceStatus.Absent
+                                ).length > 0
+                                  ? theme.vars.palette.error.contrastText
+                                  : theme.vars.palette.text.secondary,
+                              cursor:
+                                data.length === 0 ||
+                                data.every(
+                                  (item: any) => item.isPresent === AttendanceStatus.Absent
+                                )
+                                  ? 'not-allowed'
+                                  : 'pointer',
+                              opacity:
+                                data.length === 0 ||
+                                data.every(
+                                  (item: any) => item.isPresent === AttendanceStatus.Absent
+                                )
+                                  ? 0.5
+                                  : 1,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                bgcolor: (theme) =>
+                                  data.length === 0 ||
+                                  data.every(
                                     (item: any) => item.isPresent === AttendanceStatus.Absent
-                                  ).length > 0
-                                ? theme.vars.palette.error.dark
-                                : varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-                        },
-                      }}
-                    >
-                      <Iconify icon="eva:close-fill" width={18} />
-                    </Box>
-                  </CustomTooltip>
-                </Box>
-              </Stack>
-            ),
-            minWidth: '200px',
-            align: 'left',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            render(value, row) {
-              return isSaved.value ? (
-                <Label
-                  color={
-                    value === AttendanceStatus.Present
-                      ? 'success'
-                      : value === AttendanceStatus.Absent
-                        ? 'error'
-                        : 'warning'
-                  }
-                >
-                  {value === AttendanceStatus.Present
-                    ? 'Present'
-                    : value === AttendanceStatus.Absent
-                      ? 'Absent'
-                      : 'Not Yet Marked'}
-                </Label>
-              ) : (
-                <Stack direction="row" spacing={0} sx={{ alignItems: 'center' }}>
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      display: 'flex',
-                      width: '180px',
-                      height: '32px',
-                      bgcolor: (theme) => theme.vars.palette.background.neutral,
-                      borderRadius: '6px',
-                      p: 0.25,
-                      gap: 0.25,
-                    }}
-                  >
-                    {/* Present Button */}
-                    <Box
-                      onClick={() => {
-                        if (isLocked) return;
-                        setStudentData(
-                          data.map((item: any) =>
-                            item.studentId === row.studentId
-                              ? { ...item, isPresent: AttendanceStatus.Present }
-                              : item
-                          )
-                        );
-                      }}
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        cursor: isLocked ? 'not-allowed' : 'pointer',
-                        opacity: isLocked ? 0.5 : 1,
-                        bgcolor:
+                                  )
+                                    ? studentData.filter(
+                                        (item: any) => item.isPresent === AttendanceStatus.Absent
+                                      ).length > 0
+                                      ? theme.vars.palette.error.main
+                                      : 'transparent'
+                                    : studentData.filter(
+                                          (item: any) => item.isPresent === AttendanceStatus.Absent
+                                        ).length > 0
+                                      ? theme.vars.palette.error.dark
+                                      : varAlpha(theme.vars.palette.error.mainChannel, 0.08),
+                              },
+                            }}
+                          >
+                            <Iconify icon="eva:close-fill" width={18} />
+                          </Box>
+                        </CustomTooltip>
+                      </Box>
+                    </Stack>
+                  ),
+                  minWidth: '200px',
+                  align: 'left' as const,
+                  isSort: false,
+                  sticky: true,
+                  isFilter: false,
+                  render(value: any, row: any) {
+                    return isSaved.value ? (
+                      <Label
+                        color={
                           value === AttendanceStatus.Present
-                            ? (theme) => theme.vars.palette.success.main
-                            : 'transparent',
-                        color:
-                          value === AttendanceStatus.Present
-                            ? (theme) => theme.vars.palette.success.contrastText
-                            : (theme) => theme.vars.palette.text.secondary,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor:
-                            value === AttendanceStatus.Present
-                              ? (theme) => theme.vars.palette.success.dark
-                              : (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.08),
-                        },
-                      }}
-                    >
-                      <Iconify icon="eva:checkmark-fill" width={18} />
-                    </Box>
+                            ? 'success'
+                            : value === AttendanceStatus.Absent
+                              ? 'error'
+                              : 'warning'
+                        }
+                      >
+                        {value === AttendanceStatus.Present
+                          ? 'Present'
+                          : value === AttendanceStatus.Absent
+                            ? 'Absent'
+                            : 'Not Yet Marked'}
+                      </Label>
+                    ) : (
+                      <Stack direction="row" spacing={0} sx={{ alignItems: 'center' }}>
+                        <Box
+                          sx={{
+                            position: 'relative',
+                            display: 'flex',
+                            width: '180px',
+                            height: '32px',
+                            bgcolor: (theme) => theme.vars.palette.background.neutral,
+                            borderRadius: '6px',
+                            p: 0.25,
+                            gap: 0.25,
+                          }}
+                        >
+                          {/* Present Button */}
+                          <Box
+                            onClick={() => {
+                              setStudentData(
+                                data.map((item: any) =>
+                                  item.studentId === row.studentId
+                                    ? { ...item, isPresent: AttendanceStatus.Present }
+                                    : item
+                                )
+                              );
+                            }}
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              opacity: 1,
+                              bgcolor:
+                                value === AttendanceStatus.Present
+                                  ? (theme) => theme.vars.palette.success.main
+                                  : 'transparent',
+                              color:
+                                value === AttendanceStatus.Present
+                                  ? (theme) => theme.vars.palette.success.contrastText
+                                  : (theme) => theme.vars.palette.text.secondary,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                bgcolor:
+                                  value === AttendanceStatus.Present
+                                    ? (theme) => theme.vars.palette.success.dark
+                                    : (theme) =>
+                                        varAlpha(theme.vars.palette.success.mainChannel, 0.08),
+                              },
+                            }}
+                          >
+                            <Iconify icon="eva:checkmark-fill" width={18} />
+                          </Box>
 
-                    {/* Pending Button */}
-                    <Box
-                      onClick={() => {
-                        if (isLocked) return;
-                        setStudentData(
-                          data.map((item: any) =>
-                            item.studentId === row.studentId
-                              ? { ...item, isPresent: AttendanceStatus.Pending }
-                              : item
-                          )
-                        );
-                      }}
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        cursor: isLocked ? 'not-allowed' : 'pointer',
-                        opacity: isLocked ? 0.5 : 1,
-                        bgcolor:
-                          value === AttendanceStatus.Pending
-                            ? (theme) => theme.vars.palette.warning.main
-                            : 'transparent',
-                        color:
-                          value === AttendanceStatus.Pending
-                            ? (theme) => theme.vars.palette.warning.contrastText
-                            : (theme) => theme.vars.palette.text.secondary,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor:
-                            value === AttendanceStatus.Pending
-                              ? (theme) => theme.vars.palette.warning.dark
-                              : (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
-                        },
-                      }}
-                    >
-                      <Iconify icon="eva:minus-fill" width={18} />
-                    </Box>
+                          {/* Pending Button */}
+                          <Box
+                            onClick={() => {
+                              setStudentData(
+                                data.map((item: any) =>
+                                  item.studentId === row.studentId
+                                    ? { ...item, isPresent: AttendanceStatus.Pending }
+                                    : item
+                                )
+                              );
+                            }}
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              opacity: 1,
+                              bgcolor:
+                                value === AttendanceStatus.Pending
+                                  ? (theme) => theme.vars.palette.warning.main
+                                  : 'transparent',
+                              color:
+                                value === AttendanceStatus.Pending
+                                  ? (theme) => theme.vars.palette.warning.contrastText
+                                  : (theme) => theme.vars.palette.text.secondary,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                bgcolor:
+                                  value === AttendanceStatus.Pending
+                                    ? (theme) => theme.vars.palette.warning.dark
+                                    : (theme) =>
+                                        varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
+                              },
+                            }}
+                          >
+                            <Iconify icon="eva:minus-fill" width={18} />
+                          </Box>
 
-                    {/* Absent Button */}
-                    <Box
-                      onClick={() => {
-                        if (isLocked) return;
-                        setStudentData(
-                          data.map((item: any) =>
-                            item.studentId === row.studentId
-                              ? { ...item, isPresent: AttendanceStatus.Absent }
-                              : item
-                          )
-                        );
-                      }}
-                      sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '4px',
-                        cursor: isLocked ? 'not-allowed' : 'pointer',
-                        opacity: isLocked ? 0.5 : 1,
-                        bgcolor:
-                          value === AttendanceStatus.Absent
-                            ? (theme) => theme.vars.palette.error.main
-                            : 'transparent',
-                        color:
-                          value === AttendanceStatus.Absent
-                            ? (theme) => theme.vars.palette.error.contrastText
-                            : (theme) => theme.vars.palette.text.secondary,
-                        transition: 'all 0.2s',
-                        '&:hover': {
-                          bgcolor:
-                            value === AttendanceStatus.Absent
-                              ? (theme) => theme.vars.palette.error.dark
-                              : (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-                        },
-                      }}
-                    >
-                      <Iconify icon="eva:close-fill" width={18} />
-                    </Box>
-                  </Box>
-                </Stack>
-              );
-            },
-          },
+                          {/* Absent Button */}
+                          <Box
+                            onClick={() => {
+                              setStudentData(
+                                data.map((item: any) =>
+                                  item.studentId === row.studentId
+                                    ? { ...item, isPresent: AttendanceStatus.Absent }
+                                    : item
+                                )
+                              );
+                            }}
+                            sx={{
+                              flex: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              opacity: 1,
+                              bgcolor:
+                                value === AttendanceStatus.Absent
+                                  ? (theme) => theme.vars.palette.error.main
+                                  : 'transparent',
+                              color:
+                                value === AttendanceStatus.Absent
+                                  ? (theme) => theme.vars.palette.error.contrastText
+                                  : (theme) => theme.vars.palette.text.secondary,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                bgcolor:
+                                  value === AttendanceStatus.Absent
+                                    ? (theme) => theme.vars.palette.error.dark
+                                    : (theme) =>
+                                        varAlpha(theme.vars.palette.error.mainChannel, 0.08),
+                              },
+                            }}
+                          >
+                            <Iconify icon="eva:close-fill" width={18} />
+                          </Box>
+                        </Box>
+                      </Stack>
+                    );
+                  },
+                },
+              ]),
         ]}
         data={data}
         serverSide

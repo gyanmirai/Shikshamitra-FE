@@ -17,8 +17,17 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Save, Refresh, ChecklistOutlined } from '@mui/icons-material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Chip, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
+import {
+  Box,
+  Chip,
+  Button,
+  Backdrop,
+  TextField,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
@@ -244,9 +253,12 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // Fixed width for GR No. column to prevent layout shifts
   const GR_COLUMN_WIDTH = 180;
 
+  const isApiLoading = isStudentGrNumberLoading || isSaving;
+
   return (
     <Box
       sx={{
+        position: 'relative',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -254,6 +266,19 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
         minHeight: 0,
       }}
     >
+      <Backdrop
+        open={isApiLoading}
+        sx={{
+          position: 'absolute',
+          zIndex: (theme) => theme.zIndex.modal - 1,
+          color: 'primary.main',
+          backgroundColor: 'rgba(255, 255, 255, 0.45)',
+          backdropFilter: 'blur(2px)',
+          borderRadius: 1,
+        }}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box
           sx={{
@@ -275,9 +300,10 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
           )}
           <Button
             size="small"
-            startIcon={<ChecklistOutlined />}
+            startIcon={isManual ? <ChecklistOutlined /> : <Iconify icon="solar:pen-bold" />}
             variant={isManual ? 'contained' : 'outlined'}
             onClick={handleManualToggle}
+            color={isManual ? 'primary' : 'inherit'}
           >
             Manual
           </Button>

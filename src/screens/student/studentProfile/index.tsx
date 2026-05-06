@@ -249,11 +249,6 @@ export function StudentProfile() {
   const handleCloseStatus = () => {
     statusDialog.onFalse();
     setSelectedStudentForStatus(null);
-    getStudents({
-      academicMediumId: medium?.id,
-      standardId: classes,
-      divisionId: division,
-    });
   };
 
   return (

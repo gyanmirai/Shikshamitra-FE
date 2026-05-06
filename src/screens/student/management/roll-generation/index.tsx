@@ -273,7 +273,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
               onChange={(val) => setArrangementType(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { width: '250px' } }}
+              formControlProps={{ sx: { width: '200px' } }}
             />
             <CustomSelect
               options={[
@@ -285,7 +285,7 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
               onChange={(val) => setArrangeBy(val as string)}
               labelKey="name"
               valueKey="id"
-              formControlProps={{ sx: { width: '250px' } }}
+              formControlProps={{ sx: { width: '200px' } }}
               disabled={!arrangementType}
             />
           </Box>
@@ -302,10 +302,11 @@ const RollNoGenerationScreen = ({ division }: { division: string }) => {
                 />
               )}
               <Button
-                startIcon={<ChecklistOutlined />}
+                startIcon={isManual ? <ChecklistOutlined /> : <Iconify icon="solar:pen-bold" />}
                 variant={isManual ? 'contained' : 'outlined'}
                 onClick={handleManualToggle}
                 size="small"
+                color="inherit"
               >
                 Manual
               </Button>
