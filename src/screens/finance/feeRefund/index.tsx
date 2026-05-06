@@ -9,11 +9,11 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetFeeRefundQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
@@ -24,6 +24,104 @@ import FeeRefundFormComponent from './NewRefundForm/RefundForm';
 import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm';
 
 import type { IStudentFeeData } from './type';
+
+const DUMMY_FEE_REFUND_DATA: IStudentFeeData[] = [
+  {
+    id: 1,
+    name: 'Aarav Sharma',
+    avatarUrl: '',
+    board: 'CBSE',
+    medium: 'English',
+    class: '10',
+    division: 'A',
+    grNo: 'GR001',
+    rollNo: '101',
+    totalPaidFees: 45000,
+    totalPendingFees: 0,
+    refundAmount: 5000,
+    requestDate: '2026-04-10',
+    reasonOfRefund: 'TC Issued',
+    parentName: 'Rajesh Sharma',
+    status: FeeRefundStatusType.Approved,
+    refundMethod: 'Bank Transfer',
+  },
+  {
+    id: 2,
+    name: 'Priya Patel',
+    avatarUrl: '',
+    board: 'CBSE',
+    medium: 'English',
+    class: '9',
+    division: 'B',
+    grNo: 'GR002',
+    rollNo: '205',
+    totalPaidFees: 38000,
+    totalPendingFees: 2000,
+    refundAmount: 3000,
+    requestDate: '2026-04-15',
+    reasonOfRefund: 'Excess Payment',
+    parentName: 'Suresh Patel',
+    status: FeeRefundStatusType.Pending,
+    refundMethod: 'Cash',
+  },
+  {
+    id: 3,
+    name: 'Rohan Mehta',
+    avatarUrl: '',
+    board: 'SSC',
+    medium: 'Gujarati',
+    class: '8',
+    division: 'A',
+    grNo: 'GR003',
+    rollNo: '310',
+    totalPaidFees: 30000,
+    totalPendingFees: 0,
+    refundAmount: 2500,
+    requestDate: '2026-04-20',
+    reasonOfRefund: 'School Transfer',
+    parentName: 'Amit Mehta',
+    status: FeeRefundStatusType.UnderReview,
+    refundMethod: 'Cheque',
+  },
+  {
+    id: 4,
+    name: 'Sneha Joshi',
+    avatarUrl: '',
+    board: 'CBSE',
+    medium: 'English',
+    class: '7',
+    division: 'C',
+    grNo: 'GR004',
+    rollNo: '412',
+    totalPaidFees: 28000,
+    totalPendingFees: 1000,
+    refundAmount: 1500,
+    requestDate: '2026-04-22',
+    reasonOfRefund: 'Double Payment',
+    parentName: 'Vijay Joshi',
+    status: FeeRefundStatusType.Rejected,
+    refundMethod: 'Bank Transfer',
+  },
+  {
+    id: 5,
+    name: 'Karan Desai',
+    avatarUrl: '',
+    board: 'SSC',
+    medium: 'English',
+    class: '11',
+    division: 'A',
+    grNo: 'GR005',
+    rollNo: '502',
+    totalPaidFees: 52000,
+    totalPendingFees: 0,
+    refundAmount: 7000,
+    requestDate: '2026-04-28',
+    reasonOfRefund: 'Stream Change',
+    parentName: 'Nilesh Desai',
+    status: FeeRefundStatusType.ImageUploaded,
+    refundMethod: 'Bank Transfer',
+  },
+];
 
 const FeeRefund = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -112,6 +210,28 @@ const FeeRefund = () => {
             handleClose(null, false);
           }}
         />
+      ) : viewRefundRequest.value ? (
+        <CustomBreadcrumbs
+          heading="View Refund Request"
+          description="Review the details of the student's fee refund request and take appropriate action by approving or rejecting it."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            {
+              name: 'Fee Refund',
+              href: '/finance/fee-refund',
+              onClick() {
+                viewRefundRequest.onFalse();
+                setSelectedFeeRefund(null);
+              },
+            },
+            { name: 'View Refund Request' },
+          ]}
+          isBack={viewRefundRequest.value}
+          onBack={() => {
+            viewRefundRequest.onFalse();
+            setSelectedFeeRefund(null);
+          }}
+        />
       ) : (
         <CustomBreadcrumbs
           heading="Fee Refund"
@@ -134,36 +254,18 @@ const FeeRefund = () => {
         />
       )}
 
-      {!addRefundRequest.value && (
-        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
-          <CustomSelect
-            label="Board"
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={selectedBoard}
-            onChange={(value) => {
-              setSelectedBoard(value as string);
-              setSelectedMedium('');
-            }}
-            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          />
-          <CustomSelect
-            label="Medium"
-            options={mediums || []}
-            labelKey="name"
-            disabled={!selectedBoard}
-            valueKey="id"
-            value={selectedMedium}
-            onChange={(value) => setSelectedMedium(value as string)}
-            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          />
-        </Box>
-      )}
-
-      {!addRefundRequest.value && (
+      {!addRefundRequest.value && !viewRefundRequest.value && (
         <StudentFeeRefundTable
-          data={feeRefundData}
+          data={feeRefundData?.length ? feeRefundData : DUMMY_FEE_REFUND_DATA}
+          boards={boards || []}
+          mediums={mediums || []}
+          selectedBoard={selectedBoard}
+          selectedMedium={selectedMedium}
+          onBoardChange={(value) => {
+            setSelectedBoard(value);
+            setSelectedMedium('');
+          }}
+          onMediumChange={setSelectedMedium}
           onRequestRefund={(data) => {
             setSelectedFeeRefund(data);
             addRefundRequest.onTrue();
@@ -181,53 +283,32 @@ const FeeRefund = () => {
 
       {addRefundRequest.value && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <FeeRefundFormComponent
-            onCancel={handleClose}
-            student={selectedFeeRefund as IStudentFeeData}
-          />
+          <FeeRefundFormComponent onCancel={handleClose} />
         </Card>
       )}
 
-      <CustomDialog
-        open={viewRefundRequest.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Request</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal provides administrators with complete details of the fee refund request submitted by a student, enabling them to review the information and take action by approving or rejecting the request."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        handleClose={() => {
-          setSelectedFeeRefund(null);
-          viewRefundRequest.onFalse();
-        }}
-        maxWidth="sm"
-      >
-        <RefundRemarksForm
-          open={viewRefundRequest}
-          onClose={() => {
-            viewRefundRequest.onFalse();
-            setSelectedFeeRefund(null);
-          }}
-          student={selectedFeeRefund as IStudentFeeData}
-          onApprove={() => {
-            onConfirmDialg.onTrue();
-            setSelectedMode('Approve');
-            // Handle approve logic
-          }}
-          onReject={() => {
-            onConfirmDialg.onTrue();
-            setSelectedMode('Reject');
-            // Handle reject logic
-          }}
-        />
-      </CustomDialog>
+      {viewRefundRequest.value && selectedFeeRefund && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <RefundRemarksForm
+            open={viewRefundRequest}
+            onClose={() => {
+              viewRefundRequest.onFalse();
+              setSelectedFeeRefund(null);
+            }}
+            student={selectedFeeRefund as IStudentFeeData}
+            onApprove={() => {
+              onConfirmDialg.onTrue();
+              setSelectedMode('Approve');
+              // Handle approve logic
+            }}
+            onReject={() => {
+              onConfirmDialg.onTrue();
+              setSelectedMode('Reject');
+              // Handle reject logic
+            }}
+          />
+        </Card>
+      )}
 
       <CustomDialog
         open={processRefundDialog.value}
@@ -281,7 +362,6 @@ const FeeRefund = () => {
         handleClose={() => {
           onConfirmDialg.onFalse();
           setSelectedMode('');
-          setSelectedFeeRefund(null);
         }}
         maxWidth="xs"
       >

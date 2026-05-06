@@ -281,16 +281,6 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
     [concessionCounts]
   );
 
-  const getStatusLabel = (status: number) => {
-    const map: Record<number, string> = {
-      [ConcessionStatusType.Pending]: 'Pending',
-      [ConcessionStatusType.Approved]: 'Approved',
-      [ConcessionStatusType.Rejected]: 'Rejected',
-      [ConcessionStatusType.Cancelled]: 'Cancelled',
-    };
-    return map[status] || 'Unknown';
-  };
-
   return (
     <>
       <Box

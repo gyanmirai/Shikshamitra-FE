@@ -1,0 +1,119 @@
+{
+  "studentFeePaymentData": [
+    {
+      "id": "sfp-001",
+      "studentId": "STU001",
+      "feeHeads": [
+        {
+          "feeHeadId": "FH001",
+          "feeHeadName": "Tuition Fee",
+          "months": [
+            {
+              "month": "April 2024",
+              "totalAmount": 5000,
+              "paidAmount": 5000,
+              "alreadyRefunded": 0
+            },
+            { "month": "May 2024", "totalAmount": 5000, "paidAmount": 3000, "alreadyRefunded": 0 },
+            {
+              "month": "June 2024",
+              "totalAmount": 5000,
+              "paidAmount": 5000,
+              "alreadyRefunded": 2000
+            },
+            {
+              "month": "July 2024",
+              "totalAmount": 5000,
+              "paidAmount": 5000,
+              "alreadyRefunded": 5000
+            },
+            { "month": "August 2024", "totalAmount": 5000, "paidAmount": 0, "alreadyRefunded": 0 }
+          ]
+        },
+        {
+          "feeHeadId": "FH002",
+          "feeHeadName": "Exam Fee",
+          "months": [
+            {
+              "month": "April 2024",
+              "totalAmount": 1200,
+              "paidAmount": 1200,
+              "alreadyRefunded": 0
+            },
+            {
+              "month": "August 2024",
+              "totalAmount": 1200,
+              "paidAmount": 800,
+              "alreadyRefunded": 0
+            },
+            {
+              "month": "December 2024",
+              "totalAmount": 1200,
+              "paidAmount": 1200,
+              "alreadyRefunded": 1200
+            }
+          ]
+        },
+        {
+          "feeHeadId": "FH003",
+          "feeHeadName": "Transport Fee",
+          "months": [
+            {
+              "month": "April 2024",
+              "totalAmount": 2000,
+              "paidAmount": 2000,
+              "alreadyRefunded": 0
+            },
+            {
+              "month": "May 2024",
+              "totalAmount": 2000,
+              "paidAmount": 2000,
+              "alreadyRefunded": 500
+            },
+            { "month": "June 2024", "totalAmount": 2000, "paidAmount": 0, "alreadyRefunded": 0 },
+            {
+              "month": "July 2024",
+              "totalAmount": 2000,
+              "paidAmount": 2000,
+              "alreadyRefunded": 2000
+            }
+          ]
+        },
+        {
+          "feeHeadId": "FH004",
+          "feeHeadName": "Laboratory Fee",
+          "months": [
+            { "month": "April 2024", "totalAmount": 800, "paidAmount": 800, "alreadyRefunded": 0 },
+            { "month": "October 2024", "totalAmount": 800, "paidAmount": 400, "alreadyRefunded": 0 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sfp-002",
+      "studentId": "STU002",
+      "feeHeads": [
+        {
+          "feeHeadId": "FH001",
+          "feeHeadName": "Tuition Fee",
+          "months": [
+            {
+              "month": "April 2024",
+              "totalAmount": 4500,
+              "paidAmount": 4500,
+              "alreadyRefunded": 0
+            },
+            { "month": "May 2024", "totalAmount": 4500, "paidAmount": 4500, "alreadyRefunded": 0 }
+          ]
+        },
+        {
+          "feeHeadId": "FH002",
+          "feeHeadName": "Library Fee",
+          "months": [
+            { "month": "April 2024", "totalAmount": 600, "paidAmount": 600, "alreadyRefunded": 300 }
+          ]
+        }
+      ]
+    }
+  ]
+}

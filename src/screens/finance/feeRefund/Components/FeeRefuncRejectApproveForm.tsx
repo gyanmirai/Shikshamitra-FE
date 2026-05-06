@@ -6,9 +6,64 @@ import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IReasonApprovalFormProps } from '../../Concession/type';
+
+const DUMMY_REFUND_FEE_HEAD_WISE = [
+  {
+    feeHeadId: 'fh-1',
+    feeHeadName: 'Tuition Fee',
+    totalPaid: 9000,
+    totalRefunded: 2000,
+    items: [
+      {
+        month: 'April',
+        total: 3000,
+        paid: 3000,
+        refundAmount: 1000,
+        status: FeeCollectionStatusType.Paid,
+      },
+      {
+        month: 'May',
+        total: 3000,
+        paid: 3000,
+        refundAmount: 0,
+        status: FeeCollectionStatusType.Paid,
+      },
+      {
+        month: 'June',
+        total: 3000,
+        paid: 3000,
+        refundAmount: 1000,
+        status: FeeCollectionStatusType.Partial,
+      },
+    ],
+  },
+  {
+    feeHeadId: 'fh-2',
+    feeHeadName: 'Hostel Fee',
+    totalPaid: 6000,
+    totalRefunded: 0,
+    items: [
+      {
+        month: 'April',
+        total: 3000,
+        paid: 3000,
+        refundAmount: 0,
+        status: FeeCollectionStatusType.Paid,
+      },
+      {
+        month: 'May',
+        total: 3000,
+        paid: 3000,
+        refundAmount: 0,
+        status: FeeCollectionStatusType.Paid,
+      },
+    ],
+  },
+];
 
 const FeeRefundReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
   const formik = useFormik({

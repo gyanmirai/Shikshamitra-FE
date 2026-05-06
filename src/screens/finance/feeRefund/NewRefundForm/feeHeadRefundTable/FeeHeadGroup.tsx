@@ -1,0 +1,170 @@
+'use client';
+
+import React, { useMemo, useState } from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import { Box, Divider, Collapse, Typography } from '@mui/material';
+
+import RefundMonthRow from './RefundMonthRow';
+import RefundColHeader from './RefundColHeader';
+import FeeHeadGroupHeader from './FeeHeadGroupHeader';
+
+import type { RefundFormik, IFeeHeadPayment } from '../types';
+import type { IFeeHeadRefundItem } from '../initialValuesAndValidation';
+
+export interface FeeHeadGroupProps {
+  feeHead: IFeeHeadPayment;
+  selectedMonths: string[];
+  formik: RefundFormik;
+  showValidation: boolean;
+  onToggleMonth: (month: string) => void;
+  onToggleAll: () => void;
+}
+
+const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
+  feeHead,
+  selectedMonths,
+  formik,
+  showValidation,
+  onToggleMonth,
+  onToggleAll,
+}): React.ReactElement => {
+  const theme = useTheme();
+  const [open, setOpen] = useState(true);
+
+  /**
+   * Memoization Justification:
+   * - Locates this fee head's refund entry within the feeHeadRefunds array
+   * - feeHeadRefunds changes reference on every setFieldValue call;
+   *   without memoization this find() runs on every render of every group
+   * - Stabilizes fhEntry reference so dependent memos only recompute when relevant data changes
+   */
+  const fhEntry: IFeeHeadRefundItem | undefined = useMemo(
+    () => formik.values.feeHeadRefunds.find((fh) => fh.feeHeadId === feeHead.feeHeadId),
+    [formik.values.feeHeadRefunds, feeHead.feeHeadId]
+  );
+
+  /**
+   * Memoization Justification:
+   * - Sums refund amounts across all selected months for this fee head
+   * - Prevents recomputation when unrelated formik fields change
+   */
+  const totalRefundInput = useMemo(
+    () => (fhEntry?.months ?? []).reduce((s, m) => s + (Number(m.amount) || 0), 0),
+    [fhEntry]
+  );
+
+  /**
+   * Memoization Justification:
+   * - Computes total refundable amount for selected months
+   * - selectedMonths and feeHead.items are stable; recompute only when selection changes
+   */
+  const totalRefundable = useMemo(
+    () =>
+      feeHead.items
+        .filter((i) => selectedMonths.includes(i.month))
+        .reduce((s, i) => s + Math.max(0, i.paid - i.refunded), 0),
+    [feeHead.items, selectedMonths]
+  );
+
+  const handleAmountChange = (month: string, refundable: number, rawValue: string): void => {
+    if (rawValue !== '' && (Number.isNaN(Number(rawValue)) || Number(rawValue) < 0)) return;
+    const clamped = rawValue === '' ? 0 : Math.min(Number(rawValue), refundable);
+    const refunds = formik.values.feeHeadRefunds;
+    const updated = refunds.map((fh) =>
+      fh.feeHeadId === feeHead.feeHeadId
+        ? {
+            ...fh,
+            months: fh.months.map((m) => (m.month === month ? { ...m, amount: clamped } : m)),
+          }
+        : fh
+    );
+    formik.setFieldValue('feeHeadRefunds', updated);
+    formik.setFieldTouched('feeHeadRefunds', true, false);
+  };
+
+  const hasSelectable = feeHead.items.some((i) => Math.max(0, i.paid - i.refunded) > 0);
+  const visibleItems = feeHead.items.filter((item) => item.paid > 0);
+
+  return (
+    <Box
+      sx={{
+        mb: 1.5,
+        borderRadius: 1.5,
+        overflow: 'hidden',
+        border: `1px solid ${theme.palette.divider}`,
+        opacity: !hasSelectable ? 0.65 : 1,
+      }}
+    >
+      <FeeHeadGroupHeader
+        feeHead={feeHead}
+        selectedMonths={selectedMonths}
+        isOpen={open}
+        totalRefundInput={totalRefundInput}
+        onCheckboxToggle={onToggleAll}
+        onExpandToggle={() => setOpen((o) => !o)}
+      />
+
+      <Collapse in={open}>
+        <Divider />
+        <RefundColHeader />
+
+        {visibleItems.map((item, idx) => {
+          const refundable = Math.max(0, item.paid - item.refunded);
+          const isSelected = selectedMonths.includes(item.month);
+          const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? 0;
+          const inputError =
+            showValidation && isSelected && (refundValue <= 0 || refundValue > refundable);
+
+          return (
+            <React.Fragment key={item.month}>
+              <RefundMonthRow
+                item={item}
+                isSelected={isSelected}
+                isDisabled={refundable === 0}
+                refundValue={refundValue}
+                showInputError={inputError}
+                onToggle={() => onToggleMonth(item.month)}
+                onAmountChange={(raw) => handleAmountChange(item.month, refundable, raw)}
+              />
+              {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
+            </React.Fragment>
+          );
+        })}
+
+        {selectedMonths.length > 0 && (
+          <>
+            <Divider />
+            <Box
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+              gap={3}
+              px={2}
+              py={0.75}
+              sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                Selected: <strong>{selectedMonths.length}</strong> month
+                {selectedMonths.length !== 1 ? 's' : ''}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Max refundable:{' '}
+                <strong style={{ color: theme.palette.success.main }}>
+                  {formatCurrency(totalRefundable)}
+                </strong>
+              </Typography>
+              {totalRefundInput > 0 && (
+                <Typography variant="caption" color="primary.main" fontWeight={700}>
+                  Refund requested: {formatCurrency(totalRefundInput)}
+                </Typography>
+              )}
+            </Box>
+          </>
+        )}
+      </Collapse>
+    </Box>
+  );
+};
+
+export default FeeHeadGroup;
