@@ -208,16 +208,19 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   ),
 
                 // Slot Type Validation
-                slotType: Yup.string().required('Slot type is required'),
+                slotType: Yup.string()
+                  .required('Slot type is required')
+                  .oneOf(['period', 'break'], 'Invalid slot type'),
 
                 // Break Type Validation
                 breakType: Yup.string()
                   // eslint-disable-next-line func-names
                   .when('slotType', {
-                    is: 1,
+                    is: 'break',
                     then: (schema) =>
-                      schema.required('Break type is required when slot type is break'),
-
+                      schema
+                        .required('Break type is required when slot type is break')
+                        .oneOf(['short', 'lunch'], 'Invalid break type'),
                     otherwise: (schema) => schema.notRequired(),
                   })
 
@@ -371,7 +374,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   const endMin = toMinutesOfDay(slot.endTime);
                   if (startMin == null || endMin == null) return;
                   const duration = endMin - startMin;
-                  if (+slot.slotType === 0) {
+                  if (slot.slotType === 'period') {
                     totalPeriodMinutes += duration;
                   } else {
                     totalBreakMinutes += duration;

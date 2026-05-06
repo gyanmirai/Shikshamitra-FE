@@ -227,7 +227,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 multiple
                 previewCount={6}
                 onChange={(files) => onFileUpload(files, index)}
-                value={subjectDocuments}
+                value={subject.documents}
                 label="Attach Support Documents"
                 outputFormat="file"
               />

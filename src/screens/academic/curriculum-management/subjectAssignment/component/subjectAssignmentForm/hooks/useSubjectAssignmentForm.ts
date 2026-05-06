@@ -134,6 +134,8 @@ export function useSubjectAssignmentForm({
     options: { skip: !classId },
   });
 
+  console.log(subjectOptionsData, '[][][][');
+
   /**
    * Memoization Justification:
    * Checks if a subject/group already exists in the table to prevent duplicates.
@@ -207,6 +209,7 @@ export function useSubjectAssignmentForm({
       formik.setFieldValue('selectedSubjects', []);
       return;
     }
+    console.log('Selected subjects/groups changed:', newValue);
     formik.setFieldValue('selectedSubjects', newValue);
     formik.setFieldTouched('subjectName', false);
 

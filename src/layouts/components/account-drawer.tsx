@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import Drawer from '@mui/material/Drawer';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'src/routes/hooks';
 import { useState, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
@@ -23,7 +24,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateAvatar } from 'src/components/animate';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useAuthSession } from 'src/hooks/useAuthSession';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
@@ -56,7 +56,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   const { employee } = useSelector((state: any) => state.auth);
 
-  const session: any = useAuthSession();
+  const session: any = useSession();
   const { data: user } = session;
 
   const { profile } = user;
