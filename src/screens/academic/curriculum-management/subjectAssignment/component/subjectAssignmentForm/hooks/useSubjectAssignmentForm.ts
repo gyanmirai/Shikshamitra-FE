@@ -215,7 +215,7 @@ export function useSubjectAssignmentForm({
 
     const allSubjects: ISubjectAssignmentFormValues['subjects'] = [];
 
-    newValue.forEach((option) => {
+    newValue.forEach((option: any) => {
       if (option.type === 0) {
         allSubjects.push({
           ...option,
@@ -236,7 +236,7 @@ export function useSubjectAssignmentForm({
           subjectNo: option.value,
         });
       } else if (option.type === 1) {
-        const electives = (option.subjects || []).map((subject) => ({
+        const electives = (option.subjects || []).map((subject: any) => ({
           ...subject,
           subjectId: subject.id,
           subjectName: subject.name,
@@ -258,7 +258,7 @@ export function useSubjectAssignmentForm({
     });
 
     formik.setFieldValue('subjects', allSubjects);
-    const hasCore = newValue.some((v) => v.type === 0);
+    const hasCore = newValue.some((v: any) => v.type === 0);
     formik.setFieldValue('subjectType', hasCore ? 0 : 1);
   };
 

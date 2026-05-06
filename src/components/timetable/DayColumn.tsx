@@ -17,7 +17,7 @@ interface DayColumnProps {
   onDropSubject: (dayIndex: string, slotId: string, subject: Subject, fromSlotId?: string) => void;
   onRemoveSubject: (day: DayOfWeek, slotId: number, subject: Subject) => void;
   onAssignTeacher: (day: DayOfWeek, slotId: string, subject: Subject) => void;
-  onAssignRoom: (slotId: string, subject: Subject) => void;
+  onAssignRoom: (day: DayOfWeek, slotId: string, subject: Subject) => void;
   readOnly?: boolean;
 }
 

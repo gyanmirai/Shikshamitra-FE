@@ -21,7 +21,7 @@ interface TimetableSlotProps {
   attachedSubject?: Subject | null;
   onRemoveSubject?: (day: DayOfWeek, slotId: number, subject: Subject) => void;
   onAssignTeacher?: (day: DayOfWeek, slotId: string, subject: Subject) => void;
-  onAssignRoom?: (slotId: string, subject: Subject) => void;
+  onAssignRoom?: (day: DayOfWeek, slotId: string, subject: Subject) => void;
   readOnly?: boolean;
   day: DayOfWeek;
   index: number;
@@ -38,6 +38,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   day,
   index,
 }) => {
+  console.log('slot====in slot---', slot);
   const deleteDialog = useBoolean();
 
   const handleConfirmRemove = (e: React.MouseEvent) => {
@@ -60,7 +61,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const roomDialog = {
     onTrue: () => {
       if (onAssignRoom && (attachedSubject || slot.subjects?.[0])) {
-        onAssignRoom(slot.id, attachedSubject || (slot.subjects![0] as any));
+        onAssignRoom(day, String(index), attachedSubject || (slot.subjects![0] as any));
       }
     },
   };
@@ -71,17 +72,41 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const isFilled = hasSubjects || !!attachedSubject;
 
   const displaySubjects = hasSubjects ? slot.subjects! : attachedSubject ? [attachedSubject] : [];
-
   const theme = useTheme();
 
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.SUBJECT,
-    item: () => ({
-      id: attachedSubject?.id || displaySubjects[0]?.id || 'temp',
-      type: ItemTypes.SUBJECT,
-      subject: attachedSubject || displaySubjects[0],
-      fromSlotId: `${day}-${index}`,
-    }),
+    item: () => {
+      // When dragging an elective group from an already-placed slot, reconstruct
+      // the full elective subject so the drop handler can restore all sub-subjects.
+      if (slot.subjectType === 1 && slot.electiveGroupId && displaySubjects.length > 0) {
+        const electiveSubject = {
+          id: slot.electiveGroupId,
+          name: slot.electiveGroupName || displaySubjects.map((s) => s.name).join(' | '),
+          color: displaySubjects[0]?.color || '#000',
+          subjectType: 1,
+          electiveGroupId: slot.electiveGroupId,
+          electiveGroupName: slot.electiveGroupName,
+          subjects: displaySubjects.map((s) => ({
+            subjectId: s.id,
+            subjectName: s.name,
+            color: s.color,
+          })),
+        };
+        return {
+          id: slot.electiveGroupId,
+          type: ItemTypes.SUBJECT,
+          subject: electiveSubject as any,
+          fromSlotId: `${day}-${index}`,
+        };
+      }
+      return {
+        id: attachedSubject?.id || displaySubjects[0]?.id || 'temp',
+        type: ItemTypes.SUBJECT,
+        subject: attachedSubject || displaySubjects[0],
+        fromSlotId: `${day}-${index}`,
+      };
+    },
     canDrag: () => isFilled && !isBreak,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
@@ -173,8 +198,12 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     };
   };
 
+  const renderTime = (time: any) =>
+    typeof time?.format === 'function' ? time.format('HH:mm') : String(time);
+
   const getTooltipContent = () => {
-    if (isBreak) return `${slot.breakType} Break (${slot.startTime} - ${slot.endTime})`;
+    if (isBreak)
+      return `${slot.breakType} Break (${renderTime(slot.startTime)} - ${renderTime(slot.endTime)})`;
     if (!isFilled) return 'Empty Slot';
 
     const hasAnyTeacher = displaySubjects.some((s) => s.teacherName);
@@ -208,7 +237,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             pt: 0.5,
           }}
         >
-          {slot.startTime} - {slot.endTime}
+          {renderTime(slot.startTime)} - {renderTime(slot.endTime)}
         </Typography>
       </Box>
     );
@@ -243,7 +272,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               }}
             >
               <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>
-                {slot.startTime} - {slot.endTime}
+                {renderTime(slot.startTime)} - {renderTime(slot.endTime)}
               </Typography>
             </Box>
           )}
