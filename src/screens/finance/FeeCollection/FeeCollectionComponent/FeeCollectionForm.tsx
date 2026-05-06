@@ -163,17 +163,13 @@ const buildDetailsForMethod = (method: string): Record<string, any> => {
 
 const validationSchema = Yup.object({
   selectedItems: Yup.array().min(1, 'Select at least one fee item to collect'),
-  payments: Yup.array()
-    .of(
-      Yup.object({
-        paymentMethod: Yup.string().required('Payment method is required'),
-        amount: Yup.number()
-          .typeError('Amount must be a number')
-          .required('Amount is required')
-          .positive('Amount must be positive'),
-      })
-    )
-    .min(1, 'Add at least one payment method'),
+  payment: Yup.object({
+    paymentMethod: Yup.string().required('Payment method is required'),
+    amount: Yup.number()
+      .typeError('Amount must be a number')
+      .required('Amount is required')
+      .positive('Amount must be positive'),
+  }),
 });
 
 // ─── Initial Values ────────────────────────────────────────────────────────────
@@ -184,7 +180,7 @@ const buildInitialValues = (student: IStudentFee | null): FeeCollectionFormValue
   charges: [],
   subtotal: 0,
   finalAmount: 0,
-  payments: [{ paymentMethod: 'Cash', amount: '', details: {} }],
+  payment: { paymentMethod: 'Cash', amount: '', details: {} },
   remarks: '',
 });
 
@@ -247,8 +243,21 @@ const FeeCollectComponentForm = ({
     initialValues: buildInitialValues(student),
     validationSchema,
     enableReinitialize: true,
+    validate: (values) => {
+      const errors: any = {};
+      if (!values.payment.amount) return errors;
+      const itemsTotal = values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
+      const chargesTotal = (chargesData ?? [])
+        .filter((c) => values.charges.includes(c.chargeId))
+        .reduce((s, c) => s + c.amount, 0);
+      const total = itemsTotal + chargesTotal;
+      const paid = Number(String(values.payment.amount).replace(/[₹,\s]/g, ''));
+      if (!Number.isNaN(paid) && total > 0 && paid > total) {
+        errors.payment = { amount: `Amount cannot exceed ₹${formatNumber(total)}` };
+      }
+      return errors;
+    },
     onSubmit: (values) => {
-      if (totalAllocated > finalAmount) return;
       onSubmit?.({ ...values, subtotal, finalAmount });
       onCancel?.(null, true);
     },
@@ -267,14 +276,10 @@ const FeeCollectComponentForm = ({
 
   const finalAmount = subtotal;
 
-  const totalAllocated = useMemo(
-    () =>
-      formik.values.payments.reduce((s, p) => {
-        const n = Number(String(p.amount || 0).replace(/[₹,\s]/g, ''));
-        return s + (Number.isNaN(n) ? 0 : n);
-      }, 0),
-    [formik.values.payments]
-  );
+  const totalAllocated = useMemo(() => {
+    const n = Number(String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, ''));
+    return Number.isNaN(n) ? 0 : n;
+  }, [formik.values.payment.amount]);
 
   const balance = finalAmount - totalAllocated;
 
@@ -285,30 +290,22 @@ const FeeCollectComponentForm = ({
   const handleChargesChange = (chargeIds: string[]) =>
     formik.setFieldValue('charges', chargeIds, false);
 
-  const handlePaymentMethodsChange = (selectedMethods: string[]) => {
-    const current = [...formik.values.payments];
-    selectedMethods.forEach((method) => {
-      if (!current.some((p) => p.paymentMethod === method)) {
-        current.push({ paymentMethod: method, amount: '', details: buildDetailsForMethod(method) });
-      }
+  const handlePaymentMethodChange = (method: string) => {
+    formik.setFieldValue('payment', {
+      paymentMethod: method,
+      amount: formik.values.payment.amount,
+      details: buildDetailsForMethod(method),
     });
-    const filtered = current.filter((p) => selectedMethods.includes(p.paymentMethod));
-    formik.setFieldValue('payments', filtered);
   };
 
-  const updatePayment = (idx: number, field: keyof FeeCollectionPayment, value: any) =>
-    formik.setFieldValue(
-      'payments',
-      formik.values.payments.map((p, i) => (i === idx ? { ...p, [field]: value } : p))
-    );
+  const updatePayment = (field: keyof FeeCollectionPayment, value: any) =>
+    formik.setFieldValue('payment', { ...formik.values.payment, [field]: value });
 
-  const updatePaymentDetail = (idx: number, detailKey: string, value: any) =>
-    formik.setFieldValue(
-      'payments',
-      formik.values.payments.map((p, i) =>
-        i === idx ? { ...p, details: { ...p.details, [detailKey]: value } } : p
-      )
-    );
+  const updatePaymentDetail = (detailKey: string, value: any) =>
+    formik.setFieldValue('payment', {
+      ...formik.values.payment,
+      details: { ...formik.values.payment.details, [detailKey]: value },
+    });
 
   const entryCount = useMemo(
     () => (ledgerData.monthWise ?? []).reduce((s, g) => s + g.items.length, 0),
@@ -407,7 +404,7 @@ const FeeCollectComponentForm = ({
           <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
             <Scrollbar sx={{ height: '100%', pr: 0.5 }}>
               {/* ── Fee Summary Card ── */}
-              <Card sx={{ p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)' }}>
+              <Card sx={{ p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)', ml: 0.5 }}>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <Iconify icon="solar:calculator-bold" sx={{ color: 'primary.main', width: 24 }} />
                   <Typography variant="h6">Fee Summary</Typography>
@@ -524,7 +521,9 @@ const FeeCollectComponentForm = ({
               </Card>
 
               {/* ── Payment Methods Card ── */}
-              <Card sx={{ mt: 1.5, p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)' }}>
+              <Card
+                sx={{ mt: 1.5, p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)', ml: 0.5 }}
+              >
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <Iconify icon="solar:card-bold" sx={{ color: 'primary.main', width: 24 }} />
                   <Typography variant="h6">Payment Methods</Typography>
@@ -532,182 +531,171 @@ const FeeCollectComponentForm = ({
                 <Divider sx={{ mb: 1.5 }} />
 
                 <ShakingTextField
-                  error={
-                    formik.touched.payments &&
-                    typeof formik.errors.payments === 'string' &&
-                    Boolean(formik.errors.payments)
-                  }
+                  error={Boolean(
+                    formik.touched.payment?.paymentMethod && formik.errors.payment?.paymentMethod
+                  )}
                 >
                   <CustomSelect
-                    label="Select Payment Method(s) *"
+                    label="Select Payment Method *"
                     options={Object.keys(paymentMethodsConfig).map((m) => ({ value: m, label: m }))}
                     labelKey="label"
                     valueKey="value"
-                    multiple
                     disabled={finalAmount === 0}
-                    value={formik.values.payments.map((p) => p.paymentMethod)}
-                    onChange={(val) => handlePaymentMethodsChange(val as string[])}
-                    error={
-                      formik.touched.payments &&
-                      typeof formik.errors.payments === 'string' &&
-                      Boolean(formik.errors.payments)
-                    }
+                    value={formik.values.payment.paymentMethod}
+                    onChange={(val) => handlePaymentMethodChange(val as string)}
+                    error={Boolean(
+                      formik.touched.payment?.paymentMethod && formik.errors.payment?.paymentMethod
+                    )}
                     helperText={
-                      formik.touched.payments && typeof formik.errors.payments === 'string'
-                        ? (formik.errors.payments as string)
+                      formik.touched.payment?.paymentMethod
+                        ? ((formik.errors.payment?.paymentMethod as string) ?? '')
                         : ''
                     }
                     formControlProps={{ sx: { width: '100%' } }}
-                    name="payments"
+                    name="payment"
                   />
                 </ShakingTextField>
 
-                {formik.values.payments.map((payment, idx) => {
-                  const methodConfig =
-                    paymentMethodsConfig[
-                      payment.paymentMethod as keyof typeof paymentMethodsConfig
-                    ] ?? [];
+                {formik.values.payment.paymentMethod && (
+                  <Box
+                    component={motion.div}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22 }}
+                    mt={1.5}
+                  >
+                    <Typography variant="subtitle2" color="primary.main" fontWeight={700} mb={1}>
+                      {formik.values.payment.paymentMethod}
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {(
+                        paymentMethodsConfig[
+                          formik.values.payment.paymentMethod as keyof typeof paymentMethodsConfig
+                        ] ?? []
+                      ).map((field: IPaymentFieldConfig) => {
+                        const isAmount = field.name === 'amount';
+                        const fieldPath = isAmount
+                          ? 'payment.amount'
+                          : `payment.details.${field.name}`;
+                        const fieldValue = isAmount
+                          ? formik.values.payment.amount
+                          : formik.values.payment.details[field.name];
+                        const isTouched = isAmount
+                          ? formik.touched.payment?.amount
+                          : (formik.touched.payment?.details as any)?.[field.name];
+                        const errorMsg = isAmount
+                          ? formik.errors.payment?.amount
+                          : (formik.errors.payment?.details as any)?.[field.name];
 
-                  return (
-                    <Box
-                      key={payment.paymentMethod}
-                      component={motion.div}
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.22 }}
-                      mt={1.5}
-                    >
-                      <Typography variant="subtitle2" color="primary.main" fontWeight={700} mb={1}>
-                        {payment.paymentMethod}
-                      </Typography>
-                      <Grid container spacing={2}>
-                        {methodConfig.map((field: IPaymentFieldConfig) => {
-                          const isAmount = field.name === 'amount';
-                          const fieldPath = isAmount
-                            ? `payments[${idx}].amount`
-                            : `payments[${idx}].details.${field.name}`;
-                          const fieldValue = isAmount
-                            ? payment.amount
-                            : payment.details[field.name];
-                          const isTouched = isAmount
-                            ? (formik.touched.payments as any)?.[idx]?.amount
-                            : (formik.touched.payments as any)?.[idx]?.details?.[field.name];
-                          const errorMsg = isAmount
-                            ? (formik.errors.payments as any)?.[idx]?.amount
-                            : (formik.errors.payments as any)?.[idx]?.details?.[field.name];
+                        return (
+                          <Grid
+                            size={{ xs: 12, sm: 6 }}
+                            key={`${formik.values.payment.paymentMethod}-${field.name}`}
+                          >
+                            {field.type === 'date' ? (
+                              <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                <DatePicker
+                                  label={`${field.label}${field.required ? ' *' : ''}`}
+                                  value={fieldValue ? dayjs(fieldValue as Dayjs) : null}
+                                  format="DD/MM/YYYY"
+                                  onChange={(date) => formik.setFieldValue(fieldPath, date)}
+                                  sx={{ width: '100%' }}
+                                  slotProps={{
+                                    textField: {
+                                      size: 'small',
+                                      fullWidth: true,
+                                      error: isTouched && Boolean(errorMsg),
+                                      helperText: isTouched ? errorMsg : '',
+                                    },
+                                  }}
+                                />
+                              </ShakingTextField>
+                            ) : field.type === 'select' ? (
+                              <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                <TextField
+                                  select
+                                  fullWidth
+                                  label={`${field.label}${field.required ? ' *' : ''}`}
+                                  value={fieldValue ?? ''}
+                                  size="small"
+                                  onChange={(e) =>
+                                    isAmount
+                                      ? updatePayment('amount', e.target.value)
+                                      : updatePaymentDetail(field.name, e.target.value)
+                                  }
+                                  error={isTouched && Boolean(errorMsg)}
+                                  helperText={isTouched ? errorMsg : ''}
+                                >
+                                  {field.options?.map((opt) => (
+                                    <MenuItem key={opt} value={opt}>
+                                      {opt}
+                                    </MenuItem>
+                                  ))}
+                                </TextField>
+                              </ShakingTextField>
+                            ) : field.type === 'amount' ? (
+                              <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                <NumericFormatCustom
+                                  fullWidth
+                                  size="small"
+                                  label={`${field.label}${field.required ? ' *' : ''}`}
+                                  value={fieldValue ?? ''}
+                                  onChange={(e) => {
+                                    const raw = e.target.value.replace(/[₹,\s]/g, '');
+                                    updatePayment('amount', raw);
+                                  }}
+                                  error={isTouched && Boolean(errorMsg)}
+                                  helperText={isTouched ? errorMsg : ''}
+                                />
+                              </ShakingTextField>
+                            ) : field.type === 'multiline' ? (
+                              <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                <TextField
+                                  fullWidth
+                                  multiline
+                                  minRows={2}
+                                  size="small"
+                                  label={`${field.label}${field.required ? ' *' : ''}`}
+                                  value={fieldValue ?? ''}
+                                  onChange={(e) => updatePaymentDetail(field.name, e.target.value)}
+                                  error={isTouched && Boolean(errorMsg)}
+                                  helperText={isTouched ? errorMsg : ''}
+                                />
+                              </ShakingTextField>
+                            ) : (
+                              <ShakingTextField error={isTouched && Boolean(errorMsg)}>
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  type={field.type}
+                                  label={`${field.label}${field.required ? ' *' : ''}`}
+                                  value={fieldValue ?? ''}
+                                  onChange={(e) => {
+                                    const { value: val } = e.target;
+                                    if (field.pattern && val !== '') {
+                                      if (!/^[a-zA-Z0-9 ]*$/.test(val)) return;
+                                    }
+                                    updatePaymentDetail(field.name, val);
+                                  }}
+                                  error={isTouched && Boolean(errorMsg)}
+                                  helperText={isTouched ? errorMsg : ''}
+                                  inputProps={
+                                    field.type === 'number'
+                                      ? { min: field.min, max: field.max }
+                                      : {}
+                                  }
+                                />
+                              </ShakingTextField>
+                            )}
+                          </Grid>
+                        );
+                      })}
+                    </Grid>
+                    <Divider sx={{ mt: 1.5 }} />
+                  </Box>
+                )}
 
-                          return (
-                            <Grid
-                              size={{ xs: 12, sm: 6 }}
-                              key={`${payment.paymentMethod}-${field.name}`}
-                            >
-                              {field.type === 'date' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <DatePicker
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={fieldValue ? dayjs(fieldValue as Dayjs) : null}
-                                    format="DD/MM/YYYY"
-                                    onChange={(date) => formik.setFieldValue(fieldPath, date)}
-                                    sx={{ width: '100%' }}
-                                    slotProps={{
-                                      textField: {
-                                        size: 'small',
-                                        fullWidth: true,
-                                        error: isTouched && Boolean(errorMsg),
-                                        helperText: isTouched ? errorMsg : '',
-                                      },
-                                    }}
-                                  />
-                                </ShakingTextField>
-                              ) : field.type === 'select' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <TextField
-                                    select
-                                    fullWidth
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={fieldValue ?? ''}
-                                    size="small"
-                                    onChange={(e) =>
-                                      isAmount
-                                        ? updatePayment(idx, 'amount', e.target.value)
-                                        : updatePaymentDetail(idx, field.name, e.target.value)
-                                    }
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched ? errorMsg : ''}
-                                  >
-                                    {field.options?.map((opt) => (
-                                      <MenuItem key={opt} value={opt}>
-                                        {opt}
-                                      </MenuItem>
-                                    ))}
-                                  </TextField>
-                                </ShakingTextField>
-                              ) : field.type === 'amount' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <NumericFormatCustom
-                                    fullWidth
-                                    size="small"
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={fieldValue ?? ''}
-                                    onChange={(e) => {
-                                      const raw = e.target.value.replace(/[₹,\s]/g, '');
-                                      updatePayment(idx, 'amount', raw);
-                                    }}
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched ? errorMsg : ''}
-                                  />
-                                </ShakingTextField>
-                              ) : field.type === 'multiline' ? (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <TextField
-                                    fullWidth
-                                    multiline
-                                    minRows={2}
-                                    size="small"
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={fieldValue ?? ''}
-                                    onChange={(e) =>
-                                      updatePaymentDetail(idx, field.name, e.target.value)
-                                    }
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched ? errorMsg : ''}
-                                  />
-                                </ShakingTextField>
-                              ) : (
-                                <ShakingTextField error={isTouched && Boolean(errorMsg)}>
-                                  <TextField
-                                    fullWidth
-                                    size="small"
-                                    type={field.type}
-                                    label={`${field.label}${field.required ? ' *' : ''}`}
-                                    value={fieldValue ?? ''}
-                                    onChange={(e) => {
-                                      const { value: val } = e.target;
-                                      if (field.pattern && val !== '') {
-                                        if (!/^[a-zA-Z0-9 ]*$/.test(val)) return;
-                                      }
-                                      updatePaymentDetail(idx, field.name, val);
-                                    }}
-                                    error={isTouched && Boolean(errorMsg)}
-                                    helperText={isTouched ? errorMsg : ''}
-                                    inputProps={
-                                      field.type === 'number'
-                                        ? { min: field.min, max: field.max }
-                                        : {}
-                                    }
-                                  />
-                                </ShakingTextField>
-                              )}
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                      <Divider sx={{ mt: 1.5 }} />
-                    </Box>
-                  );
-                })}
-
-                {formik.values.payments.length > 0 && (
+                {formik.values.payment.paymentMethod && (
                   <Box
                     mt={1.5}
                     p={1}
@@ -810,7 +798,7 @@ const FeeCollectComponentForm = ({
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               disabled={loading}
             >
-              {loading ? 'Submitting...' : 'Submit'}
+              Submit
             </LoadingButton>
           </Box>
         </Box>

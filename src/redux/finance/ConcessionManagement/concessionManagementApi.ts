@@ -91,18 +91,9 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
 
-    getStudentConcessionRequests: builder.query({
-      query: ({ studentId, ...params }) => ({
-        url: `/concession-request/students/${studentId}`,
-        method: 'GET',
-        params,
-      }),
-      providesTags: [financeModuleType.concessionRequest],
-    }),
-
     getStudentConcessionDetails: builder.query({
       query: ({ studentId, ...params }) => ({
-        url: `/concession-request/students/${studentId}`,
+        url: `/concession-requests/${studentId}`,
         method: 'GET',
         params,
       }),
@@ -164,7 +155,6 @@ export const {
   useUpdateFeeHeadfeeHeadsDataMutation,
   useUpdateValueEntryMutation,
   useUploadDocumentsMutation,
-  useGetStudentConcessionRequestsQuery,
   useGetStudentConcessionDetailsQuery,
   useApproveConcessionRequestMutation,
   useRejectConcessionRequestMutation,

@@ -2,8 +2,6 @@
 
 import type { LabelColor } from 'src/components/label';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { varAlpha } from 'src/theme/styles';
@@ -14,9 +12,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { FeeMonthOptions } from 'src/enums/fee-collection-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
@@ -31,7 +27,6 @@ import {
   Stack,
   Paper,
   Button,
-  Checkbox,
   Skeleton,
   TextField,
   Typography,
@@ -40,161 +35,72 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
-  useCancelConcessionRequestMutation,
   useRejectConcessionRequestMutation,
-  useApproveConcessionRequestMutation,
   useGetStudentConcessionDetailsQuery,
   useDeleteConcessionApplicationMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import StudentInformationAccordion from './StucentConcessionCard';
 import DocumentDialog from '../Concession/Components/DocumentDialog';
+import ConcessionFeeHeadApprovalView from './ConcessionFeeHeadApprovalView';
 
 import type { IConcessionRequestItem, IViewConcessionRequestProps } from './type';
 
-// ─── Reason Dialog ────────────────────────────────────────────────────────────
+// ─── Reject Reason Dialog ─────────────────────────────────────────────────────
 
-interface IReasonDialogProps {
+interface IRejectDialogProps {
   open: boolean;
-  mode: 'Approve' | 'Reject' | 'Cancel';
   onClose: () => void;
   selectedItem: IConcessionRequestItem | null;
 }
 
-const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selectedItem }) => {
-  const isReject = mode === 'Reject';
-  const isCancel = mode === 'Cancel';
-  const needsReason = isReject || isCancel;
-
-  const [approveConcession, { isLoading: isApproving }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useApproveConcessionRequestMutation,
-  });
+const RejectReasonDialog: React.FC<IRejectDialogProps> = ({ open, onClose, selectedItem }) => {
+  const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
 
   const [rejectConcession, { isLoading: isRejecting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRejectConcessionRequestMutation,
   });
 
-  const [cancelConcession, { isLoading: isCancelling }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCancelConcessionRequestMutation,
-  });
+  const handleReject = async () => {
+    if (!reason.trim() || reason.trim().length < 10) {
+      setReasonError('Reason must be at least 10 characters');
+      return;
+    }
+    setReasonError('');
+    await rejectConcession({
+      studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
+      body: { message: reason },
+    }).unwrap();
+    shikshaMitraToast.success({ message: 'Concession rejected successfully' });
+    setReason('');
+    onClose();
+  };
 
-  const formik = useFormik({
-    initialValues: { reason: '', months: [] as number[] },
-    validationSchema: Yup.object({
-      reason: needsReason
-        ? Yup.string()
-            .required('Reason is required')
-            .min(10, 'Reason must be at least 10 characters')
-        : Yup.string().optional(),
-      months: isReject
-        ? Yup.array().optional()
-        : Yup.array().of(Yup.number()).min(1, 'Please select at least one month'),
-    }),
-    enableReinitialize: true,
-    onSubmit: async (values) => {
-      const body = { message: values.reason, months: values.months };
-      if (isReject) {
-        await rejectConcession({
-          studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
-          body,
-        }).unwrap();
-        shikshaMitraToast.success({ message: 'Concession rejected successfully' });
-      } else if (isCancel) {
-        await cancelConcession({
-          studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
-          body,
-        }).unwrap();
-        shikshaMitraToast.success({ message: 'Concession cancelled successfully' });
-      } else {
-        await approveConcession({
-          studentConcessionTypeRequestId: selectedItem?.studentConcessionTypeRequestId,
-          body,
-        }).unwrap();
-        shikshaMitraToast.success({ message: 'Concession approved successfully' });
-      }
-      onClose();
-    },
-  });
-
-  const toggleMonth = (value: number) => {
-    const curr = formik.values.months;
-    formik.setFieldValue(
-      'months',
-      curr.includes(value) ? curr.filter((m) => m !== value) : [...curr, value]
-    );
+  const handleClose = () => {
+    setReason('');
+    setReasonError('');
+    onClose();
   };
 
   return (
     <>
       <DialogScrollContent>
-        {/* ── Month Selection (Approve & Cancel only) ───────────────────────────────────── */}
-        {!isReject && (
-          <Box mb={2}>
-            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mb: 1 }}>
-              Select Months *
-            </Typography>
-            <Grid container spacing={1}>
-              {FeeMonthOptions.map((month) => {
-                const selected = formik.values.months.includes(month.value);
-                return (
-                  <Grid key={month.value} size={{ xs: 3 }}>
-                    <Paper
-                      variant="outlined"
-                      onClick={() => toggleMonth(month.value)}
-                      sx={{
-                        p: '8px 10px',
-                        borderRadius: 1,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        userSelect: 'none',
-                        bgcolor: selected
-                          ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1)
-                          : 'background.paper',
-                        borderColor: selected ? 'primary.main' : 'divider',
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      <Checkbox
-                        size="small"
-                        checked={selected}
-                        onChange={() => toggleMonth(month.value)}
-                        sx={{ p: 0, '& .MuiSvgIcon-root': { fontSize: 16 } }}
-                      />
-                      <Typography variant="body2" fontWeight={600}>
-                        {month.label.slice(0, 3)}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                );
-              })}
-            </Grid>
-            {formik.touched.months && formik.errors.months && (
-              <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                {formik.errors.months as string}
-              </Typography>
-            )}
-          </Box>
-        )}
-
-        {/* ── Reason ────────────────────────────────────────────── */}
-        <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
+        <ShakingTextField error={!!reasonError}>
           <TextField
             fullWidth
             multiline
             rows={3}
             size="small"
-            label={`Reason${needsReason ? ' *' : ' (optional)'}`}
-            name="reason"
-            value={formik.values.reason}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.reason && Boolean(formik.errors.reason)}
-            helperText={formik.touched.reason && formik.errors.reason}
+            label="Reason *"
+            value={reason}
+            onChange={(e) => {
+              setReason(e.target.value);
+              if (e.target.value.trim().length >= 10) setReasonError('');
+            }}
+            error={!!reasonError}
+            helperText={reasonError}
           />
         </ShakingTextField>
       </DialogScrollContent>
@@ -202,22 +108,21 @@ const ReasonDialog: React.FC<IReasonDialogProps> = ({ open, mode, onClose, selec
         <Button
           variant="outlined"
           size="small"
-          onClick={onClose}
+          color="inherit"
+          onClick={handleClose}
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
         >
           Close
         </Button>
         <LoadingButton
-          loading={isApproving || isRejecting || isCancelling}
+          loading={isRejecting}
           variant="contained"
           size="small"
-          color={isReject || isCancel ? 'error' : 'success'}
-          onClick={(e: any) => formik.handleSubmit(e)}
-          startIcon={
-            isReject || isCancel ? <Cancel fontSize="small" /> : <CheckCircle fontSize="small" />
-          }
+          color="error"
+          onClick={handleReject}
+          startIcon={<Cancel fontSize="small" />}
         >
-          {mode}
+          Reject
         </LoadingButton>
       </DialogActions>
     </>
@@ -534,11 +439,16 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 
 const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student, onClose }) => {
   const [activeTab, setActiveTab] = useState('all');
-  const confirmDialog = useBoolean();
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
+  const rejectDialog = useBoolean();
   const [selectedItem, setSelectedItem] = useState<IConcessionRequestItem | null>(null);
-  const [dialogMode, setDialogMode] = useState<'Approve' | 'Reject' | 'Cancel'>('Approve');
+  // approvalView drives the in-place fee-head-wise approval screen
+  const [approvalView, setApprovalView] = useState<{
+    item: IConcessionRequestItem;
+    mode: 'Approve' | 'Cancel';
+  } | null>(null);
+
   const [deleteConcessionApplication, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionApplicationMutation,
@@ -615,21 +525,16 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     activeTab === 'all' ? allItems : allItems.filter((i) => Number(i.status) === Number(activeTab));
 
   const handleApproveClick = (item: IConcessionRequestItem) => {
-    setSelectedItem(item);
-    setDialogMode('Approve');
-    confirmDialog.onTrue();
+    setApprovalView({ item, mode: 'Approve' });
   };
 
   const handleRejectClick = (item: IConcessionRequestItem) => {
     setSelectedItem(item);
-    setDialogMode('Reject');
-    confirmDialog.onTrue();
+    rejectDialog.onTrue();
   };
 
   const handleCancelClick = (item: IConcessionRequestItem) => {
-    setSelectedItem(item);
-    setDialogMode('Cancel');
-    confirmDialog.onTrue();
+    setApprovalView({ item, mode: 'Cancel' });
   };
 
   const handleOpenDocs = (item: IConcessionRequestItem) => {
@@ -641,6 +546,17 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     setSelectedItem(item);
     deleteDialog.onTrue();
   };
+
+  // ── Fee-head-wise approval screen (in-place) ───────────────────────────────
+  if (approvalView) {
+    return (
+      <ConcessionFeeHeadApprovalView
+        selectedItem={approvalView.item}
+        mode={approvalView.mode}
+        onBack={() => setApprovalView(null)}
+      />
+    );
+  }
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -906,43 +822,20 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
           </LoadingButton>
         }
       />
-      {/* ── Reason Dialog ────────────────────────────────────────────── */}
+      {/* ── Reject Dialog ─────────────────────────────────────────────── */}
       <CustomDialog
-        open={confirmDialog.value}
+        open={rejectDialog.value}
         handleClose={() => {
-          confirmDialog.onFalse();
+          rejectDialog.onFalse();
           setSelectedItem(null);
         }}
         maxWidth="xs"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h6">
-              {dialogMode === 'Reject'
-                ? 'Reject Concession'
-                : dialogMode === 'Cancel'
-                  ? 'Cancel Concession'
-                  : 'Approve Concession'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                dialogMode === 'Reject'
-                  ? 'Reject the concession application'
-                  : 'Approve the concession application'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+        title="Reject Concession"
       >
-        <ReasonDialog
-          open={confirmDialog.value}
-          mode={dialogMode}
+        <RejectReasonDialog
+          open={rejectDialog.value}
           onClose={() => {
-            confirmDialog.onFalse();
+            rejectDialog.onFalse();
             setSelectedItem(null);
           }}
           selectedItem={selectedItem}

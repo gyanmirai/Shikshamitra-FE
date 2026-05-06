@@ -1,3 +1,5 @@
+import type { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+
 import type { IStudentInfo } from '../Concession/type';
 
 // ---- Types for the "view concession by student" API response ----
@@ -64,4 +66,35 @@ export interface IViewConcessionRequestProps {
   onApprove?: () => void;
   onReject?: () => void;
   onClose: () => void;
+}
+
+// ---- Fee-Head Wise Approval Types ----
+
+export interface IConcessionMonthItem {
+  month: string;
+  total: number;
+  paid: number;
+  due: number;
+  concessionAmount: number;
+  status: FeeCollectionStatusType;
+}
+
+export interface IConcessionFeeHeadWiseGroup {
+  feeHeadId: string;
+  feeHeadName: string;
+  months: number;
+  totalDue: number;
+  concessionAmount: number;
+  isConcessionApply: boolean;
+  items: IConcessionMonthItem[];
+}
+
+export interface IConcessionFeeHeadWiseResponse {
+  feeHeadWise: IConcessionFeeHeadWiseGroup[];
+}
+
+export interface IFeeHeadApprovalViewProps {
+  selectedItem: IConcessionRequestItem;
+  mode: 'Approve' | 'Cancel';
+  onBack: () => void;
 }

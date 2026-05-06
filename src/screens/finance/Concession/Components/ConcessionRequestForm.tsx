@@ -13,8 +13,8 @@ import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -28,7 +28,6 @@ import {
   Box,
   Grid,
   Card,
-  Chip,
   Stack,
   Alert,
   Button,
@@ -86,7 +85,6 @@ const accordionSx = {
   border: '1px solid',
   borderColor: 'divider',
   borderRadius: '12px !important',
-  mb: 1.5,
   boxShadow: '0 1px 4px 0 rgba(0,0,0,0.06)',
   transition: 'box-shadow 0.25s ease, border-color 0.25s ease',
   '&:before': { display: 'none' },
@@ -174,11 +172,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
   });
 
   const [
-    getFilterStudents,
-    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
+    getStudents,
+    { data: StudentsData, isLoading: studentLoading, isFetching: studentFetching },
   ] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
 
   const { data: concessionTypes = [] } = useQueryAndMutation({
@@ -204,11 +202,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
 
   const studentOptions = useMemo(
     () =>
-      studentsData?.items?.map((item: any) => ({
+      StudentsData?.items?.map((item: any) => ({
         ...item,
         name: `${item.firstName}${item.middleName ? ` ${item.middleName}` : ''} ${item.lastName}`,
       })) || [],
-    [studentsData?.items]
+    [StudentsData?.items]
   );
 
   // -- Formik ----------------------------------------------------------------
@@ -427,10 +425,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
   }, [values.standardId, classes]);
 
   useEffect(() => {
-    if (values.standardId && values.divisionId) {
-      getFilterStudents({ academicYearId: currentYear?.id, academicMediumId: values.mediumId });
+    if (values.divisionId) {
+      getStudents(values.divisionId);
     }
-  }, [currentYear?.id, getFilterStudents, values.mediumId, values.standardId, values.divisionId]);
+  }, [getStudents, values.divisionId]);
 
   // Reset fee head selections when concession type changes
   useEffect(() => {
@@ -603,69 +601,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   </AccordionDetails>
                 </Accordion>
               </Grid>
-
-              {/* 2. Concession Details */}
-              <Grid size={{ xs: 12 }}>
-                <Accordion
-                  expanded={expandedPanels.concessionType}
-                  onChange={() => handleAccordionToggle('concessionType')}
-                  disableGutters
-                  elevation={0}
-                  sx={accordionSx}
-                >
-                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                    <Typography variant="h6" fontWeight={600}>
-                      Concession Details
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <ShakingTextField
-                          error={!!(touched.concessionTypeId && errors.concessionTypeId)}
-                        >
-                          <CustomSelect
-                            label="Concession Type *"
-                            options={concessionTypesList}
-                            labelKey="name"
-                            valueKey="id"
-                            value={values.concessionTypeId}
-                            onChange={(val) => {
-                              setFieldValue('concessionTypeId', val);
-                              setFieldValue('concessionTypeDocuments', []);
-                            }}
-                            error={!!errors.concessionTypeId && touched.concessionTypeId}
-                            helperText={
-                              (touched.concessionTypeId && errors.concessionTypeId) as string
-                            }
-                          />
-                        </ShakingTextField>
-                      </Grid>
-                      {selectedConcessionType?.description && (
-                        <Grid size={{ xs: 12 }}>
-                          <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
-                            <Typography variant="body2">
-                              {selectedConcessionType.description}
-                            </Typography>
-                          </Alert>
-                        </Grid>
-                      )}
-                      <Grid size={{ xs: 12 }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          multiline
-                          rows={2}
-                          label="Remarks (optional)"
-                          value={values.remarks}
-                          onChange={(e) => setFieldValue('remarks', e.target.value)}
-                        />
-                      </Grid>
-                    </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
-
               {/* 3. Fee Summary — driven by real fee structure data */}
               {values.studentId && totalFees > 0 && (
                 <Grid size={{ xs: 12 }}>
@@ -743,6 +678,69 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   )}
                 </Grid>
               )}
+              {/* 2. Concession Details */}
+              {values.studentId && (
+                <Grid size={{ xs: 12 }}>
+                  <Accordion
+                    expanded={expandedPanels.concessionType}
+                    onChange={() => handleAccordionToggle('concessionType')}
+                    disableGutters
+                    elevation={0}
+                    sx={accordionSx}
+                  >
+                    <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                      <Typography variant="h6" fontWeight={600}>
+                        Concession Details
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <ShakingTextField
+                            error={!!(touched.concessionTypeId && errors.concessionTypeId)}
+                          >
+                            <CustomSelect
+                              label="Concession Type *"
+                              options={concessionTypesList}
+                              labelKey="name"
+                              valueKey="id"
+                              value={values.concessionTypeId}
+                              onChange={(val) => {
+                                setFieldValue('concessionTypeId', val);
+                                setFieldValue('concessionTypeDocuments', []);
+                              }}
+                              error={!!errors.concessionTypeId && touched.concessionTypeId}
+                              helperText={
+                                (touched.concessionTypeId && errors.concessionTypeId) as string
+                              }
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        {selectedConcessionType?.description && (
+                          <Grid size={{ xs: 12 }}>
+                            <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
+                              <Typography variant="body2">
+                                {selectedConcessionType.description}
+                              </Typography>
+                            </Alert>
+                          </Grid>
+                        )}
+                        <Grid size={{ xs: 12 }}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            multiline
+                            rows={2}
+                            label="Remarks (optional)"
+                            value={values.remarks}
+                            onChange={(e) => setFieldValue('remarks', e.target.value)}
+                          />
+                        </Grid>
+                      </Grid>
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+              )}
 
               {/* 4. Fee Head Mapping */}
               {values.studentId && (
@@ -813,7 +811,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                                       display: 'flex',
                                       alignItems: 'center',
                                       minWidth: 0,
-                                      gap: 0.5,
+                                      gap: 1,
                                     }}
                                   >
                                     <Checkbox
@@ -835,12 +833,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                                         {fh.feeHeadName}
                                       </Typography>
                                       {fh.categoryName && (
-                                        <Typography
-                                          variant="subtitle2"
-                                          color="text.secondary"
-                                          noWrap
-                                          display="block"
-                                        >
+                                        <Typography variant="caption" noWrap display="block">
                                           {fh.categoryName}
                                         </Typography>
                                       )}
@@ -879,7 +872,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   <Accordion
                     expanded={expandedPanels.valueEntry}
                     onChange={() => handleAccordionToggle('valueEntry')}
-                    disableGutters
                     elevation={0}
                     sx={accordionSx}
                   >
@@ -888,17 +880,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         <Typography variant="h6" fontWeight={600}>
                           Concession Values
                         </Typography>
-                        <Chip
-                          label={`${selectedFeeHeadCount} fee head(s)`}
-                          size="small"
-                          color="secondary"
-                          sx={{
-                            height: 20,
-                            fontSize: '0.70rem',
-                            borderRadius: '10px',
-                            fontWeight: 600,
-                          }}
-                        />
                       </Stack>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -923,7 +904,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                   <Accordion
                     expanded={expandedPanels.preview}
                     onChange={() => handleAccordionToggle('preview')}
-                    disableGutters
                     elevation={0}
                     sx={{
                       border: '1.5px solid',
@@ -939,8 +919,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                     <AccordionSummary
                       expandIcon={<Iconify icon="mdi:chevron-down" />}
                       sx={{
-                        px: 2.5,
-                        py: 0.5,
                         borderRadius: '12px 12px 0 0',
                         bgcolor: (theme) =>
                           theme.palette.primary.lighter || 'rgba(25,118,210,0.08)',
