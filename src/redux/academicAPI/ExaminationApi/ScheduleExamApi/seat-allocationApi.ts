@@ -8,7 +8,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // GET /api/academics/exams/{examId}/seat-layout
     getSeatLayout: builder.query({
       query: ({ examId, divisionId, roomId }) => ({
-        url: `exams/${examId}/seat-layout`,
+        url: `/academics/exams/${examId}/seat-layout`,
         method: 'GET',
         params: { DivisionId: divisionId, RoomId: roomId },
       }),
@@ -19,7 +19,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // POST /api/academics/exams/{examId}/seat-allocation/save
     saveSeatAllocation: builder.mutation({
       query: ({ examId, body }) => ({
-        url: `exams/${examId}/seat-allocation/save`,
+        url: `/academics/exams/${examId}/seat-allocation/save`,
         method: 'POST',
         body,
       }),
@@ -30,7 +30,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // GET /api/academics/exams/{examId}/seat-allocation/students → SeatAllocationDivisionsResponseDto
     getExamDivisions: builder.query({
       query: ({ examId, standardId }) => ({
-        url: `exams/${examId}/seat-allocation/students`,
+        url: `/academics/exams/${examId}/seat-allocation/students`,
         method: 'GET',
         params: standardId ? { StandardId: standardId } : undefined,
       }),
@@ -40,7 +40,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // Get Rooms for Exam and Division
     getExamRooms: builder.query({
       query: ({ examId, divisionId }) => ({
-        url: `exams/${examId}/divisions/${divisionId}/rooms`,
+        url: `/academics/exams/${examId}/divisions/${divisionId}/rooms`,
         method: 'GET',
       }),
       providesTags: [academicType.seatAllocation],
@@ -50,7 +50,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // GET /api/academics/exams/seat-allocation → SeatAllocationDashboardResponseDto
     getSeatAllocationTableData: builder.query({
       query: ({ standardId, page = 1, pageSize = 10 }) => ({
-        url: `exams/seat-allocation`,
+        url: `/academics/exams/seat-allocation`,
         method: 'GET',
         params: { StandardId: standardId, Page: page, PageSize: pageSize },
       }),
@@ -61,7 +61,7 @@ export const seatAllocationApi = academicApi.injectEndpoints({
     // GET /api/academics/exams/{examId}/seat-allocation/divisions/{divisionId}/students → SeatStudentPagedResponseDto
     getSeatAllocationStudents: builder.query({
       query: ({ examId, divisionId, standardId }) => ({
-        url: `exams/${examId}/seat-allocation/divisions/${divisionId}/students`,
+        url: `/academics/exams/${examId}/seat-allocation/divisions/${divisionId}/students`,
         method: 'GET',
         params: standardId ? { StandardId: standardId } : undefined,
       }),

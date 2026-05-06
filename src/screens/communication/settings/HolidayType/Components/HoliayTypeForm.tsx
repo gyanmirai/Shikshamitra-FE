@@ -22,7 +22,6 @@ import { getHolidayTypeInitialValues } from './HolidayTypeInitialValues';
 import type { IHolidayFormProps } from '../type';
 
 const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData }) => {
-  console.log(editData);
   const [addHolidayType] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHolidayTypeMutation,

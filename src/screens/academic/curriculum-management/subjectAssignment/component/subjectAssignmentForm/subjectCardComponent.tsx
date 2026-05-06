@@ -60,8 +60,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     getIn(formik.touched, `subjects[${index}].${field}`) &&
     getIn(formik.errors, `subjects[${index}].${field}`);
 
-  console.log('=====>', subject.documents);
-
   const subjectDocuments = subject.documents.map(
     (doc) => `${process.env.NEXT_PUBLIC_API_URL}${doc}`
   );

@@ -64,8 +64,6 @@ const SectionManagementScreen = () => {
     },
   });
 
-  console.log(sectionData, '<---->');
-
   // Undo functionality hook
   const { confirmWithUndo } = useConfirmWithUndo();
 

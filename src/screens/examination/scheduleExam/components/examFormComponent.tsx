@@ -34,7 +34,6 @@ import type { INewExamFormProps } from '../type';
 const steps = ['Basic Details', 'Schedule', 'Room Details', 'Review'];
 
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
-  console.log('Edit Data in NewExamForm:', editData);
   const [activeStep, setActiveStep] = useState(0);
 
   // Mutations
@@ -74,17 +73,23 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   const handleExamSchedule = useCallback(
     async (values: any) => {
       const payload = serializeSchedulePayload(values);
-      return updateExamSchedule({ examId: values.examId, body: payload }).unwrap();
+      return updateExamSchedule({
+        examId: editData?.examId || values.examId,
+        body: payload,
+      }).unwrap();
     },
-    [updateExamSchedule]
+    [editData, updateExamSchedule]
   );
 
   const handleRoomAssignment = useCallback(
     async (values: any) => {
       const payload = serializeRoomAssignmentPayload(values);
-      return updateExamRoomAssignment({ examId: values.examId, body: payload }).unwrap();
+      return updateExamRoomAssignment({
+        examId: editData?.examId || values.examId,
+        body: payload,
+      }).unwrap();
     },
-    [updateExamRoomAssignment]
+    [editData, updateExamRoomAssignment]
   );
 
   const handleSave = useCallback(
@@ -154,7 +159,6 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps }: any) 
   const initializedRef = useRef(false);
   const isEditMode = !!editData?.examId;
   const examId = editData?.examId || formik.values.examId;
-  console.log('Exam ID in NewExamStepForm:', examId);
 
   // Only fire queries in EDIT mode. In CREATE mode, formik already has correct
   // subject data (with names/colors) from the Autocomplete — querying the backend
@@ -191,7 +195,7 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps }: any) 
   // EDIT mode only: initialize Formik once all queries finish loading.
   // Only basicDetails is required — schedule/rooms may be empty for new exams.
   useEffect(() => {
-    if (!isEditMode || !examId || initializedRef.current) return;
+    if (!isEditMode || !examId) return;
     if (basicLoading || scheduleLoading || roomLoading || subjectsLoading) return;
     if (!basicDetails) return;
 

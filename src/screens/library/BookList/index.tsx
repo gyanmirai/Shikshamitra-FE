@@ -41,7 +41,6 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to store currently selected book for editing
   const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
-  console.log('selectedBook', selectedBook);
   const [, setSelectedReservation] = useState<any>(null);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

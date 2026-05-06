@@ -18,7 +18,6 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
 }: {
   announcement: ISchoolWiseAnnouncement | null;
 }) {
-  console.log('announcement----', announcement);
   if (!announcement) return null;
 
   return (

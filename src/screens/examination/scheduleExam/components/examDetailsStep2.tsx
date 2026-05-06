@@ -15,7 +15,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
   const formik: any = props;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  console.log('formik values in exam details step 2', formik.values);
   return (
     <Box
       component={motion.div}

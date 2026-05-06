@@ -5,8 +5,8 @@ import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useEffect } from 'react';
 import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 const BasicDetailsStep = ({ formik }: { formik: any }) => {
@@ -15,7 +15,6 @@ const BasicDetailsStep = ({ formik }: { formik: any }) => {
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivisions, setAllDivisions] = useState<any[]>([]);
-  console.log('formik----', formik.values);
   const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,

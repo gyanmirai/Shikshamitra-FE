@@ -304,7 +304,6 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
               function (slots) {
                 if (!slots) return false;
                 const periodCount = slots.filter((slot) => (+slot.slotType as any) === 0).length;
-                console.log(periodCount, 'periodCount', slots);
                 if (periodCount < 3) {
                   return this.createError({
                     message: 'At least 3 periods are required in the schedule',

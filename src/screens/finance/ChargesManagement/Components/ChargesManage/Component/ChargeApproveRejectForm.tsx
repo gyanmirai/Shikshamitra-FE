@@ -27,7 +27,6 @@ const ChargeReasonApprovalForm = ({ onClose, mode, selectedCharge }: IReasonAppr
     type: 'mutation',
     currentQueryAndMutation: useApproveChargeMutation,
   });
-  console.log(selectedCharge, 'selectedCharge');
 
   const [rejectCharge, { isLoading: rejectChargeLoading }] = useQueryAndMutation({
     type: 'mutation',

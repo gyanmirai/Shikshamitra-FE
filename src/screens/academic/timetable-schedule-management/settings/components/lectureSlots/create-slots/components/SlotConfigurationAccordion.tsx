@@ -145,8 +145,6 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
     },
   });
 
-  console.log(formik, '[]][][][][][]');
-
   return (
     <Accordion
       expanded={config.expanded}

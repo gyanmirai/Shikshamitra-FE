@@ -77,7 +77,6 @@ export default function Permission({
   };
 
   const handlePermissionToggle = (key: string, type: PermissionType) => {
-    console.log(key, type);
     const targetName = `${key}.${type}`;
     const targetItem = permissionData.find((item) => item.name === targetName);
     const newValue = targetItem ? !targetItem.isGranted : false;

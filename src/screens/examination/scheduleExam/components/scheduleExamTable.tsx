@@ -210,9 +210,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           }
           columns={[
             { id: 'examName', label: 'Exam Name', align: 'left' },
-            { id: 'examType', label: 'Exam Type', align: 'left' },
+            { id: 'examTypeName', label: 'Exam Type', align: 'left' },
             {
-              id: 'z',
+              id: 'standardName',
               label: 'Class',
               align: 'left',
               filterType: 'number',
@@ -224,9 +224,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               id: 'divisions',
               label: 'Divisions',
               align: 'left',
+              isFilter: false,
+              isSort: false,
               render: (value) => <Box>{(value || []).join(', ')}</Box>,
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'creatorName', label: 'Created By', align: 'left' },
             {
               id: 'action',
               label: 'Actions',

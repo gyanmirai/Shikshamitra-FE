@@ -246,8 +246,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     },
   });
 
-  console.log('Formik Values:', formik);
-
   // Update divisions when class changes
   useEffect(() => {
     const classId = formik.values.classId || formik.values.class;

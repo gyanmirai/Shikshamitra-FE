@@ -31,7 +31,6 @@ const UserManagementScreen = () => {
 
   // State to store selected user data
   const [user, setUser] = useState<any>(null);
-  console.log('user---', user);
   const [permissioNData, setPermissionData] = useState<{ name: string; isGranted: boolean }[]>([]);
 
   // Dialog control hook for academic permissions dialog

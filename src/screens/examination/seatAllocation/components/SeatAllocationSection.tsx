@@ -62,6 +62,9 @@ const SeatAllocationSection = ({
       examId: selectedExam?.examId,
       divisionId: division,
     },
+    options: {
+      skip: !selectedExam?.examId || !division, // Skip the query if examId or division is not selected
+    },
   });
 
   const {
@@ -74,6 +77,9 @@ const SeatAllocationSection = ({
     type: 'query',
     currentQueryAndMutation: useGetSeatLayoutQuery,
     params: { examId: selectedExam?.examId, divisionId: division, roomId: classRoom },
+    options: {
+      skip: !selectedExam?.examId || !division || !classRoom, // Skip the query if any of the required parameters is missing
+    },
   });
 
   // State to manage seat assignment data, tracking which students are assigned to which seats

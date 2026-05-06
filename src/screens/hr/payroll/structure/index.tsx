@@ -59,13 +59,11 @@ const EmployeeSalaryStructureScreen = () => {
   const handleEdit = useCallback((row: any) => {
     setEditRow(row);
     // TODO: open edit dialog / form for this row
-    console.log('Edit row:', row);
   }, []);
 
   const handleDelete = useCallback((row: any) => {
     setDeleteRow(row);
     // TODO: open confirm-delete dialog for this row
-    console.log('Delete row:', row);
   }, []);
 
   return (

@@ -76,8 +76,6 @@ const HolidayManagement = (props: TabComponentType) => {
     }
   };
 
-  console.log(selectedHoliday);
-
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (

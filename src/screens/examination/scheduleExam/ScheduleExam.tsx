@@ -57,8 +57,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     currentQueryAndMutation: useDeleteExamMutation,
   });
 
-  console.log('ScheduleExam render - selectedExam:', selectedExam, 'isChanges:', isChanges);
-
   const { confirmWithUndo } = useConfirmWithUndo();
 
   const handleDeleteExam = async () => {

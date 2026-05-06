@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Card, Button, Typography } from '@mui/material';
+import { Box, Paper, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -47,6 +47,9 @@ const SeatAllocation = () => {
     type: 'query',
     currentQueryAndMutation: useGetExamDivisionsQuery,
     params: { examId: selectedExam?.examId, standardId: classes },
+    options: {
+      skip: !selectedExam?.examId || !classes, // Skip the query if examId or classes is not selected
+    },
   });
 
   const {
@@ -57,6 +60,9 @@ const SeatAllocation = () => {
     type: 'query',
     currentQueryAndMutation: useGetExamRoomsQuery,
     params: { examId: selectedExam?.examId, divisionId: division },
+    options: {
+      skip: !selectedExam?.examId || !division, // Skip the query if examId or division is not selected
+    },
   });
 
   useEffect(() => {
@@ -173,8 +179,8 @@ const SeatAllocation = () => {
           />
         </CustomDialog>
       ) : (
-        <Box key="table-view" sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-          <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
+        <>
+          <Paper sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
             <CustomSelect
               options={allClass}
               label="Class"
@@ -184,7 +190,7 @@ const SeatAllocation = () => {
               valueKey="id"
               formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
             />
-          </Card>
+          </Paper>
           <SeatAllocationTable
             openSeatAllocation={openSeatAllocation}
             onSeatAllocate={(examData) => {
@@ -195,7 +201,7 @@ const SeatAllocation = () => {
             }}
             classId={classes}
           />
-        </Box>
+        </>
       )}
     </Box>
   );

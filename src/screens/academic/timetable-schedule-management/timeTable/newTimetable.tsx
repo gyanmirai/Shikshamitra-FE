@@ -513,8 +513,6 @@ const TimeTableGrid = () => {
     },
   });
 
-  console.log('Slot Config Data:--->', slotConfigData);
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {open ? (
@@ -869,7 +867,6 @@ const TimeTableForm = ({
       skip: !classId || !divisionId,
     },
   });
-  console.log('Slot Config Data in Form:--->', slotConfigData);
   const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateTimetableMutation,
@@ -935,11 +932,8 @@ const TimeTableForm = ({
     enableReinitialize: true,
     onSubmit: (values) => {
       // eslint-disable-next-line no-console
-      console.log(values);
     },
   });
-
-  console.log('Formik Values:--->', formik.values);
 
   const subjects = useMemo(
     () =>
@@ -955,8 +949,6 @@ const TimeTableForm = ({
       })) || [],
     [slotConfigData]
   );
-
-  console.log('Subjects for Timetable Board:--->', subjects);
 
   return (
     <DialogScrollContent

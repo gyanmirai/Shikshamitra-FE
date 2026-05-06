@@ -38,8 +38,6 @@ export function usePaginatedSearch<T>({
       try {
         const response = await fetchOptions(query, pageNum);
 
-        console.log(response, 'response');
-
         // Check if this validation is still relevant (avoid race condition)
         if (latestQueryRef.current !== query) return;
 

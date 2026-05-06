@@ -102,7 +102,7 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
     [renderSubjectName, renderLectureCell]
   );
 
-  console.log('SubjectsLectureTable render with subjects:', formik.values.subjects); // Debug log
+  // Debug log
 
   return (
     <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">

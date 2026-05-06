@@ -65,10 +65,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     },
   };
 
-  const { top, height } = calculateSlotPosition(
-    slot.startTime.format('HH:mm'),
-    slot.endTime.format('HH:mm')
-  );
+  const { top, height } = calculateSlotPosition(slot.startTime, slot.endTime);
   const isBreak = slot.type === SlotType.BREAK;
   const hasSubjects = slot.subjects && slot.subjects.length > 0;
   const isFilled = hasSubjects || !!attachedSubject;
@@ -177,8 +174,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   };
 
   const getTooltipContent = () => {
-    if (isBreak)
-      return `${slot.breakType} Break (${slot.startTime.format('HH:mm')} - ${slot.endTime.format('HH:mm')})`;
+    if (isBreak) return `${slot.breakType} Break (${slot.startTime} - ${slot.endTime})`;
     if (!isFilled) return 'Empty Slot';
 
     const hasAnyTeacher = displaySubjects.some((s) => s.teacherName);
@@ -212,7 +208,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             pt: 0.5,
           }}
         >
-          {slot.startTime.format('HH:mm')} - {slot.endTime.format('HH:mm')}
+          {slot.startTime} - {slot.endTime}
         </Typography>
       </Box>
     );
@@ -247,7 +243,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               }}
             >
               <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>
-                {slot.startTime.format('HH:mm')} - {slot.endTime.format('HH:mm')}
+                {slot.startTime} - {slot.endTime}
               </Typography>
             </Box>
           )}
