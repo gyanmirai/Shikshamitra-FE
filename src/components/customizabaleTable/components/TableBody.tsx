@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
+import { keyframes } from '@emotion/react';
 import { useTheme } from '@mui/material/styles';
 import { ExpandLess as ExpandLessIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import {
@@ -15,6 +16,17 @@ import {
 import { EmptyContent } from '../../empty-content'; // Adjusted path
 import type { IData, IColumn } from '../types';
 
+const fadeSlideIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
 interface TableBodyProps {
   isLoading: boolean;
   data: IData[];
@@ -29,6 +41,8 @@ interface TableBodyProps {
   noDataText?: React.ReactNode;
   tableRef: any;
   rowsPerPage?: number;
+  columnWidths: Record<string, number>;
+  animationKey: string;
 }
 
 export const TableBody = ({
@@ -45,6 +59,8 @@ export const TableBody = ({
   noDataText = 'No data available',
   tableRef,
   rowsPerPage = 10,
+  columnWidths,
+  animationKey,
 }: TableBodyProps) => {
   const theme = useTheme();
 
@@ -102,7 +118,7 @@ export const TableBody = ({
   }
 
   return (
-    <MuiTableBody>
+    <MuiTableBody key={animationKey}>
       {data.map((row, index) => (
         <React.Fragment key={index}>
           <TableRow
@@ -110,6 +126,11 @@ export const TableBody = ({
             tabIndex={-1}
             onClick={() => onRowClick(row, index)}
             {...rowProps(row, index)}
+            sx={{
+              animation: `${fadeSlideIn} 0.45s ease both`,
+              animationDelay: `${Math.min(index * 60, 500)}ms`,
+              ...rowProps(row, index)?.sx,
+            }}
           >
             {columns.some((column) => column.children) && (
               <TableCell>
@@ -138,6 +159,16 @@ export const TableBody = ({
                       zIndex: column.sticky ? 10 : 2,
                       backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                       boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
+                      animation: `${fadeSlideIn} 0.4s ease both`,
+                      ...(columnWidths[column.id]
+                        ? {
+                            width: columnWidths[column.id],
+                            maxWidth: columnWidths[column.id],
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }
+                        : {}),
                       ...getStickyStyle(column),
                     }}
                   >
