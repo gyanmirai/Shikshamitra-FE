@@ -124,11 +124,11 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                 </Card>
               </Grid>
 
-              {/* Assessment & Feedback Section */}
+              {/* Evaluation & Feedback Section */}
               <Grid size={{ xs: 12 }}>
                 <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
                   <Typography variant="h6" sx={{ mb: 3 }}>
-                    Assessment & Feedback
+                    Evaluation & Feedback
                   </Typography>
 
                   <Grid container spacing={2}>

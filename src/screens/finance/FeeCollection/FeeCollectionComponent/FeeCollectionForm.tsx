@@ -263,8 +263,6 @@ const FeeCollectComponentForm = ({
     },
   });
 
-  console.log('Formik Values:', formik.values);
-
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);

@@ -94,7 +94,7 @@ const AssignElectiveSubject = () => {
         description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Student Elective Assignment' },
         ]}
       />

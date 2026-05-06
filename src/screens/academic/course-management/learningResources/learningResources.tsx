@@ -47,13 +47,13 @@ const LearningResources = (props: TabComponentType) => {
   const links = addLearningResourceDialog.value
     ? [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+        { name: 'Curriculum', href: '/academic/curriculumSubjects' },
         { name: 'Resources' },
         { name: 'Add Learning Resource' },
       ]
     : [
         { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+        { name: 'Curriculum', href: '/academic/curriculumSubjects' },
         { name: 'Resources' },
       ];
 

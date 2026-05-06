@@ -85,7 +85,7 @@ const ElectiveSubjectSetting = () => {
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           {
-            name: 'Curriculum Management',
+            name: 'Curriculum',
             href: '/academic/curriculumSubjects',
           },
           { name: 'Settings' },

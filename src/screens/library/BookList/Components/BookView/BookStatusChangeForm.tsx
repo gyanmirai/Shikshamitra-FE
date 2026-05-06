@@ -40,7 +40,6 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
           ? 'Book is currently under maintenance'
           : 'Book has been reported as lost',
   }));
-  console.log('editData0000', editData);
   const formik = useFormik({
     initialValues: {
       status: editData?.status || 0,

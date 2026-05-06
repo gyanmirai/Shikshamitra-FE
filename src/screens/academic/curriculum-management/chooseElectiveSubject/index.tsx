@@ -41,7 +41,7 @@ const ChooseElectiveSubject = () => {
         description="Enable students to select their preferred elective subjects from available options. Teachers and administrators can manage student selections, track enrollment, and ensure balanced distribution across elective courses. View detailed analytics on subject popularity and student preferences."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Choose Elective Subjects' },
         ]}
       />

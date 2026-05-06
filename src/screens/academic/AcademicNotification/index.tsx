@@ -17,7 +17,7 @@ import HomeworkAssignmentNotificationManagement from './Components/HomeworkAssig
 const TABS = [
   {
     value: 'curriculumManagement',
-    label: 'Curriculum Management',
+    label: 'Curriculum',
     icon: <Iconify icon="ph:books-light" width={20} />,
     component: (props: any) => <CurriculumNotificationManagement {...props} />,
   },

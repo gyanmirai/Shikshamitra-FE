@@ -91,15 +91,13 @@ const RenderGeneralFormFields = (props: GeneralFormProps) => {
   // const hasInitialized = useRef(false);
   // useEffect(() => {
   //   if (!hasInitialized.current && basicDetails?.data && !basicDetailsLoading) {
-  //     console.log('=========called=======');
-  //     resetForm({ values: { ...generalFieldsInitialValues(basicDetails.data) } });
+  //  //     resetForm({ values: { ...generalFieldsInitialValues(basicDetails.data) } });
   //     hasInitialized.current = true;
   //   }
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [basicDetails?.data?.standardId, basicDetailsLoading]);
 
-  // console.log(basicDetails, 'basicDetails', formik);
-
+  //
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     await formik?.submitForm?.();

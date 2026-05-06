@@ -265,12 +265,12 @@ const GradeEntry = (props: TabComponentType) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <CustomBreadcrumbs
-          heading="Record Marks"
+          heading="Grade Entry"
           description="Enter and manage student examination marks and grades"
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Examination', href: '/academic/scheduleExam' },
-            { name: 'Record Marks' },
+            { name: 'Grade Entry' },
           ]}
           action={
             <LoadingButton

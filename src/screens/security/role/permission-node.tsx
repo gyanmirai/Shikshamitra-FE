@@ -40,8 +40,6 @@ export default function PermissionNode({
   const nodeKey = node.permissionName;
   const hasChildren = node.children && node.children.length > 0;
 
-  console.log('permissions', permissions);
-
   // Check if all permissions for this node are active
   const isNodeFullySelected = PERMISSIONS.every(
     (perm) => !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted

@@ -5,11 +5,11 @@ import type { NavSectionProps } from 'src/components/nav-section';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { Logo } from 'src/components/logo';
+import { useSession } from 'next-auth/react';
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 import { Skeleton, Typography } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
-import { useAuthSession } from 'src/hooks/useAuthSession';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 
@@ -114,7 +114,7 @@ export function HeaderBase({
   ...other
 }: HeaderBaseProps) {
   const theme = useTheme();
-  const session: any = useAuthSession();
+  const session: any = useSession();
   const { data: user } = session;
 
   const { data: tenantData, isLoading } = useQueryAndMutation({

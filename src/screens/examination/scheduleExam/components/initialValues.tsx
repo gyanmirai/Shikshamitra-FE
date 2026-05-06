@@ -57,8 +57,8 @@ export function mapBackendToFormik(
       electiveGroupId: sched.electiveGroupId ?? sub.electiveGroupId,
       examDate: sched.examDate ? dayjs(sched.examDate) : null,
       // Backend stores time as "HH:mm:ss" — normalise to a single reference date
-      startTime: sched.startTime ? dayjs(`2000-01-01T${sched.startTime}`) : null,
-      endTime: sched.endTime ? dayjs(`2000-01-01T${sched.endTime}`) : null,
+      startTime: sched.startTime ? dayjs(sched.startTime) : null,
+      endTime: sched.endTime ? dayjs(sched.endTime) : null,
       totalMarks: sched.totalMarks ?? '',
       passingMarks: sched.passingMarks ?? '',
       notes: sched.notes ?? '',

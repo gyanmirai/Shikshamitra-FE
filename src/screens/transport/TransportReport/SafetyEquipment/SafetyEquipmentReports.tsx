@@ -94,8 +94,7 @@ const SafetyEquipmentReports = ({ report }: { report: string }) => {
     enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
-      // console.log('Generating Report:', values);
-      window.alert('Report Generated Successfully!');
+      //      window.alert('Report Generated Successfully!');
       setSubmitting(false);
     },
   });

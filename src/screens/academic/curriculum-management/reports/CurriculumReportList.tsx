@@ -21,7 +21,7 @@ const CurriculumReportList = () => {
           heading="Reports"
           links={[
             { name: 'Academic', href: '/academic/dashboard/' },
-            { name: 'Curriculum Management', href: '/academic/curriculum-management/dashboard/' },
+            { name: 'Curriculum', href: '/academic/curriculum-management/dashboard/' },
             { name: 'Reports' },
           ]}
           action={

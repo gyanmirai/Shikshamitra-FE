@@ -2,12 +2,12 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSession } from 'src/hooks/useAuthSession';
+import { useSession } from 'next-auth/react';
 
 import { SplashScreen } from '../loading-screen';
 
 const NormalRouteLayout = ({ children }: { children: React.ReactNode }) => {
-  const session: any = useAuthSession();
+  const session: any = useSession();
   const { data: sessionData, status } = session;
   const router = useRouter();
 

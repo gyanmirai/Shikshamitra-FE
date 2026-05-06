@@ -5,11 +5,11 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium, AcademicYear } from 'src/types/school';
 
 import { keyframes } from '@mui/system';
+import { useSession } from 'next-auth/react';
 import { styled } from '@mui/material/styles';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import { useAuthSession } from 'src/hooks/useAuthSession';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import React, { useMemo, useEffect, useCallback } from 'react';
@@ -55,7 +55,7 @@ const AnimatedWrapper = styled(Box, { shouldForwardProp: (prop) => prop !== 'err
 const GlobalAcademicSearch = () => {
   const [showConfirm, ConfirmDialog] = useConfirmDialog();
 
-  const { data }: any = useAuthSession();
+  const { data }: any = useSession();
 
   const dispatch = useDispatch();
 

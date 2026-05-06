@@ -3,6 +3,8 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { Box, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetExamScheduleQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import type { IExamFormValues } from '../type';
 
@@ -13,6 +15,13 @@ interface ViewTimetableCompProps {
 dayjs.extend(utc);
 
 const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
+  const { data: scheduleDetails, isLoading: scheduleLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamScheduleQuery,
+    params: { examId: examData?.examId },
+    options: { skip: !examData?.examId },
+  });
+
   if (!examData) return null;
 
   return (
@@ -22,6 +31,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
       isFilter={false}
       isSearch={false}
       isShowedDense={false}
+      isLoading={scheduleLoading}
       columns={[
         {
           id: 'subjectName',
@@ -66,6 +76,11 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
+          render: (value) => (
+            <Typography variant="caption" gutterBottom>
+              {value ? dayjs(value).format('hh:mm A') : '-'}
+            </Typography>
+          ),
         },
         {
           id: 'endTime',
@@ -73,6 +88,11 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           align: 'left',
           isFilter: true,
           isSort: true,
+          render: (value) => (
+            <Typography variant="caption" gutterBottom>
+              {value ? dayjs(value).format('hh:mm A') : '-'}
+            </Typography>
+          ),
         },
         {
           id: 'totalMarks',
@@ -91,7 +111,7 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
           isSort: true,
         },
       ]}
-      data={examData.subjects || []}
+      data={scheduleDetails?.subjects || []}
     />
   );
 };

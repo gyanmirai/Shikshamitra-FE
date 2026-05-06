@@ -108,7 +108,7 @@ const CourseProgress = (props: TabComponentType) => {
         description="Track the progress of each subject and its chapters in real-time. Monitor completed and pending chapters, and analyze progress to ensure curriculum coverage and effective learning."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Curriculum', href: '/academic/curriculumSubjects' },
           { name: 'Chapters Progress' },
         ]}
       />
@@ -203,14 +203,12 @@ const CourseProgress = (props: TabComponentType) => {
                 align: 'left',
                 sticky: true,
                 isFilter: false,
-                render(value: string, row: ICourseDetail) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                    />
-                  );
-                },
+                render: (value: string, row: ICourseDetail) => (
+                  <ThreeDotsActions
+                    actions={(prop) => actions({ ...prop, row })}
+                    placement="right-top"
+                  />
+                ),
               },
             ]}
             data={selectedCourse.details}

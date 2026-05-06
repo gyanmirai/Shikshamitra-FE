@@ -1,7 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-type SessionStatus = 'authenticated' | 'unauthenticated' | 'loading';
-
 interface AuthState {
   user: any | null;
   isAuthenticated: boolean;
@@ -9,10 +7,6 @@ interface AuthState {
   employee: any;
   permissions: { name: string; isGranted: boolean }[];
   mainModuleVisibility: boolean[];
-  // Mirror of the NextAuth session so consumers can read it from Redux instead of
-  // calling useSession() (which can trigger /api/auth/session network requests).
-  session: any | null;
-  status: SessionStatus;
 }
 export function extractGrantedPermissions(groups: any): { name: string; isGranted: boolean }[] {
   if (!Array.isArray(groups)) return [];
@@ -87,8 +81,6 @@ const initialState: AuthState = {
   employee: null,
   permissions: [],
   mainModuleVisibility: [],
-  session: null,
-  status: 'loading',
 };
 
 const authSlice = createSlice({
@@ -108,10 +100,6 @@ const authSlice = createSlice({
     },
     setPermissions: (state, action: PayloadAction<{ name: string; isGranted: boolean }[]>) => {
       state.permissions = action.payload;
-    },
-    setAuthSession: (state, action: PayloadAction<{ data: any | null; status: SessionStatus }>) => {
-      state.session = action.payload.data;
-      state.status = action.payload.status;
     },
   },
   extraReducers: (builder) => {
@@ -143,6 +131,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser, setMainModuleVisibility, setPermissions, setAuthSession } =
-  authSlice.actions;
+export const { setUser, clearUser, setMainModuleVisibility, setPermissions } = authSlice.actions;
 export default authSlice.reducer;

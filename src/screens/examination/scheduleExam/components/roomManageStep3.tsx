@@ -135,11 +135,13 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     [allClass, formik.values.className]
   );
 
-  const tableData = divisions.map((div: Division) => ({
-    divisionId: div.id,
-    division: div.name,
-    ...(formik.values.roomDetails?.[subjectId]?.[div.id] ?? { roomIds: [], capacity: 0 }),
-  }));
+  const tableData = divisions
+    ?.filter((div: Division) => formik.values.divisions?.includes(div.id))
+    .map((div: Division) => ({
+      divisionId: div.id,
+      division: div.name,
+      ...(formik.values.roomDetails?.[subjectId]?.[div.id] ?? { roomIds: [], capacity: 0 }),
+    }));
 
   // Fetch rooms from API
   const { data: roomsApiData, isLoading: roomsLoading } = useQueryAndMutation({

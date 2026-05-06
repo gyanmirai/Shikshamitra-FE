@@ -139,8 +139,6 @@ const BookCopiesStep = ({ formik, isEdit }: BookCopiesStepProps) => {
     },
   });
 
-  console.log('formik values----', formik.values);
-
   const sectionOptions =
     sectionData?.items?.map((item: any) => ({
       value: item.id,

@@ -86,7 +86,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
     },
   });
 
-  console.log('Formik values:', formik.values); // Debug log to trace form values
+  // Debug log to trace form values
 
   // Fetch classes when medium is available from editData
   useEffect(() => {

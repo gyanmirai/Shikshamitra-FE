@@ -167,7 +167,7 @@ const academicModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
-          title: 'Curriculum Management',
+          title: 'Curriculum',
           path: academicPaths.curriculum.root,
           _action: 'curriculum-management',
           shortcutKey: 'Alt+A+C',
@@ -176,7 +176,7 @@ const academicModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:book-open-page-variant-outline'),
           children: [
             {
-              title: 'Subjects Assignment',
+              title: 'Subject Allocation',
               path: academicPaths.curriculum.subjectsAssignment,
               _action: 'curriculum-management-subjects',
               shortcutKey: 'Alt+A+C+1',
@@ -206,7 +206,7 @@ const academicModule = (isDdvs: boolean) => ({
             //   shortcutKeyName: 'Alt+A+C+2',
             // },
             {
-              title: 'Chapters Management',
+              title: 'Syllabus',
               path: academicPaths.curriculum.chaptersManagement,
               _action: 'course-management-subjects',
               shortcutKey: 'Alt+A+S+1',
@@ -348,7 +348,7 @@ const academicModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:clipboard-list-outline'),
             },
             {
-              title: 'Assessment & Feedback',
+              title: 'Evaluation & Feedback',
               path: academicPaths.homework.assessment,
               _action: 'homework-assignment-management-gradingAndFeedback',
               shortcutKey: 'Alt+A+H+3',
@@ -429,7 +429,7 @@ const academicModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:calendar-clock-outline'),
             },
             {
-              title: 'Seat Allocation',
+              title: 'Seating Plan',
               path: academicPaths.examination.seatAllocation,
               _action: 'academic-seatAllocation',
               shortcutKey: 'Alt+E+1+3',
@@ -438,7 +438,7 @@ const academicModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:seat-outline'),
             },
             {
-              title: 'Record Marks',
+              title: 'Grade Entry',
               path: academicPaths.examination.recordMarks,
               _action: 'academic-gradeEntry',
               shortcutKey: 'Alt+E+1+4',

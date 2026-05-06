@@ -8,7 +8,7 @@ const Dashboard = () => (
   <Box>
     <CustomBreadcrumbs
       heading="Dashboard"
-      links={[{ name: 'Academics' }, { name: 'Curriculum Management' }, { name: 'Dashboard' }]}
+      links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Dashboard' }]}
       action={
         <DashBoardQuickAction
           actions={[

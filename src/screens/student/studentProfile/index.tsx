@@ -226,8 +226,6 @@ export function StudentProfile() {
     [StudentsData?.items]
   );
 
-  console.log('tableData--->', tableData);
-
   // Find currently selected student based on search params
   const currentStudent: boolean = !!searchParams?.student;
 

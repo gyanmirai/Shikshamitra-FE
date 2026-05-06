@@ -16,7 +16,6 @@ export const RenderPfRules = ({ disabled, formik }: RenderPfRulesProps) => {
     currentQueryAndMutation: useGetPFQuery,
     params: {},
   });
-  console.log('formik errores----', formik.errors);
 
   const pfRuleValue = PFData?.items?.find((item: any) => item.id === formik.values.pfRule) || null;
   return (
