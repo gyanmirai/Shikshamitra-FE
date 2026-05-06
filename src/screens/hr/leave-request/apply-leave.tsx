@@ -416,7 +416,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   );
 
   return (
-    <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {viewCalendarView.value ? (
         <>
           {showBreadcrumbs && (

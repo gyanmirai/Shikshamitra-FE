@@ -253,7 +253,7 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
 });
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
-  reportingManager: editData ? editData?.employeeId : '',
+  reportingManager: editData?.reportingManager?.id ?? '',
   reportingManagerName: editData?.reportingManager?.fullName ?? '',
 });
 
