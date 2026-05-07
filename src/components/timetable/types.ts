@@ -21,7 +21,8 @@ export interface Teacher {
 }
 
 export interface Subject {
-  id: string;
+  subjectId: string;
+  subjectAssignmentId: string;
   name: string;
   color: string; // CSS color string (e.g., '#e0f2f1')
   teacherId?: string;
@@ -39,6 +40,7 @@ export interface Subject {
 // --- New API Response Types ---
 export interface SubjectItemResponse {
   subjectType: number;
+  subjectAssignmentId: string;
   subjectId: string;
   subjectName: string;
   subjectCode: string;
@@ -61,7 +63,8 @@ export interface SubjectResponse {
 }
 
 export interface SlotSubject {
-  id: string;
+  subjectId: string;
+  subjectAssignmentId: string;
   name: string;
   color: string;
   teacherId?: string;
