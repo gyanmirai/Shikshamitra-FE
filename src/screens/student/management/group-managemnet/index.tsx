@@ -3,15 +3,17 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { StudentApi } from 'src/redux/student';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { DashboardCard } from 'src/components/dashboard-card';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -19,6 +21,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
+  Grid,
+  Alert,
   Stack,
   Button,
   MenuItem,
@@ -72,6 +76,8 @@ const GroupManagement = ({ division }: { division: string }) => {
 
   // State to store group data being edited
   const [editData, setEditData] = useState<null | IStudentHouse>(null);
+  // State to control info alert visibility
+  const [showInfoAlert, setShowInfoAlert] = useState(true);
 
   // Close dialog and reset edit data
   const handleClose = () => {
@@ -79,12 +85,15 @@ const GroupManagement = ({ division }: { division: string }) => {
     dialog.onFalse();
   };
 
-  const { data: getAllStudentGroupData, isLoading: isGetAllStudentGroupLoading } =
-    useQueryAndMutation({
-      type: 'query',
-      params: { division },
-      currentQueryAndMutation: useGetAllStudentGroupQuery,
-    });
+  const {
+    data: getAllStudentGroupData,
+    isLoading: isGetAllStudentGroupLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    params: { division },
+    currentQueryAndMutation: useGetAllStudentGroupQuery,
+  });
 
   // set division leader  group mutation hook
   const [assignDivisionLeader, { isLoading: isAssignDivisionLeaderLoading }] = useQueryAndMutation({
@@ -111,6 +120,16 @@ const GroupManagement = ({ division }: { division: string }) => {
     type: 'mutation',
     currentQueryAndMutation: useRemoveStudentFromGroupMutation,
   });
+
+  const stats = useMemo(() => {
+    const allStudents: IStudentHouse[] = getAllStudentGroupData?.data || [];
+    return {
+      total: allStudents.length,
+      assigned: allStudents.filter((s) => s.houseSetting).length,
+      pending: allStudents.filter((s) => !s.houseSetting).length,
+      leaders: allStudents.filter((s) => s.isGlobalHouseLeader || s.isDivisionHouseLeader).length,
+    };
+  }, [getAllStudentGroupData?.data]);
 
   return (
     <Box
@@ -309,14 +328,15 @@ const GroupManagement = ({ division }: { division: string }) => {
               try {
                 await assignDivisionLeader(editData?.studentId).unwrap();
                 dispatch(StudentApi.util.invalidateTags(['Student']));
-                isConfirmForDivisionLeader.onFalse();
                 shikshaMitraToast.success({
                   message: `Division leader assigned successfully for ${editData?.studentName}`,
                 });
               } catch (error) {
                 console.error(error);
+              } finally {
+                isConfirmForDivisionLeader.onFalse();
+                setEditData(null);
               }
-              setEditData(null);
             }}
           >
             Assign
@@ -358,27 +378,99 @@ const GroupManagement = ({ division }: { division: string }) => {
               try {
                 await assignMainLeader(editData?.studentId).unwrap();
                 dispatch(StudentApi.util.invalidateTags(['Student']));
-                isConfirmForMainLeader.onFalse();
                 shikshaMitraToast.success({
                   message: `House Leader assigned successfully for ${editData?.studentName}`,
                 });
               } catch (error) {
                 console.error(error);
+              } finally {
+                isConfirmForMainLeader.onFalse();
+                setEditData(null);
               }
-              setEditData(null);
             }}
           >
             Assign
           </LoadingButton>
         }
       />
+      {/* ── Summary Statistics Cards ── */}
+      <Grid container spacing={1} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardCard
+            title="Total Students"
+            value={stats.total}
+            icon="mdi:account-group-outline"
+            color="primary.main"
+            bgColor="transparent"
+            sx={{
+              p: 0.5,
+            }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardCard
+            title="Assigned"
+            value={stats.assigned}
+            icon="uil:house-user"
+            color="success.main"
+            bgColor="transparent"
+            sx={{
+              p: 0.5,
+            }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardCard
+            title="Pending"
+            value={stats.pending}
+            icon="mdi:account-clock-outline"
+            color="warning.main"
+            bgColor="transparent"
+            sx={{
+              p: 0.5,
+            }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <DashboardCard
+            title="Leaders"
+            value={stats.leaders}
+            icon="mdi:crown-outline"
+            color="info.main"
+            bgColor="transparent"
+            sx={{
+              p: 0.5,
+            }}
+          />
+        </Grid>
+      </Grid>
+      {/* ── Instruction Banner ── */}
+      {showInfoAlert && (
+        <Alert
+          variant="outlined"
+          severity="info"
+          icon={<Iconify icon="lucide:info" width={16} />}
+          onClose={() => setShowInfoAlert(false)}
+          sx={{ mb: 1 }}
+        >
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 2 } }}>
+            <Typography variant="caption">
+              Assign a house before assigning a House Leader
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.7 }}>
+              •
+            </Typography>
+            <Typography variant="caption">Only one House Leader is allowed per house</Typography>
+          </Box>
+        </Alert>
+      )}
       <CustomizableTable
         // onSendNotification={handlerSendNotification}
         // showCheckbox={selectedStudent.length !== 0}
         tableTitle="House Management"
         tableId="group-management-table"
         noDataText="No Student data available"
-        isLoading={isGetAllStudentGroupLoading}
+        isLoading={isGetAllStudentGroupLoading || isFetching}
         columns={[
           {
             id: 'studentName',
@@ -386,31 +478,68 @@ const GroupManagement = ({ division }: { division: string }) => {
             align: 'left',
             minWidth: '200px',
             sticky: true,
-            render: (value, row) => (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                {(row.isGlobalHouseLeader || row.isDivisionHouseLeader) && (
-                  <CustomTooltip
-                    title={
-                      row.isGlobalHouseLeader ? 'House Leader & Division Leader' : 'Division Leader'
-                    }
-                    arrow
-                    placement="top"
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        color: row.isGlobalHouseLeader ? 'success.main' : 'warning.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
+            render: (value, row) => {
+              const isBoth = row.isGlobalHouseLeader && row.isDivisionHouseLeader;
+              const isHouseOnly = row.isGlobalHouseLeader && !row.isDivisionHouseLeader;
+              const isDivisionOnly = row.isDivisionHouseLeader && !row.isGlobalHouseLeader;
+
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Typography variant="body2">{value || '-'}</Typography>
+
+                  {isBoth && (
+                    <CustomTooltip
+                      arrow
+                      placement="top"
+                      title="House Leader & Division Leader — leads the house across all divisions and represents it within this division."
                     >
-                      <Iconify icon="mdi:crown" width={24} />
-                    </Box>
-                  </CustomTooltip>
-                )}
-                <Typography variant="body2">{value || '-'}</Typography>
-              </Box>
-            ),
+                      <Label
+                        color="error"
+                        variant="soft"
+                        startIcon={<Iconify icon="mdi:trophy" width={12} />}
+                        sx={{ fontSize: 11, cursor: 'default', fontWeight: 700 }}
+                      >
+                        HL/DL
+                      </Label>
+                    </CustomTooltip>
+                  )}
+
+                  {isHouseOnly && (
+                    <CustomTooltip
+                      arrow
+                      placement="top"
+                      title="House Leader — leads this house across all divisions."
+                    >
+                      <Label
+                        color="success"
+                        variant="soft"
+                        startIcon={<Iconify icon="mdi:crown" width={12} />}
+                        sx={{ fontSize: 11, cursor: 'default' }}
+                      >
+                        HL
+                      </Label>
+                    </CustomTooltip>
+                  )}
+
+                  {isDivisionOnly && (
+                    <CustomTooltip
+                      arrow
+                      placement="top"
+                      title="Division Leader — represents the house within this division."
+                    >
+                      <Label
+                        color="warning"
+                        variant="soft"
+                        startIcon={<Iconify icon="mdi:star" width={12} />}
+                        sx={{ fontSize: 11, cursor: 'default' }}
+                      >
+                        DL
+                      </Label>
+                    </CustomTooltip>
+                  )}
+                </Box>
+              );
+            },
           },
           {
             id: 'grNo',
@@ -436,27 +565,14 @@ const GroupManagement = ({ division }: { division: string }) => {
             render(value, row) {
               return (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {value ? (
-                    <Typography variant="body2">{value}</Typography>
+                  {row?.houseSetting ? (
+                    <Label color="success" variant="soft">
+                      {row.houseSetting.name}
+                    </Label>
                   ) : (
-                    <Button
-                      size="small"
-                      variant="soft"
-                      color="inherit"
-                      startIcon={<Iconify icon="uil:house-user" width={16} />}
-                      sx={{
-                        color: 'text.secondary',
-                        fontSize: '12px',
-                        py: 0.2,
-                        minHeight: 0,
-                      }}
-                      onClick={() => {
-                        setEditData(row as IStudentHouse);
-                        assignStudentDialog.onTrue();
-                      }}
-                    >
-                      Assign House
-                    </Button>
+                    <Typography variant="caption" fontStyle="italic" color="text.secondary">
+                      No house assigned
+                    </Typography>
                   )}
                 </Box>
               );

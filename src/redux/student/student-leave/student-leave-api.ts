@@ -18,16 +18,28 @@ export const StudentLeaveApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentLeaveType.studentLeave],
     }),
-    changeLeaveStatus: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/student-leave/${id}/leave-request-status`,
-        method: 'PUT',
-        body,
+    approveStudentLeave: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/students/attendance/leaves/${id}/approve`,
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: [studentLeaveType.studentLeave],
+    }),
+    rejectStudentLeave: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/students/attendance/leaves/${id}/reject`,
+        method: 'POST',
+        data,
       }),
       invalidatesTags: [studentLeaveType.studentLeave],
     }),
   }),
 });
 
-export const { useGetStudentLeaveQuery, useAddStudentLeaveMutation, useChangeLeaveStatusMutation } =
-  StudentLeaveApi;
+export const {
+  useGetStudentLeaveQuery,
+  useAddStudentLeaveMutation,
+  useApproveStudentLeaveMutation,
+  useRejectStudentLeaveMutation,
+} = StudentLeaveApi;

@@ -15,7 +15,6 @@ import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import FileUploader from 'src/components/custom-upload';
 import CustomSelect from 'src/components/custom-select';
@@ -37,16 +36,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
-import {
-  Box,
-  Grid,
-  Stack,
-  Button,
-  TextField,
-  IconButton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, IconButton, Typography, DialogActions } from '@mui/material';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -55,7 +45,8 @@ import {
 import {
   useGetStudentLeaveQuery,
   useAddStudentLeaveMutation,
-  useChangeLeaveStatusMutation,
+  useRejectStudentLeaveMutation,
+  useApproveStudentLeaveMutation,
 } from 'src/redux/student/student-leave/student-leave-api';
 
 import { AttendanceTypeForm } from '../setting/attendance-type';
@@ -255,7 +246,7 @@ const LeaveAndAbsentScreen = () => {
         },
       },
       {
-        id: 'actions',
+        id: 'action',
         label: 'Actions',
         sticky: true,
         minWidth: 80,
@@ -265,7 +256,7 @@ const LeaveAndAbsentScreen = () => {
         render(value, row) {
           return (
             <Box display="flex" gap={1}>
-              {row.status === 'Pending' ? (
+              {row.status === EmployeeLeaveStatusType.Pending ? (
                 <>
                   <IconButton
                     size="small"
@@ -389,7 +380,24 @@ const LeaveAndAbsentScreen = () => {
         <LeaveRequestForm handleClose={handleClose} isLoading={isLoading} />
       </CustomDialog>
       <CustomDialog
-        title="Remarks"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {whichStatus === EmployeeLeaveStatusType.Rejected ? 'Reject Leave' : 'Approve Leave'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                whichStatus === EmployeeLeaveStatusType.Rejected
+                  ? 'Reject the leave request with reason'
+                  : 'Approve the leave request'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={confirmRejectDialog.value}
         handleClose={() => {
           setWhichStatus(null);
@@ -879,31 +887,49 @@ const LeaveAbsent = ({
    * Uses mutation to update leave request status in the backend
    * @returns {Array} - Array containing the mutation function
    */
-  const [changeStatus] = useQueryAndMutation({
+  const [approveStudentLeave, { isLoading: isApproveLeaveLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useChangeLeaveStatusMutation,
-  }); // Initialize form state and handlers using Formik
-  // values: contains form field values
-  // handleChange: handles input field changes
-  // handleSubmit: handles form submission
-  const { initialValues, values, handleChange, handleSubmit } = useFormik({
-    // Set initial form values
+    currentQueryAndMutation: useApproveStudentLeaveMutation,
+  });
+  const [rejectStudentLeave, { isLoading: isRejectLeaveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectStudentLeaveMutation,
+  });
+
+  const { initialValues, values, errors, touched, handleChange, handleSubmit } = useFormik({
     initialValues: {
       remarks: '',
     },
-    // Empty submit handler - to be implemented
+    validationSchema: Yup.object({
+      remarks:
+        status === EmployeeLeaveStatusType.Rejected
+          ? Yup.string().required('Remarks is required')
+          : Yup.string(),
+    }),
     async onSubmit() {
       try {
-        await changeStatus({
-          id: leaveId,
-          body: {
-            status,
-            rejectionReason: values.remarks,
-          },
-        }).unwrap();
+        if (status === EmployeeLeaveStatusType.Approved) {
+          await approveStudentLeave({
+            id: leaveId,
+            data: {
+              status,
+              remarks: values.remarks,
+              rejectionReason: values.remarks,
+            },
+          }).unwrap();
+        } else if (status === EmployeeLeaveStatusType.Rejected) {
+          await rejectStudentLeave({
+            id: leaveId,
+            data: {
+              status,
+              remarks: values.remarks,
+              rejectionReason: values.remarks,
+            },
+          }).unwrap();
+        }
         handleClose(null, true);
         shikshaMitraToast.success({
-          message: `Leave Request ${EmployeeLeaveStatusType[status as EmployeeLeaveStatusType]}  successfully`,
+          message: `Leave Request ${EmployeeLeaveStatusType[status as EmployeeLeaveStatusType]} successfully`,
         });
       } catch (error) {
         console.error('Error submitting form:', error);
@@ -912,39 +938,52 @@ const LeaveAbsent = ({
   });
 
   return (
-    <BackPopUpChecked initiavalues={initialValues} values={values}>
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <Box component="form" onSubmit={handleSubmit}>
-        <Scrollbar sx={{ p: 2 }}>
-          <Stack spacing={3}>
-            <TextField
-              value={values.remarks}
-              onChange={handleChange}
-              label="Remarks *"
-              multiline
-              fullWidth
-              rows={4}
-            />
-          </Stack>
-        </Scrollbar>
-        <DialogActions>
+        <DialogScrollContent>
+          <TextField
+            value={values.remarks}
+            onChange={handleChange}
+            name="remarks"
+            label={status === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
+            multiline
+            fullWidth
+            rows={4}
+            error={touched.remarks && !!errors.remarks}
+            helperText={touched.remarks && (errors.remarks as string)}
+            sx={{ mb: 2 }}
+          />
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             variant="outlined"
+            size="small"
             color="inherit"
             onClick={() => {
               handleClose(null, false);
             }}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            startIcon={
+              <Iconify
+                icon={
+                  status === EmployeeLeaveStatusType.Rejected
+                    ? GlobalIcons.reject
+                    : GlobalIcons.approvedIcon
+                }
+              />
+            }
             onClick={(e: any) => handleSubmit(e)}
             variant="contained"
             size="small"
+            loading={isApproveLeaveLoading || isRejectLeaveLoading}
           >
-            Submit
-          </Button>
+            {status === EmployeeLeaveStatusType.Rejected ? 'Reject' : 'Approve'}
+          </LoadingButton>
         </DialogActions>
       </Box>
     </BackPopUpChecked>

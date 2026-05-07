@@ -16,11 +16,19 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
-import { Box, Chip, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import {
+  Box,
+  Chip,
+  Button,
+  Backdrop,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 
 import type { TableDivisionDropDownProps } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry/type';
@@ -92,7 +100,8 @@ const ChangeDivisionScreen = ({
     tableData.forEach((current) => {
       const original = initialData.find((item) => item.studentId === current.studentId);
       if (original && original.divisionId !== current.divisionId) {
-        const oldDivisionName = allDivision.find((d) => d.id === original.divisionId)?.name ?? '-';
+        const oldDivisionId = original.divisionId || division;
+        const oldDivisionName = allDivision.find((d) => d.id === oldDivisionId)?.name ?? '-';
         const newDivisionName = allDivision.find((d) => d.id === current.divisionId)?.name ?? '-';
         changes.push({
           studentName: current.studentName || current.name || 'Unknown',
@@ -103,7 +112,7 @@ const ChangeDivisionScreen = ({
     });
 
     return changes;
-  }, [tableData, initialData, allDivision]);
+  }, [tableData, initialData, division, allDivision]);
 
   // Open save confirmation dialog with changes summary
   const handleSaveClick = () => {
@@ -141,7 +150,7 @@ const ChangeDivisionScreen = ({
       setModifiedRowIds(new Set()); // Clear modified rows after save
 
       // Invalidate cache to refetch updated data
-      dispatch(StudentApi.util.invalidateTags(['Student']));
+      dispatch(StudentApi.util.invalidateTags(['Student', 'studentGroup']));
     } catch (error) {
       console.error('Error saving data:', error);
     }
@@ -159,10 +168,32 @@ const ChangeDivisionScreen = ({
     }
   };
 
+  const isApiLoading = isChangeDivisionLoading;
+
   return (
     <Box
-      sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
+      sx={{
+        position: 'relative',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        flexGrow: 1,
+        minHeight: 0,
+      }}
     >
+      <Backdrop
+        open={isApiLoading}
+        sx={{
+          position: 'absolute',
+          zIndex: (theme) => theme.zIndex.modal - 1,
+          color: 'primary.main',
+          backgroundColor: 'rgba(255, 255, 255, 0.45)',
+          backdropFilter: 'blur(2px)',
+          borderRadius: 1,
+        }}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box
           sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, alignItems: 'center', mb: 1 }}
@@ -182,7 +213,7 @@ const ChangeDivisionScreen = ({
             variant="contained"
             onClick={handleSaveClick}
             size="small"
-            disabled={!isChanges}
+            disabled={changesSummary.length === 0}
           >
             Save
           </LoadingButton>
@@ -195,8 +226,8 @@ const ChangeDivisionScreen = ({
           noDataText={<>No Student Data Found </>}
           isLoading={isStudentDataLoading || isStudentDataFetching}
           columns={[
-            { id: 'grNo', label: 'GR No.', filterType: 'number' },
             { id: 'studentName', label: 'Name' },
+            { id: 'grNo', label: 'GR No.', filterType: 'number' },
             {
               id: 'divisionId',
               label: 'Division',
