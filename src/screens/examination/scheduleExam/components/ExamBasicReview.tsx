@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Grid, Chip, Divider, Typography } from '@mui/material';
+import { Box, Card, Grid, Chip, Button, Divider, Typography } from '@mui/material';
 import {
   Class,
   School,
@@ -69,12 +69,20 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
 
 // ----------------------------------------------------------------------
 
-const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) => {
+const ExamBasicReview = ({
+  formik,
+  onEdit,
+}: {
+  formik: FormikProps<IExamFormValues>;
+  onEdit?: () => void;
+}) => {
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Extract values from formik for easier access
   const { values } = formik;
+
+  console.log('ExamBasicReview values:', values);
 
   // Get all classes by flattening the standards array from each education medium stage
   const allClass = useMemo(
@@ -153,15 +161,29 @@ const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) =
           </Box>
         </Box>
 
-        {values.status !== undefined && (
-          <Label
-            variant="filled"
-            color={statusConfig.color as LabelColor}
-            sx={{ textTransform: 'uppercase', py: 0.5, px: 1 }}
-          >
-            {statusConfig.label}
-          </Label>
-        )}
+        {/* NON-BREAKING: right-side actions — Edit link + status badge */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {onEdit && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
+              onClick={onEdit}
+              sx={{ fontSize: '0.75rem' }}
+            >
+              Edit
+            </Button>
+          )}
+          {values.status !== undefined && (
+            <Label
+              variant="filled"
+              color={statusConfig.color as LabelColor}
+              sx={{ textTransform: 'uppercase', py: 0.5, px: 1 }}
+            >
+              {statusConfig.label}
+            </Label>
+          )}
+        </Box>
       </Box>
 
       {/* Body */}
@@ -174,7 +196,11 @@ const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) =
 
           {/* Exam Type */}
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <InfoItem icon={<Article />} label="Exam Type" value={values.examType || '-'} />
+            <InfoItem
+              icon={<Article />}
+              label="Exam Type"
+              value={values.examTypeName || values.examType || '-'}
+            />
           </Grid>
 
           {/* Class */}

@@ -2,14 +2,143 @@ import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { Box, TextField, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Button, Tooltip, TextField, Typography } from '@mui/material';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 
 import type { IExamFormValues } from '../type';
+
+// ---------------------------------------------------------------------------
+// ApplyToAllBar — NON-BREAKING helper toolbar for bulk-filling schedule rows
+// ---------------------------------------------------------------------------
+const ApplyToAllBar = ({ formik }: { formik: any }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [bulkDate, setBulkDate] = useState<any>(null);
+  const [bulkTotalMarks, setBulkTotalMarks] = useState<string>('');
+  const [bulkPassingMarks, setBulkPassingMarks] = useState<string>('');
+
+  if (!formik.values.subjects?.length) return null;
+
+  const applyToAll = (field: string, value: any) => {
+    const updated = formik.values.subjects.map((sub: any) => ({ ...sub, [field]: value }));
+    formik.setFieldValue('subjects', updated);
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: 1.5,
+        px: 2,
+        py: 1.25,
+        mb: 1,
+        borderRadius: 1.5,
+        border: '1px dashed',
+        borderColor: 'divider',
+        bgcolor: (theme) => theme.palette.grey[50],
+      }}
+    >
+      <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ minWidth: 90 }}>
+        Apply to all rows:
+      </Typography>
+
+      {/* Bulk Date */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <DatePicker
+          value={bulkDate}
+          label="Date"
+          format="DD/MM/YYYY"
+          minDate={dayjs()}
+          maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+          onChange={(d) => setBulkDate(d)}
+          slotProps={{ textField: { size: 'small', sx: { width: 145 } } }}
+        />
+        <Tooltip title="Set this date for all subjects" arrow>
+          <span>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!bulkDate}
+              onClick={() => {
+                applyToAll('examDate', bulkDate);
+                setBulkDate(null);
+              }}
+              sx={{ minWidth: 60, fontSize: '0.72rem' }}
+            >
+              Apply
+            </Button>
+          </span>
+        </Tooltip>
+      </Box>
+
+      {/* Bulk Total Marks */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <TextField
+          value={bulkTotalMarks}
+          label="Total Marks"
+          type="number"
+          size="small"
+          sx={{ width: 110 }}
+          inputProps={{ min: 0 }}
+          onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+          onChange={(e) => setBulkTotalMarks(e.target.value)}
+        />
+        <Tooltip title="Set total marks for all subjects" arrow>
+          <span>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!bulkTotalMarks}
+              onClick={() => {
+                applyToAll('totalMarks', bulkTotalMarks);
+                setBulkTotalMarks('');
+              }}
+              sx={{ minWidth: 60, fontSize: '0.72rem' }}
+            >
+              Apply
+            </Button>
+          </span>
+        </Tooltip>
+      </Box>
+
+      {/* Bulk Passing Marks */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <TextField
+          value={bulkPassingMarks}
+          label="Passing Marks"
+          type="number"
+          size="small"
+          sx={{ width: 120 }}
+          inputProps={{ min: 0 }}
+          onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+          onChange={(e) => setBulkPassingMarks(e.target.value)}
+        />
+        <Tooltip title="Set passing marks for all subjects" arrow>
+          <span>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!bulkPassingMarks}
+              onClick={() => {
+                applyToAll('passingMarks', bulkPassingMarks);
+                setBulkPassingMarks('');
+              }}
+              sx={{ minWidth: 60, fontSize: '0.72rem' }}
+            >
+              Apply
+            </Button>
+          </span>
+        </Tooltip>
+      </Box>
+    </Box>
+  );
+};
 
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
@@ -23,6 +152,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       sx={{ height: '100%' }}
     >
+      {/* NON-BREAKING: Apply-to-all bulk helper bar */}
+      <ApplyToAllBar formik={formik} />
       <CustomizableTable
         isFilter={false}
         isPagination={false}
@@ -229,6 +360,47 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
               );
             },
           },
+          // NON-BREAKING: Duration badge column — calculated from start/end time, display only
+          {
+            id: 'duration',
+            label: 'Duration',
+            isFilter: false,
+            isSort: false,
+            align: 'left',
+            minWidth: 90,
+            render(_value: any, row: any) {
+              if (!row.startTime || !row.endTime) {
+                return (
+                  <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+                    &mdash;
+                  </Typography>
+                );
+              }
+              const diffMins = dayjs(row.endTime).diff(dayjs(row.startTime), 'minute');
+              if (diffMins <= 0) {
+                return (
+                  <Chip
+                    label="Invalid"
+                    size="small"
+                    color="error"
+                    variant="soft"
+                    sx={{ fontSize: '0.68rem', height: 20 }}
+                  />
+                );
+              }
+              const hrs = Math.floor(diffMins / 60);
+              const mins = diffMins % 60;
+              return (
+                <Chip
+                  label={hrs > 0 ? `${hrs}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`}
+                  size="small"
+                  color="info"
+                  variant="soft"
+                  sx={{ fontSize: '0.68rem', height: 22, fontWeight: 600 }}
+                />
+              );
+            },
+          },
           {
             id: 'totalMarks',
             label: 'Total Marks',
@@ -295,52 +467,75 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             align: 'left',
             minWidth: 150,
             render(value, row) {
+              // NON-BREAKING: inline UI-only warning when passing > total
+              const totalVal = Number(formik.values.subjects?.[row.index]?.totalMarks);
+              const passingVal = Number(value);
+              const exceedsTotal =
+                !Number.isNaN(totalVal) &&
+                !Number.isNaN(passingVal) &&
+                totalVal > 0 &&
+                passingVal > totalVal;
+
               return (
-                <ShakingTextField
-                  error={
-                    typeof formik.errors.subjects?.[row.index] === 'object' &&
-                    !!(formik.errors.subjects?.[row.index] as any)?.passingMarks &&
-                    !!formik.touched.subjects?.[row.index]?.passingMarks
-                  }
-                >
-                  <TextField
-                    value={value}
-                    type="number"
-                    label="Passing Marks *"
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    onChange={(e) => {
-                      formik.setFieldValue(`subjects.${row.index}.passingMarks`, e.target.value);
-                      formik.setFieldTouched(`subjects.${row.index}.passingMarks`, false, false);
-                    }}
-                    size="small"
+                <Box>
+                  <ShakingTextField
                     error={
-                      Boolean(formik.touched.subjects?.[row.index]?.passingMarks) &&
-                      !!(formik.errors.subjects?.[row.index] as any)?.passingMarks
+                      (typeof formik.errors.subjects?.[row.index] === 'object' &&
+                        !!(formik.errors.subjects?.[row.index] as any)?.passingMarks &&
+                        !!formik.touched.subjects?.[row.index]?.passingMarks) ||
+                      exceedsTotal
                     }
-                    helperText={
-                      formik.touched.subjects?.[row.index]?.passingMarks &&
-                      (formik.errors.subjects?.[row.index] as any)?.passingMarks
-                        ? (formik.errors.subjects?.[row.index] as any)?.passingMarks
-                        : ' '
-                    }
-                    FormHelperTextProps={{
-                      sx: {
-                        margin: 0,
-                        position: 'static',
-                        whiteSpace: 'normal',
-                      },
-                    }}
-                    InputLabelProps={{
-                      sx: {
-                        lineHeight: '1.2em',
-                      },
-                    }}
-                  />
-                </ShakingTextField>
+                  >
+                    <TextField
+                      value={value}
+                      type="number"
+                      label="Passing Marks *"
+                      onKeyDown={(e) => {
+                        if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onChange={(e) => {
+                        formik.setFieldValue(`subjects.${row.index}.passingMarks`, e.target.value);
+                        formik.setFieldTouched(`subjects.${row.index}.passingMarks`, false, false);
+                      }}
+                      size="small"
+                      error={
+                        (Boolean(formik.touched.subjects?.[row.index]?.passingMarks) &&
+                          !!(formik.errors.subjects?.[row.index] as any)?.passingMarks) ||
+                        exceedsTotal
+                      }
+                      helperText={
+                        formik.touched.subjects?.[row.index]?.passingMarks &&
+                        (formik.errors.subjects?.[row.index] as any)?.passingMarks
+                          ? (formik.errors.subjects?.[row.index] as any)?.passingMarks
+                          : ' '
+                      }
+                      FormHelperTextProps={{
+                        sx: {
+                          margin: 0,
+                          position: 'static',
+                          whiteSpace: 'normal',
+                        },
+                      }}
+                      InputLabelProps={{
+                        sx: {
+                          lineHeight: '1.2em',
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                  {/* NON-BREAKING: UI-only inline warning chip */}
+                  {exceedsTotal && (
+                    <Chip
+                      label="Exceeds total"
+                      size="small"
+                      color="warning"
+                      variant="soft"
+                      sx={{ fontSize: '0.65rem', height: 18, mt: 0.25 }}
+                    />
+                  )}
+                </Box>
               );
             },
           },

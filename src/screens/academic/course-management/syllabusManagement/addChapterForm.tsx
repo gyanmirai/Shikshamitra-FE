@@ -22,8 +22,20 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  Box,
+  Grid,
+  Chip,
+  Paper,
+  Stack,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  DialogActions,
+  InputAdornment,
+} from '@mui/material';
 import {
   useAddChapterMutation,
   useUpdateChapterMutation,
@@ -126,172 +138,298 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
-              {/* Chapter Number Input */}
-              <Grid size={{ xs: 12 }}>
-                <Box display="flex" gap={2}>
-                  <Typography variant="body2">
-                    <strong>Class : </strong>
-                    {className}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Subject : </strong>
-                    {subject}
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
+            {/* ── Context Header ───────────────────────────────────── */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                mb: 3,
+                borderRadius: 2,
+                bgcolor: (t) => `rgba(${t.vars.palette.primary.mainChannel} / 0.06)`,
+                border: (t) => `1px solid rgba(${t.vars.palette.primary.mainChannel} / 0.18)`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Iconify
+                icon="mdi:book-education-outline"
+                width={22}
+                sx={{ color: 'primary.main', flexShrink: 0 }}
+              />
+              <Stack direction="row" alignItems="center" gap={1}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={700}
+                  sx={{ textTransform: 'uppercase', letterSpacing: 0.8 }}
                 >
-                  <TextField
-                    fullWidth
-                    label="Chapter Number *"
-                    name="chapterNo"
-                    type="number"
-                    inputProps={{ min: 0 }}
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    value={formik.values.chapterNo}
-                    onChange={formik.handleChange}
-                    size="small"
+                  Class
+                </Typography>
+                <Chip label={className} size="small" color="primary" variant="soft" />
+              </Stack>
+              <Divider orientation="vertical" flexItem />
+              <Stack direction="row" alignItems="center" gap={1}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={700}
+                  sx={{ textTransform: 'uppercase', letterSpacing: 0.8 }}
+                >
+                  Subject
+                </Typography>
+                <Chip label={subject} size="small" color="secondary" variant="soft" />
+              </Stack>
+              <Box sx={{ ml: 'auto' }}>
+                <Chip
+                  size="small"
+                  variant="soft"
+                  color={initialValues ? 'warning' : 'success'}
+                  label={initialValues ? 'Editing Chapter' : 'New Chapter'}
+                />
+              </Box>
+            </Paper>
+
+            {/* ── Section 1 : Chapter Info ─────────────────────────── */}
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                mb: 3,
+                borderRadius: 2,
+                transition: 'box-shadow 0.2s ease',
+                '&:hover': { boxShadow: 4 },
+              }}
+            >
+              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                <Iconify icon="mdi:information-outline" width={18} sx={{ color: 'primary.main' }} />
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Chapter Info
+                </Typography>
+              </Stack>
+              <Divider sx={{ mb: 2 }} />
+
+              <Grid container spacing={2}>
+                {/* Chapter Number */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
                     error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
-                    helperText={formik.touched.chapterNo && formik.errors.chapterNo}
-                  />
-                </ShakingTextField>
-              </Grid>
+                  >
+                    <TextField
+                      fullWidth
+                      label="Chapter Number *"
+                      name="chapterNo"
+                      type="number"
+                      placeholder="e.g. 1"
+                      inputProps={{ min: 0 }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Iconify icon="mdi:pound" width={15} sx={{ color: 'text.disabled' }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      onKeyDown={(e) => {
+                        if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      value={formik.values.chapterNo}
+                      onChange={formik.handleChange}
+                      size="small"
+                      error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
+                      helperText={formik.touched.chapterNo && formik.errors.chapterNo}
+                    />
+                  </ShakingTextField>
+                </Grid>
 
-              {/* Chapter Name Input */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
-                >
-                  <TextField
-                    fullWidth
-                    label="Chapter Name  *"
-                    name="chapterName"
-                    value={formik.values.chapterName}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                      formik.setFieldValue('chapterName', value);
-                    }}
-                    size="small"
+                {/* Chapter Name */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
                     error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
-                    helperText={formik.touched.chapterName && formik.errors.chapterName}
-                  />
-                </ShakingTextField>
-              </Grid>
+                  >
+                    <TextField
+                      fullWidth
+                      label="Chapter Name *"
+                      name="chapterName"
+                      placeholder="e.g. Introduction to Algebra"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Iconify
+                              icon="mdi:book-open-variant"
+                              width={15}
+                              sx={{ color: 'text.disabled' }}
+                            />
+                          </InputAdornment>
+                        ),
+                      }}
+                      value={formik.values.chapterName}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                        formik.setFieldValue('chapterName', value);
+                      }}
+                      size="small"
+                      error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
+                      helperText={formik.touched.chapterName && formik.errors.chapterName}
+                    />
+                  </ShakingTextField>
+                </Grid>
 
-              {/* Start Time DatePicker */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.startDate && formik.errors.startDate) || false}
-                >
-                  <DatePicker
-                    label="Chapter Start Date *"
-                    format="DD/MM/YYYY"
-                    value={formik.values.startDate}
-                    onChange={(newValue) => {
-                      formik.setFieldValue('startDate', newValue);
-                    }}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    sx={{ minWidth: 180, width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: !!(formik.touched.startDate && formik.errors.startDate) || false,
-                        helperText: formik.touched.startDate && formik.errors.startDate,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
+                {/* Chapter Start Date */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+                  >
+                    <DatePicker
+                      label="Chapter Start Date *"
+                      format="DD/MM/YYYY"
+                      value={formik.values.startDate}
+                      onChange={(newValue) => {
+                        formik.setFieldValue('startDate', newValue);
+                      }}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      sx={{ minWidth: 180, width: '100%' }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          placeholder: 'DD/MM/YYYY',
+                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                          helperText: formik.touched.startDate && formik.errors.startDate,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
 
-              {/* End Time DatePicker */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.endDate && formik.errors.endDate) || false}
-                >
-                  <DatePicker
-                    label="Chapter End Date *"
-                    format="DD/MM/YYYY"
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    value={formik.values.endDate}
-                    onChange={(newValue) => {
-                      formik.setFieldValue('endDate', newValue);
-                    }}
-                    sx={{ minWidth: 180, width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        error: !!(formik.touched.endDate && formik.errors.endDate) || false,
-                        helperText: formik.touched.endDate && formik.errors.endDate,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
+                {/* Chapter End Date */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                  >
+                    <DatePicker
+                      label="Chapter End Date *"
+                      format="DD/MM/YYYY"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      value={formik.values.endDate}
+                      onChange={(newValue) => {
+                        formik.setFieldValue('endDate', newValue);
+                      }}
+                      sx={{ minWidth: 180, width: '100%' }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'DD/MM/YYYY',
+                          error: !!(formik.touched.endDate && formik.errors.endDate) || false,
+                          helperText: formik.touched.endDate && formik.errors.endDate,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
               </Grid>
+            </Paper>
 
-              {/* Rich Text Editor for Chapter Content */}
-              <Grid size={{ xs: 12 }} mb={-2}>
-                <Typography variant="subtitle2">Description</Typography>
-              </Grid>
+            {/* ── Section 2 : Content ──────────────────────────────── */}
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                mb: 3,
+                borderRadius: 2,
+                transition: 'box-shadow 0.2s ease',
+                '&:hover': { boxShadow: 4 },
+              }}
+            >
+              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                <Iconify icon="mdi:text-box-outline" width={18} sx={{ color: 'primary.main' }} />
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Content
+                </Typography>
+              </Stack>
+              <Divider sx={{ mb: 2 }} />
 
-              <Grid size={{ xs: 12 }}>
-                <Editor
-                  value={formik.values.description}
-                  onChange={(value) => {
-                    formik.setFieldValue('description', value);
-                  }}
-                  placeholder="Description"
-                  sx={{
-                    border: `1px solid ${theme.vars.palette.grey[500]}`,
-                    borderRadius: 1,
-                    '&:hover': { borderColor: theme.vars.palette.text.primary },
-                    ...(!!formik.errors.description && {
-                      borderColor: theme.palette.error.main,
-                    }),
-                    '&:focus-within': {
-                      borderColor: theme.vars.palette.text.primary,
-                      borderWidth: 2,
-                    },
-                  }}
-                />
-              </Grid>
+              <Editor
+                value={formik.values.description}
+                onChange={(value) => {
+                  formik.setFieldValue('description', value);
+                }}
+                placeholder="Describe what this chapter covers, key topics and learning outcomes…"
+                sx={{
+                  border: `1px solid ${theme.vars.palette.grey[500]}`,
+                  borderRadius: 1,
+                  '&:hover': { borderColor: theme.vars.palette.text.primary },
+                  ...(!!formik.errors.description && {
+                    borderColor: theme.palette.error.main,
+                  }),
+                  '&:focus-within': {
+                    borderColor: theme.vars.palette.text.primary,
+                    borderWidth: 2,
+                  },
+                }}
+              />
+            </Paper>
 
-              {/* Document Upload Section */}
-              <Grid size={{ xs: 12 }}>
-                <CustomUpload
-                  multiple
-                  previewCount={6}
-                  onChange={(files) => {
-                    handleFileUpload(files);
-                  }}
-                  value={formik.values.documents}
-                  label="Upload Your Chapter Documents"
-                  outputFormat="file"
-                />
-              </Grid>
-            </Grid>
+            {/* ── Section 3 : Attachments ──────────────────────────── */}
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                borderRadius: 2,
+                transition: 'box-shadow 0.2s ease',
+                '&:hover': { boxShadow: 4 },
+              }}
+            >
+              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                <Iconify icon="mdi:paperclip" width={18} sx={{ color: 'primary.main' }} />
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Attachments
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  — PDFs, images, slides
+                </Typography>
+              </Stack>
+              <Divider sx={{ mb: 2 }} />
+
+              <CustomUpload
+                multiple
+                previewCount={6}
+                onChange={(files) => {
+                  handleFileUpload(files);
+                }}
+                value={formik.values.documents}
+                label="Drag & drop files here, or click to browse"
+                outputFormat="file"
+              />
+            </Paper>
           </Scrollbar>
 
-          {/* Form Actions */}
-
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          {/* ── Sticky Footer ────────────────────────────────────── */}
+          <DialogActions
+            sx={{
+              p: 2,
+              gap: 1,
+              borderTop: (t) => `1px solid ${t.vars.palette.divider}`,
+              boxShadow: 'var(--shadows-10)',
+              bgcolor: 'background.paper',
+            }}
+          >
             <Button
               variant="outlined"
               size="small"
+              color="inherit"
               onClick={() => {
                 onClose(null, false);
               }}
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              sx={{
+                transition: 'all 0.2s ease',
+                '&:hover': { boxShadow: 2 },
+              }}
             >
               Cancel
             </Button>
@@ -307,8 +445,13 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               type="submit"
               size="small"
               variant="contained"
+              sx={{
+                minWidth: 120,
+                transition: 'all 0.2s ease',
+                '&:hover': { boxShadow: 4 },
+              }}
             >
-              {initialValues ? 'Update' : 'Submit'}
+              {initialValues ? 'Update Chapter' : 'Save Chapter'}
             </Button>
           </DialogActions>
 

@@ -8,6 +8,7 @@ import type { IExamSubject, IRoomDetails, IExamFormValues } from '../type';
 export const defaultExamFormValues: IExamFormValues = {
   examId: '',
   examType: '',
+  examTypeName: '',
   examName: '',
   className: '',
   divisions: [],
@@ -26,7 +27,8 @@ export function mapBackendToFormik(
   basicData: any = null,
   scheduleData: any = null,
   roomData: any = null,
-  examSubjectsData: any = null
+  examSubjectsData: any = null,
+  examTypes: any[] = []
 ): IExamFormValues {
   // Build lookup maps for enrichment: prefer schedule data, fall back to examSubjects
   const scheduleMap: Record<string, any> = {};
@@ -80,6 +82,11 @@ export function mapBackendToFormik(
   return {
     examId: basicData?.id ?? '',
     examType: basicData?.examTypeId ?? '',
+    examTypeName:
+      examTypes.find((t: any) => t.id === basicData?.examTypeId)?.examType ??
+      basicData?.examTypeName ??
+      basicData?.examType ??
+      '',
     examName: basicData?.examName ?? '',
     className: basicData?.standardId ?? '',
     divisions: basicData?.divisionIds ?? [],

@@ -79,17 +79,17 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       {
         label: 'Pending',
         value: 0,
-        count: examCounts.pending,
+        count: getExams?.data?.pendingCount || 0,
         color: 'warning',
       },
       {
         label: 'Published',
         value: 1,
-        count: examCounts.completed,
+        count: getExams?.data?.publishedCount || 0,
         color: 'info',
       },
     ],
-    [examCounts]
+    [getExams?.data?.publishedCount, getExams?.data?.pendingCount]
   );
 
   // Handle tab change event

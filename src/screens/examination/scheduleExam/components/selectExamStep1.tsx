@@ -5,13 +5,15 @@ import type { Medium, Standards, Organization } from 'src/types/school';
 
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
+import { alpha } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { cardStyle } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/homeworkForm';
@@ -118,6 +120,11 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       value={formik.values.examType}
                       onChange={(val) => {
                         formik.setFieldValue('examType', val);
+                        // Also store the display name so the Review step shows it correctly
+                        const selectedType = examTypeData?.items?.find(
+                          (item: any) => item.id === val
+                        );
+                        formik.setFieldValue('examTypeName', selectedType?.examType ?? '');
                         formik.setFieldTouched(`examType`, false);
                       }}
                       labelKey="examType"
@@ -162,7 +169,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       helperText={
                         formik.touched.className && formik.errors.className
                           ? formik.errors.className
-                          : undefined
+                          : 'Select the class for this exam'
                       }
                     />
                   </ShakingTextField>
@@ -244,18 +251,18 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.divisions && formik.errors.divisions)}
                       helperText={
-                        formik.touched.divisions
+                        formik.touched.divisions && formik.errors.divisions
                           ? Array.isArray(formik.errors.divisions)
                             ? formik.errors.divisions.join(', ')
                             : formik.errors.divisions
-                          : undefined
+                          : 'Select one or more divisions (choose “All” to include all)'
                       }
                     />
                   </ShakingTextField>
                 </motion.div>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 8 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
                   <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects)}>
                     <Autocomplete
@@ -344,11 +351,118 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         formik.setFieldTouched(`examName`, false);
                       }}
                       error={formik.touched.examName && Boolean(formik.errors.examName)}
-                      helperText={formik.touched.examName && formik.errors.examName}
+                      helperText={
+                        formik.touched.examName && formik.errors.examName
+                          ? formik.errors.examName
+                          : 'A short, descriptive name for this exam'
+                      }
                     />
                   </ShakingTextField>
                 </motion.div>
               </Grid>
+
+              {/* NON-BREAKING: Subject chips preview — shown below the Subjects selector */}
+              {formik.values.subjects.length > 0 && (
+                <Grid size={{ xs: 12 }}>
+                  <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 0.75,
+                        pt: 0.5,
+                        pb: 0.5,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={600}
+                        sx={{ width: '100%', mb: 0.5 }}
+                      >
+                        {formik.values.subjects.length} subject
+                        {formik.values.subjects.length !== 1 ? 's' : ''} selected
+                      </Typography>
+                      {formik.values.subjects.map((sub: any) => (
+                        <Box
+                          key={sub.subjectId}
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.75,
+                            px: 1.25,
+                            height: 26,
+                            borderRadius: '13px',
+                            border: '1px solid',
+                            borderColor: sub.subjectColor
+                              ? alpha(sub.subjectColor, 0.3)
+                              : 'divider',
+                            bgcolor: sub.subjectColor ? alpha(sub.subjectColor, 0.1) : 'grey.100',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              bgcolor: sub.subjectColor || 'grey.500',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography
+                            variant="caption"
+                            fontWeight={600}
+                            sx={{ color: sub.subjectColor || 'text.primary', lineHeight: 1 }}
+                          >
+                            {sub.subjectName}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </motion.div>
+                </Grid>
+              )}
+
+              {/* NON-BREAKING: Lightweight step preview summary card */}
+              {(formik.values.examName || formik.values.className) && (
+                <Grid size={{ xs: 12 }}>
+                  <motion.div variants={formItemVariants} style={{ width: '100%' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        p: 1.25,
+                        borderRadius: 1.5,
+                        border: '1px dashed',
+                        borderColor: (theme) => alpha(theme.palette.success.main, 0.4),
+                        bgcolor: (theme) => alpha(theme.palette.success.main, 0.06),
+                      }}
+                    >
+                      <Iconify
+                        icon="eva:checkmark-circle-2-fill"
+                        width={20}
+                        sx={{ color: 'success.main', flexShrink: 0 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Setting up:{' '}
+                        <strong>
+                          {[
+                            formik.values.examName,
+                            allClass.find((c: Standards) => c.id === formik.values.className)?.name,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </strong>
+                        {formik.values.subjects.length > 0 &&
+                          ` · ${formik.values.subjects.length} subject${
+                            formik.values.subjects.length !== 1 ? 's' : ''
+                          }`}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                </Grid>
+              )}
             </Grid>
           </motion.div>
         </SectionCard>

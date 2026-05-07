@@ -9,14 +9,18 @@ import RoomAllocationReview from './RoomAllocationReview';
 
 import type { IExamFormValues } from '../type';
 
-const ExamReviewStep4 = (props: FormikProps<IExamFormValues>) => {
+const ExamReviewStep4 = (
+  props: FormikProps<IExamFormValues> & { onEditStep?: (step: number) => void }
+) => {
   // Destructure formik props from the component props
   const formik = props;
+  const { onEditStep } = props;
   return (
     <Box>
-      <ExamBasicReview formik={formik} />
-      <ExamScheduleReview formik={formik} />
-      <RoomAllocationReview formik={formik} />
+      {/* NON-BREAKING: onEdit callbacks navigate back to each respective step */}
+      <ExamBasicReview formik={formik} onEdit={onEditStep ? () => onEditStep(0) : undefined} />
+      <ExamScheduleReview formik={formik} onEdit={onEditStep ? () => onEditStep(1) : undefined} />
+      <RoomAllocationReview formik={formik} onEdit={onEditStep ? () => onEditStep(2) : undefined} />
     </Box>
   );
 };

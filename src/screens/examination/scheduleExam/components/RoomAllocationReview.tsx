@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { MeetingRoom, ClassOutlined } from '@mui/icons-material';
-import { Box, Card, Chip, Grid, Divider, Typography } from '@mui/material';
+import { Box, Card, Chip, Grid, Button, Divider, Typography } from '@mui/material';
 
 import type { IRoomDetails, IExamFormValues } from '../type';
 
@@ -60,7 +60,13 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
 
 // ----------------------------------------------------------------------
 
-const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) => {
+const RoomAllocationReview = ({
+  formik,
+  onEdit,
+}: {
+  formik: FormikProps<IExamFormValues>;
+  onEdit?: () => void;
+}) => {
   const { roomDetails } = formik.values;
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -122,13 +128,34 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
           <Iconify icon="fluent:conference-room-24-filled" width={24} color="primary.main" />
         </Box>
 
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            Room Allocation
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            Designated rooms for each subject and division
-          </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flex: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              Room Allocation
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+              Designated rooms for each subject and division
+            </Typography>
+          </Box>
+          {/* NON-BREAKING: Edit link navigates back to Room Details step */}
+          {onEdit && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
+              onClick={onEdit}
+              sx={{ fontSize: '0.75rem', flexShrink: 0 }}
+            >
+              Edit
+            </Button>
+          )}
         </Box>
       </Box>
 

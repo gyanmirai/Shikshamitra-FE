@@ -162,6 +162,33 @@ const SeatManagement = ({
           '::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: 'grey.300' },
         }}
       >
+        {/* NON-BREAKING: "Board" orientation indicator */}
+        <Box
+          sx={{
+            textAlign: 'center',
+            mb: 2,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'inline-block',
+              px: 4,
+              py: 0.5,
+              borderRadius: 1,
+              border: '2px solid',
+              borderColor: 'primary.main',
+              bgcolor: (theme) => theme.palette.primary.main,
+              color: 'primary.contrastText',
+              fontSize: '0.7rem',
+              fontWeight: 800,
+              letterSpacing: 3,
+              textTransform: 'uppercase',
+            }}
+          >
+            Board / Front
+          </Box>
+        </Box>
+
         <motion.div variants={containerVariants} initial="hidden" animate="show">
           <Grid container spacing={4} justifyContent="center">
             {Array.from({ length: roomColumns }).map((_, colIdx) => {
@@ -181,7 +208,7 @@ const SeatManagement = ({
                 .sort((a, b) => a - b);
 
               return (
-                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={`column-${colIdx}`}>
+                <Grid size={{ xs: 12, md: 6 }} key={`column-${colIdx}`}>
                   <motion.div variants={columnVariants}>
                     <Box
                       sx={{
@@ -190,10 +217,7 @@ const SeatManagement = ({
                         gap: 2,
                         p: 2,
                         borderRadius: 2,
-                        bgcolor: (theme) =>
-                          theme.palette.mode === 'dark'
-                            ? 'rgba(255, 255, 255, 0.02)'
-                            : 'rgba(0, 0, 0, 0.02)',
+                        bgcolor: 'background.neutral',
                         border: '1px dashed',
                         borderColor: 'divider',
                       }}
@@ -211,32 +235,53 @@ const SeatManagement = ({
                         Column {colIdx + 1}
                       </Typography>
 
-                      {benchNumbers.map((benchNo) => {
+                      {benchNumbers.map((benchNo, rowIdx) => {
                         const benchSeats = benchesInColumn[benchNo];
                         benchSeats.sort((a, b) => a.seatNumber - b.seatNumber);
 
                         return (
                           <Box
                             key={`bench-${benchNo}-${colIdx}`}
-                            sx={{
-                              display: 'flex',
-                              justifyContent: 'center',
-                              gap: 1.5,
-                              p: 1.5,
-                              borderRadius: 1.5,
-                              bgcolor: 'background.paper',
-                              boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.06)',
-                            }}
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                           >
-                            {benchSeats.map((seat) => (
-                              <SeatBox
-                                key={`seat-${seat.seatNumber}`}
-                                seat={seat}
-                                onStudentDrop={onStudentDrop}
-                                onStudentRemove={onStudentRemove}
-                                onSeatSwap={handleSeatSwap}
-                              />
-                            ))}
+                            {/* NON-BREAKING: Row label */}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: 'text.disabled',
+                                fontWeight: 600,
+                                fontSize: '0.62rem',
+                                width: 36,
+                                flexShrink: 0,
+                                textAlign: 'right',
+                              }}
+                            >
+                              R{rowIdx + 1}
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                flex: 1,
+                                minWidth: 0,
+                                justifyContent: 'center',
+                                flexWrap: 'wrap',
+                                gap: 1.5,
+                                p: 1.5,
+                                borderRadius: 1.5,
+                                bgcolor: 'background.paper',
+                                boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.06)',
+                              }}
+                            >
+                              {benchSeats.map((seat) => (
+                                <SeatBox
+                                  key={`seat-${seat.seatNumber}`}
+                                  seat={seat}
+                                  onStudentDrop={onStudentDrop}
+                                  onStudentRemove={onStudentRemove}
+                                  onSeatSwap={handleSeatSwap}
+                                />
+                              ))}
+                            </Box>
                           </Box>
                         );
                       })}

@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Grid, Paper } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Chip, Grid, Paper, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetSeatLayoutQuery,
@@ -197,15 +198,73 @@ const SeatAllocationSection = ({
   return (
     <Grid container spacing={1} height="calc(100vh - 150px)" p={1}>
       <Grid size={2.5} height="100%">
-        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
-          >
-            Total Students : {seatAllocationStudentsData?.totalCount ?? 0}
+        <Paper
+          elevation={3}
+          sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}
+        >
+          {/* NON-BREAKING: enhanced sidebar header with stats */}
+          <Box sx={{ pb: 1.5, mb: 1, borderBottom: '1px dashed', borderColor: 'divider' }}>
+            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+              Students
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              {/* Total */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Iconify
+                    icon="mdi:account-group-outline"
+                    width={14}
+                    sx={{ color: 'text.secondary' }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Total
+                  </Typography>
+                </Box>
+                <Chip
+                  label={seatAllocationStudentsData?.totalCount ?? 0}
+                  size="small"
+                  sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                />
+              </Box>
+              {/* Allocated */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Iconify
+                    icon="mdi:check-circle-outline"
+                    width={14}
+                    sx={{ color: 'success.main' }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Allocated
+                  </Typography>
+                </Box>
+                <Chip
+                  label={students.filter((s) => s.isSeatAllocate).length}
+                  size="small"
+                  color="success"
+                  variant="soft"
+                  sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                />
+              </Box>
+              {/* Unassigned */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Iconify icon="mdi:clock-outline" width={14} sx={{ color: 'warning.main' }} />
+                  <Typography variant="caption" color="text.secondary">
+                    Pending
+                  </Typography>
+                </Box>
+                <Chip
+                  label={students.filter((s) => !s.isSeatAllocate).length}
+                  size="small"
+                  color="warning"
+                  variant="soft"
+                  sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                />
+              </Box>
+            </Box>
           </Box>
-          <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
             <motion.div
               variants={listVariants}
               initial="hidden"

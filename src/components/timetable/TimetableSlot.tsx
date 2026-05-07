@@ -113,7 +113,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     }),
   });
 
-  const [{ isOver }, drop] = useDrop({
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: ItemTypes.SUBJECT,
     canDrop: () => !isBreak && !isFilled,
     drop: (item: DragItem) => {
@@ -123,6 +123,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
+      canDrop: !!monitor.canDrop(),
     }),
   });
 
@@ -180,21 +181,38 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         alignItems: 'stretch',
         padding: '2px',
         boxShadow: theme.shadows[1],
+        cursor: 'grab',
+        transition: 'all 0.18s ease',
+        '&:hover': {
+          boxShadow: theme.shadows[4],
+          transform: 'scale(1.015)',
+          zIndex: 3,
+        },
       };
     }
 
     return {
       ...baseSx,
-      bgcolor: isOver ? theme.vars.palette.action.hover : 'transparent',
-      border: '1px dashed',
+      bgcolor: isOver
+        ? canDrop
+          ? (theme.palette.success.lighter ?? 'rgba(34,197,94,0.12)')
+          : 'rgba(239,68,68,0.08)'
+        : 'transparent',
+      border: '1.5px dashed',
       borderColor: isOver
-        ? `${theme.vars.palette.success.light}`
-        : `${theme.vars.palette.grey[300]}`,
+        ? canDrop
+          ? theme.vars.palette.success.main
+          : theme.vars.palette.error.light
+        : theme.vars.palette.grey[300],
       backgroundColor: isOver
-        ? `${theme.palette.success.lighter}`
-        : `${theme.vars.palette.background.paper}`,
-      transform: isOver ? 'scale(1.02)' : 'none',
+        ? canDrop
+          ? (theme.palette.success.lighter ?? 'rgba(34,197,94,0.12)')
+          : 'rgba(239,68,68,0.08)'
+        : theme.vars.palette.background.paper,
+      transform: isOver && canDrop ? 'scale(1.025)' : 'none',
       zIndex: isOver ? 2 : 0,
+      transition: 'all 0.15s ease',
+      boxShadow: isOver && canDrop ? `0 0 0 2px ${theme.palette.success.main}40` : 'none',
     };
   };
 

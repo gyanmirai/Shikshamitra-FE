@@ -163,6 +163,26 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     onChange(newWeeklySlots);
   };
 
+  const handleClearDay = (day: DayOfWeek) => {
+    if (readOnly) return;
+    const newWeeklySlots = { ...slots };
+    newWeeklySlots[day] = newWeeklySlots[day].map((slot) => {
+      if (slot.type === SlotType.LECTURE) {
+        return {
+          ...slot,
+          subjectId: null,
+          _attachedSubject: undefined,
+          subjects: [],
+          subjectType: null,
+          electiveGroupId: null,
+          electiveGroupName: null,
+        } as any;
+      }
+      return slot;
+    });
+    onChange(newWeeklySlots);
+  };
+
   const handleRemoveSubject = (day: DayOfWeek, slotId: number, subject: Subject) => {
     if (readOnly) return;
     const dayKey = day as DayOfWeek;
@@ -477,9 +497,9 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         >
           {/* Time Column (Sticky) */}
           <Paper
-            elevation={1}
+            elevation={0}
             sx={{
-              width: '80px',
+              width: '72px',
               flexShrink: 0,
               bgcolor: 'background.paper',
               borderRight: 1,
@@ -492,32 +512,43 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
               height: '100%',
             }}
           >
-            {timelineStamps.map((time) => (
-              <Box
-                key={time}
-                sx={{
-                  height: '50px', // var(--slot-height-30)
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                  pr: 1.5,
-                  fontSize: '0.75rem',
-                  color: 'text.secondary',
-                  position: 'relative',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '6px',
-                    height: '1px',
-                    bgcolor: 'divider',
-                  },
-                }}
-              >
-                {time}
-              </Box>
-            ))}
+            {timelineStamps.map((time) => {
+              const isHour = time.endsWith(':00');
+              return (
+                <Box
+                  key={time}
+                  sx={{
+                    height: '50px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    pr: 1.5,
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: isHour ? '10px' : '5px',
+                      height: '1px',
+                      bgcolor: isHour ? 'text.disabled' : 'divider',
+                    },
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      fontSize: isHour ? '0.72rem' : '0.65rem',
+                      fontWeight: isHour ? 700 : 400,
+                      color: isHour ? 'text.secondary' : 'text.disabled',
+                      letterSpacing: isHour ? '-0.02em' : 0,
+                    }}
+                  >
+                    {time}
+                  </Box>
+                </Box>
+              );
+            })}
           </Paper>
 
           {/* Days Grid */}
@@ -531,6 +562,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 onRemoveSubject={handleRemoveSubject}
                 onAssignTeacher={handleAssignTeacher}
                 onAssignRoom={handleAssignRoom}
+                onClearDay={handleClearDay}
                 readOnly={readOnly}
               />
             ))}

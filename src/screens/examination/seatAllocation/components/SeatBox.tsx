@@ -94,25 +94,6 @@ const SeatBox = ({
     }
   };
 
-  const getBgColor = () => {
-    // Only show drag over effect on empty seats
-    if (isDragOver && !seat.isAssigned)
-      return varAlpha(theme.vars.palette.primary.mainChannel, 0.08);
-    if (seat.isAssigned) return theme.palette.background.paper;
-    return 'transparent';
-  };
-
-  const getTextColor = () => {
-    if (seat.isAssigned) return theme.palette.text.primary;
-    return theme.palette.text.secondary;
-  };
-
-  const getBorderStyle = () => {
-    if (isDragOver && !seat.isAssigned) return `2px dashed ${theme.palette.primary.main}`;
-    if (seat.isAssigned) return `1px solid ${theme.palette.divider}`;
-    return `1px dashed ${theme.palette.divider}`;
-  };
-
   return (
     <motion.div
       layout
@@ -136,24 +117,33 @@ const SeatBox = ({
           position: 'relative',
           width: 140,
           height: 90,
-          bgcolor: getBgColor(),
-          color: getTextColor(),
+          // Use sx tokens so MUI CSS-vars resolve correctly in both light & dark
+          bgcolor:
+            isDragOver && !seat.isAssigned
+              ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+              : seat.isAssigned
+                ? 'background.paper'
+                : 'transparent',
+          color: seat.isAssigned ? 'text.primary' : 'text.secondary',
           borderRadius: 1.5,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          border: getBorderStyle(),
+          border:
+            isDragOver && !seat.isAssigned
+              ? '2px dashed'
+              : seat.isAssigned
+                ? '1px solid'
+                : '1px dashed',
+          borderColor: isDragOver && !seat.isAssigned ? 'primary.main' : 'divider',
           cursor: seat.isAssigned ? 'move' : 'default',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: seat.isAssigned
-            ? theme.customShadows?.card ||
-              '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)'
-            : 'none',
+          boxShadow: seat.isAssigned ? theme.customShadows?.card || 2 : 'none',
           '&:hover': {
             transform: seat.isAssigned ? 'translateY(-2px)' : 'none',
-            boxShadow: seat.isAssigned ? theme.shadows[4] : 'none',
-            borderColor: !seat.isAssigned ? theme.palette.text.disabled : undefined,
+            boxShadow: seat.isAssigned ? 4 : 'none',
+            borderColor: !seat.isAssigned ? 'text.disabled' : undefined,
           },
         }}
       >
@@ -255,10 +245,36 @@ const SeatBox = ({
           </Typography>
         )}
 
+        {/* NON-BREAKING: improved empty seat indicator */}
         {!seat.isAssigned && !isDragOver && (
-          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
-            Empty
-          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+            <Box
+              sx={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                border: '1.5px dashed',
+                borderColor: 'text.disabled',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor: 'text.disabled',
+                  opacity: 0.4,
+                }}
+              />
+            </Box>
+            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.62rem' }}>
+              Drag to assign
+            </Typography>
+          </Box>
         )}
 
         <ConfirmDialog

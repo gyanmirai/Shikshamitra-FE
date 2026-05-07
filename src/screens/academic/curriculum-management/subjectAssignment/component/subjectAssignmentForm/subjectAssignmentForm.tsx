@@ -94,7 +94,10 @@ const SubjectAssignmentForm = ({
                     }}
                     formControlProps={{ sx: { minWidth: 180, width: '100%' } }}
                     error={Boolean(formik.touched.className && formik.errors.className)}
-                    helperText={(formik.touched.className && formik.errors.className) || ''}
+                    helperText={
+                      (formik.touched.className && formik.errors.className) ||
+                      'Select the class for this subject allocation'
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -168,7 +171,8 @@ const SubjectAssignmentForm = ({
                           formik.touched.selectedSubjects && formik.errors.selectedSubjects
                         )}
                         helperText={
-                          formik.touched.selectedSubjects && formik.errors.selectedSubjects
+                          (formik.touched.selectedSubjects && formik.errors.selectedSubjects) ||
+                          'Choose one or more subjects to assign to this class'
                         }
                         inputProps={{ ...params.inputProps, readOnly: true }}
                       />

@@ -1,11 +1,16 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
-import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Chip, Tooltip, Typography, LinearProgress } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import {
   useGetExamScheduleQuery,
   useGetExamSubjectsQuery,
@@ -32,6 +37,109 @@ import {
 import type { INewExamFormProps } from '../type';
 
 const steps = ['Basic Details', 'Schedule', 'Room Details', 'Review'];
+
+// ---------------------------------------------------------------------------
+// ExamContextHeader — Compact persistent context bar (NON-BREAKING)
+// Visible from Step 2 onwards to remind users what they're scheduling
+// ---------------------------------------------------------------------------
+const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const allClass = useMemo(
+    () => medium?.educationMediumStages?.flatMap((stage: any) => stage.standards || []) || [],
+    [medium]
+  );
+
+  const className = useMemo(
+    () => allClass.find((c: any) => c.id === formik.values.className)?.name || '',
+    [allClass, formik.values.className]
+  );
+
+  const divisions = useMemo(() => {
+    const classDivisions =
+      allClass.find((c: any) => c.id === formik.values.className)?.divisions || [];
+    return classDivisions.filter(
+      (d: any) => formik.values.divisions.includes(d.id) && d.id !== 'all'
+    );
+  }, [allClass, formik.values.className, formik.values.divisions]);
+
+  const { examName, subjects } = formik.values;
+  const hasContext = className || examName || subjects.length > 0;
+
+  if (!hasContext || step === 0) return null;
+
+  return (
+    <Box
+      sx={{
+        px: 2,
+        py: 1,
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 0.75,
+        alignItems: 'center',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        bgcolor: (theme) => (theme.palette.background as any).neutral ?? theme.palette.grey[50],
+      }}
+    >
+      {examName && (
+        <Tooltip title="Exam Name" arrow>
+          <Chip
+            icon={<Iconify icon="mdi:clipboard-text-outline" width={14} />}
+            label={examName}
+            size="small"
+            variant="outlined"
+            sx={{ fontWeight: 600, fontSize: '0.7rem', height: 22 }}
+          />
+        </Tooltip>
+      )}
+      {className && (
+        <Tooltip title="Class" arrow>
+          <Chip
+            icon={<Iconify icon="mdi:school-outline" width={14} />}
+            label={className}
+            size="small"
+            color="primary"
+            variant="soft"
+            sx={{ fontSize: '0.7rem', height: 22 }}
+          />
+        </Tooltip>
+      )}
+      {divisions.map((div: any) => (
+        <Chip
+          key={div.id}
+          label={`Div ${div.name}`}
+          size="small"
+          color="info"
+          variant="soft"
+          sx={{ fontSize: '0.7rem', height: 22 }}
+        />
+      ))}
+      {subjects.slice(0, 5).map((sub: any) => (
+        <Chip
+          key={sub.subjectId}
+          label={sub.subjectName}
+          size="small"
+          sx={{
+            fontSize: '0.7rem',
+            height: 22,
+            bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : 'grey.100',
+            color: sub.subjectColor || 'text.secondary',
+            border: `1px solid ${sub.subjectColor ? `${sub.subjectColor}55` : 'transparent'}`,
+          }}
+        />
+      ))}
+      {subjects.length > 5 && (
+        <Chip
+          label={`+${subjects.length - 5} more`}
+          size="small"
+          variant="outlined"
+          sx={{ fontSize: '0.7rem', height: 22, color: 'text.secondary' }}
+        />
+      )}
+    </Box>
+  );
+};
 
 const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -136,12 +244,17 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       onSave={(isLastStep, values, formik, setIsLoading) => {
         handleSave(isLastStep, values, formik, setIsLoading);
       }}
+      // NON-BREAKING: allow clicking completed steps to navigate back
+      onStepClick={(index) => {
+        if (index < activeStep) setActiveStep(index);
+      }}
       renderItem={({ formik, activeStep: step }) => (
         <NewExamStepForm
           activeStep={step}
           formik={formik}
           editData={editData}
           allSteps={allSteps}
+          setActiveStep={setActiveStep}
         />
       )}
     />
@@ -155,10 +268,19 @@ export default NewExamForm;
 // initializes Formik once via mapBackendToFormik.
 // In CREATE mode, skips all backend queries — subjects are already set by Step 1.
 // ---------------------------------------------------------------------------
-const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps }: any) => {
+const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps, setActiveStep }: any) => {
   const initializedRef = useRef(false);
   const isEditMode = !!editData?.examId;
   const examId = editData?.examId || formik.values.examId;
+
+  // Fetch exam types to resolve the display name from the ID (needed in edit mode)
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { data: examTypeData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExaminationTypesQuery,
+    params: { academicMediumId: (medium as any)?.id },
+    options: { skip: !(medium as any)?.id },
+  });
 
   // Only fire queries in EDIT mode. In CREATE mode, formik already has correct
   // subject data (with names/colors) from the Autocomplete — querying the backend
@@ -203,7 +325,8 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps }: any) 
       basicDetails,
       scheduleDetails ?? null,
       roomAssignmentData ?? null,
-      examSubjectsData ?? null
+      examSubjectsData ?? null,
+      examTypeData?.items ?? []
     );
     formik.setValues(merged);
     initializedRef.current = true;
@@ -228,8 +351,43 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps }: any) 
   const StepComponent = allSteps[step];
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box p={2} height="100%">
-        <StepComponent {...formik} />
+      <Box>
+        {/* NON-BREAKING: Step progress indicator */}
+        <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 0.75,
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={600}
+              letterSpacing={0.4}
+            >
+              Step {step + 1} of 4 &bull; {steps[step]}
+            </Typography>
+            <Typography variant="caption" color="primary.main" fontWeight={700}>
+              {Math.round(((step + 1) / 4) * 100)}%
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={((step + 1) / 4) * 100}
+            sx={{ height: 3, borderRadius: 2, bgcolor: 'grey.200' }}
+          />
+        </Box>
+
+        {/* NON-BREAKING: Persistent context chips — visible from Step 2 onwards */}
+        <ExamContextHeader formik={formik} step={step} />
+
+        <Box p={2}>
+          {/* NON-BREAKING: Pass onEditStep to Review step for section-level edit links */}
+          <StepComponent {...formik} onEditStep={step === 3 ? setActiveStep : undefined} />
+        </Box>
       </Box>
     </BackPopUpChecked>
   );

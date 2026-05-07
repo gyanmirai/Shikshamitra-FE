@@ -46,6 +46,7 @@ export interface IDivisionRoomDetail {
 export interface IExamFormValues {
   examId: string;
   examType: string;
+  examTypeName: string;
   examName: string;
   className: string;
   divisions: string[];
