@@ -5,6 +5,9 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { useAssignRoomsMutation } from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
 import CreateSlotsForm from 'src/screens/academic/timetable-schedule-management/settings/components/lectureSlots/createSlotsForm';
 import {
   Box,
@@ -22,7 +25,7 @@ import DayColumn from './DayColumn';
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
 import SubjectPalette from './SubjectPalette';
-import { MOCK_ROOMS, MOCK_TEACHERS, generateTimelineStamps } from './utils';
+import { MOCK_TEACHERS, generateTimelineStamps } from './utils';
 
 import type { Subject, TimeSlot, DayOfWeek, SlotSubject } from './types';
 
@@ -33,6 +36,8 @@ export interface TimetableBoardProps {
   readOnly?: boolean;
   selectedClass: string;
   selectedDivision: string;
+  standardId?: string;
+  divisionId?: string;
 }
 
 const TimetableBoard: React.FC<TimetableBoardProps> = ({
@@ -42,16 +47,19 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   readOnly = false,
   selectedClass,
   selectedDivision,
+  standardId = '',
+  divisionId = '',
 }) => {
   const [timelineStamps] = useState(generateTimelineStamps());
   const createSlotsDialog = useBoolean();
   // Dialog State
   const [activeDialog, setActiveDialog] = useState<{
     type: 'teacher' | 'room';
+    day: DayOfWeek;
     slotId: string;
     subjects: SlotSubject[];
   } | null>(null);
-
+  console.log('activeDialog---', slots);
   // Map subjectId -> selected teacherId/roomId
   const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
 
@@ -63,6 +71,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     subject: Subject,
     fromSlotId?: string
   ) => {
+    console.log('subject-----', subject);
     if (readOnly) return;
 
     // 1. Update State
@@ -98,27 +107,43 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     const slotIndex = daySlots.findIndex((_, index) => index === parseInt(slotId, 10));
 
     if (slotIndex !== -1) {
-      // Check for composite name (e.g., "Computer | Physical Training")
-      const subjectNames = subject.name.split('|').map((s) => s.trim());
+      let newSlotSubjects: SlotSubject[];
+      const isElective = (subject as any).subjectType === 1;
+      const apiSubjects: any[] = (subject as any).subjects || [];
 
-      const newSlotSubjects: SlotSubject[] = subjectNames.map((name, index) => ({
-        id: subjectNames.length > 1 ? `${subject.id}_part_${index}` : subject.id,
-        name,
-        color: subject.color, // Share color for now, or could rotate/lighten
-        teacherId: index === 0 ? subject.teacherId : undefined, // Only assign default teacher to first if simple match
-        teacherName: index === 0 ? subject.teacherName : undefined,
-        roomId: index === 0 ? subject.roomId : undefined,
-        roomName: index === 0 ? subject.roomName : undefined,
-      }));
+      if (isElective && apiSubjects.length > 0) {
+        // --- Elective Group: map each child subject from the API subjects array ---
+        newSlotSubjects = apiSubjects.map((sub: any) => ({
+          id: sub.subjectId,
+          name: sub.subjectName,
+          color: sub.color || subject.color,
+          teacherId: undefined,
+          teacherName: undefined,
+          roomId: undefined,
+          roomName: undefined,
+        }));
+      } else {
+        // --- Core subject: legacy pipe-split fallback ---
+        const subjectNames = subject.name.split('|').map((s) => s.trim());
+        newSlotSubjects = subjectNames.map((name, index) => ({
+          id: subjectNames.length > 1 ? `${subject.id}_part_${index}` : subject.id,
+          name,
+          color: subject.color,
+          teacherId: index === 0 ? subject.teacherId : undefined,
+          teacherName: index === 0 ? subject.teacherName : undefined,
+          roomId: index === 0 ? subject.roomId : undefined,
+          roomName: index === 0 ? subject.roomName : undefined,
+        }));
+      }
 
       daySlots[slotIndex] = {
         ...daySlots[slotIndex],
-        subjectId: subject.id, // Keep main subject ID for reference if needed
-        _attachedSubject: subject, // Keep original for reference
-        subjects: newSlotSubjects, // Set parsed subjects
-        subjectType: 0,
-        electiveGroupId: null,
-        electiveGroupName: null,
+        subjectId: subject.id,
+        _attachedSubject: subject,
+        subjects: newSlotSubjects,
+        subjectType: isElective ? 1 : 0,
+        electiveGroupId: isElective ? ((subject as any).electiveGroupId ?? subject.id) : null,
+        electiveGroupName: isElective ? ((subject as any).electiveGroupName ?? subject.name) : null,
       } as any;
 
       newWeeklySlots[dayKey as DayOfWeek] = daySlots;
@@ -135,7 +160,6 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     if (newFilledSlots.length === lectureSlots.length) {
       triggerConfetti();
     }
-
     onChange(newWeeklySlots);
   };
 
@@ -164,6 +188,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   };
 
   const handleAssignTeacher = (day: DayOfWeek, slotId: string, subject: Subject) => {
+    console.log('slotId---in teacher assignment=====', slotId);
     const dayKey = day as DayOfWeek;
     const slot = slots[dayKey]?.find((_, index) => index === parseInt(slotId, 10));
     if (!slot || !slot.subjects) return;
@@ -204,14 +229,16 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
     setActiveDialog({
       type: 'teacher',
+      day: dayKey,
       slotId,
       subjects: splitSubjects,
     });
   };
 
-  const handleAssignRoom = (slotId: string, subject: Subject) => {
-    const dayKey = slotId.split('-')[0] as DayOfWeek;
-    const slot = slots[dayKey]?.find((s) => s.id === slotId);
+  const handleAssignRoom = (day: DayOfWeek, slotId: string, subject: Subject) => {
+    console.log('slotId====', slotId);
+    const dayKey = day as DayOfWeek;
+    const slot = slots[dayKey]?.find((_, index) => index === parseInt(slotId, 10));
     if (!slot || !slot.subjects) return;
 
     // Build initial state with lazy splitting
@@ -249,6 +276,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
 
     setActiveDialog({
       type: 'room',
+      day: dayKey,
       slotId,
       subjects: splitSubjects,
     });
@@ -259,22 +287,24 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     setSelectedIds({});
   };
 
-  const handleSaveAssignment = () => {
+  const handleSaveAssignment = async () => {
     if (!activeDialog) return;
-    const list = activeDialog.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS;
+    const list = activeDialog.type === 'teacher' ? MOCK_TEACHERS : rooms?.items || [];
 
-    const { type, slotId, subjects: dialogSubjects } = activeDialog;
-    const dayKey = slotId.split('-')[0] as DayOfWeek;
+    const { type, day, slotId, subjects: dialogSubjects } = activeDialog;
+    const dayKey = day as DayOfWeek;
+    const slotIndex = parseInt(slotId, 10);
     const newWeeklySlots = { ...slots };
 
     if (newWeeklySlots[dayKey]) {
-      newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((slot) => {
-        if (slot.id === slotId) {
+      newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((slot, index) => {
+        if (index === slotIndex) {
           // Use dialogSubjects as the source of truth for the structure (since we lazily split)
           const updatedSubjects = dialogSubjects.map((sub) => {
             const selectedId = selectedIds[sub.id];
-            const selectedItem = list.find((item) => item.id === selectedId);
+            const selectedItem = list.find((item: any) => item.id === selectedId);
             const selectedName = selectedItem ? selectedItem.name : undefined;
+            const selectedRoomName = selectedItem ? (selectedItem as any).roomName : undefined;
 
             if (type === 'teacher') {
               return {
@@ -286,7 +316,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
             return {
               ...sub,
               roomId: selectedId || undefined,
-              roomName: selectedName || undefined,
+              roomName: selectedRoomName || selectedName || undefined,
             };
           });
 
@@ -318,6 +348,48 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         }
         return slot;
       });
+
+      // --- Call assign-rooms API when type is 'room' ---
+      if (type === 'room' && standardId && divisionId) {
+        const currentSlot = slots[dayKey]?.[slotIndex];
+        if (currentSlot) {
+          const dayNameMap: Record<DayOfWeek, string> = {
+            MONDAY: 'Monday',
+            TUESDAY: 'Tuesday',
+            WEDNESDAY: 'Wednesday',
+            THURSDAY: 'Thursday',
+            FRIDAY: 'Friday',
+            SATURDAY: 'Saturday',
+          };
+
+          const subjectsPayload = dialogSubjects
+            .map((sub) => {
+              const selectedRoomId = selectedIds[sub.id];
+              // Strip _part_ suffix to get the real subjectId
+              const rawSubjectId = sub.id.includes('_part_') ? sub.id.split('_part_')[0] : sub.id;
+              return selectedRoomId ? { subjectId: rawSubjectId, roomId: selectedRoomId } : null;
+            })
+            .filter(Boolean) as { subjectId: string; roomId: string }[];
+
+          if (subjectsPayload.length > 0) {
+            try {
+              await assignRooms({
+                standardId,
+                divisionId,
+                day: dayNameMap[dayKey],
+                startTime: currentSlot.startTime,
+                endTime: currentSlot.endTime,
+                subjectType: currentSlot.subjectType ?? 0,
+                electiveGroupId: currentSlot.electiveGroupId ?? null,
+                subjects: subjectsPayload,
+              }).unwrap();
+            } catch {
+              // API errors are handled globally; local state is still updated
+            }
+          }
+        }
+      }
+
       onChange(newWeeklySlots);
     }
 
@@ -356,7 +428,19 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     });
     return counts;
   };
+  const {
+    data: rooms,
+    isLoading: isRoomsLoading,
+    isFetching: isRoomsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomsQuery,
+  });
 
+  const [assignRooms, { isLoading: isAssigningRooms }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAssignRoomsMutation,
+  });
   const subjectCounts = getSubjectCounts();
 
   const content = (
@@ -483,7 +567,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         fullWidth
         title={activeDialog?.type === 'teacher' ? `Assign Teacher` : `Assign Room`}
       >
-        <DialogContent>
+        <DialogContent sx={{ pb: 2 }}>
           <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {activeDialog?.subjects && activeDialog.subjects.length > 0 ? (
               activeDialog.subjects.map((sub) => (
@@ -494,13 +578,18 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                   <Autocomplete
                     fullWidth
                     size="small"
-                    options={activeDialog?.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS}
-                    getOptionLabel={(option) => option?.name || ''}
+                    options={activeDialog?.type === 'teacher' ? MOCK_TEACHERS : rooms?.items || []}
+                    getOptionLabel={
+                      activeDialog?.type === 'teacher'
+                        ? (option: any) => option?.fullName || ''
+                        : (option: any) => option?.roomName || ''
+                    }
                     value={
-                      (activeDialog?.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS).find(
-                        (item) => item.id === selectedIds[sub.id]
+                      (activeDialog?.type === 'teacher' ? MOCK_TEACHERS : rooms?.items || []).find(
+                        (item: any) => item.id === selectedIds[sub.id]
                       ) || null
                     }
+                    isOptionEqualToValue={(option, value) => option?.id === value?.id}
                     onChange={(event, value) => {
                       setSelectedIds((prev) => ({
                         ...prev,
@@ -535,6 +624,8 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             size="small"
+            disabled={isAssigningRooms && activeDialog?.type === 'room'}
+            loading={isAssigningRooms && activeDialog?.type === 'room'}
           >
             Submit
           </Button>

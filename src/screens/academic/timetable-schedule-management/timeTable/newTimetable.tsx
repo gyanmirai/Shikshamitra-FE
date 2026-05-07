@@ -581,7 +581,6 @@ const TimeTableGrid = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                mb: 1,
               }}
             >
               <CustomSelect
@@ -1018,6 +1017,8 @@ const TimeTableForm = ({
             readOnly={false}
             selectedClass={selectedClass}
             selectedDivision={selectedDivision}
+            standardId={standardId}
+            divisionId={divisionId}
           />
         )}
       </Box>

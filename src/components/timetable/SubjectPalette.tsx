@@ -25,6 +25,7 @@ interface SubjectCardProps {
 }
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
+  console.log('subject in subject carf----', subject);
   const totalLectures = subject.totalLectures ?? 0;
   const isFull = placedCount >= totalLectures;
   const [{ isDragging }, drag] = useDrag(
@@ -46,7 +47,6 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
       }}
       sx={{
         p: 1.5,
-
         mb: 1.5,
         bgcolor: 'background.paper',
         border: 1,

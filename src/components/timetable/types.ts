@@ -1,5 +1,3 @@
-import type { Dayjs } from 'dayjs';
-
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY';
 
 export const SlotType = {
@@ -77,8 +75,8 @@ export interface SlotSubject {
 export interface TimeSlot {
   id: string; // Unique ID for the slot instance
   sequence: number;
-  startTime: Dayjs; // "HH:mm"
-  endTime: Dayjs; // "HH:mm"
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
   type: SlotTypes;
   breakType?: BreakTypes;
   day: DayOfWeek;
