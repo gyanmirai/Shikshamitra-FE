@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Grid } from '@mui/material';
+import { Box, Chip, Grid, Typography } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -30,6 +30,10 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   const handleCancel = () => onClose?.(null, false);
   const handleSubmit = () => formik.handleSubmit();
 
+  const { classId, className, subjects } = formik.values;
+  const hasClass = !!classId;
+  const subjectCount = subjects.length;
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -41,7 +45,30 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             isEditLocked={isEdit && !!editData}
           />
 
-          {formik.values.classId &&
+          {/* Contextual metadata — shown once a class is selected and loaded */}
+          {hasClass && !isSubjectsLoading && subjectCount > 0 && (
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 0.25, pt: 0.25 }}>
+                {className && (
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    {className}
+                  </Typography>
+                )}
+                <Typography variant="caption" color="text.disabled">
+                  ·
+                </Typography>
+                <Chip
+                  size="small"
+                  label={`${subjectCount} subject${subjectCount !== 1 ? 's' : ''} to configure`}
+                  variant="outlined"
+                  color="info"
+                  sx={{ fontSize: '11px', height: 20 }}
+                />
+              </Box>
+            </Grid>
+          )}
+
+          {hasClass &&
             (isSubjectsLoading ? (
               <Grid size={{ xs: 12 }}>
                 <SubjectListSkeleton />

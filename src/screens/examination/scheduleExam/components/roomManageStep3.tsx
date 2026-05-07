@@ -85,10 +85,19 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
         />
         <Box>
           <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-            Room Assignment
+            Assign Rooms{' '}
+            <Typography
+              component="span"
+              variant="subtitle1"
+              color="text.secondary"
+              fontWeight={400}
+            >
+              (Optional)
+            </Typography>
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Do you want to assign specific rooms for this exam schedule?
+            Optionally allocate specific rooms for each division and subject. Leave off if room
+            assignment is not needed.
           </Typography>
         </Box>
       </Paper>

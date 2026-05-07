@@ -2,14 +2,36 @@ import type { FormikProps } from 'formik';
 
 import React from 'react';
 import dayjs from 'dayjs';
-import { Box, Grid, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { Box, Grid, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IExamFormValues } from '../type';
 
-const ExamScheduleReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) => (
-  <SectionCard title="Subject Schedule">
+const ExamScheduleReview = ({
+  formik,
+  onEdit,
+}: {
+  formik: FormikProps<IExamFormValues>;
+  onEdit?: () => void;
+}) => (
+  <SectionCard
+    title="Subject Schedule"
+    headerContent={
+      onEdit ? (
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
+          onClick={onEdit}
+          sx={{ fontSize: '0.75rem' }}
+        >
+          Edit
+        </Button>
+      ) : null
+    }
+  >
     {/* Left Column */}
     <Grid size={12}>
       <CustomizableTable

@@ -3,12 +3,21 @@
 import type { FormikProps } from 'formik';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Typography, ListItemText } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SubjectType } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
+import {
+  Box,
+  Chip,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  ListItemText,
+  InputAdornment,
+} from '@mui/material';
 
 import { SubjectLectureField } from './SubjectLectureField';
 
@@ -30,6 +39,37 @@ interface SubjectsLectureTableProps {
  * `useCallback` for the cell renderers is justified for the same reason.
  */
 export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectureTableProps) {
+  const [applyAllValue, setApplyAllValue] = useState<string>('');
+
+  const isInputDisabled = disabled && !isEdit;
+
+  /** Total lectures across all subjects — UI-only, does not affect payload. */
+  const totalLectures = useMemo(
+    () => formik.values.subjects.reduce((sum, s) => sum + Number(s.noOfLecture || 0), 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formik.values.subjects]
+  );
+
+  /**
+   * Apply a single value to every subject row.
+   * Only mutates formik state — no API calls, no validation bypass.
+   */
+  const handleApplyAll = useCallback(() => {
+    const parsed = Number(applyAllValue);
+    if (!applyAllValue || Number.isNaN(parsed) || parsed < 0) return;
+    formik.values.subjects.forEach((_, i) => {
+      formik.setFieldValue(`subjects[${i}].noOfLecture`, parsed);
+    });
+  }, [applyAllValue, formik]);
+
+  const handleApplyAllKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') handleApplyAll();
+      if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
+    },
+    [handleApplyAll]
+  );
+
   const renderSubjectName: any = useCallback((value: unknown, row: ISubject) => {
     const subjects = row?.subjects || row?.electiveGroupSubjects || [];
     return (
@@ -38,7 +78,7 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <SubjectColorIndicator color={row.subjectColor || row.electiveGroupColor} />
-              <Typography variant="caption" fontSize="13px">
+              <Typography variant="caption" fontSize="13px" fontWeight={600}>
                 {value as string}
               </Typography>
               {subjects && subjects.length > 0 && (
@@ -66,7 +106,13 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
               )}
             </Box>
           }
-          secondary={`(${SubjectType[row.subjectType ?? 0]})`}
+          secondary={
+            <Typography variant="caption" fontSize="11px" color="text.disabled">
+              {SubjectType[row.subjectType ?? 0]}
+            </Typography>
+          }
+          disableTypography={false}
+          sx={{ my: 0 }}
         />
       </Box>
     );
@@ -102,10 +148,69 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
     [renderSubjectName, renderLectureCell]
   );
 
-  // Debug log
-
   return (
-    <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
+    <Box display="flex" flexDirection="column" gap={1} maxHeight="500px" height="100%">
+      {/* ── Toolbar: subject count + apply-to-all ── */}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
+          px: 0.5,
+        }}
+      >
+        <Chip
+          size="small"
+          label={`${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''}`}
+          variant="outlined"
+          sx={{ fontWeight: 500, fontSize: '12px' }}
+        />
+
+        {!isInputDisabled && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <TextField
+              type="number"
+              size="small"
+              placeholder="Apply to all"
+              value={applyAllValue}
+              onChange={(e) => setApplyAllValue(e.target.value)}
+              onKeyDown={handleApplyAllKeyDown}
+              inputProps={{ min: 0, 'aria-label': 'Apply lecture count to all subjects' }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ whiteSpace: 'nowrap' }}
+                    >
+                      lec/wk
+                    </Typography>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                width: '140px',
+                '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button':
+                  { WebkitAppearance: 'none' },
+                '& input[type=number]': { MozAppearance: 'textfield' },
+              }}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={handleApplyAll}
+              disabled={!applyAllValue}
+              sx={{ whiteSpace: 'nowrap', height: 32, fontSize: '12px' }}
+            >
+              Apply to all
+            </Button>
+          </Box>
+        )}
+      </Box>
+
       <CustomizableTable
         tableId="table-subject-list"
         isSearch={false}
@@ -115,6 +220,30 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
         columns={columns}
         data={formik.values.subjects}
       />
+
+      {/* ── Footer: total lectures (UI-only) ── */}
+      {formik.values.subjects.length > 0 && (
+        <>
+          <Divider />
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              gap: 1,
+              px: 1,
+              py: 0.5,
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              Total weekly lectures:
+            </Typography>
+            <Typography variant="caption" fontWeight={700} color="text.primary">
+              {totalLectures}
+            </Typography>
+          </Box>
+        </>
+      )}
     </Box>
   );
 }

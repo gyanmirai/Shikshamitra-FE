@@ -160,15 +160,16 @@ export const TableBody = ({
                       backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                       boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
                       animation: `${fadeSlideIn} 0.4s ease both`,
-                      ...(columnWidths[column.id]
-                        ? {
-                            width: columnWidths[column.id],
-                            maxWidth: columnWidths[column.id],
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }
-                        : {}),
+                      width: column.minWidth,
+                      // ...(columnWidths[column.id]
+                      //   ? {
+                      //       width: columnWidths[column.id],
+                      //       maxWidth: columnWidths[column.id],
+                      //       overflow: 'hidden',
+                      //       textOverflow: 'ellipsis',
+                      //       whiteSpace: 'nowrap',
+                      //     }
+                      //   : {}),
                       ...getStickyStyle(column),
                     }}
                   >

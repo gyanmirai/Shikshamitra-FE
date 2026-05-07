@@ -3,6 +3,7 @@ import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
   Paper,
@@ -13,7 +14,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import type { ISubjectDetail } from '../type';
 
@@ -163,7 +163,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
               sx={{ color: 'text.disabled', mb: 2 }}
             />
             <Typography variant="h6" color="text.secondary">
-              No chapters available
+              No Syllabus available
             </Typography>
             <Typography variant="body2" color="text.disabled">
               There are no syllabus chapters created for this subject yet.

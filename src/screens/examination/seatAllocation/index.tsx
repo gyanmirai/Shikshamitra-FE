@@ -10,9 +10,18 @@ import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Paper, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import {
+  Box,
+  Chip,
+  Paper,
+  Button,
+  Divider,
+  Tooltip,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useGetExamRoomsQuery,
   useGetExamDivisionsQuery,
@@ -116,61 +125,192 @@ const SeatAllocation = () => {
           handleClose={openSeatAllocation.onFalse}
           fullScreen
         >
+          {/* ── NON-BREAKING: enhanced context strip + stats panel ── */}
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: 2,
+              px: 2,
+              pt: 1.5,
+              pb: 0,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
             }}
           >
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <CustomSelect
-                options={examDivisionsData?.items || []}
-                label="Division"
-                value={division}
-                isLoading={isLoading || isFetching}
-                onChange={(val) => setDivision(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-                disabled={!classes}
-              />
-              <CustomSelect
-                options={examRoomsData?.items || []}
-                label="Room"
-                value={room}
-                isLoading={examRoomsLoading || examRoomsFetching}
-                onChange={(val) => setRoom(val as string)}
-                labelKey="roomName"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-                disabled={!division}
-              />
-              <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
-                Exam : {selectedExam?.examName}
-              </Typography>
+            {/* Row 1: Context breadcrumb + CTA */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1,
+                mb: 1.5,
+              }}
+            >
+              {/* Context chips strip */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                {selectedExam?.examName && (
+                  <Chip
+                    icon={<Iconify icon="mdi:clipboard-text-outline" width={14} />}
+                    label={selectedExam.examName}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+                  />
+                )}
+                {selectedExam?.standardName && (
+                  <Chip
+                    icon={<Iconify icon="mdi:school-outline" width={14} />}
+                    label={selectedExam.standardName}
+                    size="small"
+                    color="primary"
+                    variant="soft"
+                    sx={{ fontSize: '0.75rem' }}
+                  />
+                )}
+
+                <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
+                <CustomSelect
+                  options={examDivisionsData?.items || []}
+                  label="Division"
+                  value={division}
+                  isLoading={isLoading || isFetching}
+                  onChange={(val) => setDivision(val as string)}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '180px' } }}
+                  disabled={!classes}
+                />
+                <CustomSelect
+                  options={examRoomsData?.items || []}
+                  label="Room"
+                  value={room}
+                  isLoading={examRoomsLoading || examRoomsFetching}
+                  onChange={(val) => setRoom(val as string)}
+                  labelKey="roomName"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '180px' } }}
+                  disabled={!division}
+                />
+              </Box>
+
+              {/* CTA buttons */}
+              <Box sx={{ display: 'flex', gap: 1.5, flexShrink: 0 }}>
+                <Button
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                  onClick={openSeatAllocation.onFalse}
+                >
+                  Cancel
+                </Button>
+                <Tooltip title={isSaving ? 'Saving…' : 'Save seat allocation'} arrow>
+                  <span>
+                    <Button
+                      startIcon={
+                        isSaving ? (
+                          <Iconify icon="svg-spinners:ring-resize" width={16} />
+                        ) : (
+                          <Iconify icon={GlobalIcons.submit} />
+                        )
+                      }
+                      variant="contained"
+                      size="small"
+                      disabled={isSaving}
+                      onClick={handleSubmit}
+                    >
+                      {isSaving ? 'Saving…' : 'Submit'}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Box>
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                variant="outlined"
-                size="small"
-                onClick={openSeatAllocation.onFalse}
+
+            {/* Row 2: NON-BREAKING live stats bar */}
+            {selectedExam && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 3,
+                  pb: 1.25,
+                  flexWrap: 'wrap',
+                }}
               >
-                Cancel
-              </Button>
-              <Button
-                startIcon={<Iconify icon={GlobalIcons.submit} />}
-                variant="contained"
-                size="small"
-                disabled={isSaving}
-                onClick={handleSubmit}
-              >
-                Submit
-              </Button>
-            </Box>
+                {/* Stat chips */}
+                {[
+                  {
+                    label: 'Total',
+                    value: selectedExam.totalStudents ?? 0,
+                    color: 'text.primary',
+                    icon: 'mdi:account-group-outline',
+                  },
+                  {
+                    label: 'Allocated',
+                    value: selectedExam.allocatedStudents ?? 0,
+                    color: 'success.main',
+                    icon: 'mdi:check-circle-outline',
+                  },
+                  {
+                    label: 'Pending',
+                    value: selectedExam.pendingStudents ?? 0,
+                    color: 'warning.main',
+                    icon: 'mdi:clock-outline',
+                  },
+                ].map((stat) => (
+                  <Box key={stat.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Iconify icon={stat.icon} width={16} sx={{ color: stat.color }} />
+                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                      {stat.label}:
+                    </Typography>
+                    <Typography variant="caption" color={stat.color} fontWeight={700}>
+                      {stat.value}
+                    </Typography>
+                  </Box>
+                ))}
+
+                {/* Progress bar */}
+                {(selectedExam.totalStudents ?? 0) > 0 && (
+                  <Box sx={{ flex: 1, minWidth: 120, maxWidth: 280 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        mb: 0.25,
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        Allocation progress
+                      </Typography>
+                      <Typography variant="caption" color="success.main" fontWeight={700}>
+                        {Math.round(
+                          ((selectedExam.allocatedStudents ?? 0) /
+                            (selectedExam.totalStudents ?? 1)) *
+                            100
+                        )}
+                        %
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={Math.min(
+                        100,
+                        Math.round(
+                          ((selectedExam.allocatedStudents ?? 0) /
+                            (selectedExam.totalStudents ?? 1)) *
+                            100
+                        )
+                      )}
+                      color="success"
+                      sx={{ height: 6, borderRadius: 3 }}
+                    />
+                  </Box>
+                )}
+              </Box>
+            )}
           </Box>
+
           <SeatAllocationSection
             division={division}
             classRoom={room}

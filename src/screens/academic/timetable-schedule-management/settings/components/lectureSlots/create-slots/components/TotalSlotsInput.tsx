@@ -36,7 +36,7 @@ const TotalSlotsInput: React.FC<ITotalSlotsInputProps> = ({
       size="small"
       disabled={disabled}
       error={Boolean(error)}
-      helperText={error}
+      helperText={error || 'Ensure this matches the number of slot entries below'}
     />
     {!error && arrayError ? (
       <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>

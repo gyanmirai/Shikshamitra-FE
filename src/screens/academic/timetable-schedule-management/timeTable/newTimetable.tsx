@@ -26,12 +26,24 @@ import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Card, Paper, Button, Skeleton, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   TimetableStatusType,
   TimetableStatusColors,
   TimetableStatusOptions,
 } from 'src/enums/timatable-type';
+import {
+  Box,
+  Card,
+  Chip,
+  Paper,
+  Button,
+  Divider,
+  Skeleton,
+  MenuList,
+  MenuItem,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useCreateTimetableMutation,
   useGetTimetableByStandardDivisionQuery,
@@ -949,6 +961,21 @@ const TimeTableForm = ({
     [slotConfigData]
   );
 
+  // Real-time slot summary
+  const slotSummary = useMemo(() => {
+    let filled = 0;
+    let total = 0;
+    Object.values(formik.values.slots).forEach((daySlots) => {
+      (daySlots as TimeSlot[]).forEach((slot) => {
+        if (slot.type === 'LECTURE') {
+          total += 1;
+          if ((slot.subjects && slot.subjects.length > 0) || slot.subjectId) filled += 1;
+        }
+      });
+    });
+    return { filled, total, remaining: total - filled };
+  }, [formik.values.slots]);
+
   return (
     <DialogScrollContent
       sx={{ paddingBottom: '16px', height: '100%', p: 2 }}
@@ -963,6 +990,7 @@ const TimeTableForm = ({
       }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Enhanced header bar */}
         <Box
           sx={{
             display: 'flex',
@@ -970,29 +998,115 @@ const TimeTableForm = ({
             alignItems: 'center',
             gap: 2,
             pb: 1,
+            flexWrap: 'wrap',
           }}
         >
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              Class :
+          {/* Class + Division context */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Iconify
+                icon="mdi:school-outline"
+                sx={{ width: 18, height: 18, color: 'text.secondary' }}
+              />
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.9rem' }}
+              >
+                {selectedClass}
+              </Typography>
+            </Box>
+            <Typography variant="subtitle2" sx={{ color: 'text.disabled', mx: 0.25 }}>
+              •
             </Typography>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {selectedClass}
-            </Typography>
-            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
-              Division :
-            </Typography>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {selectedDivision}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Iconify
+                icon="mdi:door-open"
+                sx={{ width: 16, height: 16, color: 'text.secondary' }}
+              />
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.9rem' }}
+              >
+                Division {selectedDivision}
+              </Typography>
+            </Box>
+
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ mx: 0.5, height: 18, alignSelf: 'center' }}
+            />
+
+            {/* Slot summary pills */}
+            <Chip
+              icon={<Iconify icon="mdi:check-circle-outline" sx={{ width: 14, height: 14 }} />}
+              label={`${slotSummary.filled} filled`}
+              size="small"
+              color={slotSummary.filled > 0 ? 'success' : 'default'}
+              variant="outlined"
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
+            <Chip
+              icon={<Iconify icon="mdi:clock-outline" sx={{ width: 14, height: 14 }} />}
+              label={`${slotSummary.remaining} remaining`}
+              size="small"
+              color={slotSummary.remaining > 0 ? 'warning' : 'default'}
+              variant="outlined"
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                '& .MuiChip-label': { px: 0.75 },
+              }}
+            />
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          {/* Actions */}
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            {/* Progress indicator */}
+            {slotSummary.total > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={(slotSummary.filled / slotSummary.total) * 100}
+                  sx={{
+                    flex: 1,
+                    height: 6,
+                    borderRadius: 3,
+                    bgcolor: 'action.hover',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 3,
+                      bgcolor: slotSummary.remaining === 0 ? 'success.main' : 'primary.main',
+                    },
+                  }}
+                />
+                <Typography
+                  variant="caption"
+                  fontWeight={700}
+                  color="text.secondary"
+                  sx={{ whiteSpace: 'nowrap' }}
+                >
+                  {Math.round((slotSummary.filled / slotSummary.total) * 100)}%
+                </Typography>
+              </Box>
+            )}
+
             <Button
-              variant="contained"
+              variant="outlined"
               size="small"
+              color="inherit"
               startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
               onClick={() => {}}
+              sx={{
+                borderColor: 'divider',
+                color: 'text.secondary',
+                '&:hover': { borderColor: 'text.primary', color: 'text.primary' },
+              }}
             >
               Draft
             </Button>
@@ -1002,6 +1116,8 @@ const TimeTableForm = ({
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={() => handleSubmit(formik.values.slots, 2)}
               disabled={isSubmitting}
+              loading={isSubmitting}
+              color="primary"
             >
               Publish
             </Button>

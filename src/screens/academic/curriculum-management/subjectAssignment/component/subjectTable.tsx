@@ -86,9 +86,9 @@ const SubjectTable = ({
         id: 'subjectTypeValue',
         label: 'Subject Type',
         align: 'left',
-        minWidth: 110,
+        minWidth: '80px',
         sticky: true,
-        render: (value) => <Typography variant="body2">{value}</Typography>,
+        // render: (value) => <Typography variant="body2">{value}</Typography>,
       },
       {
         id: 'subjectName',

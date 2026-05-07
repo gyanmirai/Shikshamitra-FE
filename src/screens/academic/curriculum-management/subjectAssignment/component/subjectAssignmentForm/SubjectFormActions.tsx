@@ -26,7 +26,15 @@ const SubjectFormActions = ({
   onDraft,
   onPublish,
 }: SubjectFormActionsProps) => (
-  <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+  <DialogActions
+    sx={{
+      p: 2,
+      gap: 1,
+      borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+      bgcolor: 'background.paper',
+      boxShadow: 'var(--shadows-10)',
+    }}
+  >
     {isEdit ? (
       <>
         <Button

@@ -1,8 +1,8 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
-import { Box, Typography } from '@mui/material';
 import React, { useMemo, useCallback } from 'react';
+import { Box, Chip, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
@@ -169,15 +169,15 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       },
       {
         id: 'totalTime',
-        label: 'Total Time',
-        minWidth: 150,
+        label: 'Duration',
+        minWidth: 110,
         render(_v: unknown, row: ITimeSlot) {
           const start = row.startTime ? dayjs(row.startTime) : null;
           let end = row.endTime ? dayjs(row.endTime) : null;
 
           if (!start || !end || !start.isValid() || !end.isValid()) {
             return (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
                 —
               </Typography>
             );
@@ -191,7 +191,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
           const totalMinutes = end.diff(start, 'minute');
           if (totalMinutes <= 0) {
             return (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
                 —
               </Typography>
             );
@@ -199,15 +199,32 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
 
           const hours = Math.floor(totalMinutes / 60);
           const minutes = totalMinutes % 60;
+          const formatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
-          const formatted = `${hours}:${minutes.toString().padStart(2, '0')}`;
-          return <Typography variant="body2">{formatted}</Typography>;
+          // Color coding: short (<20m) = warning, normal (20-60m) = success, long (>60m) = info
+          const chipColor = totalMinutes < 20 ? 'warning' : totalMinutes > 60 ? 'info' : 'success';
+
+          return (
+            <Chip
+              label={formatted}
+              size="small"
+              color={chipColor}
+              variant="soft"
+              sx={{
+                height: 24,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                letterSpacing: 0.3,
+                '& .MuiChip-label': { px: 1 },
+              }}
+            />
+          );
         },
       },
       {
         id: 'slotType',
         label: 'Slot Type',
-        minWidth: 350,
+        minWidth: 300,
         align: 'left' as const,
         render(_v: unknown, row: ITimeSlot) {
           const index = slots.findIndex((s) => s.id === row.id);
@@ -215,7 +232,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
           const slotType: number = row.slotType ?? 0;
           const breakType = row.breakType ?? 0;
           return (
-            <Box sx={{ display: 'flex', gap: 1, minWidth: '320px' }}>
+            <Box sx={{ display: 'flex', gap: 1, minWidth: '270px' }}>
               <CustomSelect
                 label="Slot *"
                 options={[
