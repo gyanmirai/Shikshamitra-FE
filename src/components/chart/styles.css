@@ -1,59 +1,47 @@
-.apexcharts-canvas {
-  /**
-  * Tooltip
-  */
-  .apexcharts-tooltip {
-    min-width: 80px;
-    border-radius: 10px;
-    backdrop-filter: blur(6px);
-    color: var(--palette-text-primary);
-    box-shadow: var(--customShadows-dropdown);
-    background-color: rgba(var(--palette-background-defaultChannel) / 0.9);
-  }
-  .apexcharts-xaxistooltip {
-    border-radius: 10px;
-    border-color: transparent;
-    backdrop-filter: blur(6px);
-    color: var(--palette-text-primary);
-    box-shadow: var(--customShadows-dropdown);
-    background-color: rgba(var(--palette-background-defaultChannel) / 0.9);
-    &::before {
-      border-bottom-color: rgba(var(--palette-grey-500Channel) / 0.16);
-    }
-    &::after {
-      border-bottom-color: rgba(var(--palette-background-defaultChannel) / 0.9);
-    }
-  }
-  .apexcharts-tooltip-title {
-    font-weight: 700;
-    text-align: center;
-    color: var(--palette-text-secondary);
-    background-color: var(--palette-background-neutral);
-  }
-  /**
-  * Tooltip: group
-  */
-  .apexcharts-tooltip-series-group {
-    padding: 4px 12px;
-  }
-  .apexcharts-tooltip-marker {
-    margin-right: 8px;
-  }
-  /**
-  * Legend
-  */
-  .apexcharts-legend {
-    padding: 0;
-  }
-  .apexcharts-legend-series {
-    font-size: 0;
-  }
-  .apexcharts-legend-marker {
-    margin-right: 6px;
-    vertical-align: top;
-    /* transform: translateY(3px); */
-  }
-  .apexcharts-legend-text {
-    line-height: 18px;
-  }
+/* Highcharts polish layer.
+ * The chart engine moved from ApexCharts to Highcharts; the previous
+ * .apexcharts-* selectors have no effect anymore. We keep this file so
+ * the existing import in chart.tsx works and add a few enterprise-grade
+ * tweaks on top of the global premium theme defined in chartTheme.ts.
+ */
+
+.highcharts-container {
+  font-family: var(--font-family) !important;
+}
+
+.highcharts-background {
+  fill: transparent !important;
+}
+
+.highcharts-credits {
+  display: none !important;
+}
+
+/* Soft, modern tooltip surface (the React layer also injects styles). */
+.highcharts-tooltip-container {
+  z-index: 1300 !important;
+}
+.highcharts-tooltip > span,
+.highcharts-tooltip-box {
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+/* Axis label refinement. */
+.highcharts-axis-labels text {
+  font-weight: 500;
+}
+
+/* Make column/bar focus rings rounded. */
+.highcharts-point {
+  transition: opacity 0.2s ease;
+}
+.highcharts-point:focus {
+  outline: none;
+}
+
+/* Hide default series boxes around legend items for a cleaner look. */
+.highcharts-legend-item rect {
+  rx: 3;
+  ry: 3;
 }

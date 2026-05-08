@@ -1,32 +1,18 @@
 'use client';
 
-import type { ApexOptions } from 'apexcharts';
+import type { ChartType, ChartOptions } from 'src/components/chart';
 
 import React from 'react';
-import dynamic from 'next/dynamic';
+import { Chart } from 'src/components/chart';
 
-const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
+// Backwards-compatible custom chart component. Internally uses the
+// migrated Highcharts <Chart /> wrapper which accepts ApexCharts-shaped
+// options and translates them on the fly.
 
 interface CustomChartProps {
-  options: ApexOptions;
+  options: ChartOptions;
   series: any;
-  type:
-    | 'line'
-    | 'area'
-    | 'bar'
-    | 'pie'
-    | 'donut'
-    | 'radialBar'
-    | 'scatter'
-    | 'bubble'
-    | 'heatmap'
-    | 'candlestick'
-    | 'boxPlot'
-    | 'radar'
-    | 'polarArea'
-    | 'rangeBar'
-    | 'rangeArea'
-    | 'treemap';
+  type: ChartType;
   width?: string | number;
   height?: string | number;
 }
@@ -39,7 +25,14 @@ const CustomChart: React.FC<CustomChartProps> = ({
   height = 350,
   ...props
 }) => (
-  <Chart options={options} series={series} type={type} width={width} height={height} {...props} />
+  <Chart
+    type={type}
+    series={series}
+    options={options}
+    width={width}
+    height={typeof height === 'number' ? height : 350}
+    {...props}
+  />
 );
 
 export default CustomChart;

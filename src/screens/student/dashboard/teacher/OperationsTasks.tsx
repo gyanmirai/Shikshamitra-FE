@@ -222,7 +222,7 @@ export const UpcomingExams = () => {
       <Card
         sx={{
           height: '100%',
-          maxHeight: 480,
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
           '&:hover': {
