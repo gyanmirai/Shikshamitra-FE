@@ -36,9 +36,12 @@ export const homeworkAssessmentAndFeedbackApi = academicApi.injectEndpoints({
 
     // UPDATE homework submission feedback
     updateHomeworkSubmissionFeedback: builder.mutation({
-      query: ({ homeworkId, studentId, body }) => ({
-        url: `homework/${homeworkId}/submissions/${studentId}/feedback`,
+      query: ({ homeworkId, studentId, body, academicMediumId }) => ({
+        url: `/homework/${homeworkId}/submissions/${studentId}/feedback`,
         method: 'PATCH',
+        params: {
+          academicMediumId,
+        },
         body,
       }),
       invalidatesTags: [academicType.homeworkSubmissions],

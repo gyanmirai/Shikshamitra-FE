@@ -1,7 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useState } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -36,17 +40,18 @@ import type { IAssignGradeProps } from '../type';
 const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   isEdit,
   data,
+  homeworkId,
   onClose,
 }: IAssignGradeProps) => {
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
-  /**
-   * Initialize formik form with grade and feedback fields
-   * @param initialValues Object containing initial grade and feedback values from data prop
-   * @param onSubmit Handler function that gets called when form is submitted
-   */
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+
   const formik = useFormik({
     initialValues: {
       feedback: data?.feedback || '',
@@ -55,8 +60,9 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     onSubmit(values) {
       const isUpdate = typeof data?.totalMarks === 'number' || Boolean(data?.feedback);
       updateSubmissionFeedback({
-        homeworkId: data?.id, // Assuming data.assignmentId is available
-        studentId: data?.studentName, // Assuming data.studentId is available
+        homeworkId: homeworkId || data?.homeworkId,
+        studentId: data?.studentId,
+        academicMediumId: (medium as any)?.id,
         body: {
           feedback: values.feedback,
         },

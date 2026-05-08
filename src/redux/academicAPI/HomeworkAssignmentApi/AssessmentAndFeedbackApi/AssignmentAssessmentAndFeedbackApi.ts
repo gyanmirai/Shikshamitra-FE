@@ -51,9 +51,12 @@ export const assessmentAndFeedbackApi = academicApi.injectEndpoints({
 
     // UPDATE submission feedback
     updateSubmissionFeedback: builder.mutation({
-      query: ({ assignmentId, studentId, body }) => ({
-        url: `assignment/${assignmentId}/submissions/${studentId}/feedback`,
+      query: ({ assignmentId, studentId, body, academicMediumId }) => ({
+        url: `/assignments/${assignmentId}/submissions/${studentId}/feedback`,
         method: 'PATCH',
+        params: {
+          academicMediumId,
+        },
         body,
       }),
       invalidatesTags: [academicType.assignmentSubmissions],

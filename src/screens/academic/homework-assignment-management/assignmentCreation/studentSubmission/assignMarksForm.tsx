@@ -1,10 +1,13 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 // eslint-disable-next-line import/extensions
@@ -45,16 +48,24 @@ export const document: IDocument = {
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAssignGradeProps) => {
-  /**
-   * Initialize formik form with grade and feedback fields
-   * @param initialValues Object containing initial grade and feedback values from data prop
-   * @param onSubmit Handler function that gets called when form is submitted
-   */
+const AssignGrade: React.FC<IAssignGradeProps> = ({
+  isEdit,
+  data,
+  onClose,
+  assignmentId,
+}: IAssignGradeProps) => {
+  const marksInputRef = useRef<HTMLInputElement>(null);
+  const [activeQuickScore, setActiveQuickScore] = useState<string | null>(null);
+  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+  const templateBtnRef = useRef<HTMLButtonElement>(null);
+
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
   });
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const formik = useFormik({
     initialValues: {
       marks: typeof data?.marks === 'number' ? data.marks : '',
@@ -69,8 +80,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     onSubmit(values) {
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
       updateSubmissionFeedback({
-        assignmentId: data?.id, // Assuming data.assignmentId is available
-        studentId: data?.studentName, // Assuming data.studentId is available
+        assignmentId: assignmentId || data?.id,
+        studentId: data?.studentId,
+        academicMediumId: (medium as any)?.id,
         body: {
           marks: values.marks,
           totalMarks: values.totalMarks,

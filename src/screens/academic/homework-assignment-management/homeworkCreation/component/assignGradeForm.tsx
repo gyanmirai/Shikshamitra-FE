@@ -40,7 +40,12 @@ import type { IAssignGradeProps } from '../type';
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({
+  isEdit,
+  data,
+  homeworkId,
+  onClose,
+}: IAssignGradeProps) => {
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
@@ -61,9 +66,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     onSubmit(values) {
       const isUpdate = typeof data?.totalMarks === 'number' || Boolean(data?.feedback);
       updateSubmissionFeedback({
-        homeworkId: data?.id, // Assuming data.assignmentId is available
-        studentId: data?.studentName, // Assuming data.studentId is available
-        academicMediumId: medium?.id, // Assuming data.academicMediumId is available
+        homeworkId: homeworkId || data?.homeworkId,
+        studentId: data?.studentId,
+        academicMediumId: medium?.id,
         body: {
           totalMarks: values.totalMarks,
           feedback: values.feedback,

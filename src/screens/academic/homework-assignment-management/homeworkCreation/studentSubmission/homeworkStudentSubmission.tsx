@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
@@ -14,15 +13,15 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import {
-  ScheduleExamStatus,
-  ScheduleExamStatusColor,
-  ScheduleExamStatusOptions,
-} from 'src/enums/schedule-exam-status';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import {
+  HomeworkSubmissionStatus,
+  HomeworkSubmissionStatusColor,
+  HomeworkSubmissionStatusOptions,
+} from 'src/enums/homework-submission-status';
 
 import AssignGrade from '../component/assignGradeForm';
 import AssignMarksForText from '../component/assignMarksForText';
@@ -42,7 +41,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const {
     data: homeworkSubmissions,
     isLoading: isSubmissionsLoading,
-    refetch: refetchHomeworkSubmissions,
     isFetching: isfetching,
   } = useQueryAndMutation({
     type: 'query',
@@ -71,7 +69,19 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
 
-  const studentData = homeworkSubmissions?.data || [];
+  // Normalize old ScheduleExamStatus values to the new HomeworkSubmissionStatus
+  const normalizedData = React.useMemo(() => {
+    const studentData = homeworkSubmissions?.data || [];
+    return studentData.map((row: any) => {
+      let newStatus = row.status;
+      if (row.status === 3 || row.status === 6) {
+        newStatus = HomeworkSubmissionStatus.Submitted;
+      } else if (row.status === 4 || row.status === 5) {
+        newStatus = HomeworkSubmissionStatus.Completed;
+      }
+      return { ...row, status: newStatus };
+    });
+  }, [homeworkSubmissions?.data]);
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -103,8 +113,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        {/* Show 'Assign Grade' option only when marks are not assigned */}
-        {row.status === ScheduleExamStatus['Needs Review'] && (
+        {/* Reminder for pending students */}
+        {row.status === HomeworkSubmissionStatus.Pending && (
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
+            Send Reminder
+          </MenuItem>
+        )}
+
+        {/* Give feedback after submission */}
+        {row.status === HomeworkSubmissionStatus.Submitted && (
           <MenuItem
             onClick={() => {
               setSelectedStudent(row as TStudentGrade);
@@ -112,11 +130,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right-circle" />
+            <Iconify icon="mdi:comment-check-outline" />
             Give Feedback
           </MenuItem>
         )}
-        {row.status === ScheduleExamStatus.Reviewed && (
+
+        {/* View completed submission */}
+        {row.status === HomeworkSubmissionStatus.Completed && (
           <MenuItem
             onClick={() => {
               setSelectedStudent(row);
@@ -124,16 +144,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               pop.onClose();
             }}
           >
-            <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-            Edit Feedback
-          </MenuItem>
-        )}
-
-        {/* Show 'Send Reminder' option only when homework is published */}
-        {row.status === ScheduleExamStatus.Published && (
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-            Send Reminder
+            <Iconify icon="mdi:eye-outline" sx={{ height: '16px', width: '16px' }} />
+            View Submission
           </MenuItem>
         )}
       </MenuList>
@@ -158,52 +170,52 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         tableId="student-submissions"
         noDataText="Homework Submission Data Not Found"
         columns={[
-          {
-            id: 'checkBox',
-            align: 'center',
-            minWidth: '60px',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={
-                    studentData?.length > 0 && selectedStudents?.length === studentData?.length
-                  }
-                  indeterminate={
-                    selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
-                  }
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(studentData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
+          // {
+          //   id: 'checkBox',
+          //   align: 'center',
+          //   minWidth: '60px',
+          //   isSort: false,
+          //   sticky: true,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={
+          //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
+          //         }
+          //         indeterminate={
+          //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
+          //         }
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(studentData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
 
-              return (
-                <Checkbox
-                  checked={isChecked}
-                  onChange={(e) => {
-                    e.stopPropagation();
+          //     return (
+          //       <Checkbox
+          //         checked={isChecked}
+          //         onChange={(e) => {
+          //           e.stopPropagation();
 
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'studentName',
             label: 'Student Name/Gr No.',
@@ -267,7 +279,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     fontSize="13px"
                     noWrap
                     sx={{
-                      maxWidth: 150,
+                      maxWidth: 0,
+                      minWidth: '100%',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
@@ -314,11 +327,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             minWidth: 80,
             sticky: true,
             filterType: 'enum',
-            enumOptions: ScheduleExamStatusOptions,
+            enumOptions: HomeworkSubmissionStatusOptions,
             align: 'left',
             render(value, row) {
-              const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
-              return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
+              if (value === undefined || value === null)
+                return <Typography variant="body2">-</Typography>;
+              const color = (HomeworkSubmissionStatusColor[value as HomeworkSubmissionStatus] ||
+                'default') as LabelColor;
+              const label = HomeworkSubmissionStatus[value] || `Unknown (${value})`;
+              return <Label color={color}>{label}</Label>;
             },
           },
           {
@@ -340,7 +357,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           },
         ]}
         isLoading={isSubmissionsLoading || isfetching}
-        data={studentData}
+        data={normalizedData}
       />
 
       {sendInstantNotificationDialogValue.value && (
@@ -385,9 +402,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               }, 300);
             }}
             isEdit
+            homeworkId={selectedHomework?.id}
           />
         ) : (
-          <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />
+          <AssignMarksForText
+            data={selectedStudent}
+            onClose={handleClose}
+            isEdit
+            homeworkId={selectedHomework?.id}
+          />
         )}
       </CustomDialog>
     </>

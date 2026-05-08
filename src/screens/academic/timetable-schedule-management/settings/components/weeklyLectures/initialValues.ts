@@ -18,7 +18,7 @@ export const getNoOfLectureInitialValues = (editData: any | null, selectedClass?
         ...rest,
         id: subjectId || `subject-${index}`,
         subjectId,
-        name: subjectName || '',
+        name: subjectName || electiveGroupName || '',
         subjectCode,
         subjectColor,
         noOfLecture: weeklyLectures || 0,
