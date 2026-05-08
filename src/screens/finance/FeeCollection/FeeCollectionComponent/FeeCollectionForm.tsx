@@ -37,6 +37,7 @@ import {
 import FeeLedgerList from './FeeLedgerList';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
+import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
 
 import type { FeeLedgerFilters } from './FeeLedgerFilterBar';
@@ -237,6 +238,7 @@ const FeeCollectComponentForm = ({
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState<FeeLedgerFilters>(FEE_LEDGER_INITIAL_FILTERS);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // ── Formik ─────────────────────────────────────────────────────────────────
   const formik = useFormik<FeeCollectionFormValues>({
@@ -257,12 +259,11 @@ const FeeCollectComponentForm = ({
       }
       return errors;
     },
-    onSubmit: (values) => {
-      onSubmit?.({ ...values, subtotal, finalAmount });
-      onCancel?.(null, true);
+    onSubmit: () => {
+      setPreviewOpen(true);
     },
   });
-
+  console.log('formik values', formik.values);
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
@@ -304,6 +305,12 @@ const FeeCollectComponentForm = ({
       ...formik.values.payment,
       details: { ...formik.values.payment.details, [detailKey]: value },
     });
+
+  const handleConfirmCollect = () => {
+    onSubmit?.({ ...formik.values, subtotal, finalAmount });
+    setPreviewOpen(false);
+    onCancel?.(null, true);
+  };
 
   const entryCount = useMemo(
     () => (ledgerData.monthWise ?? []).reduce((s, g) => s + g.items.length, 0),
@@ -795,6 +802,19 @@ const FeeCollectComponentForm = ({
           </Box>
         </Box>
       </DialogActions>
+
+      {/* ── Fee Collection Preview Dialog ── */}
+      <FeeCollectionPreviewDialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        onConfirm={handleConfirmCollect}
+        loading={loading}
+        formValues={formik.values}
+        student={student}
+        chargesData={chargesData ?? []}
+        feeHeadMap={feeHeadMap}
+        academicYear={currentYear?.year ? String(currentYear.year) : undefined}
+      />
     </Box>
   );
 };
