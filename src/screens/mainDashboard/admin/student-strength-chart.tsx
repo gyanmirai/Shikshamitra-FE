@@ -131,7 +131,6 @@ export default function StudentStrengthChart({ title, subheader, chart, ...other
         type="bar"
         series={currentSeries?.data}
         options={chartOptions}
-        height={320}
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ pl: 1, pr: 2.5 }}
       />

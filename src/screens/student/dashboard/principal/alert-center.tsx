@@ -288,10 +288,15 @@ const AlertCenter = () => {
 
   return (
     <>
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={1} alignItems="stretch">
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <Card
             sx={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+
               '&:hover': {
                 transform: 'translateY(-4px)',
                 boxShadow: theme.shadows[8],
@@ -328,7 +333,7 @@ const AlertCenter = () => {
                 pb: 1,
               }}
             />
-            <Scrollbar sx={{ maxHeight: 308 }}>
+            <Scrollbar sx={{ maxHeight: 370, flexGrow: 1 }}>
               <Stack sx={{ pb: 1 }}>
                 {initialAlerts.map((alert) => (
                   <AlertItemRow
@@ -342,11 +347,12 @@ const AlertCenter = () => {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           {/* Enrollment Trends */}
           <Card
             sx={{
-              height: 370,
+              height: '100%',
+              width: '100%',
               p: 2,
               display: 'flex',
               flexDirection: 'column',
@@ -364,7 +370,7 @@ const AlertCenter = () => {
               )}
             </Typography>
 
-            <Box sx={{ flexGrow: 1, minHeight: 120 }}>
+            <Box sx={{ flexGrow: 1 }}>
               <Chart
                 type="area"
                 series={enrollmentSeries}

@@ -67,7 +67,7 @@ const SubjectDifficultyBarChart = () => {
     },
     tooltip: {
       y: {
-        formatter: (val) => `${val}% Failure Rate`,
+        formatter: (val: any) => `${val}% Failure Rate`,
       },
     },
     legend: {
@@ -97,7 +97,7 @@ const SubjectDifficultyBarChart = () => {
       />
 
       <Box>
-        <Chart type="bar" series={series} options={chartOptions} height={364} />
+        <Chart type="bar" series={series} options={chartOptions} />
       </Box>
     </Card>
   );

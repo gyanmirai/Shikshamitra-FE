@@ -103,6 +103,7 @@ export const AttendanceTrend = () => {
     <Card
       sx={{
         height: '100%',
+        width: '100%',
         position: 'relative',
         '&:hover': {
           transform: 'translateY(-4px)',
@@ -143,7 +144,7 @@ export const AttendanceTrend = () => {
       <Divider sx={{ borderStyle: 'dashed' }} />
 
       <Box dir="ltr" sx={{ py: 3, px: 3 }}>
-        <Chart type="area" series={attendanceSeries} options={attendanceOptions} height={280} />
+        <Chart type="area" series={attendanceSeries} options={attendanceOptions} />
       </Box>
 
       <Divider sx={{ borderStyle: 'dashed' }} />
@@ -257,6 +258,7 @@ export const SubjectPerformance = () => {
     <Card
       sx={{
         height: '100%',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
@@ -301,7 +303,7 @@ export const SubjectPerformance = () => {
       <Divider sx={{ borderStyle: 'dashed' }} />
 
       <Box dir="ltr" sx={{ flexGrow: 1, py: 2, px: 2 }}>
-        <Chart type="bar" series={subjectSeries} options={subjectOptions} height={260} />
+        <Chart type="bar" series={subjectSeries} options={subjectOptions} />
       </Box>
 
       <Divider sx={{ borderStyle: 'dashed' }} />
@@ -405,6 +407,7 @@ export const HomeworkStatus = () => {
     <Card
       sx={{
         height: '100%',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
@@ -462,8 +465,8 @@ export const HomeworkStatus = () => {
           type="donut"
           series={homeworkSeries}
           options={homeworkOptions}
-          height={280}
-          width={300}
+          height="100%"
+          width="80%"
         />
       </Box>
 

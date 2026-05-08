@@ -1,14 +1,14 @@
+import type Highcharts from 'highcharts';
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import ApexCharts from 'apexcharts';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import { fCurrency } from 'src/utils/format-number';
 import { Box, Menu, MenuItem, IconButton } from '@mui/material';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Chart, ChartSelect, ChartLegends } from 'src/components/chart';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import { Iconify } from '../iconify';
 
@@ -256,24 +256,21 @@ export function ChartWithTwoDropDown({
     setListOfDataOption(dataOptions);
   }, [chart.series, selectedData]);
 
-  // Handles export action for the chart as PNG
+  // Highcharts chart instance ref — captured via the ChartReady callback
+  // forwarded by the BaseChart wrapper. We use it for PNG export.
+  const hcChartRef = useRef<Highcharts.Chart | null>(null);
+
+  // Handles export action for the chart as PNG using Highcharts exporting
   const handleSelect = async (type: 'png') => {
     handleClose();
-    const charts = ApexCharts.getChartByID('my-export-chart') as any;
-    if (type === 'png') {
-      if (charts) {
-        const data = await charts.dataURI();
-
-        const { imgURI } = data as { imgURI: string };
-
-        // trigger download
-        const link = document.createElement('a');
-        link.href = imgURI;
-
-        link.download = 'chart.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    if (type === 'png' && hcChartRef.current) {
+      try {
+        (hcChartRef.current as any).exportChartLocal({
+          type: 'image/png',
+          filename: 'chart',
+        });
+      } catch {
+        /* noop */
       }
     }
   };
@@ -340,9 +337,12 @@ export function ChartWithTwoDropDown({
           options={{
             ...memoizedChartOptions,
             chart: {
-              ...memoizedChartOptions.chart,
-              id: 'my-export-chart', // 🔑 this is important
-              toolbar: { show: false },
+              ...((memoizedChartOptions as any).chart ?? {}),
+              events: {
+                load(this: Highcharts.Chart) {
+                  hcChartRef.current = this;
+                },
+              },
             },
           }}
           height={320}

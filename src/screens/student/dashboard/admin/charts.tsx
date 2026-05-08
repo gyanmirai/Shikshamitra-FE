@@ -118,13 +118,13 @@ const AdminCharts = () => {
       labels: {
         colors: theme.vars.palette.text.primary,
       },
-      formatter(val, opts) {
+      formatter(val: any, opts: any) {
         return `${val} - ${opts?.w?.globals?.series?.[opts.seriesIndex] || 0}`;
       },
     },
     dataLabels: {
       enabled: true,
-      formatter(val, opts) {
+      formatter(val: any) {
         return fPercent(Number(val));
       },
       dropShadow: {
@@ -155,7 +155,7 @@ const AdminCharts = () => {
               show: true,
               label: 'Total',
               color: theme.vars.palette.text.primary,
-              formatter: (w) => {
+              formatter: (w: any) => {
                 const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
                 return fNumber(total);
               },
@@ -304,7 +304,7 @@ const AdminCharts = () => {
                           ],
                 },
               }}
-              height={364}
+              // height={364}
             />
           </Box>
         </Card>
@@ -336,7 +336,7 @@ const AdminCharts = () => {
               type="donut" // Upgrade to Donut for center text
               series={examStatusSeries}
               options={examStatusOptions}
-              height={300}
+              // height={300}
             />
           </Box>
         </Card>
@@ -381,7 +381,7 @@ const AdminCharts = () => {
               type="bar"
               series={classParticipationSeries}
               options={classParticipationOptions}
-              height={300}
+              // height={300}
             />
           </Box>
         </Card>

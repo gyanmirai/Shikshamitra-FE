@@ -3,9 +3,8 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
-import { fNumber } from 'src/utils/format-number';
-import { Box, Card, CardHeader } from '@mui/material';
-import { Chart, useChart, ChartLegends } from 'src/components/chart';
+import { Card, CardHeader } from '@mui/material';
+import { Chart, useChart } from 'src/components/chart';
 
 type Props = CardProps & {
   title?: string;
@@ -23,80 +22,87 @@ export default function FinanceRequestStatusChart({ title, subheader, chart, ...
   const chartSeries = chart.series.map((item) => item.value);
 
   const chartColors = chart.colors ?? [
+    theme.palette.info.main,
     theme.palette.success.main,
-    theme.palette.error.main,
     theme.palette.warning.main,
+    theme.palette.error.light,
+    theme.palette.primary.light,
   ];
 
   const chartOptions = useChart({
-    chart: {
-      sparkline: {
-        enabled: true,
-      },
-    },
     colors: chartColors,
     labels: chart.series.map((item) => item.label),
-    stroke: {
-      colors: [theme.palette.background.paper],
-    },
-    legend: {
-      floating: true,
-      position: 'bottom',
-      horizontalAlign: 'center',
-    },
+    stroke: { width: 3, colors: [theme.palette.background.paper] },
     dataLabels: {
-      enabled: true,
-      dropShadow: {
-        enabled: false,
+      enabled: false,
+      formatter: (val: number, opts: any) => {
+        const name = opts.w.globals.labels[opts.seriesIndex];
+        return [`${name}`, `${val.toFixed(1)}%`];
       },
-    },
-    tooltip: {
-      fillSeriesColor: false,
-      y: {
-        formatter: (value: number) => fNumber(value),
-        title: {
-          formatter: (seriesName: string) => `${seriesName}`,
-        },
+      style: {
+        fontSize: '12px',
+        fontWeight: '700',
+        colors: [theme.palette.text.primary],
       },
+      dropShadow: { enabled: false },
     },
     plotOptions: {
       pie: {
         donut: {
-          labels: {
-            show: false,
+          size: '45%',
+          labels: { show: false },
+        },
+        expandOnClick: true,
+        dataLabels: { offset: 28, minAngleToShowLabel: 10, show: false },
+      },
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toFixed(1)}%`,
+      },
+    },
+    legend: { show: true },
+    ...chart.options,
+    highcharts: {
+      chart: {
+        animation: false,
+      },
+      plotOptions: {
+        pie: {
+          animation: false,
+          innerSize: '65%',
+          borderWidth: 1,
+          dataLabels: {
+            enabled: true,
+            distance: 32,
+            formatter(this: any) {
+              console.log(this);
+              // eslint-disable-next-line react/no-this-in-sfc
+              return `<div style="text-align:center;"><span style="font-size:12px;font-weight:600;">${this.point.name}</span><br/><span style="font-size:11px;">${this.point.y}</span></div>`;
+            },
+            useHTML: true,
+            style: {
+              fontSize: '12.5px',
+              fontWeight: '700',
+              textOutline: 'none',
+            },
+            connectorShape: 'crookedLine',
+            crookDistance: '60%',
           },
         },
       },
     },
-    ...chart.options,
   });
 
   return (
-    <Card {...other} sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
+    <Card {...other} sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
+      <CardHeader title={title} subheader={subheader} sx={{ p: 0, mb: 1 }} />
 
-      <Box
-        sx={{
-          my: 6,
-          '& .apexcharts-canvas': {
-            margin: '0 auto',
-          },
-        }}
-      >
-        <Chart
-          dir="ltr"
-          type="pie"
-          series={chartSeries}
-          options={chartOptions}
-          width="100%"
-          height={280}
-        />
-      </Box>
-
-      <ChartLegends
-        labels={chartOptions?.labels}
-        colors={chartOptions?.colors}
-        sx={{ p: 3, justifyContent: 'center' }}
+      <Chart
+        type="donut"
+        series={chartSeries}
+        options={chartOptions}
+        sx={{ flexGrow: 1, mx: 'auto', width: '100%' }}
       />
     </Card>
   );

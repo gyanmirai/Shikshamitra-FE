@@ -16,7 +16,7 @@ const FinanceAdminDashboardScreen = () => (
         <FinanceAdminDashboardOverview />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12, md: 7 }}>
         <FinanceAnnualSummaryChart
           title="Annual Finance Summary"
           chart={{
@@ -39,7 +39,7 @@ const FinanceAdminDashboardScreen = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 5 }}>
         <FinanceRequestStatusChart
           title="Concession Request Status"
           chart={{

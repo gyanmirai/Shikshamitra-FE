@@ -3,8 +3,8 @@ import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Card, Divider, CardHeader } from '@mui/material';
-import { Chart, useChart, ChartLegends } from 'src/components/chart';
+import { Card, CardHeader } from '@mui/material';
+import { Chart, useChart } from 'src/components/chart';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const OrganizationStatus = () => (
@@ -25,7 +25,7 @@ const OrganizationStatus = () => (
         ],
         options: {
           tooltip: {
-            custom: ({ series, seriesIndex, dataPointIndex }) => {
+            custom: ({ series, seriesIndex, dataPointIndex }: any) => {
               const participants = [30, 10, 25, 28, 26]; // Example data for each class
               const scores = [80, 70, 75, 85, 78]; // Average scores for each class
 
@@ -58,47 +58,115 @@ export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Pr
   const chartSeries = chart.series.map((item) => item.value);
 
   const chartColors = chart.colors ?? [
-    theme.palette.primary.main,
-    theme.palette.warning.light,
-    theme.palette.info.dark,
-    theme.palette.error.main,
+    theme.palette.info.main,
+    theme.palette.success.main,
+    theme.palette.warning.main,
+    theme.palette.error.light,
+    theme.palette.primary.light,
   ];
 
   const chartOptions = useChart({
-    chart: { sparkline: { enabled: true } },
     colors: chartColors,
     labels: chart.series.map((item) => item.label),
-    stroke: { width: 0 },
-    dataLabels: { enabled: true, dropShadow: { enabled: false } },
-    tooltip: {
-      y: {
-        // formatter: (value: number) => fNumber(value),
-        title: { formatter: (seriesName: string) => `${seriesName}` },
+    stroke: { width: 3, colors: [theme.palette.background.paper] },
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number, opts: any) => {
+        const name = opts.w.globals.labels[opts.seriesIndex];
+        return [`${name}`, `${val.toFixed(1)}%`];
+      },
+      style: {
+        fontSize: '12px',
+        fontWeight: '700',
+        colors: [theme.palette.text.primary],
+      },
+      dropShadow: { enabled: false },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '55%',
+          labels: { show: false },
+        },
+        expandOnClick: true,
+        dataLabels: { offset: 28, minAngleToShowLabel: 10 },
       },
     },
-    plotOptions: { pie: { donut: { labels: { show: false } } } },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toFixed(1)}%`,
+      },
+    },
+    legend: { show: false },
     ...chart.options,
+    highcharts: {
+      chart: {
+        animation: false,
+        events: {
+          load(this: any) {
+            // eslint-disable-next-line react/no-this-in-sfc
+            const series = this.series[0];
+            if (!series?.points?.length) return;
+            series.points.forEach((point: any, i: number) => {
+              const delay = i * 180;
+              if (point.graphic) {
+                point.graphic.attr({ opacity: 0, scaleX: 0.6, scaleY: 0.6 });
+                setTimeout(() => {
+                  point.graphic?.animate({ opacity: 1, scaleX: 1, scaleY: 1 }, { duration: 600 });
+                }, delay);
+              }
+              if (point.dataLabel) {
+                point.dataLabel.attr({ opacity: 0 });
+                setTimeout(() => {
+                  point.dataLabel?.animate({ opacity: 1 }, { duration: 350 });
+                }, delay + 400);
+              }
+              if (point.connector) {
+                point.connector.attr({ opacity: 0 });
+                setTimeout(() => {
+                  point.connector?.animate({ opacity: 1 }, { duration: 350 });
+                }, delay + 400);
+              }
+            });
+          },
+        },
+      },
+      plotOptions: {
+        pie: {
+          animation: false,
+          innerSize: '55%',
+          borderWidth: 1,
+          dataLabels: {
+            enabled: true,
+            distance: 32,
+            formatter(this: any) {
+              // eslint-disable-next-line react/no-this-in-sfc
+              return `<span style="font-size:12px;font-weight:600;">${this.point.name}</span><br/>`;
+            },
+            useHTML: true,
+            style: {
+              fontSize: '12.5px',
+              fontWeight: '700',
+              textOutline: 'none',
+            },
+            connectorShape: 'crookedLine',
+            crookDistance: '70%',
+          },
+        },
+      },
+      ...((chart.options as any)?.highcharts ?? {}),
+    },
   });
 
   return (
-    <Card {...other} sx={{ p: 2, height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} sx={{ p: 0 }} />
+    <Card {...other} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardHeader title={title} subheader={subheader} sx={{ p: 0, mb: 1 }} />
 
       <Chart
-        type="pie"
+        type="donut"
         series={chartSeries}
         options={chartOptions}
-        width={{ xs: 240, xl: 260 }}
-        height={{ xs: 240, xl: 260 }}
-        sx={{ my: 6, mx: 'auto' }}
-      />
-
-      <Divider sx={{ borderStyle: 'dashed' }} />
-
-      <ChartLegends
-        labels={chartOptions?.labels}
-        colors={chartOptions?.colors}
-        sx={{ p: 3, justifyContent: 'center' }}
+        sx={{ flexGrow: 1, mx: 'auto' }}
       />
     </Card>
   );
