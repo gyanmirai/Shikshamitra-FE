@@ -247,6 +247,7 @@ export const financeModuleType = {
   incomeCategoryData: 'incomeCategoryData',
   bankAccount: 'bank-account',
   feeStructure: 'FeeStructure',
+  classWiseFeeStructure: 'ClassWiseFeeStructure',
 } as const;
 
 // ===== Finance Budgets Category API (reducerPath: BudgetsCategoryApi) =====

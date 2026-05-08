@@ -1,6 +1,7 @@
 import type { FormikProps } from 'formik';
+import type { FeeMonth } from 'src/enums/fee-collection-type';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-import type { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
+import type { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 
 export interface IClassWiseFeeItem {
   id?: string;
@@ -8,6 +9,7 @@ export interface IClassWiseFeeItem {
   feeHeadName?: string; // for UI display
   amount: number;
   isOneTime: boolean;
+  paybleMonth?: FeeMonth; // for monthly fee heads
   isOptional: boolean;
   isRefundable?: boolean;
   paymentTermId?: string;
@@ -16,13 +18,27 @@ export interface IClassWiseFeeItem {
 export interface IClassWiseFeeData {
   _id?: string; // stable client-side key for AnimatePresence / list rendering
   name: string; // class-level fee structure name
-  status: FeeStructureClassStatusType;
   feeHeads: IClassWiseFeeItem[];
+  status?: FeeStructureLockStatusType;
+}
+
+/**
+ * Independent card model used by the new per-structure architecture.
+ * Each card owns its _id, classId, feeStructureId, and lock status.
+ */
+export interface IClassWiseFeeStructureCard {
+  _id?: string; // undefined = unsaved (new draft)
+  name: string;
+  feeHeads: IClassWiseFeeItem[];
+  lockStatus: FeeStructureLockStatusType;
+  classId: string;
+  feeStructureId: string;
 }
 
 export interface IFeeStructure {
   id: any;
   name: string;
+  status?: number;
   academicYearId?: string;
   academicYearName?: string;
 
@@ -30,7 +46,6 @@ export interface IFeeStructure {
   boardName?: string;
   mediumId?: string;
   mediumName?: string;
-  status: number;
   receiptBookId?: string;
   receiptBookName?: string;
   // paymentTerm: string;
