@@ -188,7 +188,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
               <ClassAccordionPanel
                 key={selectedClassId}
                 classId={selectedClassId}
-                feeStructureId={editData.id}
+                feeStructureMetaDataId={editData.id}
                 onDirtyChange={(dirty) => {
                   isDirtyRef.current = dirty;
                 }}

@@ -32,8 +32,8 @@ export const useCreateClassWiseFeeStructure = () => {
   });
 
   return useCallback(
-    (body: { feeStructureId: string; classId: string; name: string; feeHeads: any[] }) =>
-      create(body).unwrap(),
+    (args: { feeStructureMetaDataId: string; standardId: string; name: string; feeHeads: any[] }) =>
+      create(args).unwrap(),
     [create]
   );
 };

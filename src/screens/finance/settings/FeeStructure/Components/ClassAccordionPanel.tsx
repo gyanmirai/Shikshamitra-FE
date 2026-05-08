@@ -15,7 +15,7 @@ import type { IClassWiseFeeStructureCard } from '../type';
 // ---------------------------------------------------------------------------
 interface ClassAccordionPanelProps {
   classId: string;
-  feeStructureId: string;
+  feeStructureMetaDataId: string;
   /** Called whenever unsaved-changes state changes for any card in this panel */
   onDirtyChange?: (dirty: boolean) => void;
 }
@@ -26,7 +26,7 @@ interface ClassAccordionPanelProps {
 const mapToCardModel = (
   raw: any,
   classId: string,
-  feeStructureId: string
+  feeStructureMetaDataId: string
 ): IClassWiseFeeStructureCard => ({
   _id: raw._id ?? raw.id,
   name: raw.name,
@@ -38,8 +38,8 @@ const mapToCardModel = (
     isOneTime: fh.isOneTime ?? false,
     isOptional: fh.isOptional ?? false,
     isRefundable: fh.isRefundable ?? false,
-    paymentTermId: fh.paymentTermId ?? '',
-    paybleMonth: fh.paybleMonth ?? [],
+    // paymentTermId: fh.paymentTermId ?? '',
+    // paybleMonth: fh.paybleMonth ?? [],
   })),
   lockStatus:
     raw.lockStatus === FeeStructureLockStatusType.Locked ||
@@ -48,7 +48,7 @@ const mapToCardModel = (
       ? FeeStructureLockStatusType.Locked
       : FeeStructureLockStatusType.Unlocked,
   classId,
-  feeStructureId,
+  feeStructureMetaDataId,
 });
 
 // ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ const mapToCardModel = (
 // ---------------------------------------------------------------------------
 const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   classId,
-  feeStructureId,
+  feeStructureMetaDataId,
   onDirtyChange,
 }) => {
   const [localDrafts, setLocalDrafts] = useState<IClassWiseFeeStructureCard[]>([]);
@@ -82,7 +82,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
     Array.isArray(rawStructures)
       ? rawStructures
       : (rawStructures?.standardFeeStructures ?? rawStructures?.data ?? [])
-  ).map((raw: any) => mapToCardModel(raw, classId, feeStructureId));
+  ).map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId));
 
   const allCards = [...serverCards, ...localDrafts];
 
@@ -95,7 +95,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
         feeHeads: [],
         lockStatus: FeeStructureLockStatusType.Unlocked,
         classId,
-        feeStructureId,
+        feeStructureMetaDataId,
       },
     ]);
   };

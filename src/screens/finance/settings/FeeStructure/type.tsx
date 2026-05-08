@@ -32,7 +32,7 @@ export interface IClassWiseFeeStructureCard {
   feeHeads: IClassWiseFeeItem[];
   lockStatus: FeeStructureLockStatusType;
   classId: string;
-  feeStructureId: string;
+  feeStructureMetaDataId: string;
 }
 
 export interface IFeeStructure {

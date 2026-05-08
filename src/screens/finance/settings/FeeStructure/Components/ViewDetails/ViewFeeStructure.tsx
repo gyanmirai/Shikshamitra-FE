@@ -38,15 +38,14 @@ const ViewFeeStructure = ({
   const { data: standardFeeStructure, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStandardFeeStructureQuery,
-    params: { feeStructureId: feeStructure?.id, standardId: selectedClassId },
+    params: { standardId: selectedClassId },
     options: { skip: !feeStructure?.id || !selectedClassId },
   });
 
   const mappedFeeStructures = React.useMemo(() => {
     if (!standardFeeStructure) return [];
-    return standardFeeStructureInitialValues(standardFeeStructure).standardFeeStructures;
+    return standardFeeStructureInitialValues(standardFeeStructure).feeStructureClasses ?? [];
   }, [standardFeeStructure]);
-
   React.useEffect(() => {
     if (feeStructure?.mediumId) {
       getClassByMedium(feeStructure.mediumId);
