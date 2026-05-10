@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
@@ -41,7 +42,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const {
     data: homeworkSubmissions,
     isLoading: isSubmissionsLoading,
-    isFetching: isfetching,
+    isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkSubmissionsQuery,
@@ -69,19 +70,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
 
-  // Normalize old ScheduleExamStatus values to the new HomeworkSubmissionStatus
-  const normalizedData = React.useMemo(() => {
-    const studentData = homeworkSubmissions?.data || [];
-    return studentData.map((row: any) => {
-      let newStatus = row.status;
-      if (row.status === 3 || row.status === 6) {
-        newStatus = HomeworkSubmissionStatus.Submitted;
-      } else if (row.status === 4 || row.status === 5) {
-        newStatus = HomeworkSubmissionStatus.Completed;
-      }
-      return { ...row, status: newStatus };
-    });
-  }, [homeworkSubmissions?.data]);
+  const normalizedData = React.useMemo(
+    () => homeworkSubmissions?.data || [],
+    [homeworkSubmissions?.data]
+  );
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -122,7 +114,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         )}
 
         {/* Give feedback after submission */}
-        {row.status === HomeworkSubmissionStatus.Submitted && (
+        {[
+          HomeworkSubmissionStatus.Submitted,
+          HomeworkSubmissionStatus.NeedsReview,
+          HomeworkSubmissionStatus.Late,
+        ].includes(row.status) && (
           <MenuItem
             onClick={() => {
               setSelectedStudent(row as TStudentGrade);
@@ -135,8 +131,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           </MenuItem>
         )}
 
-        {/* View completed submission */}
-        {row.status === HomeworkSubmissionStatus.Completed && (
+        {/* Edit/View Feedback or Marks */}
+        {row.status === HomeworkSubmissionStatus.Reviewed && (
           <MenuItem
             onClick={() => {
               setSelectedStudent(row);
@@ -144,8 +140,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:eye-outline" sx={{ height: '16px', width: '16px' }} />
-            View Submission
+            <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+            Edit/View Feedback
           </MenuItem>
         )}
       </MenuList>
@@ -254,72 +250,78 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'feedback',
             label: 'Feedback',
-            render: (value, row) => (
-              <Box
-                onClick={() => {
-                  setSelectedStudent(row as TStudentGrade);
-                  viewSubmissionDialog.onTrue();
-                }}
-                sx={{
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                    borderRadius: 1,
-                  },
-                  p: 0.5,
-                }}
-              >
-                <CustomTooltip
-                  title={value || 'Click to add feedback'}
-                  arrow
-                  sx={{ textAlign: 'justify' }}
+            render: (value, row) => {
+              const text = value && value !== '-' ? value : null;
+              return (
+                <Box
+                  onClick={() => {
+                    setSelectedStudent(row as TStudentGrade);
+                    viewSubmissionDialog.onTrue();
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                      borderRadius: 1,
+                    },
+                    p: 0.5,
+                  }}
                 >
-                  <Typography
-                    variant="caption"
-                    fontSize="13px"
-                    noWrap
-                    sx={{
-                      maxWidth: 0,
-                      minWidth: '100%',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      display: 'block',
-                      color: value ? 'text.primary' : 'text.secondary',
-                      fontStyle: value ? 'normal' : 'italic',
-                    }}
+                  <CustomTooltip
+                    title={text || 'Click to add feedback'}
+                    arrow
+                    sx={{ textAlign: 'justify' }}
                   >
-                    {value || 'Add feedback'}
-                  </Typography>
-                </CustomTooltip>
-              </Box>
-            ),
+                    <Typography
+                      variant="caption"
+                      fontSize="13px"
+                      noWrap
+                      sx={{
+                        maxWidth: 0,
+                        minWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'block',
+                        color: text ? 'text.primary' : 'text.secondary',
+                        fontStyle: text ? 'normal' : 'italic',
+                      }}
+                    >
+                      {text || 'Add feedback'}
+                    </Typography>
+                  </CustomTooltip>
+                </Box>
+              );
+            },
           },
           {
             id: 'remarks',
             label: 'Remarks',
             align: 'left',
             minWidth: 150,
-            render: (value, row) => (
-              <CustomTooltip title={value || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
-                <Typography
-                  variant="caption"
-                  fontSize="13px"
-                  noWrap
-                  sx={{
-                    maxWidth: 150,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    display: 'block',
-                    color: value ? 'text.primary' : 'text.secondary',
-                    fontStyle: value ? 'normal' : 'italic',
-                  }}
-                >
-                  {value || 'No remarks'}
-                </Typography>
-              </CustomTooltip>
-            ),
+            render: (value, row) => {
+              const text = value && value !== '-' ? value : null;
+              return (
+                <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
+                  <Typography
+                    variant="caption"
+                    fontSize="13px"
+                    noWrap
+                    sx={{
+                      maxWidth: 150,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      display: 'block',
+                      color: text ? 'text.primary' : 'text.secondary',
+                      fontStyle: text ? 'normal' : 'italic',
+                    }}
+                  >
+                    {text || 'No remarks'}
+                  </Typography>
+                </CustomTooltip>
+              );
+            },
           },
           {
             id: 'status',
@@ -356,7 +358,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           },
         ]}
-        isLoading={isSubmissionsLoading || isfetching}
+        isLoading={isSubmissionsLoading || isFetching}
         data={normalizedData}
       />
 

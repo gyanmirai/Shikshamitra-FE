@@ -11,8 +11,8 @@ export interface ITimeSlot {
   id: string;
   startTime: Dayjs | null;
   endTime: Dayjs | null;
-  slotType: number;
-  breakType: number;
+  slotType: string;
+  breakType: string;
 }
 
 interface ISlotErrors {
@@ -229,22 +229,22 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         render(_v: unknown, row: ITimeSlot) {
           const index = slots.findIndex((s) => s.id === row.id);
           if (index < 0) return null;
-          const slotType: number = row.slotType ?? 0;
-          const breakType = row.breakType ?? 0;
+          const slotType: string = row.slotType ?? 'period';
+          const breakType: string = row.breakType ?? '';
           return (
             <Box sx={{ display: 'flex', gap: 1, minWidth: '270px' }}>
               <CustomSelect
                 label="Slot *"
                 options={[
-                  { value: 0, label: 'Period' },
-                  { value: 1, label: 'Break' },
+                  { value: 'period', label: 'Period' },
+                  { value: 'break', label: 'Break' },
                 ]}
                 disabled={pickerDisabled}
                 value={slotType}
                 onChange={(val: any) =>
                   updateSlot(index, {
                     slotType: val,
-                    breakType: val === 1 ? row.breakType : 0,
+                    breakType: val === 'break' ? row.breakType || 'short' : '',
                   })
                 }
                 formControlProps={{
@@ -257,12 +257,12 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
                   size: 'small',
                 }}
               />
-              {slotType === 1 && (
+              {slotType === 'break' && (
                 <CustomSelect
                   label="Break *"
                   options={[
-                    { value: 0, label: 'Short Break' },
-                    { value: 1, label: 'Lunch Break' },
+                    { value: 'short', label: 'Short Break' },
+                    { value: 'lunch', label: 'Lunch Break' },
                   ]}
                   disabled={pickerDisabled}
                   value={breakType}

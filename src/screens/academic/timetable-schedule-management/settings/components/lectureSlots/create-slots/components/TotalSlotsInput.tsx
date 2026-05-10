@@ -39,7 +39,7 @@ const TotalSlotsInput: React.FC<ITotalSlotsInputProps> = ({
       helperText={error || 'Ensure this matches the number of slot entries below'}
     />
     {!error && arrayError ? (
-      <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+      <Typography variant="caption" color="error" sx={{ mt: 1.5, display: 'block' }}>
         {arrayError}
       </Typography>
     ) : null}

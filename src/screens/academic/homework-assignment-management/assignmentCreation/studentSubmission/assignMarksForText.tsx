@@ -26,7 +26,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
+import {
+  useUpdateSubmissionStatusMutation,
+  useUpdateSubmissionFeedbackMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 
 import type { IAssignGradeProps } from '../../homeworkCreation/type';
 
@@ -46,6 +49,11 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
   });
 
+  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateSubmissionStatusMutation,
+  });
+
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   /**
@@ -62,23 +70,37 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     validationSchema: Yup.object({
       marks: Yup.string().required('Marks is required'),
     }),
-    onSubmit(values) {
-      updateSubmissionFeedback({
-        assignmentId: assignmentId || data?.id,
-        studentId: data?.studentId,
-        academicMediumId: (medium as any)?.id,
-        body: {
-          marks: values.marks,
-          totalMarks: values.totalMarks,
-          feedback: values.feedback,
-        },
-      });
-      shikshaMitraToast.success({
-        message: `Feedback and marks have been ${
-          data?.feedback ? 'updated' : 'added'
-        } successfully for ${data?.studentName}.`,
-      });
-      onClose(null, true);
+    async onSubmit(values) {
+      try {
+        await updateSubmissionFeedback({
+          assignmentId: assignmentId || data?.id,
+          studentId: data?.studentId,
+          academicMediumId: (medium as any)?.id,
+          body: {
+            marks: values.marks,
+            totalMarks: values.totalMarks,
+            feedback: values.feedback,
+          },
+        }).unwrap();
+
+        await updateSubmissionStatus({
+          assignmentId: assignmentId || data?.id,
+          studentId: data?.studentId,
+          academicMediumId: (medium as any)?.id,
+          body: {
+            status: 4, // Reviewed
+          },
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `Feedback and marks have been ${
+            data?.feedback ? 'updated' : 'added'
+          } successfully for ${data?.studentName}.`,
+        });
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to submit feedback and marks', error);
+      }
     },
   });
 
@@ -237,7 +259,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               variant="contained"
               type="submit"
               size="small"
-              loading={isUpdateLoading}
+              loading={isUpdateLoading || isStatusLoading}
               onClick={() => {
                 formik.handleSubmit();
               }}
