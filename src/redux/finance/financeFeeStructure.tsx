@@ -6,7 +6,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getFeeStructures: builder.query({
       query: (params) => ({
-        url: '/fee-structures',
+        url: '/fee-structures-metadata',
         method: 'GET',
         params,
       }),
@@ -61,10 +61,13 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
 
     getStandardFeeStructure: builder.query({
       query: ({ standardId }) => ({
-        url: `/fee-structures/standards/${standardId}`,
+        url: `/fee-structures`,
         method: 'GET',
+        params: { standardId },
       }),
-      providesTags: [financeModuleType.feeStructure],
+      providesTags: (_result, _error, { standardId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: standardId },
+      ],
     }),
 
     generateFeeStructure: builder.mutation({
@@ -74,6 +77,74 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         params: { academicYearId },
       }),
       invalidatesTags: [financeModuleType.feeStructure],
+    }),
+
+    // ── Independent class-wise fee structure endpoints ─────────────────────
+
+    getClassWiseFeeStructures: builder.query({
+      query: ({ feeStructureId, classId }) => ({
+        url: `/fee-structures/${feeStructureId}/class-wise/${classId}`,
+        method: 'GET',
+      }),
+      providesTags: (_result, _error, { classId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: classId },
+      ],
+    }),
+
+    createClassWiseFeeStructure: builder.mutation({
+      query: ({ feeStructureMetaDataId, standardId, name, feeHeads }) => ({
+        url: `/fee-structures`,
+        method: 'POST',
+        params: { feeStructureMetadataId: feeStructureMetaDataId },
+        body: {
+          standardId,
+          standardFeeStructures: { name, feeHeads },
+        },
+      }),
+      invalidatesTags: (_result, _error, { standardId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: standardId },
+      ],
+    }),
+
+    updateClassWiseFeeStructure: builder.mutation({
+      query: ({ structureId, body }) => ({
+        url: `/fee-structures/${structureId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: (_result, _error, { classId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: classId },
+      ],
+    }),
+
+    deleteClassWiseFeeStructure: builder.mutation({
+      query: ({ structureId }) => ({
+        url: `/fee-structures/${structureId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, { classId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: classId },
+      ],
+    }),
+
+    lockClassWiseFeeStructure: builder.mutation({
+      query: ({ structureId }) => ({
+        url: `/fee-structures/${structureId}/lock`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (_result, _error, { classId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: classId },
+      ],
+    }),
+
+    unlockClassWiseFeeStructure: builder.mutation({
+      query: ({ structureId }) => ({
+        url: `/fee-structures/${structureId}/lock`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (_result, _error, { classId }) => [
+        { type: financeModuleType.classWiseFeeStructure, id: classId },
+      ],
     }),
   }),
   overrideExisting: false,
@@ -88,4 +159,10 @@ export const {
   useSaveStandardFeeStructuresMutation,
   useGetStandardFeeStructureQuery,
   useGenerateFeeStructureMutation,
+  useGetClassWiseFeeStructuresQuery,
+  useCreateClassWiseFeeStructureMutation,
+  useUpdateClassWiseFeeStructureMutation,
+  useDeleteClassWiseFeeStructureMutation,
+  useLockClassWiseFeeStructureMutation,
+  useUnlockClassWiseFeeStructureMutation,
 } = financeFeeStructureApi;

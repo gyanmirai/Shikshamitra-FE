@@ -1,5 +1,6 @@
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import {
   Box,
   Grid,
@@ -35,11 +37,13 @@ const FeeStructureStep = ({
   formik: any;
   classList?: any[];
 }) => {
+  const theme = useTheme();
   const [editFeeStructure, setEditFeeStructure] = useState<{
     classId: string;
     index: number;
   } | null>(null);
   const deleteFeeStructureDialog = useBoolean();
+  const lockFeeStructureDialog = useBoolean();
   const [selectedFeeStructure, setSelectedFeeStrcture] = useState<any>(null);
   const addNewFeeStructureDialog = useBoolean();
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -101,7 +105,7 @@ const FeeStructureStep = ({
             <Card
               elevation={0}
               sx={{
-                border: (theme) => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+                border: () => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
                 borderRadius: 2,
                 overflow: 'hidden',
               }}
@@ -114,9 +118,9 @@ const FeeStructureStep = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  borderBottom: (theme) =>
+                  borderBottom: () =>
                     `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.1)}`,
-                  bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.03),
+                  bgcolor: () => varAlpha(theme.palette.grey['500Channel'], 0.03),
                 }}
               >
                 <Box display="flex" alignItems="center" gap={1}>
@@ -152,7 +156,7 @@ const FeeStructureStep = ({
                   '&::-webkit-scrollbar': { height: 4 },
                   '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
                   '&::-webkit-scrollbar-thumb': {
-                    bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.2),
+                    bgcolor: () => varAlpha(theme.palette.grey['500Channel'], 0.2),
                     borderRadius: 4,
                   },
                 }}
@@ -191,14 +195,14 @@ const FeeStructureStep = ({
                         border: '1.5px solid',
                         borderColor: isActive
                           ? 'primary.main'
-                          : (theme) => varAlpha(theme.palette.grey['500Channel'], 0.15),
+                          : () => varAlpha(theme.palette.grey['500Channel'], 0.15),
                         bgcolor: isActive
-                          ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.06)
+                          ? () => varAlpha(theme.palette.primary.mainChannel, 0.06)
                           : 'background.paper',
                         transition: 'all 0.18s ease',
                         '&:hover': {
                           borderColor: 'primary.light',
-                          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
+                          bgcolor: () => varAlpha(theme.palette.primary.mainChannel, 0.04),
                         },
                       }}
                     >
@@ -225,7 +229,7 @@ const FeeStructureStep = ({
                               borderRadius: '50%',
                               bgcolor: isActive
                                 ? 'primary.main'
-                                : (theme) => varAlpha(theme.palette.grey['500Channel'], 0.2),
+                                : () => varAlpha(theme.palette.grey['500Channel'], 0.2),
                               color: isActive ? 'white' : 'text.secondary',
                               display: 'flex',
                               alignItems: 'center',
@@ -314,9 +318,9 @@ const FeeStructureStep = ({
                                   sx={{
                                     borderRadius: 2,
                                     mb: 1.5,
-                                    border: (theme) =>
+                                    border: () =>
                                       `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
-                                    boxShadow: (theme) =>
+                                    boxShadow: () =>
                                       `0 1px 6px ${varAlpha(theme.palette.grey['500Channel'], 0.07)}`,
                                     overflow: 'visible',
                                   }}
@@ -330,9 +334,9 @@ const FeeStructureStep = ({
                                       display: 'flex',
                                       alignItems: 'center',
                                       justifyContent: 'space-between',
-                                      borderBottom: (theme) =>
+                                      borderBottom: () =>
                                         `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`,
-                                      bgcolor: (theme) =>
+                                      bgcolor: () =>
                                         varAlpha(theme.palette.grey['500Channel'], 0.03),
                                     }}
                                   >
@@ -343,7 +347,7 @@ const FeeStructureStep = ({
                                           width: 28,
                                           height: 28,
                                           borderRadius: 1,
-                                          bgcolor: (theme) =>
+                                          bgcolor: () =>
                                             varAlpha(theme.palette.primary.mainChannel, 0.1),
                                           color: 'primary.main',
                                           display: 'flex',
@@ -405,7 +409,7 @@ const FeeStructureStep = ({
                                           sx={{
                                             borderRadius: 1,
                                             '&:hover': {
-                                              bgcolor: (theme) =>
+                                              bgcolor: () =>
                                                 varAlpha(theme.palette.primary.mainChannel, 0.08),
                                             },
                                           }}
@@ -426,7 +430,7 @@ const FeeStructureStep = ({
                                           sx={{
                                             borderRadius: 1,
                                             '&:hover': {
-                                              bgcolor: (theme) =>
+                                              bgcolor: () =>
                                                 varAlpha(theme.palette.error.mainChannel, 0.08),
                                             },
                                           }}
@@ -435,6 +439,43 @@ const FeeStructureStep = ({
                                             icon={GlobalIcons.delete}
                                             color="error"
                                             width={16}
+                                          />
+                                        </IconButton>
+                                      </Tooltip>
+                                      <Tooltip title="Lock Fee Structure">
+                                        <IconButton
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            lockFeeStructureDialog.onTrue();
+                                            setSelectedFeeStrcture(structure);
+                                          }}
+                                          sx={{
+                                            p: 0.6,
+                                            borderRadius: '50%',
+                                            backgroundColor:
+                                              structure.status === FeeStructureLockStatusType.Locked
+                                                ? theme.palette.grey[500]
+                                                : theme.vars.palette.success.main,
+                                            transition:
+                                              'transform 0.2s ease-in-out, background-color 0.2s',
+                                            cursor: 'pointer',
+                                            '&:hover': {
+                                              transform: 'scale(1.1)',
+                                              backgroundColor:
+                                                structure.status ===
+                                                FeeStructureLockStatusType.Locked
+                                                  ? theme.palette.grey[500]
+                                                  : theme.vars.palette.success.main,
+                                            },
+                                          }}
+                                        >
+                                          <Iconify
+                                            icon={
+                                              structure.status === FeeStructureLockStatusType.Locked
+                                                ? 'mdi:lock-open-outline'
+                                                : 'mdi:lock-outline'
+                                            }
+                                            sx={{ width: 20, height: 20, color: '#fff' }}
                                           />
                                         </IconButton>
                                       </Tooltip>
