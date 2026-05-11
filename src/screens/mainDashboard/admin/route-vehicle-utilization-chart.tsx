@@ -211,7 +211,6 @@ export default function RouteVehicleUtilizationChart({
           { name: 'Vehicle Capacity', data: capacitySeries as any },
         ]}
         options={chartOptions}
-        height={320}
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ pl: 1, pr: 2.5 }}
       />

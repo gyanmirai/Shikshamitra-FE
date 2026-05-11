@@ -96,7 +96,7 @@ const HRPayrollSummary = () => {
       />
       {/* Chart */}
       <Box sx={{ mx: 3 }} dir="ltr">
-        <Chart type="bar" series={series} options={chartOptions} height={180} />
+        <Chart type="bar" series={series} options={chartOptions} />
       </Box>
 
       {/* Action */}

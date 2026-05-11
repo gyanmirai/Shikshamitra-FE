@@ -137,7 +137,7 @@ const PrincipalCharts = () => {
               type="area"
               series={attendanceTrendSeries}
               options={attendanceTrendOptions}
-              height={320}
+              // height={320}
             />
           </Box>
         </Card>
@@ -231,7 +231,7 @@ const PrincipalCharts = () => {
               type="bar"
               series={examPerformanceSeries}
               options={examPerformanceOptions}
-              height={320}
+              // height={320}
             />
           </Box>
         </Card>

@@ -68,7 +68,6 @@ export function AppCurrentDownload({ title, subheader, chart, ...other }: Props)
         series={chartSeries}
         options={chartOptions}
         width={{ xs: 240, xl: 260 }}
-        height={{ xs: 240, xl: 260 }}
         sx={{ my: 2, mx: 'auto' }}
       />
 

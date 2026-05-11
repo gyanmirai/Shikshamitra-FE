@@ -29,7 +29,7 @@ const TotalInquiries = () => (
             },
             dataLabels: {
               enabled: true,
-              formatter(val, opt) {
+              formatter(val: any, opt: any) {
                 return `${opt?.w?.globals?.labels?.[opt.dataPointIndex]}:  ${val}`;
               },
               dropShadow: {

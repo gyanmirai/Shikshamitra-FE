@@ -142,7 +142,6 @@ export default function TeacherWorkloadChart({
         type="bar"
         series={[{ data: sorted.map((t) => t.periods) }]}
         options={chartOptions}
-        height={Math.max(280, sorted.length * 52)}
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ pl: 1, pr: 2.5 }}
       />

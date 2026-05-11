@@ -84,7 +84,7 @@ export default function FinanceAnnualSummaryChart({ title, subheader, chart, ...
           series={chart.series}
           options={chartOptions}
           width="100%"
-          height={364}
+          // height={364}
         />
       </Box>
     </Card>
