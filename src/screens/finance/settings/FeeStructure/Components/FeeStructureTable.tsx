@@ -5,18 +5,11 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeStructuresQuery } from 'src/redux/finance/financeFeeStructure';
-import {
-  FeeStructureLockStatusType,
-  FeeStructureLockStatusOptions,
-} from 'src/enums/finance-fee-structure-status';
 
 import type { IFeeStructure, IFeeStructureTableProps } from '../type';
 
@@ -75,60 +68,6 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         align: 'left',
         filterType: 'number',
         render: (value) => (value == null ? '-' : value),
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        align: 'left',
-        minWidth: 40,
-        isFilter: false,
-        sticky: true,
-        isSort: false,
-        filterType: 'enum',
-        enumOptions: FeeStructureLockStatusOptions,
-        render(value, row) {
-          const statusColor =
-            value === FeeStructureLockStatusType.Locked
-              ? theme.palette.grey[500]
-              : theme.vars.palette.success.main;
-
-          return (
-            <CustomTooltip
-              title={value === 0 ? 'Unlock' : 'Lock'}
-              arrow
-              placement="left"
-              PopperProps={{
-                modifiers: [
-                  {
-                    name: 'offset',
-                    options: { offset: [0, 0] },
-                  },
-                ],
-              }}
-            >
-              <IconButton
-                onClick={() => onToggle?.(row as IFeeStructure)}
-                sx={{
-                  p: 0.6,
-                  borderRadius: '50%',
-                  backgroundColor: statusColor,
-                  transition: 'transform 0.2s ease-in-out, background-color 0.2s',
-                  cursor: 'pointer',
-                  '&:hover': { transform: 'scale(1.1)', backgroundColor: statusColor },
-                }}
-              >
-                <Iconify
-                  icon={
-                    value === FeeStructureLockStatusType.Locked
-                      ? 'mdi:lock-open-outline'
-                      : 'mdi:lock-outline'
-                  }
-                  sx={{ width: 20, height: 20, color: '#fff' }}
-                />
-              </IconButton>
-            </CustomTooltip>
-          );
-        },
       },
       {
         id: 'action',

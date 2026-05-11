@@ -30,7 +30,7 @@ export interface IClassWiseFeeStructureCard {
   _id?: string; // undefined = unsaved (new draft)
   name: string;
   feeHeads: IClassWiseFeeItem[];
-  lockStatus: FeeStructureLockStatusType;
+  status: FeeStructureLockStatusType;
   classId: string;
   feeStructureMetaDataId: string;
 }

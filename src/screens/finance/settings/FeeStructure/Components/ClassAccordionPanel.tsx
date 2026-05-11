@@ -41,12 +41,7 @@ const mapToCardModel = (
     // paymentTermId: fh.paymentTermId ?? '',
     // paybleMonth: fh.paybleMonth ?? [],
   })),
-  lockStatus:
-    raw.lockStatus === FeeStructureLockStatusType.Locked ||
-    raw.lockStatus === 'LOCKED' ||
-    raw.isLocked === true
-      ? FeeStructureLockStatusType.Locked
-      : FeeStructureLockStatusType.Unlocked,
+  status: raw.status,
   classId,
   feeStructureMetaDataId,
 });
@@ -93,7 +88,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
         _id: undefined,
         name: '',
         feeHeads: [],
-        lockStatus: FeeStructureLockStatusType.Unlocked,
+        status: FeeStructureLockStatusType.Unlocked,
         classId,
         feeStructureMetaDataId,
       },

@@ -31,7 +31,6 @@ import {
   TextField,
   IconButton,
   Typography,
-  FormHelperText,
   AccordionDetails,
   AccordionSummary,
 } from '@mui/material';
@@ -42,7 +41,6 @@ import {
   useCreateClassWiseFeeStructure,
   useDeleteClassWiseFeeStructure,
   useUpdateClassWiseFeeStructure,
-  useUnlockClassWiseFeeStructure,
 } from '../hooks/useClassWiseFeeStructureHooks';
 
 import type { IClassWiseFeeItem, IClassWiseFeeStructureCard } from '../type';
@@ -56,9 +54,12 @@ const feeStructureSchema = Yup.object({
     Yup.object({
       paybleMonth: Yup.string().when('isOneTime', {
         is: true,
-        then: (schema) => schema.required('Payable month is required for one-time fee'),
+        then: (schema) => schema.required('Payable month is required'),
         otherwise: (schema) => schema.optional().nullable(),
       }),
+      amount: Yup.number()
+        .transform((value) => (value === 0 || Number.isNaN(value) ? undefined : value))
+        .required('Required'),
     })
   ),
 });
@@ -84,16 +85,17 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   onDeleted,
   onDirtyChange,
 }) => {
+  console.log('initialData----', initialData);
   const theme = useTheme();
   const [cardId, setCardId] = useState<string | undefined>(initialData._id);
-  const [lockStatus, setLockStatus] = useState(initialData.lockStatus);
+  const [status, setStatus] = useState(initialData.status);
   const [isEditing, setIsEditing] = useState(!initialData._id);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
 
   const isNew = !cardId;
-  const isLocked = lockStatus === FeeStructureLockStatusType.Locked;
+  const isLocked = status === FeeStructureLockStatusType.Locked;
 
   const formik = useFormik({
     initialValues: {
@@ -113,7 +115,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const updateStructure = useUpdateClassWiseFeeStructure();
   const deleteStructure = useDeleteClassWiseFeeStructure();
   const lockStructure = useLockClassWiseFeeStructure();
-  const unlockStructure = useUnlockClassWiseFeeStructure();
 
   const totalAmount = formik.values.feeHeads.reduce((sum, fh) => sum + (fh.amount || 0), 0);
 
@@ -168,7 +169,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const handleSave = async () => {
     formik.setTouched({
       name: true,
-      feeHeads: formik.values.feeHeads.map(() => ({ paybleMonth: true })) as any,
+      feeHeads: formik.values.feeHeads.map(() => ({ paybleMonth: true, amount: true })) as any,
     });
     const errors = await formik.validateForm();
     if (Object.keys(errors).length > 0) return;
@@ -249,15 +250,9 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     lockDlg.onFalse();
     setIsLocking(true);
     try {
-      if (isLocked) {
-        await unlockStructure({ structureId: cardId, classId: initialData.classId });
-        setLockStatus(FeeStructureLockStatusType.Unlocked);
-        shikshaMitraToast.success({ message: 'Fee structure unlocked' });
-      } else {
-        await lockStructure({ structureId: cardId, classId: initialData.classId });
-        setLockStatus(FeeStructureLockStatusType.Locked);
-        shikshaMitraToast.success({ message: 'Fee structure locked' });
-      }
+      await lockStructure({ structureId: cardId, classId: initialData.classId });
+      setStatus(FeeStructureLockStatusType.Locked);
+      shikshaMitraToast.success({ message: 'Fee structure locked' });
     } catch {
       // lock status unchanged
     } finally {
@@ -305,7 +300,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               alignItems: 'center',
               gap: 1.5,
               my: 0.75,
-              overflow: 'hidden',
+              overflow: 'visible',
             },
           }}
         >
@@ -315,6 +310,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             gap={1.5}
             flex={1}
             minWidth={0}
+            overflow="hidden"
             onClick={(e) => isEditing && !isLocked && e.stopPropagation()}
           >
             <Box
@@ -336,14 +332,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             </Box>
 
             {isEditing && !isLocked ? (
-              <Box>
+              <Box sx={{ overflow: 'visible', pt: '6px' }}>
                 <TextField
                   size="small"
                   name="name"
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  placeholder="Fee Structure Name *"
+                  label="Fee Structure Name *"
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                   sx={{ maxWidth: 240 }}
@@ -417,9 +413,15 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               <>
                 {!isNew && (
                   <Tooltip title="Discard Changes">
-                    <IconButton size="small" onClick={discardEdit} sx={{ borderRadius: 1 }}>
-                      <Iconify icon={GlobalIcons.cancel} width={16} />
-                    </IconButton>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={discardEdit}
+                      sx={{ borderRadius: 1 }}
+                      startIcon={<Iconify icon={GlobalIcons.cancel} width={14} />}
+                    >
+                      Cancel
+                    </Button>
                   </Tooltip>
                 )}
                 <LoadingButton
@@ -531,6 +533,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
                 {formik.values.feeHeads.map((item, idx) => {
                   const paybleMonthError = getFeeHeadError(idx, 'paybleMonth');
+                  const amountError = getFeeHeadError(idx, 'amount');
                   return (
                     <Grid
                       container
@@ -539,9 +542,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         border: '1px dashed',
                         borderColor: paybleMonthError ? 'error.main' : 'text.disabled',
                         borderRadius: 1,
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         px: 1.5,
                         py: 0.5,
+                        pb: paybleMonthError || amountError ? 1.5 : 0.5,
                         transition: 'border-color 0.2s, background-color 0.2s',
                         '&:hover': {
                           bgcolor: 'action.hover',
@@ -570,7 +574,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           disabled={!isEditing || isLocked}
                           onValueChange={(values) => {
                             updateFeeHead(idx, 'amount', values.floatValue ?? 0);
+                            formik.setFieldTouched(`feeHeads[${idx}].amount`, true, false);
                           }}
+                          error={Boolean(amountError)}
+                          helperText={amountError}
                           sx={{
                             '& .MuiInputBase-root': { height: 36 },
                             '& .MuiOutlinedInput-notchedOutline': { borderColor: 'transparent' },
@@ -620,7 +627,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                         </Box>
                       </Grid>
 
-                      <Grid size={2} sx={{ pr: 1 }}>
+                      <Grid size={2} sx={{ pr: 1, display: 'flex', flexDirection: 'column' }}>
                         <CustomSelect
                           label="Month"
                           options={FeeMonthOptions.map((m) => ({
@@ -633,18 +640,16 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           value={item.paybleMonth ? String(item.paybleMonth) : ''}
                           onChange={(value) => {
                             updateFeeHead(idx, 'paybleMonth', value);
+                            formik.setFieldTouched(`feeHeads[${idx}].paybleMonth`, true, false);
                           }}
                           formControlProps={{
                             error: Boolean(paybleMonthError),
                             sx: { width: '100%' },
                           }}
+                          error={Boolean(paybleMonthError)}
+                          helperText={paybleMonthError}
                           size="small"
                         />
-                        {paybleMonthError && (
-                          <FormHelperText error sx={{ mt: 0.25, mx: 0 }}>
-                            {paybleMonthError}
-                          </FormHelperText>
-                        )}
                       </Grid>
 
                       <Grid size={1.5} display="flex" justifyContent="center" sx={{ pt: 0.5 }}>
@@ -818,19 +823,12 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         open={lockDlg.value}
         icon={isLocked ? 'warning' : 'info'}
         onClose={lockDlg.onFalse}
-        title={isLocked ? 'Unlock Fee Structure' : 'Lock Fee Structure'}
+        title={isLocked ? 'Cannot Unlock Fee Structure' : 'Lock Fee Structure'}
         content={
-          isLocked ? (
-            <>
-              Are you sure you want to <strong>unlock</strong> <strong>{formik.values.name}</strong>
-              ? It will become editable again.
-            </>
-          ) : (
-            <>
-              Are you sure you want to <strong>lock</strong> <strong>{formik.values.name}</strong>?
-              It will no longer be editable until unlocked.
-            </>
-          )
+          <>
+            Are you sure you want to <strong>lock</strong> <strong>{formik.values.name}</strong>? It
+            will no longer be editable until unlocked.
+          </>
         }
         action={
           <LoadingButton
@@ -838,9 +836,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             color={isLocked ? 'warning' : 'success'}
             size="small"
             loading={isLocking}
+            disabled={status === FeeStructureLockStatusType.Locked}
             onClick={handleLockConfirm}
           >
-            {isLocked ? 'Unlock' : 'Lock'}
+            Lock
           </LoadingButton>
         }
       />
