@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Box, Card } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -147,7 +148,7 @@ const FeeStructure = () => {
             <LoadingButton
               variant="contained"
               loading={isGenerating}
-              startIcon={<Iconify icon="mdi:plus" />}
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
               onClick={async () => {
                 if (!currentYear?.id) {
                   shikshaMitraToast.error({
