@@ -24,6 +24,7 @@ export const libraryPaths = {
 };
 
 export const libraryPermissions = {
+  root: `${defaultModulePermissionName}Library`,
   dashboard: `${defaultModulePermissionName}${defaultLibraryPermissionName}Dashboard`,
   allBooks: `${defaultModulePermissionName}${defaultLibraryPermissionName}AllBooks`,
   issueReturn: `${defaultModulePermissionName}${defaultLibraryPermissionName}IssueReturn`,

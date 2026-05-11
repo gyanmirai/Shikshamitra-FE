@@ -15,6 +15,7 @@ export const classManagementPaths = {
 };
 
 export const classManagementPermissions = {
+  root: `${defaultModulePermissionName}ClassManagement`,
   dashboard: `${defaultModulePermissionName}${defaultClassPermissionName}Dashboard`,
   electiveAssignment: `${defaultModulePermissionName}${defaultClassPermissionName}ElectiveAssignment`,
   chapters: `${defaultModulePermissionName}${defaultClassPermissionName}Chapters`,

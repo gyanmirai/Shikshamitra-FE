@@ -13,6 +13,8 @@ const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { permissions } = useSelector((state: RootState) => state.auth);
 
+  console.log('permissions', permissions);
+
   const hasPermission = permissions.find(
     (perm: any) => perm.name === studentPermissions.root
   )?.isGranted;

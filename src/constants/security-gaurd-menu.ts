@@ -38,6 +38,7 @@ export const securityGuardPaths = {
 };
 
 export const securityGuardPermissions = {
+  root: `${defaultModulePermissionName}SecurityGuard`,
   dashboard: `${defaultModulePermissionName}${defaultSecurityGuardPermissionName}Dashboard`,
   visitorManagement: {
     root: `${defaultModulePermissionName}${defaultSecurityGuardPermissionName}VisitorManagement`,

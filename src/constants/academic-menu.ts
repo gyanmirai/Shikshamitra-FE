@@ -79,6 +79,7 @@ export const academicPaths = {
 };
 
 export const academicPermissions = {
+  root: `${defaultModulePermissionName}Academics`,
   dashboard: `${defaultModulePermissionName}${defaultAcademicPermissionName}Dashboard`,
   curriculum: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum`,

@@ -17,6 +17,7 @@ export const instituteSetupPaths = {
 };
 
 export const instituteSetupPermissions = {
+  root: `${defaultModulePermissionName}InstituteSetup`,
   academicSetup: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}AcademicSetup`,
   shiftManagement: `${defaultModulePermissionName}${defaultInstituteSetupPermissionName}ShiftManagement`,
   roomsManagement: {
