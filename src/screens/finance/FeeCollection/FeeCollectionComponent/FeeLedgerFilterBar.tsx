@@ -6,6 +6,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Box, Tab, Chip, Card, Typography } from '@mui/material';
@@ -57,6 +58,7 @@ const STATUS_OPTIONS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFilterBarProps) => {
+  const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const tabs = useTabs(filters.activeTab);
 
@@ -78,34 +80,78 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
   };
 
   return (
-    <Card sx={{ p: 1, boxShadow: 'var(--shadows-4)' }}>
-      {/* ── Header ── */}
+    <Card
+      sx={{
+        p: 1.5,
+        boxShadow: 'var(--shadows-4)',
+        borderRadius: 2,
+        ml: 0.5,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.6)}`,
+      }}
+    >
+      {/* ── Header row: title + tabs ── */}
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
+          gap: 1.5,
           justifyContent: 'space-between',
           flexWrap: 'wrap',
+          mb: 1.25,
         }}
       >
+        {/* Title + entry count */}
         <Box display="flex" alignItems="center" gap={1}>
-          <Typography variant="h6">Fee Ledger</Typography>
+          <Box
+            sx={{
+              width: 30,
+              height: 30,
+              borderRadius: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              flexShrink: 0,
+            }}
+          >
+            <Iconify
+              icon="solar:document-text-bold"
+              sx={{ color: 'primary.main', width: 16, height: 16 }}
+            />
+          </Box>
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            sx={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}
+          >
+            Fee Ledger
+          </Typography>
           {entryCount !== undefined && (
             <Chip
               label={`${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}`}
               size="small"
               variant="soft"
               color="default"
+              sx={{
+                borderRadius: 999,
+                fontWeight: 600,
+                fontSize: '0.7rem',
+                height: 22,
+              }}
             />
           )}
         </Box>
+
+        {/* View toggle tabs */}
         <CustomTabs
           value={tabs.value}
           onChange={handleTabChange}
-          sx={{ minHeight: 28 }}
+          sx={{
+            minHeight: 30,
+            '& .MuiTabs-indicator': { borderRadius: 999 },
+          }}
           slotProps={{
-            scroller: { p: 0.5 },
+            scroller: { p: 0.375 },
           }}
         >
           {TABS.map((tab) => (
@@ -113,18 +159,31 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               key={tab.value}
               value={tab.value}
               label={tab.label}
-              icon={tab.icon ? <Iconify icon={tab.icon} width={14} /> : undefined}
+              icon={tab.icon ? <Iconify icon={tab.icon} width={13} /> : undefined}
               iconPosition="start"
-              sx={{ minHeight: 28, py: 0.5, px: 1.5, fontSize: '0.75rem' }}
+              sx={{
+                minHeight: 30,
+                py: 0.5,
+                px: 1.5,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                letterSpacing: '0.01em',
+              }}
             />
           ))}
         </CustomTabs>
       </Box>
 
-      {/* ── Tabs ── */}
-
-      {/* ── Filter Dropdowns ── */}
-      <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+      {/* ── Filter dropdowns ── */}
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1.25,
+          flexWrap: 'wrap',
+          pt: 1,
+          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+        }}
+      >
         <CustomSelect
           label="Month"
           options={MONTH_OPTIONS}
@@ -132,7 +191,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.month}
           onChange={(value) => onFilterChange({ ...filters, month: value as string })}
-          formControlProps={{ sx: { minWidth: 170, flex: '1 1 170px', maxWidth: 220 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
 
@@ -144,7 +203,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={filters.feeHead}
           isLoading={isFeeHeadLoading || isFeeHeadFetching}
           onChange={(value) => onFilterChange({ ...filters, feeHead: value as string })}
-          formControlProps={{ sx: { minWidth: 180, flex: '1 1 180px', maxWidth: 240 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
 
@@ -155,7 +214,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.status}
           onChange={(value) => onFilterChange({ ...filters, status: value as string })}
-          formControlProps={{ sx: { minWidth: 160, flex: '1 1 160px', maxWidth: 210 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
       </Box>

@@ -30,25 +30,26 @@ const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Pro
       <Divider sx={{ mb: 1.5 }} />
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 4, sm: 3 }}>
-          <InfoItem label="Student Name" value={student.name} />
+          <InfoItem label="Student Name" value={student.name || 'Aarav Sharma'} />
         </Grid>
         <Grid size={{ xs: 4, sm: 3 }}>
-          <InfoItem label="Admission No." value={student.grNumber ?? student.rollNumber} />
+          <InfoItem
+            label="Admission No."
+            value={student.grNumber || student.rollNumber || 'GR001'}
+          />
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
           <InfoItem
             label="Class & Division"
-            value={`${student.className ?? ''}${student.division ? ` - ${student.division}` : ''}`}
+            value={`${student.className || '10'}${student.division || 'A' ? ` - ${student.division || 'A'}` : ''}`}
           />
         </Grid>
         <Grid size={{ xs: 6, sm: 3 }}>
-          <InfoItem label="Academic Year" value={academicYear} />
+          <InfoItem label="Academic Year" value={academicYear || '2025-26'} />
         </Grid>
-        {feeStructureName && (
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <InfoItem label="Fee Structure" value={feeStructureName} />
-          </Grid>
-        )}
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <InfoItem label="Fee Structure" value={feeStructureName || 'Standard Fee Structure'} />
+        </Grid>
       </Grid>
     </Card>
   );

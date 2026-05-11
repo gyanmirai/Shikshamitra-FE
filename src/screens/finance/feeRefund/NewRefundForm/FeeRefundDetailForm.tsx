@@ -6,7 +6,7 @@ import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Card, Grid, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Grid, MenuItem, TextField, Typography } from '@mui/material';
 
 import FeeHeadRefundTable from './FeeHeadRefundTable';
 import { getInitialPaymentDetails } from '../Components/RefundProcessForm';
@@ -23,7 +23,7 @@ export default function FeeRefundDetailsForm({
   const theme = useTheme();
 
   return (
-    <Box display="flex" flexDirection="column" gap={3} mt={2}>
+    <Box display="flex" flexDirection="column" gap={1} mt={0}>
       {/* ── Fee Head-wise Refund Accordion Table ── */}
       <FeeHeadRefundTable
         formik={formik}
@@ -38,21 +38,30 @@ export default function FeeRefundDetailsForm({
         }
       />
 
-      {/* ── Refund Payment Details ── */}
+      {/* ── Refund Payment Details Card ── */}
       {formik.values.studentId && (
-        <Card
+        <Box
           sx={{
-            p: 2,
-            borderRadius: 2,
-            boxShadow: 2,
+            p: 1.5,
+            borderRadius: '16px',
+            border: `1px solid ${theme.palette.divider}`,
             bgcolor: theme.palette.background.paper,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
           }}
         >
-          <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
-            Refund Payment Details
-          </Typography>
+          {/* Card header */}
+          <Box display="flex" alignItems="center" gap={1.5} mb={2.5}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                Refund Payment Details
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Choose the refund method and fill in the required payment information
+              </Typography>
+            </Box>
+          </Box>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={2.5}>
             {/* Refund Method */}
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
@@ -189,14 +198,20 @@ export default function FeeRefundDetailsForm({
                 multiline
                 minRows={2}
                 size="small"
-                label="Notes"
+                label="Notes (Optional)"
                 name="notes"
                 value={formik.values.notes}
                 onChange={formik.handleChange}
+                placeholder="Add any additional notes or context about this refund request..."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '10px',
+                  },
+                }}
               />
             </Grid>
           </Grid>
-        </Card>
+        </Box>
       )}
     </Box>
   );
