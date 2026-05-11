@@ -54,6 +54,7 @@ export const hostelPaths = {
 };
 
 export const hostelPermissions = {
+  root: `${defaultModulePermissionName}Hostel`,
   dashboard: `${defaultModulePermissionName}${defaultHostelPermissionName}Dashboard`,
   newRequest: `${defaultModulePermissionName}${defaultHostelPermissionName}NewRequest`,
   management: {

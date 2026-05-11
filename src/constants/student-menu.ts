@@ -78,7 +78,7 @@ export const studentPermissions = {
     leaveAndAbsent: `${defaultStudentPermissionName}Attendance.LeaveAndAbsent`,
     reports: `${defaultStudentPermissionName}Attendance.Reports`,
     settings: {
-      root: `${defaultModulePermissionName}${defaultStudentPermissionName}Attendance.Setting`,
+      root: `${defaultModulePermissionName}${defaultStudentPermissionName}Attendance.Settings`,
       leaveType: `${defaultStudentPermissionName}Attendance.Setting.LeaveType`,
     },
   },

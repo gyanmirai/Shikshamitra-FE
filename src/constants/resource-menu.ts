@@ -39,6 +39,7 @@ export const resourcePaths = {
 };
 
 export const resourcePermissions = {
+  root: `${defaultModulePermissionName}ResourceManagement`,
   dashboard: `${defaultModulePermissionName}${defaultResourcePermissionName}Dashboard`,
   inventory: `${defaultModulePermissionName}${defaultResourcePermissionName}InventoryManagement`,
   myResources: `${defaultModulePermissionName}${defaultResourcePermissionName}MyResources`,

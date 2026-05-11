@@ -25,6 +25,7 @@ export const transportPaths = {
 };
 
 export const transportPermissions = {
+  root: `${defaultModulePermissionName}Transport`,
   dashboard: `${defaultModulePermissionName}${defaultTransportPermissionName}Dashboard`,
   stopManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}StopManagement`,
   routeManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}RouteManagement`,

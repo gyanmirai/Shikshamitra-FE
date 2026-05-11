@@ -19,6 +19,7 @@ export const calendarPaths = {
 };
 
 export const calendarPermissions = {
+  root: `${defaultModulePermissionName}Calendar`,
   dashboard: `${defaultModulePermissionName}${defaultCalendarPermissionName}Dashboard`,
   view: `${defaultModulePermissionName}${defaultCalendarPermissionName}CalendarView`,
   events: `${defaultModulePermissionName}${defaultCalendarPermissionName}Events`,

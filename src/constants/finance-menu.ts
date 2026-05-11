@@ -64,6 +64,7 @@ export const financePaths = {
 };
 
 export const financePermissions = {
+  root: `${defaultModulePermissionName}Finance`,
   dashboard: `${defaultModulePermissionName}${defaultFinancePermissionName}Dashboard`,
   fees: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees`,
@@ -100,7 +101,7 @@ export const financePermissions = {
   charges: `${defaultModulePermissionName}${defaultFinancePermissionName}Charges`,
   feeRefund: `${defaultModulePermissionName}${defaultFinancePermissionName}FeeRefund`,
   concession: `${defaultModulePermissionName}${defaultFinancePermissionName}Concession`,
-  invoiceReceipt: `${defaultModulePermissionName}${defaultFinancePermissionName}FeeRefund`,
+  invoiceReceipt: `${defaultModulePermissionName}${defaultFinancePermissionName}InvoiceReceipt`,
   reconciliation: `${defaultModulePermissionName}${defaultFinancePermissionName}Reconciliation`,
   incomeTracking: `${defaultModulePermissionName}${defaultFinancePermissionName}IncomeTracking`,
   expenseTracking: `${defaultModulePermissionName}${defaultFinancePermissionName}ExpenseTracking`,

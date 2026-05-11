@@ -5,6 +5,8 @@ import { defaultModulePermissionName } from './student-menu';
 
 const defaultSecurityPermissionName = 'Security.';
 
+const securityModuleName = 'AbpIdentity.';
+
 export const securityPaths = {
   dashboard: '/security/dashboard',
   roleAndPermission: {
@@ -16,6 +18,7 @@ export const securityPaths = {
 };
 
 export const securityPermissions = {
+  root: `${defaultModulePermissionName}Security`,
   dashboard: `${defaultModulePermissionName}${defaultSecurityPermissionName}Dashboard`,
   roleAndPermission: {
     root: `${defaultModulePermissionName}${defaultSecurityPermissionName}RoleAndPermission`,
