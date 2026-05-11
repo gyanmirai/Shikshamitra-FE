@@ -226,6 +226,10 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
     name: editData?.guardianDetails?.officeAddress.city || '',
   },
   guardianOfficePincode: editData?.guardianDetails?.officeAddress.pincode || '',
+  siblingStudents: (editData?.siblingStudents ?? []).map((s) => ({
+    id: s.studentId,
+    label: s.fullName,
+  })),
 });
 
 export const CommunicationFieldsInitialValues = (

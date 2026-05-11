@@ -10,13 +10,14 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -26,10 +27,21 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { TimePicker, DatePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Card, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
+import {
+  Box,
+  Card,
+  Grid,
+  Stack,
+  Button,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   EntranceExamSlotApi,
   useGetEntranceExamSlotQuery,
@@ -93,9 +105,9 @@ const EntranceExamSlots = () => {
   // Transform slots data to include formatted time strings
   const tableData = slots?.items?.map((item: ISlot) => ({
     ...item,
-    startTime: dayjs(item.startTime, 'HH:mm:ss').format('hh:mm A'),
+    startTime: dayjs(item.startDateTime, 'HH:mm:ss').format('hh:mm A'),
     creationDate: dayjs(item.creationTime).format('MM-DD-YYYY'),
-    endTime: dayjs(item.endTime, 'HH:mm:ss').format('hh:mm A'),
+    endTime: dayjs(item.endDateTime, 'HH:mm:ss').format('hh:mm A'),
   }));
 
   // Handles closing the incident form
@@ -237,7 +249,7 @@ const EntranceExamSlots = () => {
         }
       />
       <Card sx={{ p: 1, mb: 1 }}>
-        <Box sx={{ maxWidth: '250px', mb: 1 }}>
+        <Box sx={{ maxWidth: '250px' }}>
           <DatePicker
             label="Select Date"
             format="DD-MM-YYYY"
@@ -321,6 +333,20 @@ const EntranceExamSlots = () => {
 
 export default EntranceExamSlots;
 
+// ---------------------------------------------------------------------------
+// Room option shape derived from the API response
+// ---------------------------------------------------------------------------
+interface IRoomOption {
+  id: string;
+  roomName: string;
+  buildingId: string;
+  buildingName: string;
+  floorName: string;
+  capacity: number;
+  /** Label shown in the dropdown */
+  label: string;
+}
+
 export const SlotsForm = ({
   handleClose,
   editData,
@@ -331,6 +357,86 @@ export const SlotsForm = ({
   date: Dayjs | null;
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  // ------ Room API integration ------
+  const { data: roomsData, isLoading: isRoomsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomsQuery,
+  });
+
+  const { data: buildings, isLoading: isBuildingsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBuildingsQuery,
+  });
+
+  // Flatten API response into typed option objects
+  const roomOptions: IRoomOption[] = useMemo(
+    () =>
+      (roomsData?.items ?? []).map((room: any) => ({
+        id: room.id,
+        roomName: room.roomName ?? '',
+        buildingName: room.buildingName ?? '',
+        buildingId: room.buildingId ?? '',
+        floorName: room.floorName ?? '',
+        capacity: room.capacity ?? 0,
+        label: `${room.buildingName ?? ''} › ${room.floorName ?? ''} › ${room.roomName ?? ''}`,
+      })),
+    [roomsData]
+  );
+
+  // Cascading selection state
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
+  const [selectedFloorId, setSelectedFloorId] = useState<string>('');
+  const [selectedRoom, setSelectedRoom] = useState<IRoomOption | null>(null);
+
+  // Floors derived from the selected building
+  const floorOptions: any[] = useMemo(
+    () => (buildings ?? []).find((b: any) => b.id === selectedBuildingId)?.floors ?? [],
+    [buildings, selectedBuildingId]
+  );
+
+  // Rooms filtered by selected building + floor
+  const filteredRoomOptions: IRoomOption[] = useMemo(() => {
+    if (!selectedBuildingId) return [];
+    const selectedFloor = floorOptions.find((f: any) => f.id === selectedFloorId);
+    return roomOptions.filter((room) => {
+      const matchBuilding = room.buildingId === selectedBuildingId;
+      if (!selectedFloorId || !selectedFloor) return matchBuilding;
+      return matchBuilding && room.floorName === selectedFloor.floorName;
+    });
+  }, [roomOptions, selectedBuildingId, selectedFloorId, floorOptions]);
+
+  // Hydrate cascading state in edit mode once data is available
+  useEffect(() => {
+    if (editData?.roomNo && roomOptions.length > 0 && !selectedRoom) {
+      const match = roomOptions.find(
+        (r) => r.roomName === editData.roomNo || r.id === editData.roomNo
+      );
+      if (match) {
+        setSelectedRoom(match);
+        setSelectedBuildingId(match.buildingId);
+        formik.setFieldValue('buildingId', match.buildingId);
+        // Resolve the floor id from the building's floors list
+        const buildingFloors =
+          (buildings ?? []).find((b: any) => b.id === match.buildingId)?.floors ?? [];
+        const floor = buildingFloors.find((f: any) => f.floorName === match.floorName);
+        if (floor) {
+          setSelectedFloorId(floor.id);
+          formik.setFieldValue('floorId', floor.id);
+        }
+        formik.setFieldValue('roomNo', match.roomName);
+      }
+    }
+    // Reset when dialog closes
+    if (!editData) {
+      setSelectedRoom(null);
+      setSelectedBuildingId('');
+      setSelectedFloorId('');
+      formik.setFieldValue('buildingId', '');
+      formik.setFieldValue('floorId', '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editData, roomOptions, buildings]);
 
   // Hook for adding a new entrance exam slot
   const [addSlot, { isLoading }] = useQueryAndMutation({
@@ -346,38 +452,40 @@ export const SlotsForm = ({
   const formik = useFormik({
     initialValues: {
       slotName: editData?.slotName || '',
-      startTime: editData?.startTime ? dayjs(editData?.startTime, 'hh:mm A') : null,
-      endTime: editData?.endTime ? dayjs(editData?.endTime, 'hh:mm A') : null,
+      startDateTime: editData?.startDateTime ? dayjs(editData?.startDateTime, 'hh:mm A') : null,
+      endDateTime: editData?.endDateTime ? dayjs(editData?.endDateTime, 'hh:mm A') : null,
       duration: editData?.duration || '',
       studentLimit: editData?.studentLimit || '',
+      buildingId: editData?.buildingId || '',
+      floorId: editData?.floorId || '',
       roomNo: editData?.roomNo || '',
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
       slotName: Yup.string().trim('Slot Name is required').required('Slot Name is required'),
-      startTime: Yup.date()
+      startDateTime: Yup.date()
         .required('Start Time is required')
-        .test('startTime', 'Start time must be before end time', (value, context) => {
-          const { endTime } = context.parent;
-          if (value && endTime && dayjs(value).isAfter(dayjs(endTime))) {
+        .test('startDateTime', 'Start time must be before end time', (value, context) => {
+          const { endDateTime } = context.parent;
+          if (value && endDateTime && dayjs(value).isAfter(dayjs(endDateTime))) {
             return false;
           }
           return true;
         }),
 
-      endTime: Yup.date()
+      endDateTime: Yup.date()
         .required('End Time is required')
-        .test('endTime', 'End time must be after start time', (value, context) => {
-          const { startTime } = context.parent;
-          if (value && startTime && dayjs(value).isBefore(dayjs(startTime))) {
+        .test('endDateTime', 'End time must be after start time', (value, context) => {
+          const { startDateTime } = context.parent;
+          if (value && startDateTime && dayjs(value).isBefore(dayjs(startDateTime))) {
             return false;
           }
           return true;
         })
         .test('durationLimit', 'Duration should not exceed 3 hours', (value, context) => {
-          const { startTime } = context.parent;
-          if (value && startTime) {
-            const diffInMinutes = dayjs(value).diff(dayjs(startTime), 'minute');
+          const { startDateTime } = context.parent;
+          if (value && startDateTime) {
+            const diffInMinutes = dayjs(value).diff(dayjs(startDateTime), 'minute');
             return diffInMinutes <= 180;
           }
           return true; // don't block validation if fields are empty
@@ -385,12 +493,14 @@ export const SlotsForm = ({
       studentLimit: Yup.number()
         .min(1, 'Student Limit must be greater than 0')
         .required('Student Limit is required'),
+      buildingId: Yup.string().required('Building is required'),
+      floorId: Yup.string().required('Floor is required'),
       roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
       const newDate = date?.format('DD/MM/YYYY');
-      const newStartTime = values.startTime ? values.startTime.format('HH:mm:ss') : null;
-      const newEndTime = values.endTime ? values.endTime.format('HH:mm:ss') : null;
+      const newStartTime = values.startDateTime ? values.startDateTime.format('HH:mm:ss') : null;
+      const newEndTime = values.endDateTime ? values.endDateTime.format('HH:mm:ss') : null;
 
       try {
         if (editData) {
@@ -400,13 +510,13 @@ export const SlotsForm = ({
               academicYearId: currentYear?.id,
               slotName: values.slotName,
               startTimeDate:
-                values.startTime && date
+                values.startDateTime && date
                   ? dateConvertor(
                       dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                     )
                   : null,
               endTimeDate:
-                values.endTime && date
+                values.endDateTime && date
                   ? dateConvertor(
                       dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                     )
@@ -423,18 +533,20 @@ export const SlotsForm = ({
             academicYearId: currentYear?.id,
             slotName: values.slotName,
             startTimeDate:
-              values.startTime && date
+              values.startDateTime && date
                 ? dateConvertor(
                     dayjs(`${newDate} ${newStartTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                   )
                 : null,
             endTimeDate:
-              values.endTime && date
+              values.endDateTime && date
                 ? dateConvertor(
                     dayjs(`${newDate} ${newEndTime}`, 'DD/MM/YYYY HH:mm:ss').format(dateFormat)
                   )
                 : null,
             studentLimit: values.studentLimit,
+            buildingId: values.buildingId,
+            floorId: values.floorId,
             roomNo: values.roomNo,
           }).unwrap();
           shikshaMitraToast.success({
@@ -479,126 +591,224 @@ export const SlotsForm = ({
                 }}
               />
             </ShakingTextField>
+            {/* Row 1: Start Time | End Time */}
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.startDateTime && formik.errors.startDateTime) || false}
+                >
+                  <TimePicker
+                    label="Start Time *"
+                    value={formik.values.startDateTime}
+                    format="hh:mm a"
+                    viewRenderers={{
+                      hours: renderTimeViewClock,
+                      minutes: renderTimeViewClock,
+                      seconds: renderTimeViewClock,
+                    }}
+                    onChange={(startDateTime) => {
+                      formik.setFieldValue('startDateTime', startDateTime);
 
-            <ShakingTextField
-              error={!!(formik.touched.startTime && formik.errors.startTime) || false}
-            >
-              <TimePicker
-                label="Start Time *"
-                value={formik.values.startTime}
-                format="hh:mm a"
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock,
-                  seconds: renderTimeViewClock,
-                }}
-                onChange={(startTime) => {
-                  formik.setFieldValue('startTime', startTime);
+                      const { endDateTime } = formik.values;
+                      if (endDateTime && startDateTime) {
+                        const diffInMinutes = dayjs(endDateTime).diff(
+                          dayjs(startDateTime),
+                          'minute'
+                        );
+                        formik.setFieldValue('duration', diffInMinutes);
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        name: 'startDateTime',
+                        helperText:
+                          formik.touched.startDateTime && formik.errors.startDateTime
+                            ? String(formik.errors.startDateTime)
+                            : undefined,
+                        error: !!formik.errors.startDateTime && formik.touched.startDateTime,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.endDateTime && formik.errors.endDateTime) || false}
+                >
+                  <TimePicker
+                    label="End Time *"
+                    format="hh:mm a"
+                    value={formik.values.endDateTime}
+                    viewRenderers={{
+                      hours: renderTimeViewClock,
+                      minutes: renderTimeViewClock,
+                      seconds: renderTimeViewClock,
+                    }}
+                    onChange={(endDateTime) => {
+                      formik.setFieldValue('endDateTime', endDateTime);
 
-                  const { endTime } = formik.values;
-                  if (endTime && startTime) {
-                    const diffInMinutes = dayjs(endTime).diff(dayjs(startTime), 'minute');
-                    formik.setFieldValue('duration', diffInMinutes);
-                  }
-                }}
-                // onChange={(date) => formik.setFieldValue('startTime', date)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    name: 'startTime',
-                    helperText:
-                      formik.touched.startTime && formik.errors.startTime
-                        ? String(formik.errors.startTime)
-                        : undefined,
-                    error: !!formik.errors.startTime && formik.touched.startTime,
-                  },
-                }}
-              />
-            </ShakingTextField>
+                      const { startDateTime } = formik.values;
+                      if (startDateTime && endDateTime) {
+                        const diffInMinutes = dayjs(endDateTime).diff(
+                          dayjs(startDateTime),
+                          'minute'
+                        );
+                        formik.setFieldValue('duration', diffInMinutes);
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        name: 'endDateTime',
+                        helperText:
+                          formik.touched.endDateTime && formik.errors.endDateTime
+                            ? String(formik.errors.endDateTime)
+                            : undefined,
+                        error: !!formik.errors.endDateTime && formik.touched.endDateTime,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </Grid>
+            {/* Row 2: Duration | Student Limit */}
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  label="Duration (Minutes)"
+                  value={formik.values.duration || ''}
+                  size="small"
+                  fullWidth
+                  disabled
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.studentLimit && formik.errors.studentLimit) || false}
+                >
+                  <TextField
+                    name="studentLimit"
+                    label="Student Limit *"
+                    type="number"
+                    value={formik.values.studentLimit}
+                    disabled
+                    onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
+                    onBlur={formik.handleBlur}
+                    size="small"
+                    fullWidth
+                    helperText={
+                      formik.touched.studentLimit && formik.errors.studentLimit
+                        ? String(formik.errors.studentLimit)
+                        : ''
+                    }
+                    error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </Grid>
+            {/* ---- Cascading Room selection: Building | Floor | Room ---- */}
+            <Grid container spacing={2}>
+              {/* Building */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.buildingId && formik.errors.buildingId) || false}
+                >
+                  <CustomSelect
+                    label="Building *"
+                    size="small"
+                    isLoading={isBuildingsLoading || isRoomsLoading}
+                    options={buildings ?? []}
+                    labelKey="buildingName"
+                    valueKey="id"
+                    value={selectedBuildingId}
+                    onChange={(value) => {
+                      setSelectedBuildingId(value as string);
+                      setSelectedFloorId('');
+                      setSelectedRoom(null);
+                      formik.setFieldValue('buildingId', value);
+                      formik.setFieldValue('floorId', '');
+                      formik.setFieldValue('roomNo', '');
+                    }}
+                    onBlur={formik.handleBlur}
+                    name="buildingId"
+                    error={formik.touched.buildingId && Boolean(formik.errors.buildingId)}
+                    helperText={
+                      formik.touched.buildingId && formik.errors.buildingId
+                        ? String(formik.errors.buildingId)
+                        : ''
+                    }
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-            <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime) || false}>
-              <TimePicker
-                label="End Time *"
-                format="hh:mm a"
-                value={formik.values.endTime}
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock,
-                  seconds: renderTimeViewClock,
-                }}
-                onChange={(endTime) => {
-                  formik.setFieldValue('endTime', endTime);
+              {/* Floor */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.floorId && formik.errors.floorId) || false}
+                >
+                  <CustomSelect
+                    label="Floor *"
+                    size="small"
+                    options={floorOptions}
+                    labelKey="floorName"
+                    valueKey="id"
+                    value={selectedFloorId}
+                    onChange={(value) => {
+                      setSelectedFloorId(value as string);
+                      setSelectedRoom(null);
+                      formik.setFieldValue('floorId', value);
+                      formik.setFieldValue('roomNo', '');
+                    }}
+                    onBlur={formik.handleBlur}
+                    name="floorId"
+                    disabled={!selectedBuildingId}
+                    error={formik.touched.floorId && Boolean(formik.errors.floorId)}
+                    helperText={
+                      formik.touched.floorId && formik.errors.floorId
+                        ? String(formik.errors.floorId)
+                        : ''
+                    }
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-                  const { startTime } = formik.values;
-                  if (startTime && endTime) {
-                    const diffInMinutes = dayjs(endTime).diff(dayjs(startTime), 'minute');
-                    formik.setFieldValue('duration', diffInMinutes);
-                  }
-                }}
-                // onChange={(date) => formik.setFieldValue('endTime', date)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    name: 'endTime',
-                    helperText:
-                      formik.touched.endTime && formik.errors.endTime
-                        ? String(formik.errors.endTime)
-                        : undefined,
-                    error: !!formik.errors.endTime && formik.touched.endTime,
-                  },
-                }}
-              />
-            </ShakingTextField>
-
-            <TextField
-              label="Duration (Minutes)"
-              value={formik.values.duration || ''}
-              size="small"
-              fullWidth
-              disabled
-            />
-            <ShakingTextField
-              error={!!(formik.touched.studentLimit && formik.errors.studentLimit) || false}
-            >
-              <TextField
-                name="studentLimit"
-                label="Student Limit *"
-                type="number"
-                value={formik.values.studentLimit}
-                onChange={(e) => formik.setFieldValue('studentLimit', e.target.value)}
-                onBlur={formik.handleBlur}
-                size="small"
-                fullWidth
-                helperText={
-                  formik.touched.studentLimit && formik.errors.studentLimit
-                    ? String(formik.errors.studentLimit)
-                    : ''
-                }
-                error={formik.touched.studentLimit && Boolean(formik.errors.studentLimit)}
-              />
-            </ShakingTextField>
-
-            <ShakingTextField error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}>
-              <TextField
-                name="roomNo"
-                label="Room No. *"
-                type="number"
-                onBlur={formik.handleBlur}
-                value={formik.values.roomNo}
-                onChange={(e) => formik.setFieldValue('roomNo', e.target.value)}
-                size="small"
-                fullWidth
-                helperText={
-                  formik.touched.roomNo && formik.errors.roomNo ? String(formik.errors.roomNo) : ''
-                }
-                error={formik.touched.roomNo && !!formik.errors.roomNo}
-                inputProps={{
-                  maxLength: 20,
-                }}
-              />
-            </ShakingTextField>
+              {/* Room */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}
+                >
+                  <CustomSelect
+                    label="Room No. *"
+                    size="small"
+                    options={filteredRoomOptions}
+                    labelKey="roomName"
+                    valueKey="id"
+                    value={selectedRoom?.id ?? ''}
+                    onChange={(value) => {
+                      const room = filteredRoomOptions.find((r) => r.id === value) ?? null;
+                      setSelectedRoom(room);
+                      formik.setFieldValue('roomNo', room?.roomName ?? '');
+                      formik.setFieldValue('studentLimit', room?.capacity ?? '');
+                    }}
+                    onBlur={formik.handleBlur}
+                    name="roomNo"
+                    disabled={!selectedFloorId}
+                    error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
+                    helperText={
+                      formik.touched.roomNo && formik.errors.roomNo
+                        ? String(formik.errors.roomNo)
+                        : ''
+                    }
+                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </Grid>
           </Stack>
         </DialogScrollContent>
         <DialogActions>

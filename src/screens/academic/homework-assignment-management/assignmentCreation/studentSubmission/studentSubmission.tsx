@@ -14,8 +14,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   ScheduleExamStatus,
@@ -147,52 +147,52 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         tableId="student-submissions"
         noDataText="No Submission Data Found"
         columns={[
-          {
-            id: 'checkBox',
-            align: 'center',
-            minWidth: '60px',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={
-                    studentData?.length > 0 && selectedStudents?.length === studentData?.length
-                  }
-                  indeterminate={
-                    selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
-                  }
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(studentData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
+          // {
+          //   id: 'checkBox',
+          //   align: 'center',
+          //   minWidth: '60px',
+          //   isSort: false,
+          //   sticky: true,
+          //   isFilter: false,
+          //   label: '',
+          //   renderColumn() {
+          //     return (
+          //       <Checkbox
+          //         checked={
+          //           studentData?.length > 0 && selectedStudents?.length === studentData?.length
+          //         }
+          //         indeterminate={
+          //           selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
+          //         }
+          //         onChange={(e) => {
+          //           if (e.target.checked) {
+          //             setSelectedStudents(studentData || []);
+          //           } else {
+          //             setSelectedStudents([]);
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          //   render(value, row) {
+          //     const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
 
-              return (
-                <Checkbox
-                  checked={isChecked}
-                  onChange={(e) => {
-                    e.stopPropagation();
+          //     return (
+          //       <Checkbox
+          //         checked={isChecked}
+          //         onChange={(e) => {
+          //           e.stopPropagation();
 
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
+          //           if (e.target.checked) {
+          //             setSelectedStudents([...selectedStudents, row]);
+          //           } else {
+          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+          //           }
+          //         }}
+          //       />
+          //     );
+          //   },
+          // },
           {
             id: 'studentName',
             label: 'Student Name/GR No.',
@@ -205,7 +205,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                   {value}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  ({row.grNo})
+                  ({row?.grNumber})
                 </Typography>
               </Box>
             ),
@@ -218,7 +218,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             filterType: 'number',
           },
           {
-            id: 'assignmentType',
+            id: 'submissionType',
             label: 'Type',
             align: 'left',
             minWidth: 100,

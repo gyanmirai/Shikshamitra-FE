@@ -11,12 +11,14 @@ export interface IStudentDocument {
 export interface ISlot {
   id?: string;
   slotName?: string | null;
-  startTime?: string | Date | null;
-  endTime?: string | Date | null;
+  startDateTime?: string | Date | null;
+  endDateTime?: string | Date | null;
   studentLimit?: number | null;
   duration?: number | null; // Duration in minutes
   roomNo?: string | null;
   creationTime?: string | Date | null;
+  buildingId?: string | null;
+  floorId?: string | null;
 }
 
 export interface IExamType {
