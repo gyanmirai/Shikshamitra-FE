@@ -229,7 +229,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             filterType: 'number',
           },
           {
-            id: 'assignmentType',
+            id: 'submissionType',
             label: 'Type',
             align: 'left',
             minWidth: 100,

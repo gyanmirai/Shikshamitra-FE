@@ -48,7 +48,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.SUBJECT,
-      item: { id: subject.id, type: ItemTypes.SUBJECT, subject },
+      item: { id: subject.subjectId, type: ItemTypes.SUBJECT, subject },
       canDrag: !isFull,
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
@@ -289,7 +289,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({
               {
                 subjects.filter(
                   (s) =>
-                    (placedCounts[s.id] ?? 0) >= (s.totalLectures ?? 0) &&
+                    (placedCounts[s.subjectId] ?? 0) >= (s.totalLectures ?? 0) &&
                     (s.totalLectures ?? 0) > 0
                 ).length
               }
@@ -321,7 +321,10 @@ const SubjectPalette: React.FC<PaletteProps> = ({
 
             {/* Stats Row */}
             {(() => {
-              const totalPlaced = subjects.reduce((sum, s) => sum + (placedCounts[s.id] ?? 0), 0);
+              const totalPlaced = subjects.reduce(
+                (sum, s) => sum + (placedCounts[s.subjectId] ?? 0),
+                0
+              );
               const totalRequired = subjects.reduce((sum, s) => sum + (s.totalLectures ?? 0), 0);
               const pct = totalRequired > 0 ? Math.round((totalPlaced / totalRequired) * 100) : 0;
               return (
@@ -363,9 +366,9 @@ const SubjectPalette: React.FC<PaletteProps> = ({
                 .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
                 .map((sub) => (
                   <SubjectCard
-                    key={sub.id}
+                    key={sub.subjectId}
                     subject={sub}
-                    placedCount={placedCounts[sub.id] || 0}
+                    placedCount={placedCounts[sub.subjectId] || 0}
                     totalSubjects={sub.totalSubjects || 0}
                   />
                 ))}

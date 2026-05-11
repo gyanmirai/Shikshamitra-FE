@@ -463,6 +463,7 @@ const RegisterForm = ({
                 pincode: values.motherLocalPincode,
               },
             },
+            siblingStudentIds: (values.siblingStudents ?? []).map((s: any) => s.id),
             guardianDetails: {
               fullName: values.guardianName,
               dateOfBirth: values.guardianDob

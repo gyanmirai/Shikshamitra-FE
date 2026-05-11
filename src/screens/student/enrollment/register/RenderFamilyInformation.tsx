@@ -504,7 +504,7 @@ function GuardianAddressComponent(props: any) {
 
 function RenderFamilyInformation(props: any) {
   const { formik, isMainForm = false } = props;
-  const [student, setStudent] = useState([]);
+  const [student, setStudent] = useState<any[]>(formik.values.siblingStudents ?? []);
 
   const [studentSearchData] = useQueryAndMutation({
     type: 'mutation',
@@ -1600,7 +1600,10 @@ function RenderFamilyInformation(props: any) {
                 {option.label}
               </li>
             )}
-            onChange={(_, value: any) => setStudent(value)}
+            onChange={(_, value: any) => {
+              setStudent(value);
+              formik.setFieldValue('siblingStudents', value);
+            }}
             minChars={1}
             debounceMs={400}
             size="small"

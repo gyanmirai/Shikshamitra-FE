@@ -50,9 +50,7 @@ const QUICK_TEMPLATES = [
 ];
 
 /**
- * Props for the AssignGrade component
- * @param data Optional data containing initial grade and feedback values
- * @param onSubmit Callback function to handle form submission with grade and feedback values
+ * AssignMarksForText – Feedback modal for text-based homework submissions.
  */
 const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   isEdit,
@@ -192,7 +190,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                 </Card>
               </Grid>
 
-              {/* Student Answer Section */}
+              {/* ── Student Submission (Text) ── */}
               <Grid size={{ xs: 12 }}>
                 <Card
                   sx={{
@@ -240,11 +238,30 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
 
 I have completed all answers as per the instructions.`}
                     />
+                    <Typography variant="subtitle2">Student Submission</Typography>
+                  </Box>
+                  <Box sx={{ p: 1.5 }}>
+                    <Typography
+                      component="pre"
+                      variant="body2"
+                      sx={{
+                        whiteSpace: 'pre-wrap',
+                        m: 0,
+                        fontFamily: 'inherit',
+                        color: 'text.primary',
+                        p: 2,
+                        bgcolor: 'background.neutral',
+                        borderRadius: 1,
+                        minHeight: 80,
+                      }}
+                    >
+                      {`1. The sun rises in the east.\n2. Water boils at 100°C.\n3. Plants need water to grow.\n\nI have completed all answers as per the instructions.`}
+                    </Typography>
                   </Box>
                 </Card>
               </Grid>
 
-              {/* Homework Description Section */}
+              {/* ── Homework Description ── */}
               <Grid size={{ xs: 12 }}>
                 <Card
                   sx={{
@@ -296,24 +313,13 @@ I have completed all answers as per the instructions.`}
                         border: (theme) => `1px solid ${theme.palette.divider}`,
                       }}
                     >
-                      {`Homework Assignment: Science Fundamentals
-
-Due Date: Friday, March 15th, 2024
-Instructions: Write detailed explanations for the following scientific facts.
-
-Questions:
-1. Explain why the sun appears to rise in the east every day
-2. Describe the process of water boiling and why it occurs at 100°C at sea level
-3. Explain the importance of water in plant growth and development
-
-Additional Notes:
-I have completed all answers according to the given instructions and provided scientific explanations for each point.`}
+                      {`Homework Assignment: Science Fundamentals\n\nDue Date: Friday, March 15th, 2024\nInstructions: Write detailed explanations for the following scientific facts.\n\nQuestions:\n1. Explain why the sun appears to rise in the east every day\n2. Describe the process of water boiling and why it occurs at 100°C at sea level\n3. Explain the importance of water in plant growth and development\n\nAdditional Notes:\nI have completed all answers according to the given instructions and provided scientific explanations for each point.`}
                     </Typography>
                   </Box>
                 </Card>
               </Grid>
 
-              {/* Feedback Section */}
+              {/* ── Feedback Section ── */}
               <Grid size={{ xs: 12 }}>
                 <Card
                   sx={{
@@ -446,9 +452,7 @@ I have completed all answers according to the given instructions and provided sc
             <Button
               variant="outlined"
               color="inherit"
-              onClick={() => {
-                onClose(null, false);
-              }}
+              onClick={() => onClose(null, false)}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >

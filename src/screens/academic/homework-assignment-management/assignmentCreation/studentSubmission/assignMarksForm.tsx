@@ -259,7 +259,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 </Card>
               </Grid>
 
-              {/* Student Submission Section */}
+              {/* ── Student Submission (File) ── */}
               <Grid size={{ xs: 12 }}>
                 <Card
                   sx={{
@@ -632,13 +632,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
 
           <Divider />
 
-          <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5 }}>
+          <DialogActions sx={{ bgcolor: 'background.paper', p: 2 }}>
             <Button
               variant="outlined"
               color="inherit"
-              onClick={() => {
-                onClose(null, false);
-              }}
+              onClick={() => onClose(null, false)}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >

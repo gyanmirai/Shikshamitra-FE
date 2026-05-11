@@ -4,7 +4,6 @@ export const getInitialValues = (classes: string, editData?: any) => {
   if (editData) {
     return {
       className: editData.standardId || classes || '',
-      schoolHours: editData.schoolHours || '07:00 AM - 12:30 PM',
       previousClassSlots: editData.previousStandardId || '',
       slotConfigurations: editData.slotConfigurations
         ? editData.slotConfigurations.map((config: any, configIndex: number) => ({
@@ -54,7 +53,6 @@ export const getInitialValues = (classes: string, editData?: any) => {
 
   return {
     className: classes || '',
-    schoolHours: '07:00 AM - 12:30 PM',
     previousClassSlots: '',
     slotConfigurations: [],
   };
