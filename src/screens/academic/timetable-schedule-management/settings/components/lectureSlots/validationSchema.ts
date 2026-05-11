@@ -299,17 +299,16 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                 return true;
               }
             )
-            // Minimum Periods Validation
+            // Minimum Slots Validation
             .test(
-              'minimum-periods',
-              'At least 3 periods are required',
+              'minimum-slots',
+              'At least 3 slots are required',
               // eslint-disable-next-line func-names
               function (slots) {
                 if (!slots) return false;
-                const periodCount = slots.filter((slot) => (+slot.slotType as any) === 0).length;
-                if (periodCount < 3) {
+                if (slots.length < 3) {
                   return this.createError({
-                    message: 'At least 3 periods are required in the schedule',
+                    message: 'At least 3 slots are required in the schedule',
                   });
                 }
                 return true;

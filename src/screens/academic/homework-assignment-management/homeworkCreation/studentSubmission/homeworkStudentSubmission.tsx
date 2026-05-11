@@ -17,12 +17,12 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import {
-  ScheduleExamStatus,
-  ScheduleExamStatusColor,
-  ScheduleExamStatusOptions,
-} from 'src/enums/schedule-exam-status';
 import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import {
+  HomeworkSubmissionStatus,
+  HomeworkSubmissionStatusColor,
+  HomeworkSubmissionStatusOptions,
+} from 'src/enums/homework-submission-status';
 
 import AssignGrade from '../component/assignGradeForm';
 import AssignMarksForText from '../component/assignMarksForText';
@@ -42,8 +42,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const {
     data: homeworkSubmissions,
     isLoading: isSubmissionsLoading,
-    refetch: refetchHomeworkSubmissions,
-    isFetching: isfetching,
+    isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkSubmissionsQuery,
@@ -71,7 +70,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
 
-  const studentData = homeworkSubmissions?.data || [];
+  const normalizedData = React.useMemo(
+    () => homeworkSubmissions?.data || [],
+    [homeworkSubmissions?.data]
+  );
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -103,8 +105,20 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        {/* Show 'Assign Grade' option only when marks are not assigned */}
-        {row.status === ScheduleExamStatus['Needs Review'] && (
+        {/* Reminder for pending students */}
+        {row.status === HomeworkSubmissionStatus.Pending && (
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="mdi:bell-outline" sx={{ height: '16px', width: '16px' }} />
+            Send Reminder
+          </MenuItem>
+        )}
+
+        {/* Give feedback after submission */}
+        {[
+          HomeworkSubmissionStatus.Submitted,
+          HomeworkSubmissionStatus.NeedsReview,
+          HomeworkSubmissionStatus.Late,
+        ].includes(row.status) && (
           <MenuItem
             onClick={() => {
               setSelectedStudent(row as TStudentGrade);
@@ -112,11 +126,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               pop.onClose();
             }}
           >
-            <Iconify icon="mdi:arrow-right-circle" />
+            <Iconify icon="mdi:comment-check-outline" />
             Give Feedback
           </MenuItem>
         )}
-        {row.status === ScheduleExamStatus.Reviewed && (
+
+        {/* Edit/View Feedback or Marks */}
+        {row.status === HomeworkSubmissionStatus.Reviewed && (
           <MenuItem
             onClick={() => {
               setSelectedStudent(row);
@@ -125,15 +141,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             }}
           >
             <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-            Edit Feedback
-          </MenuItem>
-        )}
-
-        {/* Show 'Send Reminder' option only when homework is published */}
-        {row.status === ScheduleExamStatus.Published && (
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-            Send Reminder
+            Edit/View Feedback
           </MenuItem>
         )}
       </MenuList>
@@ -242,26 +250,59 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           {
             id: 'feedback',
             label: 'Feedback',
-            render: (value, row) => (
-              <Box
-                onClick={() => {
-                  setSelectedStudent(row as TStudentGrade);
-                  viewSubmissionDialog.onTrue();
-                }}
-                sx={{
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                    borderRadius: 1,
-                  },
-                  p: 0.5,
-                }}
-              >
-                <CustomTooltip
-                  title={value || 'Click to add feedback'}
-                  arrow
-                  sx={{ textAlign: 'justify' }}
+            render: (value, row) => {
+              const text = value && value !== '-' ? value : null;
+              return (
+                <Box
+                  onClick={() => {
+                    setSelectedStudent(row as TStudentGrade);
+                    viewSubmissionDialog.onTrue();
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                      borderRadius: 1,
+                    },
+                    p: 0.5,
+                  }}
                 >
+                  <CustomTooltip
+                    title={text || 'Click to add feedback'}
+                    arrow
+                    sx={{ textAlign: 'justify' }}
+                  >
+                    <Typography
+                      variant="caption"
+                      fontSize="13px"
+                      noWrap
+                      sx={{
+                        maxWidth: 0,
+                        minWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        display: 'block',
+                        color: text ? 'text.primary' : 'text.secondary',
+                        fontStyle: text ? 'normal' : 'italic',
+                      }}
+                    >
+                      {text || 'Add feedback'}
+                    </Typography>
+                  </CustomTooltip>
+                </Box>
+              );
+            },
+          },
+          {
+            id: 'remarks',
+            label: 'Remarks',
+            align: 'left',
+            minWidth: 150,
+            render: (value, row) => {
+              const text = value && value !== '-' ? value : null;
+              return (
+                <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
                   <Typography
                     variant="caption"
                     fontSize="13px"
@@ -272,41 +313,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       display: 'block',
-                      color: value ? 'text.primary' : 'text.secondary',
-                      fontStyle: value ? 'normal' : 'italic',
+                      color: text ? 'text.primary' : 'text.secondary',
+                      fontStyle: text ? 'normal' : 'italic',
                     }}
                   >
-                    {value || 'Add feedback'}
+                    {text || 'No remarks'}
                   </Typography>
                 </CustomTooltip>
-              </Box>
-            ),
-          },
-          {
-            id: 'remarks',
-            label: 'Remarks',
-            align: 'left',
-            minWidth: 150,
-            render: (value, row) => (
-              <CustomTooltip title={value || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
-                <Typography
-                  variant="caption"
-                  fontSize="13px"
-                  noWrap
-                  sx={{
-                    maxWidth: 150,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    display: 'block',
-                    color: value ? 'text.primary' : 'text.secondary',
-                    fontStyle: value ? 'normal' : 'italic',
-                  }}
-                >
-                  {value || 'No remarks'}
-                </Typography>
-              </CustomTooltip>
-            ),
+              );
+            },
           },
           {
             id: 'status',
@@ -314,11 +329,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             minWidth: 80,
             sticky: true,
             filterType: 'enum',
-            enumOptions: ScheduleExamStatusOptions,
+            enumOptions: HomeworkSubmissionStatusOptions,
             align: 'left',
             render(value, row) {
-              const color = ScheduleExamStatusColor[value as ScheduleExamStatus] as LabelColor;
-              return <Label color={color}>{ScheduleExamStatus[value]}</Label>;
+              if (value === undefined || value === null)
+                return <Typography variant="body2">-</Typography>;
+              const color = (HomeworkSubmissionStatusColor[value as HomeworkSubmissionStatus] ||
+                'default') as LabelColor;
+              const label = HomeworkSubmissionStatus[value] || `Unknown (${value})`;
+              return <Label color={color}>{label}</Label>;
             },
           },
           {
@@ -339,8 +358,8 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           },
         ]}
-        isLoading={isSubmissionsLoading || isfetching}
-        data={studentData}
+        isLoading={isSubmissionsLoading || isFetching}
+        data={normalizedData}
       />
 
       {sendInstantNotificationDialogValue.value && (
@@ -385,9 +404,15 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               }, 300);
             }}
             isEdit
+            homeworkId={selectedHomework?.id}
           />
         ) : (
-          <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />
+          <AssignMarksForText
+            data={selectedStudent}
+            onClose={handleClose}
+            isEdit
+            homeworkId={selectedHomework?.id}
+          />
         )}
       </CustomDialog>
     </>

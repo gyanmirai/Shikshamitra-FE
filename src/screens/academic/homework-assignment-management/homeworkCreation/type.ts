@@ -73,6 +73,8 @@ export interface IStudentSubmissionsProps {
 export interface IAssignGradeProps {
   isEdit?: boolean;
   data?: TStudentGrade | null;
+  homeworkId?: string;
+  assignmentId?: string;
   onClose: (e: any, isSubmit: boolean) => void;
 }
 
@@ -105,6 +107,8 @@ export interface IHomeworkTableProps {
 
 export interface TStudentGrade {
   id: string;
+  studentId: string;
+  homeworkId: string;
   studentName: string;
   rollNumber: string;
   assignments: string;

@@ -350,7 +350,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
               />
             </Grid>
 
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 12, md: 3.5 }}>
               <TotalSlotsInput
                 value={totalSlotsValue}
                 disabled={disabled || (isEdit && !!hasData)}
@@ -361,7 +361,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             </Grid>
 
             {/* Dense Mode toggle — UI-only; cascade behavior runs natively */}
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <Tooltip
                 title="When enabled, each slot starts immediately where the previous one ends (no gaps). This is the default scheduling behavior."
                 arrow

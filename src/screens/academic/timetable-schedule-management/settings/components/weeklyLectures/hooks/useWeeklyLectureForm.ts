@@ -85,9 +85,9 @@ export function useWeeklyLectureForm({
         electiveGroupId: subject.electiveGroupId || null,
       }));
 
-      if (editData && values.id) {
+      if (editData && editData.id) {
         const res = await updateWeeklyLectureSlot({
-          lectureSlotId: values.id,
+          lectureSlotId: editData.id,
           body: { subjects: subjectsPayload },
         });
         if (res.data) {
@@ -112,6 +112,8 @@ export function useWeeklyLectureForm({
       }
     },
   });
+
+  console.log('Formik values:', formik); // Debug log to trace form values
 
   const { data: subjectTableData, isLoading: isSubjectsLoading } = useQueryAndMutation({
     type: 'query',

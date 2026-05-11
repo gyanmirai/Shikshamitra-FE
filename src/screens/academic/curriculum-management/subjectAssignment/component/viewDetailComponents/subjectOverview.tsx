@@ -61,7 +61,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
               </Typography>
 
               <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12 }}>
                   <InfoItem
                     icon={<Iconify icon="mdi:code-tags" />}
                     label="Subject Code"
@@ -69,7 +69,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid size={{ xs: 12 }}>
                   <InfoItem
                     icon={<Iconify icon="mdi:target" />}
                     label="Learning Goal"

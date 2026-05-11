@@ -1,10 +1,15 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
+import { useRef, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { useState, useCallback } from 'react';
+import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -15,48 +20,34 @@ import {
   Box,
   Grid,
   Card,
-  Chip,
+  Menu,
   Stack,
   Avatar,
   Button,
   Divider,
+  MenuItem,
   TextField,
   Typography,
   DialogActions,
 } from '@mui/material';
-import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
+import {
+  useUpdateHomeworkSubmissionStatusMutation,
+  useUpdateHomeworkSubmissionFeedbackMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import { assignGradeValidationSchema } from './validationSchema';
 
 import type { IAssignGradeProps } from '../type';
 
-// --------------- Feedback Templates ---------------
-const FEEDBACK_TEMPLATES: { label: string; text: string }[] = [
-  {
-    label: 'Excellent',
-    text: 'Excellent work! You have demonstrated a thorough understanding of the topic. Keep up the outstanding effort!',
-  },
-  {
-    label: 'Good',
-    text: 'Good job! You have shown a solid grasp of the concepts. A bit more detail in certain areas would make this perfect.',
-  },
-  {
-    label: 'Average',
-    text: 'Satisfactory work. You understand the basics, but there is room to improve depth and accuracy. Please review the key concepts.',
-  },
-  {
-    label: 'Needs Work',
-    text: 'This submission needs improvement. Please revisit the topic and ensure you address all the requirements clearly.',
-  },
-  {
-    label: 'Incomplete',
-    text: 'This submission appears incomplete. Please ensure all questions are answered and resubmit for a full evaluation.',
-  },
-];
+const FEEDBACK_MAX_LENGTH = 500;
 
-const MAX_FEEDBACK_LENGTH = 500;
-const FEEDBACK_WARN_YELLOW = 400;
-const FEEDBACK_WARN_RED = 450;
+const QUICK_TEMPLATES = [
+  'Well done! Keep up the great work.',
+  'Good effort! Review the highlighted areas for improvement.',
+  'Excellent work! Very detailed and well-organized.',
+  'Needs improvement. Please revisit the core concepts.',
+  'Great start! Focus on structuring your answers better.',
+];
 
 /**
  * AssignMarksForText – Feedback modal for text-based homework submissions.
@@ -64,6 +55,7 @@ const FEEDBACK_WARN_RED = 450;
 const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   isEdit,
   data,
+  homeworkId,
   onClose,
 }: IAssignGradeProps) => {
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -71,65 +63,59 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
 
+  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
+  });
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
+  const templateBtnRef = useRef<HTMLButtonElement>(null);
 
   const formik = useFormik({
     initialValues: {
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
-    onSubmit(values) {
+    async onSubmit(values) {
       const isUpdate = typeof data?.totalMarks === 'number' || Boolean(data?.feedback);
-      updateSubmissionFeedback({
-        homeworkId: data?.id,
-        studentId: data?.studentName,
-        body: {
-          feedback: values.feedback,
-        },
-      });
-      shikshaMitraToast.success({
-        message: `Feedback has been ${isUpdate ? 'updated' : 'added'} successfully for ${
-          data?.studentName ?? 'the student'
-        }.`,
-      });
-      onClose(null, true);
+      try {
+        await updateSubmissionFeedback({
+          homeworkId: homeworkId || data?.homeworkId,
+          studentId: data?.studentId,
+          academicMediumId: (medium as any)?.id,
+          body: {
+            feedback: values.feedback,
+          },
+        }).unwrap();
+
+        await updateSubmissionStatus({
+          homeworkId: homeworkId || data?.homeworkId,
+          studentId: data?.studentId,
+          academicMediumId: (medium as any)?.id,
+          body: {
+            status: 4, // Reviewed
+          },
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${
+            data?.studentName ?? 'the student'
+          }.`,
+        });
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to submit feedback and marks', error);
+      }
     },
   });
 
-  const handleFeedbackChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { value } = e.target;
-      if (value.length <= MAX_FEEDBACK_LENGTH) {
-        formik.setFieldValue('feedback', value);
-      }
-    },
-    [formik]
-  );
-
-  const handleApplyTemplate = useCallback(
-    (text: string) => {
-      formik.setFieldValue('feedback', text);
-      setTemplateMenuOpen(false);
-    },
-    [formik]
-  );
-
-  const feedbackLength = formik.values.feedback?.length ?? 0;
-  const counterColor =
-    feedbackLength >= FEEDBACK_WARN_RED
-      ? 'error.main'
-      : feedbackLength >= FEEDBACK_WARN_YELLOW
-        ? 'warning.main'
-        : 'text.disabled';
-
-  const submissionDate = data?.submissionDate
-    ? new Date(data.submissionDate as any).toLocaleString('en-IN', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : null;
+  const handleTemplateSelect = (template: string) => {
+    if (!isEdit) return;
+    formik.setFieldValue('feedback', template);
+    setTemplateMenuOpen(false);
+  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -140,86 +126,117 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
           onSubmit={formik.handleSubmit}
         >
           <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={2.5}>
-              {/* ── Student Info Bar ── */}
+            <Grid container spacing={2}>
+              {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
-                <Box
+                <Card
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 1,
-                    px: 2,
-                    py: 1.5,
-                    borderRadius: 2,
-                    border: (theme) =>
-                      `1px solid ${varAlpha(theme.vars.palette.success.mainChannel, 0.24)}`,
-                    bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.08),
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
-                    <Avatar
-                      alt={data?.studentName || 'Student'}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: 'success.lighter',
-                        color: 'success.darker',
-                        fontWeight: 700,
-                        fontSize: 16,
-                        boxShadow: (theme) =>
-                          `0 2px 8px ${varAlpha(theme.vars.palette.success.mainChannel, 0.24)}`,
-                      }}
+                  {/* Accent bar */}
+                  <Box
+                    sx={{
+                      height: 4,
+                      background: (theme) =>
+                        `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                    }}
+                  />
+                  <Box sx={{ p: 2 }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={2}
                     >
-                      {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                        {data?.studentName || '—'}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Roll No: {data?.rollNumber || '--'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {submissionDate && (
-                    <Chip
-                      size="small"
-                      icon={<Iconify icon="solar:clock-circle-bold" width={14} />}
-                      label={`Submitted ${submissionDate}`}
-                      sx={{
-                        fontSize: 11,
-                        height: 24,
-                        bgcolor: 'success.lighter',
-                        color: 'success.darker',
-                        border: (theme) =>
-                          `1px solid ${varAlpha(theme.vars.palette.success.mainChannel, 0.24)}`,
-                        '& .MuiChip-icon': { color: 'success.main' },
-                      }}
-                    />
-                  )}
-                </Box>
+                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Avatar
+                          alt={data?.studentName || 'Student'}
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            bgcolor: 'primary.main',
+                            color: 'primary.contrastText',
+                            fontWeight: 700,
+                            fontSize: 18,
+                          }}
+                        >
+                          {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
+                            {data?.studentName || '—'}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            Roll No: {data?.rollNumber || '—'}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      {data?.submissionDate && (
+                        <Label
+                          color="success"
+                          variant="soft"
+                          startIcon={<Iconify icon="solar:clock-circle-bold" width={14} />}
+                          sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                        >
+                          Submitted
+                        </Label>
+                      )}
+                    </Stack>
+                  </Box>
+                </Card>
               </Grid>
 
               {/* ── Student Submission (Text) ── */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
+                <Card
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
                   <Box
                     sx={{
-                      p: 1.5,
-                      bgcolor: 'background.neutral',
-                      borderBottom: (t) => `1px solid ${t.palette.divider}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
+                      px: 2,
+                      py: 1.25,
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Iconify
-                      icon="solar:document-text-bold"
-                      width={18}
-                      sx={{ color: 'info.main' }}
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:document-text-bold"
+                        width={16}
+                        sx={{ color: 'info.main' }}
+                      />
+                      Student Submission
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 1 }}>
+                    <Editor
+                      editable={false}
+                      onChange={() => {}}
+                      isToolbarShow={false}
+                      value={`
+1. The sun rises in the east.
+2. Water boils at 100°C.
+3. Plants need water to grow.
+
+I have completed all answers as per the instructions.`}
                     />
                     <Typography variant="subtitle2">Student Submission</Typography>
                   </Box>
@@ -247,20 +264,41 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               {/* ── Homework Description ── */}
               <Grid size={{ xs: 12 }}>
                 <Card
-                  variant="outlined"
-                  sx={{ borderStyle: 'dashed', boxShadow: 'var(--shadows-10)' }}
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                    borderStyle: 'dashed',
+                  }}
                 >
-                  <Box sx={{ p: 2 }}>
-                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
                       <Iconify
                         icon="solar:notebook-minimalistic-bold"
-                        width={18}
+                        width={16}
                         sx={{ color: 'text.secondary' }}
                       />
-                      <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                        Homework Description
-                      </Typography>
-                    </Stack>
+                      Homework Description
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2 }}>
                     <Typography
                       component="pre"
                       variant="body2"
@@ -270,8 +308,9 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
                         fontFamily: 'inherit',
                         color: 'text.primary',
                         p: 2,
-                        bgcolor: 'background.neutral',
+                        bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.04),
                         borderRadius: 1,
+                        border: (theme) => `1px solid ${theme.palette.divider}`,
                       }}
                     >
                       {`Homework Assignment: Science Fundamentals\n\nDue Date: Friday, March 15th, 2024\nInstructions: Write detailed explanations for the following scientific facts.\n\nQuestions:\n1. Explain why the sun appears to rise in the east every day\n2. Describe the process of water boiling and why it occurs at 100°C at sea level\n3. Explain the importance of water in plant growth and development\n\nAdditional Notes:\nI have completed all answers according to the given instructions and provided scientific explanations for each point.`}
@@ -282,133 +321,126 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
 
               {/* ── Feedback Section ── */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    mb={1.5}
+                <Card
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
                   >
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                      Evaluation &amp; Feedback
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:chat-round-dots-bold"
+                        width={16}
+                        sx={{ color: 'primary.main' }}
+                      />
+                      Feedback
                     </Typography>
+
                     {isEdit && (
-                      <Box sx={{ position: 'relative' }}>
+                      <>
                         <Button
+                          ref={templateBtnRef}
                           size="small"
                           variant="outlined"
                           color="inherit"
                           endIcon={
                             <Iconify
                               icon={
-                                templateMenuOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'
+                                templateMenuOpen
+                                  ? 'solar:alt-arrow-up-bold'
+                                  : 'solar:alt-arrow-down-bold'
                               }
-                              width={16}
+                              width={14}
                             />
                           }
-                          startIcon={<Iconify icon="solar:document-add-bold" width={16} />}
-                          onClick={() => setTemplateMenuOpen((p) => !p)}
-                          sx={{ fontSize: 12, py: 0.5 }}
-                          aria-haspopup="listbox"
-                          aria-expanded={templateMenuOpen}
+                          startIcon={<Iconify icon={GlobalIcons.edit} width={14} />}
+                          onClick={() => setTemplateMenuOpen(true)}
+                          sx={{ fontSize: 12, py: 0.25 }}
                         >
                           Quick Templates
                         </Button>
-
-                        {templateMenuOpen && (
-                          <>
-                            <Box
-                              onClick={() => setTemplateMenuOpen(false)}
-                              sx={{ position: 'fixed', inset: 0, zIndex: 10 }}
-                            />
-                            <Card
-                              elevation={8}
-                              sx={{
-                                position: 'absolute',
-                                right: 0,
-                                top: 'calc(100% + 6px)',
-                                zIndex: 11,
-                                minWidth: 220,
-                                py: 0.5,
-                                overflow: 'hidden',
-                              }}
-                              role="listbox"
-                              aria-label="Feedback templates"
+                        <Menu
+                          anchorEl={templateBtnRef.current}
+                          open={templateMenuOpen}
+                          onClose={() => setTemplateMenuOpen(false)}
+                          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                          slotProps={{ paper: { sx: { maxWidth: 320, mt: 0.5 } } }}
+                        >
+                          {QUICK_TEMPLATES.map((tpl) => (
+                            <MenuItem
+                              key={tpl}
+                              onClick={() => handleTemplateSelect(tpl)}
+                              sx={{ fontSize: 13, whiteSpace: 'normal', py: 1 }}
                             >
-                              {FEEDBACK_TEMPLATES.map((tpl) => (
-                                <Box
-                                  key={tpl.label}
-                                  role="option"
-                                  tabIndex={0}
-                                  onClick={() => handleApplyTemplate(tpl.text)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ')
-                                      handleApplyTemplate(tpl.text);
-                                  }}
-                                  sx={{
-                                    px: 2,
-                                    py: 1,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    transition: 'background-color 0.15s',
-                                    '&:hover': { bgcolor: 'action.hover' },
-                                    '&:focus-visible': {
-                                      outline: (t) => `2px solid ${t.palette.primary.main}`,
-                                      outlineOffset: -2,
-                                    },
-                                  }}
-                                >
-                                  <Iconify
-                                    icon="solar:file-text-bold"
-                                    width={16}
-                                    sx={{ color: 'text.secondary' }}
-                                  />
-                                  <Typography variant="body2">{tpl.label}</Typography>
-                                </Box>
-                              ))}
-                            </Card>
-                          </>
-                        )}
-                      </Box>
+                              {tpl}
+                            </MenuItem>
+                          ))}
+                        </Menu>
+                      </>
                     )}
-                  </Stack>
+                  </Box>
 
-                  <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
-                    <TextField
-                      multiline
-                      rows={4}
-                      fullWidth
-                      size="small"
-                      name="feedback"
-                      disabled={!isEdit}
-                      placeholder="Provide constructive feedback to help the student improve..."
-                      value={formik.values.feedback}
-                      onChange={handleFeedbackChange}
-                      error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                      helperText={formik.touched.feedback && formik.errors.feedback}
-                      inputProps={{
-                        maxLength: MAX_FEEDBACK_LENGTH,
-                        'aria-label': 'Feedback textarea',
+                  <Box sx={{ p: 2 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+                    >
+                      <TextField
+                        multiline
+                        rows={4}
+                        fullWidth
+                        size="small"
+                        name="feedback"
+                        placeholder="Provide constructive feedback to help the student improve..."
+                        value={formik.values.feedback}
+                        onChange={(e) => {
+                          if (e.target.value.length <= FEEDBACK_MAX_LENGTH) {
+                            formik.handleChange(e);
+                          }
+                        }}
+                        error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                        helperText={formik.touched.feedback && formik.errors.feedback}
+                        disabled={!isEdit}
+                        inputProps={{ maxLength: FEEDBACK_MAX_LENGTH }}
+                      />
+                    </ShakingTextField>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        mt: 0.5,
+                        color:
+                          formik.values.feedback.length >= FEEDBACK_MAX_LENGTH
+                            ? 'error.main'
+                            : 'text.disabled',
                       }}
-                    />
-                  </ShakingTextField>
-
-                  {/* Character counter */}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      textAlign: 'right',
-                      mt: 0.5,
-                      color: counterColor,
-                      transition: 'color 0.2s',
-                    }}
-                    aria-live="polite"
-                  >
-                    {feedbackLength} / {MAX_FEEDBACK_LENGTH}
-                  </Typography>
+                    >
+                      {formik.values.feedback.length} / {FEEDBACK_MAX_LENGTH}
+                    </Typography>
+                  </Box>
                 </Card>
               </Grid>
             </Grid>
@@ -416,7 +448,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
 
           <Divider />
 
-          <DialogActions sx={{ bgcolor: 'background.paper', p: 2 }}>
+          <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5 }}>
             <Button
               variant="outlined"
               color="inherit"
@@ -429,7 +461,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
             <LoadingButton
               variant="contained"
               size="small"
-              loading={isUpdateLoading}
+              loading={isUpdateLoading || isStatusLoading}
               onClick={(e: any) => formik.handleSubmit(e)}
               startIcon={
                 <Iconify

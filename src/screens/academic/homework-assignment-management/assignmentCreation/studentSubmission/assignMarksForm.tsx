@@ -1,32 +1,40 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 // eslint-disable-next-line import/extensions
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
-import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
+import {
+  useUpdateSubmissionStatusMutation,
+  useUpdateSubmissionFeedbackMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import {
   Box,
   Grid,
   Card,
   Chip,
+  Menu,
   Stack,
   Avatar,
   Button,
   Divider,
   Tooltip,
+  MenuItem,
   TextField,
   Typography,
   IconButton,
@@ -44,48 +52,27 @@ export const document: IDocument = {
   size: '2.4 MB',
 };
 
-// --------------- Quick Score Config ---------------
-const QUICK_SCORES = [
-  { label: 'Full Marks', key: 'full', getValue: (total: number) => total },
-  { label: 'Good', key: 'good', getValue: (total: number) => Math.round(total * 0.8) },
-  { label: 'Half', key: 'half', getValue: (total: number) => Math.round(total / 2) },
-  { label: 'Zero', key: 'zero', getValue: () => 0 },
-] as const;
+const FEEDBACK_MAX_LENGTH = 500;
 
-// --------------- Feedback Templates ---------------
-const FEEDBACK_TEMPLATES: { label: string; text: string }[] = [
-  {
-    label: 'Excellent',
-    text: 'Excellent work! You have demonstrated a thorough understanding of the topic. Keep up the outstanding effort!',
-  },
-  {
-    label: 'Good',
-    text: 'Good job! You have shown a solid grasp of the concepts. A bit more detail in certain areas would make this perfect.',
-  },
-  {
-    label: 'Average',
-    text: 'Satisfactory work. You understand the basics, but there is room to improve depth and accuracy. Please review the key concepts.',
-  },
-  {
-    label: 'Needs Work',
-    text: 'This submission needs improvement. Please revisit the topic and ensure you address all the requirements clearly.',
-  },
-  {
-    label: 'Incomplete',
-    text: 'This submission appears incomplete. Please ensure all questions are answered and resubmit for a full evaluation.',
-  },
+const QUICK_TEMPLATES = [
+  'Well done! Keep up the great work.',
+  'Good effort! Review the highlighted areas for improvement.',
+  'Excellent work! Very detailed and well-organized.',
+  'Needs improvement. Please revisit the core concepts.',
+  'Great start! Focus on structuring your answers better.',
 ];
-
-const MAX_FEEDBACK_LENGTH = 500;
-const FEEDBACK_WARN_YELLOW = 400;
-const FEEDBACK_WARN_RED = 450;
 
 /**
  * Props for the AssignGrade component
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({
+  isEdit,
+  data,
+  onClose,
+  assignmentId,
+}: IAssignGradeProps) => {
   const marksInputRef = useRef<HTMLInputElement>(null);
   const [activeQuickScore, setActiveQuickScore] = useState<string | null>(null);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -95,6 +82,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
   });
+
+  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateSubmissionStatusMutation,
+  });
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik({
     initialValues: {
@@ -107,84 +101,89 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
         .required('Obtained Marks is required')
         .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks'),
     }),
-    onSubmit(values) {
+    async onSubmit(values) {
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
-      updateSubmissionFeedback({
-        assignmentId: data?.id,
-        studentId: data?.studentName,
-        body: {
-          marks: values.marks,
-          totalMarks: values.totalMarks,
-          feedback: values.feedback,
-        },
-      });
-      shikshaMitraToast.success({
-        message: `Feedback and marks have been ${
-          isUpdate ? 'updated' : 'added'
-        } successfully for ${data?.studentName ?? 'the student'}.`,
-      });
-      onClose(null, true);
+      try {
+        await updateSubmissionFeedback({
+          assignmentId: assignmentId || data?.id,
+          studentId: data?.studentId,
+          academicMediumId: (medium as any)?.id,
+          body: {
+            marks: values.marks,
+            totalMarks: values.totalMarks,
+            feedback: values.feedback,
+          },
+        }).unwrap();
+
+        await updateSubmissionStatus({
+          assignmentId: assignmentId || data?.id,
+          studentId: data?.studentId,
+          academicMediumId: (medium as any)?.id,
+          body: {
+            status: 4, // Reviewed
+          },
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `Feedback and marks have been ${
+            isUpdate ? 'updated' : 'added'
+          } successfully for ${data?.studentName ?? 'the student'}.`,
+        });
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to submit feedback and marks', error);
+      }
     },
   });
 
-  // Auto-focus obtained marks field on open
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      marksInputRef.current?.focus();
-    }, 150);
-    return () => clearTimeout(timer);
-  }, []);
+  const totalMarks = Number(formik.values.totalMarks) || 25;
 
-  const handleQuickScore = useCallback(
-    (key: string, getValue: (total: number) => number) => {
-      const total = Number(formik.values.totalMarks);
-      const score = getValue(total);
-      formik.setFieldValue('marks', score);
-      setActiveQuickScore(key);
+  const quickScores = [
+    { label: `Full Marks (${totalMarks})`, key: 'full', value: totalMarks },
+    {
+      label: `Half Marks (${Math.floor(totalMarks / 2)})`,
+      key: 'half',
+      value: Math.floor(totalMarks / 2),
     },
-    [formik]
-  );
+    { label: 'Zero (0)', key: 'zero', value: 0 },
+    {
+      label: `Good (${Math.floor(totalMarks * 0.8)})`,
+      key: 'good',
+      value: Math.floor(totalMarks * 0.8),
+    },
+  ];
 
-  const handleFeedbackChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { value } = e.target;
-      if (value.length <= MAX_FEEDBACK_LENGTH) {
-        formik.setFieldValue('feedback', value);
-        setActiveQuickScore(null);
-      }
-    },
-    [formik]
-  );
+  const handleQuickScore = (key: string, value: number) => {
+    if (!isEdit) return;
+    setActiveQuickScore(key);
+    formik.setFieldValue('marks', value);
+  };
 
-  const handleApplyTemplate = useCallback(
-    (text: string) => {
-      formik.setFieldValue('feedback', text);
-      setTemplateMenuOpen(false);
-    },
-    [formik]
-  );
+  const handleTemplateSelect = (template: string) => {
+    if (!isEdit) return;
+    formik.setFieldValue('feedback', template);
+    setTemplateMenuOpen(false);
+  };
 
   const handleDownload = (doc: IDocument) => {
     window.open(doc.url, '_blank');
   };
 
-  const feedbackLength = formik.values.feedback?.length ?? 0;
-  const counterColor =
-    feedbackLength >= FEEDBACK_WARN_RED
-      ? 'error.main'
-      : feedbackLength >= FEEDBACK_WARN_YELLOW
-        ? 'warning.main'
-        : 'text.disabled';
-
-  const totalMarks = Number(formik.values.totalMarks);
-  const submissionDate = data?.submissionDate
-    ? new Date(data.submissionDate as any).toLocaleString('en-IN', {
+  const formatSubmissionDate = (date: any): string => {
+    if (!date) return '';
+    try {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',
+        hour: 'numeric',
         minute: '2-digit',
-      })
-    : null;
+        hour12: true,
+      });
+    } catch {
+      return String(date);
+    }
+  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -195,88 +194,106 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
           onSubmit={formik.handleSubmit}
         >
           <Scrollbar sx={{ height: '500px', p: 2 }}>
-            <Grid container spacing={2.5}>
-              {/* ── Student Info Bar ── */}
+            <Grid container spacing={2}>
+              {/* Student Profile Section */}
               <Grid size={{ xs: 12 }}>
-                <Box
+                <Card
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 1,
-                    px: 2,
-                    py: 1.5,
-                    borderRadius: 2,
-                    border: (theme) =>
-                      `1px solid ${varAlpha(theme.vars.palette.success.mainChannel, 0.24)}`,
-                    bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.08),
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
-                    <Avatar
-                      alt={data?.studentName || 'Student'}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: 'success.lighter',
-                        color: 'success.darker',
-                        fontWeight: 700,
-                        fontSize: 16,
-                        boxShadow: (theme) =>
-                          `0 2px 8px ${varAlpha(theme.vars.palette.success.mainChannel, 0.24)}`,
-                      }}
+                  {/* Accent bar */}
+                  <Box
+                    sx={{
+                      height: 4,
+                      background: (theme) =>
+                        `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                    }}
+                  />
+                  <Box sx={{ p: 2 }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      spacing={2}
                     >
-                      {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                        {data?.studentName || '—'}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Roll No: {data?.rollNumber || '--'}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {submissionDate && (
-                    <Chip
-                      size="small"
-                      icon={<Iconify icon="solar:clock-circle-bold" width={14} />}
-                      label={`Submitted ${submissionDate}`}
-                      sx={{
-                        fontSize: 11,
-                        height: 24,
-                        bgcolor: 'success.lighter',
-                        color: 'success.darker',
-                        border: (theme) =>
-                          `1px solid ${varAlpha(theme.vars.palette.success.mainChannel, 0.24)}`,
-                        '& .MuiChip-icon': { color: 'success.main' },
-                      }}
-                    />
-                  )}
-                </Box>
+                      <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Avatar
+                          alt={data?.studentName || 'Student'}
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            bgcolor: 'primary.main',
+                            color: 'primary.contrastText',
+                            fontWeight: 700,
+                            fontSize: 18,
+                          }}
+                        >
+                          {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
+                            {data?.studentName || '—'}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                            Roll No: {data?.rollNumber || '—'}
+                            {data?.assignments ? ` • ${data.assignments}` : ''}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      {data?.submissionDate && (
+                        <Label
+                          color="success"
+                          variant="soft"
+                          startIcon={<Iconify icon="solar:clock-circle-bold" width={14} />}
+                          sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                        >
+                          Submitted {formatSubmissionDate(data.submissionDate)}
+                        </Label>
+                      )}
+                    </Stack>
+                  </Box>
+                </Card>
               </Grid>
 
               {/* ── Student Submission (File) ── */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
+                <Card
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
                   <Box
                     sx={{
-                      p: 1.5,
-                      bgcolor: 'background.neutral',
-                      borderBottom: (t) => `1px solid ${t.palette.divider}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
+                      px: 2,
+                      py: 1.25,
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Iconify
-                      icon="solar:document-text-bold"
-                      width={18}
-                      sx={{ color: 'info.main' }}
-                    />
-                    <Typography variant="subtitle2">Student Submission</Typography>
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:document-text-bold"
+                        width={16}
+                        sx={{ color: 'info.main' }}
+                      />
+                      Student Submission
+                    </Typography>
                   </Box>
                   <Box sx={{ p: 2 }}>
                     <Card
@@ -286,176 +303,245 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        bgcolor: 'background.paper',
-                        transition: 'background-color 0.2s',
-                        '&:hover': { bgcolor: 'background.neutral' },
+                        gap: 1,
+                        transition: (theme) => theme.transitions.create('background-color'),
+                        '&:hover': { bgcolor: 'action.hover' },
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        {getFileIconByType(document.type ?? 'txt', 32)}
-                        <Box>
-                          <Typography variant="subtitle2" noWrap sx={{ maxWidth: 200 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                        {getFileIconByType(document.type ?? 'txt', 36)}
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={600} noWrap>
                             {document.name}
                           </Typography>
-                          {document.size && (
-                            <Typography variant="caption" color="text.secondary">
-                              {document.size}
-                            </Typography>
-                          )}
+                          <Typography variant="caption" color="text.disabled">
+                            {document.size}
+                            {document.type ? ` • ${document.type.toUpperCase()} Document` : ''}
+                          </Typography>
                         </Box>
                       </Box>
-                      <Tooltip title="Preview file">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDownload(document)}
-                          sx={{ color: 'text.secondary' }}
-                          aria-label="Preview submission file"
-                        >
-                          <Iconify icon={GlobalIcons.eye} width={20} />
-                        </IconButton>
-                      </Tooltip>
+                      <Stack direction="row" spacing={0.5} flexShrink={0}>
+                        <Tooltip title="Preview">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDownload(document)}
+                            sx={{
+                              color: 'text.secondary',
+                              '&:hover': {
+                                color: 'primary.main',
+                                bgcolor: (theme) =>
+                                  varAlpha(theme.palette.primary.mainChannel, 0.1),
+                              },
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.eye} width={18} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Download">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDownload(document)}
+                            sx={{
+                              color: 'text.secondary',
+                              '&:hover': {
+                                color: 'success.main',
+                                bgcolor: (theme) =>
+                                  varAlpha(theme.palette.success.mainChannel, 0.1),
+                              },
+                            }}
+                          >
+                            <Iconify icon={GlobalIcons.download} width={18} />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </Card>
                   </Box>
                 </Card>
               </Grid>
 
-              {/* ── Marks Entry Section ── */}
+              {/* Evaluation & Marks Section */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
-                    Marks Entry
-                  </Typography>
+                <Card
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      <Iconify icon="solar:star-bold" width={16} sx={{ color: 'warning.main' }} />
+                      Evaluation & Marks
+                    </Typography>
+                  </Box>
 
-                  <Grid container spacing={2}>
-                    {/* Total Marks – read-only, dimmed */}
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Total Marks"
-                        fullWidth
-                        name="totalMarks"
-                        disabled
-                        size="small"
-                        value={formik.values.totalMarks}
-                        sx={{ '& .MuiInputBase-root': { opacity: 0.6 } }}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <Iconify
-                                icon="solar:lock-bold"
-                                width={16}
-                                sx={{ color: 'text.disabled' }}
-                              />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </Grid>
+                  <Box sx={{ p: 2 }}>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <ShakingTextField
+                          error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}
+                        >
+                          <TextField
+                            label="Total Marks"
+                            fullWidth
+                            name="totalMarks"
+                            disabled
+                            size="small"
+                            value={formik.values.totalMarks}
+                            onChange={formik.handleChange}
+                            error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                            helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+                          />
+                        </ShakingTextField>
+                      </Grid>
 
-                    {/* Obtained Marks – editable, auto-focused */}
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
-                        <TextField
-                          label="Obtained Marks *"
-                          fullWidth
-                          type="number"
-                          name="marks"
-                          size="small"
-                          disabled={!isEdit}
-                          inputRef={marksInputRef}
-                          inputProps={{ min: 0, max: totalMarks }}
-                          InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <Typography
-                                  variant="caption"
-                                  sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
-                                >
-                                  / {totalMarks}
-                                </Typography>
-                              </InputAdornment>
-                            ),
-                          }}
-                          onKeyDown={(e) => {
-                            if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                          }}
-                          onChange={(e) => {
-                            const { value } = e.target;
-                            if (value === '') {
-                              formik.setFieldValue('marks', '');
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
+                          <TextField
+                            label="Obtained Marks *"
+                            fullWidth
+                            type="number"
+                            name="marks"
+                            inputRef={marksInputRef}
+                            disabled={!isEdit}
+                            placeholder={`0-${totalMarks}`}
+                            inputProps={{ min: 0, max: formik.values.totalMarks }}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: 'text.disabled', whiteSpace: 'nowrap' }}
+                                  >
+                                    / {totalMarks}
+                                  </Typography>
+                                </InputAdornment>
+                              ),
+                            }}
+                            onKeyDown={(e) => {
+                              if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
+                            }}
+                            onChange={(e) => {
+                              const { value } = e.target;
                               setActiveQuickScore(null);
-                              return;
-                            }
-                            const numericValue = parseInt(value, 10);
-                            if (!Number.isNaN(numericValue) && numericValue <= totalMarks) {
-                              formik.setFieldValue('marks', numericValue);
-                              setActiveQuickScore(null);
-                            }
-                          }}
-                          value={formik.values.marks}
-                          error={formik.touched.marks && Boolean(formik.errors.marks)}
-                          helperText={formik.touched.marks && formik.errors.marks}
-                          aria-describedby="marks-error"
-                        />
-                      </ShakingTextField>
-                    </Grid>
-                  </Grid>
+                              if (value === '') {
+                                formik.setFieldValue('marks', '');
+                                return;
+                              }
+                              const numericValue = parseInt(value, 10);
+                              if (
+                                !Number.isNaN(numericValue) &&
+                                numericValue <= Number(formik.values.totalMarks)
+                              ) {
+                                formik.setFieldValue('marks', numericValue);
+                              }
+                            }}
+                            size="small"
+                            value={formik.values.marks}
+                            error={formik.touched.marks && Boolean(formik.errors.marks)}
+                            helperText={formik.touched.marks && formik.errors.marks}
+                          />
+                        </ShakingTextField>
+                      </Grid>
 
-                  {/* Quick Score Buttons */}
-                  {isEdit && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: 'text.secondary', mb: 1, display: 'block' }}
-                      >
-                        Quick Score
-                      </Typography>
-                      <Stack direction="row" flexWrap="wrap" gap={1}>
-                        {QUICK_SCORES.map(({ label, key, getValue }) => {
-                          const score = getValue(totalMarks);
-                          const isActive = activeQuickScore === key;
-                          return (
-                            <Button
-                              key={key}
+                      {/* Quick Score Shortcuts */}
+                      <Grid size={{ xs: 12 }}>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          {quickScores.map((qs) => (
+                            <Chip
+                              key={qs.key}
+                              label={qs.label}
                               size="small"
-                              variant={isActive ? 'contained' : 'outlined'}
-                              color={isActive ? 'primary' : 'inherit'}
-                              onClick={() => handleQuickScore(key, getValue)}
+                              variant={activeQuickScore === qs.key ? 'filled' : 'outlined'}
+                              color={activeQuickScore === qs.key ? 'primary' : 'default'}
+                              onClick={() => handleQuickScore(qs.key, qs.value)}
+                              disabled={!isEdit}
                               sx={{
-                                fontSize: 12,
-                                px: 1.5,
-                                py: 0.5,
-                                minWidth: 'auto',
-                                transition: 'all 0.2s',
-                                ...(isActive && {
-                                  boxShadow: (t) => `0 0 0 3px ${t.palette.primary.light}40`,
+                                cursor: isEdit ? 'pointer' : 'not-allowed',
+                                fontWeight: activeQuickScore === qs.key ? 600 : 400,
+                                transition: (theme) =>
+                                  theme.transitions.create([
+                                    'background-color',
+                                    'color',
+                                    'border-color',
+                                  ]),
+                                ...(activeQuickScore !== qs.key && {
+                                  borderColor: (theme) =>
+                                    varAlpha(theme.palette.grey['500Channel'], 0.32),
+                                  '&:hover': {
+                                    borderColor: 'text.primary',
+                                    bgcolor: (theme) =>
+                                      varAlpha(theme.palette.grey['500Channel'], 0.08),
+                                  },
                                 }),
                               }}
-                            >
-                              {label} ({score})
-                            </Button>
-                          );
-                        })}
-                      </Stack>
-                    </Box>
-                  )}
+                            />
+                          ))}
+                        </Stack>
+                      </Grid>
+                    </Grid>
+                  </Box>
                 </Card>
               </Grid>
 
-              {/* ── Feedback Section ── */}
+              {/* Feedback Section */}
               <Grid size={{ xs: 12 }}>
-                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-                  {/* Section header with Templates dropdown */}
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    mb={1.5}
+                <Card
+                  sx={{
+                    p: 0,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    border: (theme) => `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
                   >
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        color: 'text.secondary',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:chat-round-dots-bold"
+                        width={16}
+                        sx={{ color: 'primary.main' }}
+                      />
                       Feedback
                     </Typography>
+
                     {isEdit && (
-                      <Box sx={{ position: 'relative' }}>
+                      <>
                         <Button
                           ref={templateBtnRef}
                           size="small"
@@ -464,115 +550,81 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
                           endIcon={
                             <Iconify
                               icon={
-                                templateMenuOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'
+                                templateMenuOpen
+                                  ? 'solar:alt-arrow-up-bold'
+                                  : 'solar:alt-arrow-down-bold'
                               }
-                              width={16}
+                              width={14}
                             />
                           }
-                          startIcon={<Iconify icon="solar:document-add-bold" width={16} />}
-                          onClick={() => setTemplateMenuOpen((p) => !p)}
-                          sx={{ fontSize: 12, py: 0.5 }}
-                          aria-haspopup="listbox"
-                          aria-expanded={templateMenuOpen}
+                          startIcon={<Iconify icon={GlobalIcons.edit} width={14} />}
+                          onClick={() => setTemplateMenuOpen(true)}
+                          sx={{ fontSize: 12, py: 0.25 }}
                         >
                           Quick Templates
                         </Button>
-
-                        {templateMenuOpen && (
-                          <>
-                            {/* backdrop to close on outside click */}
-                            <Box
-                              onClick={() => setTemplateMenuOpen(false)}
-                              sx={{ position: 'fixed', inset: 0, zIndex: 10 }}
-                            />
-                            <Card
-                              elevation={8}
-                              sx={{
-                                position: 'absolute',
-                                right: 0,
-                                top: 'calc(100% + 6px)',
-                                zIndex: 11,
-                                minWidth: 220,
-                                py: 0.5,
-                                overflow: 'hidden',
-                              }}
-                              role="listbox"
-                              aria-label="Feedback templates"
+                        <Menu
+                          anchorEl={templateBtnRef.current}
+                          open={templateMenuOpen}
+                          onClose={() => setTemplateMenuOpen(false)}
+                          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                          slotProps={{
+                            paper: {
+                              sx: { maxWidth: 320, mt: 0.5 },
+                            },
+                          }}
+                        >
+                          {QUICK_TEMPLATES.map((tpl) => (
+                            <MenuItem
+                              key={tpl}
+                              onClick={() => handleTemplateSelect(tpl)}
+                              sx={{ fontSize: 13, whiteSpace: 'normal', py: 1 }}
                             >
-                              {FEEDBACK_TEMPLATES.map((tpl) => (
-                                <Box
-                                  key={tpl.label}
-                                  role="option"
-                                  tabIndex={0}
-                                  onClick={() => handleApplyTemplate(tpl.text)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ')
-                                      handleApplyTemplate(tpl.text);
-                                  }}
-                                  sx={{
-                                    px: 2,
-                                    py: 1,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1.5,
-                                    transition: 'background-color 0.15s',
-                                    '&:hover': { bgcolor: 'action.hover' },
-                                    '&:focus-visible': {
-                                      outline: (t) => `2px solid ${t.palette.primary.main}`,
-                                      outlineOffset: -2,
-                                    },
-                                  }}
-                                >
-                                  <Iconify
-                                    icon="solar:file-text-bold"
-                                    width={16}
-                                    sx={{ color: 'text.secondary' }}
-                                  />
-                                  <Typography variant="body2">{tpl.label}</Typography>
-                                </Box>
-                              ))}
-                            </Card>
-                          </>
-                        )}
-                      </Box>
+                              {tpl}
+                            </MenuItem>
+                          ))}
+                        </Menu>
+                      </>
                     )}
-                  </Stack>
+                  </Box>
 
-                  <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
-                    <TextField
-                      multiline
-                      rows={4}
-                      fullWidth
-                      size="small"
-                      name="feedback"
-                      disabled={!isEdit}
-                      placeholder="Provide constructive feedback to help the student improve..."
-                      value={formik.values.feedback}
-                      onChange={handleFeedbackChange}
-                      error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                      helperText={formik.touched.feedback && formik.errors.feedback}
-                      inputProps={{
-                        maxLength: MAX_FEEDBACK_LENGTH,
-                        'aria-label': 'Feedback textarea',
+                  <Box sx={{ p: 2 }}>
+                    <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
+                      <TextField
+                        multiline
+                        size="small"
+                        disabled={!isEdit}
+                        rows={4}
+                        fullWidth
+                        name="feedback"
+                        placeholder="Provide constructive feedback to help the student improve..."
+                        value={formik.values.feedback}
+                        onChange={(e) => {
+                          if (e.target.value.length <= FEEDBACK_MAX_LENGTH) {
+                            formik.handleChange(e);
+                          }
+                        }}
+                        error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                        helperText={formik.touched.feedback && formik.errors.feedback}
+                        inputProps={{ maxLength: FEEDBACK_MAX_LENGTH }}
+                      />
+                    </ShakingTextField>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        mt: 0.5,
+                        color:
+                          formik.values.feedback.length >= FEEDBACK_MAX_LENGTH
+                            ? 'error.main'
+                            : 'text.disabled',
                       }}
-                    />
-                  </ShakingTextField>
-
-                  {/* Character counter */}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      textAlign: 'right',
-                      mt: 0.5,
-                      color: counterColor,
-                      transition: 'color 0.2s',
-                    }}
-                    aria-live="polite"
-                  >
-                    {feedbackLength} / {MAX_FEEDBACK_LENGTH}
-                  </Typography>
+                    >
+                      {formik.values.feedback.length} / {FEEDBACK_MAX_LENGTH}
+                    </Typography>
+                  </Box>
                 </Card>
               </Grid>
             </Grid>
@@ -592,7 +644,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
             </Button>
             <LoadingButton
               variant="contained"
-              loading={isUpdateLoading}
+              loading={isUpdateLoading || isStatusLoading}
               size="small"
               onClick={(e: any) => formik.handleSubmit(e)}
               startIcon={

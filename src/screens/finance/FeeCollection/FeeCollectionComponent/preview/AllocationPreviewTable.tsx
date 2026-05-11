@@ -3,11 +3,11 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import { Box, Card, Chip, Divider, Collapse, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-import { Box, Card, Chip, Divider, Collapse, IconButton, Typography } from '@mui/material';
 
 import { selectFeeRows, selectChargeRows, groupFeeRowsByMonth } from './paymentAllocationUtils';
 

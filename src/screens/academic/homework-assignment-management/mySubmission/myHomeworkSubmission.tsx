@@ -299,9 +299,19 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
         maxWidth="sm"
       >
         {selectedHomework?.submissionType === 1 ? (
-          <AssignGrade isEdit={false} data={null} onClose={handleClose} />
+          <AssignGrade
+            isEdit={false}
+            data={null}
+            onClose={handleClose}
+            homeworkId={selectedHomework?.id}
+          />
         ) : (
-          <AssignMarksForText isEdit={false} data={null} onClose={handleClose} />
+          <AssignMarksForText
+            isEdit={false}
+            data={null}
+            onClose={handleClose}
+            homeworkId={selectedHomework?.id}
+          />
         )}
       </CustomDialog>
 

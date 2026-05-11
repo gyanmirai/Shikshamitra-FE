@@ -1,6 +1,9 @@
+import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetLectureSlotByIdQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import {
   Box,
   Chip,
@@ -8,6 +11,7 @@ import {
   Stack,
   Table,
   Paper,
+  Skeleton,
   TableRow,
   Accordion,
   TableHead,
@@ -19,46 +23,97 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
+// The raw table row shape passed from the parent list component
 interface ViewCreateSlotsProps {
   data: {
-    className?: string;
-    schoolHours?: string;
-    previousClassSlots?: string;
-    slotConfigurations?: Array<{
-      id: string;
-      totalSlots: string;
-      weekRange: [number, number];
-      timeSlots: Array<{
-        id: string;
-        startTime: any;
-        endTime: any;
-        slotType: string;
-        breakType?: string;
-      }>;
-    }>;
+    id?: string;
+    standardName?: string;
+    [key: string]: any;
   } | null;
 }
+
+// Normalised shape used exclusively for rendering
+interface NormalisedSlotData {
+  className: string;
+  schoolHours: string;
+  previousClassSlots: string;
+  slotConfigurations: Array<{
+    id: string;
+    totalSlots: string;
+    weekRange: [number, number];
+    timeSlots: Array<{
+      id: string;
+      startTime: any;
+      endTime: any;
+      slotType: string;
+      breakType: string;
+    }>;
+  }>;
+}
+
+const dayMarks = [
+  { value: 0, label: 'Mon' },
+  { value: 1, label: 'Tue' },
+  { value: 2, label: 'Wed' },
+  { value: 3, label: 'Thu' },
+  { value: 4, label: 'Fri' },
+  { value: 5, label: 'Sat' },
+];
+
+const getDayLabel = (value: number) => dayMarks.find((d) => d.value === value)?.label || '';
+
+/** Maps raw API detail response → normalised view model */
+const mapApiToViewModel = (apiData: any, standardName?: string): NormalisedSlotData => ({
+  className: standardName || apiData?.standardName || apiData?.standardId || '—',
+  schoolHours: apiData?.schoolHours || '—',
+  previousClassSlots: apiData?.previousStandardId || 'None',
+  slotConfigurations: (apiData?.slotConfigurations ?? []).map((config: any, ci: number) => {
+    // API may return weekRange array or separate fromDay / toDay fields
+    const weekRange: [number, number] =
+      Array.isArray(config.weekRange) && config.weekRange.length >= 2
+        ? [Number(config.weekRange[0]), Number(config.weekRange[1])]
+        : [Number(config.fromDay ?? 0), Number(config.toDay ?? 5)];
+
+    const timeSlots = (config.timeSlots ?? []).map((slot: any, si: number) => ({
+      id: slot.id ?? `${ci}-${si}`,
+      startTime: slot.startTime ? dayjs(slot.startTime, 'HH:mm:ss') : null,
+      endTime: slot.endTime ? dayjs(slot.endTime, 'HH:mm:ss') : null,
+      slotType: Number(slot.slotType) === 1 ? 'break' : 'period',
+      breakType:
+        Number(slot.breakType) === 1 ? 'short' : Number(slot.breakType) === 2 ? 'lunch' : '',
+    }));
+
+    return {
+      id: config.id ?? String(ci),
+      totalSlots: String(config.totalSlots ?? timeSlots.length),
+      weekRange,
+      timeSlots,
+    };
+  }),
+});
 
 const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
   const [expandedConfigs, setExpandedConfigs] = useState<Record<string, boolean>>({});
 
-  const dayMarks = [
-    { value: 0, label: 'Mon' },
-    { value: 1, label: 'Tue' },
-    { value: 2, label: 'Wed' },
-    { value: 3, label: 'Thu' },
-    { value: 4, label: 'Fri' },
-    { value: 5, label: 'Sat' },
-  ];
+  // Fetch full slot detail (includes timeSlots, schoolHours, etc.)
+  const { data: slotDetail, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLectureSlotByIdQuery,
+    params: data?.id,
+    options: { skip: !data?.id },
+  });
 
-  const getDayLabel = (value: number) => dayMarks.find((d) => d.value === value)?.label || '';
+  const viewData = useMemo<NormalisedSlotData | null>(() => {
+    if (!slotDetail) return null;
+    return mapApiToViewModel(slotDetail, data?.standardName);
+  }, [slotDetail, data?.standardName]);
 
   const generalDetails = useMemo(
     () => [
       {
         label: 'Class',
         icon: 'mdi:google-classroom',
-        value: data?.className || '—',
+        value: viewData?.className || '—',
       },
       // {
       //   label: 'School Hours',
@@ -68,10 +123,10 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
       {
         label: 'Slots From Other Class',
         icon: 'mdi:content-copy',
-        value: data?.previousClassSlots || 'None',
+        value: viewData?.previousClassSlots || 'None',
       },
     ],
-    [data]
+    [viewData]
   );
 
   const handleToggleConfig = (configId: string) => {
@@ -80,6 +135,16 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
       [configId]: !prev[configId],
     }));
   };
+
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Skeleton variant="rounded" height={120} sx={{ mb: 3 }} />
+        <Skeleton variant="rounded" height={80} sx={{ mb: 2 }} />
+        <Skeleton variant="rounded" height={80} />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -134,9 +199,9 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
       </Paper>
 
       {/* Slot Configurations */}
-      {data?.slotConfigurations && data.slotConfigurations.length > 0 && (
+      {viewData?.slotConfigurations && viewData.slotConfigurations.length > 0 && (
         <Box>
-          {data.slotConfigurations.map((config, index) => (
+          {viewData.slotConfigurations.map((config, index) => (
             <Accordion
               key={config.id}
               expanded={expandedConfigs[config.id] ?? false} // Changed from true to false
@@ -205,7 +270,9 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                             sx={{ fontSize: '0.75rem' }}
                             noWrap
                           >
-                            {getDayLabel(config.weekRange[0])} - {getDayLabel(config.weekRange[1])}
+                            {config.weekRange?.length >= 2
+                              ? `${getDayLabel(config.weekRange[0])} - ${getDayLabel(config.weekRange[1])}`
+                              : '—'}
                           </Typography>
                         </Box>
                       </Stack>
@@ -278,19 +345,20 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                             Active Days:
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                            {Array.from(
-                              { length: config.weekRange[1] - config.weekRange[0] + 1 },
-                              (_, i) => config.weekRange[0] + i
-                            ).map((day) => (
-                              <Chip
-                                key={day}
-                                label={getDayLabel(day)}
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: '22px' }}
-                              />
-                            ))}
+                            {config.weekRange?.length >= 2 &&
+                              Array.from(
+                                { length: config.weekRange[1] - config.weekRange[0] + 1 },
+                                (_, i) => config.weekRange[0] + i
+                              ).map((day) => (
+                                <Chip
+                                  key={day}
+                                  label={getDayLabel(day)}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ fontSize: '0.7rem', height: '22px' }}
+                                />
+                              ))}
                           </Box>
                         </Box>
                       </Stack>
@@ -376,8 +444,10 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                                         slot.slotType === 'break' ? 'error.main' : 'text.secondary'
                                       }
                                     >
-                                      {slot.slotType.charAt(0).toUpperCase() +
-                                        slot.slotType.slice(1)}
+                                      {typeof slot.slotType === 'string' && slot.slotType
+                                        ? slot.slotType.charAt(0).toUpperCase() +
+                                          slot.slotType.slice(1)
+                                        : '—'}
                                     </Typography>
                                   </TableCell>
                                 </TableRow>
@@ -396,7 +466,7 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
       )}
 
       {/* No configurations message */}
-      {(!data?.slotConfigurations || data.slotConfigurations.length === 0) && (
+      {(!viewData?.slotConfigurations || viewData.slotConfigurations.length === 0) && (
         <Box
           sx={{
             textAlign: 'center',

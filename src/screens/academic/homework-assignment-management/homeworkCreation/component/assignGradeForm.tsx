@@ -14,7 +14,6 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
-import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 import {
   Box,
   Grid,
@@ -29,6 +28,10 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
+import {
+  useUpdateHomeworkSubmissionStatusMutation,
+  useUpdateHomeworkSubmissionFeedbackMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import { assignGradeValidationSchema } from './validationSchema';
 import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
@@ -40,11 +43,22 @@ import type { IAssignGradeProps } from '../type';
  * @param data Optional data containing initial grade and feedback values
  * @param onSubmit Callback function to handle form submission with grade and feedback values
  */
-const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({
+  isEdit,
+  data,
+  homeworkId,
+  onClose,
+}: IAssignGradeProps) => {
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
+
+  const [updateSubmissionStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkSubmissionStatusMutation,
+  });
+
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   /**
@@ -58,23 +72,37 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
       feedback: data?.feedback || '',
     },
     validationSchema: assignGradeValidationSchema,
-    onSubmit(values) {
+    async onSubmit(values) {
       const isUpdate = typeof data?.totalMarks === 'number' || Boolean(data?.feedback);
-      updateSubmissionFeedback({
-        homeworkId: data?.id, // Assuming data.assignmentId is available
-        studentId: data?.studentName, // Assuming data.studentId is available
-        academicMediumId: medium?.id, // Assuming data.academicMediumId is available
-        body: {
-          totalMarks: values.totalMarks,
-          feedback: values.feedback,
-        },
-      });
-      shikshaMitraToast.success({
-        message: `Feedback and marks have been ${
-          isUpdate ? 'updated' : 'added'
-        } successfully for ${data?.studentName ?? 'the student'}.`,
-      });
-      onClose(null, true);
+      try {
+        await updateSubmissionFeedback({
+          homeworkId: homeworkId || data?.homeworkId,
+          studentId: data?.studentId,
+          academicMediumId: medium?.id,
+          body: {
+            totalMarks: values.totalMarks,
+            feedback: values.feedback,
+          },
+        }).unwrap();
+
+        await updateSubmissionStatus({
+          homeworkId: homeworkId || data?.homeworkId,
+          studentId: data?.studentId,
+          academicMediumId: medium?.id,
+          body: {
+            status: 4, // Reviewed
+          },
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `Feedback and marks have been ${
+            isUpdate ? 'updated' : 'added'
+          } successfully for ${data?.studentName ?? 'the student'}.`,
+        });
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to submit feedback and marks', error);
+      }
     },
   });
 
@@ -298,7 +326,7 @@ I have completed all answers according to the given instructions and provided sc
             <LoadingButton
               variant="contained"
               size="small"
-              loading={isUpdateLoading}
+              loading={isUpdateLoading || isStatusLoading}
               onClick={(e: any) => formik.handleSubmit(e)}
               startIcon={
                 <Iconify

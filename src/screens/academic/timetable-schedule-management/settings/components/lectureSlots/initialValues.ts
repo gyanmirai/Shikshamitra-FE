@@ -15,8 +15,13 @@ export const getInitialValues = (classes: string, editData?: any) => {
                   id: slot.id || index,
                   startTime: slot.startTime ? dayjs(slot.startTime, 'HH:mm:ss') : null,
                   endTime: slot.endTime ? dayjs(slot.endTime, 'HH,mm:ss') : null,
-                  slotType: slot.slotType || 0,
-                  breakType: slot.breakType || '',
+                  slotType: Number(slot.slotType) === 1 ? 'break' : 'period',
+                  breakType:
+                    Number(slot.breakType) === 1
+                      ? 'short'
+                      : Number(slot.breakType) === 2
+                        ? 'lunch'
+                        : '',
                 }))
               : [],
             expanded: false,
@@ -31,8 +36,13 @@ export const getInitialValues = (classes: string, editData?: any) => {
                     id: `1-${index}`,
                     startTime: slot.startTime ? dayjs(slot.startTime) : null,
                     endTime: slot.endTime ? dayjs(slot.endTime) : null,
-                    slotType: slot.slotType || 0,
-                    breakType: slot.breakType || '',
+                    slotType: Number(slot.slotType) === 1 ? 'break' : 'period',
+                    breakType:
+                      Number(slot.breakType) === 1
+                        ? 'short'
+                        : Number(slot.breakType) === 2
+                          ? 'lunch'
+                          : '',
                   }))
                 : [],
               expanded: false,

@@ -68,26 +68,31 @@ const ChapterTable = ({
         label: 'Description',
         align: 'left',
         filterType: 'string',
-        render: (value, row) => (
-          <CustomTooltip
-            title={value && <div dangerouslySetInnerHTML={{ __html: value || '' }} />}
-            arrow
-            sx={{ textAlign: 'justify' }}
-          >
-            <Typography
-              variant="inherit"
-              noWrap
-              sx={{
-                maxWidth: 150,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                display: 'block',
-              }}
-              dangerouslySetInnerHTML={{ __html: value || '' }}
-            />
-          </CustomTooltip>
-        ),
+        render: (value, row) => {
+          const plainText = value ? value.replace(/<[^>]*>/g, '') : '';
+          return (
+            <CustomTooltip
+              title={value && <div dangerouslySetInnerHTML={{ __html: value || '' }} />}
+              arrow
+              sx={{ textAlign: 'justify' }}
+            >
+              <Typography
+                variant="inherit"
+                noWrap
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                  maxWidth: 0,
+                  minWidth: '100%',
+                }}
+              >
+                {plainText}
+              </Typography>
+            </CustomTooltip>
+          );
+        },
       },
 
       {

@@ -163,6 +163,7 @@ const SubjectCreation = () => {
             color="error"
             size="small"
             onClick={async () => {
+              let deletedItemIndex = -1;
               confirmWithUndo({
                 item: selectedSubject,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
@@ -174,6 +175,7 @@ const SubjectCreation = () => {
                         const index = draft.findIndex(
                           (item: any) => item.id === (selectedSubject as any).id
                         );
+                        deletedItemIndex = index;
                         setDeleteIndex(index);
                         if (index !== -1) draft.splice(index, 1);
                       }
@@ -186,7 +188,8 @@ const SubjectCreation = () => {
                       { academicMediumId: (currentMedium as any).id },
                       (draft: any) => {
                         if (!draft) return;
-                        draft.splice(index, 0, selectedSubject);
+                        const restoreIndex = deletedItemIndex !== -1 ? deletedItemIndex : index;
+                        draft.splice(restoreIndex, 0, selectedSubject);
                       }
                     )
                   ),
