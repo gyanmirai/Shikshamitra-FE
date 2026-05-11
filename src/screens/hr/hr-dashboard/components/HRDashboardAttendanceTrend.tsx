@@ -162,7 +162,7 @@ const HRDashboardAttendanceTrend = () => {
       />
 
       <Box sx={{ mt: 0.5, mx: 1 }} dir="ltr">
-        <Chart type="line" series={series} options={chartOptions} height={240} />
+        <Chart type="line" series={series} options={chartOptions} />
       </Box>
     </Card>
   );

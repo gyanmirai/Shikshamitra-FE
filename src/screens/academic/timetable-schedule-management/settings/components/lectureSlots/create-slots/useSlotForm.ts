@@ -78,7 +78,6 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
           lectureSlotId: data.id,
           body: {
             standardId: values.className,
-            schoolHours: values.schoolHours,
             previousStandardId: values.previousClassSlots || null,
             slotConfigurations: slotConfigurationsPayload,
           },
@@ -92,7 +91,6 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
       } else {
         const res = await addLectureSlot({
           standardId: values.className,
-          schoolHours: values.schoolHours,
           previousStandardId: values.previousClassSlots || null,
           slotConfigurations: slotConfigurationsPayload,
         });

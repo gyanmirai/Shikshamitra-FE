@@ -92,7 +92,7 @@ const SubjectPassFailChart = () => {
         }
       />
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart type="bar" series={series} options={chartOptions} height={364} />
+        <Chart type="bar" series={series} options={chartOptions} />
       </Box>
     </Card>
   );

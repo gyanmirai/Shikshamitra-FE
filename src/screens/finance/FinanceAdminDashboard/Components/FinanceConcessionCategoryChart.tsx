@@ -60,14 +60,7 @@ export default function FinanceConcessionCategoryChart({
       <CardHeader title={title} subheader={subheader} sx={{ p: 2 }} />
 
       <Box>
-        <Chart
-          dir="ltr"
-          type="bar"
-          series={chart.series}
-          options={chartOptions}
-          width="100%"
-          height={364}
-        />
+        <Chart dir="ltr" type="bar" series={chart.series} options={chartOptions} width="100%" />
       </Box>
     </Card>
   );

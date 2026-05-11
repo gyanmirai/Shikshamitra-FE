@@ -145,7 +145,7 @@ const TimeTableCell = ({
       />
     );
   }
-
+  console.log('slotData-----', slotData);
   return (
     <TableCell
       sx={{

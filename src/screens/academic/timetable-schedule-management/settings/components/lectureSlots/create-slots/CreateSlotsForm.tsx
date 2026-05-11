@@ -135,16 +135,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               <GeneralInfoSection
                 classes={allClass}
                 className={formik.values.className}
-                schoolHours={formik.values.schoolHours}
                 previousClassSlots={formik.values.previousClassSlots}
                 classNameError={
                   formik.touched.className && typeof formik.errors.className === 'string'
                     ? formik.errors.className
-                    : undefined
-                }
-                schoolHoursError={
-                  formik.touched.schoolHours && typeof formik.errors.schoolHours === 'string'
-                    ? formik.errors.schoolHours
                     : undefined
                 }
                 previousClassError={
@@ -160,7 +154,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                 onChangePreviousClassSlots={(val) =>
                   formik.setFieldValue('previousClassSlots', val)
                 }
-                onChangeSchoolHours={formik.handleChange}
               />
             </Box>
           </Fade>

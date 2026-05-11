@@ -16,7 +16,7 @@ const StudentStrengthClassWise = () => (
         ],
         options: {
           tooltip: {
-            custom: ({ dataPointIndex }) => {
+            custom: ({ dataPointIndex }: any) => {
               const divisions = {
                 0: { A: 35, B: 30 },
                 1: { A: 25, B: 20 },

@@ -18,21 +18,21 @@ const TeacherDashboard = () => (
       </Box>
 
       {/* SECTION 2 – UPCOMING EXAMS & ATTENDANCE TREND */}
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={1} alignItems="stretch">
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <AttendanceTrend />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <UpcomingExams />
         </Grid>
       </Grid>
 
       {/* SECTION 3 – QUICK ACTIONS & ACADEMIC PERFORMANCE */}
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 6 }}>
+      <Grid container spacing={1} alignItems="stretch">
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <SubjectPerformance />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <HomeworkStatus />
         </Grid>
         <Grid size={{ xs: 12 }}>

@@ -88,7 +88,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
           electiveGroupId: slot.electiveGroupId,
           electiveGroupName: slot.electiveGroupName,
           subjects: displaySubjects.map((s) => ({
-            subjectId: s.id,
+            subjectId: s.subjectId,
             subjectName: s.name,
             color: s.color,
           })),
@@ -101,7 +101,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
         };
       }
       return {
-        id: attachedSubject?.id || displaySubjects[0]?.id || 'temp',
+        id: attachedSubject?.subjectId || displaySubjects[0]?.subjectId || 'temp',
         type: ItemTypes.SUBJECT,
         subject: attachedSubject || displaySubjects[0],
         fromSlotId: `${day}-${index}`,
@@ -267,7 +267,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   const fullText = subjectNames.join(' | ');
   const firstSubject = displaySubjects[0]?.name;
   const extraCount = displaySubjects.length - 1;
-
+  console.log('displaySubjects----', displaySubjects);
   return (
     <Box ref={attachRef} sx={getSx()}>
       <CustomTooltip title={getTooltipContent()} arrow placement="top">

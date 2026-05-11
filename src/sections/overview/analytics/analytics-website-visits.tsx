@@ -1,6 +1,5 @@
 import type { CardProps } from '@mui/material/Card';
-import type { ChartOptions } from 'src/components/chart';
-import type { Props as ApexProps } from 'react-apexcharts';
+import type { ChartSeries, ChartOptions } from 'src/components/chart';
 
 import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
@@ -17,7 +16,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: ApexProps['series'];
+    series: ChartSeries;
     options?: ChartOptions;
   };
   firstDropdownOptions?: { value: string; label: string }[];
@@ -113,7 +112,7 @@ export function AnalyticsWebsiteVisits({
         type="bar"
         series={chart.series}
         options={chartOptions}
-        height={364}
+        // height={364}
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ pl: 1, pr: 2.5 }}
       />

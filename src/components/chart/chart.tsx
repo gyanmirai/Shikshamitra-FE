@@ -1,31 +1,26 @@
+'use client';
+
 import './styles.css';
 
 import type { BoxProps } from '@mui/material/Box';
 
-import dynamic from 'next/dynamic';
+import { useMemo } from 'react';
 import Box from '@mui/material/Box';
-import { withLoadingProps } from 'src/utils/with-loading-props';
+import { useTheme } from '@mui/material/styles';
+import { BaseChart } from 'src/components/charts/base/BaseChart';
+import { apexToHighcharts } from 'src/components/charts/base/apexCompat';
 
-import { ChartLoading } from './chart-loading';
-
-import type { ChartProps, ChartBaseProps, ChartLoadingProps } from './types';
+import type { ChartProps } from './types';
 
 // ----------------------------------------------------------------------
-
-type WithLoadingProps = ChartBaseProps & {
-  loading?: ChartLoadingProps;
-};
-
-const ApexChart = withLoadingProps<WithLoadingProps>((props) =>
-  dynamic(() => import('react-apexcharts').then((mod) => mod.default), {
-    ssr: false,
-    loading: () => {
-      const { loading, type } = props();
-
-      return loading?.disabled ? null : <ChartLoading type={type} sx={loading?.sx} />;
-    },
-  })
-);
+// Backwards-compatible <Chart /> component.
+//
+// Historically this rendered react-apexcharts. The dashboard has been
+// migrated to Highcharts, but to avoid touching ~100+ consumer files we
+// keep the same public API (`type`, `series`, `options`) and translate
+// the ApexCharts-style options into Highcharts options at render time
+// using the apexCompat translator.
+// ----------------------------------------------------------------------
 
 export function Chart({
   sx,
@@ -37,6 +32,23 @@ export function Chart({
   width = '100%',
   ...other
 }: BoxProps & ChartProps) {
+  const theme = useTheme();
+
+  const hcOptions = useMemo(
+    () => apexToHighcharts(type as any, series, options, theme),
+    [type, series, options, theme]
+  );
+
+  const isEmpty = useMemo(() => {
+    if (Array.isArray(series) && series.length === 0) return true;
+    if (
+      Array.isArray(series) &&
+      series.every((s: any) => Array.isArray(s?.data) && s.data.length === 0)
+    )
+      return true;
+    return false;
+  }, [series]);
+
   return (
     <Box
       dir="ltr"
@@ -50,13 +62,16 @@ export function Chart({
       }}
       {...other}
     >
-      <ApexChart
-        type={type}
-        series={series}
-        options={options}
-        width="100%"
+      <BaseChart
+        options={hcOptions}
         height="100%"
-        loading={loadingProps}
+        width="100%"
+        empty={isEmpty}
+        loading={false}
+        loaderVariant={
+          ['donut', 'pie', 'radialBar', 'polarArea'].includes(type) ? 'circular' : 'rectangular'
+        }
+        sx={loadingProps?.sx}
       />
     </Box>
   );
