@@ -878,10 +878,11 @@ const TimeTableForm = ({
       skip: !classId || !divisionId,
     },
   });
-  const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateTimetableMutation,
-  });
+  const [createTimetable, { isLoading: isSubmitting, isFetching: isTimetableFetching }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useCreateTimetableMutation,
+    });
 
   const transformSlotsToPayload = useCallback(
     (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
@@ -907,7 +908,7 @@ const TimeTableForm = ({
           subjectType: slot.subjectType ?? 0,
           electiveGroupId: slot.electiveGroupId ?? null,
           subjects: (slot.subjects ?? []).map((s) => ({
-            subjectId: s.id,
+            subjectId: s.subjectId,
             teacherId: s.teacherId ?? '',
             roomId: s.roomId ?? '',
           })),
@@ -948,16 +949,22 @@ const TimeTableForm = ({
 
   const subjects = useMemo(
     () =>
-      slotConfigData?.subjectSummary.map((subject: any) => ({
-        ...subject,
-        id: subject?.electiveGroupId ? subject?.electiveGroupId : subject?.subjects?.[0]?.subjectId,
-        name: subject?.electiveGroupId
-          ? subject?.electiveGroupName
-          : subject?.subjects?.[0]?.subjectName,
-        color: subject?.color,
-        defaultDuration: 60,
-        totalLectures: subject?.totalSlots,
-      })) || [],
+      slotConfigData?.subjectSummary.map((subject: any) => {
+        const resolvedId = subject?.electiveGroupId
+          ? subject?.electiveGroupId
+          : subject?.subjects?.[0]?.subjectId;
+        return {
+          ...subject,
+          id: resolvedId,
+          subjectId: resolvedId,
+          name: subject?.electiveGroupId
+            ? subject?.electiveGroupName
+            : subject?.subjects?.[0]?.subjectName,
+          color: subject?.color,
+          defaultDuration: 60,
+          totalLectures: subject?.totalSlots,
+        };
+      }) || [],
     [slotConfigData]
   );
 

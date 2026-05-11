@@ -157,69 +157,69 @@ export const generateWeeklySlots = (config: SlotConfig[]): Record<DayOfWeek, Tim
   return weeklySlots;
 };
 
-export const MOCK_SUBJECT_DATA: SubjectResponse = {
-  items: [
-    {
-      subjectType: 0,
-      electiveGroupId: null,
-      electiveGroupName: null,
-      status: 1,
-      allocateLectures: 6,
-      totalLectures: 6,
-      subjects: [
-        {
-          subjectType: 0,
-          subjectId: 'a1b2c3d4-1111-2222-3333-444455556666',
-          subjectName: 'Mathematics',
-          subjectCode: 'MATH101',
-          color: '#3F51B5',
-        },
-      ],
-    },
-    {
-      subjectType: 0,
-      electiveGroupId: null,
-      electiveGroupName: null,
-      status: 1,
-      allocateLectures: 6,
-      totalLectures: 6,
-      subjects: [
-        {
-          subjectType: 0,
-          subjectId: 'b2c3d4e5-7777-8888-9999-000011112222',
-          subjectName: 'English',
-          subjectCode: 'ENG101',
-          color: '#009688',
-        },
-      ],
-    },
-    {
-      subjectType: 1,
-      electiveGroupId: 'e86f1ef1-84de-48ff-89f9-8e86470e258a',
-      electiveGroupName: 'Tech & Fitness Group',
-      color: '#FF9800',
-      status: 1,
-      allocateLectures: 6,
-      totalLectures: 6,
-      subjects: [
-        {
-          subjectType: 1,
-          subjectId: '68460e63-0717-47f9-8fd8-d28f152cb30b',
-          subjectName: 'Computer',
-          subjectCode: 'COMP101',
-          color: '#2196F3',
-        },
-        {
-          subjectType: 1,
-          subjectId: '9d8c7b6a-5555-4444-3333-222211110000',
-          subjectName: 'Physical Training',
-          subjectCode: 'PT101',
-          color: '#E91E63',
-        },
-      ],
-    },
-  ],
-};
+// export const MOCK_SUBJECT_DATA: SubjectResponse = {
+//   items: [
+//     {
+//       subjectType: 0,
+//       electiveGroupId: null,
+//       electiveGroupName: null,
+//       status: 1,
+//       allocateLectures: 6,
+//       totalLectures: 6,
+//       subjects: [
+//         {
+//           subjectType: 0,
+//           subjectId: 'a1b2c3d4-1111-2222-3333-444455556666',
+//           subjectName: 'Mathematics',
+//           subjectCode: 'MATH101',
+//           color: '#3F51B5',
+//         },
+//       ],
+//     },
+//     {
+//       subjectType: 0,
+//       electiveGroupId: null,
+//       electiveGroupName: null,
+//       status: 1,
+//       allocateLectures: 6,
+//       totalLectures: 6,
+//       subjects: [
+//         {
+//           subjectType: 0,
+//           subjectId: 'b2c3d4e5-7777-8888-9999-000011112222',
+//           subjectName: 'English',
+//           subjectCode: 'ENG101',
+//           color: '#009688',
+//         },
+//       ],
+//     },
+//     {
+//       subjectType: 1,
+//       electiveGroupId: 'e86f1ef1-84de-48ff-89f9-8e86470e258a',
+//       electiveGroupName: 'Tech & Fitness Group',
+//       color: '#FF9800',
+//       status: 1,
+//       allocateLectures: 6,
+//       totalLectures: 6,
+//       subjects: [
+//         {
+//           subjectType: 1,
+//           subjectId: '68460e63-0717-47f9-8fd8-d28f152cb30b',
+//           subjectName: 'Computer',
+//           subjectCode: 'COMP101',
+//           color: '#2196F3',
+//         },
+//         {
+//           subjectType: 1,
+//           subjectId: '9d8c7b6a-5555-4444-3333-222211110000',
+//           subjectName: 'Physical Training',
+//           subjectCode: 'PT101',
+//           color: '#E91E63',
+//         },
+//       ],
+//     },
+//   ],
+// };
 
 export const getSubjectsFromResponse = (data: SubjectResponse): Subject[] => {
   if (!data?.items) return [];
@@ -229,7 +229,8 @@ export const getSubjectsFromResponse = (data: SubjectResponse): Subject[] => {
     if (item.subjectType === 0) {
       const coreSub = item.subjects[0];
       return {
-        id: coreSub?.subjectId || 'unknown-core',
+        subjectId: coreSub?.subjectId || 'unknown-core',
+        subjectAssignmentId: coreSub?.subjectAssignmentId || 'unknown-core',
         name: coreSub?.subjectName || 'Unknown',
         color: coreSub?.color || '#e0e0e0',
         defaultDuration: 60,
@@ -242,7 +243,8 @@ export const getSubjectsFromResponse = (data: SubjectResponse): Subject[] => {
     if (item.subjectType === 1) {
       const names = item.subjects.map((s) => s.subjectName).join(' | ');
       return {
-        id: item.electiveGroupId || 'unknown-group',
+        subjectId: item.electiveGroupId || 'unknown-group',
+        subjectAssignmentId: item.electiveGroupId || 'unknown-group',
         name: names || item.electiveGroupName || 'Elective Group',
         // Use group color if available, else first subject color
         color: item.color || item.subjects[0]?.color || '#e0e0e0',
@@ -253,7 +255,8 @@ export const getSubjectsFromResponse = (data: SubjectResponse): Subject[] => {
 
     // Fallback
     return {
-      id: 'unknown',
+      subjectId: 'unknown',
+      subjectAssignmentId: 'unknown',
       name: 'Unknown',
       color: '#eee',
       defaultDuration: 60,
@@ -261,8 +264,6 @@ export const getSubjectsFromResponse = (data: SubjectResponse): Subject[] => {
     };
   });
 };
-
-export const MOCK_SUBJECTS = getSubjectsFromResponse(MOCK_SUBJECT_DATA);
 
 export const MOCK_TIMETABLE_DATA = {
   MONDAY: [
