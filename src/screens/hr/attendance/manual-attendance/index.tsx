@@ -23,15 +23,16 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
 import {
-  mapTakeAttendanceStatusToUi,
-  MANUAL_ATTENDANCE_UI_STATUS as STATUS,
-} from 'src/screens/hr/attendance/manual-attendance/status-mapper';
-import {
   useGetDayAttendanceQuery,
   useLockDayAttendanceMutation,
   useSaveDayAttendanceMutation,
   useUnlockDayAttendanceMutation,
 } from 'src/redux/hr/attendanceApi';
+import {
+  mapTakeAttendanceStatusToUi,
+  buildManualAttendanceSaveEntries,
+  MANUAL_ATTENDANCE_UI_STATUS as STATUS,
+} from 'src/screens/hr/attendance/manual-attendance/status-mapper';
 
 // ---------------------------------------------------------------------------
 // Status constants (mirroring AttendanceStatus enum from student module)
@@ -186,15 +187,18 @@ const ManualAttendanceScreen = () => {
   // -------------------------------------------------------------------------
   const handleSave = async () => {
     try {
+      const entries = buildManualAttendanceSaveEntries(employeeData);
+
+      if (entries.length === 0) {
+        shikshaMitraToast.error({
+          message: 'Mark at least one employee as Present, Half Day, or Absent before saving.',
+        });
+        return;
+      }
+
       const payload = {
         attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
-        entries: employeeData.map((emp) => ({
-          employeeId: emp.employeeId || emp.id,
-          statusWire: emp.status,
-          inTime: emp.timeIn || '',
-          outTime: emp.timeOut || '',
-          remarks: emp.remarks || '',
-        })),
+        entries,
       };
 
       await saveDayAttendance(payload).unwrap();

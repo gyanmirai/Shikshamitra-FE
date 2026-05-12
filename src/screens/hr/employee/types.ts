@@ -2,6 +2,7 @@ import type { Dayjs } from 'dayjs';
 
 export interface IPersonalInformationResponse {
   id: string;
+  userId?: string | null;
   firstName: string;
   middleName: string;
   lastName: string;

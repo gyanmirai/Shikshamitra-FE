@@ -13,10 +13,13 @@ import LeaveBalance from 'src/screens/hr/leave-balance/leave-balance';
 
 import ApplyLeave from './apply-leave';
 import LeaveApprovals from './leave-approvals';
-import { isAdminFromProfile } from './leave-request.utils';
-
-type LeaveCenterContext = 'hr' | 'self';
-type LeaveCenterTab = 'my-requests' | 'approvals' | 'balance';
+import {
+  isAdminFromProfile,
+  type LeaveCenterTab,
+  resolveLeaveCenterTab,
+  type LeaveCenterContext,
+  getLeaveCenterVisibleTabs,
+} from './leave-request.utils';
 
 type LeaveCenterProps = {
   context: LeaveCenterContext;
@@ -40,6 +43,10 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
       permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
   );
   const canReviewLeaves = !isSelfContext && Boolean(isAdminUser || hasApprovalPermission);
+  const visibleTabs = useMemo(
+    () => getLeaveCenterVisibleTabs(context, canReviewLeaves),
+    [canReviewLeaves, context]
+  );
 
   const requestedTab = useMemo<LeaveCenterTab>(() => {
     if (isSelfContext) {
@@ -55,26 +62,26 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     return initialTab;
   }, [initialTab, isSelfContext, searchParams]);
 
-  const activeTab: LeaveCenterTab =
-    requestedTab === 'approvals' && !canReviewLeaves ? 'my-requests' : requestedTab;
+  const activeTab = resolveLeaveCenterTab(
+    requestedTab,
+    visibleTabs,
+    canReviewLeaves ? 'approvals' : initialTab
+  );
 
   const handleTabChange = (_event: React.SyntheticEvent, nextTab: LeaveCenterTab) => {
+    if (!visibleTabs.includes(nextTab)) {
+      return;
+    }
+
     if (isSelfContext) {
       const nextParams = new URLSearchParams(searchParams.toString());
       if (nextTab === 'balance') {
         nextParams.set('tab', 'balance');
-      } else if (nextTab === 'approvals') {
-        nextParams.set('tab', 'approvals');
       } else {
         nextParams.delete('tab');
       }
       const query = nextParams.toString();
       router.push(query ? `${SELF_ROUTE}?${query}` : SELF_ROUTE);
-      return;
-    }
-
-    if (nextTab === 'approvals' && !canReviewLeaves) {
-      router.push(HR_ROUTE);
       return;
     }
 
@@ -124,9 +131,9 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="My Requests" value="my-requests" />
-          {canReviewLeaves && <Tab label="Approvals" value="approvals" />}
-          <Tab label="Balance" value="balance" />
+          {visibleTabs.includes('my-requests') && <Tab label="My Requests" value="my-requests" />}
+          {visibleTabs.includes('approvals') && <Tab label="Approvals" value="approvals" />}
+          {visibleTabs.includes('balance') && <Tab label="Balance" value="balance" />}
         </Tabs>
       </Card>
 

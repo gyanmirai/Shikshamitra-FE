@@ -6,20 +6,38 @@ const compactParams = (params: Record<string, unknown>) =>
     Object.entries(params).filter(([, value]) => value !== undefined && value !== null)
   );
 
+export const resolveEmployeeIdParam = (input: any): string | null => {
+  const id = typeof input === 'string' ? input : input?.id || input?.employeeId;
+  return typeof id === 'string' && id.trim() ? id.trim() : null;
+};
+
+export const buildWorkExperienceUrl = (input: any): string => {
+  const id = resolveEmployeeIdParam(input);
+  if (!id) {
+    throw new Error('Employee id is required to fetch work experience.');
+  }
+
+  return `/employees/${id}/work-experience`;
+};
+
 export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
-      query: ({ page = 1, pageSize = 10, search, ...filters } = {}) => ({
-        url: `/employees`,
-        method: 'GET',
-        params: compactParams({
-          page,
-          pageSize,
-          search,
-          ...filters,
-        }),
-      }),
+      query: (args) => {
+        const { page = 1, pageSize = 10, search, ...filters } = args ?? {};
+
+        return {
+          url: `/employees`,
+          method: 'GET',
+          params: compactParams({
+            page,
+            pageSize,
+            search,
+            ...filters,
+          }),
+        };
+      },
       providesTags: [employeeType.employee],
     }),
     getEmployeeById: builder.query({
@@ -104,8 +122,8 @@ export const employeeApi = api.injectEndpoints({
       invalidatesTags: [employeeType.employee],
     }),
     getWorkExperience: builder.query({
-      query: ({ id }) => ({
-        url: `/employees/${id}/work-experience`,
+      query: (input) => ({
+        url: buildWorkExperienceUrl(input),
         method: 'GET',
       }),
       providesTags: [employeeType.employee],

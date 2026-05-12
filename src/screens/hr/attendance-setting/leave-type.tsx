@@ -53,6 +53,7 @@ export interface ILeavePolicy {
   leaveType: { id: string; name: string } | string;
   leaveCount: number;
   accuralPolicyType: AccuralPolicyType;
+  accrualPolicyType?: AccuralPolicyType | 'Monthly' | 'Yearly';
   maxLeavePerYear?: number;
   paidType: string;
   carryForward: boolean;

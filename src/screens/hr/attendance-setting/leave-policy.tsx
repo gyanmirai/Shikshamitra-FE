@@ -347,6 +347,18 @@ const LeavePolicy = () => {
 export default LeavePolicy;
 
 const paidTypes = ['Paid', 'Unpaid'];
+
+export const normalizeAccrualPolicyTypeValue = (value: unknown) => {
+  if (value === AccuralPolicyType.Yearly || value === 'Yearly') {
+    return AccuralPolicyType.Yearly;
+  }
+
+  return AccuralPolicyType.Monthly;
+};
+
+export const toAccrualPolicyTypeApiValue = (value: unknown) =>
+  normalizeAccrualPolicyTypeValue(value) === AccuralPolicyType.Yearly ? 'Yearly' : 'Monthly';
+
 // Simplified validation schema per new requirements
 const validationSchema = Yup.object({
   policyTitle: Yup.string().required('Policy Name is required'),
@@ -404,7 +416,9 @@ export const LeavePolicyForm = ({
       leaveType:
         (typeof editData?.leaveType === 'object' ? editData?.leaveType?.id : editData?.leaveType) ||
         '',
-      accuralPolicyType: editData?.accuralPolicyType || AccuralPolicyType.Monthly,
+      accuralPolicyType: normalizeAccrualPolicyTypeValue(
+        editData?.accrualPolicyType ?? editData?.accuralPolicyType
+      ),
       leaveCount: editData?.leaveCount || '1',
       paidType: editData?.paidType || 'Paid',
       carryForward: editData?.carryForward ?? false,
@@ -413,6 +427,7 @@ export const LeavePolicyForm = ({
       requiresApproval: editData?.requiresApproval ?? false,
       description: editData?.description || '',
     },
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -420,7 +435,7 @@ export const LeavePolicyForm = ({
           policyTitle: values.policyTitle,
           leaveType: values.leaveType,
           leaveCount: Number(values.leaveCount),
-          accuralPolicyType: values.accuralPolicyType,
+          accrualPolicyType: toAccrualPolicyTypeApiValue(values.accuralPolicyType),
           paidType: values.paidType,
           carryForward: values.carryForward,
           encashmentAllowed: values.encashmentAllowed,
@@ -433,7 +448,7 @@ export const LeavePolicyForm = ({
           await addLeavePolicy({
             academicYearId: currentYear?.id,
             body: payload,
-          });
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Leave policy ${values.policyTitle} added successfully`,
           });
@@ -441,7 +456,7 @@ export const LeavePolicyForm = ({
           await updateLeavePolicy({
             id: editData.id,
             body: payload,
-          });
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Leave policy ${values.policyTitle} updated successfully`,
           });

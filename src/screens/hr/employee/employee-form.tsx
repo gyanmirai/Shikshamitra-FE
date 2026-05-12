@@ -256,6 +256,8 @@ const toOptionalGuid = (value: unknown) =>
   typeof value === 'string' && value.trim() ? value : null;
 
 const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
+export const getEmployeeUserId = (values: any, editData?: any) =>
+  values?.userId || editData?.userId || null;
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
   reportingManager: editData?.reportingManager?.id ?? '',
@@ -350,6 +352,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const initialValues = useMemo(
     () => ({
       ...personalInformationInitialValues(editData),
+      userId: editData?.userId,
       employeeId: editData?.id,
       ...familyInformationInitialValues(),
       ...additionalDetailsInitialValues(),
@@ -407,6 +410,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
 
         const resp = await addEmployee({ body: formData }).unwrap();
+        if (resp.userId) {
+          formik.setFieldValue('userId', resp.userId);
+        }
         formik.setFieldValue('employeeId', resp.id);
         return resp.id;
       }
@@ -610,9 +616,17 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const handleAcademicPermission = useCallback(
     async (values: any, formik: any, id: any) => {
+      const userId = getEmployeeUserId(values, editData);
+      if (!userId) {
+        shikshaMitraToast.info({
+          message: 'Academic permission was skipped because this employee has no linked user.',
+        });
+        return null;
+      }
+
       const res = await addAccessControl({
         academicYearIds: [currentYear.id],
-        userIds: [values.employeeId],
+        userIds: [userId],
         educationBoardIds: values.academicPermissionSelectedData.boards,
         educationMediumIds: values.academicPermissionSelectedData.mediums,
         educationMediumStageIds: values.academicPermissionSelectedData.organizations,
@@ -621,7 +635,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }).unwrap();
       return res;
     },
-    [addAccessControl, currentYear.id]
+    [addAccessControl, currentYear.id, editData]
   );
 
   const handleSave = useCallback(
@@ -825,6 +839,7 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
+  const initialAccessControlUserId = getEmployeeUserId(formik.values, editData);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Always keep a ref to the latest formik instance to avoid stale closures in effects
@@ -851,9 +866,10 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
     currentQueryAndMutation: useGetBasicInformationQuery,
     params: editData?.id,
     options: {
-      skip: !(editData?.id && step === 0),
+      skip: !(editData?.id && (step === 0 || (step === 7 && !initialAccessControlUserId))),
     },
   });
+  const accessControlUserId = initialAccessControlUserId || basicDetails?.userId || null;
 
   const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
     type: 'query',
@@ -901,8 +917,8 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
   const { data: accessControl, isLoading: accessControlLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
-    params: { userId: editData?.id, academicYearId: currentYear?.id },
-    options: { skip: !(editData?.id && currentYear?.id && step === 7) },
+    params: { userId: accessControlUserId, academicYearId: currentYear?.id },
+    options: { skip: !(accessControlUserId && currentYear?.id && step === 7) },
   });
 
   // Full boards tree for the current academic year — needed to expand the
@@ -919,6 +935,9 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (!editData?.id) return;
+    if (basicDetails?.userId && step === 7 && !formikRef.current.values.userId) {
+      formikRef.current.setFieldValue('userId', basicDetails.userId, false);
+    }
 
     if (basicDetails && step === 0) {
       const updatedFields = personalInformationInitialValues(basicDetails);
@@ -1047,79 +1066,92 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
                     boardsLoading ? (
                       <StepSkeleton step={step} />
                     ) : (
-                      <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
-                        {allFields[step].map((field) => (
-                          <Grid
-                            size={{
-                              xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
-                              md: [1, 2, 3, 4].includes(step) ? 12 : 4,
-                            }}
-                            key={field.name}
-                            {...field.gridProps}
-                          >
-                            {field.renderComp ? (
-                              field.renderComp({
-                                formik,
-                                field,
-                                isMainForm: true,
-                              })
-                            ) : field.type === 'date' ? (
-                              <DatePicker
-                                label={field.label}
-                                name={field.name}
-                                value={formik.values[field.name]}
-                                format="DD-MM-YYYY"
-                                onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                                // sx={{ ...(field?.sx || {}) }}
-                                sx={{
-                                  ...((field?.sx as any) || {}),
-                                }}
-                                slotProps={{
-                                  textField: {
-                                    placeholder: field.placeholder,
-                                    fullWidth: true,
-                                    size: 'small',
-                                    helperText:
-                                      formik.touched[field.name] && formik.errors[field.name],
-                                    error:
-                                      formik.touched[field.name] &&
-                                      Boolean(formik.errors[field.name]),
-                                  },
-                                }}
-                              />
-                            ) : (
-                              <ShakingTextField
-                                error={
-                                  formik.touched[field.name] && Boolean(formik.errors[field.name])
-                                }
-                              >
-                                <TextField
-                                  key={field.name}
-                                  type={field.type}
-                                  size="small"
+                      <>
+                        {step === 7 && !accessControlUserId && (
+                          <Grid size={{ xs: 12 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              Academic permissions can be assigned after this employee is linked to
+                              a user account.
+                            </Typography>
+                          </Grid>
+                        )}
+                        <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
+                          {allFields[step].map((field) => (
+                            <Grid
+                              size={{
+                                xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
+                                md: [1, 2, 3, 4].includes(step) ? 12 : 4,
+                              }}
+                              key={field.name}
+                              {...field.gridProps}
+                            >
+                              {field.renderComp ? (
+                                field.renderComp({
+                                  formik,
+                                  field,
+                                  isMainForm: true,
+                                })
+                              ) : field.type === 'date' ? (
+                                <DatePicker
                                   label={field.label}
                                   name={field.name}
-                                  placeholder={field.placeholder}
                                   value={formik.values[field.name]}
-                                  onChange={formik.handleChange}
-                                  onBlur={formik.handleBlur}
+                                  format="DD-MM-YYYY"
+                                  onChange={(newValue) =>
+                                    formik.setFieldValue(field.name, newValue)
+                                  }
+                                  // sx={{ ...(field?.sx || {}) }}
+                                  sx={{
+                                    ...((field?.sx as any) || {}),
+                                  }}
+                                  slotProps={{
+                                    textField: {
+                                      placeholder: field.placeholder,
+                                      fullWidth: true,
+                                      size: 'small',
+                                      helperText:
+                                        formik.touched[field.name] && formik.errors[field.name],
+                                      error:
+                                        formik.touched[field.name] &&
+                                        Boolean(formik.errors[field.name]),
+                                    },
+                                  }}
+                                />
+                              ) : (
+                                <ShakingTextField
                                   error={
                                     formik.touched[field.name] && Boolean(formik.errors[field.name])
                                   }
-                                  helperText={
-                                    formik.touched[field.name] && formik.errors[field.name]
-                                  }
-                                  fullWidth
-                                  sx={{ ...(field?.sx || {}) }}
-                                  {...((typeof field?.otherProps === 'function'
-                                    ? field?.otherProps({ formik })
-                                    : field?.otherProps) || {})}
-                                />
-                              </ShakingTextField>
-                            )}
-                          </Grid>
-                        ))}
-                      </Grid>
+                                >
+                                  <TextField
+                                    key={field.name}
+                                    type={field.type}
+                                    size="small"
+                                    label={field.label}
+                                    name={field.name}
+                                    placeholder={field.placeholder}
+                                    value={formik.values[field.name]}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                      formik.touched[field.name] &&
+                                      Boolean(formik.errors[field.name])
+                                    }
+                                    helperText={
+                                      formik.touched[field.name] && formik.errors[field.name]
+                                    }
+                                    fullWidth
+                                    sx={{ ...(field?.sx || {}) }}
+                                    {...((typeof field?.otherProps === 'function'
+                                      ? field?.otherProps({ formik })
+                                      : field?.otherProps) || {})}
+                                  />
+                                </ShakingTextField>
+                              )}
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </>
                     )}
                   </Box>
                 </Scrollbar>
