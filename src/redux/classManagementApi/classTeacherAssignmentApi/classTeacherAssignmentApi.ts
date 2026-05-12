@@ -6,7 +6,7 @@ export const classTeacherAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
     getClassTeacherAssignments: builder.query<any, { organizationId: string }>({
       query: (params) => ({
-        url: 'class-teachers/assignments',
+        url: 'class-management/class-teacher-assignments',
         method: 'GET',
         params,
       }),
@@ -24,7 +24,7 @@ export const classTeacherAssignmentApi = classManagementApi.injectEndpoints({
       }
     >({
       query: (body) => ({
-        url: 'class-teachers/assignments',
+        url: 'class-management/class-teacher-assignments',
         method: 'PUT',
         body,
       }),

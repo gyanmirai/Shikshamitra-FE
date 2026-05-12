@@ -254,7 +254,7 @@ const CourseProgressComponent = ({
    */
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Grid
         container
         spacing={isVertical ? 3 : 1}
@@ -607,7 +607,7 @@ const CourseProgressComponent = ({
       >
         <ViewChapterLogs onClose={handleClose} selectedChapter={selectedChapter} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

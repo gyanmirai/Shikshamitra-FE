@@ -6,15 +6,16 @@ export const studentElectiveAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
     getStudentElectiveAssignments: builder.query({
       query: (params) => ({
-        url: 'electives/assignments',
+        url: 'class-management/student-elective-assignments',
         method: 'GET',
         params,
       }),
       providesTags: [classManagementType.studentElectiveAssignment],
     }),
+
     updateStudentElectiveAssignments: builder.mutation({
       query: (body) => ({
-        url: 'electives/assignments',
+        url: 'class-management/student-elective-assignments',
         method: 'PUT',
         body,
       }),

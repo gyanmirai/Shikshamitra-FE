@@ -51,8 +51,8 @@ const CourseProgress = () => {
         sx={{ px: 2 }}
       />
       {/* Class and Division selection filters */}
-      <Card sx={{ p: 2, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <Card sx={{ p: 1, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
           <CustomSelect
             options={allClass}
             label="Class"
@@ -73,8 +73,8 @@ const CourseProgress = () => {
             disabled={!classes}
           />
         </Box>
-        <CourseProgressComponent isAction selectedClass={classes} selectedDivision={division} />
       </Card>
+      <CourseProgressComponent isAction selectedClass={classes} selectedDivision={division} />
     </Box>
   );
 };

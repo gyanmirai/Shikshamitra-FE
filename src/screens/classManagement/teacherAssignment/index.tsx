@@ -100,22 +100,6 @@ const TeacherAssignment = ({
 
   const divisions = useMemo(() => selectedClass?.divisions || [], [selectedClass]);
 
-  // // Fetch Subjects
-  // const { data: subjectsData } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetSubjectsQuery,
-  //   params: {
-  //     academicMediumId: medium?.id,
-  //     classId: classes,
-  //   },
-  // });
-
-  // useEffect(() => {
-  //   if (subjectsData) {
-  //     setSubjectList(subjectsData);
-  //   }
-  // }, [subjectsData]);
-
   const [query, setQuery] = useState({
     sorting: '',
     skipCount: 0,
@@ -123,7 +107,12 @@ const TeacherAssignment = ({
   });
 
   // Fetch Assignments
-  const { data: assignmentsData, refetch } = useQueryAndMutation({
+  const {
+    data: assignmentsData,
+    refetch,
+    isFetching,
+    isLoading,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetTeacherAssignmentsQuery,
     params: {
@@ -301,6 +290,7 @@ const TeacherAssignment = ({
         noDataText={<>No Teachers Data Found Select Class and Division</>}
         isSearch={false}
         isFilter={false}
+        isLoading={isLoading || isFetching}
         columns={[
           {
             id: 'division',
