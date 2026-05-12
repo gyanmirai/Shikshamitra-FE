@@ -16,7 +16,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useSaveAttendanceConfigurationMutation } from 'src/redux/hr/attendanceApi';
+import {
+  useGetAttendanceConfigurationQuery,
+  useSaveAttendanceConfigurationMutation,
+} from 'src/redux/hr/attendanceApi';
 import {
   Box,
   Card,
@@ -45,7 +48,8 @@ const validationSchema = Yup.object().shape({
   }),
   dailyRules: Yup.object({
     hoursBasedPayPercentage: Yup.number()
-      .min(1, 'Min 1 hour')
+      .min(0, 'Min 0%')
+      .max(100, 'Max 100%')
       .required('Required')
       .typeError('Must be a number'),
   }),
@@ -86,12 +90,26 @@ const AttendanceConfigurationScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useSaveAttendanceConfigurationMutation,
     options: { skip: !academicYearId?.id },
+    popupConfig: { error: false },
+  });
+
+  const { data: attendanceConfiguration } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAttendanceConfigurationQuery,
+    params: { academicYearId: academicYearId?.id },
+    options: { skip: !academicYearId?.id },
+    popupConfig: { error: false },
   });
 
   const formik = useFormik<AttendanceConfiguration>({
     initialValues: INITIAL_ATTENDANCE_CONFIG,
     validationSchema,
     onSubmit: async (values) => {
+      if (!academicYearId?.id) {
+        shikshaMitraToast.error({ message: 'Please select an academic year before saving' });
+        return;
+      }
+
       try {
         await saveAttendanceConfiguration({
           academicYearId: academicYearId.id,
@@ -110,7 +128,7 @@ const AttendanceConfigurationScreen = () => {
               minOvertimeMinutes: values.overtime.minOvertimeMinutes,
             },
           },
-        });
+        }).unwrap();
         shikshaMitraToast.success({ message: 'Attendance configuration saved successfully' });
       } catch (error) {
         console.error('Failed to save attendance configuration:', error);
@@ -119,7 +137,42 @@ const AttendanceConfigurationScreen = () => {
     },
   });
 
-  const { values, touched, errors, handleChange, setFieldValue } = formik;
+  const { values, touched, errors, handleChange, setFieldValue, resetForm } = formik;
+
+  React.useEffect(() => {
+    if (!attendanceConfiguration?.dailyRules) {
+      return;
+    }
+
+    resetForm({
+      values: {
+        ...INITIAL_ATTENDANCE_CONFIG,
+        dailyRules: {
+          hoursBasedPayPercentage: attendanceConfiguration.dailyRules.hoursBasedPayPercentage,
+        },
+        lateEarlyRules: {
+          ...INITIAL_ATTENDANCE_CONFIG.lateEarlyRules,
+          graceTime:
+            attendanceConfiguration.lateEarlyRules?.graceTime ??
+            INITIAL_ATTENDANCE_CONFIG.lateEarlyRules.graceTime,
+          maxLateAllowedPerMonth:
+            attendanceConfiguration.lateEarlyRules?.maxLateAllowedPerMonth ??
+            INITIAL_ATTENDANCE_CONFIG.lateEarlyRules.maxLateAllowedPerMonth,
+          penaltyType:
+            attendanceConfiguration.lateEarlyRules?.penaltyType ??
+            INITIAL_ATTENDANCE_CONFIG.lateEarlyRules.penaltyType,
+        },
+        overtime: {
+          enabled:
+            attendanceConfiguration.overtime?.enabled ?? INITIAL_ATTENDANCE_CONFIG.overtime.enabled,
+          rate: attendanceConfiguration.overtime?.rate ?? INITIAL_ATTENDANCE_CONFIG.overtime.rate,
+          minOvertimeMinutes:
+            attendanceConfiguration.overtime?.minOvertimeMinutes ??
+            INITIAL_ATTENDANCE_CONFIG.overtime.minOvertimeMinutes,
+        },
+      },
+    });
+  }, [attendanceConfiguration, resetForm]);
 
   const getFieldStatus = (field: string) => {
     const parts = field.split('.');
@@ -130,9 +183,6 @@ const AttendanceConfigurationScreen = () => {
       helperText: touchedVal && errorVal ? String(errorVal) : '',
     };
   };
-
-  // Derived hours display (based on 8-hr workday)
-  const derivedHours = ((values.dailyRules.hoursBasedPayPercentage / 100) * 8).toFixed(1);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

@@ -5,8 +5,10 @@ import {
   SELF_OPTION,
   SELF_EMPLOYEE_ID,
   isAdminFromProfile,
+  resolveLeaveCenterTab,
   isDateWithinAcademicYear,
   getAcademicYearStartMonth,
+  getLeaveCenterVisibleTabs,
   buildEmployeeSelectOptions,
   buildCreateLeaveRequestFormData,
   isEmployeeSelectionValidForCreate,
@@ -173,5 +175,21 @@ describe('problem details parsing', () => {
     expect(isAdminFromProfile({ role: 'admin' })).toBe(true);
     expect(isAdminFromProfile({ role: ['teacher', 'admin'] })).toBe(true);
     expect(isAdminFromProfile({ role: 'teacher' })).toBe(false);
+  });
+});
+
+describe('leave center tab visibility', () => {
+  it('shows only administrative approvals in HR context for reviewers', () => {
+    expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['approvals']);
+    expect(resolveLeaveCenterTab('my-requests', ['approvals'], 'approvals')).toBe('approvals');
+    expect(resolveLeaveCenterTab('balance', ['approvals'], 'approvals')).toBe('approvals');
+  });
+
+  it('keeps personal leave tabs for self context and non-review HR users', () => {
+    expect(getLeaveCenterVisibleTabs('self', true)).toEqual(['my-requests', 'balance']);
+    expect(getLeaveCenterVisibleTabs('hr', false)).toEqual(['my-requests', 'balance']);
+    expect(resolveLeaveCenterTab('balance', ['my-requests', 'balance'], 'my-requests')).toBe(
+      'balance'
+    );
   });
 });

@@ -7,6 +7,8 @@ export const LEAVE_TARGET_EMPLOYEE_REQUIRED = 'HR:Leave:020033';
 export const SELF_EMPLOYEE_ID = 'self';
 export const SELF_OPTION = { id: SELF_EMPLOYEE_ID, label: 'Self' } as const;
 
+export type LeaveCenterContext = 'hr' | 'self';
+export type LeaveCenterTab = 'my-requests' | 'approvals' | 'balance';
 export type EmployeeOption = { id: string; label: string };
 
 export interface LeaveRequestFormValuesForPayload {
@@ -67,6 +69,33 @@ export function isAdminFromProfile(profile: any): boolean {
   }
 
   return String(role || '').toLowerCase() === 'admin';
+}
+
+export function getLeaveCenterVisibleTabs(
+  context: LeaveCenterContext,
+  canReviewLeaves: boolean
+): LeaveCenterTab[] {
+  if (context === 'hr' && canReviewLeaves) {
+    return ['approvals'];
+  }
+
+  return ['my-requests', 'balance'];
+}
+
+export function resolveLeaveCenterTab(
+  requestedTab: LeaveCenterTab,
+  visibleTabs: LeaveCenterTab[],
+  fallbackTab: LeaveCenterTab
+): LeaveCenterTab {
+  if (visibleTabs.includes(requestedTab)) {
+    return requestedTab;
+  }
+
+  if (visibleTabs.includes(fallbackTab)) {
+    return fallbackTab;
+  }
+
+  return visibleTabs[0] ?? 'my-requests';
 }
 
 export function isEmployeeSelectionValidForCreate(

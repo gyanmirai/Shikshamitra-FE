@@ -16,6 +16,24 @@ export interface LockAttendanceDayParams {
   attendanceDate: string;
 }
 
+export interface AttendanceConfigurationResponse {
+  success: boolean;
+  message: string;
+  dailyRules?: {
+    hoursBasedPayPercentage: number;
+  };
+  lateEarlyRules?: {
+    graceTime: number;
+    maxLateAllowedPerMonth: number;
+    penaltyType: 'none' | 'deduct_half_day' | 'deduct_full_day';
+  };
+  overtime?: {
+    enabled: boolean;
+    rate?: '1.5x' | '2.0x' | 'flat' | null;
+    minOvertimeMinutes?: number | null;
+  };
+}
+
 export const buildGetDayAttendanceQueryParams = ({
   attendanceDate,
   department,
@@ -37,6 +55,17 @@ export const buildGetDayAttendanceQueryParams = ({
 export const attendanceApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     // Attendance Configuration
+    getAttendanceConfiguration: builder.query<
+      AttendanceConfigurationResponse,
+      { academicYearId: string }
+    >({
+      query: ({ academicYearId }) => ({
+        url: '/attendance/configuration',
+        method: 'GET',
+        params: { academicYearId },
+      }),
+      providesTags: [employeeType.attendanceRule],
+    }),
     saveAttendanceConfiguration: builder.mutation({
       query: ({ academicYearId, body }) => ({
         url: '/attendance/configuration',
@@ -164,6 +193,7 @@ export const attendanceApi = employeeApi.injectEndpoints({
 });
 
 export const {
+  useGetAttendanceConfigurationQuery,
   useSaveAttendanceConfigurationMutation,
   useGetAttendanceDateWiseQuery,
   useGetAttendanceEmployeeWiseQuery,

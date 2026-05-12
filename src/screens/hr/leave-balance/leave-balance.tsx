@@ -257,7 +257,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
       pageSize: 100,
       ...(isEmployeeProfileMode ? { employeeId } : {}),
     },
-    options: { skip: !currentYear?.id || isSelfMode },
+    options: { skip: !currentYear?.id || isSelfMode || (isEmployeeProfileMode && !employeeId) },
   });
   const {
     data: historyDataForSelf,
@@ -509,7 +509,9 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
             icon="solar:history-bold-duotone"
             sx={{ color: 'primary.main', width: 22, height: 22 }}
           />
-          <Typography variant="h6">My Leave History</Typography>
+          <Typography variant="h6">
+            {isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
+          </Typography>
         </Box>
 
         <CustomizableTable
