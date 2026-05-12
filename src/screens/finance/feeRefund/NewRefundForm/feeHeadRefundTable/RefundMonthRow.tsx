@@ -44,53 +44,84 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
       gap={1}
       pl={4}
       pr={1.5}
-      py={0.75}
       sx={{
-        opacity: effectivelyDisabled ? 0.5 : 1,
+        minHeight: 52,
+        opacity: effectivelyDisabled ? 0.45 : 1,
         cursor: effectivelyDisabled ? 'default' : 'pointer',
-        transition: 'background-color 0.15s',
-        bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
+        transition: 'background-color 0.15s ease',
+        bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.055) : 'transparent',
+        borderLeft: isSelected
+          ? `3px solid ${theme.palette.primary.main}`
+          : '3px solid transparent',
         '&:hover': !effectivelyDisabled ? { bgcolor: alpha(theme.palette.primary.main, 0.04) } : {},
       }}
       onClick={!effectivelyDisabled ? onToggle : undefined}
     >
+      {/* Animated checkbox */}
       <Checkbox
         size="small"
         checked={isSelected}
         disabled={effectivelyDisabled}
         onChange={onToggle}
         onClick={(e) => e.stopPropagation()}
-        sx={{ p: 0.5 }}
+        sx={{
+          p: 0.5,
+          borderRadius: '5px',
+          transition: 'transform 0.15s',
+          '&.Mui-checked': { color: 'primary.main' },
+          '&:hover': !effectivelyDisabled ? { transform: 'scale(1.12)' } : {},
+        }}
       />
 
-      <Typography variant="body2" fontWeight={500} flex={1} noWrap>
+      {/* Month name */}
+      <Typography
+        variant="body2"
+        fontWeight={isSelected ? 700 : 500}
+        flex={1}
+        noWrap
+        sx={{ color: isSelected ? 'primary.main' : 'text.primary', transition: 'color 0.15s' }}
+      >
         {item.month}
       </Typography>
 
-      <Typography variant="body2" sx={{ width: 88, textAlign: 'right' }}>
+      {/* Total */}
+      <Typography
+        variant="body2"
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+      >
         {formatCurrency(item.total)}
       </Typography>
-      <Typography variant="body2" sx={{ width: 88, textAlign: 'right' }}>
+
+      {/* Paid */}
+      <Typography
+        variant="body2"
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+      >
         {formatCurrency(item.paid)}
       </Typography>
+
+      {/* Refunded */}
       <Typography
         variant="body2"
         fontWeight={item.refunded > 0 ? 600 : 400}
-        color={item.refunded > 0 ? 'error.main' : 'text.secondary'}
-        sx={{ width: 88, textAlign: 'right' }}
+        color={item.refunded > 0 ? 'warning.dark' : 'text.secondary'}
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         {formatCurrency(item.refunded)}
       </Typography>
+
+      {/* Refundable */}
       <Typography
         variant="body2"
         fontWeight={refundable > 0 ? 600 : 400}
         color={refundable > 0 ? 'success.main' : 'text.disabled'}
-        sx={{ width: 88, textAlign: 'right' }}
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         {formatCurrency(refundable)}
       </Typography>
 
-      <Box sx={{ width: 120, display: 'flex', justifyContent: 'flex-end' }}>
+      {/* Refund amount input or placeholder */}
+      <Box sx={{ width: 124, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
         {isSelected ? (
           <NumericFormatCustom
             size="small"
@@ -106,19 +137,44 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
                   : 'Required'
                 : undefined
             }
-            inputProps={{ min: 0, max: refundable, style: { textAlign: 'right', fontSize: 13 } }}
+            inputProps={{
+              min: 0,
+              max: refundable,
+              style: {
+                textAlign: 'right',
+                fontSize: 13,
+                fontVariantNumeric: 'tabular-nums',
+              },
+            }}
             placeholder="0"
-            sx={{ width: 110 }}
+            sx={{
+              width: 114,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                '&.Mui-focused': {
+                  boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.15)}`,
+                },
+              },
+            }}
           />
         ) : (
-          <Typography variant="body2" color="text.disabled" sx={{ pr: 1.5 }}>
-            —
+          <Typography
+            variant="body2"
+            color="text.disabled"
+            sx={{
+              pr: 1.5,
+              fontStyle: effectivelyDisabled ? 'normal' : 'italic',
+              fontSize: 12,
+            }}
+          >
+            {effectivelyDisabled ? '—' : 'Not selected'}
           </Typography>
         )}
       </Box>
 
-      <Box sx={{ width: 72, display: 'flex', justifyContent: 'flex-end' }}>
-        <Label color={FeeCollectionStatusTypeColors[item.status]} sx={{ fontSize: 11 }}>
+      {/* Status badge */}
+      <Box sx={{ width: 76, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+        <Label color={FeeCollectionStatusTypeColors[item.status]} variant="soft">
           {FeeCollectionStatusType[item.status]}
         </Label>
       </Box>

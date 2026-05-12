@@ -1,6 +1,8 @@
 'use client';
 
+import { Iconify } from 'src/components/iconify';
 import { Box, Alert, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -120,6 +122,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   showError,
   errorMessage,
 }): React.ReactElement | null => {
+  const theme = useTheme();
   const { studentId } = formik.values;
   const isLoading = false; // TODO: replace with RTK Query isLoading
 
@@ -250,7 +253,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   if (feeHeadsWithPayments.length === 0) {
     return (
-      <Alert severity="info" sx={{ borderRadius: 2 }}>
+      <Alert severity="info" sx={{ borderRadius: 3 }}>
         No fee payment records found for this student.
       </Alert>
     );
@@ -258,23 +261,81 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   return (
     <Box>
+      {/* ── Overall Summary KPI Cards ── */}
       <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} />
 
+      {/* ── Validation error ── */}
       {showError && errorMessage && (
-        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 1 }}>
           {errorMessage}
         </Alert>
       )}
 
+      {/* ── Guidance info banner ── */}
       {totalSelectedMonthsCount === 0 && (
-        <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
-          Select months to specify refund amounts.
-        </Alert>
+        <Box
+          display="flex"
+          alignItems="flex-start"
+          gap={1.5}
+          px={2}
+          py={1.5}
+          mb={1}
+          sx={{
+            borderRadius: '12px',
+            borderLeft: `3px solid ${theme.palette.info.main}`,
+            bgcolor: alpha(theme.palette.info.main, 0.06),
+            border: `1px solid ${alpha(theme.palette.info.main, 0.18)}`,
+            borderLeftWidth: 3,
+          }}
+        >
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              flexShrink: 0,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: alpha(theme.palette.info.main, 0.12),
+              mt: 0.1,
+            }}
+          >
+            <Iconify icon="solar:info-circle-bold" width={16} sx={{ color: 'info.main' }} />
+          </Box>
+          <Box>
+            <Typography variant="body2" fontWeight={600} color="info.main" sx={{ lineHeight: 1.3 }}>
+              How to create a refund request
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Select fee months below to calculate the refund request automatically. Enter the
+              refund amount for each selected month.
+            </Typography>
+          </Box>
+        </Box>
       )}
 
-      <Typography variant="subtitle2" fontWeight={700} color="text.secondary" mb={1.5}>
-        Fee Head-wise Refund Details
-      </Typography>
+      {/* ── Fee Head-wise Section Title ── */}
+      <Box display="flex" alignItems="center" gap={1} pb={1}>
+        <Typography
+          variant="caption"
+          fontWeight={700}
+          color="text.secondary"
+          sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
+        >
+          Fee Head-wise Refund Details
+        </Typography>
+        <Box
+          sx={{
+            flex: 1,
+            height: '1px',
+            bgcolor: 'divider',
+          }}
+        />
+        <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
+          {feeHeadsWithPayments.length} fee head{feeHeadsWithPayments.length !== 1 ? 's' : ''}
+        </Typography>
+      </Box>
 
       {feeHeadsWithPayments.map((feeHead) => (
         <FeeHeadGroup

@@ -90,10 +90,21 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     <Box
       sx={{
         mb: 1.5,
-        borderRadius: 1.5,
+        borderRadius: '14px',
         overflow: 'hidden',
-        border: `1px solid ${theme.palette.divider}`,
-        opacity: !hasSelectable ? 0.65 : 1,
+        border: `1px solid ${
+          selectedMonths.length > 0
+            ? alpha(theme.palette.primary.main, 0.25)
+            : theme.palette.divider
+        }`,
+        opacity: !hasSelectable ? 0.6 : 1,
+        transition: 'border-color 0.2s ease, opacity 0.2s ease',
+        '&:hover': hasSelectable
+          ? {
+              borderColor: alpha(theme.palette.primary.main, 0.3),
+              boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
+            }
+          : {},
       }}
     >
       <FeeHeadGroupHeader
@@ -105,7 +116,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         onExpandToggle={() => setOpen((o) => !o)}
       />
 
-      <Collapse in={open}>
+      <Collapse in={open} timeout={250}>
         <Divider />
         <RefundColHeader />
 
@@ -127,11 +138,12 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 onToggle={() => onToggleMonth(item.month)}
                 onAmountChange={(raw) => handleAmountChange(item.month, refundable, raw)}
               />
-              {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
+              {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.35 }} />}
             </React.Fragment>
           );
         })}
 
+        {/* ── Per-head selection summary footer ── */}
         {selectedMonths.length > 0 && (
           <>
             <Divider />
@@ -141,12 +153,14 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
               alignItems="center"
               gap={3}
               px={2}
-              py={0.75}
+              py={1}
               sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04) }}
             >
               <Typography variant="caption" color="text.secondary">
-                Selected: <strong>{selectedMonths.length}</strong> month
-                {selectedMonths.length !== 1 ? 's' : ''}
+                Selected:{' '}
+                <strong>
+                  {selectedMonths.length} month{selectedMonths.length !== 1 ? 's' : ''}
+                </strong>
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Max refundable:{' '}
@@ -155,8 +169,13 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 </strong>
               </Typography>
               {totalRefundInput > 0 && (
-                <Typography variant="caption" color="primary.main" fontWeight={700}>
-                  Refund requested: {formatCurrency(totalRefundInput)}
+                <Typography
+                  variant="caption"
+                  color="primary.main"
+                  fontWeight={700}
+                  sx={{ fontVariantNumeric: 'tabular-nums' }}
+                >
+                  Refund: {formatCurrency(totalRefundInput)}
                 </Typography>
               )}
             </Box>

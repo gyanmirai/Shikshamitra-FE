@@ -53,17 +53,23 @@ export const ColHeader = ({
     alignItems="center"
     pl={1}
     gap={1}
-    pr={1.5}
-    py={0.5}
-    sx={{ bgcolor: 'action.hover' }}
+    pr={2}
+    py={0.75}
+    sx={{
+      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
+      borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+    }}
   >
-    <Box sx={{ width: 32 }} />
+    {/* Checkbox placeholder */}
+    <Box sx={{ width: 28 }} />
     <Typography
       variant="caption"
       color="text.disabled"
       fontWeight={700}
       textTransform="uppercase"
+      letterSpacing="0.06em"
       flex={1}
+      sx={{ fontSize: '0.68rem' }}
     >
       {firstLabel}
     </Typography>
@@ -74,7 +80,8 @@ export const ColHeader = ({
         color="text.disabled"
         fontWeight={700}
         textTransform="uppercase"
-        sx={{ width: 72, textAlign: 'right' }}
+        letterSpacing="0.06em"
+        sx={{ width: 76, textAlign: 'right', fontSize: '0.68rem' }}
       >
         {col}
       </Typography>
@@ -85,7 +92,8 @@ export const ColHeader = ({
         color="text.disabled"
         fontWeight={700}
         textTransform="uppercase"
-        sx={{ width: 84, textAlign: 'center' }}
+        letterSpacing="0.06em"
+        sx={{ width: 88, textAlign: 'center', fontSize: '0.68rem' }}
       >
         STATUS
       </Typography>
@@ -125,14 +133,21 @@ export const FeeRow = ({
       display="flex"
       alignItems="center"
       gap={1}
-      pl={5}
-      pr={2.5}
-      py={0.625}
+      pl={4}
+      pr={2}
+      py={0.875}
       sx={{
         cursor: isDisabled ? 'default' : 'pointer',
-        opacity: isDisabled ? 0.5 : 1,
-        transition: 'background-color 0.15s',
-        '&:hover': !isDisabled ? { bgcolor: alpha(theme.palette.primary.main, 0.04) } : {},
+        opacity: isDisabled ? 0.45 : 1,
+        transition: 'background-color 0.18s ease, opacity 0.18s ease',
+        bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
+        '&:hover': !isDisabled
+          ? {
+              bgcolor: isSelected
+                ? alpha(theme.palette.primary.main, 0.09)
+                : alpha(theme.palette.action.hover, 0.7),
+            }
+          : {},
       }}
       onClick={!isDisabled ? onToggle : undefined}
     >
@@ -142,30 +157,74 @@ export const FeeRow = ({
         disabled={isDisabled}
         onChange={onToggle}
         onClick={(e) => e.stopPropagation()}
-        sx={{ p: 0.5 }}
+        sx={{
+          p: 0.375,
+          '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+        }}
       />
       <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
-        <Typography variant="body2" noWrap fontWeight={500}>
+        <Typography
+          variant="body2"
+          noWrap
+          fontWeight={isSelected ? 600 : 500}
+          sx={{
+            fontSize: '0.8125rem',
+            color: isSelected ? 'primary.main' : 'text.primary',
+            transition: 'color 0.15s',
+          }}
+        >
           {name}
         </Typography>
       </Box>
-      <Typography variant="body2" sx={{ width: 72, textAlign: 'right' }}>
-        ₹ {formatNumber(total)}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ width: 72, textAlign: 'right' }}>
-        ₹ {formatNumber(paid)}
-      </Typography>
+
+      {/* TOTAL */}
       <Typography
         variant="body2"
-        fontWeight={due > 0 ? 600 : 400}
-        color={due > 0 ? 'error.main' : 'text.secondary'}
-        sx={{ width: 72, textAlign: 'right' }}
+        sx={{
+          width: 76,
+          textAlign: 'right',
+          fontVariantNumeric: 'tabular-nums',
+          fontSize: '0.8125rem',
+          color: 'text.primary',
+          fontWeight: 500,
+        }}
       >
-        ₹ {formatNumber(due)}
+        ₹{formatNumber(total)}
       </Typography>
 
-      <Box sx={{ width: 84, display: 'flex', justifyContent: 'center' }}>
-        {status && (
+      {/* PAID */}
+      <Typography
+        variant="body2"
+        sx={{
+          width: 76,
+          textAlign: 'right',
+          fontVariantNumeric: 'tabular-nums',
+          fontSize: '0.8125rem',
+          color: 'text.secondary',
+          fontWeight: 400,
+        }}
+      >
+        ₹{formatNumber(paid)}
+      </Typography>
+
+      {/* PENDING / DUE */}
+      <Typography
+        variant="body2"
+        sx={{
+          width: 76,
+          textAlign: 'right',
+          fontVariantNumeric: 'tabular-nums',
+          fontSize: '0.8125rem',
+          fontWeight: due > 0 ? 700 : 400,
+          color: due > 0 ? 'error.main' : 'text.disabled',
+        }}
+      >
+        ₹{formatNumber(due)}
+      </Typography>
+
+      {/* STATUS */}
+      <Box sx={{ width: 88, display: 'flex', justifyContent: 'center' }}>
+        {showStatus && status && (
           <Label color={FeeCollectionStatusTypeColors[status]} variant="soft">
             {FeeCollectionStatusType[status]}
           </Label>
@@ -207,12 +266,20 @@ export const GroupHeader = ({
       display="flex"
       alignItems="center"
       gap={1}
-      px={1}
+      px={1.5}
       py={1}
       sx={{
-        bgcolor: isAllSelected ? alpha(theme.palette.primary.main, 0.06) : 'background.neutral',
+        bgcolor: isAllSelected
+          ? alpha(theme.palette.primary.main, 0.08)
+          : alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 1),
         cursor: 'pointer',
         userSelect: 'none',
+        transition: 'background-color 0.18s ease',
+        '&:hover': {
+          bgcolor: isAllSelected
+            ? alpha(theme.palette.primary.main, 0.12)
+            : alpha(theme.palette.action.hover, 0.85),
+        },
       }}
       onClick={onExpandToggle}
     >
@@ -223,38 +290,85 @@ export const GroupHeader = ({
         disabled={isDisabled}
         onChange={onCheckboxToggle}
         onClick={(e) => e.stopPropagation()}
-        sx={{ p: 0.5 }}
+        sx={{
+          p: 0.375,
+          '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+        }}
       />
 
-      <Typography variant="subtitle2" fontWeight={700}>
-        {label}
-      </Typography>
-      <Box
+      <Typography
+        variant="subtitle2"
+        fontWeight={700}
         sx={{
-          px: 0.75,
-          py: 0.2,
-          borderRadius: 0.5,
-          bgcolor: alpha(theme.palette.text.secondary, 0.08),
+          fontSize: '0.8125rem',
+          color: isAllSelected ? 'primary.main' : 'text.primary',
+          transition: 'color 0.15s',
         }}
       >
-        <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+
+      {/* Badge pill */}
+      <Box
+        sx={{
+          px: 1,
+          py: 0.15,
+          borderRadius: 999,
+          bgcolor: alpha(theme.palette.text.secondary, 0.1),
+          border: `1px solid ${alpha(theme.palette.text.secondary, 0.12)}`,
+        }}
+      >
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          fontWeight={600}
+          sx={{ fontSize: '0.68rem' }}
+        >
           {badge}
         </Typography>
       </Box>
+
       <Box flex={1} />
+
+      {/* Due amount */}
       {totalDue > 0 && (
-        <Typography variant="caption" fontWeight={700} color="error.main" sx={{ mr: 0.5 }}>
-          Due: ₹ {formatNumber(totalDue)}
-        </Typography>
+        <Box
+          sx={{
+            px: 1,
+            py: 0.2,
+            borderRadius: 999,
+            bgcolor: alpha(theme.palette.error.main, 0.08),
+            border: `1px solid ${alpha(theme.palette.error.main, 0.18)}`,
+            mr: 0.5,
+          }}
+        >
+          <Typography
+            variant="caption"
+            fontWeight={700}
+            color="error.main"
+            sx={{ fontSize: '0.72rem', fontVariantNumeric: 'tabular-nums' }}
+          >
+            Due: ₹{formatNumber(totalDue)}
+          </Typography>
+        </Box>
       )}
+
       <IconButton
         size="small"
         onClick={(e) => {
           e.stopPropagation();
           onExpandToggle();
         }}
+        sx={{
+          p: 0.5,
+          borderRadius: 1,
+          color: 'text.secondary',
+          transition: 'transform 0.2s ease, background-color 0.15s',
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          '&:hover': { bgcolor: alpha(theme.palette.action.hover, 1) },
+        }}
       >
-        <Iconify icon={isOpen ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
+        <Iconify icon="eva:chevron-down-fill" width={16} />
       </IconButton>
     </Box>
   );

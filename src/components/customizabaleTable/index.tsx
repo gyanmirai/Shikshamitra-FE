@@ -45,6 +45,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   onServerPagination,
   onServerSearch,
   totalCount,
+  maxServerRowsPerPage,
   handleRowClick = () => {},
   isLoading = false,
   isPagination = true,
@@ -84,6 +85,23 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     serverSideSort,
     serverSidePagination,
   });
+
+  const rowsPerPageOptions = useMemo(() => {
+    const baseOptions = [10, 25, 100];
+    const rowCount = serverSidePagination ? totalCount || 0 : filteredData.length;
+
+    if (rowCount <= 0) {
+      return baseOptions;
+    }
+
+    if (serverSidePagination && maxServerRowsPerPage && rowCount > maxServerRowsPerPage) {
+      return baseOptions.includes(maxServerRowsPerPage)
+        ? baseOptions
+        : [...baseOptions, maxServerRowsPerPage];
+    }
+
+    return [...baseOptions, { value: rowCount, label: 'All' }];
+  }, [filteredData.length, maxServerRowsPerPage, serverSidePagination, totalCount]);
 
   const [headerRefs, setHeaderRefs] = useState<number[]>([]);
   const [tableRef, setTableRef] = useState<number>(0);
@@ -496,15 +514,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 />
                 {isPagination && (
                   <TablePagination
-                    rowsPerPageOptions={[
-                      10,
-                      25,
-                      100,
-                      {
-                        value: serverSidePagination ? totalCount || 0 : filteredData.length,
-                        label: 'All',
-                      },
-                    ]}
+                    rowsPerPageOptions={rowsPerPageOptions}
                     component="div"
                     count={serverSidePagination ? totalCount || 0 : filteredData.length}
                     rowsPerPage={rowsPerPage}
@@ -569,6 +579,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       isPagination,
       serverSidePagination,
       totalCount,
+      rowsPerPageOptions,
       filteredData.length,
       page,
       handlePageChange,

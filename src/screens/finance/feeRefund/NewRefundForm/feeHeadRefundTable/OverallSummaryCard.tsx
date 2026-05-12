@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { Box, Card, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 
 import type { RefundFormik, IFeeHeadPayment } from '../types';
 import type { IFeeHeadRefundItem } from '../initialValuesAndValidation';
@@ -68,56 +69,206 @@ const OverallSummaryCard: React.FC<OverallSummaryCardProps> = ({
       };
     }, [feeHeads, formik.values.feeHeadRefunds]);
 
-  const summaryItems = [
-    { label: 'Total Paid', value: totalPaid, color: 'text.primary', highlight: false },
-    { label: 'Already Refunded', value: totalRefunded, color: 'error.main', highlight: false },
-    { label: 'Max Refundable', value: totalRefundable, color: 'success.main', highlight: false },
-    { label: 'Refund Requested', value: totalRefundInput, color: 'primary.main', highlight: true },
-  ] as const;
+  // ── Stat card definitions ──────────────────────────────────────────────────
+  const statCards = [
+    {
+      label: 'Total Paid',
+      value: totalPaid,
+      icon: 'solar:wallet-bold',
+      accent: theme.palette.text.secondary,
+      accentBg: alpha(theme.palette.text.secondary, 0.06),
+      accentBorder: alpha(theme.palette.text.secondary, 0.12),
+      sub: 'Gross fees paid',
+      highlight: false,
+    },
+    {
+      label: 'Already Refunded',
+      value: totalRefunded,
+      icon: 'solar:arrow-left-up-bold',
+      accent: theme.palette.warning.dark,
+      accentBg: alpha(theme.palette.warning.main, 0.07),
+      accentBorder: alpha(theme.palette.warning.main, 0.2),
+      sub: 'Previous refunds',
+      highlight: false,
+    },
+    {
+      label: 'Max Refundable',
+      value: totalRefundable,
+      icon: 'solar:shield-check-bold',
+      accent: theme.palette.success.main,
+      accentBg: alpha(theme.palette.success.main, 0.07),
+      accentBorder: alpha(theme.palette.success.main, 0.2),
+      sub: 'Available to refund',
+      highlight: false,
+    },
+    {
+      label: 'Refund Requested',
+      value: totalRefundInput,
+      icon: 'solar:money-bag-bold',
+      accent: theme.palette.primary.main,
+      accentBg: alpha(theme.palette.primary.main, 0.07),
+      accentBorder: alpha(theme.palette.primary.main, 0.2),
+      sub:
+        totalSelectedMonths > 0
+          ? `${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`
+          : 'Select months',
+      highlight: true,
+    },
+  ];
+
+  // Progress bar: how much of refundable amount has been requested
+  const progressPct =
+    totalRefundable > 0 ? Math.min(100, (totalRefundInput / totalRefundable) * 100) : 0;
 
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        p: 2,
-        mb: 2,
-        borderRadius: 2,
-        bgcolor: alpha(theme.palette.primary.main, 0.04),
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-      }}
-    >
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-        <Typography variant="subtitle2" fontWeight={700} color="primary.main">
-          Overall Summary
+    <Box mb={1}>
+      {/* ── Section label ── */}
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+        <Typography
+          variant="caption"
+          fontWeight={700}
+          color="text.secondary"
+          sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 10 }}
+        >
+          Refund Summary
         </Typography>
         {totalSelectedMonths > 0 && (
           <Chip
             size="small"
             label={`${totalSelectedMonths} month${totalSelectedMonths !== 1 ? 's' : ''} selected`}
             color="primary"
-            variant="outlined"
-            sx={{ height: 22, fontSize: 11 }}
+            variant="soft"
+            sx={{ height: 20, fontSize: 10, fontWeight: 700 }}
           />
         )}
       </Box>
-      <Stack direction="row" spacing={4} flexWrap="wrap">
-        {summaryItems.map((s) => (
-          <Box key={s.label}>
-            <Typography variant="caption" color="text.secondary">
-              {s.label}
-            </Typography>
+
+      {/* ── 4 KPI Stat Cards ── */}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        flexWrap="wrap"
+        useFlexGap
+        sx={{ mb: 1.5 }}
+      >
+        {statCards.map((card) => (
+          <Box
+            key={card.label}
+            sx={{
+              flex: '1 1 130px',
+              minWidth: 0,
+              p: { xs: 1.5, md: 1.75 },
+              borderRadius: '14px',
+              border: `1px solid ${card.accentBorder}`,
+              bgcolor: card.accentBg,
+              cursor: 'default',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: `0 4px 16px ${alpha(card.accent, 0.18)}`,
+              },
+            }}
+          >
+            {/* Icon + active chip */}
+            <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={0.75}>
+              <Box
+                sx={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: alpha(card.accent, 0.14),
+                }}
+              >
+                <Iconify icon={card.icon} width={16} sx={{ color: card.accent }} />
+              </Box>
+              {card.highlight && totalRefundInput > 0 && (
+                <Chip
+                  size="small"
+                  label="Active"
+                  sx={{
+                    height: 16,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    bgcolor: alpha(card.accent, 0.14),
+                    color: card.accent,
+                    border: `1px solid ${alpha(card.accent, 0.25)}`,
+                  }}
+                />
+              )}
+            </Box>
+
+            {/* Label */}
             <Typography
-              variant="body1"
-              fontWeight={s.highlight ? 800 : 600}
-              color={s.color}
-              sx={s.highlight ? { fontSize: '1.1rem' } : undefined}
+              variant="caption"
+              fontWeight={600}
+              sx={{
+                color: alpha(card.accent, 0.75),
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                fontSize: 10,
+                display: 'block',
+              }}
             >
-              {formatCurrency(s.value)}
+              {card.label}
+            </Typography>
+
+            {/* Amount */}
+            <Typography
+              fontWeight={800}
+              sx={{
+                fontSize: { xs: '1rem', md: '1.15rem' },
+                color: card.highlight ? card.accent : 'text.primary',
+                lineHeight: 1.25,
+                mt: 0.25,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {formatCurrency(card.value)}
+            </Typography>
+
+            {/* Sub-label */}
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+              {card.sub}
             </Typography>
           </Box>
         ))}
       </Stack>
-    </Card>
+
+      {/* ── Refund utilization progress bar ── */}
+      {totalRefundable > 0 && (
+        <Box>
+          <Box display="flex" justifyContent="space-between" mb={0.5}>
+            <Typography variant="caption" color="text.secondary">
+              Refund utilization
+            </Typography>
+            <Typography variant="caption" fontWeight={700} color="primary.main">
+              {Math.round(progressPct)}%
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              height: 5,
+              borderRadius: 999,
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              sx={{
+                height: '100%',
+                width: `${progressPct}%`,
+                borderRadius: 999,
+                background: `linear-gradient(90deg, ${theme.palette.primary.light}, ${theme.palette.primary.main})`,
+                transition: 'width 0.5s ease',
+              }}
+            />
+          </Box>
+        </Box>
+      )}
+    </Box>
   );
 };
 

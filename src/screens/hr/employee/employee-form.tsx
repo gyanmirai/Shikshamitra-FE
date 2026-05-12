@@ -252,6 +252,11 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   deductionComponents: editData?.deductionComponents ?? [],
 });
 
+const toOptionalGuid = (value: unknown) =>
+  typeof value === 'string' && value.trim() ? value : null;
+
+const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
+
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
   reportingManager: editData?.reportingManager?.id ?? '',
   reportingManagerName: editData?.reportingManager?.fullName ?? '',
@@ -518,7 +523,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           },
 
           salaryDetails: {
-            pfRuleId: values.pfRule,
+            pfRuleId: toOptionalGuid(values.pfRule),
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
             punchId: values.punchId,
@@ -526,13 +531,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           },
 
           earningComponents: values.earningComponents.map((item: any) => ({
-            componentId: item?.id || item?.componentId,
+            componentId: getPayrollComponentId(item),
             name: item?.name || item?.earningComponentName || '',
             amount: Number(item?.amount ?? 0),
             isFixed: isSalaryComponentFixed(item),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
-            componentId: item?.id || item?.componentId,
+            componentId: getPayrollComponentId(item),
             name: item?.name || item?.deductionComponentName || '',
             amount: Number(item?.amount ?? 0),
             isFixed: isSalaryComponentFixed(item),

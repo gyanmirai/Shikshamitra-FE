@@ -383,7 +383,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     label="Employee *"
                     fetchOptions={async (query, page) => {
                       if (page > 1) return { data: [], hasMore: false };
-                      const res = await getEmployees({ search: query }).unwrap();
+                      const res = await getEmployees({
+                        page: 1,
+                        pageSize: 500,
+                        search: query,
+                        status: 'Active',
+                      }).unwrap();
                       const items: EmployeeOption[] = (
                         Array.isArray(res) ? res : res?.items || []
                       ).map((item: any) => ({

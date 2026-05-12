@@ -1,16 +1,24 @@
 import { api } from 'src/redux/service';
 import { employeeType } from 'src/redux/tagTypes';
 
+const compactParams = (params: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null)
+  );
+
 export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
-      query: ({ search }) => ({
+      query: ({ page = 1, pageSize = 10, search, ...filters } = {}) => ({
         url: `/employees`,
         method: 'GET',
-        params: {
+        params: compactParams({
+          page,
+          pageSize,
           search,
-        },
+          ...filters,
+        }),
       }),
       providesTags: [employeeType.employee],
     }),

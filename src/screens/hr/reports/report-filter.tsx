@@ -43,7 +43,7 @@ const REPORT_FILTERS: Record<
 };
 
 const ReportFilter = () => {
-  const { data: employeeData } = useGetEmployeeQuery({});
+  const { data: employeeData } = useGetEmployeeQuery({ page: 1, pageSize: 500, search: '' });
 
   const employees = useMemo(() => employeeData?.items || [], [employeeData]);
 

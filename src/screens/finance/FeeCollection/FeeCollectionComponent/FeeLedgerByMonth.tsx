@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
-import { Box, Divider, Collapse } from '@mui/material';
+import { Box, Collapse } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 
 import { FeeRow, toPeriod, ColHeader, GroupHeader } from './FeeLedgerShared';
 
@@ -50,10 +50,12 @@ const MonthGroup = ({
   return (
     <Box
       sx={{
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 1.5,
+        border: `1px solid ${isAllSelected ? alpha(theme.palette.primary.main, 0.28) : theme.palette.divider}`,
+        borderRadius: 2,
         overflow: 'hidden',
         mb: 1.5,
+        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+        boxShadow: isAllSelected ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}` : 'none',
       }}
     >
       <GroupHeader
@@ -68,8 +70,7 @@ const MonthGroup = ({
         onExpandToggle={() => setOpen((o) => !o)}
       />
 
-      <Collapse in={open}>
-        <Divider />
+      <Collapse in={open} timeout={180}>
         <ColHeader firstLabel="Fee Head" showStatus />
         {group.items.map((item, idx) => {
           const isSelected = selectedItems.some(
@@ -88,7 +89,14 @@ const MonthGroup = ({
                 isDisabled={item.due === 0}
                 onToggle={() => onToggleItem(item.feeHeadId, group.month, item.due)}
               />
-              {idx < group.items.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
+              {idx < group.items.length - 1 && (
+                <Box
+                  sx={{
+                    mx: 1.5,
+                    borderBottom: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+                  }}
+                />
+              )}
             </React.Fragment>
           );
         })}

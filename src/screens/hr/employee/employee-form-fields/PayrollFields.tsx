@@ -471,7 +471,7 @@ const RenderPayrollFields = (props: any) => {
               value={values.totalWorkingHourPerMonth || ''}
               onChange={(e) => {
                 const { value } = e.target;
-                if (value.length <= 2) {
+                if (value.length <= 3) {
                   formik.handleChange(e);
                 }
               }}
