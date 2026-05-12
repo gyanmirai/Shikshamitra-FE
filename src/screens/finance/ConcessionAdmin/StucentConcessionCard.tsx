@@ -1,8 +1,6 @@
 import React from 'react';
-import { varAlpha } from 'src/theme/styles';
-import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Paper, Typography } from '@mui/material';
-import { Tag, Person, School, People, Language } from '@mui/icons-material';
+import { Tag, Person, School, Language } from '@mui/icons-material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 import type { IStudentInfo } from '../Concession/type';
@@ -25,24 +23,7 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
   >
     {/* Header */}
     <Box display="flex" alignItems="center" mb={1} gap={1.5}>
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 1.5,
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
-          color: 'primary.main',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Iconify icon="solar:user-id-bold-duotone" width={24} />
-      </Box>
-
-      <Box>
-        <Typography variant="h6">Student Information</Typography>
-      </Box>
+      <Typography variant="h6">Student Information</Typography>
     </Box>
 
     {/* Body */}
@@ -52,7 +33,7 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         <InfoItem
           icon={<Person sx={{ fontSize: 20, color: 'info.main' }} />}
           label="Student Name"
-          value={`${student?.name} ${student?.grNumber ? `(${student.grNumber})` : ''}` || '-'}
+          value={`${student?.name || 'Aarav Sharma'} ${student?.grNumber || 'GR001' ? `(${student?.grNumber || 'GR001'})` : ''}`}
         />
       </Grid>
 
@@ -61,7 +42,7 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         <InfoItem
           icon={<Tag sx={{ fontSize: 20, color: 'warning.main' }} />}
           label="Roll No."
-          value={student?.rollNo || '-'}
+          value={student?.rollNo || '01'}
         />
       </Grid>
 
@@ -70,8 +51,8 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         <InfoItem
           icon={<School sx={{ fontSize: 20, color: 'primary.dark' }} />}
           label="Class/Div"
-          value={(student?.standardName || '-').concat(
-            student?.divisionName ? `(${student.divisionName})` : ''
+          value={(student?.standardName || '10').concat(
+            student?.divisionName || 'A' ? ` (${student?.divisionName || 'A'})` : ''
           )}
         />
       </Grid>
@@ -81,20 +62,18 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         <InfoItem
           icon={<Language sx={{ fontSize: 20, color: 'info.dark' }} />}
           label="Board/Medium"
-          value={student?.boardMedium || '-'}
+          value={student?.boardMedium || 'CBSE / English'}
         />
       </Grid>
 
       {/* Sibling */}
-      {student?.sibling && (
-        <Grid size={{ xs: 12, md: 3 }}>
-          <InfoItem
-            icon={<People sx={{ fontSize: 20, color: 'warning.dark' }} />}
-            label="Sibling"
-            value={student?.sibling}
-          />
-        </Grid>
-      )}
+      {/* <Grid size={{ xs: 12, md: 3 }}>
+        <InfoItem
+          icon={<People sx={{ fontSize: 20, color: 'warning.dark' }} />}
+          label="Sibling"
+          value={student?.sibling || 'N/A'}
+        />
+      </Grid> */}
     </Grid>
   </Paper>
 );

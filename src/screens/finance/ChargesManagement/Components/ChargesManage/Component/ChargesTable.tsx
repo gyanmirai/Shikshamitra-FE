@@ -186,7 +186,7 @@ const ChargesTable = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, pb: 0.5, mb: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <Box sx={{ display: 'flex', gap: 2 }}>
             <CustomSelect

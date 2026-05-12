@@ -3,8 +3,8 @@ import type { LabelColor } from 'src/components/label';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Label } from 'src/components/label';
-import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Grid, Stack, Avatar, Divider, Typography } from '@mui/material';
 
@@ -14,9 +14,18 @@ export const StudentFeeSummaryCard: React.FC<{
   student: IStudentFee | null;
   showHeader?: boolean;
 }> = ({ student, showHeader = true }) => {
+  const theme = useTheme();
+
   if (!student) {
     return (
-      <Card sx={{ p: 1, textAlign: 'center' }}>
+      <Card
+        sx={{
+          p: 2,
+          textAlign: 'center',
+          borderRadius: 2,
+          border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+        }}
+      >
         <Typography variant="body2" color="text.secondary">
           No student data available
         </Typography>
@@ -37,24 +46,26 @@ export const StudentFeeSummaryCard: React.FC<{
         flexDirection: 'column',
         ml: 0.5,
         mt: 0.5,
-        mb: 1,
-        p: 1,
+        mb: 1.25,
+        p: 1.75,
         boxShadow: 'var(--shadows-4)',
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
       }}
     >
       {showHeader && (
-        <Grid container spacing={1} alignItems="center">
+        <Grid container spacing={1.5} alignItems="center">
+          {/* ── Student identity column ── */}
           <Grid
             size={{ xs: 12, md: 5, lg: 4 }}
             sx={{
-              borderRight: (theme) => ({ md: `1px dashed ${theme.palette.divider}` }),
-              borderBottom: (theme) => ({ xs: `1px dashed ${theme.palette.divider}`, md: 'none' }),
-              pr: { md: 1 },
-              pb: { xs: 1, md: 0 },
-              mb: { xs: 1, md: 0 },
+              borderRight: (t) => ({ md: `1px dashed ${t.palette.divider}` }),
+              borderBottom: (t) => ({ xs: `1px dashed ${t.palette.divider}`, md: 'none' }),
+              pr: { md: 2 },
+              pb: { xs: 1.5, md: 0 },
+              mb: { xs: 0.5, md: 0 },
             }}
           >
-            <Box display="flex" alignItems="center" gap={2}>
+            <Box display="flex" alignItems="center" gap={1.75}>
               <motion.div
                 initial={{ scale: 0.75, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -62,131 +73,125 @@ export const StudentFeeSummaryCard: React.FC<{
               >
                 <Avatar
                   sx={{
-                    width: 50,
-                    height: 50,
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                    width: 52,
+                    height: 52,
+                    bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
                     color: 'primary.main',
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.24)}`,
+                    fontSize: '1.35rem',
+                    fontWeight: 800,
+                    border: (t) => `1.5px solid ${alpha(t.palette.primary.main, 0.22)}`,
+                    boxShadow: (t) => `0 0 0 4px ${alpha(t.palette.primary.main, 0.07)}`,
                   }}
                 >
-                  {student.name?.charAt(0).toUpperCase()}
+                  {(student.name || 'Aarav Sharma')?.charAt(0).toUpperCase()}
                 </Avatar>
               </motion.div>
 
               <Box>
-                <Typography variant="h6" fontWeight={600} sx={{ lineHeight: 1, mb: 0.5 }}>
-                  {student.name}
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={700}
+                  sx={{ lineHeight: 1.2, mb: 0.5, fontSize: '0.95rem', letterSpacing: '-0.01em' }}
+                >
+                  {student.name || 'Aarav Sharma'}
                 </Typography>
 
-                <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
-                  <Stack direction="row" alignItems="center" gap={0.5}>
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                      {student.grNumber}
-                    </Typography>
-                  </Stack>
+                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {student.grNumber || 'GR001'}
+                  </Typography>
 
                   <Divider
                     orientation="vertical"
                     flexItem
-                    sx={{ height: 14, alignSelf: 'center' }}
+                    sx={{ height: 12, alignSelf: 'center' }}
                   />
 
-                  <Stack direction="row" alignItems="center" gap={0.5}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {student.className && student.division
-                        ? `${student.className}-${student.division}`
-                        : 'N/A'}
-                    </Typography>
-                  </Stack>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {(student.className || '10') && (student.division || 'A')
+                      ? `${student.className || '10'}-${student.division || 'A'}`
+                      : 'N/A'}
+                  </Typography>
 
                   <Divider
                     orientation="vertical"
                     flexItem
-                    sx={{ height: 14, alignSelf: 'center' }}
+                    sx={{ height: 12, alignSelf: 'center' }}
                   />
 
-                  <Stack direction="row" alignItems="center" gap={0.5}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 700,
-                        px: 0.8,
-                        py: 0.2,
-                        borderRadius: 0.5,
-                        bgcolor: 'action.selected',
-                        color: 'text.secondary',
-                      }}
-                    >
-                      Roll No : {student.rollNumber ?? '-'}
+                  <Box
+                    sx={{
+                      px: 0.875,
+                      py: 0.2,
+                      borderRadius: 999,
+                      bgcolor: (t) => alpha(t.palette.action.selected, 0.9),
+                      border: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Roll No : {student.rollNumber || '01'}
                     </Typography>
-                  </Stack>
+                  </Box>
                 </Stack>
               </Box>
             </Box>
           </Grid>
 
+          {/* ── Summary stats column ── */}
           <Grid size={{ xs: 12, md: 7, lg: 8 }}>
             <Box
               display="grid"
               gridTemplateColumns={{
-                xs: '1fr',
+                xs: 'repeat(2, 1fr)',
                 sm: 'repeat(2, 1fr)',
                 md: 'repeat(2, 1fr)',
                 lg: 'repeat(4, 1fr)',
               }}
-              gap={1}
+              gap={1.25}
             >
               {[
                 {
                   label: 'Total Fee',
-                  value: student.totalFees,
-                  color: 'primary.main',
-                  bgcolor: 'primary.lighter',
-                  icon: 'solar:wallet-money-outline',
+                  value: student.totalFees || 45000,
+                  color: 'primary' as const,
                 },
                 {
                   label: 'Paid',
-                  value: student.paidFees,
-                  color: 'success.main',
-                  bgcolor: 'success.lighter',
-                  icon: 'solar:verified-check-outline',
+                  value: student.paidFees || 30000,
+                  color: 'success' as const,
                 },
                 {
                   label: 'Pending',
-                  value: student.pendingFees,
-                  color: 'warning.main',
-                  bgcolor: 'warning.lighter',
-                  icon: 'solar:clock-circle-outline',
+                  value: student.pendingFees || 15000,
+                  color: 'warning' as const,
                 },
                 {
                   label: 'Concession',
-                  value: student.concessionAmount,
-                  color: 'info.main',
-                  bgcolor: 'info.lighter',
-                  icon: 'solar:verified-check-outline',
+                  value: student.concessionAmount || 2500,
+                  color: 'info' as const,
                 },
               ].map((item, index) => (
                 <Box
                   component={motion.div}
                   key={index}
-                  initial={{ opacity: 0, y: 14 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: index * 0.07 }}
-                  whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1], delay: index * 0.06 }}
+                  whileHover={{ y: -2, transition: { duration: 0.18 } }}
                   sx={{
-                    p: 0.75,
-                    borderRadius: 1,
-                    bgcolor: (theme) =>
-                      alpha((theme.palette as any)[item.color.split('.')[0]].main, 0.04),
-                    borderLeft: (theme) =>
-                      `3px solid ${(theme.palette as any)[item.color.split('.')[0]].main}`,
-                    boxShadow: (theme) => theme.customShadows?.z1 || 2,
+                    p: 1.25,
+                    borderRadius: 1.75,
+                    bgcolor: (t) => alpha(t.palette[item.color].main, 0.06),
+                    border: (t) => `1px solid ${alpha(t.palette[item.color].main, 0.14)}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    gap: 1,
                     cursor: 'default',
+                    transition: 'box-shadow 0.2s ease',
+                    '&:hover': {
+                      boxShadow: (t) => `0 4px 16px ${alpha(t.palette[item.color].main, 0.14)}`,
+                    },
                   }}
                 >
                   <Box>
@@ -196,6 +201,8 @@ export const StudentFeeSummaryCard: React.FC<{
                         color: 'text.secondary',
                         fontWeight: 700,
                         textTransform: 'uppercase',
+                        letterSpacing: '0.06em',
+                        fontSize: '0.62rem',
                         mb: 0.5,
                         display: 'block',
                       }}
@@ -204,21 +211,17 @@ export const StudentFeeSummaryCard: React.FC<{
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ color: 'text.primary', fontWeight: 800, fontSize: '0.875rem' }}
+                      sx={{
+                        color: (t) => t.palette[item.color].main,
+                        fontWeight: 800,
+                        fontSize: '0.875rem',
+                        fontVariantNumeric: 'tabular-nums',
+                        lineHeight: 1.2,
+                      }}
                     >
                       {formatNumber(item.value ?? 0, 'INR')}
                     </Typography>
                   </Box>
-
-                  <Iconify
-                    icon={item.icon}
-                    width={20}
-                    sx={{
-                      color: item.color,
-                      filter: (theme) =>
-                        `drop-shadow(0 4px 8px ${alpha((theme.palette as any)[item.color.split('.')[0]].main, 0.24)})`,
-                    }}
-                  />
                 </Box>
               ))}
             </Box>

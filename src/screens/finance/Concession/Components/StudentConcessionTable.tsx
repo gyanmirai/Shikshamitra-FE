@@ -17,8 +17,8 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Tab, Tabs, Button, Typography } from '@mui/material';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
+import { Box, Tab, Card, Tabs, Button, Typography } from '@mui/material';
 import { useDeleteConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
   concessionManagementApi,
@@ -283,69 +283,58 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
   return (
     <>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{
-          p: 1,
-          gap: 2,
-          borderRadius: '8px',
-          bgcolor: 'background.paper',
-          boxShadow: 'var(--shadows-3)',
-          mb: 1,
-          flexWrap: 'wrap',
-        }}
-      >
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <CustomSelect
-            label="Board"
-            options={boards || []}
-            labelKey="name"
-            valueKey="id"
-            value={selectedBoard}
-            onChange={(value) => {
-              onBoardChange(value as string);
-              onMediumChange('');
-            }}
-            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-          />
-          <CustomSelect
-            label="Medium"
-            options={mediums || []}
-            labelKey="name"
-            disabled={!selectedBoard}
-            valueKey="id"
-            value={selectedMedium}
-            onChange={(value) => onMediumChange(value as string)}
-            formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-          />
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, pt: 1, mb: 1 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <CustomSelect
+              label="Board"
+              options={boards || []}
+              labelKey="name"
+              valueKey="id"
+              value={selectedBoard}
+              onChange={(value) => {
+                onBoardChange(value as string);
+                onMediumChange('');
+              }}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+            <CustomSelect
+              label="Medium"
+              options={mediums || []}
+              labelKey="name"
+              disabled={!selectedBoard}
+              valueKey="id"
+              value={selectedMedium}
+              onChange={(value) => onMediumChange(value as string)}
+              formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Tabs
+              value={tabs.value}
+              onChange={tabs.onChange}
+              sx={{
+                '& .MuiTabs-flexContainer': { gap: 2 },
+                flexGrow: 1,
+              }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  key={String(tab.value)}
+                  value={tab.value}
+                  sx={{ fontSize: '12px' }}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label}
+                      <Label color={tab.color as LabelColor}>{tab.count}</Label>
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Tabs
-            value={tabs.value}
-            onChange={tabs.onChange}
-            sx={{
-              '& .MuiTabs-flexContainer': { gap: 2 },
-              flexGrow: 1,
-            }}
-          >
-            {TABS.map((tab) => (
-              <Tab
-                key={String(tab.value)}
-                value={tab.value}
-                sx={{ fontSize: '12px' }}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label}
-                    <Label color={tab.color as LabelColor}>{tab.count}</Label>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
-        </Box>
-      </Box>
+      </Card>
 
       <CustomizableTable
         tableId="student-concession-table"
