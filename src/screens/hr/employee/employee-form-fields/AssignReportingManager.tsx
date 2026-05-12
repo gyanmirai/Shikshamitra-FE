@@ -38,54 +38,51 @@ const getInitials = (name?: string) => {
 
 // ─── Right Panel: Empty State ─────────────────────────────────────────────────
 
-const RightEmptyState = () => {
-  const theme = useTheme();
-  return (
-    <motion.div
-      key="empty"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      style={{ height: '100%' }}
+const RightEmptyState = () => (
+  <motion.div
+    key="empty"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.2 }}
+    style={{ height: '100%' }}
+  >
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 200,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
+        px: 3,
+        textAlign: 'center',
+      }}
     >
-      <Box
-        sx={{
-          height: '100%',
-          minHeight: 200,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1,
-          px: 3,
-          textAlign: 'center',
-        }}
-      >
-        {/* Person + gear icon (teal) */}
-        <Box sx={{ mb: 0.5, color: '#00897B' }}>
-          <Iconify icon="solar:user-id-bold" width={48} />
-        </Box>
-
-        <Typography variant="subtitle2" fontWeight={700} color="text.primary">
-          No manager selected yet
-        </Typography>
-
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 280, lineHeight: 1.6 }}>
-          Pick a reporting manager from the dropdown on the left to see their full profile,{' '}
-          <Box component="span" sx={{ color: '#1565C0', cursor: 'pointer' }}>
-            contact details
-          </Box>
-          , and{' '}
-          <Box component="span" sx={{ color: '#1565C0', cursor: 'pointer' }}>
-            team here
-          </Box>
-          .
-        </Typography>
+      {/* Person + gear icon (teal) */}
+      <Box sx={{ mb: 0.5, color: '#00897B' }}>
+        <Iconify icon="solar:user-id-bold" width={48} />
       </Box>
-    </motion.div>
-  );
-};
+
+      <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+        No manager selected yet
+      </Typography>
+
+      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 280, lineHeight: 1.6 }}>
+        Pick a reporting manager from the dropdown on the left to see their full profile,{' '}
+        <Box component="span" sx={{ color: '#1565C0', cursor: 'pointer' }}>
+          contact details
+        </Box>
+        , and{' '}
+        <Box component="span" sx={{ color: '#1565C0', cursor: 'pointer' }}>
+          team here
+        </Box>
+        .
+      </Typography>
+    </Box>
+  </motion.div>
+);
 
 // ─── Right Panel: Loading State ───────────────────────────────────────────────
 
@@ -239,7 +236,7 @@ const RenderAssignReportingManager = ({ formik, isMainForm }: any) => {
   const theme = useTheme();
   const { setFieldValue } = formik;
 
-  const [employeeParams, setEmployeeParams] = useState({ search: '' });
+  const [employeeParams, setEmployeeParams] = useState({ page: 1, pageSize: 500, search: '' });
 
   // ── State 1: basic dropdown selection (lightweight list data) ──────────────
   const [selectedManager, setSelectedManager] = useState<any>(

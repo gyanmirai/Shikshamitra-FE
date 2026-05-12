@@ -21,7 +21,11 @@ export const DEDUCTION_COMPONENTS = [
 ];
 
 export const useReportOptions = () => {
-  const { data: employeeData, isLoading: isEmployeeLoading } = useGetEmployeeQuery({});
+  const { data: employeeData, isLoading: isEmployeeLoading } = useGetEmployeeQuery({
+    page: 1,
+    pageSize: 500,
+    search: '',
+  });
 
   const employees = useMemo(() => employeeData?.items || [], [employeeData]);
 
