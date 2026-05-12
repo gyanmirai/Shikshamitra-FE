@@ -9,6 +9,7 @@ const TDS = () => {
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
+    params: { page: 1, pageSize: 500, search: '' },
   });
 
   return (

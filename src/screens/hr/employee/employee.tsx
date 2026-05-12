@@ -72,9 +72,8 @@ const HrEmployee = () => {
   const [editData, setEditData] = useState<any>(null);
 
   const [employeeParams, setEmployeeParams] = useState({
-    // page: 1,
-    // pageSize: 10,
-    // academicYearId: currentYear?.id,
+    page: 1,
+    pageSize: 10,
     search: '',
   });
 
@@ -120,7 +119,7 @@ const HrEmployee = () => {
   }, []);
 
   const handleServerSearch = useCallback((search: string) => {
-    setEmployeeParams((pre) => ({ ...pre, search }));
+    setEmployeeParams((pre) => ({ ...pre, page: 1, search }));
   }, []);
 
   const {
@@ -397,6 +396,7 @@ const HrEmployee = () => {
             tableId="employee-table"
             serverSidePagination
             totalCount={employee?.totalCount}
+            maxServerRowsPerPage={500}
             onServerPagination={handleServerPagination}
             serverSideSearch
             onServerSearch={handleServerSearch}
