@@ -4,21 +4,22 @@ import type { Division } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -28,18 +29,19 @@ import {
 import {
   Box,
   Grid,
+  Paper,
+  Stack,
   Button,
-  Accordion,
+  Divider,
   TextField,
   Typography,
-  DialogActions,
-  AccordionDetails,
-  AccordionSummary,
+  Autocomplete,
 } from '@mui/material';
 
 import type { IChargeFormProps } from './type';
 
 const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProps) => {
+  const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // State
@@ -53,10 +55,22 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const [getFilterStudents] = useQueryAndMutation({
+  const [
+    getStudents,
+    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
+  ] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
+    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
+
+  const studentOptions = useMemo(
+    () =>
+      studentsData?.items?.map((item: any) => ({
+        ...item,
+        name: `${item.firstName}${item.middleName ? ` ${item.middleName}` : ''} ${item.lastName}`,
+      })) || [],
+    [studentsData?.items]
+  );
   // Get charge categories data
   const {
     data: chargeCategories,
@@ -77,16 +91,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     type: 'mutation',
     currentQueryAndMutation: useUpdateChargeMutation,
   });
-
-  const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({
-    chargeDetails: true,
-    studentInfo: true,
-    additionalNotes: true,
-  });
-
-  const handleAccordionToggle = useCallback((panel: string) => {
-    setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] }));
-  }, []);
 
   // Memoize initial values
   const initialValues = useMemo(() => {
@@ -207,32 +211,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
 
   const handleSubmit = useCallback(() => {
-    const fieldToPanelMap: Record<string, string> = {
-      chargeCategoryId: 'chargeDetails',
-      amount: 'chargeDetails',
-      dueDate: 'chargeDetails',
-      priority: 'chargeDetails',
-      purposeDescription: 'chargeDetails',
-      boardId: 'studentInfo',
-      educationMediumId: 'studentInfo',
-      standardId: 'studentInfo',
-      divisionId: 'studentInfo',
-      studentId: 'studentInfo',
-      selectedStudent: 'studentInfo',
-      additionalNotes: 'additionalNotes',
-    };
-
     formik.validateForm().then((validationErrors) => {
-      const errorKeys = Object.keys(validationErrors);
-      if (errorKeys.length > 0) {
-        const panelsToOpen: Record<string, boolean> = {};
-        errorKeys.forEach((key) => {
-          if (fieldToPanelMap[key]) {
-            panelsToOpen[fieldToPanelMap[key]] = true;
-          }
-        });
-        setExpandedPanels((prev) => ({ ...prev, ...panelsToOpen }));
-      }
       formik.handleSubmit();
     });
   }, [formik]);
@@ -259,32 +238,52 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     setAllDivision(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
   }, [values.standardId, classes]);
 
+  useEffect(() => {
+    if (values.divisionId) getStudents(values.divisionId);
+  }, [values.divisionId, getStudents]);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <Accordion
-                  expanded={expandedPanels.chargeDetails}
-                  onChange={() => handleAccordionToggle('chargeDetails')}
-                  disableGutters
-                  elevation={0}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: '8px !important',
-                    mb: 1.5,
-                    '&:before': { display: 'none' },
-                  }}
-                >
-                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Charge Details
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
+        <Box
+          component={motion.div}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          display="flex"
+          flexDirection="column"
+          height="100%"
+        >
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+            <Box sx={{ p: 1 }}>
+              <Grid container spacing={0}>
+                <Grid size={{ xs: 12 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      mb: 1.5,
+                      borderRadius: 2,
+                      transition: 'box-shadow 0.2s ease',
+                      '&:hover': { boxShadow: 4 },
+                    }}
+                  >
+                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                      <Iconify
+                        icon="mdi:information-outline"
+                        width={18}
+                        sx={{ color: 'primary.main' }}
+                      />
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          Charge Details
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Configure amount, due date, and charge priority
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Divider sx={{ mb: 2 }} />
                     <Grid container spacing={2}>
                       {/* Charge Category */}
                       <Grid size={{ xs: 12, md: 3 }}>
@@ -413,30 +412,36 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         </ShakingTextField>
                       </Grid>
                     </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
-              {/* Student Information */}
-              <Grid size={{ xs: 12 }}>
-                <Accordion
-                  expanded={expandedPanels.studentInfo}
-                  onChange={() => handleAccordionToggle('studentInfo')}
-                  disableGutters
-                  elevation={0}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: '8px !important',
-                    mb: 1.5,
-                    '&:before': { display: 'none' },
-                  }}
-                >
-                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Student Information
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
+                  </Paper>
+                </Grid>
+                {/* Student Information */}
+                <Grid size={{ xs: 12 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      mb: 1.5,
+                      borderRadius: 2,
+                      transition: 'box-shadow 0.2s ease',
+                      '&:hover': { boxShadow: 4 },
+                    }}
+                  >
+                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                      <Iconify
+                        icon="solar:users-group-rounded-bold-duotone"
+                        width={18}
+                        sx={{ color: 'primary.main' }}
+                      />
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          Student Information
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Select board, class, and student to proceed
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Divider sx={{ mb: 2 }} />
                     <Grid container spacing={2}>
                       {/* Board */}
                       <Grid size={{ xs: 6, md: 3 }}>
@@ -547,77 +552,82 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         <ShakingTextField
                           error={!!(touched.selectedStudent && errors.selectedStudent) || false}
                         >
-                          <PaginatedSearchSelect
-                            key={`${values.standardId}-${values.divisionId}`}
-                            noOptionsText="No students found"
-                            label="Student *"
+                          <Autocomplete
+                            loading={studentLoading || studentFetching}
+                            noOptionsText={
+                              values.divisionId ? 'No Student Found' : 'Select a division first'
+                            }
+                            fullWidth
                             disabled={!values.divisionId || isEdit}
-                            fetchOptions={async (query, page) => {
-                              if (!values.divisionId) return { data: [], hasMore: false };
-
-                              const res = await getFilterStudents({
-                                page,
-                                pageSize: 10,
-                                academicYearId: currentYear.id,
-                                standardId: values.standardId,
-                                divisionId: values.divisionId,
-                                search: query,
-                              }).unwrap();
-
-                              const hasMore = res.currentPage !== res.totalPages;
-                              return {
-                                data: res?.items?.map((item: any) => ({
-                                  label: `${item.firstName} ${item.lastName} ${item.middleName}`,
-                                  id: item.studentId,
-                                })),
-                                hasMore,
-                              };
+                            options={studentOptions}
+                            value={
+                              studentOptions.find((s: any) => s.studentId === values.studentId) ||
+                              (values.studentId && values.selectedStudent
+                                ? {
+                                    name: values.selectedStudent.label,
+                                    studentId: values.studentId,
+                                  }
+                                : null)
+                            }
+                            onChange={(_e, value: any) => {
+                              setFieldValue(
+                                'selectedStudent',
+                                value ? { label: value.name, id: value.studentId } : null
+                              );
+                              setFieldValue('studentId', value?.studentId || null);
                             }}
-                            value={values.selectedStudent}
-                            renderOption={(prop, option: any) => (
-                              <li {...prop} key={option.id}>
-                                {option.label}
+                            getOptionLabel={(option: any) => option.name || ''}
+                            renderOption={(props, option: any) => (
+                              <li {...props} key={option.studentId}>
+                                {option.name}
                               </li>
                             )}
-                            getOptionLabel={(option: any) => option?.label || ''}
-                            minChars={2}
-                            onChange={(_, value) => {
-                              setFieldValue('selectedStudent', value);
-                              setFieldValue('studentId', value?.id || null);
-                            }}
-                            debounceMs={400}
-                            sx={{ minWidth: 250 }}
-                            size="small"
-                            error={!!(touched.selectedStudent && errors.selectedStudent) || false}
-                            helperText={(touched.selectedStudent && errors.selectedStudent) || ''}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                size="small"
+                                label="Student *"
+                                fullWidth
+                                error={!!(touched.selectedStudent && errors.selectedStudent)}
+                                helperText={
+                                  (touched.selectedStudent && errors.selectedStudent) as string
+                                }
+                              />
+                            )}
                           />
                         </ShakingTextField>
                       </Grid>
                     </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
-              {/* Additional Notes */}
-              <Grid size={{ xs: 12 }}>
-                <Accordion
-                  expanded={expandedPanels.additionalNotes}
-                  onChange={() => handleAccordionToggle('additionalNotes')}
-                  disableGutters
-                  elevation={0}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: '8px !important',
-                    mb: 1.5,
-                    '&:before': { display: 'none' },
-                  }}
-                >
-                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Additional Notes
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
+                  </Paper>
+                </Grid>
+                {/* Additional Notes */}
+                <Grid size={{ xs: 12 }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      mb: 1.5,
+                      borderRadius: 2,
+                      transition: 'box-shadow 0.2s ease',
+                      '&:hover': { boxShadow: 4 },
+                    }}
+                  >
+                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                      <Iconify
+                        icon="solar:notes-bold-duotone"
+                        width={18}
+                        sx={{ color: 'primary.main' }}
+                      />
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          Additional Notes
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Add any internal remarks or special conditions
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Divider sx={{ mb: 2 }} />
                     <TextField
                       name="additionalNotes"
                       label="Additional Notes"
@@ -628,33 +638,54 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                     />
-                  </AccordionDetails>
-                </Accordion>
+                  </Paper>
+                </Grid>
               </Grid>
-            </Grid>
+            </Box>
           </Scrollbar>
 
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={() => onClose(null, false)}
-              variant="outlined"
-              size="small"
+          {/* ── Sticky Finance Action Bar ── */}
+          <Box
+            sx={{
+              flexShrink: 0,
+              borderTop: `1px solid ${theme.palette.divider}`,
+              bgcolor: alpha(theme.palette.background.paper, 0.92),
+              backdropFilter: 'blur(12px)',
+              px: { xs: 2, md: 3 },
+              py: 1.5,
+            }}
+          >
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="flex-end"
+              flexWrap="wrap"
+              gap={1.5}
             >
-              Cancel
-            </Button>
-            <LoadingButton
-              type="button"
-              variant="contained"
-              size="small"
-              disabled={postChargeLoading || updateChargeLoading}
-              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
-              loading={postChargeLoading || updateChargeLoading}
-              onClick={handleSubmit}
-            >
-              {isEdit ? 'Update' : 'Submit'}
-            </LoadingButton>
-          </DialogActions>
+              <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                  onClick={() => onClose(null, false)}
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  disabled={postChargeLoading || updateChargeLoading}
+                >
+                  Cancel
+                </Button>
+                <LoadingButton
+                  type="button"
+                  variant="contained"
+                  loading={postChargeLoading || updateChargeLoading}
+                  startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+                  size="small"
+                  onClick={handleSubmit}
+                >
+                  {isEdit ? 'Update' : 'Create'}
+                </LoadingButton>
+              </Stack>
+            </Box>
+          </Box>
         </Box>
       </form>
     </BackPopUpChecked>

@@ -1,64 +1,34 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Grid, Divider, Typography } from '@mui/material';
+import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { Email, School, Numbers, LocalPhone, CalendarToday } from '@mui/icons-material';
 import { ChargesPaymentStatus, ChargesPaymentStatusColors } from 'src/enums/fee-charges-status';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 const ChargeInformationAccordion = ({ charge }: any) => (
-  <Card
+  <Paper
+    variant="outlined"
     sx={{
+      p: 1.5,
       borderRadius: 2,
-      boxShadow: (theme) =>
-        theme.customShadows?.card ||
-        '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
-      border: (theme) => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
-      overflow: 'hidden',
+      transition: 'box-shadow 0.2s ease',
+      '&:hover': { boxShadow: 4 },
     }}
   >
     {/* Header */}
-    <Box
-      sx={{
-        p: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
-        borderBottom: (theme) => `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
-      }}
-    >
-      <Box display="flex" alignItems="center" gap={2}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: (theme) => `0 4px 8px ${varAlpha(theme.palette.primary.mainChannel, 0.16)}`,
-            border: (theme) => `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.1)}`,
-          }}
-        >
-          <Iconify icon="solar:user-id-bold-duotone" width={24} color="primary.main" />
-        </Box>
-
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            {charge?.student?.studentName || 'Student Name'}&apos;s Information
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-            View academic and personal details
-          </Typography>
-        </Box>
-      </Box>
+    <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+      <Stack direction="row" alignItems="center" gap={1}>
+        <Iconify icon="solar:user-id-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
+        <Typography variant="subtitle2" fontWeight={700}>
+          {charge?.student?.studentName || 'Student Name'}&apos;s Information
+        </Typography>
+      </Stack>
 
       <Label
-        variant="filled"
+        variant="soft"
         color={
           (ChargesPaymentStatusColors[charge?.status as ChargesPaymentStatus] as LabelColor) ||
           'default'
@@ -67,11 +37,12 @@ const ChargeInformationAccordion = ({ charge }: any) => (
       >
         {ChargesPaymentStatus[charge?.status as ChargesPaymentStatus] || 'N/A'}
       </Label>
-    </Box>
+    </Stack>
+    <Divider sx={{ mb: 2 }} />
 
     {/* Body */}
-    <Box sx={{ p: 3 }}>
-      <Grid container spacing={3}>
+    <Box>
+      <Grid container spacing={1}>
         {/* GR Number */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoItem icon={<Numbers />} label="GR No." value={charge?.student?.grNumber || 'N/A'} />
@@ -137,7 +108,7 @@ const ChargeInformationAccordion = ({ charge }: any) => (
         </Grid>
       </Grid>
     </Box>
-  </Card>
+  </Paper>
 );
 
 export default ChargeInformationAccordion;

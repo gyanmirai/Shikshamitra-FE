@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Grid, Paper, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { Tag, Person, School, Language } from '@mui/icons-material';
+import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 import type { IStudentInfo } from '../Concession/type';
@@ -11,24 +12,33 @@ interface Props {
 
 const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
   <Paper
-    elevation={0}
+    variant="outlined"
     sx={{
+      p: 1.5,
+      mb: 1.5,
       borderRadius: 2,
-      p: 1,
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      boxShadow: (theme) =>
-        theme.customShadows?.card ||
-        '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
+      transition: 'box-shadow 0.2s ease',
+      '&:hover': { boxShadow: 4 },
     }}
   >
-    {/* Header */}
-    <Box display="flex" alignItems="center" mb={1} gap={1.5}>
-      <Typography variant="h6">Student Information</Typography>
-    </Box>
+    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+      <Iconify
+        icon="solar:users-group-rounded-bold-duotone"
+        width={18}
+        sx={{ color: 'primary.main' }}
+      />
+      <Box>
+        <Typography variant="subtitle2" fontWeight={700}>
+          Student Information
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Details of the selected student
+        </Typography>
+      </Box>
+    </Stack>
+    <Divider sx={{ mb: 2 }} />
 
-    {/* Body */}
     <Grid container spacing={2}>
-      {/* Student Name */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<Person sx={{ fontSize: 20, color: 'info.main' }} />}
@@ -37,7 +47,6 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         />
       </Grid>
 
-      {/* Roll No */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<Tag sx={{ fontSize: 20, color: 'warning.main' }} />}
@@ -46,7 +55,6 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         />
       </Grid>
 
-      {/* Class / Division */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<School sx={{ fontSize: 20, color: 'primary.dark' }} />}
@@ -57,7 +65,6 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
         />
       </Grid>
 
-      {/* Board / Medium */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<Language sx={{ fontSize: 20, color: 'info.dark' }} />}
@@ -65,15 +72,6 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
           value={student?.boardMedium || 'CBSE / English'}
         />
       </Grid>
-
-      {/* Sibling */}
-      {/* <Grid size={{ xs: 12, md: 3 }}>
-        <InfoItem
-          icon={<People sx={{ fontSize: 20, color: 'warning.dark' }} />}
-          label="Sibling"
-          value={student?.sibling || 'N/A'}
-        />
-      </Grid> */}
     </Grid>
   </Paper>
 );

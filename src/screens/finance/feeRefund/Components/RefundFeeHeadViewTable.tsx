@@ -1,9 +1,11 @@
 import type { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 import React, { useState } from 'react';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { FeeCollectionStatusTypeColors } from 'src/enums/fee-collection-type';
 import { Box, Chip, Divider, Collapse, IconButton, Typography } from '@mui/material';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -30,61 +32,107 @@ interface Props {
 
 // ─── Column Header ─────────────────────────────────────────────────────────────
 
-const COLUMNS = ['TOTAL', 'PAID', 'REFUND AMOUNT', 'STATUS'] as const;
-
 const ColHeader = () => (
   <Box
     display="flex"
     alignItems="center"
-    pl={4}
-    pr={1.5}
-    py={0.5}
-    gap={1}
-    sx={{ bgcolor: 'action.hover' }}
+    px={2}
+    py={1}
+    sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
   >
     <Typography
-      flex={1}
       variant="caption"
-      fontWeight={700}
       color="text.disabled"
+      fontWeight={700}
       textTransform="uppercase"
+      sx={{ letterSpacing: '0.7px', fontSize: '10px', flex: 1 }}
     >
       Month
     </Typography>
-    {COLUMNS.map((col) => (
+
+    {(['TOTAL', 'PAID', 'REFUND AMOUNT'] as const).map((col) => (
       <Typography
         key={col}
         variant="caption"
-        fontWeight={700}
         color="text.disabled"
+        fontWeight={700}
         textTransform="uppercase"
-        sx={{ width: col === 'STATUS' ? 72 : 100, textAlign: 'right' }}
+        sx={{
+          letterSpacing: '0.7px',
+          fontSize: '10px',
+          width: 110,
+          textAlign: 'right',
+          whiteSpace: 'nowrap',
+        }}
       >
         {col}
       </Typography>
     ))}
+
+    <Box sx={{ width: 100, textAlign: 'center' }}>
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        fontWeight={700}
+        textTransform="uppercase"
+        sx={{ letterSpacing: '0.7px', fontSize: '10px' }}
+      >
+        STATUS
+      </Typography>
+    </Box>
   </Box>
 );
 
 // ─── Month Row ─────────────────────────────────────────────────────────────────
 
 const MonthRow = ({ item }: { item: IRefundMonthItem }) => (
-  <Box display="flex" alignItems="center" gap={1} pl={4} pr={1.5} py={0.75}>
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      px: 2,
+      py: 1,
+    }}
+  >
     <Typography variant="body2" fontWeight={500} flex={1} noWrap>
       {item.month}
     </Typography>
 
-    <Typography variant="body2" sx={{ width: 100, textAlign: 'right' }}>
+    <Typography
+      variant="body2"
+      sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+    >
+      {' '}
       {formatCurrency(item.total)}
     </Typography>
 
-    <Typography variant="body2" sx={{ width: 100, textAlign: 'right' }}>
+    <Typography
+      variant="body2"
+      sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+    >
+      {' '}
       {formatCurrency(item.paid)}
     </Typography>
 
-    <Typography variant="body2" sx={{ width: 100, textAlign: 'right' }}>
+    <Typography
+      variant="body2"
+      sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+    >
+      {' '}
       {formatCurrency(item.refundAmount)}
     </Typography>
+
+    <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
+      <Label color={FeeCollectionStatusTypeColors[item.status]} variant="soft">
+        {item.status === 1
+          ? 'Paid'
+          : item.status === 2
+            ? 'Partial'
+            : item.status === 3
+              ? 'Pending'
+              : 'Overdue'}
+      </Label>
+    </Box>
   </Box>
 );
 
@@ -119,13 +167,17 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
       >
         <IconButton
           size="small"
-          sx={{ p: 0.25 }}
+          sx={{
+            color: 'text.secondary',
+            transition: 'transform 200ms ease',
+            transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+          }}
           onClick={(e) => {
             e.stopPropagation();
             setOpen((o) => !o);
           }}
         >
-          {open ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+          <Iconify icon="eva:chevron-down-fill" width={18} />
         </IconButton>
 
         <Typography variant="subtitle2" fontWeight={700} flex={1}>
@@ -176,7 +228,12 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
         >
           <Typography variant="caption" color="text.secondary">
             Total Paid :{' '}
-            <strong style={{ color: theme.palette.text.primary }}>
+            <strong
+              style={{
+                color: theme.palette.text.primary,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
               {formatCurrency(feeHead.totalPaid)}
             </strong>
           </Typography>
@@ -188,6 +245,7 @@ const FeeHeadViewGroup = ({ feeHead }: { feeHead: IRefundFeeHeadItem }) => {
                   feeHead.totalRefunded > 0
                     ? theme.palette.primary.main
                     : theme.palette.text.disabled,
+                fontVariantNumeric: 'tabular-nums',
               }}
             >
               {formatCurrency(feeHead.totalRefunded)}
@@ -238,12 +296,15 @@ const RefundFeeHeadViewTable: React.FC<Props> = ({ data }) => {
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Total Paid :{' '}
-          <strong style={{ color: theme.palette.text.primary }}>
+          <strong style={{ color: theme.palette.text.primary, fontVariantNumeric: 'tabular-nums' }}>
             {formatCurrency(grandTotalPaid)}
           </strong>
         </Typography>
         <Typography variant="body2" color="primary.main" fontWeight={700}>
-          Total Refunded : {formatCurrency(grandTotalRefunded)}
+          Total Refunded :{' '}
+          <strong style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatCurrency(grandTotalRefunded)}
+          </strong>
         </Typography>
       </Box>
 

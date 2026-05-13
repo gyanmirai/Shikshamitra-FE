@@ -3,7 +3,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Card, Chip, Divider, Collapse, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Divider, Collapse, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
@@ -20,13 +20,6 @@ import type {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STATUS_LABEL: Record<FeeCollectionStatusType, string> = {
-  [FeeCollectionStatusType.Paid]: 'Fully Paid',
-  [FeeCollectionStatusType.Partial]: 'Partially Paid',
-  [FeeCollectionStatusType.Pending]: 'Pending',
-  [FeeCollectionStatusType.Overdue]: 'Overdue',
-};
-
 const STATUS_ICON: Record<FeeCollectionStatusType, string> = {
   [FeeCollectionStatusType.Paid]: 'solar:check-circle-bold',
   [FeeCollectionStatusType.Partial]: 'solar:clock-circle-bold',
@@ -34,17 +27,22 @@ const STATUS_ICON: Record<FeeCollectionStatusType, string> = {
   [FeeCollectionStatusType.Overdue]: 'solar:danger-triangle-bold',
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Column Header ────────────────────────────────────────────────────────────
 
 const ColHeader = () => (
-  <Box display="flex" alignItems="center" px={1.5} py={0.5} sx={{ bgcolor: 'action.hover' }}>
-    {/* Fee Head label column */}
+  <Box
+    display="flex"
+    alignItems="center"
+    px={2}
+    py={0.75}
+    sx={{ borderBottom: '1px solid', borderColor: 'divider' }}
+  >
     <Typography
       variant="caption"
       color="text.disabled"
       fontWeight={700}
       textTransform="uppercase"
-      flex={1}
+      sx={{ letterSpacing: '0.7px', fontSize: '10px', flex: 1 }}
     >
       Fee Head
     </Typography>
@@ -56,7 +54,7 @@ const ColHeader = () => (
         color="text.disabled"
         fontWeight={700}
         textTransform="uppercase"
-        sx={{ width: 80, textAlign: 'right' }}
+        sx={{ letterSpacing: '0.7px', fontSize: '10px', width: 86, textAlign: 'right' }}
       >
         {col}
       </Typography>
@@ -68,6 +66,7 @@ const ColHeader = () => (
         color="text.disabled"
         fontWeight={700}
         textTransform="uppercase"
+        sx={{ letterSpacing: '0.7px', fontSize: '10px' }}
       >
         STATUS
       </Typography>
@@ -75,49 +74,52 @@ const ColHeader = () => (
   </Box>
 );
 
-// ─── Fee Row (read-only) ──────────────────────────────────────────────────────
+// ─── Fee Row ──────────────────────────────────────────────────────────────────
 
 const FeeItemRow = ({ row }: { row: AllocatedFeeRow }) => {
   const theme = useTheme();
 
   return (
     <Box
-      display="flex"
-      alignItems="center"
-      px={1.5}
-      py={0.75}
       sx={{
-        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.03) },
+        display: 'flex',
+        alignItems: 'center',
+        px: 2,
+        py: 1.25,
+        transition: 'background-color 150ms ease',
+        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
       }}
     >
-      <Box flex={1} minWidth={0}>
-        <Typography variant="body2" fontWeight={500} noWrap>
-          {row.feeHeadName}
-        </Typography>
+      {/* Fee head name */}
+      <Box flex={1} minWidth={0} pr={1}>
+        <Typography variant="body2">{row.feeHeadName}</Typography>
       </Box>
 
-      <Typography variant="body2" sx={{ width: 80, textAlign: 'right' }}>
+      {/* ORIGINAL */}
+      <Typography
+        variant="body2"
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+      >
         ₹{formatNumber(row.originalAmount)}
       </Typography>
 
+      {/* PAID */}
       <Typography
         variant="body2"
-        fontWeight={600}
-        color="success.main"
-        sx={{ width: 80, textAlign: 'right' }}
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(row.paidAmount)}
       </Typography>
 
+      {/* REMAINING */}
       <Typography
         variant="body2"
-        fontWeight={row.remainingAmount > 0 ? 600 : 400}
-        color={row.remainingAmount > 0 ? 'warning.main' : 'text.disabled'}
-        sx={{ width: 80, textAlign: 'right' }}
+        sx={{ width: 90, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(row.remainingAmount)}
       </Typography>
 
+      {/* STATUS */}
       <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
         <Label color={FeeCollectionStatusTypeColors[row.status]} variant="soft">
           {FeeCollectionStatusType[row.status]}
@@ -134,51 +136,67 @@ const ChargeItemRow = ({ row }: { row: AllocatedChargeRow }) => {
 
   return (
     <Box
-      display="flex"
-      alignItems="center"
-      px={1.5}
-      py={0.75}
       sx={{
-        '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.03) },
+        display: 'flex',
+        alignItems: 'center',
+        px: 2,
+        py: 1.25,
+        minHeight: 56,
+        transition: 'background-color 150ms ease',
+        '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.04) },
       }}
     >
-      <Box flex={1} minWidth={0}>
-        <Typography variant="body2" fontWeight={500} color="error.main" noWrap>
-          {row.chargeName}
+      <Box flex={1} minWidth={0} pr={1}>
+        <Stack direction="row" alignItems="center" spacing={0.5}>
+          <Iconify
+            icon="solar:danger-circle-bold"
+            width={13}
+            sx={{ color: 'error.main', flexShrink: 0 }}
+          />
+          <Typography variant="body2" fontWeight={600} noWrap color="error.main">
+            {row.chargeName}
+          </Typography>
+        </Stack>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          fontWeight={500}
+          sx={{ mt: 0.25, display: 'block' }}
+        >
+          Additional charge
         </Typography>
       </Box>
 
-      <Typography variant="body2" sx={{ width: 80, textAlign: 'right' }}>
+      <Typography
+        variant="body2"
+        fontWeight={500}
+        color="text.secondary"
+        sx={{ width: 86, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+      >
         ₹{formatNumber(row.originalAmount)}
       </Typography>
 
       <Typography
         variant="body2"
         fontWeight={600}
-        color="success.main"
-        sx={{ width: 80, textAlign: 'right' }}
+        color="text.primary"
+        sx={{ width: 86, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(row.paidAmount)}
       </Typography>
 
       <Typography
         variant="body2"
-        fontWeight={row.remainingAmount > 0 ? 600 : 400}
-        color={row.remainingAmount > 0 ? 'warning.main' : 'text.disabled'}
-        sx={{ width: 80, textAlign: 'right' }}
+        fontWeight={600}
+        color="text.primary"
+        sx={{ width: 86, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(row.remainingAmount)}
       </Typography>
 
       <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
-        <Label
-          color={FeeCollectionStatusTypeColors[row.status]}
-          variant="filled"
-          sx={{
-            borderRadius: '6px',
-            fontWeight: 600,
-          }}
-        >
+        <Label color={FeeCollectionStatusTypeColors[row.status]} variant="soft">
+          <Iconify icon={STATUS_ICON[row.status]} width={11} sx={{ mr: 0.4 }} />
           {FeeCollectionStatusType[row.status]}
         </Label>
       </Box>
@@ -186,89 +204,117 @@ const ChargeItemRow = ({ row }: { row: AllocatedChargeRow }) => {
   );
 };
 
-// ─── Month Group (collapsible, no checkbox) ───────────────────────────────────
+// ─── Month Group ──────────────────────────────────────────────────────────────
 
 const MonthGroupBlock = ({ group }: { group: MonthAllocationGroup }) => {
   const [open, setOpen] = useState(true);
   const theme = useTheme();
 
-  const allPaid = group.rows.every((r) => r.status === FeeCollectionStatusType.Paid);
-  const anyPartial = group.rows.some((r) => r.status === FeeCollectionStatusType.Partial);
-
   return (
     <Box
       sx={{
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 1.5,
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
         overflow: 'hidden',
-        mb: 1,
+        mb: 1.5,
+        transition: 'border-color 200ms ease, box-shadow 200ms ease',
+        '&:hover': {
+          borderColor: alpha(theme.palette.primary.main, 0.2),
+          boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.06)}`,
+        },
       }}
     >
-      {/* ── Month Header ── */}
+      {/* ── Accordion Header ── */}
       <Box
         display="flex"
         alignItems="center"
-        gap={1}
-        px={1.5}
-        py={1}
+        gap={1.5}
+        px={2}
+        py={1.25}
         sx={{
-          bgcolor: allPaid ? alpha(theme.palette.success.main, 0.06) : 'background.neutral',
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
           cursor: 'pointer',
           userSelect: 'none',
+          transition: 'background-color 150ms ease',
+          '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.07) },
         }}
         onClick={() => setOpen((o) => !o)}
       >
-        <Typography variant="subtitle2" fontWeight={700}>
-          {group.period}
-        </Typography>
-
-        <Box
-          sx={{
-            px: 0.75,
-            py: 0.2,
-            borderRadius: 0.5,
-            bgcolor: alpha(theme.palette.text.secondary, 0.08),
-          }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            {group.rows.length} {group.rows.length === 1 ? 'item' : 'items'}
+        {/* Left: period + count */}
+        <Box flex={1} minWidth={0}>
+          <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+            {group.period}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" fontWeight={500}>
+            {group.rows.length} {group.rows.length === 1 ? 'fee head' : 'fee heads'}
           </Typography>
         </Box>
 
-        <Box flex={1} />
+        {/* Right: totals */}
+        <Stack direction="row" alignItems="center" spacing={3}>
+          <Box textAlign="right">
+            <Typography variant="caption" color="text.disabled">
+              PAID
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                width: 110,
+                textAlign: 'right',
+                flexShrink: 0,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {' '}
+              ₹{formatNumber(group.totalPaid)}
+            </Typography>
+          </Box>
 
-        {/* Month-level totals */}
-        <Typography variant="caption" color="success.main" fontWeight={700} sx={{ mr: 0.5 }}>
-          Paid : ₹{formatNumber(group.totalPaid)}
-        </Typography>
-        {group.totalRemaining > 0 && (
-          <Typography variant="caption" color="warning.main" fontWeight={700} sx={{ mr: 0.5 }}>
-            Due : ₹{formatNumber(group.totalRemaining)}
-          </Typography>
-        )}
-        <Label color={FeeCollectionStatusTypeColors[group.status]} variant="soft">
-          {FeeCollectionStatusType[group.status]}
-        </Label>
+          {group.totalRemaining > 0 && (
+            <Box textAlign="right">
+              <Typography variant="caption" color="text.disabled">
+                DUE
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  width: 110,
+                  textAlign: 'right',
+                  flexShrink: 0,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {' '}
+                ₹{formatNumber(group.totalRemaining)}
+              </Typography>
+            </Box>
+          )}
 
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((o) => !o);
-          }}
-        >
-          <Iconify icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
-        </IconButton>
+          <IconButton
+            size="small"
+            sx={{
+              color: 'text.secondary',
+              transition: 'transform 200ms ease',
+              transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((o) => !o);
+            }}
+          >
+            <Iconify icon="eva:chevron-down-fill" width={18} />
+          </IconButton>
+        </Stack>
       </Box>
 
-      {/* ── Rows ── */}
+      {/* ── Collapsible Rows ── */}
       <Collapse in={open}>
-        <Divider />
         <ColHeader />
         {group.rows.map((row, idx) => (
           <Box key={row.key}>
             <FeeItemRow row={row} />
-            {idx < group.rows.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
+            {idx < group.rows.length - 1 && <Divider sx={{ mx: 2, opacity: 0.4 }} />}
           </Box>
         ))}
       </Collapse>
@@ -288,72 +334,106 @@ const ChargesSection = ({ rows }: { rows: AllocatedChargeRow[] }) => {
   return (
     <Box
       sx={{
-        border: `1px solid ${theme.palette.error.light}`,
-        borderRadius: 1.5,
+        border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`,
+        borderRadius: 2,
         overflow: 'hidden',
-        mb: 1,
+        mb: 1.5,
+        transition: 'box-shadow 200ms ease',
+        '&:hover': {
+          boxShadow: `0 2px 12px ${alpha(theme.palette.error.main, 0.08)}`,
+        },
       }}
     >
       {/* Header */}
       <Box
         display="flex"
         alignItems="center"
-        gap={1}
-        px={1.5}
-        py={1}
+        gap={1.5}
+        px={2}
+        py={1.25}
         sx={{
           bgcolor: alpha(theme.palette.error.main, 0.05),
           cursor: 'pointer',
           userSelect: 'none',
+          transition: 'background-color 150ms ease',
+          '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) },
         }}
         onClick={() => setOpen((o) => !o)}
       >
-        <Iconify icon="solar:danger-circle-bold" width={16} sx={{ color: 'error.main' }} />
-        <Typography variant="subtitle2" fontWeight={700} color="error.main">
-          Additional Charges
-        </Typography>
-        <Box
-          sx={{
-            px: 0.75,
-            py: 0.2,
-            borderRadius: 0.5,
-            bgcolor: alpha(theme.palette.error.main, 0.08),
-          }}
-        >
-          <Typography variant="caption" color="error.main">
+        <Box flex={1} minWidth={0}>
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Iconify icon="solar:danger-circle-bold" width={16} sx={{ color: 'error.main' }} />
+            <Typography variant="subtitle2" fontWeight={700} color="error.main">
+              Additional Charges
+            </Typography>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" fontWeight={500}>
             {rows.length} {rows.length === 1 ? 'charge' : 'charges'}
           </Typography>
         </Box>
 
-        <Box flex={1} />
-
-        <Typography variant="caption" color="success.main" fontWeight={700} sx={{ mr: 0.5 }}>
-          Paid: ₹{formatNumber(totalPaid)}
-        </Typography>
-        {totalRemaining > 0 && (
-          <Typography variant="caption" color="warning.main" fontWeight={700} sx={{ mr: 0.5 }}>
-            Due: ₹{formatNumber(totalRemaining)}
-          </Typography>
-        )}
-
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((o) => !o);
-          }}
-        >
-          <Iconify icon={open ? 'eva:chevron-up-fill' : 'eva:chevron-down-fill'} width={18} />
-        </IconButton>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Box textAlign="right">
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              fontWeight={500}
+              sx={{ fontSize: '10px', display: 'block' }}
+            >
+              PAID
+            </Typography>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.primary"
+              sx={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              ₹{formatNumber(totalPaid)}
+            </Typography>
+          </Box>
+          {totalRemaining > 0 && (
+            <Box textAlign="right">
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                fontWeight={500}
+                sx={{ fontSize: '10px', display: 'block' }}
+              >
+                DUE
+              </Typography>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="warning.main"
+                sx={{ fontVariantNumeric: 'tabular-nums' }}
+              >
+                ₹{formatNumber(totalRemaining)}
+              </Typography>
+            </Box>
+          )}
+          <IconButton
+            size="small"
+            sx={{
+              color: 'text.secondary',
+              transition: 'transform 200ms ease',
+              transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((o) => !o);
+            }}
+          >
+            <Iconify icon="eva:chevron-down-fill" width={18} />
+          </IconButton>
+        </Stack>
       </Box>
 
       <Collapse in={open}>
-        <Divider sx={{ borderColor: 'error.light' }} />
         <ColHeader />
         {rows.map((row, idx) => (
           <Box key={row.key}>
             <ChargeItemRow row={row} />
-            {idx < rows.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.4 }} />}
+            {idx < rows.length - 1 && <Divider sx={{ mx: 2, opacity: 0.4 }} />}
           </Box>
         ))}
       </Collapse>
@@ -361,39 +441,62 @@ const ChargesSection = ({ rows }: { rows: AllocatedChargeRow[] }) => {
   );
 };
 
-// ─── Grand Totals Footer ──────────────────────────────────────────────────────
+// ─── Grand Totals ─────────────────────────────────────────────────────────────
 
 const GrandTotalsFooter = ({ rows }: { rows: AllocatedRow[] }) => {
   const totalOriginal = rows.reduce((s, r) => s + r.originalAmount, 0);
   const totalPaid = rows.reduce((s, r) => s + r.paidAmount, 0);
   const totalRemaining = rows.reduce((s, r) => s + r.remainingAmount, 0);
 
+  const stats: Array<{ label: string; value: number; icon: string }> = [
+    { label: 'Total Original', value: totalOriginal, icon: 'solar:bill-list-bold' },
+    { label: 'Total Paid', value: totalPaid, icon: 'solar:check-circle-bold' },
+    { label: 'Total Remaining', value: totalRemaining, icon: 'solar:clock-circle-bold' },
+  ];
+
   return (
     <Box
       sx={{
-        px: 1.5,
-        py: 1,
-        mt: 0.5,
-        borderRadius: 1.5,
+        mt: 1,
+        p: 2,
+        borderRadius: 2,
         bgcolor: 'background.neutral',
         border: '1px solid',
         borderColor: 'divider',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        gap: 3,
-        flexWrap: 'wrap',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 0,
       }}
     >
-      {[
-        { label: 'Total Original', value: totalOriginal, color: 'text.primary' },
-        { label: 'Total Paid', value: totalPaid, color: 'success.main' },
-        { label: 'Total Remaining', value: totalRemaining, color: 'warning.main' },
-      ].map(({ label, value, color }) => (
-        <Box key={label} textAlign="right">
-          <Typography variant="body2" color={color} display="block">
-            {label}
-          </Typography>
-          <Typography variant="subtitle2" fontWeight={700} color={color}>
+      {stats.map(({ label, value, icon }, idx) => (
+        <Box
+          key={label}
+          sx={{
+            textAlign: 'center',
+            px: 1,
+            py: 1,
+            borderRight: idx < stats.length - 1 ? '1px solid' : 'none',
+            borderColor: 'divider',
+          }}
+        >
+          <Stack direction="row" justifyContent="center" alignItems="center" spacing={0.5} mb={0.5}>
+            <Typography
+              variant="caption"
+              fontWeight={600}
+              sx={{ textTransform: 'uppercase', letterSpacing: '0.6px', fontSize: '10px' }}
+            >
+              {label}
+            </Typography>
+          </Stack>
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            color="text.primary"
+            sx={{
+              fontVariantNumeric: 'tabular-nums',
+              fontSize: '1.1rem',
+            }}
+          >
             ₹{formatNumber(value)}
           </Typography>
         </Box>
@@ -409,14 +512,42 @@ interface Props {
 }
 
 const AllocationPreviewTable = ({ allocatedRows }: Props) => {
+  const theme = useTheme();
+
   if (allocatedRows.length === 0) {
     return (
-      <Card variant="outlined" sx={{ p: 2.5, borderRadius: 2, textAlign: 'center' }}>
-        <Iconify icon="solar:bill-cross-bold" width={36} sx={{ color: 'text.disabled', mb: 1 }} />
-        <Typography variant="body2" color="text.secondary">
+      <Box
+        sx={{
+          p: 4,
+          borderRadius: 2.5,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          textAlign: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.text.disabled, 0.08),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 1.5,
+          }}
+        >
+          <Iconify icon="solar:bill-cross-bold" width={28} sx={{ color: 'text.disabled' }} />
+        </Box>
+        <Typography variant="subtitle2" fontWeight={600} color="text.secondary" mb={0.5}>
+          No allocation available
+        </Typography>
+        <Typography variant="body2" color="text.disabled">
           No items can be covered by the entered payment amount.
         </Typography>
-      </Card>
+      </Box>
     );
   }
 
@@ -426,19 +557,10 @@ const AllocationPreviewTable = ({ allocatedRows }: Props) => {
 
   return (
     <Box>
-      {/* ── Card Header ── */}
-      <Box display="flex" alignItems="center" gap={1} mb={1}>
-        <Typography variant="subtitle2" fontWeight={700}>
-          Payment Allocation Breakdown
-        </Typography>
-        <Chip
-          size="small"
-          label={`${allocatedRows.length} item${allocatedRows.length !== 1 ? 's' : ''}`}
-          sx={{ height: 20, fontSize: '0.7rem' }}
-        />
-      </Box>
-
-      {/* ── Month Groups ── */}
+      {/* ── Header ── */}
+      <Typography variant="subtitle1" fontWeight={700} pb={1}>
+        Payment Allocation Breakdown
+      </Typography>
       {monthGroups.map((group) => (
         <MonthGroupBlock key={group.period} group={group} />
       ))}
