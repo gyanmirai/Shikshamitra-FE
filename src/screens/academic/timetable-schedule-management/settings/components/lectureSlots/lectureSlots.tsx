@@ -193,14 +193,14 @@ const LectureSlots = () => {
         />
       ) : addLectureSlotDialog.value ? (
         <CustomBreadcrumbs
-          heading="Add Lecture Slot"
-          description="Add a new lecture slot for a class."
+          heading={`${isEdit ? 'Update' : 'Add'} Lecture Slot`}
+          description={`${isEdit ? 'Update' : 'Add'} a new lecture slot for a class.`}
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Timetable', href: '/academic/newTimetable' },
             { name: 'Settings' },
             { name: 'Lecture Slots' },
-            { name: 'Add Lecture Slot' },
+            { name: `${isEdit ? 'Update' : 'Add'} Lecture Slot` },
           ]}
           isBack
           onBack={() => {

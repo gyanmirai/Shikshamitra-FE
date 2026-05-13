@@ -11,22 +11,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { usePublishExamMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
-import {
-  Box,
-  Button,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  Autocomplete,
-} from '@mui/material';
+import { Box, MenuList, MenuItem, TextField, Typography, Autocomplete } from '@mui/material';
+import { useGetSubjectsQuery } from 'src/redux/classManagementApi/subjectProgressManageApi/subjectProgressManageApi';
 
 import AssignGrade from './components/assignGradeForm';
 import GradeEntryTable from './components/GradeEntryTable';
@@ -34,78 +29,6 @@ import GradeEntryTable from './components/GradeEntryTable';
 import type { IStudentExamGradeEntry } from './type';
 import type { TabComponentType } from '../../hr/leave-request';
 
-const studentExamGradeEntries: IStudentExamGradeEntry[] = [
-  {
-    id: '1',
-    rollNo: '2024001',
-    studentName: 'Sharma Aarav Rajesh',
-    subject: 'Mathematics',
-    examType: 'mid_term',
-    examName: 'Mid Term',
-    marks: null,
-    totalMarks: 100,
-    grade: '',
-    feedback: '',
-    weightedAverage: '0%',
-    status: 0, // Pending marks and feedback assignment
-  },
-  {
-    id: '2',
-    rollNo: '2024002',
-    studentName: 'Patel Riya Amit',
-    subject: 'Mathematics',
-    examType: 'mid_term',
-    examName: 'Mid Term',
-    marks: 82,
-    totalMarks: 100,
-    grade: 'A-',
-    feedback: 'Excellent problem-solving skills. Keep up the good work!',
-    weightedAverage: '82%',
-    status: 1, // Marks and feedback assigned
-  },
-  {
-    id: '3',
-    rollNo: '2024003',
-    studentName: 'Kumar Arjun Suresh',
-    subject: 'Mathematics',
-    examType: 'mid_term',
-    examName: 'Mid Term',
-    marks: null,
-    totalMarks: 100,
-    grade: '',
-    feedback: '',
-    weightedAverage: '0%',
-    status: 0, // Pending marks and feedback assignment
-  },
-  {
-    id: '4',
-    rollNo: '2024004',
-    studentName: 'Shah Meera Rajesh',
-    subject: 'Mathematics',
-    examType: 'mid_term',
-    examName: 'Mid Term',
-    marks: 88,
-    totalMarks: 100,
-    grade: 'A',
-    feedback: 'Strong grasp of concepts. Work on time management.',
-    weightedAverage: '88%',
-    status: 1, // Marks and feedback assigned
-  },
-  {
-    id: '5',
-    rollNo: '2024005',
-    studentName: 'Joshi Aditya Prakash',
-    subject: 'Mathematics',
-    examType: 'mid_term',
-    examName: 'Mid Term',
-    marks: null,
-    totalMarks: 100,
-    grade: '',
-    feedback: '',
-    weightedAverage: '0%',
-    status: 0, // Pending marks and feedback assignment
-  },
-];
 const GradeEntry = (props: TabComponentType) => {
   // Dialog control for showing/hiding modal
   const dialog = useBoolean();
@@ -154,12 +77,81 @@ const GradeEntry = (props: TabComponentType) => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
+  // Reset subject and examId when class or division changes
+  useEffect(() => {
+    setSubject('');
+    setExamId('');
+  }, [classes, division]);
+
+  // Reset examId when subject changes
+  useEffect(() => {
+    setExamId('');
+  }, [subject]);
+
+  // Fetch subjects dynamically based on selected class and division
+  const {
+    data: subjectData,
+    isLoading: isSubjectsLoading,
+    isFetching: isSubjectsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      classId: classes,
+      divisionId: division,
+    },
+    options: {
+      skip: !(medium?.id && classes && division),
+    },
+  });
+
+  // Map API response to { id, name } options for the Subject dropdown
+  const subjectOptions = useMemo<{ id: string; name: string }[]>(() => {
+    const raw: any[] = Array.isArray(subjectData)
+      ? subjectData
+      : (subjectData?.data?.items ?? subjectData?.items ?? subjectData?.records ?? []);
+    return raw.map((s: any) => ({
+      id: s.subjectId ?? s.id ?? '',
+      name: s.subjectName ?? s.name ?? '',
+    }));
+  }, [subjectData]);
+
+  // Fetch exams dynamically based on selected class, division, and subject
+  const {
+    data: examData,
+    isLoading: isExamsLoading,
+    isFetching: isExamsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamsQuery,
+    params: {
+      AcademicMediumId: medium?.id,
+      StandardId: classes,
+      DivisionId: division,
+      SubjectId: subject,
+      ...(assignmentType ? { ExamType: assignmentType } : {}),
+    },
+    options: {
+      skip: !(medium?.id && classes && division && subject),
+    },
+  });
+
+  // Map API exam items to a stable options array for the Exam Title Autocomplete
+  const examOptions = useMemo<{ examId: string; examName: string }[]>(() => {
+    const raw: any[] = examData?.data?.items ?? examData?.items ?? [];
+    return raw.map((e: any) => ({
+      examId: e.examId ?? e.id ?? '',
+      examName: e.examName ?? e.name ?? '',
+    }));
+  }, [examData]);
+
   // Currently selected student for grade entry
   const [selectedStudent, setSelectedStudent] = useState<IStudentExamGradeEntry | null>(null);
-  // Table data containing student grades and information
-  const [tableData] = useState<IStudentExamGradeEntry[]>(studentExamGradeEntries);
   // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  // True when every student row has status === 1 (marks assigned)
+  const [allMarksAssigned, setAllMarksAssigned] = useState(false);
 
   // Dialog control for viewing student submission
   const viewSubmissionDialog = useBoolean();
@@ -181,15 +173,23 @@ const GradeEntry = (props: TabComponentType) => {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [publishExamMarks, { isLoading: isPublishLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePublishExamMarksMutation,
-    params: {
-      examId,
-      divisionId: division,
-    },
   });
+
+  const handlePublishMarks = async () => {
+    if (!examId || !division) return;
+    try {
+      await publishExamMarks({ examId, divisionId: division }).unwrap();
+      publishMarksDialog.onFalse();
+      shikshaMitraToast.success({
+        message: `Marks published successfully for ${examOptions.find((o) => o.examId === examId)?.examName ?? 'selected exam'}.`,
+      });
+    } catch (error) {
+      console.error('[GradeEntry] Failed to publish marks:', error);
+    }
+  };
 
   // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -233,7 +233,7 @@ const GradeEntry = (props: TabComponentType) => {
               onClick={() => {
                 viewSubmissionDialog.onTrue();
                 popover.onClose();
-                setSelectedStudent(row);
+                setSelectedStudent({ ...row, subjectId: subject, examId: row.examId || examId });
               }}
             >
               {' '}
@@ -247,7 +247,7 @@ const GradeEntry = (props: TabComponentType) => {
               onClick={() => {
                 popover.onClose();
                 viewSubmissionDialog.onTrue();
-                setSelectedStudent(row);
+                setSelectedStudent({ ...row, subjectId: subject, examId: row.examId || examId });
               }}
             >
               {' '}
@@ -258,7 +258,7 @@ const GradeEntry = (props: TabComponentType) => {
         </MenuList>
       </>
     ),
-    [viewSubmissionDialog]
+    [viewSubmissionDialog, subject, examId]
   );
 
   return (
@@ -276,7 +276,7 @@ const GradeEntry = (props: TabComponentType) => {
             <LoadingButton
               variant="contained"
               size="small"
-              disabled={!examId}
+              disabled={!examId || !allMarksAssigned}
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               onClick={() => {
                 publishMarksDialog.onTrue();
@@ -285,7 +285,7 @@ const GradeEntry = (props: TabComponentType) => {
               title="Publish marks to make them visible to students"
               sx={{ px: '32px' }}
             >
-              Publish Marks
+              {} Publish Marks
             </LoadingButton>
           }
         />
@@ -328,60 +328,29 @@ const GradeEntry = (props: TabComponentType) => {
             <CustomSelect
               label="Subject"
               disabled={!division}
-              options={[
-                { value: 'math', label: 'Mathematics' },
-                { value: 'science', label: 'Science' },
-                { value: 'english', label: 'English' },
-              ]}
+              options={subjectOptions}
+              labelKey="name"
+              valueKey="id"
+              isLoading={isSubjectsLoading || isSubjectsFetching}
               onChange={(val) => {
                 setSubject(val as string);
               }}
               value={subject}
               formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
             />
-            <CustomTooltip placement="top" title={examId && `${examId}`}>
+            <CustomTooltip
+              placement="top"
+              title={examId && examOptions.find((o) => o.examId === examId)?.examName}
+            >
               <Autocomplete
                 disabled={!subject}
-                options={[
-                  // Unit Test titles
-                  { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
-                  { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
-                  // Mid Term titles
-                  { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
-                  { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
-                  // Final Term titles
-                  { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
-                  { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
-                  // Practical titles
-                  { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
-                  { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
-                  // Project titles
-                  { value: 'project_1', label: 'Project Work 1', type: 'project' },
-                  { value: 'project_2', label: 'Project Work 2', type: 'project' },
-                  // Assignment titles
-                  { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
-                  { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-                ].filter((option) => !assignmentType || option.type === assignmentType)}
-                getOptionLabel={(option: any) => option.label || ''}
-                isOptionEqualToValue={(option, value) => option.value === value.value}
-                value={
-                  [
-                    { value: 'unit_test_1', label: 'Unit Test 1', type: 'unit_test' },
-                    { value: 'unit_test_2', label: 'Unit Test 2', type: 'unit_test' },
-                    { value: 'mid_term_theory', label: 'Mid Term Theory', type: 'mid_term' },
-                    { value: 'mid_term_mcq', label: 'Mid Term MCQ', type: 'mid_term' },
-                    { value: 'final_term_theory', label: 'Final Term Theory', type: 'final_term' },
-                    { value: 'final_term_mcq', label: 'Final Term MCQ', type: 'final_term' },
-                    { value: 'lab_practical_1', label: 'Lab Practical 1', type: 'practical' },
-                    { value: 'lab_practical_2', label: 'Lab Practical 2', type: 'practical' },
-                    { value: 'project_1', label: 'Project Work 1', type: 'project' },
-                    { value: 'project_2', label: 'Project Work 2', type: 'project' },
-                    { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
-                    { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-                  ].find((opt) => opt.value === examId) || null
-                }
-                onChange={(event, newValue) => {
-                  setExamId(newValue?.value || '');
+                loading={isExamsLoading || isExamsFetching}
+                options={examOptions}
+                getOptionLabel={(option: any) => option.examName || ''}
+                isOptionEqualToValue={(option, value) => option.examId === value.examId}
+                value={examOptions.find((opt) => opt.examId === examId) || null}
+                onChange={(_event, newValue) => {
+                  setExamId(newValue?.examId || '');
                 }}
                 renderInput={(params) => (
                   <TextField
@@ -397,7 +366,6 @@ const GradeEntry = (props: TabComponentType) => {
           </Box>
         </motion.div>
         <GradeEntryTable
-          data={tableData}
           selectedStudents={selectedStudents}
           handleSelectStudent={handleSelectStudent}
           actions={actions}
@@ -405,6 +373,7 @@ const GradeEntry = (props: TabComponentType) => {
           divisionId={division}
           subjectId={subject}
           examId={examId}
+          onAllAssignedChange={setAllMarksAssigned}
         />
 
         <CustomDialog
@@ -450,25 +419,25 @@ const GradeEntry = (props: TabComponentType) => {
           open={publishMarksDialog.value}
           onClose={() => {
             publishMarksDialog.onFalse();
-            // setSelectedExam(null);
           }}
-          title="Publish"
+          title="Publish Marks"
           content={
             <>
-              Are you sure you want to publish marks <strong>{examId}</strong>?
+              Are you sure you want to publish marks for{' '}
+              <strong>{examOptions.find((o) => o.examId === examId)?.examName ?? examId}</strong>?
+              This will make the marks visible to students and cannot be undone.
             </>
           }
           action={
-            <Button
+            <LoadingButton
               variant="contained"
               size="small"
+              loading={isPublishLoading}
               startIcon={<Iconify icon={GlobalIcons.publish} />}
-              onClick={() => {
-                // handleDelete(selectedExam?.id);
-              }}
+              onClick={handlePublishMarks}
             >
               Publish
-            </Button>
+            </LoadingButton>
           }
         />
       </Box>

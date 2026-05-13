@@ -3,6 +3,8 @@ export interface IStudentExamGradeEntry {
   rollNo: string;
   studentName: string;
   subject: string;
+  subjectId?: string;
+  obtainedMarks: number | null;
   marks: number | null;
   totalMarks: number;
   grade: string;
@@ -12,6 +14,39 @@ export interface IStudentExamGradeEntry {
   examType: string;
   examName: string;
   examId?: string;
+}
+
+/** Query parameters for the GET  */
+export interface IExamMarksQueryParams {
+  ExamId: string;
+  SubjectId: string;
+  DivisionId: string;
+  StandardId: string;
+}
+
+/** Single student marks item returned by the API */
+export interface IExamMarkItem {
+  id: string;
+  rollNo: string;
+  studentName: string;
+  subject?: string;
+  subjectId?: string;
+  marks: number | null;
+  totalMarks: number;
+  grade: string;
+  feedback: string;
+  weightedAverage?: string;
+  status: number;
+  examType?: string;
+  examName?: string;
+  examId?: string;
+}
+
+/** Request body for PATCH */
+export interface IUpdateStudentMarksRequest {
+  marks: number;
+  totalMarks: number;
+  feedback?: string;
 }
 
 /**
@@ -25,7 +60,6 @@ export interface IAssignGradeProps {
 }
 
 export interface IGradeEntryTableProps {
-  data: IStudentExamGradeEntry[];
   selectedStudents: string[];
   handleSelectStudent: (id: string) => void;
   actions: (props: any) => any;
@@ -33,4 +67,6 @@ export interface IGradeEntryTableProps {
   divisionId: string;
   subjectId: string;
   examId: string;
+  /** Called whenever the table data changes, with true if all students have status === 1 */
+  onAllAssignedChange?: (allAssigned: boolean) => void;
 }
