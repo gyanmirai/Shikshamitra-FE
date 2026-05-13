@@ -31,7 +31,7 @@ import { subjectTempData } from '../subjectsData';
 import ChapterTable from './components/chapterTable';
 import ChapterDocuments from './components/chapterDocuments';
 
-import type { IChapter } from './type';
+import type { IChapter, SubjectOption } from './type';
 
 const Subjects = () => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -43,7 +43,8 @@ const Subjects = () => {
 
   const [classes, setClasses] = useState<string>('');
   const [classId, setClassId] = useState<string>('');
-  const [subjectId, setSubjectId] = useState<string>('');
+  const [subjectId, setSubjectId] = useState<string>(''); // plain item.id — used for API
+  const [subjectSelectValue, setSubjectSelectValue] = useState<string>(''); // composite key — used for dropdown display
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [subject, setSubject] = useState<string>('');
   const chapterDialog = useBoolean();
@@ -235,31 +236,80 @@ const Subjects = () => {
                     const standard = allClass.find((std) => std.id === value);
                     setClasses(standard?.name || '');
                     setClassId(value as string);
+                    // Reset subject selection when class changes
+                    setSubjectId('');
+                    setSubjectSelectValue('');
                   }}
                 />
                 <CustomSelect
-                  options={
-                    subjectOptionsData?.data?.items?.map((item: any) => ({
-                      value: item.id,
-                      label:
-                        item.subjects?.length > 1
-                          ? item.electiveGroupName
-                          : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName,
-                    })) || []
-                  }
-                  value={subjectId}
+                  options={(() => {
+                    const allOptions: SubjectOption[] = [];
+
+                    subjectOptionsData?.data?.items?.forEach((item: any) => {
+                      if (item.subjects?.length > 1 && item.electiveGroupName) {
+                        // Elective group — each subject as its own dropdown entry
+                        // API shape confirmed: { subjectId, subjectName, subjectCode, color }
+                        item.subjects.forEach((sub: any, index: number) => {
+                          const subId = sub.subjectId || String(index);
+                          allOptions.push({
+                            value: `${item.id}::${subId}`,
+                            label: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+                            originalItem: item,
+                            isElective: true,
+                            electiveGroupId: item.id,
+                          });
+                        });
+                      } else {
+                        // Regular single subject
+                        allOptions.push({
+                          value: item.id,
+                          label:
+                            item.subjects?.[0]?.subject?.name ||
+                            item.subjects?.[0]?.subjectName ||
+                            '',
+                          originalItem: item,
+                          isElective: false,
+                        });
+                      }
+                    });
+
+                    return allOptions;
+                  })()}
+                  value={subjectSelectValue}
                   disabled={!classes}
                   onChange={(val) => {
-                    const selected = subjectOptionsData?.data?.items?.find(
-                      (item: any) => item.id === val
-                    );
-                    const label =
-                      selected?.subjects?.length > 1
-                        ? selected?.electiveGroupName
-                        : selected?.subjects?.[0]?.subject?.name ||
-                          selected?.subjects?.[0]?.subjectName;
-                    setSubject(label || '');
-                    setSubjectId(val as string);
+                    const strVal = String(val);
+
+                    // The API always needs the plain item.id (groupId), not the composite key.
+                    const apiId = strVal.includes('::') ? strVal.split('::')[0] : strVal;
+
+                    const label = (() => {
+                      if (strVal.includes('::')) {
+                        // Composite key: "groupId::subjectId"
+                        const [groupId, subId] = strVal.split('::');
+                        const groupItem = subjectOptionsData?.data?.items?.find(
+                          (item: any) => item.id === groupId
+                        );
+                        const matchedSub = groupItem?.subjects?.find(
+                          (sub: any, idx: number) => (sub.subjectId || String(idx)) === subId
+                        );
+                        const subName = matchedSub?.subjectName || '';
+                        return subName;
+                      }
+                      // Regular subject — value is simply item.id
+                      const selected = subjectOptionsData?.data?.items?.find(
+                        (item: any) => item.id === strVal
+                      );
+                      return (
+                        selected?.subjects?.[0]?.subject?.name ||
+                        selected?.subjects?.[0]?.subjectName ||
+                        ''
+                      );
+                    })();
+
+                    setSubject(label);
+                    setSubjectSelectValue(strVal); // full composite key — keeps dropdown in sync
+                    setSubjectId(apiId); // plain item.id — safe for API
                   }}
                   label="Subject"
                   valueKey="value"
@@ -291,7 +341,7 @@ const Subjects = () => {
             isLoading={isChapterLoading || isChapterFetching}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
-            data={chapterResponse || []}
+            data={subjectId ? chapterResponse || [] : []}
             actions={actions}
             handleEyeClick={handleEyeClick}
             onViewDocuments={(chapter) => {

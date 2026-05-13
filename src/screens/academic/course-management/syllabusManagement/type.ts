@@ -25,6 +25,14 @@ export interface IChapter {
   lastModificationTime: string;
 }
 
+export interface SubjectOption {
+  value: string;
+  label: string;
+  originalItem: any;
+  isElective: boolean;
+  electiveGroupId?: string;
+}
+
 export interface IChapterFormValues {
   chapterNo: number;
   chapterName: string;

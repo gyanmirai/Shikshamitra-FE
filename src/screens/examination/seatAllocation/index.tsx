@@ -320,7 +320,7 @@ const SeatAllocation = () => {
         </CustomDialog>
       ) : (
         <>
-          <Paper sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
+          <Paper sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1, borderRadius: 2 }}>
             <CustomSelect
               options={allClass}
               label="Class"
