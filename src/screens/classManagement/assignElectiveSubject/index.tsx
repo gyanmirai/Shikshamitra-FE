@@ -6,9 +6,9 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
-import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
@@ -86,6 +86,7 @@ const AssignElectiveSubject = () => {
     data: assignmentData,
     isLoading: isElectiveLoading,
     refetch: refetchElectives,
+    isFetching: isElectiveFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentElectiveAssignmentsQuery,
@@ -163,7 +164,7 @@ const AssignElectiveSubject = () => {
   // --------------------------------------------
   // PUT API USING useQueryAndMutation
   // --------------------------------------------
-  const { updateStudentElectiveAssignments, isLoading: isSaving } = useQueryAndMutation({
+  const [updateStudentElectiveAssignments, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentElectiveAssignmentsMutation,
   });
@@ -179,7 +180,7 @@ const AssignElectiveSubject = () => {
     };
 
     try {
-      await updateStudentElectiveAssignments(payload);
+      await updateStudentElectiveAssignments(payload).unwrap();
       shikshaMitraToast.success({ message: 'Elective assignments saved!' });
       saveDialog.onFalse();
       refetchElectives();
@@ -204,7 +205,7 @@ const AssignElectiveSubject = () => {
   // --------------------------------------------
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
         description="Assign elective subjects based on student preference."
@@ -215,18 +216,9 @@ const AssignElectiveSubject = () => {
       />
 
       {/* MAIN CARD */}
-      <Box
-        sx={{
-          borderRadius: 2,
-          bgcolor: 'background.paper',
-          boxShadow: (theme) => theme.customShadows.card,
-          p: 1.5,
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {/* FILTER & ACTIONS */}
+
+      {/* FILTER & ACTIONS */}
+      <Card sx={{ p: 1, mb: 1 }}>
         <Box
           sx={{
             display: 'flex',
@@ -234,7 +226,6 @@ const AssignElectiveSubject = () => {
             justifyContent: 'space-between',
             alignItems: { xs: 'stretch', md: 'center' },
             gap: 1,
-            mb: 1,
           }}
         >
           <Box
@@ -306,71 +297,39 @@ const AssignElectiveSubject = () => {
             </LoadingButton>
           </Box>
         </Box>
+      </Card>
 
-        {/* TABLE */}
-        <CustomizableTable
-          tableId="elective-table"
-          data={students}
-          isLoading={isElectiveLoading}
-          noDataText={<>No Students Found</>}
-          columns={[
-            { id: 'studentName', label: 'Student Name', minWidth: '200px' },
-            { id: 'rollNo', label: 'Roll No.', minWidth: '120px' },
-            { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
-            {
-              id: 'electiveSubjects',
-              label: '',
-              minWidth: '500px',
-              isFilter: false,
-              isSort: false,
-              renderColumn: () => {
-                if (!students || students.length === 0) return null;
+      {/* TABLE */}
 
-                const subjects = students[0]?.selectableSubjects || [];
+      <CustomizableTable
+        tableId="elective-table"
+        data={students}
+        isLoading={isElectiveLoading || isElectiveFetching}
+        noDataText={<>No Students Found</>}
+        columns={[
+          { id: 'studentName', label: 'Student Name', minWidth: '200px' },
+          { id: 'rollNo', label: 'Roll No.', minWidth: '120px' },
+          { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
+          {
+            id: 'electiveSubjects',
+            label: '',
+            minWidth: '500px',
+            isFilter: false,
+            isSort: false,
+            renderColumn: () => {
+              if (!students || students.length === 0) return null;
 
-                return (
-                  <Box display="flex" gap={1.5}>
-                    {subjects.map((s: any) => {
-                      const isSelected = selectedHeaderSubject === s.subjectId;
-                      return (
-                        <Button
-                          key={s.subjectId}
-                          variant={isSelected ? 'contained' : 'outlined'}
-                          onClick={() => handleHeaderSubjectClick(s.subjectId)}
-                          size="small"
-                          sx={{
-                            borderRadius: 1,
-                            textTransform: 'none',
-                            fontWeight: isSelected ? 'bold' : 'normal',
-                            boxShadow: isSelected ? 2 : 0,
-                            color: isSelected ? '#fff' : s.subjectColor,
-                            borderColor: s.subjectColor,
-                            backgroundColor: isSelected ? s.subjectColor : 'transparent',
-                            '&:hover': {
-                              backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}15`,
-                              borderColor: s.subjectColor,
-                              boxShadow: isSelected ? 3 : 0,
-                            },
-                          }}
-                        >
-                          {s.subjectName}
-                        </Button>
-                      );
-                    })}
-                  </Box>
-                );
-              },
+              const subjects = students[0]?.selectableSubjects || [];
 
-              render: (_, row) => (
+              return (
                 <Box display="flex" gap={1.5}>
-                  {row.selectableSubjects?.map((s: any) => {
-                    const isSelected = studentSelections[row.studentId] === s.subjectId;
-
+                  {subjects.map((s: any) => {
+                    const isSelected = selectedHeaderSubject === s.subjectId;
                     return (
                       <Button
                         key={s.subjectId}
                         variant={isSelected ? 'contained' : 'outlined'}
-                        onClick={() => handleStudentSubjectClick(row.studentId, s.subjectId)}
+                        onClick={() => handleHeaderSubjectClick(s.subjectId)}
                         size="small"
                         sx={{
                           borderRadius: 1,
@@ -392,11 +351,44 @@ const AssignElectiveSubject = () => {
                     );
                   })}
                 </Box>
-              ),
+              );
             },
-          ]}
-        />
-      </Box>
+
+            render: (_, row) => (
+              <Box display="flex" gap={1.5}>
+                {row.selectableSubjects?.map((s: any) => {
+                  const isSelected = studentSelections[row.studentId] === s.subjectId;
+
+                  return (
+                    <Button
+                      key={s.subjectId}
+                      variant={isSelected ? 'contained' : 'outlined'}
+                      onClick={() => handleStudentSubjectClick(row.studentId, s.subjectId)}
+                      size="small"
+                      sx={{
+                        borderRadius: 1,
+                        textTransform: 'none',
+                        fontWeight: isSelected ? 'bold' : 'normal',
+                        boxShadow: isSelected ? 2 : 0,
+                        color: isSelected ? '#fff' : s.subjectColor,
+                        borderColor: s.subjectColor,
+                        backgroundColor: isSelected ? s.subjectColor : 'transparent',
+                        '&:hover': {
+                          backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}15`,
+                          borderColor: s.subjectColor,
+                          boxShadow: isSelected ? 3 : 0,
+                        },
+                      }}
+                    >
+                      {s.subjectName}
+                    </Button>
+                  );
+                })}
+              </Box>
+            ),
+          },
+        ]}
+      />
 
       {/* RESET DIALOG */}
       <ConfirmDialog

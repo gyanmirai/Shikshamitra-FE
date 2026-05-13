@@ -9,36 +9,115 @@ import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Card, Button, Avatar } from '@mui/material';
 import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Button, TextField, Autocomplete } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import {
   useGetClassTeacherAssignmentsQuery,
   useUpdateClassTeacherAssignmentsMutation,
 } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
 
-interface ITeacherOption {
-  value: string;
-  name: string;
+interface EmployeeOption {
+  id: string;
+  label: string;
 }
 
-const teacherOptions: ITeacherOption[] = [
-  { value: 't1', name: 'Sharma Riya Kumar' },
-  { value: 't2', name: 'Patel Ankit Rajesh' },
-  { value: 't3', name: 'Desai Priya Mahesh' },
-  { value: 't4', name: 'Singh Rahul Vikram' },
-  { value: 't5', name: 'Mehta Neha Suresh' },
-  { value: 't6', name: 'Kumar Deepak Prakash' },
-  { value: 't7', name: 'Mishra Pooja Dinesh' },
-  { value: 't8', name: 'Joshi Vikram Shyam' },
-];
+// ----- Row-level teacher cell with dynamic search -----
+const TeacherCell = ({
+  teacherId,
+  isFocused,
+  onTeacherChange,
+}: {
+  teacherId: string | null;
+  isFocused: boolean;
+  onTeacherChange: (val: EmployeeOption | null) => void;
+}) => {
+  const [getEmployees] = useLazyGetEmployeeQuery();
+  const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
+  const [selectedTeacher, setSelectedTeacher] = useState<EmployeeOption | null>(null);
+
+  // Pre-load the existing assigned teacher
+  useEffect(() => {
+    if (!teacherId) {
+      setSelectedTeacher(null);
+      return;
+    }
+    getEmployeeById(teacherId)
+      .unwrap()
+      .then((data: { id: string; fullName: string }) =>
+        setSelectedTeacher({ id: data.id, label: data.fullName })
+      )
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teacherId]);
+
+  const fetchOptions = useCallback(
+    async (query: string) => {
+      const res = await getEmployees({ search: query }).unwrap();
+      return {
+        data: (res?.items ?? []).map((item: { id: string; fullName: string }) => ({
+          id: item.id,
+          label: item.fullName,
+        })),
+        hasMore: res.currentPage <= res.totalPages,
+      };
+    },
+    [getEmployees]
+  );
+
+  return (
+    <PaginatedSearchSelect
+      label="Class Teacher"
+      fetchOptions={fetchOptions}
+      value={selectedTeacher}
+      onChange={(_: unknown, newValue: EmployeeOption | null) => {
+        setSelectedTeacher(newValue);
+        onTeacherChange(newValue);
+      }}
+      getOptionLabel={(option: EmployeeOption) => option?.label || ''}
+      isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
+        option.id === value.id
+      }
+      renderOption={(props: any, option: EmployeeOption) => {
+        const { key, ...rest } = props;
+        return (
+          <Box component="li" {...rest} key={key} sx={{ display: 'flex', gap: 1 }}>
+            <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>{option.label?.[0]}</Avatar>
+            {option.label}
+          </Box>
+        );
+      }}
+      debounceMs={400}
+      minChars={0}
+      size="small"
+      fullWidth
+      sx={{
+        maxWidth: '280px',
+        '& .MuiOutlinedInput-root': {
+          '& fieldset': {
+            borderColor: isFocused ? 'primary.main' : 'rgba(0,0,0,0.23)',
+            borderWidth: isFocused ? 2 : 1,
+          },
+          '&:hover fieldset': {
+            borderColor: isFocused ? 'primary.main' : undefined,
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: isFocused ? 'primary.main' : undefined,
+          },
+        },
+      }}
+    />
+  );
+};
 
 const ClassTeacherAssignment = () => {
   const resetConfirmDialog = useBoolean();
@@ -66,6 +145,7 @@ const ClassTeacherAssignment = () => {
     data: assignmentsData,
     refetch: refetchAssignments,
     isLoading: isClassAssignmentLoading,
+    isFetching: isClassAssignmentFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassTeacherAssignmentsQuery,
@@ -107,12 +187,12 @@ const ClassTeacherAssignment = () => {
     [tableData, originalTableData]
   );
 
-  const handleTeacherChange = (teacherId: string | null, rowIndex: number) => {
+  const handleTeacherChange = (newValue: EmployeeOption | null, rowIndex: number) => {
     const newTableData = [...tableData];
-    newTableData[rowIndex].classTeacher = teacherId;
+    newTableData[rowIndex].classTeacher = newValue?.id || null;
     setTableData(newTableData);
 
-    if (teacherId) {
+    if (newValue?.id) {
       if (!focusedCells.includes(rowIndex)) {
         setFocusedCells((prev) => [...prev, rowIndex]);
       }
@@ -133,7 +213,7 @@ const ClassTeacherAssignment = () => {
   const handleSave = async () => {
     try {
       const assignments = tableData
-        .filter((row) => row.classTeacher) // Only send assignments with a teacher
+        .filter((row) => row.classTeacher)
         .map((row) => ({
           classId: row.classId,
           divisionId: row.divisionId,
@@ -163,27 +243,18 @@ const ClassTeacherAssignment = () => {
   };
 
   const getModifiedSubjects = () =>
-    // Returns list of "Class - Division" that have changed
     tableData
       .filter((row, index) => {
         const original = originalTableData[index];
         return row.classTeacher !== original?.classTeacher;
       })
       .map((row) => `${row.className} - ${row.divisionName}`);
+
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
-
-  const getAvailableTeachers = (currentRow: any) =>
-    // Filter out teachers already assigned to OTHER rows
-    teacherOptions.filter((teacher) => {
-      const isAssignedToAny = tableData.some(
-        (row) => row.classTeacher === teacher.value && row !== currentRow
-      );
-      return !isAssignedToAny;
-    });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -195,56 +266,57 @@ const ClassTeacherAssignment = () => {
         ]}
         description="Assign teachers to specific classes and divisions, manage class teacher allocations."
       />
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-          ml: 1,
-        }}
-      >
-        <CustomSelect
-          options={allOrganization}
-          label="Organization *"
-          value={organization}
-          onChange={(val) => {
-            setOrganization(val as any);
+      <Card sx={{ mb: 1, p: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-        />
-        <Box display="flex" gap={2} justifyContent="flex-end">
-          <Button
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-            onClick={resetConfirmDialog.onTrue}
-            size="small"
-            disabled={!hasChanges}
-            sx={{ px: '32px' }}
-          >
-            Reset
-          </Button>
-          <LoadingButton
-            startIcon={<Save />}
-            variant="contained"
-            size="small"
-            onClick={saveConfirmDialog.onTrue}
-            loading={isSaving}
-            disabled={!hasChanges}
-            sx={{ px: '32px' }}
-          >
-            Save
-          </LoadingButton>
+        >
+          <CustomSelect
+            options={allOrganization}
+            label="Organization *"
+            value={organization}
+            onChange={(val) => {
+              setOrganization(val as any);
+            }}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+          />
+
+          <Box display="flex" gap={2} justifyContent="flex-end">
+            <Button
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+              onClick={resetConfirmDialog.onTrue}
+              size="small"
+              disabled={!hasChanges}
+              sx={{ px: '32px' }}
+            >
+              Reset
+            </Button>
+            <LoadingButton
+              startIcon={<Save />}
+              variant="contained"
+              size="small"
+              onClick={saveConfirmDialog.onTrue}
+              loading={isSaving}
+              disabled={!hasChanges}
+              sx={{ px: '32px' }}
+            >
+              Save
+            </LoadingButton>
+          </Box>
         </Box>
-      </Box>
+      </Card>
 
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
         tableId="assignTeacherTable"
-        isLoading={isClassAssignmentLoading}
+        isLoading={isClassAssignmentLoading || isClassAssignmentFetching}
         noDataText={<>No Division Data Found for this Organization</>}
         columns={[
           {
@@ -260,54 +332,13 @@ const ClassTeacherAssignment = () => {
             label: 'Class Teacher',
             isSort: false,
             isFilter: false,
-            render: (value, row: any) => {
-              const activeTeacher =
-                teacherOptions.find((t) => t.value === row.classTeacher) || null;
-
+            render: (value: any, row: any) => {
+              const rowIndex = tableData.indexOf(row);
               return (
-                <Autocomplete
-                  options={getAvailableTeachers(row)}
-                  value={activeTeacher}
-                  getOptionLabel={(option) => option.name}
-                  isOptionEqualToValue={(option, val) => option.value === val.value}
-                  onChange={(event, newValue) =>
-                    handleTeacherChange(newValue?.value || null, tableData.indexOf(row))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Class Teacher"
-                      fullWidth
-                      sx={{
-                        maxWidth: '280px',
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': {
-                            borderColor: focusedCells.includes(tableData.indexOf(row))
-                              ? 'primary.main'
-                              : 'rgba(0,0,0,0.23)',
-                            borderWidth: focusedCells.includes(tableData.indexOf(row)) ? 2 : 1,
-                          },
-                          '&:hover fieldset': {
-                            borderColor: focusedCells.includes(tableData.indexOf(row))
-                              ? 'primary.main'
-                              : undefined,
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: focusedCells.includes(tableData.indexOf(row))
-                              ? 'primary.main'
-                              : undefined,
-                          },
-                        },
-                      }}
-                    />
-                  )}
-                  size="small"
-                  ListboxProps={{
-                    style: {
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                    },
-                  }}
+                <TeacherCell
+                  teacherId={row.classTeacher}
+                  isFocused={focusedCells.includes(rowIndex)}
+                  onTeacherChange={(newValue) => handleTeacherChange(newValue, rowIndex)}
                 />
               );
             },
