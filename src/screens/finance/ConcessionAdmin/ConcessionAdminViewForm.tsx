@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -146,14 +147,15 @@ const StatCard: React.FC<IStatCardProps> = ({ label, value, color = 'default' })
   };
 
   return (
-    <Card
+    <Paper
       variant="outlined"
       sx={{
         flex: 1,
         minWidth: 120,
-        p: 1,
+        p: 1.5,
         borderRadius: 2,
-        boxShadow: 'none',
+        transition: 'box-shadow 0.2s ease',
+        '&:hover': { boxShadow: 4 },
       }}
     >
       <Typography
@@ -166,7 +168,7 @@ const StatCard: React.FC<IStatCardProps> = ({ label, value, color = 'default' })
       <Typography variant="h4" sx={{ mt: 0.5, color: colorMap[color], fontWeight: 700 }}>
         {value}
       </Typography>
-    </Card>
+    </Paper>
   );
 };
 
@@ -438,6 +440,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student, onClose }) => {
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState('all');
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
@@ -569,7 +572,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               borderRadius: 2,
               p: 2,
               mb: 2,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
+              border: (t) => `1px solid ${t.palette.divider}`,
             }}
           >
             <Box display="flex" alignItems="center" mb={3} gap={1.5}>
@@ -778,18 +781,27 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
         )}
       </Scrollbar>
 
-      {/* ── Footer ───────────────────────────────────────────────────── */}
+      {/* ── Footer ────────────────────────────────────────────── */}
       <Box
         sx={{
-          px: 2.5,
+          flexShrink: 0,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          bgcolor: alpha(theme.palette.background.paper, 0.92),
+          backdropFilter: 'blur(12px)',
+          px: { xs: 2, md: 3 },
           py: 1.5,
           display: 'flex',
           justifyContent: 'flex-end',
-          boxShadow: 'var(--shadows-10)',
         }}
       >
-        <Button variant="outlined" size="small" color="inherit" onClick={onClose}>
-          Close
+        <Button
+          variant="outlined"
+          size="small"
+          color="inherit"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
+          Cancel
         </Button>
       </Box>
       <ConfirmDialog

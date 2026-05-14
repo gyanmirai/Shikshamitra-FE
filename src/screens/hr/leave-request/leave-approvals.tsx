@@ -43,7 +43,11 @@ import {
 } from 'src/redux/hr/leaveApi';
 
 import { LeaveRequestForm } from './leave-calender';
-import { getLeaveStatusColor, getLeaveStatusLabel } from './leave-status.utils';
+import {
+  getLeaveStatusColor,
+  getLeaveStatusLabel,
+  getLeaveStatusFilterValue,
+} from './leave-status.utils';
 
 type LeaveApprovalsProps = {
   showBreadcrumbs?: boolean;
@@ -128,7 +132,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
             '-',
           description: item.description,
           remarks: item.remarks,
-          status: item.status,
+          status: getLeaveStatusFilterValue(item.status),
         };
       }) || [];
 

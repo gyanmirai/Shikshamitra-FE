@@ -120,7 +120,11 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
                 >
                   {item.label}
                 </Typography>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 0.5 }}>
+
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, mt: 0.5, fontVariantNumeric: 'tabular-nums' }}
+                >
                   {item.value}
                 </Typography>
               </Box>
@@ -130,9 +134,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
         </Box>
       </Card>
 
-      {/* Fee Head Refund Breakdown */}
-      <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle2" fontWeight={700} mb={1.5} color="primary.main">
+      <Typography variant="subtitle2" fontWeight={700} mb={1}>
         Fee Head Refund Details
       </Typography>
       <RefundFeeHeadViewTable data={DUMMY_REFUND_FEE_HEAD_WISE} />

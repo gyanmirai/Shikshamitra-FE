@@ -53,6 +53,7 @@ export const GlobalIcons = {
   printer: 'mdi:printer',
   question: 'mdi:question-mark-circle-outline',
   report: 'streamline-plump:file-report-solid',
+  refresh: 'mdi:refresh',
 };
 
 export const GlobalIconColors = {

@@ -3,7 +3,7 @@
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Checkbox, Typography } from '@mui/material';
+import { Box, Card, Checkbox, Typography } from '@mui/material';
 
 import ByMonthView from './FeeLedgerByMonth';
 import { toPeriod } from './FeeLedgerShared';
@@ -18,7 +18,7 @@ import type {
   FeeHeadWiseGroup,
 } from '../Components/type';
 
-// â”€â”€â”€ Charges Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Charges Section ───────────────────────────────────────────────────────────
 
 interface ChargesSectionProps {
   chargesData: IFeeCharge[];
@@ -30,10 +30,29 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
   const theme = useTheme();
 
   return (
-    <Box mt={2}>
-      <Box display="flex" alignItems="center" gap={1} mb={1} px={0.5}>
-        <Iconify icon="solar:bill-bold" sx={{ color: 'error.main', width: 16, height: 16 }} />
-        <Typography variant="subtitle2" fontWeight={700} color="error.main">
+    <Card sx={{ p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)', ml: 0.5, mt: 2 }}>
+      {/* Section header */}
+      <Box display="flex" alignItems="center" gap={1} mb={1.25} px={0.5}>
+        <Box
+          sx={{
+            width: 28,
+            height: 28,
+            borderRadius: 1.25,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: alpha(theme.palette.error.main, 0.1),
+            flexShrink: 0,
+          }}
+        >
+          <Iconify icon="solar:bill-bold" sx={{ color: 'error.main', width: 15, height: 15 }} />
+        </Box>
+        <Typography
+          variant="subtitle2"
+          fontWeight={700}
+          color="error.main"
+          sx={{ fontSize: '0.8rem' }}
+        >
           Additional Charges
         </Typography>
       </Box>
@@ -47,17 +66,29 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
             display="flex"
             alignItems="center"
             gap={1}
-            px={1}
-            py={0.75}
+            px={1.25}
+            py={0.875}
             sx={{
-              border: `1px solid ${isSelected ? theme.palette.error.light : theme.palette.divider}`,
+              border: `1px solid ${
+                isSelected
+                  ? alpha(theme.palette.error.main, 0.35)
+                  : alpha(theme.palette.error.main, 0.15)
+              }`,
               borderRadius: 1.5,
-              mb: 0.75,
+              mb: 0.875,
               cursor: isDisabled ? 'default' : 'pointer',
-              opacity: isDisabled ? 0.5 : 1,
-              bgcolor: isSelected ? alpha(theme.palette.error.main, 0.04) : 'transparent',
-              transition: 'all 0.15s',
-              '&:hover': !isDisabled ? { bgcolor: alpha(theme.palette.error.main, 0.04) } : {},
+              opacity: isDisabled ? 0.45 : 1,
+              bgcolor: isSelected ? alpha(theme.palette.error.main, 0.05) : 'transparent',
+              transition: 'all 0.18s ease',
+              boxShadow: isSelected ? `0 0 0 2px ${alpha(theme.palette.error.main, 0.1)}` : 'none',
+              '&:hover': !isDisabled
+                ? {
+                    bgcolor: isSelected
+                      ? alpha(theme.palette.error.main, 0.08)
+                      : alpha(theme.palette.action.hover, 0.7),
+                    borderColor: alpha(theme.palette.error.main, 0.25),
+                  }
+                : {},
             }}
             onClick={!isDisabled ? () => onToggleCharge(charge.chargeId) : undefined}
           >
@@ -67,22 +98,41 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
               disabled={isDisabled}
               onChange={() => onToggleCharge(charge.chargeId)}
               onClick={(e) => e.stopPropagation()}
-              sx={{ p: 0.5, color: 'error.light', '&.Mui-checked': { color: 'error.main' } }}
+              sx={{
+                p: 0.375,
+                color: 'error.light',
+                '&.Mui-checked': { color: 'error.main' },
+                '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+              }}
             />
-            <Typography variant="body2" fontWeight={500} flex={1}>
+            <Typography
+              variant="body2"
+              fontWeight={isSelected ? 600 : 500}
+              flex={1}
+              sx={{
+                fontSize: '0.8125rem',
+                color: isSelected ? 'error.main' : 'text.primary',
+                transition: 'color 0.15s',
+              }}
+            >
               {charge.chargeName}
             </Typography>
-            <Typography variant="body2" fontWeight={600} color="error.main">
-              ₹ {formatNumber(charge.amount)}
+            <Typography
+              variant="body2"
+              fontWeight={700}
+              color="error.main"
+              sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '0.8125rem' }}
+            >
+              ₹{formatNumber(charge.amount)}
             </Typography>
           </Box>
         );
       })}
-    </Box>
+    </Card>
   );
 };
 
-// â”€â”€â”€ Main Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Export ───────────────────────────────────────────────────────────────
 
 export interface FeeLedgerListProps {
   data: FeeLedgerData;
@@ -105,7 +155,7 @@ const FeeLedgerList = ({
   onChargesChange,
   year = new Date().getFullYear(),
 }: FeeLedgerListProps) => {
-  // â”€â”€ Item toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Item toggle ────────────────────────────────────────────────────────────
   const toggleItem = (feeHeadId: string, month: string, due: number) => {
     if (due === 0) return;
     const period = toPeriod(month, year);
@@ -119,7 +169,7 @@ const FeeLedgerList = ({
     }
   };
 
-  // â”€â”€ Month group toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
     const period = toPeriod(group.month, year);
     const selectableItems = group.items.filter((i) => i.due > 0);
@@ -143,7 +193,7 @@ const FeeLedgerList = ({
     }
   };
 
-  // â”€â”€ Fee head group toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Fee head group toggle ──────────────────────────────────────────────────
   const toggleFeeHeadGroup = (group: FeeHeadWiseGroup) => {
     const getPeriod = (month: string) => toPeriod(month, year);
     const selectableItems = group.items.filter((i) => i.due > 0);
@@ -173,26 +223,37 @@ const FeeLedgerList = ({
     }
   };
 
-  // â”€â”€ Charge toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Charge toggle ──────────────────────────────────────────────────────────
   const toggleCharge = (chargeId: string) => {
     const exists = charges.includes(chargeId);
     onChargesChange(exists ? charges.filter((c) => c !== chargeId) : [...charges, chargeId]);
   };
 
-  // â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Empty state ────────────────────────────────────────────────────────────
   const isEmpty =
     (activeTab === 'by-month' && !data.monthWise?.length) ||
     (activeTab === 'by-fee-head' && !data.feeHeadWise?.length);
 
   if (isEmpty) {
     return (
-      <Box py={5} textAlign="center">
+      <Box
+        py={6}
+        textAlign="center"
+        sx={{
+          borderRadius: 2,
+          border: (t) => `1px dashed ${t.palette.divider}`,
+          bgcolor: (t) => alpha(t.palette.action.hover, 0.4),
+        }}
+      >
         <Iconify
           icon="solar:inbox-bold"
-          sx={{ width: 40, height: 40, color: 'text.disabled', mb: 1 }}
+          sx={{ width: 40, height: 40, color: 'text.disabled', mb: 1.5 }}
         />
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" fontWeight={500}>
           No fee records found
+        </Typography>
+        <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
+          Records will appear here once available
         </Typography>
       </Box>
     );

@@ -2,6 +2,7 @@ import type { LabelColor } from 'src/components/label';
 
 import { Typography } from '@mui/material';
 import { Label } from 'src/components/label';
+import { useMemo, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,10 +14,9 @@ import {
   ExamGradeStatusOptions,
 } from 'src/enums/grade-entry-status';
 
-import type { IGradeEntryTableProps } from '../type';
+import type { IExamMarkItem, IGradeEntryTableProps } from '../type';
 
 const GradeEntryTable = ({
-  data,
   selectedStudents,
   handleSelectStudent,
   actions,
@@ -24,24 +24,54 @@ const GradeEntryTable = ({
   divisionId,
   subjectId,
   examId,
+  onAllAssignedChange,
 }: IGradeEntryTableProps) => {
+  const allParamsReady = !!(examId && classId && divisionId && subjectId);
+
+  const [query, setQuery] = useState<{ page: number; pageSize: number }>({
+    page: 1,
+    pageSize: 10,
+  });
+
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: gradingData,
     isLoading,
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamMarksQuery,
-    params: { examId, classId, divisionId, subjectId },
+    params: {
+      ExamId: examId,
+      SubjectId: subjectId,
+      DivisionId: divisionId,
+      StandardId: classId,
+      ...query,
+    },
     options: {
-      skip: !(examId && classId && divisionId && subjectId),
+      skip: !allParamsReady,
     },
   });
+
+  const tableData = useMemo<IExamMarkItem[]>(() => {
+    const raw: any[] = gradingData?.items ?? [];
+    return raw.map((item: any) => ({
+      ...item,
+      id: item.id ?? item.studentId ?? '',
+    }));
+  }, [gradingData]);
+
+  // Notify parent whether all students have marks assigned (status === 1)
+  useEffect(() => {
+    if (!onAllAssignedChange) return;
+    const allAssigned = tableData.length > 0 && tableData.every((item) => item.status === 1);
+    onAllAssignedChange(allAssigned);
+  }, [tableData, onAllAssignedChange]);
+
   return (
     <CustomizableTable
       tableId="grade-entry-table"
       noDataText={<>Students Data Not Found For Grading</>}
+      totalCount={gradingData?.totalCount}
       isLoading={isLoading || isFetching}
       columns={[
         { id: 'studentName', label: 'Student Name', sticky: true, minWidth: 180, align: 'left' },
@@ -54,7 +84,7 @@ const GradeEntryTable = ({
           filterType: 'number',
         },
         {
-          id: 'marks',
+          id: 'obtainedMarks',
           label: 'Obtained Marks',
           align: 'left',
           minWidth: 150,
@@ -94,11 +124,12 @@ const GradeEntryTable = ({
                 fontSize="13px"
                 noWrap
                 sx={{
-                  maxWidth: 150,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
                   display: 'block',
+                  maxWidth: 0,
+                  minWidth: '100%',
                 }}
               >
                 {value || '-'}
@@ -137,7 +168,14 @@ const GradeEntryTable = ({
           },
         },
       ]}
-      data={data}
+      data={tableData}
+      serverSidePagination
+      onServerPagination={(page, rowPerPage) => {
+        setQuery({
+          page,
+          pageSize: rowPerPage,
+        });
+      }}
     />
   );
 };

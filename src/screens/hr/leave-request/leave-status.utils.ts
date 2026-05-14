@@ -2,27 +2,47 @@ import type { LabelColor } from 'src/components/label';
 
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 
-export type NormalizedLeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'VIEWED' | 'UNKNOWN';
+export type NormalizedLeaveStatus =
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'REVIEWED'
+  | 'CANCELLED'
+  | 'UNKNOWN';
 
 const STATUS_LABELS: Record<Exclude<NormalizedLeaveStatus, 'UNKNOWN'>, string> = {
   PENDING: 'Pending',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
-  VIEWED: 'Viewed',
+  REVIEWED: 'Reviewed',
+  CANCELLED: 'Cancelled',
 };
 
 const STATUS_COLORS: Record<Exclude<NormalizedLeaveStatus, 'UNKNOWN'>, LabelColor> = {
   PENDING: 'warning',
   APPROVED: 'success',
   REJECTED: 'error',
-  VIEWED: 'info',
+  REVIEWED: 'info',
+  CANCELLED: 'default',
 };
 
 const NUMERIC_TO_STATUS: Record<number, Exclude<NormalizedLeaveStatus, 'UNKNOWN'>> = {
   [EmployeeLeaveStatusType.Pending]: 'PENDING',
   [EmployeeLeaveStatusType.Approved]: 'APPROVED',
   [EmployeeLeaveStatusType.Rejected]: 'REJECTED',
-  [EmployeeLeaveStatusType.Viewed]: 'VIEWED',
+  [EmployeeLeaveStatusType.Reviewed]: 'REVIEWED',
+  [EmployeeLeaveStatusType.Cancelled]: 'CANCELLED',
+};
+
+const STATUS_TO_NUMERIC: Record<
+  Exclude<NormalizedLeaveStatus, 'UNKNOWN'>,
+  EmployeeLeaveStatusType
+> = {
+  PENDING: EmployeeLeaveStatusType.Pending,
+  APPROVED: EmployeeLeaveStatusType.Approved,
+  REJECTED: EmployeeLeaveStatusType.Rejected,
+  REVIEWED: EmployeeLeaveStatusType.Reviewed,
+  CANCELLED: EmployeeLeaveStatusType.Cancelled,
 };
 
 export function normalizeLeaveStatus(value: unknown): NormalizedLeaveStatus {
@@ -35,6 +55,10 @@ export function normalizeLeaveStatus(value: unknown): NormalizedLeaveStatus {
   }
 
   const normalized = value.trim().toUpperCase();
+  if (normalized === 'VIEWED') {
+    return 'REVIEWED';
+  }
+
   if (normalized in STATUS_LABELS) {
     return normalized as Exclude<NormalizedLeaveStatus, 'UNKNOWN'>;
   }
@@ -59,4 +83,12 @@ export function getLeaveStatusColor(value: unknown): LabelColor {
     return 'default';
   }
   return STATUS_COLORS[normalized];
+}
+
+export function getLeaveStatusFilterValue(value: unknown): EmployeeLeaveStatusType | unknown {
+  const normalized = normalizeLeaveStatus(value);
+  if (normalized === 'UNKNOWN') {
+    return value;
+  }
+  return STATUS_TO_NUMERIC[normalized];
 }

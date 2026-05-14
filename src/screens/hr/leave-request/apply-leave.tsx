@@ -46,6 +46,7 @@ import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
   normalizeLeaveStatus,
+  getLeaveStatusFilterValue,
 } from './leave-status.utils';
 
 const LEAVE_REQUESTS_PAGE_SIZE = 100;
@@ -269,7 +270,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
             '-',
           description: item.description,
           remarks: item.remarks,
-          status: item.status,
+          status: getLeaveStatusFilterValue(item.status),
         };
       }) || [];
 

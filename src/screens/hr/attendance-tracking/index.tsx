@@ -441,6 +441,7 @@ const EmployeeWise = ({
   const { data: employees, isLoading: employeeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
+    params: { page: 1, pageSize: 500, search: '' },
   });
 
   const { data: attendanceData, isLoading: attendanceLoading } = useQueryAndMutation({

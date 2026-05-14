@@ -49,7 +49,7 @@ export const lectureSlotsApi = academicApi.injectEndpoints({
 
     assignLectureSlotToClasses: builder.mutation({
       query: ({ lectureSlotId, body }) => ({
-        url: `academics/timetable/lecture-slots/${lectureSlotId}/assign`,
+        url: `academics/timetable/settings/lecture-slots/${lectureSlotId}/assign`,
         method: 'POST',
         body,
       }),

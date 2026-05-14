@@ -9,7 +9,7 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
       { academicMediumId: string; classId: string; divisionId?: string }
     >({
       query: ({ academicMediumId, classId, divisionId }) => ({
-        url: `/subjects`,
+        url: `class-management/chapter-progress/subjects`,
         method: 'GET',
         params: {
           academicMediumId,
@@ -29,7 +29,7 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
       }
     >({
       query: ({ academicMediumId, classId, divisionId, subjectId }) => ({
-        url: 'chapters/progress',
+        url: 'class-management/chapter-progress',
         method: 'GET',
         params: {
           academicMediumId,
@@ -42,7 +42,7 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
     }),
     updateChapterProgress: builder.mutation<any, { chapterId: string; data: any }>({
       query: ({ chapterId, data }) => ({
-        url: `chapters/${chapterId}/progress`,
+        url: `class-management/chapters/${chapterId}/progress`,
         method: 'PUT',
         body: data,
       }),

@@ -19,14 +19,15 @@ import { classManagementApi } from '../classManagementApi';
 
 export const teacherAssignmentApi = classManagementApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTeacherAssignments: builder.query<any, { academicMediumId: string; classId: string }>({
+    getTeacherAssignments: builder.query<any, { academicMediumId?: string }>({
       query: (params) => ({
-        url: 'teachers/assignments',
+        url: 'class-management/teacher-assignments',
         method: 'GET',
         params,
       }),
       providesTags: [classManagementType.teacherAssignment],
     }),
+
     updateTeacherAssignments: builder.mutation<
       any,
       {

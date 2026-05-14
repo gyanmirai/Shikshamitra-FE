@@ -19,6 +19,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -383,12 +384,18 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                     label="Employee *"
                     fetchOptions={async (query, page) => {
                       if (page > 1) return { data: [], hasMore: false };
-                      const res = await getEmployees({ search: query }).unwrap();
+                      const res = await getEmployees({
+                        page: 1,
+                        pageSize: 500,
+                        search: query,
+                        status: EmployeeStatusType.Active,
+                      }).unwrap();
                       const items: EmployeeOption[] = (
                         Array.isArray(res) ? res : res?.items || []
                       ).map((item: any) => ({
                         label: item.fullName,
                         id: item.id,
+                        status: item.status ?? item.employeeStatusType,
                       }));
                       return {
                         data: buildEmployeeSelectOptions(items, shouldUseAdminSelectionRules),

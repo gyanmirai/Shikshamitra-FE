@@ -455,6 +455,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+E+1+5',
               permissionName: academicPermissions.examination.quizManagement,
               icon: menuIconView('mdi:comment-question-outline'),
+              caption: 'coming soon',
             },
             {
               title: 'Reports',
@@ -464,6 +465,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+E+R',
               permissionName: academicPermissions.examination.reports,
               icon: menuIconView('mdi:chart-box-outline'),
+              caption: 'coming soon',
             },
             {
               title: 'Settings',

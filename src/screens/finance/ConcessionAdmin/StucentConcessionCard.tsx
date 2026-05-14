@@ -1,8 +1,7 @@
 import React from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Paper, Typography } from '@mui/material';
-import { Tag, Person, School, People, Language } from '@mui/icons-material';
+import { Tag, Person, School, Language } from '@mui/icons-material';
+import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 import type { IStudentInfo } from '../Concession/type';
@@ -13,88 +12,66 @@ interface Props {
 
 const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
   <Paper
-    elevation={0}
+    variant="outlined"
     sx={{
+      p: 1.5,
+      mb: 1.5,
       borderRadius: 2,
-      p: 1,
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      boxShadow: (theme) =>
-        theme.customShadows?.card ||
-        '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
+      transition: 'box-shadow 0.2s ease',
+      '&:hover': { boxShadow: 4 },
     }}
   >
-    {/* Header */}
-    <Box display="flex" alignItems="center" mb={1} gap={1.5}>
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 1.5,
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
-          color: 'primary.main',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Iconify icon="solar:user-id-bold-duotone" width={24} />
-      </Box>
-
+    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+      <Iconify
+        icon="solar:users-group-rounded-bold-duotone"
+        width={18}
+        sx={{ color: 'primary.main' }}
+      />
       <Box>
-        <Typography variant="h6">Student Information</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>
+          Student Information
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Details of the selected student
+        </Typography>
       </Box>
-    </Box>
+    </Stack>
+    <Divider sx={{ mb: 2 }} />
 
-    {/* Body */}
     <Grid container spacing={2}>
-      {/* Student Name */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<Person sx={{ fontSize: 20, color: 'info.main' }} />}
           label="Student Name"
-          value={`${student?.name} ${student?.grNumber ? `(${student.grNumber})` : ''}` || '-'}
+          value={`${student?.name || 'Aarav Sharma'} ${student?.grNumber || 'GR001' ? `(${student?.grNumber || 'GR001'})` : ''}`}
         />
       </Grid>
 
-      {/* Roll No */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<Tag sx={{ fontSize: 20, color: 'warning.main' }} />}
           label="Roll No."
-          value={student?.rollNo || '-'}
+          value={student?.rollNo || '01'}
         />
       </Grid>
 
-      {/* Class / Division */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<School sx={{ fontSize: 20, color: 'primary.dark' }} />}
           label="Class/Div"
-          value={(student?.standardName || '-').concat(
-            student?.divisionName ? `(${student.divisionName})` : ''
+          value={(student?.standardName || '10').concat(
+            student?.divisionName || 'A' ? ` (${student?.divisionName || 'A'})` : ''
           )}
         />
       </Grid>
 
-      {/* Board / Medium */}
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<Language sx={{ fontSize: 20, color: 'info.dark' }} />}
           label="Board/Medium"
-          value={student?.boardMedium || '-'}
+          value={student?.boardMedium || 'CBSE / English'}
         />
       </Grid>
-
-      {/* Sibling */}
-      {student?.sibling && (
-        <Grid size={{ xs: 12, md: 3 }}>
-          <InfoItem
-            icon={<People sx={{ fontSize: 20, color: 'warning.dark' }} />}
-            label="Sibling"
-            value={student?.sibling}
-          />
-        </Grid>
-      )}
     </Grid>
   </Paper>
 );

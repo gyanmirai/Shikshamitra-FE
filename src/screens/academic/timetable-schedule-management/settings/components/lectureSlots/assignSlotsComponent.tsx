@@ -52,7 +52,7 @@ const AssignSlots = ({ onClose, lectureSlotId }: AssignSlotsProps) => {
     onSubmit: async (values) => {
       const res = await assignLectureSlot({
         lectureSlotId,
-        body: { standardIds: values.classNames },
+        body: { selectedStandardIds: values.classNames },
       });
       if (res.data) {
         shikshaMitraToast.success({

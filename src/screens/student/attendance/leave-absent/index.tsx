@@ -15,6 +15,8 @@ import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import FileUploader from 'src/components/custom-upload';
 import CustomSelect from 'src/components/custom-select';
@@ -36,12 +38,27 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
-import { Box, Grid, Button, TextField, IconButton, Typography, DialogActions } from '@mui/material';
+import {
+  getLeaveStatusColor,
+  getLeaveStatusLabel,
+} from 'src/screens/hr/leave-request/leave-status.utils';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  Box,
+  Chip,
+  Grid,
+  Stack,
+  Button,
+  Divider,
+  TextField,
+  IconButton,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   useGetStudentLeaveQuery,
   useAddStudentLeaveMutation,
@@ -60,6 +77,9 @@ const LeaveAndAbsentScreen = () => {
   const dialog = useBoolean();
   // Dialog control for reject confirmation
   const confirmRejectDialog = useBoolean();
+  // Dialog control for view leave details
+  const viewDialog = useBoolean();
+  const [viewData, setViewData] = useState<any>(null);
 
   const [whichStatus, setWhichStatus] = useState<EmployeeLeaveStatusType | null>(null);
 
@@ -255,8 +275,19 @@ const LeaveAndAbsentScreen = () => {
         align: 'left',
         render(value, row) {
           return (
-            <Box display="flex" gap={1}>
-              {row.status === EmployeeLeaveStatusType.Pending ? (
+            <Box display="flex" gap={1} alignItems="center">
+              {/* View button – always visible */}
+              <IconButton
+                size="small"
+                color="default"
+                onClick={() => {
+                  setViewData(row);
+                  viewDialog.onTrue();
+                }}
+              >
+                <Iconify icon="carbon:view-filled" width={18} />
+              </IconButton>
+              {row.status === EmployeeLeaveStatusType.Pending && (
                 <>
                   <IconButton
                     size="small"
@@ -281,8 +312,6 @@ const LeaveAndAbsentScreen = () => {
                     <Cancel />
                   </IconButton>
                 </>
-              ) : (
-                '-'
               )}
             </Box>
           );
@@ -415,6 +444,28 @@ const LeaveAndAbsentScreen = () => {
           userList={selectedStudent}
         />
       )}
+      {/* View Leave Details Dialog */}
+      <CustomDialog
+        open={viewDialog.value}
+        handleClose={() => {
+          viewDialog.onFalse();
+          setViewData(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Leave Request Details</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Displays detailed information about the student's leave request, including type, dates, reason, and approval status."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <StudentLeaveViewDetail data={viewData} />
+      </CustomDialog>
     </Box>
   );
 };
@@ -987,5 +1038,221 @@ const LeaveAbsent = ({
         </DialogActions>
       </Box>
     </BackPopUpChecked>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// StudentLeaveViewDetail
+// Renders all fields of a student leave request in a read-only detail panel,
+// mirroring the HR LeaveRequestForm from leave-calender.tsx.
+// ---------------------------------------------------------------------------
+const StudentLeaveViewDetail = ({ data }: { data: any }) => {
+  const theme = useTheme();
+
+  if (!data) return null;
+
+  // eslint-disable-next-line react/no-unstable-nested-components
+  const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0, mr: 2 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={600} textAlign="right">
+        {value}
+      </Typography>
+    </Box>
+  );
+
+  // eslint-disable-next-line react/no-unstable-nested-components
+  const SectionHeader = ({ icon, label }: { icon: string; label: string }) => (
+    <Stack direction="row" alignItems="center" spacing={0.75} mb={2}>
+      <Iconify icon={icon} width={15} color="text.disabled" />
+      <Typography
+        variant="overline"
+        sx={{ color: 'text.disabled', letterSpacing: 1.2, lineHeight: 1, fontSize: '0.68rem' }}
+      >
+        {label}
+      </Typography>
+    </Stack>
+  );
+
+  const isHalfDay = data.isHalfDay ?? data.halfDay ?? false;
+  const startDate = data.leaveDate || data.startDate;
+  const { endDate } = data;
+  const { totalDays } = data;
+  const plainDescription = data.description
+    ? data.description.replace(/<[^>]*>/g, '').trim()
+    : null;
+
+  return (
+    <Scrollbar sx={{ maxHeight: 520 }}>
+      {/* ── Header ── */}
+      <Box sx={{ px: 3, pt: 2.5, pb: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={2}>
+          <Box minWidth={0}>
+            <Typography variant="h5" fontWeight={700} mb={0.5}>
+              {data.studentName || '-'}
+            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.75} flexWrap="wrap">
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {data.className || data.class || ''}
+                {data.divisionName ? ` · ${data.divisionName}` : ''}
+              </Typography>
+              {data.organizationName && (
+                <>
+                  <Box
+                    sx={{
+                      width: 3,
+                      height: 3,
+                      borderRadius: '50%',
+                      bgcolor: 'text.disabled',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {data.organizationName}
+                  </Typography>
+                </>
+              )}
+            </Stack>
+          </Box>
+          <Label color={getLeaveStatusColor(data.status)} sx={{ flexShrink: 0, mt: 0.5 }}>
+            <Box
+              sx={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                bgcolor: 'currentColor',
+                mr: 0.75,
+                display: 'inline-block',
+                opacity: 0.85,
+              }}
+            />
+            {getLeaveStatusLabel(data.status)}
+          </Label>
+        </Box>
+      </Box>
+
+      <Divider />
+
+      {/* ── Section: Student Information ── */}
+      <Box sx={{ px: 3, py: 2.5 }}>
+        <SectionHeader icon="mdi:account-outline" label="Student Information" />
+        <Stack spacing={1.5}>
+          <InfoRow label="Organization" value={data.organizationName || '-'} />
+          <InfoRow label="Class" value={data.className || '-'} />
+          <InfoRow label="Division" value={data.divisionName || '-'} />
+        </Stack>
+      </Box>
+
+      <Divider />
+
+      {/* ── Section: Leave Details ── */}
+      <Box sx={{ px: 3, py: 2.5 }}>
+        <SectionHeader icon="mdi:calendar-outline" label="Leave Details" />
+        <Stack spacing={1.5}>
+          <InfoRow label="Leave type" value={data.leaveTypeName || '-'} />
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0, mr: 2 }}>
+              Duration
+            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <Typography variant="body2" fontWeight={600}>
+                {startDate ? dayjs(startDate).format('DD MMM YYYY') : '-'}
+              </Typography>
+              {!isHalfDay && endDate && (
+                <>
+                  <Iconify icon="mdi:arrow-right" width={14} color="text.disabled" />
+                  <Typography variant="body2" fontWeight={600}>
+                    {dayjs(endDate).format('DD MMM YYYY')}
+                  </Typography>
+                </>
+              )}
+              {totalDays != null && (
+                <Chip
+                  label={`${totalDays} ${totalDays === 1 || totalDays === 0.5 ? 'day' : 'days'}`}
+                  size="small"
+                  sx={{ height: 22, fontSize: '0.68rem', fontWeight: 700 }}
+                />
+              )}
+            </Stack>
+          </Box>
+          <InfoRow label="Session" value={isHalfDay ? 'Half day' : 'Full day'} />
+        </Stack>
+      </Box>
+
+      {/* ── Section: Description ── */}
+      {plainDescription && (
+        <>
+          <Divider />
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon="mdi:format-list-text" label="Description" />
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1.5,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.neutral',
+              }}
+            >
+              <Typography variant="body2" lineHeight={1.85}>
+                {plainDescription}
+              </Typography>
+            </Box>
+          </Box>
+        </>
+      )}
+
+      {/* ── Section: Remarks ── */}
+      {data.remarks && (
+        <>
+          <Divider />
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon="mdi:comment-text-outline" label="Remarks" />
+            <Typography variant="body2" color="text.secondary" lineHeight={1.75}>
+              {data.remarks}
+            </Typography>
+          </Box>
+        </>
+      )}
+
+      {/* ── Section: Attachment ── */}
+      {data.attachmentUrl && (
+        <>
+          <Divider />
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <SectionHeader icon="mdi:paperclip" label="Attachment" />
+            <Box
+              component="button"
+              onClick={() => window.open(data.attachmentUrl, '_blank')}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 2,
+                py: 0.875,
+                borderRadius: 5,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.neutral',
+                cursor: 'pointer',
+                transition: 'border-color 0.15s, background-color 0.15s',
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.06),
+                  borderColor: 'primary.main',
+                },
+              }}
+            >
+              <Iconify icon="mdi:file-document-outline" width={14} color="primary.main" />
+              <Typography variant="body2" fontWeight={500} color="text.primary">
+                {data.attachmentUrl.split('/').pop() || 'View Document'}
+              </Typography>
+              <Iconify icon="mdi:arrow-right" width={14} color="text.disabled" />
+            </Box>
+          </Box>
+        </>
+      )}
+    </Scrollbar>
   );
 };

@@ -14,7 +14,7 @@ import { ReligionTypeArray } from 'src/enums/religion';
 import { alpha, useTheme } from '@mui/material/styles';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BloodGroupArray } from 'src/enums/blood-group';
+import { HrBloodGroupArray } from 'src/enums/blood-group';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { MaritalStatusTypeArray } from 'src/enums/marriatal-status';
@@ -517,7 +517,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     onChange={formik.handleChange}
                     label="Blood Group"
                   >
-                    {BloodGroupArray.map((option) => (
+                    {HrBloodGroupArray.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>

@@ -35,6 +35,7 @@ import {
 } from '@mui/material';
 
 import FeeLedgerList from './FeeLedgerList';
+import { toPeriod } from './FeeLedgerShared';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
 import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
@@ -311,6 +312,35 @@ const FeeCollectComponentForm = ({
     setPreviewOpen(false);
     onCancel?.(null, true);
   };
+  const handleSelectAll = () => {
+    const year = currentYear?.year ?? new Date().getFullYear();
+    const allItems: SelectedItem[] = [];
+    (ledgerData.monthWise ?? []).forEach((group) => {
+      const period = toPeriod(group.month, year);
+      group.items.forEach((item) => {
+        if (item.due > 0) {
+          allItems.push({
+            feeHeadId: item.feeHeadId,
+            period,
+            dueAmount: item.due,
+          });
+        }
+      });
+    });
+    formik.setFieldValue('selectedItems', allItems, false);
+
+    if (chargesData && chargesData.length > 0) {
+      const allCharges = chargesData
+        .filter((c) => c.status !== 0 && c.status !== 'Paid')
+        .map((c) => c.chargeId);
+      formik.setFieldValue('charges', allCharges, false);
+    }
+  };
+
+  const handleRemoveAll = () => {
+    formik.setFieldValue('selectedItems', [], false);
+    formik.setFieldValue('charges', [], false);
+  };
 
   const entryCount = useMemo(
     () => (ledgerData.monthWise ?? []).reduce((s, g) => s + g.items.length, 0),
@@ -368,25 +398,57 @@ const FeeCollectComponentForm = ({
                   entryCount={entryCount}
                 />
 
-                <Box display="flex" alignItems="center" gap={1} mt={1} minHeight={24}>
-                  {selectedCount > 0 && (
-                    <Chip
-                      label={`${selectedCount} selected`}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  mt={1}
+                  minHeight={24}
+                >
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {selectedCount > 0 && (
+                      <Chip
+                        label={`${selectedCount} selected`}
+                        size="small"
+                        color="primary"
+                        variant="soft"
+                        onDelete={handleRemoveAll}
+                        deleteIcon={<Iconify icon={GlobalIcons.cancel} width={14} />}
+                      />
+                    )}
+                    {formik.errors.selectedItems && formik.touched.selectedItems && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.selectedItems as string}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Button
                       size="small"
-                      color="primary"
-                      variant="soft"
-                      onDelete={() => {
-                        formik.setFieldValue('selectedItems', [], false);
-                        formik.setFieldValue('charges', [], false);
+                      variant="outlined"
+                      startIcon={<Iconify icon="solar:check-read-linear" />}
+                      onClick={handleSelectAll}
+                      sx={{
+                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08) },
                       }}
-                      deleteIcon={<Iconify icon={GlobalIcons.cancel} width={14} />}
-                    />
-                  )}
-                  {formik.errors.selectedItems && formik.touched.selectedItems && (
-                    <Typography variant="caption" color="error">
-                      {formik.errors.selectedItems as string}
-                    </Typography>
-                  )}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      disabled={selectedCount === 0}
+                      startIcon={<Iconify icon="solar:trash-bin-trash-linear" />}
+                      onClick={handleRemoveAll}
+                      sx={{
+                        '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) },
+                      }}
+                    >
+                      Remove All
+                    </Button>
+                  </Box>
                 </Box>
 
                 <Box mt={1}>
@@ -444,7 +506,15 @@ const FeeCollectComponentForm = ({
                             </Typography>
                           </Box>
                           <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
-                            <Typography variant="body2">
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                width: 110,
+                                textAlign: 'right',
+                                flexShrink: 0,
+                                fontVariantNumeric: 'tabular-nums',
+                              }}
+                            >
                               ₹ {formatNumber(item.dueAmount)}
                             </Typography>
                             <IconButton
@@ -458,8 +528,8 @@ const FeeCollectComponentForm = ({
                               }}
                             >
                               <Iconify
-                                icon="solar:trash-bin-trash-bold"
-                                width={14}
+                                icon={GlobalIcons.cancel}
+                                width={25}
                                 sx={{ color: 'error.main' }}
                               />
                             </IconButton>
@@ -483,7 +553,15 @@ const FeeCollectComponentForm = ({
                                 <Typography variant="body2">{charge.chargeName}</Typography>
                               </Box>
                               <Box display="flex" alignItems="center">
-                                <Typography variant="body2">
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    width: 110,
+                                    textAlign: 'right',
+                                    flexShrink: 0,
+                                    fontVariantNumeric: 'tabular-nums',
+                                  }}
+                                >
                                   ₹ {formatNumber(charge.amount)}
                                 </Typography>
                                 <IconButton
@@ -712,7 +790,11 @@ const FeeCollectComponentForm = ({
                       <Typography variant="caption" color="text.secondary">
                         Total Allocated
                       </Typography>
-                      <Typography variant="caption" fontWeight={600}>
+                      <Typography
+                        variant="caption"
+                        fontWeight={600}
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
                         ₹ {formatNumber(totalAllocated)}
                       </Typography>
                     </Box>
@@ -723,6 +805,7 @@ const FeeCollectComponentForm = ({
                       <Typography
                         variant="caption"
                         fontWeight={700}
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
                         color={
                           balance === 0
                             ? 'success.main'
@@ -759,9 +842,8 @@ const FeeCollectComponentForm = ({
       {/* ── Actions ── */}
       <DialogActions>
         <Box display="flex" justifyContent="space-between" gap={1} alignItems="center" width="100%">
-          <Box flex={1} />
-          <Box flex={2} display="flex" justifyContent="center">
-            {balance < 0 && (
+          {balance < 0 && (
+            <Box flex={2} display="flex" justifyContent="center">
               <Typography variant="caption" color="error" textAlign="center">
                 Total allocated <strong>(₹ {formatNumber(totalAllocated)})</strong> exceeds the
                 payable amount{' '}
@@ -771,8 +853,8 @@ const FeeCollectComponentForm = ({
                 </strong>
                 . Please reduce payment amounts before submitting.
               </Typography>
-            )}
-          </Box>
+            </Box>
+          )}
           <Box flex={1} display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
             <Button
               variant="outlined"

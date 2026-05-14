@@ -1,12 +1,16 @@
 import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   SELF_OPTION,
   SELF_EMPLOYEE_ID,
   isAdminFromProfile,
+  resolveLeaveCenterTab,
+  isActiveEmployeeOption,
   isDateWithinAcademicYear,
   getAcademicYearStartMonth,
+  getLeaveCenterVisibleTabs,
   buildEmployeeSelectOptions,
   buildCreateLeaveRequestFormData,
   isEmployeeSelectionValidForCreate,
@@ -62,8 +66,8 @@ describe('leave request payload mapping', () => {
 
 describe('leave request employee options', () => {
   const employees = [
-    { id: 'emp-1', label: 'Emp 1' },
-    { id: 'emp-2', label: 'Emp 2' },
+    { id: 'emp-1', label: 'Emp 1', status: EmployeeStatusType.Active },
+    { id: 'emp-2', label: 'Emp 2', status: 'Active' },
   ];
 
   it('hides self option for admin users', () => {
@@ -76,6 +80,30 @@ describe('leave request employee options', () => {
     const options = buildEmployeeSelectOptions(employees, false);
     expect(options[0]).toEqual(SELF_OPTION);
     expect(options).toHaveLength(3);
+  });
+
+  it('filters inactive employees out of leave target options', () => {
+    const options = buildEmployeeSelectOptions(
+      [
+        { id: 'active-number', label: 'Active Number', status: EmployeeStatusType.Active },
+        { id: 'active-string', label: 'Active String', status: 'Active' },
+        { id: 'active-numeric-string', label: 'Active Numeric String', status: '0' },
+        { id: 'inactive-number', label: 'Inactive Number', status: EmployeeStatusType.Inactive },
+        { id: 'inactive-string', label: 'Inactive String', status: 'Inactive' },
+        { id: 'missing-status', label: 'Missing Status' },
+      ],
+      true
+    );
+
+    expect(options.map((option) => option.id)).toEqual([
+      'active-number',
+      'active-string',
+      'active-numeric-string',
+    ]);
+  });
+
+  it('treats the self option as a valid active target for non-admin self leave', () => {
+    expect(isActiveEmployeeOption(SELF_OPTION)).toBe(true);
   });
 
   it('validates admin and non-admin employee selection rules', () => {
@@ -173,5 +201,21 @@ describe('problem details parsing', () => {
     expect(isAdminFromProfile({ role: 'admin' })).toBe(true);
     expect(isAdminFromProfile({ role: ['teacher', 'admin'] })).toBe(true);
     expect(isAdminFromProfile({ role: 'teacher' })).toBe(false);
+  });
+});
+
+describe('leave center tab visibility', () => {
+  it('shows only administrative approvals in HR context for reviewers', () => {
+    expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['approvals']);
+    expect(resolveLeaveCenterTab('my-requests', ['approvals'], 'approvals')).toBe('approvals');
+    expect(resolveLeaveCenterTab('balance', ['approvals'], 'approvals')).toBe('approvals');
+  });
+
+  it('keeps personal leave tabs for self context and non-review HR users', () => {
+    expect(getLeaveCenterVisibleTabs('self', true)).toEqual(['my-requests', 'balance']);
+    expect(getLeaveCenterVisibleTabs('hr', false)).toEqual(['my-requests', 'balance']);
+    expect(resolveLeaveCenterTab('balance', ['my-requests', 'balance'], 'my-requests')).toBe(
+      'balance'
+    );
   });
 });

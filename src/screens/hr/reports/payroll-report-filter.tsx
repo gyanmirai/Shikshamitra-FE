@@ -64,7 +64,7 @@ const PAYROLL_REPORT_FILTERS: Record<
 };
 
 const PayrollReportFilter = () => {
-  const { data: employeeData } = useGetEmployeeQuery({});
+  const { data: employeeData } = useGetEmployeeQuery({ page: 1, pageSize: 500, search: '' });
 
   const employees = useMemo(() => employeeData?.items || [], [employeeData]);
 

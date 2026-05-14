@@ -7,7 +7,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
     // Get Exam Students Marks
     getExamMarks: builder.query({
       query: (params) => ({
-        url: `exams/marks`,
+        url: `/academics/exams/marks`,
         method: 'GET',
         params,
       }),
@@ -16,9 +16,10 @@ export const recordMarksApi = academicApi.injectEndpoints({
 
     // Assign / Update Student Marks
     updateStudentMarks: builder.mutation({
-      query: ({ examId, studentId, body }) => ({
-        url: `exams/${examId}/students/${studentId}/marks`,
+      query: ({ examId, studentId, subjectId, body }) => ({
+        url: `/academics/exams/${examId}/students/${studentId}/marks`,
         method: 'PATCH',
+        params: { subjectId },
         body,
       }),
       invalidatesTags: [academicType.recordMarks],
@@ -27,7 +28,7 @@ export const recordMarksApi = academicApi.injectEndpoints({
     // Publish Exam Marks (Division-wise)
     publishExamMarks: builder.mutation({
       query: ({ examId, divisionId }) => ({
-        url: `exams/${examId}/publish-marks`,
+        url: `/academics/exams/${examId}/publish-marks`,
         method: 'PATCH',
         params: { divisionId },
       }),
