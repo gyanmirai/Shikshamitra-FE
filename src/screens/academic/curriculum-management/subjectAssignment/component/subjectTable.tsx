@@ -189,7 +189,7 @@ const SubjectTable = ({
               },
             }}
           >
-            Add Subject
+            Allocate Subjects
           </Box>
         </>
       }

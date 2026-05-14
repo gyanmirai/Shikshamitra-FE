@@ -16,7 +16,7 @@ export interface ITimeSlot {
 }
 
 interface ISlotErrors {
-  [index: number]: { startTime?: string; endTime?: string };
+  [index: number]: { startTime?: string; endTime?: string; slotType?: string };
 }
 
 interface ISlotTimesTableProps {
@@ -115,11 +115,11 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
               views={['hours', 'minutes']}
               disabled={pickerDisabled}
               ampm
-              onChange={(t) => handleStartChange(row.id as any, t?.isValid?.() ? dayjs(t) : null)}
+              onChange={(t) => handleStartChange(index, t?.isValid?.() ? dayjs(t) : null)}
               slotProps={{
                 textField: {
                   size: 'small',
-                  sx: { width: '135px' },
+                  sx: { width: '200px' },
                   error: !!err,
                   helperText: err,
                 },
@@ -149,11 +149,11 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
               views={['hours', 'minutes']}
               disabled={pickerDisabled}
               ampm
-              onChange={(t) => handleEndChange(row.id as any, t?.isValid?.() ? dayjs(t) : null)}
+              onChange={(t) => handleEndChange(index, t?.isValid?.() ? dayjs(t) : null)}
               slotProps={{
                 textField: {
                   size: 'small',
-                  sx: { width: '140px' },
+                  sx: { width: '200px' },
                   error: !!err,
                   helperText: err,
                 },
@@ -170,7 +170,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       {
         id: 'totalTime',
         label: 'Duration',
-        minWidth: 110,
+        minWidth: 100,
         render(_v: unknown, row: ITimeSlot) {
           const start = row.startTime ? dayjs(row.startTime) : null;
           let end = row.endTime ? dayjs(row.endTime) : null;
@@ -231,44 +231,61 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
           if (index < 0) return null;
           const slotType: string = row.slotType ?? 'period';
           const breakType: string = row.breakType ?? '';
+          const slotTypeErr = errors?.[index]?.slotType;
           return (
-            <Box sx={{ display: 'flex', gap: 1, minWidth: '270px' }}>
-              <CustomSelect
-                label="Slot *"
-                options={[
-                  { value: 'period', label: 'Period' },
-                  { value: 'break', label: 'Break' },
-                ]}
-                disabled={pickerDisabled}
-                value={slotType}
-                onChange={(val: any) =>
-                  updateSlot(index, {
-                    slotType: val,
-                    breakType: val === 'break' ? row.breakType || 'short' : '',
-                  })
-                }
-                formControlProps={{
-                  sx: {
-                    minWidth: '150px',
-                    '& .MuiFormLabel-root': {
-                      zIndex: -1,
-                    },
-                  },
-                  size: 'small',
-                }}
-              />
-              {slotType === 'break' && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: '270px' }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <CustomSelect
-                  label="Break *"
+                  label="Slot *"
                   options={[
-                    { value: 'short', label: 'Short Break' },
-                    { value: 'lunch', label: 'Lunch Break' },
+                    { value: 'period', label: 'Period' },
+                    { value: 'break', label: 'Break' },
                   ]}
                   disabled={pickerDisabled}
-                  value={breakType}
-                  onChange={(val: any) => updateSlot(index, { breakType: val })}
-                  formControlProps={{ sx: { minWidth: '150px' }, size: 'small' }}
+                  value={slotType}
+                  error={!!slotTypeErr}
+                  onChange={(val: any) =>
+                    updateSlot(index, {
+                      slotType: val,
+                      breakType: val === 'break' ? row.breakType || 'short' : '',
+                    })
+                  }
+                  formControlProps={{
+                    sx: {
+                      minWidth: '150px',
+                      '& .MuiFormLabel-root': {
+                        zIndex: -1,
+                      },
+                    },
+                    size: 'small',
+                  }}
                 />
+                {slotType === 'break' && (
+                  <CustomSelect
+                    label="Break *"
+                    options={[
+                      { value: 'short', label: 'Short Break' },
+                      { value: 'lunch', label: 'Lunch Break' },
+                    ]}
+                    disabled={pickerDisabled}
+                    value={breakType}
+                    onChange={(val: any) => updateSlot(index, { breakType: val })}
+                    formControlProps={{ sx: { minWidth: '150px' }, size: 'small' }}
+                  />
+                )}
+              </Box>
+              {slotTypeErr && (
+                <Box
+                  component="span"
+                  sx={{
+                    fontSize: '0.75rem',
+                    lineHeight: 1.66,
+                    color: 'error.main',
+                    ml: '14px',
+                  }}
+                >
+                  {slotTypeErr}
+                </Box>
               )}
             </Box>
           );

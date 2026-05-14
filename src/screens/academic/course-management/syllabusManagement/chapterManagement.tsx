@@ -328,7 +328,7 @@ const Subjects = () => {
                 disabled={!classes || !subject}
                 sx={{ px: '32px' }}
               >
-                Chapter
+                Syllabus
               </Button>
             </Box>
           </Card>

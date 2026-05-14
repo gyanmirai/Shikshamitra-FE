@@ -115,16 +115,6 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
         icon: 'mdi:google-classroom',
         value: viewData?.className || '—',
       },
-      // {
-      //   label: 'School Hours',
-      //   icon: 'mdi:clock-time-four-outline',
-      //   value: data?.schoolHours || '—',
-      // },
-      {
-        label: 'Slots From Other Class',
-        icon: 'mdi:content-copy',
-        value: viewData?.previousClassSlots || 'None',
-      },
     ],
     [viewData]
   );

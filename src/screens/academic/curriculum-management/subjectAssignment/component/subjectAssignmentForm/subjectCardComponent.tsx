@@ -1,5 +1,5 @@
 import { getIn } from 'formik';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Editor } from 'src/components/editor';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -34,6 +34,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onSubjectChange,
   index,
   onFileUpload,
+  activeSubjectId,
+  onAccordionToggle,
 }) => {
   const {
     primaryTeacherObj,
@@ -47,9 +49,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     secondaryTeacherIds: subject.secondaryTeacherIds,
   });
 
-  const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
+
+  // Derived from parent-controlled state — enables single-expand accordion behavior.
+  const isExpanded = activeSubjectId === subject.subjectNo;
 
   const handleChange = (field: string, value: unknown) => {
     if (!subject?.subjectNo) return;
@@ -60,6 +64,18 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     getIn(formik.touched, `subjects[${index}].${field}`) &&
     getIn(formik.errors, `subjects[${index}].${field}`);
 
+  const hasSubjectError = useMemo(() => {
+    const subjectErrors = getIn(formik.errors, `subjects[${index}]`);
+    const subjectTouched = getIn(formik.touched, `subjects[${index}]`);
+    if (!subjectErrors || typeof subjectErrors !== 'object') return false;
+    if (!subjectTouched || typeof subjectTouched !== 'object') return false;
+    return Object.keys(subjectErrors as object).some(
+      (field) =>
+        !!(subjectTouched as Record<string, unknown>)[field] &&
+        !!(subjectErrors as Record<string, unknown>)[field]
+    );
+  }, [formik.errors, formik.touched, index]);
+
   const subjectDocuments = subject.documents.map(
     (doc) => `${process.env.NEXT_PUBLIC_API_URL}${doc}`
   );
@@ -68,22 +84,22 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     <>
       <Accordion
         expanded={isExpanded}
-        onChange={() => setIsExpanded(!isExpanded)}
+        onChange={() => onAccordionToggle(subject.subjectNo ?? '')}
         sx={{
           borderRadius: 1.5,
-          border: (theme) => `1px solid ${theme.palette.divider}`,
-          boxShadow: (theme) => theme.customShadows?.z1 || theme.shadows[1],
-          transition: (theme) => theme.transitions.create(['box-shadow', 'background-color']),
-          '&:hover': {
-            boxShadow: (theme) => theme.customShadows?.z8 || theme.shadows[4],
-          },
+          border: (theme) =>
+            `1px solid ${hasSubjectError ? theme.palette.error.main : theme.palette.divider}`,
+
+          transition: (theme) =>
+            theme.transitions.create(['box-shadow', 'border-color', 'background-color']),
           '&:before': { display: 'none' },
           mb: 2,
           overflow: 'hidden',
           '&.Mui-expanded': {
             m: 0,
             mb: 3,
-            border: (theme) => `1px solid ${theme.palette.primary.main}`,
+            border: (theme) =>
+              `1px solid ${hasSubjectError ? theme.palette.error.main : theme.palette.primary.main}`,
           },
         }}
       >
@@ -163,7 +179,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       const uppercaseValue = e.target.value
                         .toUpperCase()
                         .replace(/[^A-Z0-9\-_]/g, '');
-                      formik.setFieldValue(`subjects.${index}.subjectCode`, uppercaseValue);
+                      handleChange('subjectCode', uppercaseValue);
                     }}
                     error={!!getError('subjectCode')}
                     helperText={

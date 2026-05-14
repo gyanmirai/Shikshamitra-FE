@@ -3,19 +3,6 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-// Parse "hh:mm AM/PM" -> minutes since midnight (date-independent)
-const parseTimeToMinutes = (timeString: string): number | null => {
-  const match = timeString.match(/^(\d{1,2}):(\d{2})\s*([AP]M)$/i);
-  if (!match) return null;
-  let hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const period = match[3].toUpperCase();
-  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) return null;
-  if (period === 'PM' && hours !== 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return hours * 60 + minutes;
-};
-
 // Convert any dayjs value to minutes-of-day
 const toMinutesOfDay = (value: unknown): number | null => {
   const d = dayjs(value as Dayjs);
@@ -23,50 +10,10 @@ const toMinutesOfDay = (value: unknown): number | null => {
   return d.hour() * 60 + d.minute();
 };
 
-// Helper function to parse school hours string
-const parseSchoolHours = (schoolHours: string) => {
-  const match = schoolHours.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
-  if (!match) return null;
-  const start = parseTimeToMinutes(match[1].trim());
-  const end = parseTimeToMinutes(match[2].trim());
-  if (start == null || end == null) return null;
-  return { start, end };
-};
-
-export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr: string) => {
-  const schoolStartMin = parseTimeToMinutes(schoolStartTimeStr);
-  const schoolEndMin = parseTimeToMinutes(schoolEndTimeStr);
-
-  if (schoolStartMin == null || schoolEndMin == null || schoolEndMin <= schoolStartMin) {
-    throw new Error('Invalid school hours provided');
-  }
-
-  const schoolDurationMinutes = schoolEndMin - schoolStartMin;
-
-  return Yup.object().shape({
+export const getValidationSchema = () =>
+  Yup.object().shape({
     // ============ GENERAL INFORMATION VALIDATIONS ============
     className: Yup.string().required('Class is required').min(1, 'Class name cannot be empty'),
-
-    schoolHours: Yup.string()
-      .required('School hours is required')
-      .test('valid-format', 'Invalid format. Use "HH:MM AM/PM - HH:MM AM/PM"', (value) => {
-        if (!value) return false;
-        const parsed = parseSchoolHours(value);
-        return parsed !== null;
-      })
-      .test('valid-duration', 'School hours must be at least 2 hours', (value) => {
-        if (!value) return false;
-        const parsed = parseSchoolHours(value);
-        if (!parsed) return false;
-        return parsed.end - parsed.start >= 120; // At least 2 hours
-      })
-      .test('logical-time', 'End time must be after start time', (value) => {
-        if (!value) return false;
-        const parsed = parseSchoolHours(value);
-        if (!parsed) return false;
-        return parsed.end > parsed.start;
-      }),
-
     previousClassSlots: Yup.string().test(
       'not-same-as-current',
       'Cannot copy slots from the same class',
@@ -91,19 +38,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
               if (!value) return false;
               const num = parseInt(value, 10);
               return !Number.isNaN(num) && num >= 1 && num <= 20;
-            })
-            .test(
-              'realistic-duration',
-              'Too many slots for the school hours duration',
-              // eslint-disable-next-line func-names
-              (value) => {
-                if (!value) return false;
-                const num = parseInt(value, 10);
-                // Minimum 5 minutes per slot
-                const minRequiredMinutes = num * 5;
-                return minRequiredMinutes <= schoolDurationMinutes;
-              }
-            ),
+            }),
 
           // Week Range Validation
           weekRange: Yup.array()
@@ -139,16 +74,6 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   .required('Start time is required')
                   .test('valid-start', 'Invalid start time', (value) =>
                     value ? dayjs(value as Dayjs).isValid() : false
-                  )
-                  .test(
-                    'within-school-hours-start',
-                    'Start time must be within school hours',
-                    (value) => {
-                      if (!value) return false;
-                      const startMin = toMinutesOfDay(value);
-                      if (startMin == null) return false;
-                      return startMin >= schoolStartMin && startMin < schoolEndMin;
-                    }
                   ),
 
                 // End Time Validation
@@ -156,16 +81,6 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                   .required('End time is required')
                   .test('valid-end', 'Invalid end time', (value) =>
                     value ? dayjs(value as Dayjs).isValid() : false
-                  )
-                  .test(
-                    'within-school-hours-end',
-                    'End time must be within school hours',
-                    (value) => {
-                      if (!value) return false;
-                      const endMin = toMinutesOfDay(value);
-                      if (endMin == null) return false;
-                      return endMin > schoolStartMin && endMin <= schoolEndMin;
-                    }
                   )
                   .test(
                     'after-start',
@@ -264,8 +179,8 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
 
                   if (currentEndMin !== nextStartMin) {
                     return this.createError({
-                      path: `timeSlots[${i + 1}].startTime`,
-                      message: `Slot ${i + 2} must start exactly when slot ${i + 1} ends`,
+                      path: `${this.path}[${i + 1}].startTime`,
+                      message: `must start exactly when slot ${i + 1} ends`,
                     });
                   }
                 }
@@ -284,14 +199,14 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
 
                 if (firstSlot.slotType === 'break') {
                   return this.createError({
-                    path: 'timeSlots[0].slotType',
+                    path: `${this.path}[0].slotType`,
                     message: 'First slot should be a period, not a break',
                   });
                 }
 
                 if (lastSlot.slotType === 'break') {
                   return this.createError({
-                    path: `timeSlots[${slots.length - 1}].slotType`,
+                    path: `${this.path}[${slots.length - 1}].slotType`,
                     message: 'Last slot should be a period, not a break',
                   });
                 }
@@ -328,7 +243,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                     consecutiveBreaks += 1;
                     if (consecutiveBreaks > 2) {
                       return this.createError({
-                        path: `timeSlots[${i}].slotType`,
+                        path: `${this.path}[${i}].slotType`,
                         message: 'No more than 2 consecutive breaks allowed',
                       });
                     }
@@ -431,4 +346,3 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
         }
       ),
   });
-};

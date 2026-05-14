@@ -41,9 +41,9 @@ export const createDefaultConfig = () => {
   const id = Date.now().toString();
   return {
     id,
-    totalSlots: '1',
+    totalSlots: '',
     weekRange: [0, 5] as [number, number],
-    timeSlots: generateSlots(1, id),
+    timeSlots: [] as IGeneratedSlot[],
     expanded: true,
   };
 };

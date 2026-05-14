@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -19,6 +20,36 @@ import { getInitialValues } from '../initialValues';
 import { getValidationSchema } from '../validationSchema';
 import { mapSlotConfigurations } from './utils/mapSlotPayload';
 import { generateSlots, createDefaultConfig } from './utils/generateSlots';
+
+const computeSchoolHours = (slotConfigurations: any[]): string => {
+  let minStartMins = Infinity;
+  let maxEndMins = -Infinity;
+
+  slotConfigurations.forEach((config) => {
+    (config.timeSlots || []).forEach((slot: any) => {
+      const start = slot.startTime ? dayjs(slot.startTime) : null;
+      const end = slot.endTime ? dayjs(slot.endTime) : null;
+      if (start?.isValid()) {
+        const mins = start.hour() * 60 + start.minute();
+        if (mins < minStartMins) minStartMins = mins;
+      }
+      if (end?.isValid()) {
+        const mins = end.hour() * 60 + end.minute();
+        if (mins > maxEndMins) maxEndMins = mins;
+      }
+    });
+  });
+
+  if (!Number.isFinite(minStartMins) || !Number.isFinite(maxEndMins)) return '';
+
+  const fmt = (totalMins: number) =>
+    dayjs()
+      .hour(Math.floor(totalMins / 60))
+      .minute(totalMins % 60)
+      .format('hh:mm A');
+
+  return `${fmt(minStartMins)} - ${fmt(maxEndMins)}`;
+};
 
 interface IUseSlotFormParams {
   isEdit?: boolean;
@@ -61,7 +92,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
     [classes, lectureSlots]
   );
 
-  const validationSchema = useMemo(() => getValidationSchema('07:00 AM', '12:30 PM'), []);
+  const validationSchema = useMemo(() => getValidationSchema(), []);
 
   const formik = useFormik({
     initialValues,
@@ -72,6 +103,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
         allClass.find((c) => c.id === values.className)?.name || values.className;
 
       const slotConfigurationsPayload = mapSlotConfigurations(values.slotConfigurations);
+      const schoolHours = computeSchoolHours(values.slotConfigurations);
 
       if (isEdit && data?.id) {
         const res = await updateLectureSlot({
@@ -79,6 +111,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
           body: {
             standardId: values.className,
             previousStandardId: values.previousClassSlots || null,
+            schoolHours,
             slotConfigurations: slotConfigurationsPayload,
           },
         });
@@ -92,6 +125,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
         const res = await addLectureSlot({
           standardId: values.className,
           previousStandardId: values.previousClassSlots || null,
+          schoolHours,
           slotConfigurations: slotConfigurationsPayload,
         });
         if (res.data) {
@@ -108,15 +142,8 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   useEffect(() => {
     if (!formik.values.slotConfigurations?.length) {
       formik.setFieldValue('slotConfigurations', [createDefaultConfig()]);
-      return;
     }
 
-    const first = formik.values.slotConfigurations[0];
-
-    if (!first.timeSlots?.length && !first.totalSlots) {
-      formik.setFieldValue('slotConfigurations[0].totalSlots', '1');
-      formik.setFieldValue('slotConfigurations[0].timeSlots', generateSlots(1, 0));
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.slotConfigurations]);
 
