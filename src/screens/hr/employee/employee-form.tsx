@@ -38,8 +38,8 @@ import {
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
-import { isSalaryComponentFixed } from './salary-utils';
 import { validations } from './employee-form-validation';
+import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 
 import type {
   IPayrollInformation,
@@ -558,13 +558,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           earningComponents: values.earningComponents.map((item: any) => ({
             componentId: getPayrollComponentId(item),
             name: item?.name || item?.earningComponentName || '',
-            amount: Number(item?.amount ?? 0),
+            amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
             componentId: getPayrollComponentId(item),
             name: item?.name || item?.deductionComponentName || '',
-            amount: Number(item?.amount ?? 0),
+            amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
           })),
         },
@@ -666,7 +666,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       isSaveButton: boolean = false
     ) => {
       let saveSucceeded = false;
-      const savedValues = values;
       let resolvedEmployeeId = values.employeeId;
 
       try {

@@ -14,11 +14,14 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { isSalaryComponentFixed } from 'src/screens/hr/employee/salary-utils';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { RenderComponents } from 'src/screens/hr/employee/employee-form-fields/PayrollFields';
 import { Box, Grid, Card, Paper, Button, Typography, DialogActions } from '@mui/material';
+import { RenderComponents } from 'src/screens/hr/employee/employee-form-fields/PayrollFields';
+import {
+  isSalaryComponentFixed,
+  getSalaryComponentPayloadAmount,
+} from 'src/screens/hr/employee/salary-utils';
 import {
   type EmployeeOption,
   buildEmployeeSelectOptions,
@@ -269,7 +272,7 @@ const SalaryStructureEdit = ({
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
           componentId: item?.componentId || null,
           name: item?.earningComponentName || item?.name,
-          amount: Number(item?.amount),
+          amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
@@ -278,7 +281,7 @@ const SalaryStructureEdit = ({
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
           componentId: item?.componentId || null,
           name: item?.deductionComponentName || item?.name,
-          amount: Number(item?.amount),
+          amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,

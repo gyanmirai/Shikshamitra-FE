@@ -9,10 +9,10 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Grid, Paper, Button, TextField, Typography } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
-import { isSalaryComponentFixed } from '../salary-utils';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
+import { isSalaryComponentFixed, isPercentageSalaryComponent } from '../salary-utils';
 
 import type { FieldsType } from './types';
 
@@ -30,7 +30,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         ...c,
         id: existing?.id ?? null,
         componentId: cComponentId,
-        amount: existing?.amount ?? c.amount ?? 0,
+        amount: existing?.amount ?? (isPercentageSalaryComponent(c) ? null : (c.amount ?? 0)),
         applicableMonth: existing?.applicableMonth ?? null,
       };
     });
