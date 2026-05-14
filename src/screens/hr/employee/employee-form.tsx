@@ -368,6 +368,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
+      console.log('formik values=====', formik.values);
       if (!values.employeeId) {
         const body: Record<string, any> = {
           lastName: values.lastName,
@@ -410,9 +411,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
 
         const resp = await addEmployee({ body: formData }).unwrap();
-        if (resp.userId) {
-          formik.setFieldValue('userId', resp.userId);
-        }
         formik.setFieldValue('employeeId', resp.id);
         return resp.id;
       }
@@ -647,6 +645,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       isSaveButton: boolean = false
     ) => {
       let saveSucceeded = false;
+      let resolvedEmployeeId = values.employeeId;
       try {
         setIsLoading(true);
         if (editData && activeStep === 0) {
@@ -662,10 +661,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            const createdId = await handleBasicInformation(values, formik);
-            if (createdId) {
-              formik.setFieldValue('employeeId', createdId);
-            }
+            const newId = await handleBasicInformation(values, formik);
+            resolvedEmployeeId = newId;
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }
@@ -711,7 +708,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         if (saveSucceeded) {
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
-          formik.resetForm({ values: formik.values });
+          formik.resetForm({ values: { ...formik.values, employeeId: resolvedEmployeeId } });
           resetCurrentStepRef.current?.();
         }
 

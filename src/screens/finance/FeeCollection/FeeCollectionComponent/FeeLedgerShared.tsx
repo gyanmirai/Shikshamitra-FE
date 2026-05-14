@@ -81,7 +81,7 @@ export const ColHeader = ({
         fontWeight={700}
         textTransform="uppercase"
         letterSpacing="0.06em"
-        sx={{ width: 76, textAlign: 'right', fontSize: '0.68rem' }}
+        sx={{ width: 100, textAlign: 'right', fontSize: '0.68rem' }}
       >
         {col}
       </Typography>
@@ -93,7 +93,7 @@ export const ColHeader = ({
         fontWeight={700}
         textTransform="uppercase"
         letterSpacing="0.06em"
-        sx={{ width: 88, textAlign: 'center', fontSize: '0.68rem' }}
+        sx={{ width: 100, textAlign: 'center', fontSize: '0.68rem' }}
       >
         STATUS
       </Typography>
@@ -163,31 +163,13 @@ export const FeeRow = ({
         }}
       />
       <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
-        <Typography
-          variant="body2"
-          noWrap
-          fontWeight={isSelected ? 600 : 500}
-          sx={{
-            fontSize: '0.8125rem',
-            color: isSelected ? 'primary.main' : 'text.primary',
-            transition: 'color 0.15s',
-          }}
-        >
-          {name}
-        </Typography>
+        <Typography variant="body2">{name}</Typography>
       </Box>
 
       {/* TOTAL */}
       <Typography
         variant="body2"
-        sx={{
-          width: 76,
-          textAlign: 'right',
-          fontVariantNumeric: 'tabular-nums',
-          fontSize: '0.8125rem',
-          color: 'text.primary',
-          fontWeight: 500,
-        }}
+        sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(total)}
       </Typography>
@@ -195,14 +177,7 @@ export const FeeRow = ({
       {/* PAID */}
       <Typography
         variant="body2"
-        sx={{
-          width: 76,
-          textAlign: 'right',
-          fontVariantNumeric: 'tabular-nums',
-          fontSize: '0.8125rem',
-          color: 'text.secondary',
-          fontWeight: 400,
-        }}
+        sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(paid)}
       </Typography>
@@ -210,14 +185,7 @@ export const FeeRow = ({
       {/* PENDING / DUE */}
       <Typography
         variant="body2"
-        sx={{
-          width: 76,
-          textAlign: 'right',
-          fontVariantNumeric: 'tabular-nums',
-          fontSize: '0.8125rem',
-          fontWeight: due > 0 ? 700 : 400,
-          color: due > 0 ? 'error.main' : 'text.disabled',
-        }}
+        sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
       >
         ₹{formatNumber(due)}
       </Typography>

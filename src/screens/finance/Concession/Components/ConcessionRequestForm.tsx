@@ -9,9 +9,11 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
@@ -28,18 +30,16 @@ import {
   Box,
   Grid,
   Card,
+  Paper,
   Stack,
   Alert,
   Button,
   Divider,
   Checkbox,
-  Accordion,
   TextField,
   Typography,
+  IconButton,
   Autocomplete,
-  DialogActions,
-  AccordionDetails,
-  AccordionSummary,
 } from '@mui/material';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
@@ -77,17 +77,12 @@ type FormValues = {
 // Module-level helpers (no React deps)
 // ---------------------------------------------------------------------------
 
-/**
- * UI-ONLY: Base accordion style — soft card appearance with subtle border,
- * rounded corners, and smooth box-shadow transition for a premium ERP feel.
- */
-const accordionSx = {
-  border: '1px solid',
-  borderColor: 'divider',
-  borderRadius: '12px !important',
-  boxShadow: '0 1px 4px 0 rgba(0,0,0,0.06)',
-  transition: 'box-shadow 0.25s ease, border-color 0.25s ease',
-  '&:before': { display: 'none' },
+const paperSx = {
+  p: 1.5,
+  mb: 1.5,
+  borderRadius: 2,
+  transition: 'box-shadow 0.2s ease',
+  '&:hover': { boxShadow: 4 },
 } as const;
 
 function buildInitialValues(editData: any): FormValues {
@@ -144,25 +139,11 @@ function computeDiscount(
 
 const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const theme = useTheme();
 
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivisions, setAllDivisions] = useState<any[]>([]);
-
-  const [expandedPanels, setExpandedPanels] = useState({
-    studentInfo: true,
-    concessionType: true,
-    feeHeads: true,
-    valueEntry: true,
-    preview: true,
-    documents: true,
-  });
-
-  const handleAccordionToggle = useCallback(
-    (panel: keyof typeof expandedPanels) =>
-      setExpandedPanels((prev) => ({ ...prev, [panel]: !prev[panel] })),
-    []
-  );
 
   // -- API queries / mutations -----------------------------------------------
 
@@ -343,24 +324,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
   // -- Handlers --------------------------------------------------------------
 
   const handleSubmit = useCallback(() => {
-    const fieldToPanelMap: Record<string, keyof typeof expandedPanels> = {
-      boardId: 'studentInfo',
-      mediumId: 'studentInfo',
-      standardId: 'studentInfo',
-      divisionId: 'studentInfo',
-      studentId: 'studentInfo',
-      concessionTypeId: 'concessionType',
-    };
-    formik.validateForm().then((errs) => {
-      const errorKeys = Object.keys(errs);
-      if (errorKeys.length > 0) {
-        const panelsToOpen = errorKeys.reduce<Partial<typeof expandedPanels>>((acc, key) => {
-          const panel = fieldToPanelMap[key];
-          if (panel) acc[panel] = true;
-          return acc;
-        }, {});
-        setExpandedPanels((prev) => ({ ...prev, ...panelsToOpen }));
-      }
+    formik.validateForm().then(() => {
       formik.handleSubmit();
     });
   }, [formik]);
@@ -442,24 +406,29 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={1} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={2}>
-              {/* 1. Student Information */}
-              <Grid size={{ xs: 12 }}>
-                <Accordion
-                  expanded={expandedPanels.studentInfo}
-                  onChange={() => handleAccordionToggle('studentInfo')}
-                  disableGutters
-                  elevation={0}
-                  sx={accordionSx}
-                >
-                  <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                    <Typography variant="h6" fontWeight={600}>
-                      Student Information
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
+        <Box display="flex" flexDirection="column" height="100%">
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+            <Box sx={{ p: 1 }}>
+              <Grid container spacing={0}>
+                {/* 1. Student Information */}
+                <Grid size={{ xs: 12 }}>
+                  <Paper variant="outlined" sx={paperSx}>
+                    <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                      <Iconify
+                        icon="solar:users-group-rounded-bold-duotone"
+                        width={18}
+                        sx={{ color: 'primary.main' }}
+                      />
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          Student Information
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Select board, class, and student to proceed
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Divider sx={{ mb: 2 }} />
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 6, md: 3 }}>
                         <ShakingTextField error={!!(touched.boardId && errors.boardId)}>
@@ -598,133 +567,168 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         </ShakingTextField>
                       </Grid>
                     </Grid>
-                  </AccordionDetails>
-                </Accordion>
-              </Grid>
-              {/* 3. Fee Summary — driven by real fee structure data */}
-              {values.studentId && totalFees > 0 && (
-                <Grid size={{ xs: 12 }}>
-                  <Grid container spacing={2}>
-                    {[
-                      {
-                        icon: 'mdi:currency-inr',
-                        title: 'Total Fees',
-                        value: totalFees,
-                        color: 'text.primary',
-                        /* UI-ONLY: accent strip color token per card type */
-                        accentColor: '#1976d2',
-                        bgColor: 'rgba(25,118,210,0.06)',
-                      },
-                      {
-                        icon: 'mdi:tag-minus-outline',
-                        title: 'Concession Amount',
-                        value: computedConcessionAmount,
-                        color: computedConcessionAmount > 0 ? 'error.main' : 'text.disabled',
-                        accentColor: '#d32f2f',
-                        bgColor: 'rgba(211,47,47,0.06)',
-                      },
-                      {
-                        icon: 'mdi:cash-check',
-                        title: 'Net Payable',
-                        value: Math.max(totalFees - computedConcessionAmount, 0),
-                        color: 'success.main',
-                        accentColor: '#2e7d32',
-                        bgColor: 'rgba(46,125,50,0.06)',
-                      },
-                    ].map((item) => (
-                      <Grid size={{ xs: 12, sm: 4 }} key={item.title}>
-                        <Card
-                          sx={{
-                            p: 1.5,
-                            height: '100%',
-                            bgcolor: 'background.paper',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderLeft: `4px solid ${item.accentColor}`,
-                            borderRadius: '10px',
-                            boxShadow: 'none',
-                            transition: 'box-shadow 0.25s ease, transform 0.2s ease',
-                            '&:hover': {
-                              boxShadow: '0 6px 20px rgba(0,0,0,0.10)',
-                              transform: 'translateY(-2px)',
-                            },
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            fontWeight={600}
-                            textTransform="uppercase"
-                            letterSpacing={0.8}
-                            display="block"
-                            mb={0.5}
-                          >
-                            {item.title}
-                          </Typography>
-                          <Typography variant="h6" color={item.color} fontWeight={800}>
-                            {formatNumber(item.value, 'INR')}
-                          </Typography>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-
-                  {isAmountExceedingFees && (
-                    <Alert severity="error" sx={{ mt: 1, borderRadius: 1.5 }}>
-                      Total concession ({formatNumber(computedConcessionAmount, 'INR')}) exceeds
-                      total applicable fees ({formatNumber(totalFees, 'INR')}). Please reduce the
-                      concession values.
-                    </Alert>
-                  )}
+                  </Paper>
                 </Grid>
-              )}
-              {/* 2. Concession Details */}
-              {values.studentId && (
-                <Grid size={{ xs: 12 }}>
-                  <Accordion
-                    expanded={expandedPanels.concessionType}
-                    onChange={() => handleAccordionToggle('concessionType')}
-                    disableGutters
-                    elevation={0}
-                    sx={accordionSx}
-                  >
-                    <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                      <Typography variant="h6" fontWeight={600}>
-                        Concession Details
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
+                {/* 3. Fee Summary */}
+                {values.studentId && totalFees > 0 && (
+                  <Grid size={{ xs: 12 }}>
+                    <Grid container spacing={2}>
+                      {[
+                        {
+                          icon: 'mdi:currency-inr',
+                          title: 'Total Fees',
+                          value: totalFees,
+                          color: 'text.primary',
+                          /* UI-ONLY: accent strip color token per card type */
+                          accentColor: '#1976d2',
+                          bgColor: 'rgba(25,118,210,0.06)',
+                        },
+                        {
+                          icon: 'mdi:tag-minus-outline',
+                          title: 'Concession Amount',
+                          value: computedConcessionAmount,
+                          color: computedConcessionAmount > 0 ? 'error.main' : 'text.disabled',
+                          accentColor: '#d32f2f',
+                          bgColor: 'rgba(211,47,47,0.06)',
+                        },
+                        {
+                          icon: 'mdi:cash-check',
+                          title: 'Net Payable',
+                          value: Math.max(totalFees - computedConcessionAmount, 0),
+                          color: 'success.main',
+                          accentColor: '#2e7d32',
+                          bgColor: 'rgba(46,125,50,0.06)',
+                        },
+                      ].map((item) => (
+                        <Grid size={{ xs: 12, sm: 4 }} key={item.title}>
+                          <Card
+                            sx={{
+                              p: 1.5,
+                              height: '100%',
+                              bgcolor: 'background.paper',
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              borderLeft: `4px solid ${item.accentColor}`,
+                              borderRadius: '10px',
+                              boxShadow: 'none',
+                              transition: 'box-shadow 0.25s ease, transform 0.2s ease',
+                              '&:hover': {
+                                boxShadow: '0 6px 20px rgba(0,0,0,0.10)',
+                                transform: 'translateY(-2px)',
+                              },
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              fontWeight={600}
+                              textTransform="uppercase"
+                              letterSpacing={0.8}
+                              display="block"
+                              mb={0.5}
+                            >
+                              {item.title}
+                            </Typography>
+                            <Typography variant="h6" color={item.color} fontWeight={800}>
+                              {formatNumber(item.value, 'INR')}
+                            </Typography>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+
+                    {isAmountExceedingFees && (
+                      <Alert severity="error" sx={{ mt: 1, borderRadius: 1.5 }}>
+                        Total concession ({formatNumber(computedConcessionAmount, 'INR')}) exceeds
+                        total applicable fees ({formatNumber(totalFees, 'INR')}). Please reduce the
+                        concession values.
+                      </Alert>
+                    )}
+                  </Grid>
+                )}
+                {/* 2. Concession Details */}
+                {values.studentId && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper variant="outlined" sx={paperSx}>
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Iconify
+                          icon="solar:tag-price-bold-duotone"
+                          width={18}
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Concession Details
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Choose concession type and add remarks
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <Divider sx={{ mb: 2 }} />
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 6 }}>
                           <ShakingTextField
                             error={!!(touched.concessionTypeId && errors.concessionTypeId)}
                           >
-                            <CustomSelect
-                              label="Concession Type *"
+                            <Autocomplete
                               options={concessionTypesList}
-                              labelKey="name"
-                              valueKey="id"
-                              value={values.concessionTypeId}
-                              onChange={(val) => {
-                                setFieldValue('concessionTypeId', val);
+                              value={
+                                concessionTypesList.find(
+                                  (ct: any) => ct.id === values.concessionTypeId
+                                ) || null
+                              }
+                              onChange={(_, newValue: any) => {
+                                setFieldValue('concessionTypeId', newValue?.id || '');
                                 setFieldValue('concessionTypeDocuments', []);
                               }}
-                              error={!!errors.concessionTypeId && touched.concessionTypeId}
-                              helperText={
-                                (touched.concessionTypeId && errors.concessionTypeId) as string
-                              }
+                              size="small"
+                              disableClearable
+                              getOptionLabel={(option: any) => option.name || ''}
+                              renderOption={(props, option: any) => (
+                                <Box
+                                  component="li"
+                                  {...props}
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    width: '100%',
+                                  }}
+                                >
+                                  {option.name}
+                                  <Box sx={{ marginLeft: 'auto' }}>
+                                    <CustomTooltip
+                                      title={option.description || 'No description available'}
+                                      placement="right"
+                                    >
+                                      <IconButton
+                                        size="small"
+                                        sx={{
+                                          color: theme.vars.palette.info.main,
+                                        }}
+                                      >
+                                        <Iconify icon="mdi:information" width={20} />
+                                      </IconButton>
+                                    </CustomTooltip>
+                                  </Box>
+                                </Box>
+                              )}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  size="small"
+                                  label="Concession Type *"
+                                  fullWidth
+                                  error={!!errors.concessionTypeId && touched.concessionTypeId}
+                                  helperText={
+                                    (touched.concessionTypeId && errors.concessionTypeId) as string
+                                  }
+                                />
+                              )}
                             />
                           </ShakingTextField>
                         </Grid>
-                        {selectedConcessionType?.description && (
-                          <Grid size={{ xs: 12 }}>
-                            <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
-                              <Typography variant="body2">
-                                {selectedConcessionType.description}
-                              </Typography>
-                            </Alert>
-                          </Grid>
-                        )}
                         <Grid size={{ xs: 12 }}>
                           <TextField
                             fullWidth
@@ -737,29 +741,30 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                           />
                         </Grid>
                       </Grid>
-                    </AccordionDetails>
-                  </Accordion>
-                </Grid>
-              )}
+                    </Paper>
+                  </Grid>
+                )}
 
-              {/* 4. Fee Head Mapping */}
-              {values.studentId && (
-                <Grid size={{ xs: 12 }}>
-                  <Accordion
-                    expanded={expandedPanels.feeHeads}
-                    onChange={() => handleAccordionToggle('feeHeads')}
-                    disableGutters
-                    elevation={0}
-                    sx={accordionSx}
-                  >
-                    <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                      <Stack direction="row" alignItems="center" spacing={1.5}>
-                        <Typography variant="h6" fontWeight={600}>
-                          Fee Head Mapping
-                        </Typography>
+                {/* 4. Fee Head Mapping */}
+                {values.studentId && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper variant="outlined" sx={paperSx}>
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Iconify
+                          icon="solar:bill-list-bold-duotone"
+                          width={18}
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Fee Head Mapping
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Select fee heads to apply concession
+                          </Typography>
+                        </Box>
                       </Stack>
-                    </AccordionSummary>
-                    <AccordionDetails>
+                      <Divider sx={{ mb: 2 }} />
                       {!values.concessionTypeId ? (
                         <Typography color="text.secondary" textAlign="center" py={2}>
                           Please select a concession type above to map fee heads.
@@ -861,28 +866,30 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                           })}
                         </Grid>
                       )}
-                    </AccordionDetails>
-                  </Accordion>
-                </Grid>
-              )}
+                    </Paper>
+                  </Grid>
+                )}
 
-              {/* 5. Concession Values */}
-              {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
-                <Grid size={{ xs: 12 }}>
-                  <Accordion
-                    expanded={expandedPanels.valueEntry}
-                    onChange={() => handleAccordionToggle('valueEntry')}
-                    elevation={0}
-                    sx={accordionSx}
-                  >
-                    <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                      <Stack direction="row" alignItems="center" spacing={1.5}>
-                        <Typography variant="h6" fontWeight={600}>
-                          Concession Values
-                        </Typography>
+                {/* 5. Concession Values */}
+                {values.studentId && values.concessionTypeId && hasSelectedFeeHeads && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper variant="outlined" sx={paperSx}>
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Iconify
+                          icon="solar:calculator-bold-duotone"
+                          width={18}
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Concession Values
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Enter concession amounts per fee head
+                          </Typography>
+                        </Box>
                       </Stack>
-                    </AccordionSummary>
-                    <AccordionDetails>
+                      <Divider sx={{ mb: 2 }} />
                       <ValueEntryStep
                         formik={{
                           ...formik,
@@ -893,50 +900,37 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         }}
                         concessionTypes={concessionTypesList}
                       />
-                    </AccordionDetails>
-                  </Accordion>
-                </Grid>
-              )}
+                    </Paper>
+                  </Grid>
+                )}
 
-              {/* 6. Concession Preview */}
-              {previewData && (
-                <Grid size={{ xs: 12 }}>
-                  <Accordion
-                    expanded={expandedPanels.preview}
-                    onChange={() => handleAccordionToggle('preview')}
-                    elevation={0}
-                    sx={{
-                      border: '1.5px solid',
-                      borderColor: 'primary.main',
-                      borderRadius: '12px !important',
-                      mb: 1.5,
-                      boxShadow: '0 2px 12px rgba(25,118,210,0.12)',
-                      transition: 'box-shadow 0.25s ease',
-                      '&:before': { display: 'none' },
-                      '&:hover': { boxShadow: '0 6px 24px rgba(25,118,210,0.20)' },
-                    }}
-                  >
-                    <AccordionSummary
-                      expandIcon={<Iconify icon="mdi:chevron-down" />}
+                {/* 6. Concession Preview */}
+                {previewData && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper
+                      variant="outlined"
                       sx={{
-                        borderRadius: '12px 12px 0 0',
-                        bgcolor: (theme) =>
-                          theme.palette.primary.lighter || 'rgba(25,118,210,0.08)',
-                        borderBottom: '1px solid',
-                        borderColor: 'primary.light',
-                        minHeight: 52,
-                        '&.Mui-expanded': { minHeight: 52 },
-                        '& .MuiAccordionSummary-content': { my: '14px' },
+                        p: 1.5,
+                        mb: 1.5,
+                        borderRadius: 2,
+                        border: '1.5px solid',
+                        borderColor: 'primary.main',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 4 },
                       }}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1.5}>
-                        <Iconify icon="mdi:eye-outline" width={20} color="primary.main" />
-                        <Typography variant="h6" fontWeight={600} letterSpacing={0.1}>
-                          Concession Preview
-                        </Typography>
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Iconify icon="mdi:eye-outline" width={18} sx={{ color: 'primary.main' }} />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Concession Preview
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Summary of concession impact on fees
+                          </Typography>
+                        </Box>
                       </Stack>
-                    </AccordionSummary>
-                    <AccordionDetails>
+                      <Divider sx={{ mb: 2 }} />
                       <Card
                         variant="outlined"
                         sx={{
@@ -1002,27 +996,30 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                           </Stack>
                         </Box>
                       </Card>
-                    </AccordionDetails>
-                  </Accordion>
-                </Grid>
-              )}
+                    </Paper>
+                  </Grid>
+                )}
 
-              {/* 7. Documents */}
-              {values.concessionTypeId && (
-                <Grid size={{ xs: 12 }}>
-                  <Accordion
-                    expanded={expandedPanels.documents}
-                    onChange={() => handleAccordionToggle('documents')}
-                    disableGutters
-                    elevation={0}
-                    sx={accordionSx}
-                  >
-                    <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-                      <Typography variant="h6" fontWeight={600}>
-                        Documents
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
+                {/* 7. Documents */}
+                {values.concessionTypeId && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper variant="outlined" sx={paperSx}>
+                      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                        <Iconify
+                          icon="solar:document-bold-duotone"
+                          width={18}
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            Documents
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Upload required supporting documents
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <Divider sx={{ mb: 2 }} />
                       <ConcessionDocumentList
                         concessionId={values.concessionTypeId}
                         concessionName={
@@ -1033,44 +1030,56 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({ onClose, editDa
                         submittedDocuments={getSubmittedDocs(values.concessionTypeId)}
                         onSave={(newDocs) => handleSaveDocs(values.concessionTypeId, newDocs)}
                       />
-                    </AccordionDetails>
-                  </Accordion>
-                </Grid>
-              )}
-            </Grid>
+                    </Paper>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
           </Scrollbar>
 
-          <DialogActions
+          {/* ── Sticky Action Bar ── */}
+          <Box
             sx={{
-              px: 2.5,
-              py: 1.5,
-              borderTop: '1px solid',
+              flexShrink: 0,
+              borderTop: `1px solid`,
               borderColor: 'divider',
-              bgcolor: (theme) =>
-                theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'grey.50',
-              gap: 1,
+              bgcolor: (t) => alpha(t.palette.background.paper, 0.92),
+              backdropFilter: 'blur(12px)',
+              px: { xs: 2, md: 3 },
+              py: 1.5,
             }}
           >
-            <Button
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={() => onClose(null, false)}
-              variant="outlined"
-              size="small"
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="flex-end"
+              flexWrap="wrap"
+              gap={1.5}
             >
-              Cancel
-            </Button>
-            <LoadingButton
-              type="button"
-              variant="contained"
-              size="small"
-              disabled={createLoading || uploadLoading || isAmountExceedingFees}
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              loading={createLoading || uploadLoading}
-              onClick={handleSubmit}
-            >
-              Submit
-            </LoadingButton>
-          </DialogActions>
+              <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                <Button
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  onClick={() => onClose(null, false)}
+                  variant="outlined"
+                  color="inherit"
+                  size="small"
+                >
+                  Cancel
+                </Button>
+                <LoadingButton
+                  type="button"
+                  variant="contained"
+                  size="small"
+                  disabled={createLoading || uploadLoading || isAmountExceedingFees}
+                  startIcon={<Iconify icon={GlobalIcons.submit} />}
+                  loading={createLoading || uploadLoading}
+                  onClick={handleSubmit}
+                >
+                  Submit
+                </LoadingButton>
+              </Stack>
+            </Box>
+          </Box>
         </Box>
       </form>
     </BackPopUpChecked>

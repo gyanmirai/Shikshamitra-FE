@@ -1,9 +1,10 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
+import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { Flag, Event, Description, CurrencyRupee } from '@mui/icons-material';
-import { Box, Card, Grid, Divider, Typography, CardContent } from '@mui/material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
 import type { IChargeData } from '../type';
@@ -29,37 +30,30 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
   const priority = getPriorityLabel(charge?.priority);
 
   return (
-    <Card
+    <Paper
       variant="outlined"
       sx={{
+        p: 1.5,
         borderRadius: 2,
-        boxShadow: (theme) =>
-          `0 0 2px 0 ${varAlpha(theme.palette.grey['500Channel'], 0.2)}, 0 12px 24px -4px ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
-        overflow: 'hidden',
+        transition: 'box-shadow 0.2s ease',
+        '&:hover': { boxShadow: 4 },
       }}
     >
       {/* Header Section */}
-      <Box
-        sx={{
-          px: 2,
-          py: 2,
-          borderBottom: '1px dashed',
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.02),
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Charge Details
-        </Typography>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Iconify icon="mdi:information-outline" width={18} sx={{ color: 'primary.main' }} />
+          <Typography variant="subtitle2" fontWeight={700}>
+            Charge Details
+          </Typography>
+        </Stack>
         <Label variant="soft" color="success">
           {priority.label}
         </Label>
-      </Box>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
 
-      <CardContent sx={{ p: 2 }}>
+      <Box>
         <Grid container spacing={3}>
           {/* Top Row: Key Metrics */}
           <InfoItem
@@ -81,7 +75,7 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
 
           {/* Description Section */}
           <Grid size={{ xs: 12 }}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               <Box
                 sx={{
                   minWidth: 40,
@@ -98,9 +92,7 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
                 <Flag sx={{ fontSize: 20 }} />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                  Description & Notes
-                </Typography>
+                <Typography variant="subtitle2">Description & Notes</Typography>
                 <Typography
                   variant="body2"
                   color="text.secondary"
@@ -134,8 +126,8 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
             </Box>
           </Grid>
         </Grid>
-      </CardContent>
-    </Card>
+      </Box>
+    </Paper>
   );
 };
 

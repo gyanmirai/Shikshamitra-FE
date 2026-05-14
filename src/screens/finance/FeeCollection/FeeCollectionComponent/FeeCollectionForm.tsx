@@ -506,7 +506,15 @@ const FeeCollectComponentForm = ({
                             </Typography>
                           </Box>
                           <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
-                            <Typography variant="body2">
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                width: 110,
+                                textAlign: 'right',
+                                flexShrink: 0,
+                                fontVariantNumeric: 'tabular-nums',
+                              }}
+                            >
                               ₹ {formatNumber(item.dueAmount)}
                             </Typography>
                             <IconButton
@@ -545,7 +553,15 @@ const FeeCollectComponentForm = ({
                                 <Typography variant="body2">{charge.chargeName}</Typography>
                               </Box>
                               <Box display="flex" alignItems="center">
-                                <Typography variant="body2">
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    width: 110,
+                                    textAlign: 'right',
+                                    flexShrink: 0,
+                                    fontVariantNumeric: 'tabular-nums',
+                                  }}
+                                >
                                   ₹ {formatNumber(charge.amount)}
                                 </Typography>
                                 <IconButton
@@ -774,7 +790,11 @@ const FeeCollectComponentForm = ({
                       <Typography variant="caption" color="text.secondary">
                         Total Allocated
                       </Typography>
-                      <Typography variant="caption" fontWeight={600}>
+                      <Typography
+                        variant="caption"
+                        fontWeight={600}
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
                         ₹ {formatNumber(totalAllocated)}
                       </Typography>
                     </Box>
@@ -785,6 +805,7 @@ const FeeCollectComponentForm = ({
                       <Typography
                         variant="caption"
                         fontWeight={700}
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
                         color={
                           balance === 0
                             ? 'success.main'
