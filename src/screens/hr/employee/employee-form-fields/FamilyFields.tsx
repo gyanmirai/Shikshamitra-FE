@@ -655,7 +655,8 @@ const FamilyMemberSection = ({
 
 function RenderFamilyInformation(props: any) {
   const { formik, isMainForm, editData } = props;
-
+  console.log('formik errors----', formik.errors);
+  console.log('formik values----', formik.values);
   return (
     <Box sx={{ width: '100%' }}>
       <FamilyMemberSection
