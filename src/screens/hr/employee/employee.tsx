@@ -498,8 +498,8 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
     onSubmit: async (values) => {
       const data = {
         earningComponents: values.earningComponents.map((item: any) => ({
-          id: item?.id || null,
-          componentId: item?.componentId || item?.id || null,
+          id: item?.id && item?.id !== item?.componentId ? item.id : null,
+          componentId: item?.componentId || null,
           name: item?.earningComponentName || item?.name,
           amount: Number(item?.amount),
           isFixed: isSalaryComponentFixed(item),
@@ -507,8 +507,8 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
         })),
         deductionComponents: values.deductionComponents.map((item: any) => ({
-          id: item?.id || null,
-          componentId: item?.componentId || item?.id || null,
+          id: item?.id && item?.id !== item?.componentId ? item.id : null,
+          componentId: item?.componentId || null,
           name: item?.deductionComponentName || item?.name,
           amount: Number(item?.amount),
           isFixed: isSalaryComponentFixed(item),

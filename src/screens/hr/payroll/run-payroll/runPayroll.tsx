@@ -306,7 +306,6 @@ const RunPayroll = () => {
     },
     [loadPreview, selectedMonthKey]
   );
-
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -411,7 +410,7 @@ const RunPayroll = () => {
         label: 'Last month',
         minWidth: 130,
         filterType: 'number',
-        render: (v) => (v === null || v === undefined ? '-' : formatCurrency(v)),
+        render: (v) => (typeof v === 'number' ? formatCurrency(v) : '-'),
       },
       {
         id: 'netPayDelta',
@@ -779,7 +778,7 @@ const RunPayroll = () => {
             </Stack>
             <Divider />
             <Grid container spacing={1}>
-              <Grid size={6}>
+              <Grid size={3}>
                 <Typography variant="caption" color="text.secondary">
                   Payable days
                 </Typography>
@@ -787,26 +786,26 @@ const RunPayroll = () => {
                   {activeRow.payableDays} / {activeRow.totalWorkingDays}
                 </Typography>
               </Grid>
-              <Grid size={6}>
+              <Grid size={3}>
                 <Typography variant="caption" color="text.secondary">
                   Proration
                 </Typography>
                 <Typography variant="subtitle2">{activeRow.prorationFactor.toFixed(4)}</Typography>
               </Grid>
-              <Grid size={6}>
+              <Grid size={3}>
                 <Typography variant="caption" color="text.secondary">
                   Day rule
                 </Typography>
                 <Typography variant="subtitle2">{activeRow.dayCalculationMode}</Typography>
               </Grid>
-              <Grid size={6}>
+              <Grid size={3}>
                 <Typography variant="caption" color="text.secondary">
                   Review status
                 </Typography>
                 <Typography variant="subtitle2">{activeRow.status}</Typography>
               </Grid>
             </Grid>
-            <Card variant="outlined" sx={{ p: 1.25 }}>
+            <Card variant="outlined" sx={{ p: 1.25, overflow: 'visible' }}>
               <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
                 View all issues
               </Typography>

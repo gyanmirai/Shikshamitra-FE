@@ -457,6 +457,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     const newName = value ? value.charAt(0).toUpperCase() + value.slice(1) : '';
                     formik.setFieldValue('familyCast', newName);
                   }}
+                  onBlur={(e) => {
+                    formik.setFieldValue('familyCast', e.target.value.trim());
+                    formik.handleBlur(e);
+                  }}
                   error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
                   helperText={formik.touched.familyCast && formik.errors.familyCast}
                   disabled={!isBasicDetailsEditable.value}
@@ -790,6 +794,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Building No./Flat/House No. *"
               {...formik.getFieldProps('addressLine1')}
               onChange={formik.handleChange}
+              onBlur={(e) => {
+                formik.setFieldValue('addressLine1', e.target.value.trim());
+                formik.handleBlur(e);
+              }}
               error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
               helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
               disabled={!isAddressDetailsEditable.value}
@@ -806,6 +814,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Area/Locality/Road Name *"
               {...formik.getFieldProps('addressLine2')}
               onChange={formik.handleChange}
+              onBlur={(e) => {
+                formik.setFieldValue('addressLine2', e.target.value.trim());
+                formik.handleBlur(e);
+              }}
               error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
               helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
               disabled={!isAddressDetailsEditable.value}
@@ -822,6 +834,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               label="Landmark"
               {...formik.getFieldProps('addressLine3')}
               onChange={formik.handleChange}
+              onBlur={(e) => {
+                formik.setFieldValue('addressLine3', e.target.value.trim());
+                formik.handleBlur(e);
+              }}
               error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
               helperText={formik.touched.addressLine3 && formik.errors.addressLine3}
               disabled={!isAddressDetailsEditable.value}
@@ -887,16 +903,21 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               fullWidth
               size="small"
               label="PIN Code"
-              type="number"
+              type="text"
               {...formik.getFieldProps('pincode')}
               error={formik.touched.pincode && Boolean(formik.errors.pincode)}
               helperText={formik.touched.pincode && formik.errors.pincode}
               disabled={!isAddressDetailsEditable.value}
               name="pincode"
+              inputProps={{
+                maxLength: 6,
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+              }}
               onChange={(e) => {
-                const { value } = e.target;
+                const value = e.target.value.replace(/\D/g, '');
                 if (value.length <= 6) {
-                  formik.handleChange(e);
+                  formik.setFieldValue('pincode', value);
                   formik.validateField('pincode');
                 }
               }}
@@ -905,7 +926,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   e.preventDefault();
                 }
               }}
-              inputProps={{ maxLength: 6, pattern: '[0-9]*' }}
             />
           </ShakingTextField>
         </Grid>

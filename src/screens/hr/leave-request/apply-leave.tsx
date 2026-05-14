@@ -88,7 +88,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   const [reloadKey, setReloadKey] = useState(0);
   const [triggerLeaveRequests] = useLazyGetLeaveRequestsQuery();
   const [triggerMyLeaveRequests] = useLazyGetMyLeaveRequestsQuery();
-
+  console.log('currentYear0000', currentYear);
   useEffect(() => {
     let isActive = true;
 

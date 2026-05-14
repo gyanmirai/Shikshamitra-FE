@@ -23,11 +23,17 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const isAddingTemp = useBoolean(false);
 
   const handleAdd = (selectedComponents: any[]) => {
-    const normalized = selectedComponents.map((c: any) => ({
-      ...c,
-      amount: c.amount ?? 0,
-      applicableMonth: c.applicableMonth ?? dayjs().toISOString(),
-    }));
+    const normalized = selectedComponents.map((c: any) => {
+      const cComponentId = c._id || c.componentId || c.id;
+      const existing = components.find((ex: any) => (ex.componentId || ex.id) === cComponentId);
+      return {
+        ...c,
+        id: existing?.id ?? null,
+        componentId: cComponentId,
+        amount: existing?.amount ?? c.amount ?? 0,
+        applicableMonth: existing?.applicableMonth ?? null,
+      };
+    });
     formik.setFieldValue(name, normalized);
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
@@ -55,8 +61,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     isTemp: !!c?.isTemp,
     applicableMonth: c?.applicableMonth,
   }));
-
-  const accentColor = type === 'earning' ? 'success.main' : 'error.main';
 
   return (
     <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', mt: 2 }}>
@@ -293,7 +297,7 @@ const RenderPayrollFields = (props: any) => {
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="Bank Name"
+              label="Bank Name *"
               name="bankName"
               value={values.bankName || ''}
               onChange={(e) => {
@@ -302,6 +306,10 @@ const RenderPayrollFields = (props: any) => {
                 if (/^[A-Za-z ]*$/.test(newName)) {
                   formik.setFieldValue('bankName', newName);
                 }
+              }}
+              onBlur={(e) => {
+                formik.setFieldValue('bankName', e.target.value.trim());
+                formik.handleBlur(e);
               }}
               error={formik.touched.bankName && Boolean(formik.errors.bankName)}
               helperText={formik.touched.bankName && formik.errors.bankName}
@@ -337,7 +345,7 @@ const RenderPayrollFields = (props: any) => {
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="Account Holder Name"
+              label="Account Holder Name *"
               name="accountHolderName"
               value={values.accountHolderName || ''}
               onChange={(e) => {
@@ -346,6 +354,10 @@ const RenderPayrollFields = (props: any) => {
                 if (/^[A-Za-z ]*$/.test(newName)) {
                   formik.setFieldValue('accountHolderName', newName);
                 }
+              }}
+              onBlur={(e) => {
+                formik.setFieldValue('accountHolderName', e.target.value.trim());
+                formik.handleBlur(e);
               }}
               error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
               helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
@@ -360,7 +372,7 @@ const RenderPayrollFields = (props: any) => {
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="Account Number"
+              label="Account Number *"
               name="accountNumber"
               type="number"
               value={values.accountNumber || ''}
@@ -369,6 +381,10 @@ const RenderPayrollFields = (props: any) => {
                 if (value.length <= 18) {
                   formik.setFieldValue('accountNumber', value);
                 }
+              }}
+              onBlur={(e) => {
+                formik.setFieldValue('accountNumber', e.target.value.trim());
+                formik.handleBlur(e);
               }}
               inputProps={{
                 min: 0,
@@ -384,10 +400,14 @@ const RenderPayrollFields = (props: any) => {
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="IFSC Code"
+              label="IFSC Code *"
               name="ifscCode"
               value={values.ifscCode || ''}
               onChange={handleChange}
+              onBlur={(e) => {
+                formik.setFieldValue('ifscCode', e.target.value.trim());
+                formik.handleBlur(e);
+              }}
               error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
               helperText={formik.touched.ifscCode && formik.errors.ifscCode}
             />
@@ -446,6 +466,10 @@ const RenderPayrollFields = (props: any) => {
               disabled={!isEditable.value}
               label="Punch Id"
               name="punchId"
+              onBlur={(e) => {
+                formik.setFieldValue('punchId', e.target.value.trim());
+                formik.handleBlur(e);
+              }}
               value={values.punchId || ''}
               onChange={handleChange}
               error={formik.touched.punchId && Boolean(formik.errors.punchId)}
