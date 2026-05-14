@@ -162,7 +162,6 @@ const studentModule = (isDdvs: boolean) => ({
             },
             {
               title: 'Reports',
-              disabled: !isDdvs,
               path: studentPaths.enrollment.reports,
               _action: 'student-enrollment-reports',
 
@@ -258,7 +257,6 @@ const studentModule = (isDdvs: boolean) => ({
               title: 'Student I-Card',
               path: studentPaths.records.studentICard,
               _action: 'student-i-card',
-              disabled: !isDdvs,
               shortcutKey: 'Alt+S+R+3',
               shortcutKeyName: 'Alt+S+R+3',
               permissionName: studentPermissions.records.studentICard,
@@ -275,7 +273,6 @@ const studentModule = (isDdvs: boolean) => ({
             },
             {
               title: 'Reports',
-              disabled: !isDdvs,
               path: studentPaths.records.reports,
               _action: 'student-reports',
               shortcutKey: 'Alt+S+R+6',
@@ -322,7 +319,6 @@ const studentModule = (isDdvs: boolean) => ({
             },
             {
               title: 'Reports',
-              disabled: !isDdvs,
               path: studentPaths.attendance.reports,
               _action: 'student-attendance-reports',
               shortcutKey: 'Alt+S+A+4',

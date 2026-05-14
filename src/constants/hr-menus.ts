@@ -133,7 +133,6 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
           permissionName: hrPermissions.dashboard,
-          disabled: !isDdvs,
           icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
@@ -158,7 +157,6 @@ const hrModule = (isDdvs: boolean) => ({
               title: 'I-card',
               path: hrPaths.employee.iCard,
               _action: 'i-card',
-              disabled: !isDdvs,
               caption: 'Coming Soon',
               shortcutKey: 'Alt+H+E+2',
               shortcutKeyName: 'Alt+H+E+2',
@@ -437,7 +435,6 @@ const hrModule = (isDdvs: boolean) => ({
           title: 'Professional Management',
           path: hrPaths.professionalManagement,
           _action: 'professional-management',
-          disabled: !isDdvs,
           caption: 'Coming Soon',
           shortcutKey: 'Alt+H+M',
           shortcutKeyName: 'Alt+H+M',
