@@ -403,9 +403,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
         const resp = await addEmployee({ body: formData }).unwrap();
         formik.setFieldValue('employeeId', resp.id);
-        return resp.id;
       }
-      return values.employeeId;
     },
     [addEmployee]
   );
@@ -643,10 +641,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            const createdId = await handleBasicInformation(values, formik);
-            if (createdId) {
-              formik.setFieldValue('employeeId', createdId);
-            }
+            await handleBasicInformation(values, formik);
+
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }

@@ -1,6 +1,12 @@
-import React from 'react';
-import TeacherPermission from 'src/components/teacher-permission';
+'use client';
 
-const StudentManagement = ({ children }: any) => <TeacherPermission>{children}</TeacherPermission>;
+import { studentPermissions } from 'src/constants/student-menu';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
 
-export default StudentManagement;
+const ManagementLayout = ({ children }: { children: React.ReactNode }) => (
+  <StudentPermissionGuard permissionKey={studentPermissions.records.studentManagement}>
+    {children}
+  </StudentPermissionGuard>
+);
+
+export default ManagementLayout;

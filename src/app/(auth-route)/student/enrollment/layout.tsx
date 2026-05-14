@@ -1,6 +1,12 @@
-import React from 'react';
-import TeacherPermission from 'src/components/teacher-permission';
+'use client';
 
-const EnrollmentLayout = ({ children }: any) => <TeacherPermission>{children}</TeacherPermission>;
+import { studentPermissions } from 'src/constants/student-menu';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
+
+const EnrollmentLayout = ({ children }: { children: React.ReactNode }) => (
+  <StudentPermissionGuard permissionKey={studentPermissions.enrollment.root}>
+    {children}
+  </StudentPermissionGuard>
+);
 
 export default EnrollmentLayout;

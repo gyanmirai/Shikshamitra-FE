@@ -77,7 +77,8 @@ export const hrPermissions = {
   },
   payroll: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}Payroll`,
-    dashboard: `${defaultHrPermissionName}PayrollManagement`,
+    overview: `${defaultHrPermissionName}PayrollManagement.Overview`,
+    dashboard: `${defaultHrPermissionName}PayrollManagement.Dashboard`,
     runPayroll: `${defaultHrPermissionName}PayrollManagement.RunPayroll`,
     settings: {
       root: `${defaultModulePermissionName}${defaultHrPermissionName}Payroll.Settings`,
@@ -201,7 +202,7 @@ const hrModule = (isDdvs: boolean) => ({
               _action: 'payroll-overview',
               shortcutKey: 'Alt+H+P+0',
               shortcutKeyName: 'Alt+H+P+0',
-              permissionName: hrPermissions.payroll.root,
+              permissionName: hrPermissions.payroll.overview,
               icon: menuIconView('mdi:view-dashboard-edit-outline'),
             },
             {
