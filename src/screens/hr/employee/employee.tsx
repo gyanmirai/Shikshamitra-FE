@@ -57,8 +57,8 @@ import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
-import { isSalaryComponentFixed } from './salary-utils';
 import { RenderComponents } from './employee-form-fields/PayrollFields';
+import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 
 const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -501,7 +501,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
           componentId: item?.componentId || null,
           name: item?.earningComponentName || item?.name,
-          amount: Number(item?.amount),
+          amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,
@@ -510,7 +510,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           id: item?.id && item?.id !== item?.componentId ? item.id : null,
           componentId: item?.componentId || null,
           name: item?.deductionComponentName || item?.name,
-          amount: Number(item?.amount),
+          amount: getSalaryComponentPayloadAmount(item),
           isFixed: isSalaryComponentFixed(item),
           isTemp: !!item?.isTemp,
           applicableMonth: item?.applicableMonth ? dayjs(item.applicableMonth).toISOString() : null,

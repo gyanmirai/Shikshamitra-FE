@@ -29,6 +29,7 @@ import {
 } from 'src/redux/hr/employeeApi';
 
 import { infoValidations } from './employee-form-validation';
+import { getSalaryComponentPayloadAmount } from './salary-utils';
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { InformationFields } from './employee-form-fields/InformationFields';
@@ -390,11 +391,13 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
           earningComponents: values.earningComponents.map((item: any) => ({
             componentId: item?.id || item?.componentId,
-            amount: Number(item?.amount),
+            name: item?.name || item?.earningComponentName || '',
+            amount: getSalaryComponentPayloadAmount(item),
           })),
           deductionComponents: values.deductionComponents.map((item: any) => ({
             componentId: item?.id || item?.componentId,
-            amount: Number(item?.amount),
+            name: item?.name || item?.deductionComponentName || '',
+            amount: getSalaryComponentPayloadAmount(item),
           })),
         },
       }).unwrap();
