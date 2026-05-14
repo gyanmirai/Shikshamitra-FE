@@ -10,8 +10,8 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { Box, Chip, Button, Divider, Typography } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
 
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
@@ -73,29 +73,35 @@ const FeeRefundFormComponent = ({
         <Box sx={{ p: { xs: 1, md: 2 }, pb: 1 }}>
           <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
             {/* ── Student Information Card ── */}
-            <Box
+            <Paper
+              variant="outlined"
               sx={{
-                mb: 2.5,
                 p: 1.5,
-                borderRadius: '16px',
-                border: `1px solid ${theme.palette.divider}`,
-                bgcolor: theme.palette.background.paper,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                mb: 1.5,
+                borderRadius: 2,
+                transition: 'box-shadow 0.2s ease',
+                '&:hover': { boxShadow: 4 },
               }}
             >
               {/* Card header */}
-              <Box display="flex" alignItems="center" gap={1.5} mb={2.5}>
+              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                <Iconify
+                  icon="solar:users-group-rounded-bold-duotone"
+                  width={18}
+                  sx={{ color: 'primary.main' }}
+                />
                 <Box>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                  <Typography variant="subtitle2" fontWeight={700}>
                     Student Information
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Select board, class, and student to proceed
                   </Typography>
                 </Box>
-              </Box>
+              </Stack>
+              <Divider sx={{ mb: 2 }} />
               <RefundGeneralInfoCard formik={formik} />
-            </Box>
+            </Paper>
 
             {/* ── Fee Refund Details ── */}
             <FeeRefundDetailsForm formik={formik} />

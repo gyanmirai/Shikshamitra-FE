@@ -1,8 +1,9 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Person, CalendarToday } from '@mui/icons-material';
-import { Box, Card, Stack, Avatar, Divider, Typography, CardContent } from '@mui/material';
+import { Box, Paper, Stack, Avatar, Divider, Typography } from '@mui/material';
 
 interface RequestorInfoProps {
   charge?: any;
@@ -25,32 +26,27 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
       : 'NA';
 
   return (
-    <Card
+    <Paper
       variant="outlined"
       sx={{
+        p: 1.5,
         borderRadius: 2,
-        boxShadow: (theme) =>
-          `0 0 2px 0 ${varAlpha(theme.palette.grey['500Channel'], 0.2)}, 0 12px 24px -4px ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+        transition: 'box-shadow 0.2s ease',
+        '&:hover': { boxShadow: 4 },
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <Box
-        sx={{
-          px: 2,
-          py: 2,
-          borderBottom: '1px dashed',
-          borderColor: 'divider',
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.02),
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+        <Iconify icon="mdi:account-details-outline" width={18} sx={{ color: 'primary.main' }} />
+        <Typography variant="subtitle2" fontWeight={700}>
           Requestor Details
         </Typography>
-      </Box>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
 
-      <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Stack spacing={3}>
           {/* Requestor Profile Section */}
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -116,8 +112,8 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
             </Box>
           </Box>
         </Stack>
-      </CardContent>
-    </Card>
+      </Box>
+    </Paper>
   );
 };
 

@@ -412,9 +412,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
 
         const resp = await addEmployee({ body: formData }).unwrap();
-        if (resp.userId) {
-          formik.setFieldValue('userId', resp.userId);
-        }
         formik.setFieldValue('employeeId', resp.id);
         return resp;
       }

@@ -1,40 +1,22 @@
 import React from 'react';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { NumericFormat } from 'react-number-format';
-import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import { formatNumber } from 'src/utils/formate_number';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { FeePaymentTypeOptions } from 'src/enums/fee-payment-type';
 import { FeeOptionalTypeOptions } from 'src/enums/fee-optional-type';
-import {
-  Box,
-  Chip,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Chip, Paper, Stack, Divider, Typography } from '@mui/material';
 
-import type { IFeeStructure, IClassWiseFeeData } from '../../type';
+import type { IClassWiseFeeData } from '../../type';
 
 interface FeeStructureViewCardProps {
   className: string;
   feeStructure: IClassWiseFeeData;
-  index: number;
-  expanded: boolean;
-  onChange: () => void;
-  feeStructureMain: IFeeStructure;
 }
 
-const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
-  className,
-  feeStructure,
-  index,
-  expanded,
-  onChange,
-  feeStructureMain,
-}) => {
+const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, feeStructure }) => {
   const feeHeads = feeStructure.feeHeads || [];
 
   if (!feeHeads || feeHeads.length === 0) {
@@ -44,31 +26,37 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
   const totalFeeAmount = feeHeads.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
-    <Accordion
-      expanded={expanded}
-      onChange={onChange}
+    <Paper
+      variant="outlined"
       sx={{
-        border: '1px solid #ccc',
-        boxShadow: 'none',
-        borderRadius: 1,
-        '&:before': { display: 'none' },
-        width: '100%',
-        mb: expanded ? 0 : 1,
+        p: 1.5,
+        mb: 1.5,
+        borderRadius: 2,
+        transition: 'box-shadow 0.2s ease',
+        '&:hover': { boxShadow: 4 },
       }}
     >
-      <AccordionSummary expandIcon={<GridExpandMoreIcon />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <Typography sx={{ fontWeight: 600, flex: 1 }}>{feeStructure.name}</Typography>
-          <Chip
-            label={`Total : ${formatNumber(totalFeeAmount, 'INR')}`}
-            color="success"
-            size="small"
-            variant="outlined"
-          />
-        </Box>
-      </AccordionSummary>
-
-      <AccordionDetails sx={{ width: '100%' }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Iconify icon="solar:bill-list-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
+          <Box>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {feeStructure.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Fee heads assigned to this division
+            </Typography>
+          </Box>
+        </Stack>
+        <Chip
+          label={`Total: ${formatNumber(totalFeeAmount, 'INR')}`}
+          color="success"
+          size="small"
+          variant="outlined"
+        />
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      <Box>
         <CustomizableTable
           tableId="fee-items-table"
           noDataText="No Fee Items Found"
@@ -123,91 +111,8 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
           ]}
           data={feeHeads || []}
         />
-
-        {/* <Grid container spacing={2}>
-          <Grid size={12} ml={8}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid size={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Category
-                </Typography>
-              </Grid>
-              <Grid size={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Name
-                </Typography>
-              </Grid>
-              <Grid size={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Amount
-                </Typography>
-              </Grid>
-              <Grid size={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Payment Type
-                </Typography>
-              </Grid>
-              <Grid size={2} ml={2}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Status
-                </Typography>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid size={12} sx={{ mt: 2 }}>
-            <Scrollbar sx={{ maxHeight: 300 }}>
-              {feeItems.map((item, ind) => (
-                <Paper
-                  key={ind}
-                  sx={{
-                    border: '1px dashed #000',
-                    borderRadius: 1,
-                    p: 1.5,
-                    mb: 2,
-                  }}
-                >
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid size={0.5}>
-                      <Typography variant="body1">{ind + 1}.</Typography>
-                    </Grid>
-                    <Grid size={2}>
-                      <Typography variant="body1">{item.feeCategory}</Typography>
-                    </Grid>
-                    <Grid size={2}>
-                      <Typography variant="body1">{item.feeHead}</Typography>
-                    </Grid>
-                    <Grid size={2}>
-                      <Typography variant="body1">
-                        <NumericFormat
-                          value={item.amount}
-                          displayType="text"
-                          thousandSeparator
-                          prefix="₹"
-                        />
-                      </Typography>
-                    </Grid>
-                    <Grid size={2}>
-                      {item.isOneTime ? (
-                        <Chip label="One Time" color="info" size="small" variant="soft" />
-                      ) : (
-                        <Chip label="Recurring" color="default" size="small" variant="soft" />
-                      )}
-                    </Grid>
-                    <Grid size={2}>
-                      {item.required ? (
-                        <Chip label="Mandatory" color="success" size="small" variant="soft" />
-                      ) : (
-                        <Chip label="Optional" color="warning" size="small" variant="soft" />
-                      )}
-                    </Grid>
-                  </Grid>
-                </Paper>
-              ))}
-            </Scrollbar>
-          </Grid>
-        </Grid> */}
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Paper>
   );
 };
 
