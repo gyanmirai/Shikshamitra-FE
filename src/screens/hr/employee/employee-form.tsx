@@ -258,6 +258,8 @@ const toOptionalGuid = (value: unknown) =>
 const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
 export const getEmployeeUserId = (values: any, editData?: any) =>
   values?.userId || editData?.userId || null;
+const getSavedEmployeeId = (values: any, editData?: any) =>
+  values?.employeeId || editData?.id || '';
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
   reportingManager: editData?.reportingManager?.id ?? '',
@@ -414,19 +416,24 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           formik.setFieldValue('userId', resp.userId);
         }
         formik.setFieldValue('employeeId', resp.id);
-        return resp.id;
+        return resp;
       }
-      return values.employeeId;
+      return { id: values.employeeId, userId: values.userId };
     },
     [addEmployee]
   );
 
   const handleFamilyInformation = useCallback(
     async (values: any, formik: any) => {
+      const employeeId = getSavedEmployeeId(values, editData);
+      if (!employeeId) {
+        throw new Error('Employee must be saved before family information can be updated.');
+      }
+
       const res = await updateFamilyInfo({
-        employeeId: values.employeeId,
+        employeeId,
         body: {
-          id: values.employeeId,
+          id: employeeId,
           fatherDetails: {
             name: values.fatherName,
             occupation: values.fatherOccupation,
@@ -469,13 +476,18 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }).unwrap();
       return res;
     },
-    [updateFamilyInfo]
+    [editData, updateFamilyInfo]
   );
 
   const handleAdditionalDetails = useCallback(
     async (values: any, formik: any) => {
+      const employeeId = getSavedEmployeeId(values, editData);
+      if (!employeeId) {
+        throw new Error('Employee must be saved before additional details can be updated.');
+      }
+
       const res = await updateAdditionalInfo({
-        employeeId: values.employeeId,
+        employeeId,
         body: {
           bplCardNo: values.bplCardNo,
           personWithDisability: values.personWithDisability === 'Yes',
@@ -486,13 +498,18 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }).unwrap();
       return res;
     },
-    [updateAdditionalInfo]
+    [editData, updateAdditionalInfo]
   );
 
   const handleWorkExperience = useCallback(
     async (values: any, formik: any) => {
+      const employeeId = getSavedEmployeeId(values, editData);
+      if (!employeeId) {
+        throw new Error('Employee must be saved before work experience can be updated.');
+      }
+
       const res = await updateExperienceInfo({
-        employeeId: values.employeeId,
+        employeeId,
         body: values.experiences.map((i: any) => ({
           id: i.id,
           mediumStageName: i.mediumStageName ?? '',
@@ -513,12 +530,17 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }).unwrap();
       return res;
     },
-    [updateExperienceInfo]
+    [editData, updateExperienceInfo]
   );
   const handleBankDetailsInformation = useCallback(
     async (values: any, formik: any) => {
+      const employeeId = getSavedEmployeeId(values, editData);
+      if (!employeeId) {
+        throw new Error('Employee must be saved before payroll details can be updated.');
+      }
+
       const res = updateBankDetails({
-        employeeId: values.employeeId,
+        employeeId,
         body: {
           bankDetails: {
             bankName: values.bankName,
@@ -552,7 +574,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }).unwrap();
       return res;
     },
-    [updateBankDetails]
+    [editData, updateBankDetails]
   );
 
   const handelUpdateEmployee = useCallback(
@@ -647,6 +669,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       isSaveButton: boolean = false
     ) => {
       let saveSucceeded = false;
+      let savedValues = values;
       try {
         setIsLoading(true);
         if (editData && activeStep === 0) {
@@ -662,9 +685,17 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            const createdId = await handleBasicInformation(values, formik);
-            if (createdId) {
-              formik.setFieldValue('employeeId', createdId);
+            const createdEmployee = await handleBasicInformation(values, formik);
+            if (createdEmployee?.id) {
+              savedValues = {
+                ...values,
+                employeeId: createdEmployee.id,
+                userId: createdEmployee.userId ?? values.userId,
+              };
+              formik.setFieldValue('employeeId', createdEmployee.id);
+              if (createdEmployee.userId) {
+                formik.setFieldValue('userId', createdEmployee.userId);
+              }
             }
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
@@ -711,7 +742,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         if (saveSucceeded) {
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
-          formik.resetForm({ values: formik.values });
+          formik.resetForm({ values: savedValues });
           resetCurrentStepRef.current?.();
         }
 

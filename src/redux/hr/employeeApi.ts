@@ -20,6 +20,15 @@ export const buildWorkExperienceUrl = (input: any): string => {
   return `/employees/${id}/work-experience`;
 };
 
+export const buildEmployeeSubresourceUrl = (input: any, resourceName: string): string => {
+  const id = resolveEmployeeIdParam(input);
+  if (!id) {
+    throw new Error(`Employee id is required to access ${resourceName}.`);
+  }
+
+  return `/employees/${id}/${resourceName}`;
+};
+
 export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
@@ -70,7 +79,7 @@ export const employeeApi = api.injectEndpoints({
     // Employee Information Management
     updateEmployee: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/employees/${id}/personal-info`,
+        url: buildEmployeeSubresourceUrl({ id }, 'personal-info'),
         method: 'PUT',
         body,
       }),
@@ -86,21 +95,21 @@ export const employeeApi = api.injectEndpoints({
     }),
     getBasicInformation: builder.query({
       query: (id) => ({
-        url: `/employees/${id}/personal-info`,
+        url: buildEmployeeSubresourceUrl(id, 'personal-info'),
         redirect: 'follow',
       }),
       providesTags: [employeeType.employee],
     }),
     getFamilyInformation: builder.query({
       query: (id) => ({
-        url: `/employees/${id}/family-info`,
+        url: buildEmployeeSubresourceUrl(id, 'family-info'),
         method: 'GET',
       }),
       providesTags: [employeeType.employee],
     }),
     updateFamilyInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/employees/${employeeId}/family-info`,
+        url: buildEmployeeSubresourceUrl({ employeeId }, 'family-info'),
         method: 'PUT',
         body,
       }),
@@ -108,14 +117,14 @@ export const employeeApi = api.injectEndpoints({
     }),
     getAdditionalInformation: builder.query({
       query: (id) => ({
-        url: `/employees/${id}/additional-info`,
+        url: buildEmployeeSubresourceUrl(id, 'additional-info'),
         redirect: 'follow',
       }),
       providesTags: [employeeType.employee],
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/employees/${employeeId}/additional-info`,
+        url: buildEmployeeSubresourceUrl({ employeeId }, 'additional-info'),
         method: 'PUT',
         body,
       }),
@@ -130,7 +139,7 @@ export const employeeApi = api.injectEndpoints({
     }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/employees/${employeeId}/work-experience`,
+        url: buildEmployeeSubresourceUrl({ employeeId }, 'work-experience'),
         method: 'PUT',
         body,
       }),
@@ -138,14 +147,14 @@ export const employeeApi = api.injectEndpoints({
     }),
     getBankDetails: builder.query({
       query: (id) => ({
-        url: `/employees/${id}/payroll`,
+        url: buildEmployeeSubresourceUrl(id, 'payroll'),
         method: 'GET',
       }),
       providesTags: [employeeType.employee],
     }),
     updateBankDetails: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/employees/${employeeId}/payroll`,
+        url: buildEmployeeSubresourceUrl({ employeeId }, 'payroll'),
         method: 'PUT',
         body,
       }),

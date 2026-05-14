@@ -1,6 +1,7 @@
 import type { AcademicYear } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 export const LEAVE_TARGET_EMPLOYEE_REQUIRED = 'HR:Leave:020033';
@@ -9,7 +10,12 @@ export const SELF_OPTION = { id: SELF_EMPLOYEE_ID, label: 'Self' } as const;
 
 export type LeaveCenterContext = 'hr' | 'self';
 export type LeaveCenterTab = 'my-requests' | 'approvals' | 'balance';
-export type EmployeeOption = { id: string; label: string };
+export type EmployeeOption = {
+  id: string;
+  label: string;
+  status?: EmployeeStatusType | number | string | null;
+  employeeStatusType?: EmployeeStatusType | number | string | null;
+};
 
 export interface LeaveRequestFormValuesForPayload {
   employee: EmployeeOption | null;
@@ -55,7 +61,26 @@ export function buildEmployeeSelectOptions(
   employees: EmployeeOption[],
   isAdminUser: boolean
 ): EmployeeOption[] {
-  return isAdminUser ? employees : [SELF_OPTION, ...employees];
+  const activeEmployees = employees.filter(isActiveEmployeeOption);
+  return isAdminUser ? activeEmployees : [SELF_OPTION, ...activeEmployees];
+}
+
+export function isActiveEmployeeOption(employee: EmployeeOption): boolean {
+  if (employee.id === SELF_EMPLOYEE_ID) {
+    return true;
+  }
+
+  const status = employee.status ?? employee.employeeStatusType;
+  if (status === undefined || status === null || status === '') {
+    return false;
+  }
+
+  if (typeof status === 'number') {
+    return status === EmployeeStatusType.Active;
+  }
+
+  const normalizedStatus = String(status).trim().toLowerCase();
+  return normalizedStatus === 'active' || normalizedStatus === String(EmployeeStatusType.Active);
 }
 
 export function isAdminFromProfile(profile: any): boolean {
