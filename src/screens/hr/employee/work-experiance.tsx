@@ -116,6 +116,13 @@ const WorkExperiences = (props: any) => {
                       const capitalized = sanitizedValue.replace(/\b\w/g, (c) => c.toUpperCase());
                       formik.setFieldValue(`experiences.${index}.mediumStageName`, capitalized);
                     }}
+                    onBlur={(e) => {
+                      formik.setFieldValue(
+                        `experiences.${index}.mediumStageName`,
+                        e.target.value.trim()
+                      );
+                      formik.handleBlur(e);
+                    }}
                     error={
                       formik?.touched?.experiences?.[index]?.mediumStageName &&
                       formik?.errors?.experiences?.[index]?.mediumStageName
@@ -155,6 +162,13 @@ const WorkExperiences = (props: any) => {
                       const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       setFieldValue(`experiences.${index}.designation`, value);
                     }}
+                    onBlur={(e) => {
+                      formik.setFieldValue(
+                        `experiences.${index}.designation`,
+                        e.target.value.trim()
+                      );
+                      formik.handleBlur(e);
+                    }}
                     error={
                       formik?.touched?.experiences?.[index]?.designation &&
                       formik?.errors?.experiences?.[index]?.designation
@@ -187,6 +201,10 @@ const WorkExperiences = (props: any) => {
                     const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
                     const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
                     formik.setFieldValue(`experiences.${index}.department`, capitalized);
+                  }}
+                  onBlur={(e) => {
+                    formik.setFieldValue(`experiences.${index}.department`, e.target.value.trim());
+                    formik.handleBlur(e);
                   }}
                   FormHelperTextProps={{
                     sx: {
