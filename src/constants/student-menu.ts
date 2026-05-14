@@ -70,7 +70,7 @@ export const studentPermissions = {
     studentManagement: `${defaultStudentPermissionName}Records.StudentManagement`,
     certificates: `${defaultStudentPermissionName}Records.Certificates`,
     reports: `${defaultStudentPermissionName}Records.Reports`,
-    setting: `${defaultModulePermissionName}${defaultStudentPermissionName}Records.Settings`,
+    setting: `${defaultStudentPermissionName}Records.Settings`,
   },
   attendance: {
     root: `${defaultModulePermissionName}${defaultStudentPermissionName}Attendance`,

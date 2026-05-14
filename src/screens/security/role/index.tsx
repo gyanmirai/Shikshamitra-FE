@@ -87,6 +87,8 @@ const RoleScreen = () => {
     setOpen(false);
   };
 
+  console.log('Roles data:', roles);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs

@@ -1,8 +1,12 @@
-import React from 'react';
-import TeacherPermission from 'src/components/teacher-permission';
+'use client';
 
-const PayrollManagementLayout = ({ children }: any) => (
-  <TeacherPermission>{children}</TeacherPermission>
+import { hrPermissions } from 'src/constants/hr-menus';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
+
+const PayrollManagementLayout = ({ children }: { children: React.ReactNode }) => (
+  <StudentPermissionGuard permissionKey={hrPermissions.payroll.root}>
+    {children}
+  </StudentPermissionGuard>
 );
 
 export default PayrollManagementLayout;

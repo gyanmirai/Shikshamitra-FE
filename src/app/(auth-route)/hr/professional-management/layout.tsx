@@ -1,8 +1,12 @@
-import React from 'react';
-import TeacherPermission from 'src/components/teacher-permission';
+'use client';
 
-const ProfessionalManagementLayout = ({ children }: any) => (
-  <TeacherPermission>{children}</TeacherPermission>
+import { hrPermissions } from 'src/constants/hr-menus';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
+
+const ProfessionalManagementLayout = ({ children }: { children: React.ReactNode }) => (
+  <StudentPermissionGuard permissionKey={hrPermissions.professionalManagement}>
+    {children}
+  </StudentPermissionGuard>
 );
 
 export default ProfessionalManagementLayout;

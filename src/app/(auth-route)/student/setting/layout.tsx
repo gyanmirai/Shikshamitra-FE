@@ -1,6 +1,12 @@
-import React from 'react';
-import TeacherPermission from 'src/components/teacher-permission';
+'use client';
 
-const StudentSetting = ({ children }: any) => <TeacherPermission>{children}</TeacherPermission>;
+import { studentPermissions } from 'src/constants/student-menu';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
 
-export default StudentSetting;
+const StudentSettingLayout = ({ children }: { children: React.ReactNode }) => (
+  <StudentPermissionGuard permissionKey={studentPermissions.records.setting}>
+    {children}
+  </StudentPermissionGuard>
+);
+
+export default StudentSettingLayout;

@@ -1,8 +1,12 @@
-import React from 'react';
-import TeacherPermission from 'src/components/teacher-permission';
+'use client';
 
-const AttendanceImportHistoryLayout = ({ children }: { children: React.ReactNode }) => (
-  <TeacherPermission>{children}</TeacherPermission>
+import { hrPermissions } from 'src/constants/hr-menus';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
+
+const BiometricAttendanceLayout = ({ children }: { children: React.ReactNode }) => (
+  <StudentPermissionGuard permissionKey={hrPermissions.attendance.biometricAttendance}>
+    {children}
+  </StudentPermissionGuard>
 );
 
-export default AttendanceImportHistoryLayout;
+export default BiometricAttendanceLayout;

@@ -413,9 +413,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
         const resp = await addEmployee({ body: formData }).unwrap();
         formik.setFieldValue('employeeId', resp.id);
-        return resp;
       }
-      return { id: values.employeeId, userId: values.userId };
     },
     [addEmployee]
   );
@@ -682,18 +680,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            const createdEmployee = await handleBasicInformation(values, formik);
-            if (createdEmployee?.id) {
-              savedValues = {
-                ...values,
-                employeeId: createdEmployee.id,
-                userId: createdEmployee.userId ?? values.userId,
-              };
-              formik.setFieldValue('employeeId', createdEmployee.id);
-              if (createdEmployee.userId) {
-                formik.setFieldValue('userId', createdEmployee.userId);
-              }
-            }
+            await handleBasicInformation(values, formik);
+
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }

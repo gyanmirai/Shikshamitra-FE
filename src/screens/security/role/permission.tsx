@@ -36,6 +36,12 @@ export default function Permission({
   providerName: string;
   initialData: any;
 }) {
+  console.log(
+    'Permission component rendered with providerName:',
+    providerName,
+    'and editData:',
+    editData
+  );
   const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPermissionsQuery,
@@ -78,7 +84,9 @@ export default function Permission({
 
   const handlePermissionToggle = (key: string, type: PermissionType) => {
     const targetName = `${key}.${type}`;
+    console.log('Toggling permission:', targetName);
     const targetItem = permissionData.find((item) => item.name === targetName);
+    console.log(permissionData, 'Current permission value:', targetItem);
     const newValue = targetItem ? !targetItem.isGranted : false;
 
     setPermissionData(
@@ -194,7 +202,7 @@ export default function Permission({
       </Scrollbar>
     </Card>
   );
-
+  console.log(selectedModule.submodule, 'selectedModule.submodule');
   const renderSubModules = (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
       <Box sx={{ p: 2.5, borderBottom: '1px dashed', borderColor: 'divider' }}>
@@ -309,6 +317,8 @@ export default function Permission({
                       ? getAllChildrenData(activeSubModule)
                       : [activeSubModule];
 
+                  console.log(itemsToShow, 'itemsToShow');
+
                   // Check if all items have this permission enabled
                   const isGlobalChecked = itemsToShow.every((item: any) => {
                     const key = `${item.permissionName}.${type}`;
@@ -324,6 +334,7 @@ export default function Permission({
                         size="small"
                         checked={isGlobalChecked}
                         onChange={(e) => {
+                          console.log(itemsToShow, 'itemsToShow');
                           const isChecked = e.target.checked;
                           const newPermissions: { name: string; isGranted: boolean }[] = [
                             ...permissionData,
