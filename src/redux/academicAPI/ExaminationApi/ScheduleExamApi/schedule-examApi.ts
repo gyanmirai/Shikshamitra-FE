@@ -103,6 +103,16 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       }),
       invalidatesTags: [academicType.exam],
     }),
+
+    // Update exam status (Publish Timetable)
+    updateExamStatus: builder.mutation<void, { examId: string; body: { status: number } }>({
+      query: ({ examId, body }) => ({
+        url: `/academics/exams/${examId}/status`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [academicType.exam],
+    }),
   }),
   overrideExisting: false,
 });
@@ -119,4 +129,5 @@ export const {
   useGetExamSubjectsQuery,
   useDeleteExamMutation,
   usePublishExamMutation,
+  useUpdateExamStatusMutation,
 } = scheduleExamApi;

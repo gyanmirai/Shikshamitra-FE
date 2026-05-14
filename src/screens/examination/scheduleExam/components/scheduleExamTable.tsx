@@ -3,6 +3,7 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { motion } from 'framer-motion';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
@@ -18,7 +19,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
 import { Box, Tab, Card, Tabs, Button, MenuList, MenuItem } from '@mui/material';
-import { usePublishExamMutation } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
+import {
+  usePublishExamMutation,
+  useUpdateExamStatusMutation,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import ViewTimetableComp from './viewTimetableComp';
 
@@ -42,6 +46,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     type: 'mutation',
     currentQueryAndMutation: usePublishExamMutation,
   });
+
+  const [updateExamStatus, { isLoading: isPublishing }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateExamStatusMutation,
+  });
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
   // Add this outside your component
@@ -51,9 +60,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const handlePublishExam = async () => {
     try {
       if (selectedTimetable?.examId) {
-        await publishExam({
+        await updateExamStatus({
           examId: selectedTimetable.examId,
-          body: { status: 1 }, // Published status
+          body: { status: ScheduleExamStatus.Published },
         }).unwrap();
         shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
         publishExamDialog.onFalse();
@@ -69,7 +78,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     const items = getExams?.data?.items || [];
     return {
       pending: items.filter((i: any) => i.status === 0).length || 0,
-      completed: items.filter((i: any) => i.status === 1).length || 0,
+      published: items.filter((i: any) => i.status === 2).length || 0,
+      complated: items.filter((i: any) => i.status === 5).length || 0,
     };
   }, [getExams?.data?.items]);
 
@@ -88,8 +98,14 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         count: getExams?.data?.publishedCount || 0,
         color: 'info',
       },
+      {
+        label: 'Complated',
+        value: 2,
+        count: getExams?.data?.complatedCount || 0,
+        color: 'success',
+      },
     ],
-    [getExams?.data?.publishedCount, getExams?.data?.pendingCount]
+    [getExams?.data?.publishedCount, getExams?.data?.pendingCount, getExams?.data?.complatedCount]
   );
 
   // Handle tab change event
@@ -148,7 +164,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 2, pb: 1, mb: 1 }}>
+      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, mb: 1 }}>
         <Box display="flex" justifyContent="space-between">
           <motion.div variants={headerItemVariant}>
             <Tabs value={tabs.value} onChange={handleTabChange}>
@@ -175,7 +191,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               onClick={() => {
                 setOpenDialog?.(true);
               }}
-              sx={{ px: '32px', mt: 1.5 }}
+              sx={{ px: '32px', mt: 1 }}
             >
               Schedule Exam
             </Button>
@@ -327,14 +343,16 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
+            loading={isPublishing}
+            disabled={isPublishing}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={handlePublishExam}
             size="small"
           >
             Publish
-          </Button>
+          </LoadingButton>
         }
       />
     </>

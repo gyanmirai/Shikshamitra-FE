@@ -107,7 +107,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading="Schedule Exam"
+            heading={selectedExam?.examName ? 'Update Exam' : 'Schedule Exam'}
             description={
               selectedExam?.examName
                 ? 'Update existing exam details including title, date, duration and assigned subjects. Make necessary adjustments to the exam schedule.'

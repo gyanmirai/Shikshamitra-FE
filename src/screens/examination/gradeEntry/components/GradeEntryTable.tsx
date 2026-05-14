@@ -1,7 +1,7 @@
 import type { LabelColor } from 'src/components/label';
 
-import { Typography } from '@mui/material';
 import { Label } from 'src/components/label';
+import { Box, Typography } from '@mui/material';
 import { useMemo, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -74,7 +74,19 @@ const GradeEntryTable = ({
       totalCount={gradingData?.totalCount}
       isLoading={isLoading || isFetching}
       columns={[
-        { id: 'studentName', label: 'Student Name', sticky: true, minWidth: 180, align: 'left' },
+        {
+          id: 'studentName',
+          label: 'Student Name/Gr No.',
+          sticky: true,
+          minWidth: 180,
+          align: 'left',
+          render: (value, row) => (
+            <Box>
+              <Typography variant="body2">{value}</Typography>
+              <Typography variant="caption">({row.grNo})</Typography>
+            </Box>
+          ),
+        },
         { id: 'rollNo', label: 'Roll No.', minWidth: 90, align: 'left' },
         {
           id: 'totalMarks',

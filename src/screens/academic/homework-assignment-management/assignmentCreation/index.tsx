@@ -57,6 +57,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const [subject, setSubject] = useState('');
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [dateError, setDateError] = useState<string | null>(null);
   // State to store selected class/standard ID
   const [classes, setClass] = useState<string>('');
   // State to store all divisions for the selected class
@@ -71,6 +72,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const selectedClassData = allClass.find((c: any) => c?.id === classes);
   const selectedDivisionData = allDivision.find((d: any) => d?.id === division);
 
+  const isValidDate = !!date && date.isValid() && !dateError;
+
   const {
     data: assignmentData,
     isLoading,
@@ -84,10 +87,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       StandardId: selectedClassData?.id,
       DivisionId: selectedDivisionData?.id,
       SubjectId: subject,
-      AssignmentDate: date?.isValid() ? date.toISOString() : undefined,
+      AssignmentDate: isValidDate ? date!.toISOString() : undefined,
     },
     options: {
-      skip: !(medium as Medium)?.id || !classes || !division || !subject,
+      skip: !(medium as Medium)?.id || !classes || !division || !subject || !isValidDate,
     },
   });
 
@@ -233,6 +236,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
           name="date"
           value={date}
+          onError={(error) => setDateError(error ? String(error) : null)}
           onChange={(val) => {
             setDate(val);
           }}
@@ -290,7 +294,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       </CustomDialog>
 
       <AssignmentTable
-        assignmentData={assignmentData?.items || []}
+        assignmentData={isValidDate ? assignmentData?.items || [] : []}
         isLoading={isLoading || isFetching}
         dialog={addAssignmentDialog}
         selectedDivision={division}
@@ -342,7 +346,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
                 SubjectId: subject,
-                AssignmentDate: date?.isValid() ? date.toISOString() : undefined,
+                AssignmentDate: isValidDate ? date.toISOString() : undefined,
               };
 
               confirmWithUndo({

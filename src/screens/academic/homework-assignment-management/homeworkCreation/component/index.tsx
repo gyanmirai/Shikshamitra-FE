@@ -58,6 +58,10 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const [division, setDivision] = useState<string>('');
   // State to store and update the selected date using dayjs
   const [date, setDate] = useState<Dayjs | null>(dayjs());
+  // Tracks DatePicker's own validation error
+  const [dateError, setDateError] = useState<string | null>(null);
+  // AND the DatePicker itself reports no error (rules out partial manual typing)
+  const isValidDate = !!date && date.isValid() && !dateError;
   const [deleteHomework, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteHomeworkMutation,
@@ -135,10 +139,10 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       StandardId: selectedClassData?.id,
       DivisionId: selectedDivisionData?.id,
       SubjectId: subject,
-      HomeworkDate: date?.isValid() ? date.toISOString() : undefined,
+      HomeworkDate: isValidDate ? date!.toISOString() : undefined,
     },
     options: {
-      skip: !(medium as Medium)?.id || !classes || !division || !subject,
+      skip: !(medium as Medium)?.id || !classes || !division || !subject || !isValidDate,
     },
   });
 
@@ -248,6 +252,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           minDate={dayjs(currentYear?.startDate)}
           maxDate={dayjs(currentYear?.endDate)}
           value={date}
+          onError={(error) => setDateError(error ? String(error) : null)}
           onChange={(val) => {
             setDate(val);
           }}
@@ -295,7 +300,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       </CustomDialog>
 
       <HomeworkTable
-        homeworkData={homeworkData?.items || []}
+        homeworkData={isValidDate ? homeworkData?.items || [] : []}
         isLoading={isHomeworkDataLoading || isHomeworkDataFetching}
         selectedDivision={division}
         setOpen={setOpen}
@@ -389,7 +394,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
                 StandardId: selectedClassData?.id,
                 DivisionId: selectedDivisionData?.id,
                 SubjectId: subject,
-                HomeworkDate: date?.isValid() ? date.toISOString() : undefined,
+                HomeworkDate: isValidDate ? date!.toISOString() : undefined,
               };
 
               confirmWithUndo({
