@@ -235,24 +235,35 @@ export const workExperienceValidationSchema = Yup.object({
 });
 
 export const payrollValidationSchema = Yup.object({
-  bankName: Yup.string().nullable().max(100, 'Bank name must be at most 100 characters'),
+  bankName: Yup.string()
+    .required('Bank name is required')
+    .max(100, 'Bank name must be at most 100 characters'),
 
   branchName: Yup.string().nullable().max(100, 'Branch name must be at most 100 characters'),
 
   accountHolderName: Yup.string()
-    .nullable()
-    .matches(/^[a-zA-Z\s.]+$/, 'Only letters and spaces allowed')
+    .required('Account holder name is required')
+    .matches(/^[a-zA-Z\s.]+$/, {
+      message: 'Only letters and spaces allowed',
+      excludeEmptyString: true,
+    })
     .max(100, 'Account holder name must be at most 100 characters'),
 
   accountNumber: Yup.string()
-    .nullable()
-    .matches(/^\d+$/, 'Account number must contain only digits')
-    .min(9, 'Account number must be at least 9 digits')
+    .required('Account number is required')
+    .matches(/^\d+$/, {
+      message: 'Account number must contain only digits',
+      excludeEmptyString: true,
+    })
+    .min(8, 'Account number must be at least 8 characters')
     .max(18, 'Account number must be at most 18 digits'),
-
   ifscCode: Yup.string()
-    .nullable()
-    .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code (Ex: SBIN0001234)'),
+    .required('IFSC code is required')
+    .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, {
+      message:
+        'IFSC code must follow the format: 4 uppercase letters, a zero, then 6 alphanumeric characters (e.g., SBIN0001234)',
+      excludeEmptyString: true,
+    }),
 
   pfType: Yup.string().nullable(),
 

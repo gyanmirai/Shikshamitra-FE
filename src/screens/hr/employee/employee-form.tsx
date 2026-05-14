@@ -413,7 +413,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
         const resp = await addEmployee({ body: formData }).unwrap();
         formik.setFieldValue('employeeId', resp.id);
+        return resp.id;
       }
+      return values.employeeId;
     },
     [addEmployee]
   );
@@ -664,7 +666,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       isSaveButton: boolean = false
     ) => {
       let saveSucceeded = false;
-      let savedValues = values;
+      const savedValues = values;
+      let resolvedEmployeeId = values.employeeId;
+
       try {
         setIsLoading(true);
         if (editData && activeStep === 0) {
@@ -680,8 +684,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
               shikshaMitraToast.success({ message: 'Employee details updated successfully' });
             }
           } else {
-            await handleBasicInformation(values, formik);
-
+            const newId = await handleBasicInformation(values, formik);
+            resolvedEmployeeId = newId;
             if (isSaveButton) {
               shikshaMitraToast.success({ message: 'Employee added successfully' });
             }
@@ -727,7 +731,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         if (saveSucceeded) {
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
-          formik.resetForm({ values: savedValues });
+          formik.resetForm({ values: { ...formik.values, employeeId: resolvedEmployeeId } });
           resetCurrentStepRef.current?.();
         }
 
