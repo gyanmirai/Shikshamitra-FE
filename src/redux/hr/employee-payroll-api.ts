@@ -44,14 +44,38 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [employeeType.deductionComponents],
+      invalidatesTags: [
+        employeeType.deductionComponents,
+        employeeType.employeePayroll,
+        employeeType.salaryStructure,
+      ],
+    }),
+    previewDeductionComponentUpdateImpact: builder.mutation({
+      query: ({ id, body, includeEmployees = false }) => ({
+        url: `/payroll/deduction-components/${id}/update-impact-preview`,
+        method: 'POST',
+        params: { includeEmployees },
+        body,
+      }),
+    }),
+    previewDeductionComponentDeleteImpact: builder.query({
+      query: ({ id, includeEmployees = true, skipCount = 0, maxResultCount = 20 }) => ({
+        url: `/payroll/deduction-components/${id}/delete-impact-preview`,
+        method: 'GET',
+        params: { includeEmployees, skipCount, maxResultCount },
+      }),
     }),
     deleteDeductionComponent: builder.mutation({
-      query: (id) => ({
+      query: ({ id, previewHash }) => ({
         url: `/payroll/deduction-components/${id}`,
         method: 'DELETE',
+        params: { previewHash },
       }),
-      invalidatesTags: [employeeType.deductionComponents],
+      invalidatesTags: [
+        employeeType.deductionComponents,
+        employeeType.employeePayroll,
+        employeeType.salaryStructure,
+      ],
     }),
     addEarningComponent: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -67,7 +91,26 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [employeeType.earningComponents],
+      invalidatesTags: [
+        employeeType.earningComponents,
+        employeeType.employeePayroll,
+        employeeType.salaryStructure,
+      ],
+    }),
+    previewEarningComponentUpdateImpact: builder.mutation({
+      query: ({ id, body, includeEmployees = false }) => ({
+        url: `/payroll/earning-components/${id}/update-impact-preview`,
+        method: 'POST',
+        params: { includeEmployees },
+        body,
+      }),
+    }),
+    previewEarningComponentDeleteImpact: builder.query({
+      query: ({ id, includeEmployees = true, skipCount = 0, maxResultCount = 20 }) => ({
+        url: `/payroll/earning-components/${id}/delete-impact-preview`,
+        method: 'GET',
+        params: { includeEmployees, skipCount, maxResultCount },
+      }),
     }),
     getEarningComponents: builder.query({
       query: ({ page = 1, pageSize = 20, academicYearId, search }) => ({
@@ -85,11 +128,16 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
       providesTags: [employeeType.earningComponents],
     }),
     deleteEarningComponent: builder.mutation({
-      query: (id) => ({
+      query: ({ id, previewHash }) => ({
         url: `/payroll/earning-components/${id}`,
         method: 'DELETE',
+        params: { previewHash },
       }),
-      invalidatesTags: [employeeType.earningComponents],
+      invalidatesTags: [
+        employeeType.earningComponents,
+        employeeType.employeePayroll,
+        employeeType.salaryStructure,
+      ],
     }),
     saveDayCalculationSettings: builder.mutation({
       query: ({ body, academicYearId }) => ({
@@ -107,6 +155,10 @@ export const {
   useAddEarningComponentMutation,
   useUpdateDeductionComponentMutation,
   useUpdateEarningComponentMutation,
+  usePreviewDeductionComponentUpdateImpactMutation,
+  usePreviewEarningComponentUpdateImpactMutation,
+  usePreviewDeductionComponentDeleteImpactQuery,
+  usePreviewEarningComponentDeleteImpactQuery,
   useGetDeductionComponentsQuery,
   useGetEarningComponentsQuery,
   useGetDeductionComponentByIdQuery,
