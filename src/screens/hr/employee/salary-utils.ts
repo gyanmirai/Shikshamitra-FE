@@ -12,19 +12,19 @@
  *   - Payroll component renderer             (PayrollFields.tsx)
  */
 export function isSalaryComponentFixed(item: Record<string, any>): boolean {
-  if (item?.calculationType === 1) {
-    return false;
-  }
-
-  if (item?.calculationType === 0) {
-    return true;
-  }
-
+  // earningType / deductionType is the primary source of truth for fixed vs variable.
   if (item?.earningType === 'FIXED' || item?.deductionType === 'FIXED') {
     return true;
   }
+  if (item?.earningType === 'VARIABLE' || item?.deductionType === 'VARIABLE') {
+    return false;
+  }
 
-  // Neither type field is present — the item came from the backend with only `isFixed`
+  // Numeric calculationType fallback (legacy / in-progress form data)
+  if (item?.calculationType === 0) return true;
+  if (item?.calculationType === 1) return false;
+
+  // Neither type field is present — item came from the backend with only `isFixed`
   if (item?.earningType === undefined && item?.deductionType === undefined) {
     return !!item?.isFixed;
   }
@@ -33,7 +33,7 @@ export function isSalaryComponentFixed(item: Record<string, any>): boolean {
 }
 
 export function isPercentageSalaryComponent(item: Record<string, any>): boolean {
-  return item?.calculationType === 1;
+  return item?.calculationType === 1 || item?.calculationType === 'PERCENTAGE';
 }
 
 export function getSalaryComponentPayloadAmount(item: Record<string, any>): number | null {

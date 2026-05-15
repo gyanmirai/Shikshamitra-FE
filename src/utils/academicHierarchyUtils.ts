@@ -167,11 +167,8 @@ export const expandAccessibleHierarchy = (
     const fullBoard = allBoards.find((b) => b.id === beBoard.boardId);
     if (!fullBoard) return;
 
-    if (beBoard.hasAccess || beBoard.hasFullMediumAccess) {
-      out.boards.push(fullBoard.id);
-    }
-
     if (beBoard.hasFullMediumAccess) {
+      out.boards.push(fullBoard.id);
       fullBoard.educationMediums?.forEach((m: any) => addAllFromMediumTree(m, out));
       return;
     }
@@ -180,11 +177,8 @@ export const expandAccessibleHierarchy = (
       const fullMedium = fullBoard.educationMediums?.find((m: any) => m.id === beMedium.mediumId);
       if (!fullMedium) return;
 
-      if (beMedium.hasAccess || beMedium.hasFullMediumStageAccess) {
-        out.mediums.push(fullMedium.id);
-      }
-
       if (beMedium.hasFullMediumStageAccess) {
+        out.mediums.push(fullMedium.id);
         fullMedium.educationMediumStages?.forEach((s: any) => addAllFromStageTree(s, out));
         return;
       }
@@ -195,11 +189,8 @@ export const expandAccessibleHierarchy = (
         );
         if (!fullStage) return;
 
-        if (beStage.hasAccess || beStage.hasFullStandardAccess) {
-          out.organizations.push(fullStage.id);
-        }
-
         if (beStage.hasFullStandardAccess) {
+          out.organizations.push(fullStage.id);
           fullStage.standards?.forEach((st: any) => addAllFromStandardTree(st, out));
           return;
         }
@@ -208,11 +199,9 @@ export const expandAccessibleHierarchy = (
           const fullStd = fullStage.standards?.find((st: any) => st.id === beStd.standardId);
           if (!fullStd) return;
 
-          if (beStd.hasAccess || beStd.hasFullDivisionAccess) {
-            out.standards.push(fullStd.id);
-          }
-
           if (beStd.hasFullDivisionAccess) {
+            out.standards.push(fullStd.id);
+            // Use fullStd.divisions to handle the case where BE returns empty divisions array
             fullStd.divisions?.forEach((d: any) => {
               if (d?.id) out.divisions.push(d.id);
             });
@@ -220,9 +209,10 @@ export const expandAccessibleHierarchy = (
           }
 
           beStd.divisions?.forEach((beDiv: any) => {
+            if (!beDiv.hasAccess) return;
             const fullDiv = fullStd.divisions?.find((d: any) => d.id === beDiv.divisionId);
             if (!fullDiv) return;
-            if (beDiv.hasAccess) out.divisions.push(fullDiv.id);
+            out.divisions.push(fullDiv.id);
           });
         });
       });

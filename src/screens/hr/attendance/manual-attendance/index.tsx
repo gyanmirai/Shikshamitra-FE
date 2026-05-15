@@ -6,6 +6,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { RestartAlt } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
@@ -189,13 +190,6 @@ const ManualAttendanceScreen = () => {
     try {
       const entries = buildManualAttendanceSaveEntries(employeeData);
 
-      if (entries.length === 0) {
-        shikshaMitraToast.error({
-          message: 'Mark at least one employee as Present, Half Day, or Absent before saving.',
-        });
-        return;
-      }
-
       const payload = {
         attendanceDate: dateConvertor(dayjs(date).format(dateFormat)),
         entries,
@@ -251,7 +245,7 @@ const ManualAttendanceScreen = () => {
         minWidth: '12vw',
         align: 'left',
         sticky: true,
-        render(value, row) {
+        render(value: any, row: any) {
           return (
             <Box display="flex" alignItems="center" gap={1}>
               {value} ({row.employeeCode})
@@ -372,7 +366,7 @@ const ManualAttendanceScreen = () => {
         label: 'Remarks',
         align: 'left',
         minWidth: '15vw',
-        render: (val, row) =>
+        render: (val: any, row: any) =>
           row.status === STATUS.Absent ? (
             <TextField
               size="small"
@@ -414,7 +408,7 @@ const ManualAttendanceScreen = () => {
         label: 'Errors',
         align: 'left',
         minWidth: '3vw',
-        render(value) {
+        render(value: any) {
           return value?.length > 0 ? (
             <CustomTooltip title={value.join(', ')}>
               <Iconify icon="material-symbols:error-outline" color="error.main" />
@@ -432,7 +426,7 @@ const ManualAttendanceScreen = () => {
         label: 'Warnings',
         align: 'left',
         minWidth: '3vw',
-        render(value) {
+        render(value: any) {
           return value?.length > 0 ? (
             <CustomTooltip title={value.join(', ')}>
               <Iconify icon="material-symbols:warning-outline" color="warning.main" />
@@ -442,482 +436,521 @@ const ManualAttendanceScreen = () => {
           );
         },
       },
-      {
-        id: 'status',
-        sticky: true,
-        label: (
-          <Stack spacing={0.75} alignItems="center">
-            {/* ── Count badges ── */}
-            <Box
-              sx={{
-                display: 'flex',
-                width: '230px',
-                gap: 0.25,
-                px: 0.25,
-              }}
-            >
-              {/* Present */}
-              <CustomTooltip
-                title={
-                  presentCount > 0 ? (
-                    <Box sx={{ p: 1, maxWidth: 260 }}>
-                      <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
-                        Present ({presentCount})
-                      </Typography>
-                      {employeeData
-                        .filter((e) => e.status === STATUS.Present)
-                        .slice(0, 8)
-                        .map((e) => (
-                          <Typography key={e.id} variant="caption" display="block">
-                            • {e.fullName} ({e.employeeCode})
-                          </Typography>
-                        ))}
-                      {presentCount > 8 && (
-                        <Typography
-                          variant="caption"
-                          display="block"
-                          sx={{ fontStyle: 'italic', mt: 0.5 }}
-                        >
-                          +{presentCount - 8} more
-                        </Typography>
-                      )}
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        mt={1}
-                        sx={{ fontStyle: 'italic', opacity: 0.8 }}
+      ...(isLocked
+        ? [
+            {
+              id: 'status' as const,
+              label: 'Status',
+              sticky: true,
+              minWidth: '110px',
+              align: 'left' as const,
+              isSort: false,
+              isFilter: false,
+              render: (value: string) => {
+                const colorMap: Record<
+                  string,
+                  'primary' | 'error' | 'warning' | 'info' | 'default'
+                > = {
+                  Present: 'primary',
+                  Absent: 'error',
+                  Pending: 'warning',
+                  HalfDay: 'info',
+                };
+                return <Label color={colorMap[value] ?? 'default'}>{value || '—'}</Label>;
+              },
+            } as any,
+          ]
+        : [
+            {
+              id: 'status',
+              sticky: true,
+              label: (
+                <Stack spacing={0.75} alignItems="center">
+                  {/* ── Count badges ── */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      width: '230px',
+                      gap: 0.25,
+                      px: 0.25,
+                    }}
+                  >
+                    {/* Present */}
+                    <CustomTooltip
+                      title={
+                        presentCount > 0 ? (
+                          <Box sx={{ p: 1, maxWidth: 260 }}>
+                            <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
+                              Present ({presentCount})
+                            </Typography>
+                            {employeeData
+                              .filter((e) => e.status === STATUS.Present)
+                              .slice(0, 8)
+                              .map((e) => (
+                                <Typography key={e.id} variant="caption" display="block">
+                                  • {e.fullName} ({e.employeeCode})
+                                </Typography>
+                              ))}
+                            {presentCount > 8 && (
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{ fontStyle: 'italic', mt: 0.5 }}
+                              >
+                                +{presentCount - 8} more
+                              </Typography>
+                            )}
+                            <Typography
+                              variant="caption"
+                              display="block"
+                              mt={1}
+                              sx={{ fontStyle: 'italic', opacity: 0.8 }}
+                            >
+                              Click ✓ to mark all as Present
+                            </Typography>
+                          </Box>
+                        ) : (
+                          'Click ✓ to mark all as Present'
+                        )
+                      }
+                      arrow
+                      placement="top"
+                      slotProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'background.paper',
+                            color: 'text.primary',
+                            boxShadow: (t) => t.shadows[8],
+                            border: (t) => `1px solid ${t.vars.palette.divider}`,
+                            '& .MuiTooltip-arrow': {
+                              color: 'background.paper',
+                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          flex: 1,
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '10px',
+                          bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.16),
+                          color: 'success.dark',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'default',
+                        }}
                       >
-                        Click ✓ to mark all as Present
-                      </Typography>
+                        {presentCount}
+                      </Box>
+                    </CustomTooltip>
+
+                    {/* Half Day */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '10px',
+                        bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
+                        color: 'info.dark',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'default',
+                      }}
+                    >
+                      {halfDayCount}
                     </Box>
-                  ) : (
-                    'Click ✓ to mark all as Present'
-                  )
-                }
-                arrow
-                placement="top"
-                slotProps={{
-                  tooltip: {
-                    sx: {
-                      bgcolor: 'background.paper',
-                      color: 'text.primary',
-                      boxShadow: (t) => t.shadows[8],
-                      border: (t) => `1px solid ${t.vars.palette.divider}`,
-                      '& .MuiTooltip-arrow': {
-                        color: 'background.paper',
-                        '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
-                      },
-                    },
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    flex: 1,
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '10px',
-                    bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.16),
-                    color: 'success.dark',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    cursor: 'default',
-                  }}
-                >
-                  {presentCount}
-                </Box>
-              </CustomTooltip>
 
-              {/* Half Day */}
-              <Box
-                sx={{
-                  flex: 1,
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
-                  color: 'info.dark',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'default',
-                }}
-              >
-                {halfDayCount}
-              </Box>
+                    {/* Pending */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '10px',
+                        bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.16),
+                        color: 'warning.dark',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'default',
+                      }}
+                    >
+                      {pendingCount}
+                    </Box>
 
-              {/* Pending */}
-              <Box
-                sx={{
-                  flex: 1,
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '10px',
-                  bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.16),
-                  color: 'warning.dark',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'default',
-                }}
-              >
-                {pendingCount}
-              </Box>
-
-              {/* Absent */}
-              <CustomTooltip
-                title={
-                  absentCount > 0 ? (
-                    <Box sx={{ p: 1, maxWidth: 260 }}>
-                      <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
-                        Absent ({absentCount})
-                      </Typography>
-                      {employeeData
-                        .filter((e) => e.status === STATUS.Absent)
-                        .slice(0, 8)
-                        .map((e) => (
-                          <Typography key={e.id} variant="caption" display="block">
-                            • {e.fullName} ({e.employeeCode})
-                          </Typography>
-                        ))}
-                      {absentCount > 8 && (
-                        <Typography
-                          variant="caption"
-                          display="block"
-                          sx={{ fontStyle: 'italic', mt: 0.5 }}
-                        >
-                          +{absentCount - 8} more
-                        </Typography>
-                      )}
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        mt={1}
-                        sx={{ fontStyle: 'italic', opacity: 0.8 }}
+                    {/* Absent */}
+                    <CustomTooltip
+                      title={
+                        absentCount > 0 ? (
+                          <Box sx={{ p: 1, maxWidth: 260 }}>
+                            <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
+                              Absent ({absentCount})
+                            </Typography>
+                            {employeeData
+                              .filter((e) => e.status === STATUS.Absent)
+                              .slice(0, 8)
+                              .map((e) => (
+                                <Typography key={e.id} variant="caption" display="block">
+                                  • {e.fullName} ({e.employeeCode})
+                                </Typography>
+                              ))}
+                            {absentCount > 8 && (
+                              <Typography
+                                variant="caption"
+                                display="block"
+                                sx={{ fontStyle: 'italic', mt: 0.5 }}
+                              >
+                                +{absentCount - 8} more
+                              </Typography>
+                            )}
+                            <Typography
+                              variant="caption"
+                              display="block"
+                              mt={1}
+                              sx={{ fontStyle: 'italic', opacity: 0.8 }}
+                            >
+                              Click ✗ to mark all as Absent
+                            </Typography>
+                          </Box>
+                        ) : (
+                          'Click ✗ to mark all as Absent'
+                        )
+                      }
+                      arrow
+                      placement="top"
+                      slotProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'background.paper',
+                            color: 'text.primary',
+                            boxShadow: (t) => t.shadows[8],
+                            border: (t) => `1px solid ${t.vars.palette.divider}`,
+                            '& .MuiTooltip-arrow': {
+                              color: 'background.paper',
+                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          flex: 1,
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '10px',
+                          bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.16),
+                          color: 'error.dark',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'default',
+                        }}
                       >
-                        Click ✗ to mark all as Absent
-                      </Typography>
+                        {absentCount}
+                      </Box>
+                    </CustomTooltip>
+                  </Box>
+
+                  {/* ── Mark-all segmented control ── */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      width: '230px',
+                      height: '32px',
+                      bgcolor: (t) => t.vars.palette.background.neutral,
+                      borderRadius: '6px',
+                      p: 0.25,
+                      gap: 0.25,
+                    }}
+                  >
+                    {/* Mark all Present */}
+                    <CustomTooltip title="Mark all as Present" arrow placement="top">
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((emp) => emp.status === STATUS.Present)
+                          )
+                            return;
+                          setAllStatus(STATUS.Present);
+                        }}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor:
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((e) => e.status === STATUS.Present)
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((e) => e.status === STATUS.Present)
+                              ? 0.5
+                              : 1,
+                          bgcolor: (t) =>
+                            presentCount > 0 ? t.vars.palette.success.main : 'transparent',
+                          color: (t) =>
+                            presentCount > 0
+                              ? t.vars.palette.success.contrastText
+                              : t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.12),
+                          },
+                        }}
+                      >
+                        <Iconify icon="eva:checkmark-fill" width={18} />
+                      </Box>
+                    </CustomTooltip>
+
+                    {/* Mark all Half Day */}
+                    <CustomTooltip title="Mark all as Half Day" arrow placement="top">
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((emp) => emp.status === STATUS.HalfDay)
+                          )
+                            return;
+                          setAllStatus(STATUS.HalfDay);
+                        }}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor:
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((e) => e.status === STATUS.HalfDay)
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((e) => e.status === STATUS.HalfDay)
+                              ? 0.5
+                              : 1,
+                          bgcolor: (t) =>
+                            halfDayCount > 0 ? t.vars.palette.info.main : 'transparent',
+                          color: (t) =>
+                            halfDayCount > 0
+                              ? t.vars.palette.info.contrastText
+                              : t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.12),
+                          },
+                        }}
+                      >
+                        <Iconify icon="mdi:fraction-one-half" width={18} />
+                      </Box>
+                    </CustomTooltip>
+
+                    {/* Pending indicator (display only) */}
+                    <Box
+                      sx={{
+                        ...segmentBtnBase,
+                        cursor: 'default',
+                        bgcolor: (t) =>
+                          pendingCount > 0 ? t.vars.palette.warning.main : 'transparent',
+                        color: (t) =>
+                          pendingCount > 0
+                            ? t.vars.palette.warning.contrastText
+                            : t.vars.palette.text.secondary,
+                      }}
+                    >
+                      <Iconify icon="eva:minus-fill" width={18} />
                     </Box>
-                  ) : (
-                    'Click ✗ to mark all as Absent'
-                  )
-                }
-                arrow
-                placement="top"
-                slotProps={{
-                  tooltip: {
-                    sx: {
-                      bgcolor: 'background.paper',
-                      color: 'text.primary',
-                      boxShadow: (t) => t.shadows[8],
-                      border: (t) => `1px solid ${t.vars.palette.divider}`,
-                      '& .MuiTooltip-arrow': {
-                        color: 'background.paper',
-                        '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
-                      },
-                    },
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    flex: 1,
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '10px',
-                    bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.16),
-                    color: 'error.dark',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    cursor: 'default',
-                  }}
-                >
-                  {absentCount}
-                </Box>
-              </CustomTooltip>
-            </Box>
 
-            {/* ── Mark-all segmented control ── */}
-            <Box
-              sx={{
-                display: 'flex',
-                width: '230px',
-                height: '32px',
-                bgcolor: (t) => t.vars.palette.background.neutral,
-                borderRadius: '6px',
-                p: 0.25,
-                gap: 0.25,
-              }}
-            >
-              {/* Mark all Present */}
-              <CustomTooltip title="Mark all as Present" arrow placement="top">
-                <Box
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((emp) => emp.status === STATUS.Present)
-                    )
-                      return;
-                    setAllStatus(STATUS.Present);
-                  }}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor:
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((e) => e.status === STATUS.Present)
-                        ? 'not-allowed'
-                        : 'pointer',
-                    opacity:
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((e) => e.status === STATUS.Present)
-                        ? 0.5
-                        : 1,
-                    bgcolor: (t) =>
-                      presentCount > 0 ? t.vars.palette.success.main : 'transparent',
-                    color: (t) =>
-                      presentCount > 0
-                        ? t.vars.palette.success.contrastText
-                        : t.vars.palette.text.secondary,
-                    '&:hover': {
-                      bgcolor: (t) => varAlpha(t.vars.palette.success.mainChannel, 0.12),
-                    },
-                  }}
-                >
-                  <Iconify icon="eva:checkmark-fill" width={18} />
-                </Box>
-              </CustomTooltip>
+                    {/* Mark all Absent */}
+                    <CustomTooltip title="Mark all as Absent" arrow placement="top">
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((emp) => emp.status === STATUS.Absent)
+                          )
+                            return;
+                          setAllStatus(STATUS.Absent);
+                        }}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor:
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((e) => e.status === STATUS.Absent)
+                              ? 'not-allowed'
+                              : 'pointer',
+                          opacity:
+                            isLocked ||
+                            employeeData.length === 0 ||
+                            employeeData.every((e) => e.status === STATUS.Absent)
+                              ? 0.5
+                              : 1,
+                          bgcolor: (t) =>
+                            absentCount > 0 ? t.vars.palette.error.main : 'transparent',
+                          color: (t) =>
+                            absentCount > 0
+                              ? t.vars.palette.error.contrastText
+                              : t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.12),
+                          },
+                        }}
+                      >
+                        <Iconify icon="eva:close-fill" width={18} />
+                      </Box>
+                    </CustomTooltip>
+                  </Box>
+                </Stack>
+              ),
+              align: 'left',
+              minWidth: '230px',
+              isSort: false,
+              isFilter: false,
+              render(value: any, row: any) {
+                return (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      width: '220px',
+                      height: '32px',
+                      bgcolor: (t) => t.vars.palette.background.neutral,
+                      borderRadius: '6px',
+                      p: 0.25,
+                      gap: 0.25,
+                    }}
+                  >
+                    {/* Present */}
+                    <CustomTooltip title="Present" arrow placement="top">
+                      <Box
+                        onClick={() => setRowStatus(row.id, STATUS.Present)}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor: isLocked ? 'not-allowed' : 'pointer',
+                          opacity: isLocked ? 0.5 : 1,
+                          bgcolor:
+                            value === STATUS.Present
+                              ? (t) => t.vars.palette.success.main
+                              : 'transparent',
+                          color:
+                            value === STATUS.Present
+                              ? (t) => t.vars.palette.success.contrastText
+                              : (t) => t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor:
+                              value === STATUS.Present
+                                ? (t) => t.vars.palette.success.dark
+                                : (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
+                          },
+                        }}
+                      >
+                        <Iconify icon="eva:checkmark-fill" width={18} />
+                      </Box>
+                    </CustomTooltip>
 
-              {/* Mark all Half Day */}
-              <CustomTooltip title="Mark all as Half Day" arrow placement="top">
-                <Box
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((emp) => emp.status === STATUS.HalfDay)
-                    )
-                      return;
-                    setAllStatus(STATUS.HalfDay);
-                  }}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor:
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((e) => e.status === STATUS.HalfDay)
-                        ? 'not-allowed'
-                        : 'pointer',
-                    opacity:
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((e) => e.status === STATUS.HalfDay)
-                        ? 0.5
-                        : 1,
-                    bgcolor: (t) => (halfDayCount > 0 ? t.vars.palette.info.main : 'transparent'),
-                    color: (t) =>
-                      halfDayCount > 0
-                        ? t.vars.palette.info.contrastText
-                        : t.vars.palette.text.secondary,
-                    '&:hover': {
-                      bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.12),
-                    },
-                  }}
-                >
-                  <Iconify icon="mdi:fraction-one-half" width={18} />
-                </Box>
-              </CustomTooltip>
+                    {/* Half Day */}
+                    <CustomTooltip title="Half Day" arrow placement="top">
+                      <Box
+                        onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor: isLocked ? 'not-allowed' : 'pointer',
+                          opacity: isLocked ? 0.5 : 1,
+                          bgcolor:
+                            value === STATUS.HalfDay
+                              ? (t) => t.vars.palette.info.main
+                              : 'transparent',
+                          color:
+                            value === STATUS.HalfDay
+                              ? (t) => t.vars.palette.info.contrastText
+                              : (t) => t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor:
+                              value === STATUS.HalfDay
+                                ? (t) => t.vars.palette.info.dark
+                                : (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
+                          },
+                        }}
+                      >
+                        <Iconify icon="mdi:fraction-one-half" width={18} />
+                      </Box>
+                    </CustomTooltip>
 
-              {/* Pending indicator (display only) */}
-              <Box
-                sx={{
-                  ...segmentBtnBase,
-                  cursor: 'default',
-                  bgcolor: (t) => (pendingCount > 0 ? t.vars.palette.warning.main : 'transparent'),
-                  color: (t) =>
-                    pendingCount > 0
-                      ? t.vars.palette.warning.contrastText
-                      : t.vars.palette.text.secondary,
-                }}
-              >
-                <Iconify icon="eva:minus-fill" width={18} />
-              </Box>
+                    {/* Pending */}
+                    <CustomTooltip title="Pending" arrow placement="top">
+                      <Box
+                        onClick={() => setRowStatus(row.id, STATUS.Pending)}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor: isLocked ? 'not-allowed' : 'pointer',
+                          opacity: isLocked ? 0.5 : 1,
+                          bgcolor:
+                            value === STATUS.Pending
+                              ? (t) => t.vars.palette.warning.main
+                              : 'transparent',
+                          color:
+                            value === STATUS.Pending
+                              ? (t) => t.vars.palette.warning.contrastText
+                              : (t) => t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor:
+                              value === STATUS.Pending
+                                ? (t) => t.vars.palette.warning.dark
+                                : (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
+                          },
+                        }}
+                      >
+                        <Iconify icon="eva:minus-fill" width={18} />
+                      </Box>
+                    </CustomTooltip>
 
-              {/* Mark all Absent */}
-              <CustomTooltip title="Mark all as Absent" arrow placement="top">
-                <Box
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((emp) => emp.status === STATUS.Absent)
-                    )
-                      return;
-                    setAllStatus(STATUS.Absent);
-                  }}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor:
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((e) => e.status === STATUS.Absent)
-                        ? 'not-allowed'
-                        : 'pointer',
-                    opacity:
-                      isLocked ||
-                      employeeData.length === 0 ||
-                      employeeData.every((e) => e.status === STATUS.Absent)
-                        ? 0.5
-                        : 1,
-                    bgcolor: (t) => (absentCount > 0 ? t.vars.palette.error.main : 'transparent'),
-                    color: (t) =>
-                      absentCount > 0
-                        ? t.vars.palette.error.contrastText
-                        : t.vars.palette.text.secondary,
-                    '&:hover': { bgcolor: (t) => varAlpha(t.vars.palette.error.mainChannel, 0.12) },
-                  }}
-                >
-                  <Iconify icon="eva:close-fill" width={18} />
-                </Box>
-              </CustomTooltip>
-            </Box>
-          </Stack>
-        ),
-        align: 'left',
-        minWidth: '230px',
-        isSort: false,
-        isFilter: false,
-        render(value, row) {
-          return (
-            <Box
-              sx={{
-                display: 'flex',
-                width: '220px',
-                height: '32px',
-                bgcolor: (t) => t.vars.palette.background.neutral,
-                borderRadius: '6px',
-                p: 0.25,
-                gap: 0.25,
-              }}
-            >
-              {/* Present */}
-              <CustomTooltip title="Present" arrow placement="top">
-                <Box
-                  onClick={() => setRowStatus(row.id, STATUS.Present)}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor: isLocked ? 'not-allowed' : 'pointer',
-                    opacity: isLocked ? 0.5 : 1,
-                    bgcolor:
-                      value === STATUS.Present ? (t) => t.vars.palette.success.main : 'transparent',
-                    color:
-                      value === STATUS.Present
-                        ? (t) => t.vars.palette.success.contrastText
-                        : (t) => t.vars.palette.text.secondary,
-                    '&:hover': {
-                      bgcolor:
-                        value === STATUS.Present
-                          ? (t) => t.vars.palette.success.dark
-                          : (t) => varAlpha(t.vars.palette.success.mainChannel, 0.08),
-                    },
-                  }}
-                >
-                  <Iconify icon="eva:checkmark-fill" width={18} />
-                </Box>
-              </CustomTooltip>
-
-              {/* Half Day */}
-              <CustomTooltip title="Half Day" arrow placement="top">
-                <Box
-                  onClick={() => setRowStatus(row.id, STATUS.HalfDay)}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor: isLocked ? 'not-allowed' : 'pointer',
-                    opacity: isLocked ? 0.5 : 1,
-                    bgcolor:
-                      value === STATUS.HalfDay ? (t) => t.vars.palette.info.main : 'transparent',
-                    color:
-                      value === STATUS.HalfDay
-                        ? (t) => t.vars.palette.info.contrastText
-                        : (t) => t.vars.palette.text.secondary,
-                    '&:hover': {
-                      bgcolor:
-                        value === STATUS.HalfDay
-                          ? (t) => t.vars.palette.info.dark
-                          : (t) => varAlpha(t.vars.palette.info.mainChannel, 0.08),
-                    },
-                  }}
-                >
-                  <Iconify icon="mdi:fraction-one-half" width={18} />
-                </Box>
-              </CustomTooltip>
-
-              {/* Pending */}
-              <CustomTooltip title="Pending" arrow placement="top">
-                <Box
-                  onClick={() => setRowStatus(row.id, STATUS.Pending)}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor: isLocked ? 'not-allowed' : 'pointer',
-                    opacity: isLocked ? 0.5 : 1,
-                    bgcolor:
-                      value === STATUS.Pending ? (t) => t.vars.palette.warning.main : 'transparent',
-                    color:
-                      value === STATUS.Pending
-                        ? (t) => t.vars.palette.warning.contrastText
-                        : (t) => t.vars.palette.text.secondary,
-                    '&:hover': {
-                      bgcolor:
-                        value === STATUS.Pending
-                          ? (t) => t.vars.palette.warning.dark
-                          : (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.08),
-                    },
-                  }}
-                >
-                  <Iconify icon="eva:minus-fill" width={18} />
-                </Box>
-              </CustomTooltip>
-
-              {/* Absent */}
-              <CustomTooltip title="Absent" arrow placement="top">
-                <Box
-                  onClick={() => setRowStatus(row.id, STATUS.Absent)}
-                  sx={{
-                    ...segmentBtnBase,
-                    cursor: isLocked ? 'not-allowed' : 'pointer',
-                    opacity: isLocked ? 0.5 : 1,
-                    bgcolor:
-                      value === STATUS.Absent ? (t) => t.vars.palette.error.main : 'transparent',
-                    color:
-                      value === STATUS.Absent
-                        ? (t) => t.vars.palette.error.contrastText
-                        : (t) => t.vars.palette.text.secondary,
-                    '&:hover': {
-                      bgcolor:
-                        value === STATUS.Absent
-                          ? (t) => t.vars.palette.error.dark
-                          : (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
-                    },
-                  }}
-                >
-                  <Iconify icon="eva:close-fill" width={18} />
-                </Box>
-              </CustomTooltip>
-            </Box>
-          );
-        },
-      },
+                    {/* Absent */}
+                    <CustomTooltip title="Absent" arrow placement="top">
+                      <Box
+                        onClick={() => setRowStatus(row.id, STATUS.Absent)}
+                        sx={{
+                          ...segmentBtnBase,
+                          cursor: isLocked ? 'not-allowed' : 'pointer',
+                          opacity: isLocked ? 0.5 : 1,
+                          bgcolor:
+                            value === STATUS.Absent
+                              ? (t) => t.vars.palette.error.main
+                              : 'transparent',
+                          color:
+                            value === STATUS.Absent
+                              ? (t) => t.vars.palette.error.contrastText
+                              : (t) => t.vars.palette.text.secondary,
+                          '&:hover': {
+                            bgcolor:
+                              value === STATUS.Absent
+                                ? (t) => t.vars.palette.error.dark
+                                : (t) => varAlpha(t.vars.palette.error.mainChannel, 0.08),
+                          },
+                        }}
+                      >
+                        <Iconify icon="eva:close-fill" width={18} />
+                      </Box>
+                    </CustomTooltip>
+                  </Box>
+                );
+              },
+            },
+          ]),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -1046,9 +1079,7 @@ const ManualAttendanceScreen = () => {
             loading={isUpdating}
             startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
             onClick={handleSave}
-            disabled={
-              employeeData.length === 0 || employeeData.every((e) => e.status === STATUS.Pending)
-            }
+            disabled={employeeData.length === 0 || !isDirty}
             sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
           >
             Save

@@ -65,11 +65,33 @@ const HrEmployee = () => {
   const dispatch = useDispatch();
   const statusDialog = useBoolean();
 
-  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({ employee: '' });
+  const {
+    getAllParams,
+    setParam: setSearchParams,
+    deleteParam,
+  } = useCustomSearchParams({ employee: '' });
   const searchParams = getAllParams();
 
-  const [open, setOpen] = useState(false);
+  const open = searchParams?.mode === 'form';
+  const setOpen = useCallback(
+    (value: boolean) => {
+      if (value) {
+        setSearchParams('mode', 'form');
+      } else {
+        deleteParam('mode');
+      }
+    },
+    [setSearchParams, deleteParam]
+  );
   const [editData, setEditData] = useState<any>(null);
+
+  // Clear editData only after the form panel is gone, so the heading
+  // never flips from "Update" to "Add" during the close transition.
+  useEffect(() => {
+    if (!open) {
+      setEditData(null);
+    }
+  }, [open]);
 
   const [employeeParams, setEmployeeParams] = useState({
     page: 1,
@@ -137,13 +159,12 @@ const HrEmployee = () => {
       if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
         dispatch(setIsChanges(false));
         setOpen(false);
-        setEditData(null);
       } else if (!isChanges) {
         setOpen(false);
-        setEditData(null);
       }
     },
-    [dispatch, isChanges]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dispatch, isChanges, deleteParam]
   );
   const handleCloseStatus = (): void => {
     statusDialog.onFalse();
@@ -321,7 +342,7 @@ const HrEmployee = () => {
         },
       },
     ],
-    [actions, setSearchParams]
+    [actions, setOpen, setSearchParams]
   );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -473,7 +494,11 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           name: Yup.string(),
           componentType: Yup.string(),
           // eslint-disable-next-line func-names
-          amount: Yup.string().required('Amount is required'),
+          amount: Yup.string().when('calculationType', {
+            is: (val: any) => val === 'PERCENTAGE' || val === 1,
+            then: (schema) => schema.nullable(),
+            otherwise: (schema) => schema.required('Amount is required'),
+          }),
           applicableMonth: Yup.mixed().when('isTemp', {
             is: true,
             then: (schema) => schema.required('Applicable month is required'),
@@ -486,7 +511,11 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           name: Yup.string(),
           componentType: Yup.string(),
           // eslint-disable-next-line func-names
-          amount: Yup.string().required('Amount is required'),
+          amount: Yup.string().when('calculationType', {
+            is: (val: any) => val === 'PERCENTAGE' || val === 1,
+            then: (schema) => schema.nullable(),
+            otherwise: (schema) => schema.required('Amount is required'),
+          }),
           applicableMonth: Yup.mixed().when('isTemp', {
             is: true,
             then: (schema) => schema.required('Applicable month is required'),

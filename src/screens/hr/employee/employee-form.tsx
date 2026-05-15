@@ -300,6 +300,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [activeStep, setActiveStep] = useState(0);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const formikRef = React.useRef<any>(null);
   const resetCurrentStepRef = React.useRef<(() => void) | null>(null);
 
@@ -731,7 +732,12 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
           formik.resetForm({ values: { ...formik.values, employeeId: resolvedEmployeeId } });
-          resetCurrentStepRef.current?.();
+          // Don't reset the initialized flag on the last step — we're about to close
+          // the form and clearing it would cause the useEffect to re-fire with cached
+          // API data, producing a double-render / double-save appearance.
+          if (!isLastStep) {
+            resetCurrentStepRef.current?.();
+          }
         }
 
         if (!isSaveButton && !isLastStep) {
@@ -740,10 +746,12 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       } catch (error) {
         console.error(error, '============================');
       }
-      setIsLoading(false);
       if (isLastStep) {
+        setIsSubmitted(true);
         handleClose(null, true);
+        return;
       }
+      setIsLoading(false);
     },
     [
       activeStep,
@@ -803,12 +811,15 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           return (
             <>
               <SyncReduxDirty formik={formik} />
-              <FormSlider
-                step={step}
-                formik={formik}
-                editData={editData}
-                resetCurrentStepRef={resetCurrentStepRef}
-              />
+              {!isSubmitted && (
+                <FormSlider
+                  step={step}
+                  formik={formik}
+                  editData={editData}
+                  resetCurrentStepRef={resetCurrentStepRef}
+                  isSubmitted={isSubmitted}
+                />
+              )}
             </>
           );
         }}
@@ -856,7 +867,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
 export default EmployeeFrom;
 
-const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
+const FormSlider = ({ step, formik, editData, resetCurrentStepRef, isSubmitted }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
   const initialAccessControlUserId = getEmployeeUserId(formik.values, editData);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -933,7 +944,11 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
       },
     });
 
-  const { data: accessControl, isLoading: accessControlLoading } = useQueryAndMutation({
+  const {
+    data: accessControl,
+    isLoading: accessControlLoading,
+    isFetching: accessControlFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
     params: { userId: accessControlUserId, academicYearId: currentYear?.id },
@@ -942,7 +957,11 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
 
   // Full boards tree for the current academic year — needed to expand the
   // BE access-control response when it compresses branches via `hasFull*Access`.
-  const { data: boardsData, isLoading: boardsLoading } = useQueryAndMutation({
+  const {
+    data: boardsData,
+    isLoading: boardsLoading,
+    isFetching: boardsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
     options: { skip: step !== 7 },
@@ -1109,6 +1128,8 @@ const FormSlider = ({ step, formik, editData, resetCurrentStepRef }: any) => {
                                   formik,
                                   field,
                                   isMainForm: true,
+                                  isLoading:
+                                    step === 7 && (accessControlFetching || boardsFetching),
                                 })
                               ) : field.type === 'date' ? (
                                 <DatePicker

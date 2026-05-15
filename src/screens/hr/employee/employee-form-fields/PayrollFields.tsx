@@ -23,6 +23,8 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const isAddingTemp = useBoolean(false);
 
   const handleAdd = (selectedComponents: any[]) => {
+    // Preserve existing temp components so they are not lost when adding from dropdown
+    const tempComponents = components.filter((c: any) => !!c?.isTemp);
     const normalized = selectedComponents.map((c: any) => {
       const cComponentId = c._id || c.componentId || c.id;
       const existing = components.find((ex: any) => (ex.componentId || ex.id) === cComponentId);
@@ -34,7 +36,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         applicableMonth: existing?.applicableMonth ?? null,
       };
     });
-    formik.setFieldValue(name, normalized);
+    formik.setFieldValue(name, [...tempComponents, ...normalized]);
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
     }
@@ -57,7 +59,9 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     _raw: c,
     name: c?.earningComponentName || c?.deductionComponentName || c?.name || '-',
     amount: c?.amount ?? 0,
+    percentage: c?.percentage ?? null,
     isFixed: isSalaryComponentFixed(c),
+    isPercentage: isPercentageSalaryComponent(c),
     isTemp: !!c?.isTemp,
     applicableMonth: c?.applicableMonth,
   }));
@@ -128,37 +132,53 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
               label: 'Component',
               render(value: any, row: any) {
                 return (
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      sx={{
-                        borderLeft: (theme) =>
-                          `3px solid ${
-                            row.isTemp
-                              ? theme.palette.warning.main
-                              : type === 'earning'
-                                ? theme.palette.success.main
-                                : theme.palette.error.main
-                          }`,
-                        pl: 1,
-                      }}
-                    >
-                      {value}
-                    </Typography>
-                    {row.isTemp && (
+                  <Box display="flex" flexDirection="column" gap={0.5}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{
+                          borderLeft: (theme) =>
+                            `3px solid ${
+                              row.isTemp
+                                ? theme.palette.warning.main
+                                : type === 'earning'
+                                  ? theme.palette.success.main
+                                  : theme.palette.error.main
+                            }`,
+                          pl: 1,
+                        }}
+                      >
+                        {value}
+                      </Typography>
+                      {row.isTemp && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            bgcolor: 'warning.soft',
+                            color: 'warning.dark',
+                            px: 0.75,
+                            py: 0.25,
+                            borderRadius: 1,
+                            fontSize: '10px',
+                          }}
+                        >
+                          Temp
+                        </Typography>
+                      )}
+                    </Box>
+                    {row.applicableMonth && (
                       <Typography
                         variant="caption"
                         sx={{
-                          bgcolor: 'warning.soft',
-                          color: 'warning.dark',
-                          px: 0.75,
-                          py: 0.25,
+                          bgcolor: 'background.neutral',
+                          px: 1,
+                          py: 0.5,
                           borderRadius: 1,
-                          fontSize: '10px',
+                          color: 'text.secondary',
                         }}
                       >
-                        Temp
+                        {dayjs(row.applicableMonth).format('MMM-YYYY')}
                       </Typography>
                     )}
                   </Box>
@@ -167,8 +187,15 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
             },
             {
               id: 'amount',
-              label: 'Amount',
+              label: 'Amount / %',
               render(value: any, row: any) {
+                if (row.isPercentage) {
+                  return (
+                    <Typography variant="body2" fontWeight={500}>
+                      {row.percentage != null ? `${row.percentage}%` : '-'}
+                    </Typography>
+                  );
+                }
                 if (row.isFixed) {
                   return (
                     <Typography variant="body2" fontWeight={500}>
@@ -195,27 +222,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                     }}
                     sx={{ width: 110 }}
                   />
-                );
-              },
-            },
-            {
-              id: 'applicableMonth',
-              label: 'Month',
-              render(value: any) {
-                if (!value || !dayjs(value).isValid()) return '-';
-                return (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      bgcolor: 'background.neutral',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      color: 'text.secondary',
-                    }}
-                  >
-                    {dayjs(value).format('MMM-YYYY')}
-                  </Typography>
                 );
               },
             },
