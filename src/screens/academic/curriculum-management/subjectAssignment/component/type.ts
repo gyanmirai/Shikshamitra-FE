@@ -134,6 +134,8 @@ export interface ISubjectCardProps {
   // isPublishing: boolean;
   // teacherOptions: TeacherProfile[];
   onSubjectChange: (subjectId: string, field: string, value: any) => void;
+  activeSubjectId: string | null;
+  onAccordionToggle: (subjectId: string) => void;
 }
 
 export type IDocType =

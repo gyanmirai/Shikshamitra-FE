@@ -104,12 +104,12 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           };
           await updateChapter(updatePayload).unwrap();
           shikshaMitraToast.success({
-            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in Class ${className}`,
+            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in ${className}`,
           });
         } else {
           await addChapter(payload).unwrap();
           shikshaMitraToast.success({
-            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been successfully added to ${subject} for Class ${className}`,
+            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been added successfully to ${subject} in ${className}`,
           });
         }
         onClose(null, true);

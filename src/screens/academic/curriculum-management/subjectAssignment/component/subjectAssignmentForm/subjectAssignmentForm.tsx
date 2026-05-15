@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -33,6 +34,13 @@ const SubjectAssignmentForm = ({
 }: ISubjectAssignmentFormProps) => {
   const isPublished =
     SubjectAssignmentStatus[data?.status as SubjectAssignmentStatus] === 'Published';
+
+  // Single-expand accordion: tracks which subject (by subjectNo) is currently open.
+  const [activeSubjectId, setActiveSubjectId] = useState<string | null>(null);
+  const handleAccordionToggle = useCallback(
+    (subjectId: string) => setActiveSubjectId((prev) => (prev === subjectId ? null : subjectId)),
+    []
+  );
 
   const {
     formik,
@@ -127,6 +135,21 @@ const SubjectAssignmentForm = ({
                       )
                     }
                     ListboxProps={{ style: { maxHeight: 200, overflow: 'auto' } }}
+                    renderTags={(value, getTagProps) =>
+                      (value as Array<{ label?: string }>).map((option, index) => {
+                        const { key, ...tagProps } = getTagProps({ index });
+                        return (
+                          <Chip
+                            key={key}
+                            {...tagProps}
+                            label={option.label}
+                            size="small"
+                            variant="soft"
+                            sx={{ ml: 0.5 }}
+                          />
+                        );
+                      })
+                    }
                     renderOption={(props, option) => {
                       const { key, ...restProps } = props;
                       const typedOption = option as { label?: string; type?: number };
@@ -193,6 +216,8 @@ const SubjectAssignmentForm = ({
                       isPublished={isPublished}
                       onSubjectChange={handleSubjectFieldChange}
                       onFileUpload={handleFileUpload}
+                      activeSubjectId={activeSubjectId}
+                      onAccordionToggle={handleAccordionToggle}
                     />
                   ))}
                 </Grid>

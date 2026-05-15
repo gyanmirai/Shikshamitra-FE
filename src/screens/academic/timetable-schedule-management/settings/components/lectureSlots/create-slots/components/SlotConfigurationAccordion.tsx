@@ -1,7 +1,7 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { alpha, lighten } from '@mui/material/styles';
@@ -11,13 +11,11 @@ import {
   Chip,
   Grid,
   Stack,
-  Switch,
   Tooltip,
   Divider,
   Accordion,
   Typography,
   IconButton,
-  FormControlLabel,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -60,9 +58,6 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
   onRemove,
   onTotalSlotsChange,
 }) => {
-  // UI-only: Dense mode indicator (back-to-back slots without gaps)
-  // Cascade logic already runs natively; this toggle reflects that behavior visually.
-  const [isDense, setIsDense] = useState(true);
   const configErrors = formik.errors.slotConfigurations;
   const configErr =
     Array.isArray(configErrors) &&
@@ -102,6 +97,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
       if (!slotErr || typeof slotErr !== 'object') return;
       if (slotErr.startTime) messages.push(`Slot ${idx + 1}: ${slotErr.startTime}`);
       if (slotErr.endTime) messages.push(`Slot ${idx + 1}: ${slotErr.endTime}`);
+      if (slotErr.slotType) messages.push(`Slot ${idx + 1}: ${slotErr.slotType}`);
     });
     return messages;
   }, [formik.submitCount, configErr]);
@@ -109,12 +105,13 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
   // Map of per-slot errors for SlotTimesTable
   const slotErrorsMap = useMemo(() => {
     if (!configErr || !Array.isArray(configErr.timeSlots)) return undefined;
-    const map: Record<number, { startTime?: string; endTime?: string }> = {};
+    const map: Record<number, { startTime?: string; endTime?: string; slotType?: string }> = {};
     configErr.timeSlots.forEach((slotErr: any, idx: number) => {
       if (!slotErr || typeof slotErr !== 'object') return;
       map[idx] = {
         startTime: typeof slotErr.startTime === 'string' ? slotErr.startTime : undefined,
         endTime: typeof slotErr.endTime === 'string' ? slotErr.endTime : undefined,
+        slotType: typeof slotErr.slotType === 'string' ? slotErr.slotType : undefined,
       };
     });
     return map;
@@ -277,17 +274,6 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
                   color="warning"
                 />
               )}
-
-              {isDense && (
-                <Chip
-                  size="small"
-                  variant="soft"
-                  icon={<Iconify icon="mdi:layers-triple-outline" width={14} />}
-                  label="Dense"
-                  color="secondary"
-                />
-              )}
-
               {hasError && (
                 <Chip
                   size="small"
@@ -359,62 +345,6 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
                 onChange={onTotalSlotsChange}
               />
             </Grid>
-
-            {/* Dense Mode toggle — UI-only; cascade behavior runs natively */}
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Tooltip
-                title="When enabled, each slot starts immediately where the previous one ends (no gaps). This is the default scheduling behavior."
-                arrow
-                placement="top"
-              >
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    px: 1.5,
-                    py: 0.75,
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: isDense
-                      ? (theme) => alpha(theme.palette.secondary.main, 0.35)
-                      : 'divider',
-                    bgcolor: (theme) =>
-                      isDense
-                        ? alpha(
-                            theme.palette.secondary.main,
-                            theme.palette.mode === 'dark' ? 0.12 : 0.06
-                          )
-                        : 'transparent',
-                    transition: 'all 150ms ease',
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        size="small"
-                        checked={isDense}
-                        onChange={(e) => !disabled && setIsDense(e.target.checked)}
-                        color="secondary"
-                        inputProps={{ 'aria-label': 'Dense mode toggle' }}
-                      />
-                    }
-                    label={
-                      <Box>
-                        <Typography variant="body2" fontWeight={600} lineHeight={1.2}>
-                          Dense Mode
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" lineHeight={1.3}>
-                          Back-to-back slots without gaps
-                        </Typography>
-                      </Box>
-                    }
-                    sx={{ m: 0, gap: 1 }}
-                  />
-                </Box>
-              </Tooltip>
-            </Grid>
-
             {config.timeSlots && config.timeSlots.length > 0 && (
               <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 1.5 }} />

@@ -50,24 +50,6 @@ const GeneralInfoSection: React.FC<IGeneralInfoSectionProps> = ({
           />
         </ShakingTextField>
       </Grid>
-
-      {/* School Hours — system-derived, read-only */}
-      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-        <ShakingTextField error={Boolean(previousClassError)}>
-          <CustomSelect
-            options={classes}
-            value={previousClassSlots}
-            onChange={(val) => onChangePreviousClassSlots(val as string)}
-            label="Slots From Other Class"
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ fullWidth: true }}
-            error={Boolean(previousClassError)}
-            helperText={previousClassError || 'Optional: inherit slots from another class'}
-            disabled={lockedByEdit}
-          />
-        </ShakingTextField>
-      </Grid>
     </Grid>
   );
 };

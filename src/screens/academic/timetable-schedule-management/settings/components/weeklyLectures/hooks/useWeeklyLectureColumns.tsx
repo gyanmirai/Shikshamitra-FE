@@ -3,6 +3,7 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
+import { Box, Chip } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import type { ISubjectFormValues } from '../type';
@@ -40,6 +41,22 @@ export function useWeeklyLectureColumns({
         isSort: false,
         align: 'left',
         isFilter: false,
+        render: (_value, row) => {
+          const subjects = (row as ISubjectFormValues).subjects ?? [];
+          return (
+            <Box display="flex" flexWrap="wrap" gap={0.75} alignItems="center">
+              {subjects.map((subject, idx) => (
+                <Chip
+                  key={subject.id ?? idx}
+                  label={`${subject.electiveGroupName || subject.subjectName} (${subject.weeklyLectures})`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontWeight: 500 }}
+                />
+              ))}
+            </Box>
+          );
+        },
       },
       {
         id: 'action',

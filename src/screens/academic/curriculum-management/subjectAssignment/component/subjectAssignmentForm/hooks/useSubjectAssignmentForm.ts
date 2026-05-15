@@ -5,7 +5,7 @@ import type { Medium, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useMemo, useCallback } from 'react';
+import { useRef, useMemo, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
@@ -134,6 +134,9 @@ export function useSubjectAssignmentForm({
     options: { skip: !classId },
   });
 
+  const latestSubjectsRef = useRef<ISubjectAssignmentFormValues['subjects']>([]);
+  latestSubjectsRef.current = formik.values.subjects || [];
+
   console.log(subjectOptionsData, '[][][][');
 
   /**
@@ -209,65 +212,112 @@ export function useSubjectAssignmentForm({
       formik.setFieldValue('selectedSubjects', []);
       return;
     }
-    console.log('Selected subjects/groups changed:', newValue);
+
+    const currentSelected: any[] = formik.values.selectedSubjects || [];
+    const addedOption = newValue.find(
+      (opt: any) => !currentSelected.some((cur: any) => cur.value === opt.value)
+    );
+    if (addedOption) {
+      const coreSubjectIds = new Set<string>(
+        currentSelected.filter((opt: any) => opt.type === 0).map((opt: any) => opt.value)
+      );
+      const electiveSubjectIds = new Set<string>(
+        currentSelected
+          .filter((opt: any) => opt.type === 1)
+          .flatMap((opt: any) => (opt.subjects || []).map((s: any) => s.id))
+      );
+
+      if (addedOption.type === 0) {
+        if (electiveSubjectIds.has(addedOption.value)) {
+          shikshaMitraToast.error({
+            message: `"${addedOption.label}" is already selected in Elective Subjects. Please remove it from the Elective selection before adding it as a Core Subject.`,
+          });
+          return;
+        }
+      } else if (addedOption.type === 1) {
+        const conflicting = (addedOption.subjects || []).filter((s: any) =>
+          coreSubjectIds.has(s.id)
+        );
+        if (conflicting.length > 0) {
+          const names = conflicting.map((s: any) => `"${s.name}"`).join(', ');
+          const plural = conflicting.length > 1;
+          shikshaMitraToast.error({
+            message: `${names} ${plural ? 'are' : 'is'} already selected as a Core Subject${plural ? 's' : ''}. Please remove ${plural ? 'them' : 'it'} before selecting in Elective Subjects.`,
+          });
+          return;
+        }
+      }
+    }
+
     formik.setFieldValue('selectedSubjects', newValue);
     formik.setFieldTouched('subjectName', false);
+    const existingSubjectsMap = new Map(latestSubjectsRef.current.map((s) => [s.subjectId, s]));
 
     const allSubjects: ISubjectAssignmentFormValues['subjects'] = [];
 
     newValue.forEach((option: any) => {
       if (option.type === 0) {
         allSubjects.push({
-          ...option,
-          subjectId: option.value,
-          subjectName: option.label,
           subjectCode: '',
           subjectType: 0,
-          primaryTeacher: '',
+          primaryTeacher: { id: '', name: '' },
           primaryTeacherId: option.primaryTeacherId || '',
           secondaryTeacher: [],
           secondaryTeacherIds: option.secondaryTeacherIds || [],
           description: '',
-          isSubjectOpen: true,
+          isSubjectOpen: false,
           learningGoal: '',
           prerequisites: '',
           subjectColor: option.color || '#4169E1',
           documents: [],
+          ...existingSubjectsMap.get(option.value),
+          subjectId: option.value,
+          subjectName: option.label,
           subjectNo: option.value,
         });
       } else if (option.type === 1) {
         const electives = (option.subjects || []).map((subject: any) => ({
-          ...subject,
-          subjectId: subject.id,
-          subjectName: subject.name,
           subjectCode: '',
           subjectType: 1,
           electiveGroupId: option.value,
-          primaryTeacher: '',
+          primaryTeacher: { id: '', name: '' },
+          primaryTeacherId: '',
           secondaryTeacher: [],
-          isSubjectOpen: true,
+          secondaryTeacherIds: [],
+          isSubjectOpen: false,
           description: '',
           learningGoal: '',
           prerequisites: '',
           subjectColor: subject.color || '#FFA726',
           documents: [],
+          // --- preserved user-entered values (override defaults) ---
+          ...existingSubjectsMap.get(subject.id),
+          // --- stable identifiers always sourced from option (highest priority) ---
+          subjectId: subject.id,
+          subjectName: subject.name,
           subjectNo: subject.id,
         }));
         allSubjects.push(...electives);
       }
     });
 
-    formik.setFieldValue('subjects', allSubjects);
+    const seenSubjectIds = new Set<string>();
+    const deduplicatedSubjects = allSubjects.filter((subject) => {
+      if (seenSubjectIds.has(subject.subjectId)) return false;
+      seenSubjectIds.add(subject.subjectId);
+      return true;
+    });
+
+    formik.setFieldValue('subjects', deduplicatedSubjects);
     const hasCore = newValue.some((v: any) => v.type === 0);
     formik.setFieldValue('subjectType', hasCore ? 0 : 1);
   };
 
   const handleSubjectFieldChange = (subjectId: string, field: string, value: unknown) => {
     if (!subjectId) return;
-    const updatedSubjects = formik.values.subjects?.map((subject) =>
-      subject.subjectNo === subjectId ? { ...subject, [field]: value } : subject
-    );
-    formik.setFieldValue('subjects', updatedSubjects);
+    const idx = latestSubjectsRef.current.findIndex((s) => s.subjectNo === subjectId);
+    if (idx === -1) return;
+    formik.setFieldValue(`subjects.${idx}.${field}`, value);
   };
 
   const handleFileUpload = async (files: (File | string)[], index: number | null) => {

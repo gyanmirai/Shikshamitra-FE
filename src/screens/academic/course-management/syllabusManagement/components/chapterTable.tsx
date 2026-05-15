@@ -148,7 +148,7 @@ const ChapterTable = ({
               },
             }}
           >
-            Add Chapter
+            Add Syllabus
           </Box>
         </>
       }
