@@ -35,71 +35,76 @@ export const useTableData = ({
    * Complex filtering logic that should only run when filters or row data change.
    */
   const applyFilter = useCallback(
-    (row: IData) =>
-      filters.every((filter) => {
-        const value = _.get(row, filter.column, '');
-        const valueAsNumber = !Number.isNaN(Number(value)) ? Number(value) : value; // fixed isNumber check
-        const filterValueAsNumber = !Number.isNaN(Number(filter.value))
-          ? Number(filter.value)
-          : filter.value;
-        const isDateType = filter.valueType === 'date';
-        const isFormattedNumber = filter.valueType === 'formattedNumber';
+    (row: IData) => {
+      const filtersByColumn = _.groupBy(filters, 'column');
 
-        if (isDateType) {
-          switch (filter.type) {
-            case 'equals':
-              return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
+      return Object.values(filtersByColumn).every((columnFilters) =>
+        columnFilters.some((filter) => {
+          const value = _.get(row, filter.column, '');
+          const valueAsNumber = !Number.isNaN(Number(value)) ? Number(value) : value; // fixed isNumber check
+          const filterValueAsNumber = !Number.isNaN(Number(filter.value))
+            ? Number(filter.value)
+            : filter.value;
+          const isDateType = filter.valueType === 'date';
+          const isFormattedNumber = filter.valueType === 'formattedNumber';
 
-            case 'after':
-              return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(
-                dayjs(filter.value as string, 'DD-MM-YYYY')
-              );
-            case 'before':
-              return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
-            default:
-              return false;
-          }
-        }
-        if (isFormattedNumber) {
-          const parsedValue = parseFormattedNumber(value);
-          const parsedFilterValue = parseFormattedNumber(filter.value as string);
+          if (isDateType) {
+            switch (filter.type) {
+              case 'equals':
+                return dayjs(value, 'DD-MM-YYYY').isSame(dayjs(filter.value, 'DD-MM-YYYY'));
 
-          switch (filter.type) {
-            case 'equals':
-              return parsedValue === parsedFilterValue;
-            case 'greaterThan':
-              return parsedValue > parsedFilterValue;
-            case 'lessThan':
-              return parsedValue < parsedFilterValue;
-            default:
-              return false;
+              case 'after':
+                return dayjs(value, 'DD-MM-YYYY').isSameOrAfter(
+                  dayjs(filter.value as string, 'DD-MM-YYYY')
+                );
+              case 'before':
+                return dayjs(value, 'DD-MM-YYYY').isSameOrBefore(dayjs(filter.value, 'DD-MM-YYYY'));
+              default:
+                return false;
+            }
           }
-        } else {
-          const safeValue = (value ?? '').toString().toLowerCase();
-          const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
-          switch (filter.type) {
-            case 'contains':
-              return safeValue.includes(safeFilterValue);
-            case 'equals':
-              return safeValue === safeFilterValue;
-            case 'startsWith':
-              return safeValue.startsWith(safeFilterValue);
-            case 'endsWith':
-              return safeValue.endsWith(safeFilterValue);
-            case 'greaterThan':
-              return valueAsNumber > filterValueAsNumber;
-            case 'lessThan':
-              return valueAsNumber < filterValueAsNumber;
-            case 'between':
-              return (
-                valueAsNumber >= (filter?.value as any)?.min &&
-                valueAsNumber <= (filter?.value as any)?.max
-              );
-            default:
-              return true;
+          if (isFormattedNumber) {
+            const parsedValue = parseFormattedNumber(value);
+            const parsedFilterValue = parseFormattedNumber(filter.value as string);
+
+            switch (filter.type) {
+              case 'equals':
+                return parsedValue === parsedFilterValue;
+              case 'greaterThan':
+                return parsedValue > parsedFilterValue;
+              case 'lessThan':
+                return parsedValue < parsedFilterValue;
+              default:
+                return false;
+            }
+          } else {
+            const safeValue = (value ?? '').toString().toLowerCase();
+            const safeFilterValue = (filter.value ?? '').toString().toLowerCase();
+            switch (filter.type) {
+              case 'contains':
+                return safeValue.includes(safeFilterValue);
+              case 'equals':
+                return safeValue === safeFilterValue;
+              case 'startsWith':
+                return safeValue.startsWith(safeFilterValue);
+              case 'endsWith':
+                return safeValue.endsWith(safeFilterValue);
+              case 'greaterThan':
+                return valueAsNumber > filterValueAsNumber;
+              case 'lessThan':
+                return valueAsNumber < filterValueAsNumber;
+              case 'between':
+                return (
+                  valueAsNumber >= (filter?.value as any)?.min &&
+                  valueAsNumber <= (filter?.value as any)?.max
+                );
+              default:
+                return true;
+            }
           }
-        }
-      }),
+        })
+      );
+    },
     [filters]
   );
 

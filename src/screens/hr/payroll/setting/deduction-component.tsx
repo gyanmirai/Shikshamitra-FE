@@ -15,11 +15,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -31,24 +29,29 @@ import {
   Grid,
   Alert,
   Button,
+  Dialog,
   MenuItem,
-  TextField,
   FormLabel,
+  TextField,
   Typography,
+  DialogTitle,
   FormControl,
   Autocomplete,
   ToggleButton,
   DialogActions,
+  DialogContent,
   InputAdornment,
+  DialogContentText,
   ToggleButtonGroup,
 } from '@mui/material';
 import {
-  employeePayrollApi,
   useGetEarningComponentsQuery,
   useGetDeductionComponentsQuery,
   useAddDeductionComponentMutation,
   useUpdateDeductionComponentMutation,
   useDeleteDeductionComponentMutation,
+  usePreviewDeductionComponentDeleteImpactQuery,
+  usePreviewDeductionComponentUpdateImpactMutation,
 } from 'src/redux/hr/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
@@ -82,6 +85,15 @@ const DeductionComponent = () => {
       type: 'mutation',
       currentQueryAndMutation: useDeleteDeductionComponentMutation,
     });
+  const {
+    data: deleteImpactPreview,
+    isFetching: deleteImpactPreviewLoading,
+    isError: deleteImpactPreviewError,
+    refetch: refetchDeleteImpactPreview,
+  } = usePreviewDeductionComponentDeleteImpactQuery(
+    { id: deleteInformation?.id || '', includeEmployees: true, maxResultCount: 5 },
+    { skip: !confirm.value || !deleteInformation?.id }
+  );
 
   const {
     data: getDeductionComponentsData,
@@ -115,8 +127,6 @@ const DeductionComponent = () => {
     }
   };
 
-  const { confirmWithUndo } = useConfirmWithUndo();
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -140,53 +150,103 @@ const DeductionComponent = () => {
           </Button>
         }
       />
-      <ConfirmDialog
+      <Dialog
         open={confirm.value}
-        onClose={confirm.onFalse}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete{' '}
-            <b>{deleteInformation?.deductionComponentName || deleteInformation?.deductionName}</b>{' '}
-            Deduction Component?
-          </>
-        }
-        action={
+        onClose={() => {
+          confirm.onFalse();
+          setDeleteInformation(null);
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete Deduction Component</DialogTitle>
+        <DialogContent>
+          {deleteImpactPreviewLoading ? (
+            <Alert severity="info">Loading payroll impact...</Alert>
+          ) : deleteImpactPreviewError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" color="inherit" onClick={() => refetchDeleteImpactPreview()}>
+                  Retry
+                </Button>
+              }
+            >
+              Unable to load payroll impact. Please retry before deleting this component.
+            </Alert>
+          ) : deleteImpactPreview?.previewHash ? (
+            <>
+              <DialogContentText sx={{ mb: 2 }}>
+                This component is linked to {deleteImpactPreview.linkedEmployeeCount} employee
+                payroll profiles. It will be removed from employee payroll profiles going forward.
+                Finalized salary slips will not change. Draft salary slips will update only after
+                regeneration.
+              </DialogContentText>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: 1.5,
+                }}
+              >
+                <Alert severity="info">
+                  Synced employees: {deleteImpactPreview?.syncedEmployeeCount ?? 0}
+                </Alert>
+                <Alert severity="warning">
+                  Manual overrides: {deleteImpactPreview?.manualOverrideEmployeeCount ?? 0}
+                </Alert>
+                <Alert severity="success">
+                  Draft slips: {deleteImpactPreview?.draftSlipCount ?? 0}
+                </Alert>
+                <Alert severity="error">
+                  Finalized slips: {deleteImpactPreview?.finalizedSlipCount ?? 0}
+                </Alert>
+              </Box>
+            </>
+          ) : (
+            <Alert severity="info">Payroll impact is not loaded yet.</Alert>
+          )}
+          {!!deleteImpactPreview?.previewHash && !!deleteImpactPreview?.syncedEmployees?.length && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Sample linked employees:{' '}
+              {deleteImpactPreview.syncedEmployees
+                .map((employee: any) => employee.employeeName)
+                .join(', ')}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              confirm.onFalse();
+              setDeleteInformation(null);
+            }}
+          >
+            Cancel
+          </Button>
           <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            loading={deleteDeductionComponentLoading}
+            loading={deleteDeductionComponentLoading || deleteImpactPreviewLoading}
+            disabled={!deleteImpactPreview?.previewHash || deleteImpactPreviewError}
             onClick={async () => {
-              confirmWithUndo({
-                item: deleteInformation,
-                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
-                  dispatchFn(
-                    employeePayrollApi.util.updateQueryData(
-                      'getDeductionComponents',
-                      { academicYearId: currentYear?.id },
-                      (draft: any) => {
-                        const index = draft.items?.findIndex(
-                          (b: any) => b.id === deleteInformation?.id
-                        );
-                        setDeleteIndex(index);
-                        if (index !== -1) {
-                          draft.items.splice(index, 1);
-                        }
-                      }
-                    )
-                  ),
-                onUndoRestore: (dispatchFn, index) => refetch(),
-                onCommit: () => deleteDeductionComponent(deleteInformation?.id || ''),
-              });
+              await deleteDeductionComponent({
+                id: deleteInformation?.id || '',
+                previewHash: deleteImpactPreview?.previewHash,
+              }).unwrap();
+              shikshaMitraToast.success({ message: 'Deduction Component deleted successfully' });
               confirm.onFalse();
+              setDeleteInformation(null);
               setEditData(null);
+              refetch();
             }}
           >
-            Yes
+            Delete
           </LoadingButton>
-        }
-      />
+        </DialogActions>
+      </Dialog>
       <CustomizableTable
         tableId="earning-component"
         isLoading={getDeductionComponentsLoading}
@@ -423,6 +483,12 @@ const DeductionComponentForm = ({
       type: 'mutation',
       currentQueryAndMutation: useUpdateDeductionComponentMutation,
     });
+  const [previewUpdateImpact, { isLoading: previewUpdateImpactLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePreviewDeductionComponentUpdateImpactMutation,
+  });
+  const [impactPreview, setImpactPreview] = useState<any>(null);
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
 
   const formik = useFormik({
     initialValues: {
@@ -471,23 +537,42 @@ const DeductionComponentForm = ({
         };
 
         if (editData) {
-          await updateDeductionComponent({
+          const preview = await previewUpdateImpact({
             id: editData.id,
             body: payload,
           }).unwrap();
-          shikshaMitraToast.success({ message: 'Deduction Component updated successfully' });
+          setPendingPayload(payload);
+          setImpactPreview(preview);
         } else {
           await addDeductionComponent({
             body: payload,
           }).unwrap();
           shikshaMitraToast.success({ message: 'Deduction Component added successfully' });
+          handleClose(null, true);
         }
-        handleClose(null, true);
       } catch (error) {
         console.error(error);
       }
     },
   });
+
+  const confirmUpdate = async (applyMode: 'SyncedOnly' | 'ForceApply') => {
+    if (!editData || !pendingPayload || !impactPreview) return;
+
+    await updateDeductionComponent({
+      id: editData.id,
+      body: {
+        ...pendingPayload,
+        applyMode,
+        effectiveMonth: impactPreview.effectiveMonth,
+        previewHash: impactPreview.previewHash,
+      },
+    }).unwrap();
+    setImpactPreview(null);
+    setPendingPayload(null);
+    shikshaMitraToast.success({ message: 'Deduction Component updated successfully' });
+    handleClose(null, true);
+  };
 
   const componentOptions = React.useMemo(
     () => [
@@ -510,414 +595,477 @@ const DeductionComponentForm = ({
   );
 
   return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <DialogScrollContent>
-        {/* Deduction Details */}
-        <SectionCard
-          title="Deduction Details"
-          headerContent={
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Deduction components define how amount is deducted from employee salary, such as PF or Tax."
-            >
-              <Iconify
-                icon="lucide:info"
-                sx={{ cursor: 'pointer' }}
-                fontSize={16}
-                color="info.main"
-              />
-            </CustomTooltip>
-          }
-        >
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <ShakingTextField
-              error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Deduction Name *"
-                name="deductionName"
-                value={formik.values.deductionName}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
-                  formik.setFieldValue('deductionName', value);
-                }}
-                error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
-                helperText={(formik.touched.deductionName && formik.errors.deductionName) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <ShakingTextField
-              error={formik.touched.deductionType && Boolean(formik.errors.deductionType)}
-            >
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label="Deduction Type *"
-                name="deductionType"
-                value={formik.values.deductionType}
-                onChange={(e) => {
-                  formik.handleChange(e);
-                  // Reset amount if switching to Variable
-                  if (e.target.value === 'Variable') {
-                    formik.setFieldValue('amount', '');
-                  }
-                }}
-                error={formik.touched.deductionType && Boolean(formik.errors.deductionType)}
-                helperText={(formik.touched.deductionType && formik.errors.deductionType) as string}
+    <>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <DialogScrollContent>
+          {/* Deduction Details */}
+          <SectionCard
+            title="Deduction Details"
+            headerContent={
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Deduction components define how amount is deducted from employee salary, such as PF or Tax."
               >
-                {deductionTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 12 }}>
-            <ShakingTextField
-              error={formik.touched.description && Boolean(formik.errors.description)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Description"
-                name="description"
-                multiline
-                rows={2}
-                value={formik.values.description}
-                onChange={formik.handleChange}
-              />
-            </ShakingTextField>
-          </Grid>
-        </SectionCard>
-
-        {/* Calculation Rules */}
-        <SectionCard
-          title="Calculation Rules"
-          headerContent={
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="Calculation rules define how the deduction is calculated, such as percentage of Basic Pay or a fixed amount."
-            >
-              <Iconify
-                icon="lucide:info"
-                sx={{ cursor: 'pointer' }}
-                fontSize={16}
-                color="info.main"
-              />
-            </CustomTooltip>
-          }
-        >
-          <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-            <ShakingTextField
-              error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
-            >
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label="Calculation Type *"
-                name="calculationType"
-                value={formik.values.calculationType}
-                onChange={(e) => {
-                  formik.setFieldValue('calculationType', e.target.value);
-                  formik.setFieldValue('amount', '');
-                }}
-                error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
-                helperText={
-                  (formik.touched.calculationType && formik.errors.calculationType) as string
-                }
-              >
-                {calculationTypes.map((type) => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </ShakingTextField>
-          </Grid>
-
-          {formik.values.calculationType === 'Percentage' && (
-            <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                <Iconify
+                  icon="lucide:info"
+                  sx={{ cursor: 'pointer' }}
+                  fontSize={16}
+                  color="info.main"
+                />
+              </CustomTooltip>
+            }
+          >
+            <Grid size={{ xs: 12, sm: 6 }}>
               <ShakingTextField
-                error={
-                  formik.touched.selectedDeductionComponent &&
-                  Boolean(formik.errors.selectedDeductionComponent)
-                }
+                error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
               >
-                <Autocomplete
-                  options={componentOptions}
-                  groupBy={(option) => option.group}
-                  getOptionLabel={(option) => option.componentName}
-                  filterOptions={(options) => options}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
-                  value={
-                    componentOptions.find(
-                      (opt) => opt.id === formik.values.selectedDeductionComponent
-                    ) || null
-                  }
-                  onChange={(_, value) => {
-                    formik.setFieldValue('selectedDeductionComponent', value?.id || null);
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Deduction Name *"
+                  name="deductionName"
+                  value={formik.values.deductionName}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^a-zA-Z0-9-_\s]/g, '');
+                    formik.setFieldValue('deductionName', value);
                   }}
-                  renderGroup={(params) => (
-                    <Box key={params.key}>
-                      {/* 🔹 Group Header */}
-                      <Box
-                        sx={{
-                          px: 2,
-                          pt: 1.2,
-                          pb: 0.5,
-                          fontWeight: 600,
-                          fontSize: '14px',
-                          color: 'text.primary',
-                        }}
-                      >
-                        {params.group}
-                      </Box>
-
-                      {/* 🔹 Group Items */}
-                      <Box sx={{ pl: 2 }}>{params.children}</Box>
-                    </Box>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Select Deduction Component *"
-                      size="small"
-                      error={
-                        formik.touched.selectedDeductionComponent &&
-                        Boolean(formik.errors.selectedDeductionComponent)
-                      }
-                      helperText={
-                        (formik.touched.selectedDeductionComponent &&
-                          formik.errors.selectedDeductionComponent) as string
-                      }
-                    />
-                  )}
+                  error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
+                  helperText={
+                    (formik.touched.deductionName && formik.errors.deductionName) as string
+                  }
                 />
               </ShakingTextField>
             </Grid>
-          )}
 
-          {formik.values.deductionType === 'Fixed' &&
-            formik.values.calculationType === 'Percentage' && (
-              <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-                <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    label="Percentage"
-                    required={formik.values.deductionType === 'Fixed'}
-                    name="amount"
-                    type="number"
-                    value={formik.values.amount}
-                    onChange={(e) => {
-                      const { value } = e.target;
-
-                      // Allow empty value
-                      if (value === '') {
-                        formik.setFieldValue('amount', value);
-                        return;
-                      }
-
-                      const numericValue = Number(value);
-
-                      // Restrict between 0 and 100
-                      if (numericValue >= 0 && numericValue <= 100) {
-                        formik.setFieldValue('amount', numericValue);
-                      }
-                    }}
-                    inputProps={{
-                      min: 0,
-                      max: 100,
-                    }}
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                    }}
-                    error={formik.touched.amount && Boolean(formik.errors.amount)}
-                    helperText={(formik.touched.amount && formik.errors.amount) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-            )}
-          {formik.values.deductionType === 'Fixed' &&
-            formik.values.calculationType === 'Amount' && (
-              <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-                <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
-                  <NumericFormatCustom
-                    size="small"
-                    fullWidth
-                    label="Amount *"
-                    name="amount"
-                    value={formik.values.amount || ''}
-                    onChange={(e) => {
-                      let val = e.target.value;
-                      // Remove currency symbol and disallowed characters, but allow dots
-                      val = val.replace(/[^0-9.]/g, '');
-
-                      // Prevent multiple dots
-                      const parts = val.split('.');
-                      if (parts.length > 2) {
-                        val = `${parts[0]}.${parts.slice(1).join('')}`;
-                      }
-
-                      // Convert to number and ensure it's positive
-                      if (/^\d*\.?\d*$/.test(val)) {
-                        formik.setFieldValue('amount', val); // keep it as string while typing
-                      }
-                    }}
-                    sx={{
-                      width: '100%',
-                      padding: '0',
-                      borderRadius: 1,
-                    }}
-                    error={!!(formik.touched.amount && formik.errors.amount)}
-                    helperText={(formik.touched.amount && formik.errors.amount) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-            )}
-
-          <Grid size={{ xs: 12 }} display="flex" alignItems="center">
-            <FormControl fullWidth>
-              <FormLabel sx={{ mb: 0.5, fontSize: 13 }}>Payslip Visibility *</FormLabel>
-
-              <Box display="flex" gap={1}>
-                <ToggleButtonGroup
-                  exclusive
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField
+                error={formik.touched.deductionType && Boolean(formik.errors.deductionType)}
+              >
+                <TextField
                   size="small"
-                  value={formik.values.showOnPayslip ? 'VISIBLE' : 'HIDDEN'}
-                  onChange={(_, value) => {
-                    if (value !== null) {
-                      formik.setFieldValue('showOnPayslip', value === 'VISIBLE');
+                  select
+                  fullWidth
+                  label="Deduction Type *"
+                  name="deductionType"
+                  value={formik.values.deductionType}
+                  onChange={(e) => {
+                    formik.handleChange(e);
+                    // Reset amount if switching to Variable
+                    if (e.target.value === 'Variable') {
+                      formik.setFieldValue('amount', '');
                     }
                   }}
-                  sx={{ p: 0 }}
+                  error={formik.touched.deductionType && Boolean(formik.errors.deductionType)}
+                  helperText={
+                    (formik.touched.deductionType && formik.errors.deductionType) as string
+                  }
                 >
-                  <ToggleButton
-                    value="VISIBLE"
-                    sx={{
-                      textTransform: 'none',
-                      px: 1.5,
-                      py: 0.5,
-                      fontSize: 12,
-                      gap: 0.5,
-                      '&.Mui-selected': {
-                        backgroundColor: 'success.light',
-                        color: 'success.dark',
-                      },
-                    }}
-                  >
-                    <Iconify icon="lucide:eye" fontSize={14} />
-                    Visible
-                  </ToggleButton>
+                  {deductionTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ShakingTextField>
+            </Grid>
 
-                  <ToggleButton
-                    value="HIDDEN"
-                    sx={{
-                      textTransform: 'none',
-                      px: 1.5,
-                      py: 0.5,
-                      fontSize: 12,
-                      gap: 0.5,
-                      '&.Mui-selected': {
-                        backgroundColor: 'warning.light',
-                        color: 'warning.dark',
-                      },
+            <Grid size={{ xs: 12, sm: 12 }}>
+              <ShakingTextField
+                error={formik.touched.description && Boolean(formik.errors.description)}
+              >
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Description"
+                  name="description"
+                  multiline
+                  rows={2}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                />
+              </ShakingTextField>
+            </Grid>
+          </SectionCard>
+
+          {/* Calculation Rules */}
+          <SectionCard
+            title="Calculation Rules"
+            headerContent={
+              <CustomTooltip
+                arrow
+                placement="right"
+                title="Calculation rules define how the deduction is calculated, such as percentage of Basic Pay or a fixed amount."
+              >
+                <Iconify
+                  icon="lucide:info"
+                  sx={{ cursor: 'pointer' }}
+                  fontSize={16}
+                  color="info.main"
+                />
+              </CustomTooltip>
+            }
+          >
+            <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+              <ShakingTextField
+                error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
+              >
+                <TextField
+                  size="small"
+                  select
+                  fullWidth
+                  label="Calculation Type *"
+                  name="calculationType"
+                  value={formik.values.calculationType}
+                  onChange={(e) => {
+                    formik.setFieldValue('calculationType', e.target.value);
+                    formik.setFieldValue('amount', '');
+                  }}
+                  error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
+                  helperText={
+                    (formik.touched.calculationType && formik.errors.calculationType) as string
+                  }
+                >
+                  {calculationTypes.map((type) => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ShakingTextField>
+            </Grid>
+
+            {formik.values.calculationType === 'Percentage' && (
+              <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                <ShakingTextField
+                  error={
+                    formik.touched.selectedDeductionComponent &&
+                    Boolean(formik.errors.selectedDeductionComponent)
+                  }
+                >
+                  <Autocomplete
+                    options={componentOptions}
+                    groupBy={(option) => option.group}
+                    getOptionLabel={(option) => option.componentName}
+                    filterOptions={(options) => options}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    value={
+                      componentOptions.find(
+                        (opt) => opt.id === formik.values.selectedDeductionComponent
+                      ) || null
+                    }
+                    onChange={(_, value) => {
+                      formik.setFieldValue('selectedDeductionComponent', value?.id || null);
                     }}
+                    renderGroup={(params) => (
+                      <Box key={params.key}>
+                        {/* 🔹 Group Header */}
+                        <Box
+                          sx={{
+                            px: 2,
+                            pt: 1.2,
+                            pb: 0.5,
+                            fontWeight: 600,
+                            fontSize: '14px',
+                            color: 'text.primary',
+                          }}
+                        >
+                          {params.group}
+                        </Box>
+
+                        {/* 🔹 Group Items */}
+                        <Box sx={{ pl: 2 }}>{params.children}</Box>
+                      </Box>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Select Deduction Component *"
+                        size="small"
+                        error={
+                          formik.touched.selectedDeductionComponent &&
+                          Boolean(formik.errors.selectedDeductionComponent)
+                        }
+                        helperText={
+                          (formik.touched.selectedDeductionComponent &&
+                            formik.errors.selectedDeductionComponent) as string
+                        }
+                      />
+                    )}
+                  />
+                </ShakingTextField>
+              </Grid>
+            )}
+
+            {formik.values.deductionType === 'Fixed' &&
+              formik.values.calculationType === 'Percentage' && (
+                <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                  <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="Percentage"
+                      required={formik.values.deductionType === 'Fixed'}
+                      name="amount"
+                      type="number"
+                      value={formik.values.amount}
+                      onChange={(e) => {
+                        const { value } = e.target;
+
+                        // Allow empty value
+                        if (value === '') {
+                          formik.setFieldValue('amount', value);
+                          return;
+                        }
+
+                        const numericValue = Number(value);
+
+                        // Restrict between 0 and 100
+                        if (numericValue >= 0 && numericValue <= 100) {
+                          formik.setFieldValue('amount', numericValue);
+                        }
+                      }}
+                      inputProps={{
+                        min: 0,
+                        max: 100,
+                      }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                      }}
+                      error={formik.touched.amount && Boolean(formik.errors.amount)}
+                      helperText={(formik.touched.amount && formik.errors.amount) as string}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+            {formik.values.deductionType === 'Fixed' &&
+              formik.values.calculationType === 'Amount' && (
+                <Grid size={{ xs: 12, sm: 6, md: 6 }}>
+                  <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
+                    <NumericFormatCustom
+                      size="small"
+                      fullWidth
+                      label="Amount *"
+                      name="amount"
+                      value={formik.values.amount || ''}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        // Remove currency symbol and disallowed characters, but allow dots
+                        val = val.replace(/[^0-9.]/g, '');
+
+                        // Prevent multiple dots
+                        const parts = val.split('.');
+                        if (parts.length > 2) {
+                          val = `${parts[0]}.${parts.slice(1).join('')}`;
+                        }
+
+                        // Convert to number and ensure it's positive
+                        if (/^\d*\.?\d*$/.test(val)) {
+                          formik.setFieldValue('amount', val); // keep it as string while typing
+                        }
+                      }}
+                      sx={{
+                        width: '100%',
+                        padding: '0',
+                        borderRadius: 1,
+                      }}
+                      error={!!(formik.touched.amount && formik.errors.amount)}
+                      helperText={(formik.touched.amount && formik.errors.amount) as string}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+            <Grid size={{ xs: 12 }} display="flex" alignItems="center">
+              <FormControl fullWidth>
+                <FormLabel sx={{ mb: 0.5, fontSize: 13 }}>Payslip Visibility *</FormLabel>
+
+                <Box display="flex" gap={1}>
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={formik.values.showOnPayslip ? 'VISIBLE' : 'HIDDEN'}
+                    onChange={(_, value) => {
+                      if (value !== null) {
+                        formik.setFieldValue('showOnPayslip', value === 'VISIBLE');
+                      }
+                    }}
+                    sx={{ p: 0 }}
                   >
-                    <Iconify icon="lucide:eye-off" fontSize={14} />
-                    Internal
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-            </FormControl>
+                    <ToggleButton
+                      value="VISIBLE"
+                      sx={{
+                        textTransform: 'none',
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: 12,
+                        gap: 0.5,
+                        '&.Mui-selected': {
+                          backgroundColor: 'success.light',
+                          color: 'success.dark',
+                        },
+                      }}
+                    >
+                      <Iconify icon="lucide:eye" fontSize={14} />
+                      Visible
+                    </ToggleButton>
+
+                    <ToggleButton
+                      value="HIDDEN"
+                      sx={{
+                        textTransform: 'none',
+                        px: 1.5,
+                        py: 0.5,
+                        fontSize: 12,
+                        gap: 0.5,
+                        '&.Mui-selected': {
+                          backgroundColor: 'warning.light',
+                          color: 'warning.dark',
+                        },
+                      }}
+                    >
+                      <Iconify icon="lucide:eye-off" fontSize={14} />
+                      Internal
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+              </FormControl>
+            </Grid>
+          </SectionCard>
+          <Grid size={{ xs: 12 }}>
+            <Box
+              sx={{
+                mt: 2,
+                minHeight: 110, // slightly higher to handle all cases
+                transition: 'opacity 0.2s ease',
+              }}
+            >
+              <Alert icon={<Iconify icon="lucide:info" />} severity="info" variant="outlined">
+                <Typography variant="body2">
+                  {/* 🔹 Main calculation explanation */}
+                  {formik.values.calculationType === 'Percentage' ? (
+                    <>
+                      This deduction will be calculated as{' '}
+                      <strong>{formik.values.amount || 'X'}%</strong> of{' '}
+                      <strong>
+                        {componentOptions.find(
+                          (c) => c.id === formik.values.selectedDeductionComponent
+                        )?.componentName || 'the selected component'}
+                      </strong>
+                      .
+                      <br />
+                      Example: If Basic Pay is ₹30,000 and percentage is 10%, this deduction will be
+                      ₹3,000.
+                    </>
+                  ) : (
+                    <>
+                      This deduction will be added as a fixed amount.
+                      <strong>{formik.values.amount || 'X'}</strong>
+                      <br />
+                      Example: If amount is ₹2,000, the same deduction will be applied to all
+                      employees.
+                    </>
+                  )}
+                </Typography>
+
+                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                  {formik.values.deductionType === 'Fixed'
+                    ? 'The amount will be the same for all employees.'
+                    : 'The amount can vary for each employee.'}
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 0.5,
+                    visibility: formik.values.showOnPayslip ? 'hidden' : 'visible',
+                  }}
+                >
+                  ⚠️ This deduction will <strong>not</strong> appear on employee payslips.
+                </Typography>
+              </Alert>
+            </Box>
           </Grid>
-        </SectionCard>
-        <Grid size={{ xs: 12 }}>
+        </DialogScrollContent>
+
+        <DialogActions>
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            size="small"
+            variant="outlined"
+            onClick={(e: any) => handleClose(e, false)}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            size="small"
+            variant="contained"
+            type="submit"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            onClick={(e: any) => formik.handleSubmit(e)}
+            loading={
+              addDeductionComponentLoading ||
+              updateDeductionComponentLoading ||
+              previewUpdateImpactLoading
+            }
+          >
+            {editData ? 'Update' : 'Submit'}
+          </LoadingButton>
+        </DialogActions>
+      </BackPopUpChecked>
+      <Dialog
+        open={Boolean(impactPreview)}
+        onClose={() => setImpactPreview(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Payroll Impact Preview</DialogTitle>
+        <DialogContent>
           <Box
             sx={{
-              mt: 2,
-              minHeight: 110, // slightly higher to handle all cases
-              transition: 'opacity 0.2s ease',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: 1.5,
+              my: 1,
             }}
           >
-            <Alert icon={<Iconify icon="lucide:info" />} severity="info" variant="outlined">
-              <Typography variant="body2">
-                {/* 🔹 Main calculation explanation */}
-                {formik.values.calculationType === 'Percentage' ? (
-                  <>
-                    This deduction will be calculated as{' '}
-                    <strong>{formik.values.amount || 'X'}%</strong> of{' '}
-                    <strong>
-                      {componentOptions.find(
-                        (c) => c.id === formik.values.selectedDeductionComponent
-                      )?.componentName || 'the selected component'}
-                    </strong>
-                    .
-                    <br />
-                    Example: If Basic Pay is ₹30,000 and percentage is 10%, this deduction will be
-                    ₹3,000.
-                  </>
-                ) : (
-                  <>
-                    This deduction will be added as a fixed amount.
-                    <strong>{formik.values.amount || 'X'}</strong>
-                    <br />
-                    Example: If amount is ₹2,000, the same deduction will be applied to all
-                    employees.
-                  </>
-                )}
-              </Typography>
-
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {formik.values.deductionType === 'Fixed'
-                  ? 'The amount will be the same for all employees.'
-                  : 'The amount can vary for each employee.'}
-              </Typography>
-
-              <Typography
-                variant="body2"
-                sx={{
-                  mt: 0.5,
-                  visibility: formik.values.showOnPayslip ? 'hidden' : 'visible',
-                }}
-              >
-                ⚠️ This deduction will <strong>not</strong> appear on employee payslips.
-              </Typography>
+            <Alert severity="info">
+              Synced employees: {impactPreview?.syncedEmployeeCount ?? 0}
+            </Alert>
+            <Alert severity="warning">
+              Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
+            </Alert>
+            <Alert severity="success">Draft slips: {impactPreview?.draftSlipCount ?? 0}</Alert>
+            <Alert severity="error">
+              Finalized slips: {impactPreview?.finalizedSlipCount ?? 0}
             </Alert>
           </Box>
-        </Grid>
-      </DialogScrollContent>
-
-      <DialogActions>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          size="small"
-          variant="outlined"
-          onClick={(e: any) => handleClose(e, false)}
-        >
-          Cancel
-        </Button>
-        <LoadingButton
-          size="small"
-          variant="contained"
-          type="submit"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={(e: any) => formik.handleSubmit(e)}
-          loading={addDeductionComponentLoading || updateDeductionComponentLoading}
-        >
-          {editData ? 'Update' : 'Submit'}
-        </LoadingButton>
-      </DialogActions>
-    </BackPopUpChecked>
+          <Typography variant="body2" color="text.secondary">
+            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only employees
+            still following the master value. Force apply overwrites manual employee overrides for
+            this component and makes them follow the master again.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={() => setImpactPreview(null)}>
+            Review
+          </Button>
+          <LoadingButton
+            loading={updateDeductionComponentLoading}
+            onClick={() => confirmUpdate('SyncedOnly')}
+          >
+            Save synced only
+          </LoadingButton>
+          <LoadingButton
+            color="warning"
+            variant="contained"
+            loading={updateDeductionComponentLoading}
+            onClick={() => confirmUpdate('ForceApply')}
+          >
+            Force apply
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
