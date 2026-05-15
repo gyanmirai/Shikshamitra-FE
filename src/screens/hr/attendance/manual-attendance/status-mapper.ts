@@ -15,7 +15,7 @@ export const MANUAL_ATTENDANCE_UI_STATUS = {
 export type ManualAttendanceUiStatus =
   (typeof MANUAL_ATTENDANCE_UI_STATUS)[keyof typeof MANUAL_ATTENDANCE_UI_STATUS];
 
-export type ManualAttendanceStatusWire = 'PRESENT' | 'HALF_DAY' | 'ABSENT';
+export type ManualAttendanceStatusWire = 'PRESENT' | 'HALF_DAY' | 'ABSENT' | 'NOT_MARKED';
 
 export type ManualAttendanceSaveRow = {
   id?: string;
@@ -39,6 +39,7 @@ export const mapManualAttendanceStatusToWire = (
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Present) return 'PRESENT';
   if (status === MANUAL_ATTENDANCE_UI_STATUS.HalfDay) return 'HALF_DAY';
   if (status === MANUAL_ATTENDANCE_UI_STATUS.Absent) return 'ABSENT';
+  if (status === MANUAL_ATTENDANCE_UI_STATUS.Pending) return 'NOT_MARKED';
   return null;
 };
 
@@ -47,7 +48,7 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
     const statusWire = mapManualAttendanceStatusToWire(row.status);
     const employeeId = row.employeeId || row.id;
 
-    if (!statusWire || !employeeId) {
+    if (!employeeId) {
       return [];
     }
 
