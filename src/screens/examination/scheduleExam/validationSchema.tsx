@@ -8,7 +8,7 @@ export const validationSchema = [
     examName: yup.string().required('Exam Name is required'),
     className: yup.string().required('Class is required'),
     divisions: yup.array().min(1, 'At least one division is required'),
-    selectedSubjects: yup
+    subjects: yup
       .array()
       .required('Subjects is required')
       .min(1, 'At least one subject is required'),
@@ -20,7 +20,7 @@ export const validationSchema = [
       .array()
       .of(
         yup.object().shape({
-          id: yup.number().required('ID is required'),
+          subjectId: yup.string().required('ID is required'),
           subjectName: yup.string().required('Subject name is required'),
           subjectColor: yup
             .string()

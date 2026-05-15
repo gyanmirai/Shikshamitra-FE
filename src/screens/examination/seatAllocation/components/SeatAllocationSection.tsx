@@ -72,7 +72,6 @@ const SeatAllocationSection = ({
     data: seatLayoutData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: seatLayoutLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching: seatLayoutFetching,
   } = useQueryAndMutation({
     type: 'query',
@@ -100,10 +99,16 @@ const SeatAllocationSection = ({
   }, [division]);
 
   React.useEffect(() => {
+    if (seatLayoutFetching) return;
+
     if (seatLayoutData?.items) {
-      setAssignedData(seatLayoutData.items);
+      setAssignedData(
+        seatLayoutData.items.filter((item: ISeatAllocation) => item.studentId !== null)
+      );
+    } else {
+      setAssignedData([]);
     }
-  }, [seatLayoutData]);
+  }, [seatLayoutData, seatLayoutFetching]);
 
   React.useEffect(() => {
     if (seatAllocationStudentsData?.items) {
