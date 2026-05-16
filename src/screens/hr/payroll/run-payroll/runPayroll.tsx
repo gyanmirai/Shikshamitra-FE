@@ -51,6 +51,7 @@ type PayrollRow = {
   payableDays: number;
   presentDays: number;
   absentDays: number;
+  fullGrossSalary: number;
   grossSalary: number;
   totalDeduction: number;
   netSalary: number;
@@ -162,6 +163,7 @@ const RunPayroll = () => {
           payableDays,
           presentDays: Number(item.presentDays || 0),
           absentDays: Math.max(0, totalWorkingDays - payableDays),
+          fullGrossSalary: Number(item.fullGrossSalary || 0),
           grossSalary: Number(item.grossSalary || 0),
           totalDeduction: Number(item.totalDeduction || 0),
           netSalary: Number(item.netPay || 0),
@@ -385,8 +387,15 @@ const RunPayroll = () => {
       },
       { id: 'payableDays', label: 'Payable days', minWidth: 120, filterType: 'number' },
       {
+        id: 'fullGrossSalary',
+        label: 'Total salary',
+        minWidth: 140,
+        filterType: 'number',
+        render: (v) => formatCurrency(v),
+      },
+      {
         id: 'grossSalary',
-        label: 'Gross',
+        label: 'Payable gross',
         minWidth: 130,
         filterType: 'number',
         render: (v) => formatCurrency(v),
@@ -791,6 +800,14 @@ const RunPayroll = () => {
                   Proration
                 </Typography>
                 <Typography variant="subtitle2">{activeRow.prorationFactor.toFixed(4)}</Typography>
+              </Grid>
+              <Grid size={3}>
+                <Typography variant="caption" color="text.secondary">
+                  Total salary
+                </Typography>
+                <Typography variant="subtitle2">
+                  {formatCurrency(activeRow.fullGrossSalary)}
+                </Typography>
               </Grid>
               <Grid size={3}>
                 <Typography variant="caption" color="text.secondary">

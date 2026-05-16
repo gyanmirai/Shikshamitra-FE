@@ -23,6 +23,7 @@ export interface LeaveRequestFormValuesForPayload {
   leaveTypeId: string;
   startDate: dayjs.Dayjs | null;
   endDate: dayjs.Dayjs | null;
+  halfDay: boolean;
   reason: string;
   docs: unknown;
 }
@@ -45,6 +46,7 @@ export function buildCreateLeaveRequestFormData(
   formData.append('leaveTypeId', values.leaveTypeId);
   formData.append('startDate', dayjs(values.startDate).toISOString());
   formData.append('endDate', dayjs(values.endDate).toISOString());
+  formData.append('halfDay', String(values.halfDay));
   formData.append('reason', values.reason);
 
   const docs = values.docs as any;
@@ -55,6 +57,35 @@ export function buildCreateLeaveRequestFormData(
   }
 
   return formData;
+}
+
+export function countLeaveUnits(
+  startDate: dayjs.Dayjs | null,
+  endDate: dayjs.Dayjs | null,
+  halfDay: boolean
+): number {
+  if (!startDate?.isValid() || !endDate?.isValid()) {
+    return 0;
+  }
+
+  if (halfDay) {
+    return startDate.isSame(endDate, 'day') ? 0.5 : 0;
+  }
+
+  const start = startDate.startOf('day');
+  const end = endDate.startOf('day');
+  if (end.isBefore(start)) {
+    return 0;
+  }
+
+  let count = 0;
+  for (let cursor = start; !cursor.isAfter(end, 'day'); cursor = cursor.add(1, 'day')) {
+    if (cursor.day() !== 0) {
+      count += 1;
+    }
+  }
+
+  return count;
 }
 
 export function buildEmployeeSelectOptions(

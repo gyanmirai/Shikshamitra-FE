@@ -3,14 +3,44 @@ import { employeeType } from 'src/redux/tagTypes';
 import { employeeApi } from './employeeApi';
 
 export interface DayCalculationRequest {
-  dayCalculationType: 'working-days' | 'total-days';
-  totalDayType?: 'total-month-days' | 'manual-days';
+  academicYearId?: string;
+  dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
   manualDays?: number;
+  manualMonthDays?: DayCalculationManualMonth[];
+}
+
+export interface DayCalculationManualMonth {
+  year: number;
+  month: number;
+  manualDays: number;
+}
+
+export interface DayCalculationMonthPreview {
+  year: number;
+  month: number;
+  calendarDays: number;
+  sundays: number;
+  holidayDays: number;
+  workingDays: number;
+  manualDays?: number | null;
+  basisDays: number;
+  dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
+  holidayNames: string[];
+}
+
+export interface DayCalculationSetting {
+  academicYearId?: string;
+  dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
+  manualDays?: number | null;
+  manualMonthDays: DayCalculationManualMonth[];
+  usedFallbackSetting: boolean;
+  months: DayCalculationMonthPreview[];
 }
 
 export interface DayCalculationResponse {
   success: boolean;
   message: string;
+  setting?: DayCalculationSetting;
 }
 
 export const employeePayrollApi = employeeApi.injectEndpoints({
@@ -140,10 +170,28 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
       ],
     }),
     saveDayCalculationSettings: builder.mutation({
-      query: ({ body, academicYearId }) => ({
+      query: ({ body }) => ({
         url: '/payroll/day-calculation',
         method: 'POST',
+        body,
+      }),
+      invalidatesTags: [employeeType.runPayroll],
+    }),
+    getDayCalculationSettings: builder.query<DayCalculationSetting, { academicYearId: string }>({
+      query: ({ academicYearId }) => ({
+        url: '/payroll/day-calculation',
+        method: 'GET',
         params: { academicYearId },
+      }),
+      providesTags: [employeeType.runPayroll],
+    }),
+    previewDayCalculationSettings: builder.mutation<
+      DayCalculationSetting,
+      { body: DayCalculationRequest }
+    >({
+      query: ({ body }) => ({
+        url: '/payroll/day-calculation/preview',
+        method: 'POST',
         body,
       }),
     }),
@@ -166,4 +214,6 @@ export const {
   useDeleteDeductionComponentMutation,
   useDeleteEarningComponentMutation,
   useSaveDayCalculationSettingsMutation,
+  useGetDayCalculationSettingsQuery,
+  usePreviewDayCalculationSettingsMutation,
 } = employeePayrollApi;

@@ -574,8 +574,8 @@ const DeductionComponentForm = ({
     handleClose(null, true);
   };
 
-  const componentOptions = React.useMemo(
-    () => [
+  const componentOptions = React.useMemo(() => {
+    const options = [
       ...(getEarningComponentsData?.items || []).map((item: any) => ({
         ...item,
         componentName: item.earningComponentName || item.componentName || 'Unnamed Earning',
@@ -590,9 +590,25 @@ const DeductionComponentForm = ({
           'Unnamed Deduction',
         group: 'Deduction Components',
       })),
-    ],
-    [getEarningComponentsData, getDeductionComponentsData]
-  );
+    ];
+
+    if (
+      editData?.selectedDeductionComponentId &&
+      editData?.customComponent?.componentName &&
+      !options.some((item: any) => item.id === editData.selectedDeductionComponentId)
+    ) {
+      options.push({
+        id: editData.selectedDeductionComponentId,
+        componentName: editData.customComponent.componentName,
+        group:
+          editData.customComponent.componentOf === 'EARNING_COMPONENT'
+            ? 'Earning Components'
+            : 'Deduction Components',
+      });
+    }
+
+    return options;
+  }, [editData, getEarningComponentsData, getDeductionComponentsData]);
 
   return (
     <>
