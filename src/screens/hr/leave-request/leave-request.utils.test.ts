@@ -4,6 +4,7 @@ import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   SELF_OPTION,
+  countLeaveUnits,
   SELF_EMPLOYEE_ID,
   isAdminFromProfile,
   resolveLeaveCenterTab,
@@ -26,6 +27,7 @@ describe('leave request payload mapping', () => {
       leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
+      halfDay: false,
       reason: 'Family function',
       docs: null,
     });
@@ -41,6 +43,7 @@ describe('leave request payload mapping', () => {
       leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
+      halfDay: false,
       reason: 'Personal work',
       docs: null,
     });
@@ -56,11 +59,41 @@ describe('leave request payload mapping', () => {
       leaveTypeId: 'type-1',
       startDate: dayjs('2026-06-01'),
       endDate: dayjs('2026-06-02'),
+      halfDay: false,
       reason: 'Family function',
       docs: null,
     });
 
     expect(formData.get('File')).toBeNull();
+  });
+
+  it('sends half-day flag in create payloads', () => {
+    const formData = buildCreateLeaveRequestFormData({
+      employee: { id: 'emp-123', label: 'John Doe' },
+      leavePolicyId: 'policy-1',
+      leaveTypeId: 'type-1',
+      startDate: dayjs('2026-06-01'),
+      endDate: dayjs('2026-06-01'),
+      halfDay: true,
+      reason: 'Medical appointment',
+      docs: null,
+    });
+
+    expect(formData.get('halfDay')).toBe('true');
+  });
+});
+
+describe('leave unit calculation', () => {
+  it('counts full-day ranges excluding Sundays and including Saturdays', () => {
+    expect(countLeaveUnits(dayjs('2026-06-06'), dayjs('2026-06-08'), false)).toBe(2);
+  });
+
+  it('counts single-date half-day leave as 0.5', () => {
+    expect(countLeaveUnits(dayjs('2026-06-08'), dayjs('2026-06-08'), true)).toBe(0.5);
+  });
+
+  it('rejects multi-date half-day ranges locally as zero units', () => {
+    expect(countLeaveUnits(dayjs('2026-06-08'), dayjs('2026-06-09'), true)).toBe(0);
   });
 });
 

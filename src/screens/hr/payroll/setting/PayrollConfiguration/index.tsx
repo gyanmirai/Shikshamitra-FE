@@ -1,98 +1,265 @@
 'use client';
 
-import React from 'react';
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
+import type { RootState } from 'src/redux/store';
+import type {
+  DayCalculationRequest,
+  DayCalculationManualMonth,
+  DayCalculationMonthPreview,
+} from 'src/redux/hr/employee-payroll-api';
+
+import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { LoadingButton } from '@mui/lab';
-import { GlobalIcons } from 'src/utils/icons';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useSaveDayCalculationSettingsMutation } from 'src/redux/hr/employee-payroll-api';
+import {
+  useGetDayCalculationSettingsQuery,
+  useSaveDayCalculationSettingsMutation,
+  usePreviewDayCalculationSettingsMutation,
+} from 'src/redux/hr/employee-payroll-api';
 import {
   Box,
   Card,
-  Grid,
-  Paper,
+  Chip,
   Stack,
+  Paper,
+  Table,
   Button,
-  Switch,
   Divider,
+  Tooltip,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
   TextField,
   Typography,
+  ButtonGroup,
+  ToggleButton,
   DialogActions,
+  TableContainer,
+  LinearProgress,
+  ToggleButtonGroup,
 } from '@mui/material';
+
+type DayCalculationMode = 'working-days' | 'total-month-days' | 'manual-days';
+
+const modeOptions: Array<{
+  value: DayCalculationMode;
+  label: string;
+  icon: string;
+}> = [
+  { value: 'working-days', label: 'Working days', icon: 'fluent:calendar-work-week-24-regular' },
+  {
+    value: 'total-month-days',
+    label: 'Total month days',
+    icon: 'fluent:calendar-month-24-regular',
+  },
+  { value: 'manual-days', label: 'Manual days', icon: 'solar:calendar-mark-bold-duotone' },
+];
+
+const monthKey = (year: number, month: number) => `${year}-${String(month).padStart(2, '0')}`;
+
+const formatMonth = (year: number, month: number) =>
+  dayjs(`${year}-${String(month).padStart(2, '0')}-01`).format('MMM YYYY');
+
+const toManualMonths = (manualByMonth: Record<string, number | ''>): DayCalculationManualMonth[] =>
+  Object.entries(manualByMonth)
+    .filter(([, value]) => value !== '')
+    .map(([key, value]) => {
+      const [year, month] = key.split('-').map(Number);
+      return { year, month, manualDays: Number(value) };
+    });
 
 const PayrollConfiguration = () => {
   const theme = useTheme();
-  const [saveDayCalculationSettings, { isLoading: saveDayCalculationSettingsLoading }] =
-    useQueryAndMutation({
-      type: 'mutation',
-      currentQueryAndMutation: useSaveDayCalculationSettingsMutation,
-    });
-  const formik = useFormik({
-    initialValues: {
-      dayCalculationType: 'working-days', // 'working-days' | 'total-days'
-      totalDayType: 'total-month-days', // 'total-month-days' | 'manual-days'
-      manualDays: '',
-    },
-    validationSchema: Yup.object().shape({
-      manualDays: Yup.mixed()
-        // eslint-disable-next-line func-names
-        .test('is-required', 'Manual Days is required', function (value) {
-          // eslint-disable-next-line react/no-this-in-sfc
-          const { dayCalculationType, totalDayType } = this.parent;
-          if (dayCalculationType === 'total-days' && totalDayType === 'manual-days') {
-            return value !== undefined && value !== null && value !== '';
-          }
-          return true;
-        })
-        // eslint-disable-next-line func-names
-        .test('min', 'Manual Days must be at least 1', function (value) {
-          // eslint-disable-next-line react/no-this-in-sfc
-          const { dayCalculationType, totalDayType } = this.parent;
-          if (dayCalculationType === 'total-days' && totalDayType === 'manual-days') {
-            return Number(value) >= 1;
-          }
-          return true;
-        })
-        // eslint-disable-next-line func-names
-        .test('max', 'Manual Days must be at most 31', function (value) {
-          // eslint-disable-next-line react/no-this-in-sfc
-          const { dayCalculationType, totalDayType } = this.parent;
-          if (dayCalculationType === 'total-days' && totalDayType === 'manual-days') {
-            return Number(value) <= 31;
-          }
-          return true;
-        }),
-    }),
-    onSubmit: async (values) => {
-      const payload = {
-        dayCalculationType:
-          values.dayCalculationType === 'total-days'
-            ? values.totalDayType
-            : values.dayCalculationType,
-        manualDays:
-          values.dayCalculationType === 'total-days' && values.totalDayType === 'manual-days'
-            ? Number(values.manualDays)
-            : 0,
-      };
-      await saveDayCalculationSettings({ body: payload, academicYearId: '' });
-    },
-  });
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const academicYearId = currentYear?.id;
 
-  const handleReset = () => {
-    formik.resetForm();
+  const [mode, setMode] = useState<DayCalculationMode>('working-days');
+  const [manualByMonth, setManualByMonth] = useState<Record<string, number | ''>>({});
+  const [preview, setPreview] = useState<DayCalculationMonthPreview[]>([]);
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [setAllDays, setSetAllDays] = useState('');
+
+  const { data: savedSetting, isFetching } = useGetDayCalculationSettingsQuery(
+    { academicYearId },
+    { skip: !academicYearId }
+  );
+  const [previewDayCalculation, { isLoading: isPreviewing }] =
+    usePreviewDayCalculationSettingsMutation();
+  const [saveDayCalculation, { isLoading: isSaving }] = useSaveDayCalculationSettingsMutation();
+
+  useEffect(() => {
+    if (!savedSetting) return;
+
+    setMode(savedSetting.dayCalculationType);
+    setPreview(savedSetting.months || []);
+    setManualByMonth(
+      (savedSetting.months || []).reduce<Record<string, number | ''>>((acc, item) => {
+        acc[monthKey(item.year, item.month)] =
+          item.manualDays ??
+          (savedSetting.dayCalculationType === 'manual-days' ? item.workingDays : '');
+        return acc;
+      }, {})
+    );
+  }, [savedSetting]);
+
+  const fillManualFromPreview = (overwrite = false) => {
+    setManualByMonth((current) =>
+      preview.reduce<Record<string, number | ''>>((acc, item) => {
+        const key = monthKey(item.year, item.month);
+        acc[key] =
+          !overwrite && current[key] !== undefined && current[key] !== ''
+            ? current[key]
+            : item.workingDays;
+        return acc;
+      }, {})
+    );
+  };
+
+  const displayedPreview = useMemo(
+    () =>
+      preview.map((item) => {
+        const key = monthKey(item.year, item.month);
+        const manualValue = manualByMonth[key];
+        return mode === 'manual-days'
+          ? {
+              ...item,
+              manualDays:
+                manualValue === '' || manualValue === undefined ? null : Number(manualValue),
+              basisDays: manualValue === '' || manualValue === undefined ? 0 : Number(manualValue),
+              dayCalculationType: mode,
+            }
+          : item;
+      }),
+    [manualByMonth, mode, preview]
+  );
+
+  const summary = useMemo(() => {
+    const basisDays = displayedPreview.reduce((sum, item) => sum + item.basisDays, 0);
+    const sundays = displayedPreview.reduce((sum, item) => sum + item.sundays, 0);
+    const holidays = displayedPreview.reduce((sum, item) => sum + item.holidayDays, 0);
+    const average = displayedPreview.length
+      ? Math.round((basisDays / displayedPreview.length) * 10) / 10
+      : 0;
+    return { basisDays, sundays, holidays, average };
+  }, [displayedPreview]);
+
+  const manualErrors = useMemo(
+    () =>
+      displayedPreview.reduce<Record<string, string>>((acc, item) => {
+        const key = monthKey(item.year, item.month);
+        const value = manualByMonth[key];
+        if (mode !== 'manual-days') return acc;
+        if (value === '' || value === undefined) {
+          acc[key] = 'Required';
+        } else if (Number(value) < 1 || Number(value) > item.calendarDays) {
+          acc[key] = `1-${item.calendarDays}`;
+        }
+        return acc;
+      }, {}),
+    [displayedPreview, manualByMonth, mode]
+  );
+
+  const hasManualErrors = Object.keys(manualErrors).length > 0;
+  const hasCompleteManualValues =
+    mode !== 'manual-days' || (!hasManualErrors && displayedPreview.length > 0);
+
+  useEffect(() => {
+    if (mode === 'manual-days' && preview.length) {
+      fillManualFromPreview(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, preview.length]);
+
+  useEffect(() => {
+    if (!academicYearId || !savedSetting?.months?.length) return undefined;
+    if (mode === 'manual-days' && !hasCompleteManualValues) return undefined;
+
+    const timer = window.setTimeout(async () => {
+      const body: DayCalculationRequest = {
+        academicYearId,
+        dayCalculationType: mode,
+        manualMonthDays: mode === 'manual-days' ? toManualMonths(manualByMonth) : [],
+      };
+      try {
+        const nextPreview = await previewDayCalculation({ body }).unwrap();
+        setPreview(nextPreview.months || []);
+      } catch {
+        // Toast is handled by save; preview can fail while the user is still editing manual cells.
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    academicYearId,
+    hasCompleteManualValues,
+    manualByMonth,
+    mode,
+    previewDayCalculation,
+    savedSetting?.months?.length,
+  ]);
+
+  const fillManual = (source: 'working' | 'calendar' | 'blank', fixedValue?: number) => {
+    setManualByMonth(
+      preview.reduce<Record<string, number | ''>>((acc, item) => {
+        const key = monthKey(item.year, item.month);
+        if (fixedValue !== undefined) acc[key] = Math.min(fixedValue, item.calendarDays);
+        else if (source === 'working') acc[key] = item.workingDays;
+        else if (source === 'calendar') acc[key] = item.calendarDays;
+        else acc[key] = '';
+        return acc;
+      }, {})
+    );
+  };
+
+  const applySetAllDays = () => {
+    const value = Number(setAllDays);
+    if (!Number.isFinite(value) || value < 1) {
+      toast.error('Enter a valid day count.');
+      return;
+    }
+    fillManual('working', Math.floor(value));
+  };
+
+  const handleSave = async () => {
+    if (!academicYearId) {
+      toast.error('Select an academic year first.');
+      return;
+    }
+    if (!hasCompleteManualValues) {
+      toast.error('Enter valid manual days for every month.');
+      return;
+    }
+
+    const body: DayCalculationRequest = {
+      academicYearId,
+      dayCalculationType: mode,
+      manualMonthDays: mode === 'manual-days' ? toManualMonths(manualByMonth) : [],
+    };
+
+    try {
+      const response = await saveDayCalculation({ body }).unwrap();
+      if (response.setting?.months) {
+        setPreview(response.setting.months);
+      }
+      setLastSavedAt(dayjs().format('DD MMM YYYY, hh:mm A'));
+      toast.success(response.message || 'Payroll configuration saved.');
+    } catch {
+      toast.error('Could not save payroll configuration.');
+    }
   };
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Payroll Configuration"
-        description="Configure the payroll calculation rules, including how days are counted for salary processing."
+        description="Configure salary day basis for the selected academic year."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
@@ -110,374 +277,233 @@ const PayrollConfiguration = () => {
           overflow: 'hidden',
         }}
       >
-        <form
-          onSubmit={formik.handleSubmit}
-          style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-        >
-          <Scrollbar sx={{ flexGrow: 1 }}>
-            <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto', width: '100%' }}>
-              {/* Day Calculation Method Section */}
-              <Box mb={5}>
-                <Typography variant="h6" sx={{ mb: 0.5 }}>
-                  Day Calculation Method
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Select how the system should calculate the basis for salary distribution.
-                </Typography>
+        {(isFetching || isPreviewing) && <LinearProgress />}
 
-                <Grid container spacing={3}>
-                  {/* Option 1: According to Working Days */}
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper
-                      component="div"
-                      onClick={() => formik.setFieldValue('dayCalculationType', 'working-days')}
-                      sx={{
-                        p: 3,
-                        cursor: 'pointer',
-                        height: '100%',
-                        position: 'relative',
-                        borderRadius: 2,
-                        border: '2px solid',
-                        borderColor:
-                          formik.values.dayCalculationType === 'working-days'
-                            ? 'success.main'
-                            : 'divider',
-                        bgcolor:
-                          formik.values.dayCalculationType === 'working-days'
-                            ? alpha(theme.palette.success.main, 0.04)
-                            : 'transparent',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          bgcolor:
-                            formik.values.dayCalculationType === 'working-days'
-                              ? alpha(theme.palette.success.main, 0.08)
-                              : alpha(theme.palette.grey[500], 0.08),
-                        },
-                      }}
-                    >
-                      <Stack spacing={2}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                          <Box
-                            sx={{
-                              p: 1,
-                              borderRadius: 1,
-                              bgcolor: 'success.main',
-                              color: 'common.white',
-                              display: 'flex',
-                            }}
-                          >
-                            <Iconify icon="fluent:calendar-work-week-24-regular" width={24} />
-                          </Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            According to working days
-                          </Typography>
-                          {formik.values.dayCalculationType === 'working-days' && (
-                            <Iconify
-                              icon="eva:checkmark-circle-2-fill"
-                              color="success.main"
-                              width={24}
-                              sx={{ ml: 'auto' }}
-                            />
-                          )}
-                        </Box>
+        <Scrollbar sx={{ flexGrow: 1 }}>
+          <Box sx={{ p: 3 }}>
+            <Stack spacing={3}>
+              <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 1 }}>
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  alignItems={{ xs: 'flex-start', md: 'center' }}
+                  justifyContent="space-between"
+                  spacing={2}
+                >
+                  <Stack spacing={0.75}>
+                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                      <Typography variant="h6">Day calculation policy</Typography>
+                      <Chip
+                        size="small"
+                        label={currentYear?.name || 'No academic year selected'}
+                        color={academicYearId ? 'primary' : 'default'}
+                        variant="outlined"
+                      />
+                      {savedSetting?.usedFallbackSetting && (
+                        <Chip size="small" label="Using tenant default" color="warning" />
+                      )}
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary">
+                      {currentYear?.startDate && currentYear?.endDate
+                        ? `${dayjs(currentYear.startDate).format('DD MMM YYYY')} - ${dayjs(
+                            currentYear.endDate
+                          ).format('DD MMM YYYY')}`
+                        : 'Select an academic year from the global selector.'}
+                    </Typography>
+                  </Stack>
 
-                        <Typography variant="body2" color="text.secondary">
-                          Salary is calculated based on actual working days in the month
-                        </Typography>
-
-                        <Box
-                          sx={{
-                            py: 0.5,
-                            px: 1.5,
-                            bgcolor: alpha(theme.palette.error.main, 0.1),
-                            color: 'error.main',
-                            borderRadius: 0.5,
-                            width: 'fit-content',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          <Iconify icon="mdi:briefcase-outline" width={16} />
-                          Best for organizations with attendance tracking
-                        </Box>
-
-                        <Card
-                          variant="outlined"
-                          sx={{
-                            p: 2,
-                            mt: 2,
-                            bgcolor: 'transparent',
-                            borderStyle: 'dashed',
-                            borderColor: 'divider',
-                          }}
-                        >
-                          <Stack spacing={1.5}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Iconify
-                                icon="eva:checkmark-square-fill"
-                                color="success.main"
-                                width={16}
-                              />
-                              <Typography
-                                variant="caption"
-                                fontWeight={700}
-                                color="success.main"
-                                sx={{ letterSpacing: 0.5 }}
-                              >
-                                LIVE EXAMPLE
-                              </Typography>
-                            </Box>
-
-                            <Grid container spacing={2}>
-                              <Grid size={{ xs: 6 }}>
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  color="text.secondary"
-                                >
-                                  Monthly Salary
-                                </Typography>
-                                <Typography variant="subtitle2">₹30,000</Typography>
-                              </Grid>
-                              <Grid size={{ xs: 6 }}>
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  color="text.secondary"
-                                >
-                                  Working Days
-                                </Typography>
-                                <Typography variant="subtitle2">26 days</Typography>
-                              </Grid>
-                              <Grid size={{ xs: 6 }}>
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  color="text.secondary"
-                                >
-                                  Present Days
-                                </Typography>
-                                <Typography variant="subtitle2">24 days</Typography>
-                              </Grid>
-                              <Grid size={{ xs: 6 }}>
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  color="text.secondary"
-                                >
-                                  Payable Salary
-                                </Typography>
-                                <Typography variant="subtitle2" color="success.main">
-                                  ₹27,692
-                                </Typography>
-                              </Grid>
-                            </Grid>
-
-                            <Divider sx={{ borderStyle: 'dashed' }} />
-
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ fontFamily: 'monospace' }}
-                            >
-                              Formula: (₹30,000 ÷ 26) × 24 = ₹27,692
-                            </Typography>
-                          </Stack>
-                        </Card>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-
-                  {/* Option 2: Total Month Days */}
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper
-                      component="div"
-                      onClick={() => formik.setFieldValue('dayCalculationType', 'total-days')}
-                      sx={{
-                        p: 3,
-                        cursor: 'pointer',
-                        height: '100%',
-                        position: 'relative',
-                        borderRadius: 2,
-                        border: '2px solid',
-                        borderColor:
-                          formik.values.dayCalculationType === 'total-days'
-                            ? 'primary.main'
-                            : 'divider',
-                        bgcolor:
-                          formik.values.dayCalculationType === 'total-days'
-                            ? alpha(theme.palette.primary.main, 0.04)
-                            : 'transparent',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          bgcolor:
-                            formik.values.dayCalculationType === 'total-days'
-                              ? alpha(theme.palette.primary.main, 0.08)
-                              : alpha(theme.palette.grey[500], 0.08),
-                        },
-                      }}
-                    >
-                      <Stack spacing={2}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                          <Box
-                            sx={{
-                              p: 1,
-                              borderRadius: 1,
-                              bgcolor: 'action.selected',
-                              color: 'text.secondary',
-                              display: 'flex',
-                            }}
-                          >
-                            <Iconify icon="fluent:calendar-month-24-regular" width={24} />
-                          </Box>
-                          <Typography variant="subtitle1" fontWeight={700}>
-                            Total days
-                          </Typography>
-                          {formik.values.dayCalculationType === 'total-days' && (
-                            <Iconify
-                              icon="eva:checkmark-circle-2-fill"
-                              color="primary.main"
-                              width={24}
-                              sx={{ ml: 'auto' }}
-                            />
-                          )}
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary">
-                          Salary is calculated based on total calendar days in the month (or a fixed
-                          manual count)
-                        </Typography>
-
-                        <Box
-                          sx={{
-                            py: 0.5,
-                            px: 1.5,
-                            bgcolor: alpha(theme.palette.primary.main, 0.1),
-                            color: 'primary.main',
-                            borderRadius: 0.5,
-                            width: 'fit-content',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          <Iconify icon="mdi:calendar-check" width={16} />
-                          Best for fixed monthly payroll
-                        </Box>
-                        <Stack spacing={2}>
-                          {/* Toggle Row */}
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Typography
-                              variant="subtitle2"
-                              color={
-                                formik.values.totalDayType === 'total-month-days'
-                                  ? 'text.primary'
-                                  : 'text.secondary'
-                              }
-                            >
-                              Total Month Days
-                            </Typography>
-
-                            <Switch
-                              checked={formik.values.totalDayType === 'manual-days'}
-                              onChange={(e) =>
-                                formik.setFieldValue(
-                                  'totalDayType',
-                                  e.target.checked ? 'manual-days' : 'total-month-days'
-                                )
-                              }
-                            />
-
-                            <Typography
-                              variant="subtitle2"
-                              color={
-                                formik.values.totalDayType === 'manual-days'
-                                  ? 'text.primary'
-                                  : 'text.secondary'
-                              }
-                            >
-                              Manual Days
-                            </Typography>
-                          </Stack>
-
-                          {/* Manual Days Input */}
-                          {formik.values.totalDayType === 'manual-days' && (
-                            <Box
-                              sx={{
-                                maxWidth: 320,
-                                animation: 'fadeIn 0.25s ease-in-out',
-                                '@keyframes fadeIn': {
-                                  '0%': { opacity: 0, transform: 'translateY(-6px)' },
-                                  '100%': { opacity: 1, transform: 'translateY(0)' },
-                                },
-                              }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                name="manualDays"
-                                label="Manual Days *"
-                                type="number"
-                                value={formik.values.manualDays}
-                                onChange={(e) => {
-                                  const { value } = e.target;
-
-                                  if (value === '') {
-                                    formik.setFieldValue('manualDays', value);
-                                    return;
-                                  }
-
-                                  const numericValue = Number(value);
-                                  if (
-                                    Number.isInteger(numericValue) &&
-                                    numericValue >= 0 &&
-                                    numericValue <= 31
-                                  ) {
-                                    formik.setFieldValue('manualDays', numericValue);
-                                  }
-                                }}
-                                onBlur={formik.handleBlur}
-                                error={!!(formik.touched.manualDays && formik.errors.manualDays)}
-                                helperText={formik.touched.manualDays && formik.errors.manualDays}
-                                inputProps={{ min: 0, max: 31 }}
-                              />
-                            </Box>
-                          )}
+                  <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={mode}
+                    onChange={(_, value) => value && setMode(value)}
+                    sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}
+                  >
+                    {modeOptions.map((option) => (
+                      <ToggleButton key={option.value} value={option.value} sx={{ px: 1.5 }}>
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                          <Iconify icon={option.icon} width={18} />
+                          <Typography variant="button">{option.label}</Typography>
                         </Stack>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </Box>
-            </Box>
-          </Scrollbar>
+                      </ToggleButton>
+                    ))}
+                  </ToggleButtonGroup>
+                </Stack>
+              </Paper>
 
-          <DialogActions>
-            <Button
-              variant="outlined"
-              color="inherit"
-              onClick={handleReset}
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-            >
-              Reset
-            </Button>
-            <LoadingButton
-              variant="contained"
-              type="submit"
-              size="small"
-              loading={saveDayCalculationSettingsLoading}
-              startIcon={<Iconify icon="mdi:content-save" />}
-            >
-              Submit
-            </LoadingButton>
-          </DialogActions>
-        </form>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                {[
+                  { label: 'Annual basis days', value: summary.basisDays, icon: 'mdi:sigma' },
+                  {
+                    label: 'Average per month',
+                    value: summary.average,
+                    icon: 'mdi:calendar-range',
+                  },
+                  { label: 'Sundays', value: summary.sundays, icon: 'mdi:calendar-weekend' },
+                  { label: 'Holidays counted', value: summary.holidays, icon: 'mdi:calendar-star' },
+                ].map((item) => (
+                  <Paper
+                    key={item.label}
+                    variant="outlined"
+                    sx={{ p: 2, flex: 1, borderRadius: 1 }}
+                  >
+                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <Box
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 1,
+                          display: 'grid',
+                          placeItems: 'center',
+                          color: 'primary.main',
+                          bgcolor: alpha(theme.palette.primary.main, 0.08),
+                        }}
+                      >
+                        <Iconify icon={item.icon} width={19} />
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" lineHeight={1.1}>
+                          {item.value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+
+              {mode === 'manual-days' && (
+                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                    justifyContent="space-between"
+                    spacing={1.5}
+                  >
+                    <Typography variant="subtitle2">Manual month tools</Typography>
+                    <Stack
+                      direction={{ xs: 'column', md: 'row' }}
+                      spacing={1}
+                      alignItems={{ xs: 'stretch', md: 'center' }}
+                    >
+                      <Stack direction="row" spacing={1}>
+                        <TextField
+                          size="small"
+                          type="number"
+                          value={setAllDays}
+                          placeholder="Set all"
+                          inputProps={{ min: 1, max: 31 }}
+                          onChange={(event) => setSetAllDays(event.target.value)}
+                          sx={{ width: 112 }}
+                        />
+                        <Button size="small" variant="contained" onClick={applySetAllDays}>
+                          Apply
+                        </Button>
+                      </Stack>
+                      <ButtonGroup size="small" variant="outlined">
+                        <Button onClick={() => fillManual('working')}>Copy working</Button>
+                        <Button onClick={() => fillManual('calendar')}>Copy calendar</Button>
+                        <Button onClick={() => fillManual('blank')}>Clear</Button>
+                      </ButtonGroup>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              )}
+
+              <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Month</TableCell>
+                      <TableCell align="right">Calendar days</TableCell>
+                      <TableCell align="right">Sundays</TableCell>
+                      <TableCell align="right">Holidays</TableCell>
+                      <TableCell align="right">Working days</TableCell>
+                      <TableCell align="right">Manual days</TableCell>
+                      <TableCell align="right">Payroll basis</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {displayedPreview.map((item) => {
+                      const key = monthKey(item.year, item.month);
+                      const error = manualErrors[key];
+                      return (
+                        <TableRow key={key} hover>
+                          <TableCell>
+                            <Typography variant="subtitle2">
+                              {formatMonth(item.year, item.month)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">{item.calendarDays}</TableCell>
+                          <TableCell align="right">{item.sundays}</TableCell>
+                          <TableCell align="right">
+                            <Tooltip
+                              title={
+                                item.holidayNames?.length
+                                  ? item.holidayNames.join(', ')
+                                  : 'No payroll holidays'
+                              }
+                            >
+                              <Chip size="small" label={item.holidayDays} variant="outlined" />
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell align="right">{item.workingDays}</TableCell>
+                          <TableCell align="right" sx={{ width: 150 }}>
+                            {mode === 'manual-days' ? (
+                              <TextField
+                                size="small"
+                                type="number"
+                                value={manualByMonth[key] ?? ''}
+                                error={!!error}
+                                helperText={error || ' '}
+                                inputProps={{ min: 1, max: item.calendarDays }}
+                                onChange={(event) => {
+                                  const { value } = event.target;
+                                  setManualByMonth((prev) => ({
+                                    ...prev,
+                                    [key]: value === '' ? '' : Number(value),
+                                  }));
+                                }}
+                                sx={{ maxWidth: 112 }}
+                              />
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                -
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="subtitle2" color="primary.main">
+                              {item.basisDays}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Stack>
+          </Box>
+        </Scrollbar>
+
+        <Divider />
+        <DialogActions sx={{ px: 3, py: 1.5, justifyContent: 'space-between' }}>
+          <Typography variant="caption" color="text.secondary">
+            {lastSavedAt ? `Last saved ${lastSavedAt}` : 'Changes apply to future payroll runs.'}
+          </Typography>
+          <LoadingButton
+            variant="contained"
+            size="small"
+            loading={isSaving}
+            disabled={!academicYearId || !hasCompleteManualValues}
+            startIcon={<Iconify icon="mdi:content-save" />}
+            onClick={handleSave}
+          >
+            Save configuration
+          </LoadingButton>
+        </DialogActions>
       </Card>
     </Box>
   );

@@ -20,10 +20,19 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
+import {
+  Grid,
+  Stack,
+  Switch,
+  Button,
+  TextField,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 import {
   useLazyGetLeaveTypesQuery,
   useLazyGetLeavePoliciesQuery,
@@ -36,6 +45,7 @@ import {
 import { normalizeLeaveStatus } from './leave-status.utils';
 import {
   SELF_OPTION,
+  countLeaveUnits,
   isAdminFromProfile,
   type EmployeeOption,
   parseApiProblemDetail,
@@ -71,6 +81,7 @@ interface FormValues {
   leaveTypeId: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
+  halfDay: boolean;
   reason: string;
   status?: string | number;
   rejectionReason: string;
@@ -154,6 +165,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       reason: editData?.reason || editData?.description || '',
       startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
       endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
+      halfDay: Boolean(editData?.halfDay),
       rejectionReason: editData?.rejectionReason || '',
       status: editData?.status,
       docs: editData?.attachmentUrl || '',
@@ -182,7 +194,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           const { startDate } = this.parent;
           if (!value || !startDate) return true;
           return dayjs(value as any).valueOf() >= dayjs(startDate as any).valueOf();
+        })
+        // eslint-disable-next-line func-names
+        .test('half-day-single-date', 'Half-day leave must be for one date', function (value) {
+          const { startDate, halfDay } = this.parent;
+          if (!halfDay || !value || !startDate) return true;
+          return dayjs(value as any).isSame(dayjs(startDate as any), 'day');
         }),
+      halfDay: Yup.boolean(),
       reason: Yup.string()
         .min(5, 'Reason must be at least 5 characters')
         .max(500, 'Reason must not exceed 500 characters')
@@ -252,6 +271,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             leaveTypeId: formValues.leaveTypeId,
             startDate: formValues.startDate,
             endDate: formValues.endDate,
+            halfDay: formValues.halfDay,
             reason: formValues.reason,
             docs: formValues.docs,
           });
@@ -372,6 +392,19 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       setFieldValue('leavePolicyId', '');
     }
   }, [editData, leavePolicyOptions, setFieldValue, values.leavePolicyId]);
+
+  useEffect(() => {
+    if (!values.halfDay || !values.startDate) {
+      return;
+    }
+
+    if (!values.endDate || !values.endDate.isSame(values.startDate, 'day')) {
+      setFieldValue('endDate', values.startDate, false);
+    }
+  }, [setFieldValue, values.endDate, values.halfDay, values.startDate]);
+
+  const requestedUnits = countLeaveUnits(values.startDate, values.endDate, values.halfDay);
+
   return (
     <>
       <DialogScrollContent>
@@ -478,7 +511,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   disabled={!!editData}
                   format="DD/MM/YYYY"
                   disablePast
-                  onChange={(value) => setFieldValue('startDate', value)}
+                  onChange={(value) => {
+                    setFieldValue('startDate', value);
+                    if (values.halfDay) {
+                      setFieldValue('endDate', value);
+                    }
+                  }}
                   slotProps={{
                     textField: {
                       fullWidth: true,
@@ -496,7 +534,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <DatePicker
                   label="End Date *"
                   value={values.endDate}
-                  disabled={!!editData}
+                  disabled={!!editData || values.halfDay}
                   format="DD/MM/YYYY"
                   disablePast
                   minDate={values.startDate || undefined}
@@ -511,6 +549,42 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   }}
                 />
               </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1.5}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                justifyContent="space-between"
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 1,
+                }}
+              >
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={values.halfDay}
+                      disabled={!!editData}
+                      onChange={(event) => {
+                        const { checked } = event.target;
+                        setFieldValue('halfDay', checked);
+                        if (checked && values.startDate) {
+                          setFieldValue('endDate', values.startDate);
+                        }
+                      }}
+                    />
+                  }
+                  label="Half day"
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Total requested days: {requestedUnits}
+                </Typography>
+              </Stack>
             </Grid>
 
             <Grid size={{ xs: 12 }}>
