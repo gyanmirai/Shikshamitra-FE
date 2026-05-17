@@ -46,6 +46,7 @@ import { LeaveRequestForm } from './leave-calender';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
+  normalizeLeaveStatus,
   getLeaveStatusFilterValue,
 } from './leave-status.utils';
 
@@ -55,7 +56,11 @@ type LeaveApprovalsProps = {
 
 const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { employee } = useSelector((state: RootState) => state.auth);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+  const [statusFilter, setStatusFilter] = useState<EmployeeLeaveStatusType | ''>(
+    EmployeeLeaveStatusType.Pending
+  );
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -63,6 +68,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
     params: {
       academicYearId: currentYear?.id,
       'month-year': date?.format('MMMM-YYYY')?.toUpperCase(),
+      status: statusFilter === '' ? undefined : statusFilter,
     },
   });
 
@@ -71,73 +77,84 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
   const [editData, setEditData] = useState<any>(null);
 
   const actions = useCallback(
-    ({ popover }: any, row: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            setEditData(row);
-            viewDialog.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
-          View
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setEditData({ ...row, type: EmployeeLeaveStatusType.Approved });
-            approveOrRejectConfirmation.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'success.main' }}
-        >
-          <Iconify icon="mdi:approve" sx={{ height: '16px', width: '16px' }} />
-          Approve
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setEditData({ ...row, type: EmployeeLeaveStatusType.Rejected });
-            approveOrRejectConfirmation.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
-          Reject
-        </MenuItem>
-      </MenuList>
-    ),
+    ({ popover }: any, row: any) => {
+      const normalizedStatus = normalizeLeaveStatus(row?.status);
+      const canAct = normalizedStatus === 'PENDING' || normalizedStatus === 'REVIEWED';
+
+      return (
+        <MenuList>
+          <MenuItem
+            onClick={() => {
+              setEditData(row);
+              viewDialog.onTrue();
+              popover.onClose();
+            }}
+          >
+            <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
+            View
+          </MenuItem>
+          {canAct && (
+            <MenuItem
+              onClick={() => {
+                setEditData({ ...row, type: EmployeeLeaveStatusType.Approved });
+                approveOrRejectConfirmation.onTrue();
+                popover.onClose();
+              }}
+              sx={{ color: 'success.main' }}
+            >
+              <Iconify icon="mdi:approve" sx={{ height: '16px', width: '16px' }} />
+              Approve
+            </MenuItem>
+          )}
+          {canAct && (
+            <MenuItem
+              onClick={() => {
+                setEditData({ ...row, type: EmployeeLeaveStatusType.Rejected });
+                approveOrRejectConfirmation.onTrue();
+                popover.onClose();
+              }}
+              sx={{ color: 'error.main' }}
+            >
+              <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
+              Reject
+            </MenuItem>
+          )}
+        </MenuList>
+      );
+    },
     [viewDialog, approveOrRejectConfirmation]
   );
 
   const tableData = useMemo(() => {
     const apiData =
-      data?.items?.map((item: any) => {
-        const start = dayjs(item.startDate);
-        const end = dayjs(item.endDate);
+      data?.items
+        ?.filter((item: any) => String(item.employeeId ?? '') !== String(employee?.id ?? ''))
+        ?.map((item: any) => {
+          const start = dayjs(item.startDate);
+          const end = dayjs(item.endDate);
 
-        return {
-          id: item.id,
-          name: item.name || item.employeeName,
-          employeeIdentifier: item.employeeIdentifier || item.employeeCode,
-          leaveType: item.leaveType,
-          startDate: start.format('DD-MM-YYYY'),
-          endDate: end.format('DD-MM-YYYY'),
-          totalDays: item.totalDays,
-          organization:
-            item.mediumStageName ||
-            currentMedium?.educationMediumStages?.find(
-              (org: any) => String(org?.id ?? '') === String(item?.mediumStageId ?? '')
-            )?.name ||
-            '-',
-          description: item.description,
-          remarks: item.remarks,
-          status: getLeaveStatusFilterValue(item.status),
-        };
-      }) || [];
+          return {
+            id: item.id,
+            name: item.name || item.employeeName,
+            employeeIdentifier: item.employeeIdentifier || item.employeeCode,
+            leaveType: item.leaveType,
+            startDate: start.format('DD-MM-YYYY'),
+            endDate: end.format('DD-MM-YYYY'),
+            totalDays: item.totalDays,
+            organization:
+              item.mediumStageName ||
+              currentMedium?.educationMediumStages?.find(
+                (org: any) => String(org?.id ?? '') === String(item?.mediumStageId ?? '')
+              )?.name ||
+              '-',
+            description: item.description,
+            remarks: item.remarks,
+            status: getLeaveStatusFilterValue(item.status),
+          };
+        }) || [];
 
     return apiData;
-  }, [currentMedium?.educationMediumStages, data]);
+  }, [currentMedium?.educationMediumStages, data, employee?.id]);
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -271,6 +288,24 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
             setDate(newDate);
           }}
         />
+        <TextField
+          select
+          size="small"
+          label="Status"
+          value={statusFilter}
+          sx={{ minWidth: 180 }}
+          onChange={(event) => {
+            const { value } = event.target;
+            setStatusFilter(value === '' ? '' : (Number(value) as EmployeeLeaveStatusType));
+          }}
+        >
+          <MenuItem value="">All Requests</MenuItem>
+          {EmployeeLeaveStatusOptions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
       </Card>
 
       <CustomizableTable

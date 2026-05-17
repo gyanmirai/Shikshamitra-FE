@@ -385,7 +385,30 @@ const RunPayroll = () => {
           );
         },
       },
-      { id: 'payableDays', label: 'Payable days', minWidth: 120, filterType: 'number' },
+      {
+        id: 'payableDays',
+        label: 'Payable days',
+        minWidth: 160,
+        filterType: 'number',
+        render(_value, row) {
+          const absentDays = Number(row.absentDays || 0);
+
+          return (
+            <Stack spacing={0.25}>
+              <Typography variant="body2" fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
+                {row.payableDays} / {row.totalWorkingDays}
+              </Typography>
+              <Typography
+                variant="caption"
+                color={absentDays > 0 ? 'error.main' : 'success.main'}
+                sx={{ lineHeight: 1.2 }}
+              >
+                {absentDays > 0 ? `${absentDays} absent` : 'Full payable'}
+              </Typography>
+            </Stack>
+          );
+        },
+      },
       {
         id: 'fullGrossSalary',
         label: 'Total salary',

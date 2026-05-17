@@ -32,7 +32,10 @@ export function NavList({
 
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);
-  const active = isSubLayout ? removeTrailingSlash === data.path : currentModule === data._action;
+  const active = isSubLayout
+    ? removeTrailingSlash === data.path
+    : removeTrailingSlash === data.path ||
+      (data.path !== '/dashboard' && currentModule === data._action);
 
   // const [openMenu, setOpenMenu] = useState(false);
 

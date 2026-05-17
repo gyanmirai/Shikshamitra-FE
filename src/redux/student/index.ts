@@ -4,13 +4,22 @@ import { studentType } from 'src/redux/tagTypes';
 export const StudentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getFilterStudents: builder.query({
-      query: ({ academicYearId, academicMediumId, standardId, divisionId }) => {
+      query: ({
+        academicYearId,
+        academicMediumId,
+        educationMediumStageId,
+        standardId,
+        divisionId,
+      }) => {
         let queryString = '';
         if (academicYearId) {
           queryString += `AcademicYearId=${academicYearId}&`;
         }
         if (academicMediumId) {
           queryString += `AcademicMediumId=${academicMediumId}&`;
+        }
+        if (educationMediumStageId) {
+          queryString += `EducationMediumStageId=${educationMediumStageId}&`;
         }
         if (standardId) {
           queryString += `StandardId=${standardId}&`;

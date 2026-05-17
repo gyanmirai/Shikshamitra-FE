@@ -253,6 +253,13 @@ export const employeeApi = api.injectEndpoints({
       }),
       providesTags: [employeeType.employee],
     }),
+    getMyEmployeesUnderManager: builder.query({
+      query: () => ({
+        url: '/employees/reporting-manager/my/employees',
+        method: 'GET',
+      }),
+      providesTags: [employeeType.employee],
+    }),
 
     // Employee Document configuration
     getDocumentConfigurations: builder.query({
@@ -327,6 +334,7 @@ export const {
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
   useGetEmployeesUnderManagerQuery,
+  useGetMyEmployeesUnderManagerQuery,
   useGetDocumentConfigurationsQuery,
   useCreateDocumentConfigurationMutation,
   useUpdateDocumentConfigurationMutation,

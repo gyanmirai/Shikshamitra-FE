@@ -83,7 +83,9 @@ const StudentManagementScreen = () => {
     [nativeSearchParams, router, pathname]
   );
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear: year, currentMedium: medium } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -117,12 +119,14 @@ const StudentManagementScreen = () => {
   useEffect(() => {
     if (division && classes && organization) {
       getStudentsRef.current({
+        academicYearId: year?.id,
+        academicMediumId: medium?.id,
         educationMediumStageId: organization,
         standardId: classes,
         divisionId: division,
       });
     }
-  }, [division, classes, organization]);
+  }, [division, classes, organization, medium?.id, year?.id]);
 
   const tableData = useMemo(
     () =>

@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'src/routes/hooks';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import LeaveBalance from 'src/screens/hr/leave-balance/leave-balance';
+import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 
 import ApplyLeave from './apply-leave';
 import LeaveApprovals from './leave-approvals';
@@ -42,25 +43,25 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     (permission: any) =>
       permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
   );
-  const canReviewLeaves = !isSelfContext && Boolean(isAdminUser || hasApprovalPermission);
+  const shouldCheckReports = !isAdminUser && !hasApprovalPermission;
+  const { data: myReportsData } = useGetMyEmployeesUnderManagerQuery(undefined, {
+    skip: !shouldCheckReports,
+    refetchOnMountOrArgChange: true,
+  });
+  const hasReportingHierarchy = Boolean(myReportsData?.employees?.length);
+  const canReviewLeaves = Boolean(isAdminUser || hasApprovalPermission || hasReportingHierarchy);
   const visibleTabs = useMemo(
     () => getLeaveCenterVisibleTabs(context, canReviewLeaves),
     [canReviewLeaves, context]
   );
 
   const requestedTab = useMemo<LeaveCenterTab>(() => {
-    if (isSelfContext) {
-      const tabFromQuery = searchParams.get('tab');
-      if (tabFromQuery === 'balance') return 'balance';
-      return initialTab === 'balance' ? 'balance' : 'my-requests';
-    }
-
     const tabFromQuery = searchParams.get('tab');
     if (tabFromQuery === 'approvals') return 'approvals';
     if (tabFromQuery === 'balance') return 'balance';
     if (tabFromQuery === 'my-requests') return 'my-requests';
     return initialTab;
-  }, [initialTab, isSelfContext, searchParams]);
+  }, [initialTab, searchParams]);
 
   const activeTab = resolveLeaveCenterTab(
     requestedTab,
@@ -75,10 +76,10 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
 
     if (isSelfContext) {
       const nextParams = new URLSearchParams(searchParams.toString());
-      if (nextTab === 'balance') {
-        nextParams.set('tab', 'balance');
-      } else {
+      if (nextTab === 'my-requests') {
         nextParams.delete('tab');
+      } else {
+        nextParams.set('tab', nextTab);
       }
       const query = nextParams.toString();
       router.push(query ? `${SELF_ROUTE}?${query}` : SELF_ROUTE);
