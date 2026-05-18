@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { ReactNode } from 'react';
+import type { Theme, SxProps } from '@mui/material/styles';
 import type { BoxProps, TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
 
 // Add this interface to your existing interfaces
@@ -13,8 +14,12 @@ export interface IColumn {
   label: React.ReactNode; // allow rich header content
   filterType?: 'string' | 'number' | 'date' | 'enum' | 'formattedNumber';
   isFilter?: boolean;
+  width?: number | string;
   minWidth?: number | string;
+  maxWidth?: number | string;
   align?: 'right' | 'left' | 'center';
+  headerSx?: SxProps<Theme>;
+  cellSx?: SxProps<Theme>;
   render?: (value: any, row: IData) => React.ReactNode;
   renderColumn?: (col: IColumn) => React.ReactNode; // header specific custom render
   children?: (row: IData) => React.ReactNode;

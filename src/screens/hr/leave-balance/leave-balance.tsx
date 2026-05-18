@@ -20,6 +20,7 @@ import {
   Card,
   Grid,
   Chip,
+  Alert,
   Tooltip,
   Skeleton,
   Typography,
@@ -32,6 +33,10 @@ import {
   useGetSelfLeaveBalanceQuery,
 } from 'src/redux/hr/leaveApi';
 
+import {
+  parseApiProblemDetail,
+  LEAVE_EMPLOYEE_NOT_FOUND,
+} from '../leave-request/leave-request.utils';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
@@ -235,6 +240,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
   });
   const {
     data: balanceDataForSelf,
+    error: balanceErrorForSelf,
     isLoading: isBalanceLoadingForSelf,
     isFetching: isBalanceFetchingForSelf,
   } = useQueryAndMutation({
@@ -242,6 +248,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
     currentQueryAndMutation: useGetSelfLeaveBalanceQuery,
     params: { academicYearId: currentYear?.id },
     options: { skip: !currentYear?.id || !isSelfMode },
+    popupConfig: { error: false },
   });
 
   const {
@@ -261,6 +268,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
   });
   const {
     data: historyDataForSelf,
+    error: historyErrorForSelf,
     isLoading: isHistoryLoadingForSelf,
     isFetching: isHistoryFetchingForSelf,
   } = useQueryAndMutation({
@@ -268,6 +276,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
     currentQueryAndMutation: useGetMyLeaveRequestsQuery,
     params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
     options: { skip: !currentYear?.id || !isSelfMode },
+    popupConfig: { error: false },
   });
   const balanceData = isSelfMode ? balanceDataForSelf : balanceDataForHr;
   const historyData = isSelfMode ? historyDataForSelf : historyDataForHr;
@@ -415,6 +424,11 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
   const isLoadingBalance = isSelfMode
     ? isBalanceLoadingForSelf || isBalanceFetchingForSelf
     : isBalanceLoadingForHr || isBalanceFetchingForHr;
+  const selfAccessError =
+    isSelfMode &&
+    [balanceErrorForSelf, historyErrorForSelf].some(
+      (queryError) => parseApiProblemDetail(queryError).errorCode === LEAVE_EMPLOYEE_NOT_FOUND
+    );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -435,112 +449,126 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
         />
       )}
 
+      {selfAccessError && (
+        <Card sx={{ mt: 1, p: 2 }}>
+          <Alert severity="warning">
+            Your user is not linked to an employee profile. Contact admin/HR.
+          </Alert>
+        </Card>
+      )}
+
       {/* ── Section A: Summary Stat Cards ── */}
-      <Grid container spacing={1} sx={{ mt: 0.5 }}>
-        {summaryCards.map((card) =>
-          isLoadingBalance ? (
-            <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
-              <Skeleton variant="rounded" height={82} sx={{ borderRadius: 2 }} />
-            </Grid>
-          ) : (
-            <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
-              <DashboardCard
-                title={card.title}
-                value={card.value}
-                icon={card.icon}
-                color={card.color}
-                bgColor={card.bgColor}
-              />
-            </Grid>
-          )
-        )}
-      </Grid>
+      {!selfAccessError && (
+        <Grid container spacing={1} sx={{ mt: 0.5 }}>
+          {summaryCards.map((card) =>
+            isLoadingBalance ? (
+              <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
+                <Skeleton variant="rounded" height={82} sx={{ borderRadius: 2 }} />
+              </Grid>
+            ) : (
+              <Grid size={{ xs: 6, sm: 3 }} key={card.title}>
+                <DashboardCard
+                  title={card.title}
+                  value={card.value}
+                  icon={card.icon}
+                  color={card.color}
+                  bgColor={card.bgColor}
+                />
+              </Grid>
+            )
+          )}
+        </Grid>
+      )}
 
       {/* ── Section B: Leave Type Breakdown ── */}
-      <Card sx={{ mt: 1, p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <Iconify
-            icon="solar:pie-chart-2-bold-duotone"
-            sx={{ color: 'primary.main', width: 22, height: 22 }}
-          />
-          <Typography variant="h6">Leave Type Breakdown</Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            title="Shows allocation and usage per leave type. Red remaining balance means you are running low."
-          >
+      {!selfAccessError && (
+        <Card sx={{ mt: 1, p: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
             <Iconify
-              icon="lucide:info"
-              sx={{ cursor: 'pointer', ml: 0.5 }}
-              fontSize={15}
-              color="info.main"
+              icon="solar:pie-chart-2-bold-duotone"
+              sx={{ color: 'primary.main', width: 22, height: 22 }}
             />
-          </CustomTooltip>
-        </Box>
-
-        <CustomizableTable
-          tableId="leave-balance-breakdown"
-          columns={BREAKDOWN_COLUMNS}
-          data={breakdownRows}
-          isLoading={isLoadingBalance}
-          isPagination={false}
-          isSearch={false}
-          isFilter={false}
-          tableTitle="Leave Type Breakdown"
-          noDataText={
-            <Box sx={{ py: 4, textAlign: 'center' }}>
+            <Typography variant="h6">Leave Type Breakdown</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Shows allocation and usage per leave type. Red remaining balance means you are running low."
+            >
               <Iconify
-                icon="solar:calendar-minimalistic-bold-duotone"
-                sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
+                icon="lucide:info"
+                sx={{ cursor: 'pointer', ml: 0.5 }}
+                fontSize={15}
+                color="info.main"
               />
-              <Typography color="text.secondary">
-                No leave type allocation found for this year.
-              </Typography>
-            </Box>
-          }
-          wrapperProps={{ sx: { mt: 0 } }}
-        />
-      </Card>
+            </CustomTooltip>
+          </Box>
+
+          <CustomizableTable
+            tableId="leave-balance-breakdown"
+            columns={BREAKDOWN_COLUMNS}
+            data={breakdownRows}
+            isLoading={isLoadingBalance}
+            isPagination={false}
+            isSearch={false}
+            isFilter={false}
+            tableTitle="Leave Type Breakdown"
+            noDataText={
+              <Box sx={{ py: 4, textAlign: 'center' }}>
+                <Iconify
+                  icon="solar:calendar-minimalistic-bold-duotone"
+                  sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
+                />
+                <Typography color="text.secondary">
+                  No leave type allocation found for this year.
+                </Typography>
+              </Box>
+            }
+            wrapperProps={{ sx: { mt: 0 } }}
+          />
+        </Card>
+      )}
 
       {/* ── Section C: My Leave History ── */}
-      <Card sx={{ mt: 1, p: 2, mb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-          <Iconify
-            icon="solar:history-bold-duotone"
-            sx={{ color: 'primary.main', width: 22, height: 22 }}
-          />
-          <Typography variant="h6">
-            {isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
-          </Typography>
-        </Box>
-
-        <CustomizableTable
-          tableId="leave-balance-history"
-          columns={historyColumns}
-          data={historyRows}
-          isLoading={isHistoryLoading || isHistoryFetching}
-          tableTitle="Leave History"
-          noDataText={
-            <Box sx={{ py: 4, textAlign: 'center' }}>
-              <Iconify
-                icon="solar:document-bold-duotone"
-                sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
-              />
-              <Typography color="text.secondary">
-                No leave history found for this academic year.
-              </Typography>
-            </Box>
-          }
-        />
-        {historyData &&
-          typeof historyData.totalCount === 'number' &&
-          historyData.totalCount > (historyData.items?.length ?? 0) && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-              Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave requests
-              for this academic year (max {100} per page).
+      {!selfAccessError && (
+        <Card sx={{ mt: 1, p: 2, mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+            <Iconify
+              icon="solar:history-bold-duotone"
+              sx={{ color: 'primary.main', width: 22, height: 22 }}
+            />
+            <Typography variant="h6">
+              {isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
             </Typography>
-          )}
-      </Card>
+          </Box>
+
+          <CustomizableTable
+            tableId="leave-balance-history"
+            columns={historyColumns}
+            data={historyRows}
+            isLoading={isHistoryLoading || isHistoryFetching}
+            tableTitle="Leave History"
+            noDataText={
+              <Box sx={{ py: 4, textAlign: 'center' }}>
+                <Iconify
+                  icon="solar:document-bold-duotone"
+                  sx={{ width: 48, height: 48, color: 'text.disabled', mb: 1 }}
+                />
+                <Typography color="text.secondary">
+                  No leave history found for this academic year.
+                </Typography>
+              </Box>
+            }
+          />
+          {historyData &&
+            typeof historyData.totalCount === 'number' &&
+            historyData.totalCount > (historyData.items?.length ?? 0) && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                Showing {historyData.items?.length ?? 0} of {historyData.totalCount} leave requests
+                for this academic year (max {100} per page).
+              </Typography>
+            )}
+        </Card>
+      )}
     </Box>
   );
 };

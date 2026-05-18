@@ -6,7 +6,7 @@ import { Provider, useDispatch } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import store, { persistor } from './store';
-import { loadUser } from './auth/authSlice';
+import { loadUser, getEmployee } from './auth/authSlice';
 
 const ReduxProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
@@ -50,6 +50,7 @@ const LoadUser = memo(() => {
   useEffect(() => {
     if (sessionData?.profile?.sub && !isInitialize.current) {
       dispatch(loadUser(sessionData) as any);
+      dispatch(getEmployee(sessionData) as any);
       isInitialize.current = true;
     }
   }, [dispatch, sessionData]);

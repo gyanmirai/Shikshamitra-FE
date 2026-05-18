@@ -9,15 +9,18 @@ import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
-import React, { useRef, useState, useEffect } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/runPayroll/runPayrollApi';
+import {
+  useLazyGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipPdfQuery,
+} from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Card,
@@ -74,6 +77,8 @@ const PaySlipGenerationScreen = () => {
     },
   });
 
+  const [getEmployeeSalarySlipPdf] = useLazyGetEmployeeSalarySlipPdfQuery();
+
   useEffect(() => {
     if (employee?.id && monthYear) {
       getEmployeeSalarySlip({
@@ -83,11 +88,28 @@ const PaySlipGenerationScreen = () => {
     }
   }, [employee?.id, getEmployeeSalarySlip, monthYear]);
 
-  const { handlePrint, handleDownload } = usePayslipActions({
+  const normalizedSalarySlip = employeeSalarySlip
+    ? {
+        ...employeeSalarySlip,
+        netSalary: employeeSalarySlip.netSalary ?? employeeSalarySlip.netPay ?? 0,
+      }
+    : null;
+
+  const downloadOfficialPdf = useCallback(async () => {
+    if (!employee?.id || !monthYear) return null;
+
+    return getEmployeeSalarySlipPdf({
+      employeeId: employee.id,
+      monthYear: monthYear.format('MMMM-YYYY').toUpperCase(),
+    }).unwrap();
+  }, [employee?.id, getEmployeeSalarySlipPdf, monthYear]);
+
+  const { handlePrint, handleDownload, isDownloading } = usePayslipActions({
     printRef,
     employee,
     monthYear,
-    employeeSalarySlip,
+    employeeSalarySlip: normalizedSalarySlip,
+    downloadOfficialPdf,
   });
 
   const hasData = !!employee?.id && !employeeSalarySlipLoading && !!employeeSalarySlip;
@@ -164,10 +186,10 @@ const PaySlipGenerationScreen = () => {
               startIcon={<Iconify icon="ion:download-outline" />}
               variant="outlined"
               color="inherit"
-              disabled={!hasData}
+              disabled={!hasData || isDownloading}
               onClick={handleDownload}
             >
-              Download
+              {isDownloading ? 'Downloading...' : 'Download'}
             </Button>
             <Button
               size="small"
@@ -184,7 +206,7 @@ const PaySlipGenerationScreen = () => {
               startIcon={<Iconify icon="iconamoon:email-thin" />}
               variant="outlined"
               color="inherit"
-              disabled={!employee?.id}
+              disabled
             >
               Email
             </Button>
@@ -192,14 +214,14 @@ const PaySlipGenerationScreen = () => {
         </Box>
       </Card>
 
-      {employee?.id && !employeeSalarySlipLoading ? (
+      {hasData ? (
         <>
           {/* Summary Stats */}
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, md: 4 }}>
               <SummaryWidget
                 title="Total Earning"
-                total={employeeSalarySlip?.totalEarning || 0}
+                total={normalizedSalarySlip?.totalEarning || 0}
                 icon="solar:wallet-bold-duotone"
                 color="success"
               />
@@ -208,7 +230,7 @@ const PaySlipGenerationScreen = () => {
             <Grid size={{ xs: 12, md: 4 }}>
               <SummaryWidget
                 title="Total Deduction"
-                total={employeeSalarySlip?.totalDeduction || 0}
+                total={normalizedSalarySlip?.totalDeduction || 0}
                 icon="solar:bill-list-bold-duotone"
                 color="error"
               />
@@ -217,12 +239,13 @@ const PaySlipGenerationScreen = () => {
             <Grid size={{ xs: 12, md: 4 }}>
               <SummaryWidget
                 title="Net Payable"
-                total={employeeSalarySlip?.netSalary || 0}
+                total={normalizedSalarySlip?.netSalary || 0}
                 icon="solar:card-send-bold-duotone"
                 color="info"
               />
             </Grid>
           </Grid>
+          <PayBasisCard slip={normalizedSalarySlip} />
           <Divider />
           {/* Tables Section */}
           <Grid container spacing={1} alignItems="stretch">
@@ -232,7 +255,7 @@ const PaySlipGenerationScreen = () => {
                 subheader="Breakdown of earnings"
                 icon="solar:hand-money-linear"
                 iconColor={{ bg: 'success.lighter', color: 'success.main' }}
-                data={employeeSalarySlip?.earnings || []}
+                data={normalizedSalarySlip?.earnings || []}
                 tableId="earning-table"
                 nameColumnLabel="Earning Type"
                 noDataText="No Earning Found"
@@ -244,7 +267,7 @@ const PaySlipGenerationScreen = () => {
                 subheader="Breakdown of deductions"
                 icon="solar:minus-circle-linear"
                 iconColor={{ bg: 'error.lighter', color: 'error.main' }}
-                data={employeeSalarySlip?.deductions || []}
+                data={normalizedSalarySlip?.deductions || []}
                 tableId="deduction-table"
                 nameColumnLabel="Deduction Type"
                 noDataText="No Deduction Found"
@@ -300,7 +323,7 @@ const PaySlipGenerationScreen = () => {
           ref={printRef}
           employee={employee}
           monthYear={monthYear}
-          slip={employeeSalarySlip}
+          slip={normalizedSalarySlip}
         />
       </Box>
     </Box>
@@ -323,6 +346,78 @@ interface SalaryDetailsTableCardProps {
   nameColumnLabel: string;
   noDataText: string;
 }
+
+interface PayBasisCardProps {
+  slip:
+    | {
+        payableDays?: number | null;
+        payrollBasisDays?: number | null;
+        lopDays?: number | null;
+        presentDays?: number | null;
+        halfWorkingDays?: number | null;
+        prorationFactor?: number | null;
+        payrollDayCalculationMode?: string | null;
+      }
+    | null
+    | undefined;
+}
+
+const formatDays = (value: number | null | undefined) =>
+  value === null || value === undefined ? '-' : Number(value).toLocaleString('en-IN');
+
+const formatMode = (value: string | null | undefined) => {
+  if (!value) return '-';
+  return value
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
+const PayBasisCard = ({ slip }: PayBasisCardProps) => {
+  const items = [
+    { label: 'Payable Days', value: formatDays(slip?.payableDays) },
+    { label: 'Payroll Basis Days', value: formatDays(slip?.payrollBasisDays) },
+    { label: 'LOP / Absent Days', value: formatDays(slip?.lopDays) },
+    {
+      label: 'Proration Factor',
+      value:
+        slip?.prorationFactor === null || slip?.prorationFactor === undefined
+          ? '-'
+          : Number(slip.prorationFactor).toFixed(4),
+    },
+    { label: 'Present Days', value: formatDays(slip?.presentDays) },
+    { label: 'Half Days', value: formatDays(slip?.halfWorkingDays) },
+    { label: 'Day Calculation', value: formatMode(slip?.payrollDayCalculationMode) },
+  ];
+
+  return (
+    <Card variant="outlined" sx={{ p: 2 }}>
+      <Typography variant="subtitle1" sx={{ mb: 1 }}>
+        Pay Basis
+      </Typography>
+      <Grid container spacing={1}>
+        {items.map((item) => (
+          <Grid key={item.label} size={{ xs: 6, md: 3 }}>
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 1,
+                minHeight: 64,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                {item.label}
+              </Typography>
+              <Typography variant="subtitle2">{item.value}</Typography>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+    </Card>
+  );
+};
 
 export const SalaryDetailsTableCard = ({
   title,

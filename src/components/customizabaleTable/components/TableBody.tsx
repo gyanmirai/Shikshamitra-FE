@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 
 import { EmptyContent } from '../../empty-content'; // Adjusted path
+import { getColumnSizeSx } from '../utils/columnSizing';
+
 import type { IData, IColumn } from '../types';
 
 const fadeSlideIn = keyframes`
@@ -160,7 +162,7 @@ export const TableBody = ({
                       backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                       boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
                       animation: `${fadeSlideIn} 0.4s ease both`,
-                      width: column.minWidth,
+                      ...getColumnSizeSx(column, columnWidths[column.id]),
                       // ...(columnWidths[column.id]
                       //   ? {
                       //       width: columnWidths[column.id],
@@ -171,6 +173,7 @@ export const TableBody = ({
                       //     }
                       //   : {}),
                       ...getStickyStyle(column),
+                      ...column.cellSx,
                     }}
                   >
                     {column.render

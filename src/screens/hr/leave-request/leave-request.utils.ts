@@ -5,6 +5,7 @@ import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 export const LEAVE_TARGET_EMPLOYEE_REQUIRED = 'HR:Leave:020033';
+export const LEAVE_EMPLOYEE_NOT_FOUND = 'HR:Leave:020006';
 export const SELF_EMPLOYEE_ID = 'self';
 export const SELF_OPTION = { id: SELF_EMPLOYEE_ID, label: 'Self' } as const;
 

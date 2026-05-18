@@ -62,10 +62,13 @@ export const getEmployee = createAsyncThunk(
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${userData?.access_token}`,
+            Authorization: `Bearer ${userData?.accessToken}`,
           },
         }
       );
+      if (!employeeRes.ok) {
+        return null;
+      }
       const employeeData = await employeeRes.json();
       return employeeData;
     } catch (error) {
@@ -125,6 +128,7 @@ const authSlice = createSlice({
         // state.loading = false;
       })
       .addCase(getEmployee.rejected, (state) => {
+        state.employee = null;
         // state.error = action.payload;
         // state.loading = false;
       });

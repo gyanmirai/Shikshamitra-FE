@@ -53,6 +53,16 @@ export const runPayrollApi = employeeApi.injectEndpoints({
       }),
       providesTags: [employeeType.salarySlip],
     }),
+
+    getEmployeeSalarySlipPdf: builder.query({
+      query: (params) => ({
+        url: '/payroll/salary-slips/pdf',
+        method: 'GET',
+        params,
+        responseHandler: (response) => response.blob(),
+      }),
+      providesTags: [employeeType.salarySlip],
+    }),
   }),
 });
 
@@ -64,4 +74,5 @@ export const {
   useUnmarkPayrollReviewedMutation,
   useGetEmployeeSalarySlipQuery,
   useLazyGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipPdfQuery,
 } = runPayrollApi;
