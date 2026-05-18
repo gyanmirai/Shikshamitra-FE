@@ -124,7 +124,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     if (Object.keys(columnWidths).length === 0) return {} as Record<string, number>;
     const widths: Record<string, number> = {};
     memoizedColumns.forEach((col, i) => {
-      widths[col.id] = columnWidths[col.id] ?? (headerRefs[i] as number) ?? 100;
+      const configuredWidth = typeof col.width === 'number' ? col.width : undefined;
+      widths[col.id] = columnWidths[col.id] ?? configuredWidth ?? (headerRefs[i] as number) ?? 100;
     });
     return widths;
   }, [columnWidths, memoizedColumns, headerRefs]);

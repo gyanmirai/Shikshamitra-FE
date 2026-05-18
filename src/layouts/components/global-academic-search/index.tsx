@@ -119,6 +119,65 @@ const GlobalAcademicSearch = () => {
   );
   const options = getDivisionOptions();
 
+  const clearAcademicSelection = useCallback(
+    (clearYear: boolean) => {
+      if (clearYear) {
+        dispatch(setCurrentYear({}));
+      }
+      dispatch(setCurrentBoard({}));
+      dispatch(setCurrentMedium({}));
+      setSelectedDivision(null);
+    },
+    [dispatch]
+  );
+
+  // Clear persisted selections that do not belong to the freshly loaded tenant data.
+  useEffect(() => {
+    if (isYearLoading || !years?.items) {
+      return;
+    }
+
+    if (!currentYear?.id) {
+      return;
+    }
+
+    const persistedYear = years.items.find((year: AcademicYear) => year.id === currentYear.id);
+    if (!persistedYear) {
+      clearAcademicSelection(true);
+      return;
+    }
+
+    if (isBoardLoading || !boardData?.items) {
+      return;
+    }
+
+    if (!currentBoard?.id && !currentMedium?.id) {
+      return;
+    }
+
+    const persistedBoard = currentBoard?.id
+      ? boardData.items.find(
+          (board: Board) => board.id === currentBoard.id && board.academicYearId === currentYear.id
+        )
+      : null;
+    const persistedMediumExists =
+      !currentMedium?.id ||
+      persistedBoard?.educationMediums?.some((medium: Medium) => medium.id === currentMedium.id);
+
+    if (!persistedBoard || !persistedMediumExists) {
+      clearAcademicSelection(false);
+    }
+  }, [
+    boardData?.items,
+    clearAcademicSelection,
+    currentBoard?.id,
+    currentMedium?.id,
+    currentYear?.id,
+    isBoardLoading,
+    isYearLoading,
+    years?.items,
+  ]);
+
   // Effect to update selected division when current selections change
   useEffect(() => {
     if (currentYear?.id && currentBoard?.id && currentMedium?.id) {

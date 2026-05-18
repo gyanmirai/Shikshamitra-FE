@@ -205,6 +205,9 @@ const HrEmployee = () => {
         label: 'Role',
         align: 'left',
         sticky: true,
+        width: 170,
+        minWidth: 140,
+        maxWidth: 180,
         render(value, row) {
           return (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -217,7 +220,8 @@ const HrEmployee = () => {
       {
         id: 'fullName',
         label: 'Name',
-        minWidth: '16vw',
+        width: 260,
+        minWidth: 240,
         sticky: true,
         align: 'left',
         render(value, row) {
@@ -229,6 +233,11 @@ const HrEmployee = () => {
               onClick={() => setSearchParams('employee', row?.id)}
               sx={{
                 cursor: 'pointer',
+                minWidth: 0,
+                maxWidth: '100%',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
                 '&:hover': { color: 'primary.main', textDecoration: 'underline' },
               }}
             >
@@ -265,8 +274,9 @@ const HrEmployee = () => {
       },
       {
         id: 'dob',
-        label: 'Date of Birth',
-        minWidth: '8vw',
+        label: 'DOB',
+        width: 120,
+        minWidth: 110,
         filterType: 'date',
         align: 'left',
       },
@@ -274,6 +284,8 @@ const HrEmployee = () => {
         id: 'genderValue',
         label: 'Gender',
         align: 'left',
+        width: 96,
+        minWidth: 90,
         filterType: 'enum',
         enumOptions: [
           { label: 'Male', value: 'Male' },
@@ -282,17 +294,27 @@ const HrEmployee = () => {
       },
       {
         id: 'doi',
-        label: 'Date of Joining',
-        minWidth: 150,
+        label: 'DOJ',
+        width: 120,
+        minWidth: 110,
         filterType: 'date',
         align: 'left',
       },
-      { id: 'email', label: 'Email', align: 'left' },
-      { id: 'mobileNo', label: 'Mobile No.', minWidth: 150, align: 'left' },
+      {
+        id: 'email',
+        label: 'Email',
+        align: 'left',
+        width: 220,
+        minWidth: 180,
+        maxWidth: 260,
+        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+      },
+      { id: 'mobileNo', label: 'Mobile', width: 128, minWidth: 120, align: 'left' },
       {
         id: 'isTeaching',
-        label: 'Employee Group',
-        minWidth: '10vw',
+        label: 'Group',
+        width: 120,
+        minWidth: 110,
         align: 'left',
         filterType: 'enum',
         enumOptions: EmployeeGroupTypeFilter,
@@ -300,14 +322,23 @@ const HrEmployee = () => {
           return EmployeeGroupType[value === true ? 0 : 1];
         },
       },
-      { id: 'shiftName', label: 'Shift', align: 'left', minWidth: 350 },
+      {
+        id: 'shiftName',
+        label: 'Shift',
+        align: 'left',
+        width: 240,
+        minWidth: 200,
+        maxWidth: 280,
+        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+      },
       // { id: 'organization', label: 'Organization', align: 'left' },
       {
         id: 'status',
         label: 'Status',
         filterType: 'enum',
         enumOptions: EmployeeStatusTypeOptions,
-        minWidth: '70px',
+        width: 92,
+        minWidth: 84,
         align: 'left',
         sticky: true,
         render(value, row) {
@@ -321,7 +352,10 @@ const HrEmployee = () => {
         isSort: false,
         sticky: true,
         isFilter: false,
-        minWidth: '80px',
+        width: 112,
+        minWidth: 104,
+        headerSx: { px: 1.5 },
+        cellSx: { px: 1.5 },
         render(value, row) {
           return (
             <ThreeDotsActions

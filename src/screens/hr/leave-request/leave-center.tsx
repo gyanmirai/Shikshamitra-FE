@@ -2,8 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
@@ -43,10 +43,17 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
       permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
   );
   const canReviewLeaves = !isSelfContext && Boolean(isAdminUser || hasApprovalPermission);
+  const isSelfLeaveBlocked = isSelfContext && isAdminUser;
   const visibleTabs = useMemo(
     () => getLeaveCenterVisibleTabs(context, canReviewLeaves),
     [canReviewLeaves, context]
   );
+
+  useEffect(() => {
+    if (isSelfLeaveBlocked) {
+      router.replace('/dashboard/');
+    }
+  }, [isSelfLeaveBlocked, router]);
 
   const requestedTab = useMemo<LeaveCenterTab>(() => {
     if (isSelfContext) {
@@ -94,6 +101,10 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     const query = nextParams.toString();
     router.push(query ? `${HR_ROUTE}?${query}` : HR_ROUTE);
   };
+
+  if (isSelfLeaveBlocked) {
+    return null;
+  }
 
   return (
     <Box

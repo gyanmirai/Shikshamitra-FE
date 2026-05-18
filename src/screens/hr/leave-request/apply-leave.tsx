@@ -23,7 +23,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Card, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   EmployeeLeaveStatusType,
@@ -40,8 +40,12 @@ import {
 
 import AddLeaveRequest from './leave-requst';
 import { ApproveRejectForm } from './leave-approvals';
-import { isAdminFromProfile } from './leave-request.utils';
 import LeaveCalender, { LeaveRequestForm } from './leave-calender';
+import {
+  isAdminFromProfile,
+  parseApiProblemDetail,
+  LEAVE_EMPLOYEE_NOT_FOUND,
+} from './leave-request.utils';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
@@ -51,6 +55,9 @@ import {
 
 const LEAVE_REQUESTS_PAGE_SIZE = 100;
 const MY_LEAVE_PATH = '/dashboard/my-leave';
+const LEAVE_REQUESTS_LOAD_ERROR_MESSAGE = 'Unable to load leave requests. Please try again.';
+const LEAVE_REQUESTS_NETWORK_ERROR_MESSAGE =
+  'Unable to connect to the leave service. Please check that the backend is running and try again.';
 
 const dedupeLeaveRequestsById = (items: any[]) => {
   const byId = new Map<string, any>();
@@ -85,10 +92,10 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   const canReviewLeaves = !isSelfMode && Boolean(isAdminUser || hasApprovalPermission);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
+  const [selfLeaveAccessError, setSelfLeaveAccessError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [triggerLeaveRequests] = useLazyGetLeaveRequestsQuery();
   const [triggerMyLeaveRequests] = useLazyGetMyLeaveRequestsQuery();
-  console.log('currentYear0000', currentYear);
   useEffect(() => {
     let isActive = true;
 
@@ -101,6 +108,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
 
       setLeaveRequests([]);
       setIsLeaveRequestsLoading(true);
+      setSelfLeaveAccessError(null);
 
       try {
         const allItems: any[] = [];
@@ -139,9 +147,22 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
         setLeaveRequests(dedupeLeaveRequestsById(allItems));
       } catch (e) {
         if (!isActive) return;
-        console.error(e);
+        const parsedError = parseApiProblemDetail(e);
+        if (isSelfMode && parsedError.errorCode === LEAVE_EMPLOYEE_NOT_FOUND) {
+          setSelfLeaveAccessError(
+            'Your user is not linked to an employee profile. Contact admin/HR.'
+          );
+          setLeaveRequests([]);
+          return;
+        }
+
+        const message =
+          (e as any)?.status === 'FETCH_ERROR'
+            ? LEAVE_REQUESTS_NETWORK_ERROR_MESSAGE
+            : parsedError.detail || LEAVE_REQUESTS_LOAD_ERROR_MESSAGE;
+
         shikshaMitraToast.error({
-          message: 'Unable to load leave requests. Please try again.',
+          message,
         });
         setLeaveRequests([]);
       } finally {
@@ -465,70 +486,78 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               }
             />
           )}
-          <Card
-            sx={{
-              display: 'flex',
-              p: 2,
-              gap: 2,
-              pl: 1,
-              mb: 1,
-              justifyContent: 'flex-end',
-            }}
-          >
-            <Box display="flex" gap={2}>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Add />}
-                onClick={() => {
-                  addLeaveRequestDialog.onTrue();
+          {selfLeaveAccessError ? (
+            <Card sx={{ p: 2 }}>
+              <Alert severity="warning">{selfLeaveAccessError}</Alert>
+            </Card>
+          ) : (
+            <>
+              <Card
+                sx={{
+                  display: 'flex',
+                  p: 2,
+                  gap: 2,
+                  pl: 1,
+                  mb: 1,
+                  justifyContent: 'flex-end',
                 }}
-                sx={{ px: '32px' }}
               >
-                Leave Request
-              </Button>
-              {!isSelfMode && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
-                  onClick={() => {
-                    viewCalendarView.onTrue();
-                  }}
-                  sx={{ px: '32px' }}
-                >
-                  View Calendar
-                </Button>
-              )}
-            </Box>
-          </Card>
-
-          <CustomizableTable
-            noDataText={
-              <>
-                No Leave Request Found{' '}
-                <Box
-                  onClick={() => addLeaveRequestDialog.onTrue?.()}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{
-                    '&:hover': {
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Leave Request
+                <Box display="flex" gap={2}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<Add />}
+                    onClick={() => {
+                      addLeaveRequestDialog.onTrue();
+                    }}
+                    sx={{ px: '32px' }}
+                  >
+                    Leave Request
+                  </Button>
+                  {!isSelfMode && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<Iconify icon={GlobalIcons.calenderIcon} />}
+                      onClick={() => {
+                        viewCalendarView.onTrue();
+                      }}
+                      sx={{ px: '32px' }}
+                    >
+                      View Calendar
+                    </Button>
+                  )}
                 </Box>
-              </>
-            }
-            onSendNotification={handlerSendNotification}
-            showCheckbox={selectedStudents.length !== 0}
-            isLoading={isLeaveRequestsLoading}
-            tableId="apply-leave-table"
-            data={tableData}
-            columns={columns}
-          />
+              </Card>
+
+              <CustomizableTable
+                noDataText={
+                  <>
+                    No Leave Request Found{' '}
+                    <Box
+                      onClick={() => addLeaveRequestDialog.onTrue?.()}
+                      color="primary.main"
+                      fontWeight={600}
+                      sx={{
+                        '&:hover': {
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      Leave Request
+                    </Box>
+                  </>
+                }
+                onSendNotification={handlerSendNotification}
+                showCheckbox={selectedStudents.length !== 0}
+                isLoading={isLeaveRequestsLoading}
+                tableId="apply-leave-table"
+                data={tableData}
+                columns={columns}
+              />
+            </>
+          )}
         </>
       )}
 

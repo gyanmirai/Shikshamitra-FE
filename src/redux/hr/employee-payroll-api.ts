@@ -5,9 +5,15 @@ import { employeeApi } from './employeeApi';
 export interface DayCalculationRequest {
   academicYearId?: string;
   dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
+  saturdayWorkPolicy?: SaturdayWorkPolicy;
+  holidaySyncMode?: HolidaySyncMode;
   manualDays?: number;
   manualMonthDays?: DayCalculationManualMonth[];
+  holidayOverrides?: PayrollHolidayOverride[];
 }
+
+export type SaturdayWorkPolicy = 'full-day' | 'half-day' | 'off';
+export type HolidaySyncMode = 'synced-with-overrides';
 
 export interface DayCalculationManualMonth {
   year: number;
@@ -20,21 +26,47 @@ export interface DayCalculationMonthPreview {
   month: number;
   calendarDays: number;
   sundays: number;
+  saturdays: number;
+  saturdayUnits: number;
+  weeklyOffDays: number;
   holidayDays: number;
+  payrollHolidayDays: number;
+  payrollHolidayUnits: number;
   workingDays: number;
   manualDays?: number | null;
   basisDays: number;
   dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
+  locked: boolean;
   holidayNames: string[];
+  holidays: PayrollResolvedHoliday[];
 }
 
 export interface DayCalculationSetting {
   academicYearId?: string;
   dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
+  saturdayWorkPolicy: SaturdayWorkPolicy;
+  holidaySyncMode: HolidaySyncMode;
   manualDays?: number | null;
   manualMonthDays: DayCalculationManualMonth[];
+  holidayOverrides: PayrollHolidayOverride[];
   usedFallbackSetting: boolean;
   months: DayCalculationMonthPreview[];
+}
+
+export interface PayrollHolidayOverride {
+  date: string;
+  holidayName: string;
+  includedInPayroll: boolean;
+  calendarHolidayId?: string | null;
+}
+
+export interface PayrollResolvedHoliday {
+  date: string;
+  calendarHolidayId?: string | null;
+  holidayName: string;
+  source: 'calendar' | 'payroll' | string;
+  includedInPayroll: boolean;
+  isEditable: boolean;
 }
 
 export interface DayCalculationResponse {

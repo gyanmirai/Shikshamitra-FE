@@ -25,6 +25,13 @@ interface SalarySlipData {
   totalEarning: number | null | undefined;
   totalDeduction: number | null | undefined;
   netSalary: number | null | undefined;
+  payrollBasisDays?: number | null;
+  payableDays?: number | null;
+  lopDays?: number | null;
+  presentDays?: number | null;
+  halfWorkingDays?: number | null;
+  prorationFactor?: number | null;
+  payrollDayCalculationMode?: string | null;
   earnings: LineItem[];
   deductions: LineItem[];
 }
@@ -66,6 +73,17 @@ const tdRightStyle: React.CSSProperties = {
   ...tdStyle,
   textAlign: 'right',
 };
+
+const formatDays = (value: number | null | undefined) =>
+  value === null || value === undefined ? '-' : Number(value).toLocaleString('en-IN');
+
+const formatMode = (value: string | null | undefined) =>
+  value
+    ? value
+        .split('-')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    : '-';
 
 const PaySlipPrintView = React.forwardRef<HTMLDivElement, PaySlipPrintViewProps>(
   ({ employee, monthYear, slip }, ref) => {
@@ -144,6 +162,39 @@ const PaySlipPrintView = React.forwardRef<HTMLDivElement, PaySlipPrintViewProps>
               </p>
             </div>
           ))}
+        </div>
+
+        <div
+          style={{
+            border: '1px solid #e5e7eb',
+            background: '#f8fafc',
+            padding: 12,
+            marginBottom: 24,
+          }}
+        >
+          <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700 }}>Pay Basis</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+            {[
+              ['Payable Days', formatDays(slip.payableDays)],
+              ['Payroll Basis Days', formatDays(slip.payrollBasisDays)],
+              ['LOP / Absent Days', formatDays(slip.lopDays)],
+              [
+                'Proration Factor',
+                slip.prorationFactor === null || slip.prorationFactor === undefined
+                  ? '-'
+                  : Number(slip.prorationFactor).toFixed(4),
+              ],
+              ['Present Days', formatDays(slip.presentDays)],
+              ['Half Days', formatDays(slip.halfWorkingDays)],
+              ['Day Calculation', formatMode(slip.payrollDayCalculationMode)],
+              ['Pay Period', period],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <p style={{ margin: 0, color: '#6b7280', fontSize: 10 }}>{label}</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 600 }}>{value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Tables side by side */}
