@@ -78,13 +78,13 @@ const PayrollHome = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Payroll overview"
+        heading="Overview"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Overview' }]}
         description="Run payroll with a simple flow: monthly workbench, lock reviewed rows, then payslips."
       />
 
       {isError ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 1 }}>
           Could not load payroll preview for this month. Please refresh and try again.
         </Alert>
       ) : null}
@@ -92,8 +92,8 @@ const PayrollHome = () => {
       <Stack
         spacing={1.5}
         sx={{
-          mb: 2,
-          p: 2,
+          mb: 1,
+          p: 1,
           border: (theme) => `1px solid ${theme.palette.divider}`,
           borderRadius: 2,
           bgcolor: 'background.paper',
@@ -121,7 +121,7 @@ const PayrollHome = () => {
           <Box sx={{ flex: 1 }} />
           <Button
             variant="contained"
-            size="medium"
+            size="small"
             onClick={() => router.push(nextPath)}
             startIcon={<Iconify icon="solar:arrow-right-up-bold" />}
           >
@@ -130,7 +130,7 @@ const PayrollHome = () => {
         </Stack>
       </Stack>
 
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={1} sx={{ mb: 1 }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -272,7 +272,7 @@ const PayrollHome = () => {
         </Grid>
       </Grid>
 
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 1 }}>
         <PayrollAdvancedRoadmapCard />
       </Box>
     </Box>

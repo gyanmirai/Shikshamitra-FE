@@ -1,12 +1,13 @@
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
+import { varAlpha } from 'src/theme/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Grid, Paper, Button, TextField, Typography } from '@mui/material';
+import { Box, Grid, Chip, Paper, Button, Divider, TextField, Typography } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
@@ -66,22 +67,62 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     applicableMonth: c?.applicableMonth,
   }));
 
+  const accentColor = type === 'earning' ? 'success' : 'error';
+
   return (
-    <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', mt: 2 }}>
+    <Paper
+      elevation={0}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        mt: 1,
+        border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+        borderRadius: 2,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Accent strip */}
+      <Box
+        sx={{
+          height: '4px',
+          background: (theme) =>
+            type === 'earning'
+              ? `linear-gradient(90deg, ${theme.palette.success.main}, ${theme.palette.success.light})`
+              : `linear-gradient(90deg, ${theme.palette.error.main}, ${theme.palette.error.light})`,
+        }}
+      />
+
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" p={2} pb={1}>
-        <Typography
-          variant="h6"
-          sx={{
-            borderLeft: (theme) =>
-              `4px solid ${
-                type === 'earning' ? theme.palette.success.main : theme.palette.error.main
-              }`,
-            pl: 1,
-          }}
-        >
-          {label}
-        </Typography>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        px={2}
+        py={1.5}
+        sx={{ bgcolor: (t) => varAlpha(t.vars.palette[accentColor].mainChannel, 0.04) }}
+      >
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              width: 4,
+              height: 22,
+              borderRadius: 1,
+              bgcolor: `${accentColor}.main`,
+              flexShrink: 0,
+            }}
+          />
+          <Typography variant="subtitle1" fontWeight={700}>
+            {label}
+          </Typography>
+          <Chip
+            label={components.length}
+            size="small"
+            color={accentColor}
+            variant="soft"
+            sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700, ml: 0.5 }}
+          />
+        </Box>
 
         <Box display="flex" alignItems="center" gap={1}>
           {showTempAdd && (
@@ -100,6 +141,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           )}
           <Button
             variant="soft"
+            color={accentColor}
             startIcon={<Add />}
             onClick={() => {
               isAddingTemp.onFalse();
@@ -112,8 +154,10 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
         </Box>
       </Box>
 
+      <Divider />
+
       {/* Table */}
-      <Box px={2} pb={2} sx={{ flex: 1 }}>
+      <Box px={1.5} pb={1.5} pt={1} sx={{ flex: 1 }}>
         <CustomizableTable
           tableId={`${name}-components-table`}
           isFilter={false}
@@ -132,39 +176,50 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
               label: 'Component',
               render(value: any, row: any) {
                 return (
-                  <Box display="flex" flexDirection="column" gap={0.5}>
+                  <Box display="flex" flexDirection="column" gap={0.5} py={0.5}>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
+                      <Box
                         sx={{
-                          borderLeft: (theme) =>
-                            `3px solid ${
-                              row.isTemp
-                                ? theme.palette.warning.main
-                                : type === 'earning'
-                                  ? theme.palette.success.main
-                                  : theme.palette.error.main
-                            }`,
-                          pl: 1,
+                          width: 3,
+                          height: 16,
+                          borderRadius: 0.5,
+                          bgcolor: row.isTemp
+                            ? 'warning.main'
+                            : type === 'earning'
+                              ? 'success.main'
+                              : 'error.main',
+                          flexShrink: 0,
                         }}
-                      >
+                      />
+                      <Typography variant="body2" fontWeight={600} lineHeight={1.3}>
                         {value}
                       </Typography>
                       {row.isTemp && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            bgcolor: 'warning.soft',
-                            color: 'warning.dark',
-                            px: 0.75,
-                            py: 0.25,
-                            borderRadius: 1,
-                            fontSize: '10px',
-                          }}
-                        >
-                          Temp
-                        </Typography>
+                        <Chip
+                          label="Temp"
+                          size="small"
+                          color="warning"
+                          variant="soft"
+                          sx={{ height: 18, fontSize: '10px', fontWeight: 700 }}
+                        />
+                      )}
+                      {row.isPercentage && (
+                        <Chip
+                          label="%"
+                          size="small"
+                          color="info"
+                          variant="soft"
+                          sx={{ height: 18, fontSize: '10px', fontWeight: 700 }}
+                        />
+                      )}
+                      {row.isFixed && !row.isPercentage && (
+                        <Chip
+                          label="Fixed"
+                          size="small"
+                          color="default"
+                          variant="soft"
+                          sx={{ height: 18, fontSize: '10px', fontWeight: 600 }}
+                        />
                       )}
                     </Box>
                     {row.applicableMonth && (
@@ -173,12 +228,15 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                         sx={{
                           bgcolor: 'background.neutral',
                           px: 1,
-                          py: 0.5,
+                          py: 0.25,
                           borderRadius: 1,
                           color: 'text.secondary',
+                          display: 'inline-block',
+                          width: 'fit-content',
+                          ml: 2,
                         }}
                       >
-                        {dayjs(row.applicableMonth).format('MMM-YYYY')}
+                        📅 {dayjs(row.applicableMonth).format('MMM YYYY')}
                       </Typography>
                     )}
                   </Box>
@@ -191,14 +249,18 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
               render(value: any, row: any) {
                 if (row.isPercentage) {
                   return (
-                    <Typography variant="body2" fontWeight={500}>
-                      {row.percentage != null ? `${row.percentage}%` : '-'}
-                    </Typography>
+                    <Chip
+                      label={row.percentage != null ? `${row.percentage}%` : '—'}
+                      size="small"
+                      color="info"
+                      variant="soft"
+                      sx={{ fontWeight: 600, fontSize: '0.78rem' }}
+                    />
                   );
                 }
                 if (row.isFixed) {
                   return (
-                    <Typography variant="body2" fontWeight={500}>
+                    <Typography variant="body2" fontWeight={600} color="text.primary">
                       {formatCurrency(value)}
                     </Typography>
                   );
@@ -206,7 +268,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                 return (
                   <NumericFormatCustom
                     size="small"
-                    variant="standard"
+                    variant="outlined"
                     label=""
                     name={`${name}.${row._idx}.amount`}
                     value={value ?? 0}
@@ -220,18 +282,21 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                       );
                       formik.setFieldTouched(`${name}.${row._idx}.amount`, true, false);
                     }}
-                    sx={{ width: 110 }}
+                    sx={{
+                      width: 120,
+                      '& .MuiOutlinedInput-root': { fontSize: '0.85rem' },
+                    }}
                   />
                 );
               },
             },
             {
               id: 'actions',
-              label: 'Actions',
+              label: '',
               isSort: false,
               isFilter: false,
               sticky: true,
-              minWidth: '80px',
+              minWidth: '56px',
               render(_value: any, row: any) {
                 return (
                   <ThreeDotsActions
@@ -519,8 +584,8 @@ const RenderPayrollFields = (props: any) => {
           </ShakingTextField>
         </Grid>
       </SectionCard>
-
-      <Grid container spacing={3}>
+      Leave Center
+      <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 6 }}>
           <RenderComponents
             formik={formik}

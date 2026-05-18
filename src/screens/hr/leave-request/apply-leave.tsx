@@ -96,6 +96,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   const [reloadKey, setReloadKey] = useState(0);
   const [triggerLeaveRequests] = useLazyGetLeaveRequestsQuery();
   const [triggerMyLeaveRequests] = useLazyGetMyLeaveRequestsQuery();
+
   useEffect(() => {
     let isActive = true;
 
@@ -438,7 +439,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
   );
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {viewCalendarView.value ? (
         <>
           {showBreadcrumbs && (
@@ -495,7 +496,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
               <Card
                 sx={{
                   display: 'flex',
-                  p: 2,
+                  p: 1,
                   gap: 2,
                   pl: 1,
                   mb: 1,

@@ -126,7 +126,7 @@ const PaySlipGenerationScreen = () => {
         description="View, download, print, or email finalized salary slips after payroll lock."
       />
 
-      <Card variant="outlined" sx={{ p: 2, width: '100%' }}>
+      <Card variant="outlined" sx={{ p: 1.3, width: '100%' }}>
         <Box sx={{ width: '100%' }} display="flex" alignItems="center" flexWrap="wrap">
           {/* Filters */}
           <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
