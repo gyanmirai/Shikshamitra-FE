@@ -5,11 +5,21 @@ import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Button, TextField, Typography, Autocomplete, DialogActions } from '@mui/material';
 import {
   useGetEarningComponentsQuery,
   useGetDeductionComponentsQuery,
 } from 'src/redux/hr/employee-payroll-api';
+import {
+  Box,
+  Chip,
+  Button,
+  Divider,
+  Checkbox,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 type Props = {
   open: boolean;
@@ -81,6 +91,15 @@ export default function PayrollComponentDialog({
           <Typography variant="h5">
             Add {type === 'earning' ? 'Earning' : 'Deduction'} Components
           </Typography>
+          {syncedValue.length > 0 && (
+            <Chip
+              label={`${syncedValue.length} selected`}
+              size="small"
+              color={type === 'earning' ? 'success' : 'error'}
+              variant="soft"
+              sx={{ fontWeight: 700, fontSize: '0.7rem' }}
+            />
+          )}
           <CustomTooltip
             sx={{ textAlign: 'justify' }}
             arrow
@@ -99,16 +118,74 @@ export default function PayrollComponentDialog({
           fullWidth
           loading={isLoading}
           size="small"
-          options={options}
+          options={[{ __selectAll: true } as any, ...options]}
           getOptionLabel={(option: any) =>
-            option?.earningComponentName || option?.deductionComponentName || ''
+            (option as any).__selectAll
+              ? ''
+              : option?.earningComponentName || option?.deductionComponentName || ''
           }
-          isOptionEqualToValue={(option: any, value: any) => getId(option) === getId(value)}
+          isOptionEqualToValue={(option: any, value: any) =>
+            !(option as any).__selectAll && getId(option) === getId(value)
+          }
+          disableCloseOnSelect
           slotProps={{
             chip: {
               size: 'small',
               variant: 'soft',
             },
+          }}
+          renderOption={(props, option, { selected }) => {
+            if ((option as any).__selectAll) {
+              const allSelected = syncedValue.length === options.length;
+              return (
+                <li key="__selectAll" style={{ padding: 0, listStyle: 'none' }}>
+                  <Box
+                    component="button"
+                    type="button"
+                    display="flex"
+                    alignItems="center"
+                    px={1}
+                    py={0.75}
+                    onClick={(e: any) => {
+                      e.stopPropagation();
+                      formik.setFieldValue('selectedComponents', allSelected ? [] : options);
+                    }}
+                    onKeyDown={(e: any) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        formik.setFieldValue('selectedComponents', allSelected ? [] : options);
+                      }
+                    }}
+                    sx={{
+                      width: '100%',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'none',
+                      textAlign: 'left',
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={syncedValue.length > 0 && !allSelected}
+                      size="small"
+                      sx={{ mr: 1, p: 0.5 }}
+                    />
+                    <Typography variant="body2" fontWeight={600}>
+                      {allSelected ? 'Deselect All' : 'Select All'}
+                    </Typography>
+                  </Box>
+                  <Divider />
+                </li>
+              );
+            }
+            const { key, ...restProps } = props as any;
+            return (
+              <li key={key} {...restProps}>
+                <Checkbox checked={selected} size="small" sx={{ mr: 1, p: 0.5 }} />
+                {option?.earningComponentName || option?.deductionComponentName || ''}
+              </li>
+            );
           }}
           value={syncedValue}
           onChange={(e, newValue) => formik.setFieldValue('selectedComponents', newValue)}

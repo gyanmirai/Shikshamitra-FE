@@ -80,7 +80,11 @@ const EmployeeSalaryStructureScreen = () => {
       <CustomBreadcrumbs
         heading="Payroll Structure"
         description="View and manage employee salary structures."
-        links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Payroll Structure' }]}
+        links={[
+          { name: 'HR/Staff' },
+          { name: 'Payroll Management' },
+          { name: 'Payroll Structure' },
+        ]}
       />
       <Card>
         <Box display="flex" gap={2} flexWrap="wrap" p={1}>
@@ -141,7 +145,7 @@ const EmployeeSalaryStructureScreen = () => {
               Edit Salary Structure
             </Button>
           </Box>
-          <Grid container spacing={3} alignItems="stretch">
+          <Grid container spacing={1} alignItems="stretch">
             <Grid size={{ xs: 12, md: 6 }}>
               <Section
                 title="Earning"

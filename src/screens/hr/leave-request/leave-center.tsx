@@ -5,7 +5,9 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Box, Tab, Card, Tabs } from '@mui/material';
+import { Box, Tab, Paper } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -119,17 +121,28 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
         gap: 1,
       }}
     >
       <CustomBreadcrumbs
-        heading={isSelfContext ? 'My Leave' : 'Leave Center'}
+        heading={
+          isSelfContext
+            ? 'My Leave'
+            : activeTab === 'approvals'
+              ? 'Leave Approvals'
+              : activeTab === 'balance'
+                ? 'Leave Balance'
+                : 'Apply Leave'
+        }
         links={
           isSelfContext
             ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]
             : [
                 { name: 'HR/Staff', href: '/hr/dashboard/' },
                 { name: 'Leave Management', href: HR_ROUTE },
+                { name: 'Leave Center' },
                 {
                   name:
                     activeTab === 'approvals'
@@ -143,26 +156,50 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
         description="Apply leave, track requests, review approvals, and monitor leave balance."
       />
 
-      <Card sx={{ px: 1 }}>
-        <Tabs
+      <Paper
+        sx={{
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+        }}
+      >
+        <CustomTabs
           value={activeTab}
           onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
+          role="tablist"
         >
-          {visibleTabs.includes('my-requests') && <Tab label="My Requests" value="my-requests" />}
-          {visibleTabs.includes('approvals') && <Tab label="Approvals" value="approvals" />}
-          {visibleTabs.includes('balance') && <Tab label="Balance" value="balance" />}
-        </Tabs>
-      </Card>
+          {visibleTabs.includes('my-requests') && (
+            <Tab
+              label="My Requests"
+              value="my-requests"
+              icon={<Iconify icon="mdi:file-document-edit-outline" width={20} />}
+            />
+          )}
+          {visibleTabs.includes('approvals') && (
+            <Tab
+              label="Approvals"
+              value="approvals"
+              icon={<Iconify icon="mdi:check-circle-outline" width={20} />}
+            />
+          )}
+          {visibleTabs.includes('balance') && (
+            <Tab
+              label="Balance"
+              value="balance"
+              icon={<Iconify icon="mdi:scale-balance" width={20} />}
+            />
+          )}
+        </CustomTabs>
+      </Paper>
 
-      {activeTab === 'my-requests' && (
-        <ApplyLeave mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
-      )}
-      {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
-      {activeTab === 'balance' && (
-        <LeaveBalance mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
-      )}
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        {activeTab === 'my-requests' && (
+          <ApplyLeave mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
+        )}
+        {activeTab === 'approvals' && canReviewLeaves && <LeaveApprovals showBreadcrumbs={false} />}
+        {activeTab === 'balance' && (
+          <LeaveBalance mode={isSelfContext ? 'self' : 'hr'} showBreadcrumbs={false} />
+        )}
+      </Box>
     </Box>
   );
 };

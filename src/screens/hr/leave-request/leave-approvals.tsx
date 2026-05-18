@@ -264,9 +264,8 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
       <Card
         sx={{
           display: 'flex',
-          p: 2,
+          p: 1,
           gap: 2,
-          mt: 1,
           pl: 1,
           mb: 1,
           justifyContent: 'space-between',
