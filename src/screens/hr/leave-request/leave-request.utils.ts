@@ -132,7 +132,7 @@ export function getLeaveCenterVisibleTabs(
   context: LeaveCenterContext,
   canReviewLeaves: boolean
 ): LeaveCenterTab[] {
-  if (context === 'hr' && canReviewLeaves) {
+  if (canReviewLeaves) {
     return ['my-requests', 'approvals', 'balance'];
   }
   return ['my-requests', 'balance'];

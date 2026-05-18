@@ -238,14 +238,20 @@ describe('problem details parsing', () => {
 });
 
 describe('leave center tab visibility', () => {
-  it('shows only administrative approvals in HR context for reviewers', () => {
-    expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['approvals']);
-    expect(resolveLeaveCenterTab('my-requests', ['approvals'], 'approvals')).toBe('approvals');
-    expect(resolveLeaveCenterTab('balance', ['approvals'], 'approvals')).toBe('approvals');
+  it('shows approvals alongside personal tabs for reviewers', () => {
+    expect(getLeaveCenterVisibleTabs('hr', true)).toEqual(['my-requests', 'approvals', 'balance']);
+    expect(getLeaveCenterVisibleTabs('self', true)).toEqual([
+      'my-requests',
+      'approvals',
+      'balance',
+    ]);
+    expect(
+      resolveLeaveCenterTab('approvals', ['my-requests', 'approvals', 'balance'], 'my-requests')
+    ).toBe('approvals');
   });
 
-  it('keeps personal leave tabs for self context and non-review HR users', () => {
-    expect(getLeaveCenterVisibleTabs('self', true)).toEqual(['my-requests', 'balance']);
+  it('keeps personal leave tabs for users who cannot review leaves', () => {
+    expect(getLeaveCenterVisibleTabs('self', false)).toEqual(['my-requests', 'balance']);
     expect(getLeaveCenterVisibleTabs('hr', false)).toEqual(['my-requests', 'balance']);
     expect(resolveLeaveCenterTab('balance', ['my-requests', 'balance'], 'my-requests')).toBe(
       'balance'
