@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 
 import { Iconify } from '../../iconify';
+import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IColumn, IParams } from '../types';
 
@@ -81,8 +82,7 @@ export const TableHeader = React.memo(
                     // fontSize: '13px',
                     fontWeight: 600,
                     color: 'text.secondary',
-                    minWidth: column.minWidth,
-                    ...(columnWidths[column.id] ? { width: columnWidths[column.id] } : {}),
+                    ...getColumnSizeSx(column, columnWidths[column.id]),
                     whiteSpace: 'nowrap',
                     py: 1.5,
                     px: 2,
@@ -113,6 +113,7 @@ export const TableHeader = React.memo(
                     zIndex: 100,
                     ...getStickyStyle(column, true),
                     position: 'sticky',
+                    ...column.headerSx,
                   }}
                 >
                   <Box
@@ -122,7 +123,7 @@ export const TableHeader = React.memo(
                       cursor: column.isSort !== false ? 'pointer' : 'default',
                       userSelect: 'none',
                       fontWeight: 'bold',
-
+                      minWidth: 0,
                       gap: 0.5,
                     }}
                     onClick={() => column.isSort !== false && onSort(column.id, column?.originalId)}
@@ -132,6 +133,9 @@ export const TableHeader = React.memo(
                       display="block"
                       textAlign={column.align}
                       gap={1}
+                      minWidth={0}
+                      overflow="hidden"
+                      textOverflow="ellipsis"
                       width={!column?.renderColumn ? 'auto' : 'inherit'}
                       component="span"
                     >
@@ -139,11 +143,11 @@ export const TableHeader = React.memo(
                     </Box>
                     {column.isSort !== false && (
                       <Box
-                        width="50px"
+                        width="18px"
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
-                        sx={{ flexGrow: '1', display: 'flex', justifyContent: 'start', pl: 1 }}
+                        sx={{ flexShrink: 0, display: 'flex', justifyContent: 'start' }}
                       >
                         {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
                           <Box component="span" sx={{ fontSize: '0.75em' }}>
@@ -154,6 +158,7 @@ export const TableHeader = React.memo(
                           size="small"
                           sx={{
                             opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
+                            p: 0.25,
                           }}
                         >
                           {sorts.find((sort) => sort.column === column.id)?.direction === 'asc' ? (
@@ -165,7 +170,7 @@ export const TableHeader = React.memo(
                       </Box>
                     )}
                     {column.isFilter && (
-                      <Box position="relative" display="flex" alignItems="center">
+                      <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
                         <Iconify
                           icon="fluent:filter-12-filled"
                           className="column-filter-icon"

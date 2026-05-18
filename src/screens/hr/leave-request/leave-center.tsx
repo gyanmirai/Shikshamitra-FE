@@ -2,8 +2,8 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useRouter, useSearchParams } from 'src/routes/hooks';
@@ -43,25 +43,39 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     (permission: any) =>
       permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
   );
-  const shouldCheckReports = !isAdminUser && !hasApprovalPermission;
+  const shouldCheckReports = !isSelfContext && !isAdminUser && !hasApprovalPermission;
   const { data: myReportsData } = useGetMyEmployeesUnderManagerQuery(undefined, {
     skip: !shouldCheckReports,
     refetchOnMountOrArgChange: true,
   });
   const hasReportingHierarchy = Boolean(myReportsData?.employees?.length);
-  const canReviewLeaves = Boolean(isAdminUser || hasApprovalPermission || hasReportingHierarchy);
+  const canReviewLeaves =
+    !isSelfContext && Boolean(isAdminUser || hasApprovalPermission || hasReportingHierarchy);
+  const isSelfLeaveBlocked = isSelfContext && isAdminUser;
   const visibleTabs = useMemo(
     () => getLeaveCenterVisibleTabs(context, canReviewLeaves),
     [canReviewLeaves, context]
   );
 
+  useEffect(() => {
+    if (isSelfLeaveBlocked) {
+      router.replace('/dashboard/');
+    }
+  }, [isSelfLeaveBlocked, router]);
+
   const requestedTab = useMemo<LeaveCenterTab>(() => {
+    if (isSelfContext) {
+      const tabFromQuery = searchParams.get('tab');
+      if (tabFromQuery === 'balance') return 'balance';
+      return initialTab === 'balance' ? 'balance' : 'my-requests';
+    }
+
     const tabFromQuery = searchParams.get('tab');
     if (tabFromQuery === 'approvals') return 'approvals';
     if (tabFromQuery === 'balance') return 'balance';
     if (tabFromQuery === 'my-requests') return 'my-requests';
     return initialTab;
-  }, [initialTab, searchParams]);
+  }, [initialTab, isSelfContext, searchParams]);
 
   const activeTab = resolveLeaveCenterTab(
     requestedTab,
@@ -76,10 +90,10 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
 
     if (isSelfContext) {
       const nextParams = new URLSearchParams(searchParams.toString());
-      if (nextTab === 'my-requests') {
-        nextParams.delete('tab');
+      if (nextTab === 'balance') {
+        nextParams.set('tab', 'balance');
       } else {
-        nextParams.set('tab', nextTab);
+        nextParams.delete('tab');
       }
       const query = nextParams.toString();
       router.push(query ? `${SELF_ROUTE}?${query}` : SELF_ROUTE);
@@ -95,6 +109,10 @@ const LeaveCenter = ({ context, initialTab = 'my-requests' }: LeaveCenterProps) 
     const query = nextParams.toString();
     router.push(query ? `${HR_ROUTE}?${query}` : HR_ROUTE);
   };
+
+  if (isSelfLeaveBlocked) {
+    return null;
+  }
 
   return (
     <Box

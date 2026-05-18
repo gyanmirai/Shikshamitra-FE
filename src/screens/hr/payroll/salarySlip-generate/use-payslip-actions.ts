@@ -1,9 +1,8 @@
 import type { Dayjs } from 'dayjs';
 import type { RefObject } from 'react';
 
-import JsPDF from 'jspdf';
-import { useCallback } from 'react';
-import autoTable from 'jspdf-autotable';
+import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 
 // ---------------------------------------------------------------------------
@@ -36,11 +35,11 @@ interface UsePayslipActionsParams {
   employee: Employee | null | undefined;
   monthYear: Dayjs | null | undefined;
   employeeSalarySlip: SalarySlip | null | undefined;
+  downloadOfficialPdf: () => Promise<Blob | null | undefined>;
 }
 
 // ---------------------------------------------------------------------------
-// PDF-safe currency formatter
-// jsPDF's built-in Helvetica font doesn't support ₹ (U+20B9), so we use Rs.
+// PDF-safe currency formatter used by payslip helpers.
 // ---------------------------------------------------------------------------
 export const pdfCurrency = (val: number | null | undefined): string => {
   // Gracefully handle undefined, null, or other falsey non-zero values
@@ -66,7 +65,10 @@ export function usePayslipActions({
   employee,
   monthYear,
   employeeSalarySlip,
+  downloadOfficialPdf,
 }: UsePayslipActionsParams) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // ── Print ────────────────────────────────────────────────────────────────
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -75,181 +77,46 @@ export function usePayslipActions({
 
   // ── Download PDF ─────────────────────────────────────────────────────────
   const handleDownload = useCallback(() => {
-    // 1. Guard against null employeeSalarySlip, but use optional chaining below as a second line of defense
-    if (!employeeSalarySlip) return;
+    if (!employeeSalarySlip || isDownloading) return;
 
-    const period = monthYear ? monthYear.format('MMMM YYYY') : '-';
-    const employeeName = employee?.label || 'Employee';
-    const doc = new JsPDF({
-      orientation: 'portrait',
-      unit: 'pt',
-      format: 'a4',
-    });
+    setIsDownloading(true);
+    downloadOfficialPdf()
+      .then((blob) => {
+        if (!blob || blob.size === 0 || (blob.type && blob.type !== 'application/pdf')) {
+          throw new Error('Invalid payslip PDF response.');
+        }
 
-    const pageW = doc.internal.pageSize.getWidth();
-    let y = 40;
-
-    // ── Title ──
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 20);
-    doc.text('Salary Slip', 40, y);
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(110, 110, 110);
-    doc.text(`Pay Period: ${period}`, 40, (y += 22));
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(20, 20, 20);
-    doc.text(employeeName, pageW - 40, 40, { align: 'right' });
-
-    y += 18;
-    doc.setDrawColor(210, 210, 210);
-    doc.setLineWidth(0.5);
-    doc.line(40, y, pageW - 40, y);
-    y += 22;
-
-    // ── Summary boxes ──
-    const gap = 12;
-    const boxW = (pageW - 80 - gap * 2) / 3;
-    const boxH = 58;
-    const summaries = [
-      {
-        label: 'Total Earnings',
-        value: employeeSalarySlip?.totalEarning || 0,
-        r: 22,
-        g: 101,
-        b: 52,
-      },
-      {
-        label: 'Total Deductions',
-        value: employeeSalarySlip?.totalDeduction || 0,
-        r: 185,
-        g: 28,
-        b: 28,
-      },
-      {
-        label: 'Net Payable',
-        value: employeeSalarySlip?.netSalary || 0,
-        r: 30,
-        g: 64,
-        b: 175,
-      },
-    ];
-
-    summaries.forEach((s, idx) => {
-      const bx = 40 + idx * (boxW + gap);
-      doc.setDrawColor(220, 220, 220);
-      doc.setFillColor(248, 250, 252);
-      doc.roundedRect(bx, y, boxW, boxH, 6, 6, 'FD');
-
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(120, 120, 120);
-      doc.text(s.label ?? 'Error', bx + boxW / 2, y + 18, { align: 'center' });
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(s.r, s.g, s.b);
-      doc.text(pdfCurrency(s.value), bx + boxW / 2, y + 40, {
-        align: 'center',
+        const employeeName = sanitizeFileName(employee?.label || 'Employee');
+        const fileName = `Payslip_${employeeName}_${monthYear?.format('MMM-YYYY') || 'unknown'}.pdf`;
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((error) => {
+        const message =
+          error?.data?.error?.message ||
+          error?.error ||
+          error?.message ||
+          'Could not download the official payslip PDF.';
+        toast.error(message);
+      })
+      .finally(() => {
+        setIsDownloading(false);
       });
-    });
+  }, [downloadOfficialPdf, employee?.label, employeeSalarySlip, isDownloading, monthYear]);
 
-    doc.setTextColor(0);
-    y += boxH + 26;
-
-    // ── Section headings + side-by-side tables ──
-    const halfW = (pageW - 80 - gap) / 2;
-    const leftX = 40;
-    const rightX = 40 + halfW + gap;
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(22, 101, 52);
-    doc.text('Earnings', leftX, y);
-
-    doc.setTextColor(153, 27, 27);
-    doc.text('Deductions', rightX, y);
-    doc.setTextColor(0);
-    y += 8;
-
-    // Earnings table
-    autoTable(doc, {
-      startY: y,
-      tableWidth: halfW,
-      margin: { left: leftX, right: pageW - leftX - halfW },
-      head: [['Earning Type', 'Amount']],
-      body: (employeeSalarySlip.earnings ?? []).map((e: EarningDeduction) => [
-        e.name,
-        pdfCurrency(e.amount ?? 0),
-      ]),
-      styles: {
-        fontSize: 10,
-        cellPadding: { top: 6, bottom: 6, left: 8, right: 8 },
-      },
-      headStyles: {
-        fillColor: [240, 253, 244],
-        textColor: [22, 101, 52],
-        fontStyle: 'bold',
-        lineWidth: 0.3,
-        lineColor: [187, 247, 208],
-      },
-      bodyStyles: { lineColor: [230, 230, 230], lineWidth: 0.3 },
-      columnStyles: { 1: { halign: 'right', cellWidth: 90 } },
-      alternateRowStyles: { fillColor: [250, 255, 250] },
-    } as any);
-
-    const earningsEndY = (doc as any).lastAutoTable.finalY;
-
-    // Deductions table
-    autoTable(doc, {
-      startY: y,
-      tableWidth: halfW,
-      margin: { left: rightX, right: 40 },
-      head: [['Deduction Type', 'Amount']],
-      body: (employeeSalarySlip.deductions ?? []).map((d: EarningDeduction) => [
-        d.name,
-        pdfCurrency(d.amount ?? 0),
-      ]),
-      styles: {
-        fontSize: 10,
-        cellPadding: { top: 6, bottom: 6, left: 8, right: 8 },
-      },
-      headStyles: {
-        fillColor: [255, 241, 242],
-        textColor: [153, 27, 27],
-        fontStyle: 'bold',
-        lineWidth: 0.3,
-        lineColor: [254, 205, 211],
-      },
-      bodyStyles: { lineColor: [230, 230, 230], lineWidth: 0.3 },
-      columnStyles: { 1: { halign: 'right', cellWidth: 90 } },
-      alternateRowStyles: { fillColor: [255, 250, 250] },
-    } as any);
-
-    const deductionsEndY = (doc as any).lastAutoTable.finalY;
-    y = Math.max(earningsEndY, deductionsEndY) + 30;
-
-    // ── Footer ──
-    doc.setDrawColor(210, 210, 210);
-    doc.setLineWidth(0.5);
-    doc.line(40, y, pageW - 40, y);
-    y += 16;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(160, 160, 160);
-    doc.text(
-      'This is a computer-generated payslip and does not require a signature.',
-      pageW / 2,
-      y,
-      { align: 'center' }
-    );
-
-    doc.save(`Payslip_${employeeName}_${monthYear?.format('MMM-YYYY') || 'unknown'}.pdf`);
-  }, [employee, monthYear, employeeSalarySlip]);
-
-  return { handlePrint, handleDownload };
+  return { handlePrint, handleDownload, isDownloading };
 }
+
+const sanitizeFileName = (value: string) =>
+  value
+    .trim()
+    .replace(/[<>:"/\\|?*]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'Employee';

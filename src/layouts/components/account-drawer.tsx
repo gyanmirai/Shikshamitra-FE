@@ -36,6 +36,14 @@ import { SignOutButton } from './sign-out-button';
 
 // ----------------------------------------------------------------------
 
+const hasRole = (role: unknown, expectedRole: string) => {
+  if (Array.isArray(role)) {
+    return role.some((item) => String(item).toLowerCase() === expectedRole);
+  }
+
+  return String(role || '').toLowerCase() === expectedRole;
+};
+
 export type AccountDrawerProps = IconButtonProps & {
   data?: {
     label: string;
@@ -60,6 +68,9 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
   const { data: user } = session;
 
   const { profile } = user;
+  const isAdminUser = hasRole(profile?.role, 'admin');
+  const isStudentUser = hasRole(profile?.role, 'student');
+  const canUseSelfLeaveCenter = !isAdminUser && !isStudentUser;
 
   const [open, setOpen] = useState(false);
 
@@ -180,33 +191,25 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
               borderBottom: `dashed 1px ${theme.vars.palette.divider}`,
             }}
           >
-            {profile?.role !== 'student' &&
+            {canUseSelfLeaveCenter &&
               [
-                ...(employee?.id
-                  ? [
-                      {
-                        label: 'My Leave',
-                        icon: <Iconify icon="mdi:calendar-account" />,
-                        info: null,
-                        onClick: () => {
-                          handleCloseDrawer();
-                          router.push('/dashboard/my-leave');
-                        },
-                      },
-                    ]
-                  : []),
-                ...(profile?.role !== 'admin'
-                  ? [
-                      {
-                        label: 'Profile',
-                        icon: <Iconify icon="mdi:user-box" />,
-                        info: null,
-                        onClick: () => {
-                          profileDialog.onTrue();
-                        },
-                      },
-                    ]
-                  : []),
+                {
+                  label: 'Leave Center',
+                  icon: <Iconify icon="mdi:calendar-account" />,
+                  info: null,
+                  onClick: () => {
+                    handleCloseDrawer();
+                    router.push('/dashboard/my-leave');
+                  },
+                },
+                {
+                  label: 'Profile',
+                  icon: <Iconify icon="mdi:user-box" />,
+                  info: null,
+                  onClick: () => {
+                    profileDialog.onTrue();
+                  },
+                },
               ].map((option) => (
                 // const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
 
