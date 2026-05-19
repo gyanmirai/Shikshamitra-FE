@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -120,7 +121,30 @@ const SeatAllocation = () => {
       )}
       {openSeatAllocation.value ? (
         <CustomDialog
-          title="Allocation Details"
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h6">
+                Seat Allocation
+                {selectedExam?.examName ? ` — ${selectedExam.examName}` : ''}
+                {selectedExam?.standardName ? ` · ${selectedExam.standardName}` : ''}
+              </Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="Drag and drop students into exam rooms to assign seats. Select a division and room to view available students and room capacity, then submit to save the allocation."
+              >
+                <Box component="span" sx={{ display: 'inline-flex' }}>
+                  <Iconify
+                    icon="lucide:info"
+                    sx={{ cursor: 'pointer' }}
+                    color="info.main"
+                    width={18}
+                  />
+                </Box>
+              </CustomTooltip>
+            </Box>
+          }
           open={openSeatAllocation.value}
           handleClose={openSeatAllocation.onFalse}
           fullScreen
@@ -175,7 +199,12 @@ const SeatAllocation = () => {
                   label="Division"
                   value={division}
                   isLoading={isLoading || isFetching}
-                  onChange={(val) => setDivision(val as string)}
+                  onChange={(val) => {
+                    setDivision(val as string);
+                    // Reset dependent state so no stale room selection or allocation data persists
+                    setRoom('');
+                    setDroppedData({ roomId: '', students: [] });
+                  }}
                   labelKey="name"
                   valueKey="id"
                   formControlProps={{ sx: { minWidth: '180px' } }}

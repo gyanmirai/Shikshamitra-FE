@@ -8,11 +8,11 @@ import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Button } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -44,7 +44,11 @@ const AssignElectiveSubject = () => {
   // --------------------------------------------
   // FETCH ELECTIVE GROUPS (subject-assignments filtered to elective/subjectType=1)
   // --------------------------------------------
-  const { data: subjectAssignmentsData } = useQueryAndMutation({
+  const {
+    data: subjectAssignmentsData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: { standardId: classes },
@@ -74,6 +78,7 @@ const AssignElectiveSubject = () => {
     setAllDivision(selectedClass?.divisions || []);
     setDivision(selectedClass?.divisions?.[0]?.id || '');
 
+    setElectiveGroupId('');
     setStudents([]);
     setStudentSelections({});
     setSelectedHeaderSubject('');
@@ -252,6 +257,7 @@ const AssignElectiveSubject = () => {
               value={division}
               labelKey="name"
               valueKey="id"
+              isLoading={isLoading || isFetching}
               disabled={!classes}
               onChange={(v) => setDivision(v as string)}
               formControlProps={{ sx: { minWidth: '200px' } }}
@@ -263,6 +269,7 @@ const AssignElectiveSubject = () => {
               onChange={(v) => setElectiveGroupId(v as string)}
               labelKey="name"
               valueKey="id"
+              isLoading={isLoading || isFetching}
               options={electiveGroups}
               disabled={!division}
               formControlProps={{ sx: { minWidth: '200px' } }}
@@ -313,7 +320,7 @@ const AssignElectiveSubject = () => {
           {
             id: 'electiveSubjects',
             label: '',
-            minWidth: '500px',
+            minWidth: '220px',
             isFilter: false,
             isSort: false,
             renderColumn: () => {
@@ -322,32 +329,48 @@ const AssignElectiveSubject = () => {
               const subjects = students[0]?.selectableSubjects || [];
 
               return (
-                <Box display="flex" gap={1.5}>
+                <Box display="flex" flexDirection="row" flexWrap="wrap" gap={1}>
                   {subjects.map((s: any) => {
                     const isSelected = selectedHeaderSubject === s.subjectId;
                     return (
-                      <Button
+                      <Box
                         key={s.subjectId}
-                        variant={isSelected ? 'contained' : 'outlined'}
                         onClick={() => handleHeaderSubjectClick(s.subjectId)}
-                        size="small"
                         sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          cursor: 'pointer',
                           borderRadius: 1,
-                          textTransform: 'none',
-                          fontWeight: isSelected ? 'bold' : 'normal',
-                          boxShadow: isSelected ? 2 : 0,
-                          color: isSelected ? '#fff' : s.subjectColor,
-                          borderColor: s.subjectColor,
-                          backgroundColor: isSelected ? s.subjectColor : 'transparent',
+                          overflow: 'hidden',
+                          border: '1px solid',
+                          borderColor: isSelected ? s.subjectColor : 'divider',
+                          backgroundColor: isSelected ? `${s.subjectColor}14` : 'grey.50',
                           '&:hover': {
-                            backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}15`,
+                            backgroundColor: `${s.subjectColor}20`,
                             borderColor: s.subjectColor,
-                            boxShadow: isSelected ? 3 : 0,
                           },
                         }}
                       >
-                        {s.subjectName}
-                      </Button>
+                        <Box
+                          sx={{
+                            width: 4,
+                            alignSelf: 'stretch',
+                            backgroundColor: isSelected ? s.subjectColor : 'grey.400',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            px: 1.5,
+                            py: 0.5,
+                            fontWeight: isSelected ? 600 : 400,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {s.subjectName}
+                        </Typography>
+                      </Box>
                     );
                   })}
                 </Box>
@@ -355,33 +378,49 @@ const AssignElectiveSubject = () => {
             },
 
             render: (_, row) => (
-              <Box display="flex" gap={1.5}>
+              <Box display="flex" flexDirection="row" flexWrap="wrap" gap={1}>
                 {row.selectableSubjects?.map((s: any) => {
                   const isSelected = studentSelections[row.studentId] === s.subjectId;
 
                   return (
-                    <Button
+                    <Box
                       key={s.subjectId}
-                      variant={isSelected ? 'contained' : 'outlined'}
                       onClick={() => handleStudentSubjectClick(row.studentId, s.subjectId)}
-                      size="small"
                       sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        cursor: 'pointer',
                         borderRadius: 1,
-                        textTransform: 'none',
-                        fontWeight: isSelected ? 'bold' : 'normal',
-                        boxShadow: isSelected ? 2 : 0,
-                        color: isSelected ? '#fff' : s.subjectColor,
-                        borderColor: s.subjectColor,
-                        backgroundColor: isSelected ? s.subjectColor : 'transparent',
+                        overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: isSelected ? s.subjectColor : 'divider',
+                        backgroundColor: isSelected ? `${s.subjectColor}14` : 'grey.50',
                         '&:hover': {
-                          backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}15`,
+                          backgroundColor: `${s.subjectColor}20`,
                           borderColor: s.subjectColor,
-                          boxShadow: isSelected ? 3 : 0,
                         },
                       }}
                     >
-                      {s.subjectName}
-                    </Button>
+                      <Box
+                        sx={{
+                          width: 4,
+                          alignSelf: 'stretch',
+                          backgroundColor: isSelected ? s.subjectColor : 'grey.400',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          px: 1.5,
+                          py: 0.5,
+                          fontWeight: isSelected ? 600 : 400,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {s.subjectName}
+                      </Typography>
+                    </Box>
                   );
                 })}
               </Box>

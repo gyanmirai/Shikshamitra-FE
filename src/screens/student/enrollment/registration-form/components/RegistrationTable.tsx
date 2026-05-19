@@ -83,7 +83,7 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         render: (value, row) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
-              variant="caption"
+              variant="inherit"
               noWrap
               sx={{
                 maxWidth: 150,
@@ -121,7 +121,7 @@ const RegistrationTableComponent: React.FC<RegistrationTableProps> = ({
         render: (value, row) => (
           <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
             <Typography
-              variant="caption"
+              variant="inherit"
               noWrap
               sx={{
                 maxWidth: 150,

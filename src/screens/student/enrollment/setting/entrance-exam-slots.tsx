@@ -12,7 +12,6 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -40,6 +39,7 @@ import {
   Button,
   TextField,
   Typography,
+  Autocomplete,
   DialogActions,
 } from '@mui/material';
 import {
@@ -345,6 +345,8 @@ interface IRoomOption {
   capacity: number;
   /** Label shown in the dropdown */
   label: string;
+  /** Group header for Autocomplete groupBy */
+  group: string;
 }
 
 export const SlotsForm = ({
@@ -380,31 +382,13 @@ export const SlotsForm = ({
         floorName: room.floorName ?? '',
         capacity: room.capacity ?? 0,
         label: `${room.buildingName ?? ''} › ${room.floorName ?? ''} › ${room.roomName ?? ''}`,
+        group: `${room.buildingName ?? 'Unknown Building'} › ${room.floorName ?? 'Unknown Floor'}`,
       })),
     [roomsData]
   );
 
-  // Cascading selection state
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
-  const [selectedFloorId, setSelectedFloorId] = useState<string>('');
+  // Single room selection state
   const [selectedRoom, setSelectedRoom] = useState<IRoomOption | null>(null);
-
-  // Floors derived from the selected building
-  const floorOptions: any[] = useMemo(
-    () => (buildings ?? []).find((b: any) => b.id === selectedBuildingId)?.floors ?? [],
-    [buildings, selectedBuildingId]
-  );
-
-  // Rooms filtered by selected building + floor
-  const filteredRoomOptions: IRoomOption[] = useMemo(() => {
-    if (!selectedBuildingId) return [];
-    const selectedFloor = floorOptions.find((f: any) => f.id === selectedFloorId);
-    return roomOptions.filter((room) => {
-      const matchBuilding = room.buildingId === selectedBuildingId;
-      if (!selectedFloorId || !selectedFloor) return matchBuilding;
-      return matchBuilding && room.floorName === selectedFloor.floorName;
-    });
-  }, [roomOptions, selectedBuildingId, selectedFloorId, floorOptions]);
 
   // Hydrate cascading state in edit mode once data is available
   useEffect(() => {
@@ -414,14 +398,11 @@ export const SlotsForm = ({
       );
       if (match) {
         setSelectedRoom(match);
-        setSelectedBuildingId(match.buildingId);
         formik.setFieldValue('buildingId', match.buildingId);
-        // Resolve the floor id from the building's floors list
         const buildingFloors =
           (buildings ?? []).find((b: any) => b.id === match.buildingId)?.floors ?? [];
         const floor = buildingFloors.find((f: any) => f.floorName === match.floorName);
         if (floor) {
-          setSelectedFloorId(floor.id);
           formik.setFieldValue('floorId', floor.id);
         }
         formik.setFieldValue('roomNo', match.roomName);
@@ -430,8 +411,6 @@ export const SlotsForm = ({
     // Reset when dialog closes
     if (!editData) {
       setSelectedRoom(null);
-      setSelectedBuildingId('');
-      setSelectedFloorId('');
       formik.setFieldValue('buildingId', '');
       formik.setFieldValue('floorId', '');
     }
@@ -709,106 +688,70 @@ export const SlotsForm = ({
                 </ShakingTextField>
               </Grid>
             </Grid>
-            {/* ---- Cascading Room selection: Building | Floor | Room ---- */}
-            <Grid container spacing={2}>
-              {/* Building */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.buildingId && formik.errors.buildingId) || false}
-                >
-                  <CustomSelect
-                    label="Building *"
-                    size="small"
-                    isLoading={isBuildingsLoading || isRoomsLoading}
-                    options={buildings ?? []}
-                    labelKey="buildingName"
-                    valueKey="id"
-                    value={selectedBuildingId}
-                    onChange={(value) => {
-                      setSelectedBuildingId(value as string);
-                      setSelectedFloorId('');
-                      setSelectedRoom(null);
-                      formik.setFieldValue('buildingId', value);
-                      formik.setFieldValue('floorId', '');
-                      formik.setFieldValue('roomNo', '');
-                    }}
-                    onBlur={formik.handleBlur}
-                    name="buildingId"
-                    error={formik.touched.buildingId && Boolean(formik.errors.buildingId)}
-                    helperText={
-                      formik.touched.buildingId && formik.errors.buildingId
-                        ? String(formik.errors.buildingId)
-                        : ''
-                    }
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Floor */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.floorId && formik.errors.floorId) || false}
-                >
-                  <CustomSelect
-                    label="Floor *"
-                    size="small"
-                    options={floorOptions}
-                    labelKey="floorName"
-                    valueKey="id"
-                    value={selectedFloorId}
-                    onChange={(value) => {
-                      setSelectedFloorId(value as string);
-                      setSelectedRoom(null);
-                      formik.setFieldValue('floorId', value);
-                      formik.setFieldValue('roomNo', '');
-                    }}
-                    onBlur={formik.handleBlur}
-                    name="floorId"
-                    disabled={!selectedBuildingId}
-                    error={formik.touched.floorId && Boolean(formik.errors.floorId)}
-                    helperText={
-                      formik.touched.floorId && formik.errors.floorId
-                        ? String(formik.errors.floorId)
-                        : ''
-                    }
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Room */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.roomNo && formik.errors.roomNo) || false}
-                >
-                  <CustomSelect
+            {/* ---- Single Room selection with grouped Autocomplete ---- */}
+            <ShakingTextField
+              error={
+                !!(
+                  (formik.touched.roomNo && formik.errors.roomNo) ||
+                  (formik.touched.buildingId && formik.errors.buildingId) ||
+                  (formik.touched.floorId && formik.errors.floorId)
+                ) || false
+              }
+            >
+              <Autocomplete
+                size="small"
+                loading={isRoomsLoading || isBuildingsLoading}
+                options={roomOptions}
+                groupBy={(option) => option.group}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, val) => option.id === val.id}
+                value={selectedRoom}
+                onChange={(_e, newVal) => {
+                  setSelectedRoom(newVal);
+                  if (newVal) {
+                    formik.setFieldValue('roomNo', newVal.roomName);
+                    formik.setFieldValue('buildingId', newVal.buildingId);
+                    formik.setFieldValue('studentLimit', newVal.capacity ?? '');
+                    const buildingFloors =
+                      (buildings ?? []).find((b: any) => b.id === newVal.buildingId)?.floors ?? [];
+                    const floor = buildingFloors.find((f: any) => f.floorName === newVal.floorName);
+                    formik.setFieldValue('floorId', floor?.id ?? '');
+                  } else {
+                    formik.setFieldValue('roomNo', '');
+                    formik.setFieldValue('buildingId', '');
+                    formik.setFieldValue('floorId', '');
+                    formik.setFieldValue('studentLimit', '');
+                  }
+                }}
+                onBlur={() => {
+                  formik.setFieldTouched('roomNo', true);
+                  formik.setFieldTouched('buildingId', true);
+                  formik.setFieldTouched('floorId', true);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
                     label="Room No. *"
-                    size="small"
-                    options={filteredRoomOptions}
-                    labelKey="roomName"
-                    valueKey="id"
-                    value={selectedRoom?.id ?? ''}
-                    onChange={(value) => {
-                      const room = filteredRoomOptions.find((r) => r.id === value) ?? null;
-                      setSelectedRoom(room);
-                      formik.setFieldValue('roomNo', room?.roomName ?? '');
-                      formik.setFieldValue('studentLimit', room?.capacity ?? '');
-                    }}
-                    onBlur={formik.handleBlur}
                     name="roomNo"
-                    disabled={!selectedFloorId}
-                    error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
+                    size="small"
+                    error={
+                      (formik.touched.roomNo && Boolean(formik.errors.roomNo)) ||
+                      (formik.touched.buildingId && Boolean(formik.errors.buildingId)) ||
+                      (formik.touched.floorId && Boolean(formik.errors.floorId))
+                    }
                     helperText={
                       formik.touched.roomNo && formik.errors.roomNo
                         ? String(formik.errors.roomNo)
-                        : ''
+                        : formik.touched.buildingId && formik.errors.buildingId
+                          ? String(formik.errors.buildingId)
+                          : formik.touched.floorId && formik.errors.floorId
+                            ? String(formik.errors.floorId)
+                            : ''
                     }
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   />
-                </ShakingTextField>
-              </Grid>
-            </Grid>
+                )}
+              />
+            </ShakingTextField>
           </Stack>
         </DialogScrollContent>
         <DialogActions>

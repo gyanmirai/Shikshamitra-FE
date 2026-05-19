@@ -13,20 +13,22 @@ export const chaptersApi = academicApi.injectEndpoints({
       providesTags: [academicType.chapter],
     }),
 
-    // GET - Fetch all chapters by assigned standard ID
+    // GET - Fetch all chapters by standardId and optional subjectId
     getChaptersByStandard: builder.query({
-      query: ({ assignedStandardId }) => ({
-        url: `/academic/curriculum/chapters/${assignedStandardId}`,
+      query: ({ standardId, subjectId }) => ({
+        url: `/academic/curriculum/chapters`,
         method: 'GET',
+        params: { standardId, subjectId },
       }),
       providesTags: [academicType.chapter],
     }),
 
     // POST - Create new chapter
     addChapter: builder.mutation({
-      query: (body) => ({
+      query: ({ standardId, subjectId, body }) => ({
         url: `/academic/curriculum/chapters`,
         method: 'POST',
+        params: { standardId, subjectId },
         body,
       }),
       invalidatesTags: [academicType.chapter],

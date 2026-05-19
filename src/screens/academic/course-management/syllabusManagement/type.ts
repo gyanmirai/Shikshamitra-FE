@@ -39,7 +39,7 @@ export interface IChapterFormValues {
   description: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
-  documents?: File[];
+  documents?: string[];
 }
 
 // Props interface for AddNewChapter component

@@ -9,6 +9,7 @@ export const getChapterInitialValues = (editData?: IChapter | null) => {
     description: editData?.description || '',
     startDate: editData?.chapterStartTime ? dayjs(editData.chapterStartTime, 'DD-MM-YYYY') : null,
     endDate: editData?.chapterEndTime ? dayjs(editData.chapterEndTime, 'DD-MM-YYYY') : null,
+    documents: [] as string[],
   };
   return initialValues;
 };

@@ -118,6 +118,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       examDate: sub.examDate?.toISOString() ?? null,
       startTime: sub.startTime?.toISOString() ?? null,
       endTime: sub.endTime?.toISOString() ?? null,
+      gradeScalingId: sub.gradeScalingId ?? null,
       totalMarks: Number(sub.totalMarks),
       passingMarks: Number(sub.passingMarks),
       notes: sub.notes,
@@ -126,17 +127,26 @@ export function serializeSchedulePayload(values: IExamFormValues) {
 }
 
 export function serializeRoomAssignmentPayload(values: IExamFormValues) {
+  // Exclude the 'all' placeholder — mirrors serializeBasicDetailsPayload
+  const validDivisionIds = values.divisions.filter((id) => id !== 'all');
+
   return {
     isRoomAssigned: values.isRoomAssign,
-    subjects: values.subjects.map((sub) => ({
-      subjectId: sub.subjectId,
-      examDate: sub.examDate?.toISOString() ?? null,
-      divisions: values.divisions.map((divId) => ({
+    subjects: values.subjects.map((sub) => {
+      const mappedDivisions = validDivisionIds.map((divId) => ({
         divisionId: divId,
         roomIds: values.roomDetails[sub.subjectId]?.[divId]?.roomIds ?? [],
         capacity: values.roomDetails[sub.subjectId]?.[divId]?.capacity ?? 0,
-      })),
-    })),
+      }));
+
+      return {
+        subjectId: sub.subjectId,
+        examDate: sub.examDate?.toISOString() ?? null,
+        divisions: values.isRoomAssign
+          ? mappedDivisions.filter((div) => div.roomIds.length > 0)
+          : mappedDivisions,
+      };
+    }),
   };
 }
 

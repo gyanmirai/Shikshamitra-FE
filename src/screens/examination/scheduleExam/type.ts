@@ -33,6 +33,7 @@ export interface IExamSubject {
   totalMarks: number | '';
   passingMarks: number | '';
   notes: string;
+  gradeScalingId?: string | null;
 }
 
 /** Room details keyed by subjectId → divisionId */

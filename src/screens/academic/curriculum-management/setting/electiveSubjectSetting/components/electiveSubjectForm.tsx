@@ -10,13 +10,14 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   useAddElectiveGroupMutation,
@@ -125,12 +126,14 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
                 name="name"
                 onChange={(e) => {
                   const value = e.target.value
-                    // Remove everything except letters, numbers, spaces, dash, colon
-                    .replace(/[^a-zA-Z-:0-9\s]/g, '')
-                    // Capitalize each word
                     .split(' ')
                     .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                      word
+                        .split('/')
+                        .map((part) =>
+                          part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ''
+                        )
+                        .join('/')
                     )
                     .join(' ');
                   formik.setFieldValue('name', value);
@@ -165,13 +168,32 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
 
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
-              <Typography
-                variant="subtitle2"
-                sx={{ mb: 1 }}
-                color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
-              >
-                Elective Group Color *
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 0.5 }}>
+                <Typography
+                  variant="subtitle2"
+                  color={
+                    formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'
+                  }
+                >
+                  Elective Group Color *
+                </Typography>
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="This subject color is used throughout the system to visually identify this subject."
+                >
+                  <Box component="span" sx={{ display: 'inline-flex' }}>
+                    <Iconify
+                      icon="lucide:info"
+                      sx={{ cursor: 'pointer' }}
+                      color="info.main"
+                      width={18}
+                      height={18}
+                    />
+                  </Box>
+                </CustomTooltip>
+              </Box>
               <ColorPickerCircle
                 onSelect={(color: string) => formik.setFieldValue('color', color)}
                 initialColor={formik.values.color}
