@@ -299,6 +299,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [activeStep, setActiveStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const formikRef = React.useRef<any>(null);
@@ -701,6 +702,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           await handleAdditionalDetails(values, formik);
           shikshaMitraToast.success({ message: 'Additional details updated successfully' });
           saveSucceeded = true;
+        } else if (activeStep === 3) {
+          saveSucceeded = true;
         } else if (activeStep === 4) {
           await handleWorkExperience(values, formik);
           if (isSaveButton) {
@@ -729,6 +732,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
 
         if (saveSucceeded) {
+          if (!editData) {
+            setCompletedSteps((prev) =>
+              prev.includes(activeStep) ? prev : [...prev, activeStep].sort((a, b) => a - b)
+            );
+          }
           // Sync formik's initialValues with the saved state so dirty becomes false,
           // and clear the initialized flag so fresh API data re-populates on next visit.
           formik.resetForm({ values: { ...formik.values, employeeId: resolvedEmployeeId } });
@@ -769,6 +777,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     ]
   );
 
+  const canNavigateToStep = useCallback(
+    (step: number) => {
+      if (editData) {
+        return true;
+      }
+      return step === activeStep || completedSteps.includes(step);
+    },
+    [activeStep, completedSteps, editData]
+  );
+
   return (
     <>
       <CustomStepperWithFormik
@@ -779,17 +797,20 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         steps={steps}
         viewMode="vertical"
         activeStep={activeStep}
+        completedSteps={!editData ? completedSteps : undefined}
+        isStepClickable={canNavigateToStep}
         handleBack={() => {
           setActiveStep(activeStep - 1);
         }}
         validationSchema={validations[activeStep]}
         onStepClick={(step) => {
-          if (editData) {
-            if (isChanges) {
-              setPendingStep(step);
-            } else {
-              setActiveStep(step);
-            }
+          if (step === activeStep || !canNavigateToStep(step)) {
+            return;
+          }
+          if (isChanges) {
+            setPendingStep(step);
+          } else {
+            setActiveStep(step);
           }
         }}
         isDisabledLabel={!editData}

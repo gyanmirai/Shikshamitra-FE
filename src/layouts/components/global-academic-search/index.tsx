@@ -15,6 +15,7 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import React, { useMemo, useEffect, useCallback } from 'react';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import { setDriverNextEnabled } from 'src/utils/driverBtnConfig';
+import { findCurrentAcademicYear } from 'src/utils/academic-year';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 import {
@@ -117,7 +118,8 @@ const GlobalAcademicSearch = () => {
   const [selectedDivision, setSelectedDivision] = React.useState<GlobalAcademicSearchOption | null>(
     null
   );
-  const options = getDivisionOptions();
+  const options = useMemo(() => getDivisionOptions(), [getDivisionOptions]);
+  const autoSelectedAccessTokenRef = React.useRef<string | null>(null);
 
   const clearAcademicSelection = useCallback(
     (clearYear: boolean) => {
@@ -177,6 +179,36 @@ const GlobalAcademicSearch = () => {
     isYearLoading,
     years?.items,
   ]);
+
+  useEffect(() => {
+    const accessToken = data?.accessToken;
+
+    if (
+      !accessToken ||
+      autoSelectedAccessTokenRef.current === accessToken ||
+      isYearLoading ||
+      isBoardLoading ||
+      !years?.items?.length
+    ) {
+      return;
+    }
+
+    const academicYear = findCurrentAcademicYear<AcademicYear>(years.items);
+    if (!academicYear) {
+      autoSelectedAccessTokenRef.current = accessToken;
+      return;
+    }
+
+    const defaultOption = options.find((option) => option.academicYear.id === academicYear.id);
+
+    dispatch(setCurrentYear(defaultOption?.academicYear ?? academicYear));
+    dispatch(setCurrentBoard(defaultOption?.board ?? {}));
+    dispatch(setCurrentMedium(defaultOption?.medium ?? {}));
+    setSelectedDivision(defaultOption ?? null);
+    setDriverNextEnabled(true);
+
+    autoSelectedAccessTokenRef.current = accessToken;
+  }, [data?.accessToken, dispatch, isBoardLoading, isYearLoading, options, years?.items]);
 
   // Effect to update selected division when current selections change
   useEffect(() => {

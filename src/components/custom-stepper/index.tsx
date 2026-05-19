@@ -77,6 +77,8 @@ interface CustomStepperWithFormikProps {
     isBackClick: boolean;
   }) => any;
   onStepClick?: (index: number, label: string, formik: any) => void;
+  completedSteps?: number[];
+  isStepClickable?: (index: number) => boolean;
   errors?: boolean[];
   isDisabledLabel?: boolean;
   showSaveButton?: boolean;
@@ -239,6 +241,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   validationSchema,
   renderItem,
   onStepClick = () => {},
+  completedSteps,
+  isStepClickable,
   errors = [],
   validateOnChange = false,
   onSave = () => {},
@@ -265,6 +269,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   });
 
   const isVertical = viewMode === 'vertical' && !isMobile;
+  const hasExplicitCompletedSteps = Array.isArray(completedSteps);
 
   const renderStepper = () => (
     <Stepper
@@ -347,29 +352,37 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           overflowY: 'auto',
         }}
       > */}
-      {steps.map((label: string, index: number) => (
-        <Step
-          key={label}
-          id={`step-label-${index}`}
-          sx={{ cursor: 'pointer' }}
-          onClick={() => {
-            onStepClick?.(index, label, formik);
-          }}
-        >
-          <CustomStepLabel
-            error={errors[index]}
-            sx={{
-              '& span': { fontSize: '12px', mt: '2px !important' },
-              '& .MuiStepLabel-iconContainer': { display: 'block' },
+      {steps.map((label: string, index: number) => {
+        const isClickable = isStepClickable ? isStepClickable(index) : true;
+        const isLabelDisabled = isStepClickable ? !isClickable : isDisabledLabel;
+
+        return (
+          <Step
+            key={label}
+            id={`step-label-${index}`}
+            completed={hasExplicitCompletedSteps ? completedSteps.includes(index) : undefined}
+            sx={{ cursor: isClickable ? 'pointer' : 'no-drop' }}
+            onClick={() => {
+              if (isClickable) {
+                onStepClick?.(index, label, formik);
+              }
             }}
-            // @ts-ignore
-            isdisabledlabel={`${isDisabledLabel}`}
-            StepIconComponent={ModernStepIcon}
           >
-            {label}
-          </CustomStepLabel>
-        </Step>
-      ))}
+            <CustomStepLabel
+              error={errors[index]}
+              sx={{
+                '& span': { fontSize: '12px', mt: '2px !important' },
+                '& .MuiStepLabel-iconContainer': { display: 'block' },
+              }}
+              // @ts-ignore
+              isdisabledlabel={`${isLabelDisabled}`}
+              StepIconComponent={ModernStepIcon}
+            >
+              {label}
+            </CustomStepLabel>
+          </Step>
+        );
+      })}
       {/* </Scrollbar> */}
     </Stepper>
   );

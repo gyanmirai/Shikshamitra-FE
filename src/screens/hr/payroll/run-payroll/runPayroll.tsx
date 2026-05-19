@@ -83,6 +83,26 @@ const ISSUE_LABELS: Record<
   NEGATIVE_NET_PAY: { label: 'Negative net pay', severity: 'CRITICAL', color: 'error' },
   NO_PREVIOUS_MONTH_COMPARISON: { label: 'No previous month', severity: 'INFO', color: 'info' },
   LARGE_SALARY_VARIANCE: { label: 'Large variance', severity: 'WARNING', color: 'warning' },
+  ATTENDANCE_POLICY_EVALUATION_MISSING: {
+    label: 'Published attendance evaluation missing',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ATTENDANCE_POLICY_EVALUATION_CONFIG_STALE: {
+    label: 'Attendance evaluation uses older policy',
+    severity: 'WARNING',
+    color: 'warning',
+  },
+  ATTENDANCE_POLICY_EFFECTIVE_BOUNDARY: {
+    label: 'Attendance policy boundary warning',
+    severity: 'INFO',
+    color: 'info',
+  },
+  ATTENDANCE_POLICY_EVALUATION_RESULT_MISSING: {
+    label: 'Employee attendance evaluation result missing',
+    severity: 'WARNING',
+    color: 'warning',
+  },
 };
 
 const statusColor = {
@@ -102,8 +122,10 @@ const formatDelta = (value: number | null, percent: number | null) => {
 
 const resolveIssueSeverity = (codes: string[]): PayrollRow['issueSeverity'] => {
   if (!codes.length) return 'CLEAN';
-  if (codes.some((code) => ISSUE_LABELS[code]?.severity === 'CRITICAL')) return 'CRITICAL';
-  if (codes.some((code) => ISSUE_LABELS[code]?.severity === 'WARNING')) return 'WARNING';
+  if (codes.some((code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === 'CRITICAL'))
+    return 'CRITICAL';
+  if (codes.some((code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === 'WARNING'))
+    return 'WARNING';
   return 'INFO';
 };
 
@@ -855,7 +877,7 @@ const RunPayroll = () => {
                 <Stack spacing={0.75}>
                   {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
                     const codes = activeRow.issueCodes.filter(
-                      (code) => ISSUE_LABELS[code]?.severity === severity
+                      (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity
                     );
                     if (!codes.length) return null;
                     const color =

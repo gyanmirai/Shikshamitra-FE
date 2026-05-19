@@ -73,7 +73,6 @@ export const ICONS = {
 
   // Modern Iconify icons for sidebar navigation (user's curated selection)
   dashboard: iconify('lucide:layout-dashboard'),
-  leaveCenter: iconify('mdi:calendar-check-outline'),
   student: iconify('ph:student'),
   academic: iconify('solar:square-academic-cap-2-broken'),
   class: iconify('streamline:class-lesson'),
@@ -110,16 +109,6 @@ export const navData = (visibility: boolean[]) => [
         _action: 'dashboard',
         shortcutKey: 'Alt+D',
         shortcutKeyName: 'Alt+D',
-        visibility: visibility[0],
-        permissionName: `${defaultModulePermissionName}Dashboard`,
-      },
-      {
-        title: 'Leave Center',
-        path: '/dashboard/my-leave',
-        icon: ICONS.leaveCenter,
-        _action: 'dashboard',
-        shortcutKey: 'Alt+L',
-        shortcutKeyName: 'Alt+L',
         visibility: visibility[0],
         permissionName: `${defaultModulePermissionName}Dashboard`,
       },

@@ -1,6 +1,23 @@
+import type {
+  PagedResult,
+  AttendanceConfiguration,
+  AttendancePolicyEvaluationRun,
+  AttendancePolicyEvaluationResult,
+  AttendancePolicyEvaluationRequest,
+  AttendanceConfigurationPreviewRequest,
+  AttendanceConfigurationPreviewResponse,
+  AttendancePolicyEvaluationResultsRequest,
+} from 'src/screens/hr/attendance-setting/types';
+
 import { employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
+
+export const attendanceEvaluationPublishInvalidationTags = [
+  employeeType.attendanceRule,
+  employeeType.employeePayroll,
+  employeeType.runPayroll,
+];
 
 export interface GetDayAttendanceParams {
   attendanceDate: string;
@@ -16,23 +33,10 @@ export interface LockAttendanceDayParams {
   attendanceDate: string;
 }
 
-export interface AttendanceConfigurationResponse {
+export type AttendanceConfigurationResponse = Partial<AttendanceConfiguration> & {
   success: boolean;
   message: string;
-  dailyRules?: {
-    hoursBasedPayPercentage: number;
-  };
-  lateEarlyRules?: {
-    graceTime: number;
-    maxLateAllowedPerMonth: number;
-    penaltyType: 'none' | 'deduct_half_day' | 'deduct_full_day';
-  };
-  overtime?: {
-    enabled: boolean;
-    rate?: '1.5x' | '2.0x' | 'flat' | null;
-    minOvertimeMinutes?: number | null;
-  };
-}
+};
 
 export const buildGetDayAttendanceQueryParams = ({
   attendanceDate,
@@ -72,6 +76,97 @@ export const attendanceApi = employeeApi.injectEndpoints({
         method: 'POST',
         params: { academicYearId },
         body,
+      }),
+      invalidatesTags: [employeeType.attendanceRule],
+    }),
+    previewAttendanceConfiguration: builder.mutation<
+      AttendanceConfigurationPreviewResponse,
+      { academicYearId: string; body: AttendanceConfigurationPreviewRequest }
+    >({
+      query: ({ academicYearId, body }) => ({
+        url: '/attendance/configuration/preview',
+        method: 'POST',
+        params: { academicYearId },
+        body,
+      }),
+    }),
+    previewAttendancePolicyEvaluation: builder.mutation<
+      AttendancePolicyEvaluationRun,
+      { body: AttendancePolicyEvaluationRequest }
+    >({
+      query: ({ body }) => ({
+        url: '/attendance/configuration/evaluations/preview',
+        method: 'POST',
+        body,
+      }),
+    }),
+    createAttendancePolicyEvaluation: builder.mutation<
+      AttendancePolicyEvaluationRun,
+      { body: AttendancePolicyEvaluationRequest }
+    >({
+      query: ({ body }) => ({
+        url: '/attendance/configuration/evaluations',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [employeeType.attendanceRule],
+    }),
+    getAttendancePolicyEvaluations: builder.query<
+      AttendancePolicyEvaluationRun[],
+      { academicYearId: string; month: number; year: number }
+    >({
+      query: ({ academicYearId, month, year }) => ({
+        url: '/attendance/configuration/evaluations',
+        method: 'GET',
+        params: { academicYearId, month, year },
+      }),
+      providesTags: [employeeType.attendanceRule],
+    }),
+    getAttendancePolicyEvaluation: builder.query<AttendancePolicyEvaluationRun, { runId: string }>({
+      query: ({ runId }) => ({
+        url: `/attendance/configuration/evaluations/${runId}`,
+        method: 'GET',
+      }),
+      providesTags: [employeeType.attendanceRule],
+    }),
+    getAttendancePolicyEvaluationResults: builder.query<
+      PagedResult<AttendancePolicyEvaluationResult>,
+      AttendancePolicyEvaluationResultsRequest
+    >({
+      query: ({ runId, ...params }) => ({
+        url: `/attendance/configuration/evaluations/${runId}/results`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: [employeeType.attendanceRule],
+    }),
+    approveAttendancePolicyEvaluation: builder.mutation<
+      AttendancePolicyEvaluationRun,
+      { runId: string }
+    >({
+      query: ({ runId }) => ({
+        url: `/attendance/configuration/evaluations/${runId}/approve`,
+        method: 'POST',
+      }),
+      invalidatesTags: [employeeType.attendanceRule],
+    }),
+    publishAttendancePolicyEvaluation: builder.mutation<
+      AttendancePolicyEvaluationRun,
+      { runId: string }
+    >({
+      query: ({ runId }) => ({
+        url: `/attendance/configuration/evaluations/${runId}/publish`,
+        method: 'POST',
+      }),
+      invalidatesTags: attendanceEvaluationPublishInvalidationTags,
+    }),
+    cancelAttendancePolicyEvaluation: builder.mutation<
+      AttendancePolicyEvaluationRun,
+      { runId: string }
+    >({
+      query: ({ runId }) => ({
+        url: `/attendance/configuration/evaluations/${runId}/cancel`,
+        method: 'POST',
       }),
       invalidatesTags: [employeeType.attendanceRule],
     }),
@@ -195,6 +290,15 @@ export const attendanceApi = employeeApi.injectEndpoints({
 export const {
   useGetAttendanceConfigurationQuery,
   useSaveAttendanceConfigurationMutation,
+  usePreviewAttendanceConfigurationMutation,
+  usePreviewAttendancePolicyEvaluationMutation,
+  useCreateAttendancePolicyEvaluationMutation,
+  useGetAttendancePolicyEvaluationsQuery,
+  useGetAttendancePolicyEvaluationQuery,
+  useGetAttendancePolicyEvaluationResultsQuery,
+  useApproveAttendancePolicyEvaluationMutation,
+  usePublishAttendancePolicyEvaluationMutation,
+  useCancelAttendancePolicyEvaluationMutation,
   useGetAttendanceDateWiseQuery,
   useGetAttendanceEmployeeWiseQuery,
   useLazyGetAttendanceEmployeeWiseQuery,
