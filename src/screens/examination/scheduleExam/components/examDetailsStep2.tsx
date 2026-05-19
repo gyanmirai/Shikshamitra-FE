@@ -5,10 +5,11 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Chip, Button, Tooltip, TextField, Typography } from '@mui/material';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { Box, Chip, Stack, Button, Divider, Tooltip, TextField, Typography } from '@mui/material';
 
 import type { IExamFormValues } from '../type';
 
@@ -16,8 +17,8 @@ import type { IExamFormValues } from '../type';
 // ApplyToAllBar — NON-BREAKING helper toolbar for bulk-filling schedule rows
 // ---------------------------------------------------------------------------
 const ApplyToAllBar = ({ formik }: { formik: any }) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [bulkDate, setBulkDate] = useState<any>(null);
+  const [bulkStartTime, setBulkStartTime] = useState<any>(null);
+  const [bulkEndTime, setBulkEndTime] = useState<any>(null);
   const [bulkTotalMarks, setBulkTotalMarks] = useState<string>('');
   const [bulkPassingMarks, setBulkPassingMarks] = useState<string>('');
 
@@ -29,62 +30,100 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
   };
 
   return (
-    <Box
+    <Stack
+      direction="row"
+      alignItems="center"
+      flexWrap="wrap"
+      divider={<Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto', mx: 0.5 }} />}
       sx={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: 1.5,
         px: 2,
         py: 1.25,
-        mb: 1,
+        mb: 1.5,
+        gap: 0.5,
         borderRadius: 1.5,
         border: '1px dashed',
         borderColor: 'divider',
-        bgcolor: (theme) => theme.palette.grey[50],
+        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
       }}
     >
-      <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ minWidth: 90 }}>
-        Apply to all rows:
-      </Typography>
+      {/* Section label */}
+      <Box sx={{ pr: 1.5, flexShrink: 0 }}>
+        <Typography
+          variant="caption"
+          fontWeight={700}
+          color="text.secondary"
+          sx={{ whiteSpace: 'nowrap', letterSpacing: '0.01em' }}
+        >
+          Apply to all rows
+        </Typography>
+      </Box>
 
-      {/* Bulk Date */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <DatePicker
-          value={bulkDate}
-          label="Date"
-          format="DD/MM/YYYY"
-          minDate={dayjs()}
-          maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-          onChange={(d) => setBulkDate(d)}
-          slotProps={{ textField: { size: 'small', sx: { width: 145 } } }}
+      {/* Bulk Start Time */}
+      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
+        <TimePicker
+          value={bulkStartTime}
+          label="Start Time"
+          format="hh:mm a"
+          onChange={(t) => setBulkStartTime(t)}
+          viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+          slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
         />
-        <Tooltip title="Set this date for all subjects" arrow>
+        <Tooltip title="Set this start time for all subjects" arrow>
           <span>
             <Button
               size="small"
-              variant="outlined"
-              disabled={!bulkDate}
+              variant="soft"
+              color="primary"
+              disabled={!bulkStartTime}
               onClick={() => {
-                applyToAll('examDate', bulkDate);
-                setBulkDate(null);
+                applyToAll('startTime', bulkStartTime);
+                setBulkStartTime(null);
               }}
-              sx={{ minWidth: 60, fontSize: '0.72rem' }}
+              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
             >
               Apply
             </Button>
           </span>
         </Tooltip>
-      </Box>
+      </Stack>
+
+      {/* Bulk End Time */}
+      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
+        <TimePicker
+          value={bulkEndTime}
+          label="End Time"
+          format="hh:mm a"
+          onChange={(t) => setBulkEndTime(t)}
+          viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+          slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
+        />
+        <Tooltip title="Set this end time for all subjects" arrow>
+          <span>
+            <Button
+              size="small"
+              variant="soft"
+              color="primary"
+              disabled={!bulkEndTime}
+              onClick={() => {
+                applyToAll('endTime', bulkEndTime);
+                setBulkEndTime(null);
+              }}
+              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
+            >
+              Apply
+            </Button>
+          </span>
+        </Tooltip>
+      </Stack>
 
       {/* Bulk Total Marks */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
         <TextField
           value={bulkTotalMarks}
           label="Total Marks"
           type="number"
           size="small"
-          sx={{ width: 110 }}
+          sx={{ width: 115 }}
           inputProps={{ min: 0 }}
           onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
           onChange={(e) => setBulkTotalMarks(e.target.value)}
@@ -93,28 +132,29 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
           <span>
             <Button
               size="small"
-              variant="outlined"
+              variant="soft"
+              color="primary"
               disabled={!bulkTotalMarks}
               onClick={() => {
                 applyToAll('totalMarks', bulkTotalMarks);
                 setBulkTotalMarks('');
               }}
-              sx={{ minWidth: 60, fontSize: '0.72rem' }}
+              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
             >
               Apply
             </Button>
           </span>
         </Tooltip>
-      </Box>
+      </Stack>
 
       {/* Bulk Passing Marks */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
         <TextField
           value={bulkPassingMarks}
           label="Passing Marks"
           type="number"
           size="small"
-          sx={{ width: 120 }}
+          sx={{ width: 125 }}
           inputProps={{ min: 0 }}
           onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
           onChange={(e) => setBulkPassingMarks(e.target.value)}
@@ -123,20 +163,21 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
           <span>
             <Button
               size="small"
-              variant="outlined"
+              variant="soft"
+              color="primary"
               disabled={!bulkPassingMarks}
               onClick={() => {
                 applyToAll('passingMarks', bulkPassingMarks);
                 setBulkPassingMarks('');
               }}
-              sx={{ minWidth: 60, fontSize: '0.72rem' }}
+              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
             >
               Apply
             </Button>
           </span>
         </Tooltip>
-      </Box>
-    </Box>
+      </Stack>
+    </Stack>
   );
 };
 
@@ -199,7 +240,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
-            minWidth: 100,
+            minWidth: 155,
             render(value, row) {
               return (
                 <ShakingTextField
@@ -222,7 +263,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     slotProps={{
                       textField: {
                         size: 'small',
-
+                        sx: { width: 145 },
                         error:
                           typeof formik.errors.subjects?.[row.index] === 'object' &&
                           !!(formik.errors.subjects?.[row.index] as any)?.examDate &&
@@ -258,6 +299,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
+            minWidth: 150,
             render(value, row) {
               return (
                 <ShakingTextField
@@ -279,7 +321,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     slotProps={{
                       textField: {
                         size: 'small',
-
+                        sx: { width: 140 },
                         error:
                           typeof formik.errors.subjects?.[row.index] === 'object' &&
                           !!(formik.errors.subjects?.[row.index] as any)?.startTime &&
@@ -297,7 +339,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                           },
                         },
                         InputLabelProps: {
-                          sx: { lineHeight: '1.2em' },
+                          sx: { lineHeight: '1.2em', width: '80%' },
                         },
                       },
                     }}
@@ -334,6 +376,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     slotProps={{
                       textField: {
                         size: 'small',
+                        sx: { width: 140 },
                         error:
                           typeof formik.errors.subjects?.[row.index] === 'object' &&
                           !!(formik.errors.subjects?.[row.index] as any)?.endTime &&
@@ -551,7 +594,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 <TextField
                   value={value}
                   multiline
-                  rows={2}
+                  rows={1}
                   label="Notes"
                   onChange={(e) => {
                     formik.setFieldValue(`subjects.${row.index}.notes`, e.target.value);

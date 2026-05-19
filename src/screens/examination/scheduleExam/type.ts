@@ -80,6 +80,8 @@ export interface IScheduledExamTableProps {
   onDelete: (data: IExamFormValues) => void;
   onViewTimetable: (data: IExamFormValues) => void;
   getExams: any;
+  activeStatus?: number;
+  onStatusChange?: (status: number) => void;
 }
 
 export interface INewExamFormProps {

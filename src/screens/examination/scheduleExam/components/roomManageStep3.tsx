@@ -183,14 +183,9 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           <Chip
             label={examDate.format('dddd, DD MMM YYYY')}
             size="small"
-            variant="outlined"
-            sx={{
-              fontWeight: 600,
-              borderRadius: 1,
-              color: 'primary.main',
-              borderColor: alpha(theme.palette.primary.main, 0.2),
-              bgcolor: alpha(theme.palette.primary.main, 0.08),
-            }}
+            variant="soft"
+            color="primary"
+            sx={{ fontWeight: 600, borderRadius: 1 }}
           />
         ) : null
       }
@@ -257,6 +252,21 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                         totalCapacity
                       );
                     }}
+                    renderTags={(tagValues, getTagProps) =>
+                      tagValues.map((option: any, index) => {
+                        const { key, ...tagProps } = getTagProps({ index });
+                        return (
+                          <Chip
+                            key={key}
+                            {...tagProps}
+                            label={option.label}
+                            size="small"
+                            variant="soft"
+                            sx={{ ml: 0.5 }}
+                          />
+                        );
+                      })
+                    }
                     sx={{ minWidth: { xs: 220, md: 380 } }}
                     renderInput={(params) => (
                       <TextField {...params} label="Select Room(s)" size="small" />

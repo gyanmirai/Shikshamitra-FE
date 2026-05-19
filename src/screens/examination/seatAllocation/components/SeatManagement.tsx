@@ -69,7 +69,9 @@ const SeatManagement = ({
   });
 
   const seatList = baseSeatList.map((seat) => {
-    const assigned = assignedData.find((s) => s.seatNumber === seat.seatNumber);
+    const assigned = assignedData.find(
+      (s) => s.seatNumber === seat.seatNumber && s.studentId !== null
+    );
     if (assigned) {
       return {
         ...seat,

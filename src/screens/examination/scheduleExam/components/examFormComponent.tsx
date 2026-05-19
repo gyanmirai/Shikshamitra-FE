@@ -1,7 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
-import * as Yup from 'yup';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -26,6 +26,7 @@ import SelectExam from './selectExamStep1';
 import RoomDetails from './roomManageStep3';
 import ExamDetails from './examDetailsStep2';
 import ExamReviewStep4 from './ExamReviewStep4';
+import { validationSchema as stepValidationSchemas } from '../validationSchema';
 import {
   mapBackendToFormik,
   defaultExamFormValues,
@@ -79,7 +80,7 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
         alignItems: 'center',
         borderBottom: '1px solid',
         borderColor: 'divider',
-        bgcolor: (theme) => (theme.palette.background as any).neutral ?? theme.palette.grey[50],
+        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
       }}
     >
       {examName && (
@@ -88,7 +89,7 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
             icon={<Iconify icon="mdi:clipboard-text-outline" width={14} />}
             label={examName}
             size="small"
-            variant="outlined"
+            variant="soft"
             sx={{ fontWeight: 600, fontSize: '0.7rem', height: 22 }}
           />
         </Tooltip>
@@ -120,12 +121,13 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
           key={sub.subjectId}
           label={sub.subjectName}
           size="small"
+          variant="soft"
           sx={{
             fontSize: '0.7rem',
             height: 22,
-            bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : 'grey.100',
+            bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : undefined,
             color: sub.subjectColor || 'text.secondary',
-            border: `1px solid ${sub.subjectColor ? `${sub.subjectColor}55` : 'transparent'}`,
+            '& .MuiChip-label': { fontWeight: 600 },
           }}
         />
       ))}
@@ -133,7 +135,7 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
         <Chip
           label={`+${subjects.length - 5} more`}
           size="small"
-          variant="outlined"
+          variant="soft"
           sx={{ fontSize: '0.7rem', height: 22, color: 'text.secondary' }}
         />
       )}
@@ -201,7 +203,13 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   );
 
   const handleSave = useCallback(
-    async (isLastStep: boolean, values: any, formik: any, setIsLoading: (val: boolean) => void) => {
+    async (
+      isLastStep: boolean,
+      values: any,
+      formik: any,
+      setIsLoading: (val: boolean) => void,
+      isSaveButton: boolean = false
+    ) => {
       try {
         setIsLoading(true);
         if (activeStep === 0) {
@@ -213,6 +221,9 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         } else if (activeStep === 2) {
           await handleRoomAssignment(values);
           shikshaMitraToast.success({ message: 'Room assignments saved successfully' });
+        }
+        if (isSaveButton) {
+          return;
         }
         if (!isLastStep) {
           setActiveStep((prev) => prev + 1);
@@ -237,17 +248,21 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
       activeStep={activeStep}
       handleBack={() => setActiveStep((prev) => prev - 1)}
       validateOnChange={false}
-      validationSchema={Yup.object().shape({})}
+      validationSchema={stepValidationSchemas[activeStep]}
       handleNext={(isLastStep, values, formik, setIsLoading) => {
-        handleSave(isLastStep, values, formik, setIsLoading);
+        handleSave(isLastStep, values, formik, setIsLoading, false);
       }}
       onSave={(isLastStep, values, formik, setIsLoading) => {
-        handleSave(isLastStep, values, formik, setIsLoading);
+        handleSave(isLastStep, values, formik, setIsLoading, true);
       }}
-      // NON-BREAKING: allow clicking completed steps to navigate back
       onStepClick={(index) => {
-        if (index < activeStep) setActiveStep(index);
+        if (editData) {
+          setActiveStep(index);
+        } else if (index < activeStep) {
+          setActiveStep(index);
+        }
       }}
+      isDisabledLabel={!editData}
       renderItem={({ formik, activeStep: step }) => (
         <NewExamStepForm
           activeStep={step}

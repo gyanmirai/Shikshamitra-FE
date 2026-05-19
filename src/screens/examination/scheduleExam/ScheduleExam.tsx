@@ -13,6 +13,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   scheduleExamApi,
@@ -31,6 +32,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   const [open, setOpen] = useState(false);
   // State to store currently selected exam for editing
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
+  // Active status tab driving the API query
+  const [activeStatus, setActiveStatus] = useState<number>(examScheduledStatus.Pending);
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -49,6 +52,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     currentQueryAndMutation: useGetExamsQuery,
     params: {
       AcademicMediumId: medium?.id,
+      Status: activeStatus,
     },
   });
 
@@ -66,7 +70,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         dispatchFn(
           scheduleExamApi.util.updateQueryData(
             'getExams',
-            { AcademicMediumId: medium?.id },
+            { AcademicMediumId: medium?.id, Status: activeStatus },
             (draft: any) => {
               const index = draft?.items?.findIndex(
                 (item: any) => item.examId === selectedExam?.examId
@@ -182,6 +186,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
                 setSelectedExam(data);
               }}
               getExams={getExams}
+              activeStatus={activeStatus}
+              onStatusChange={setActiveStatus}
             />
           </Box>
         )}

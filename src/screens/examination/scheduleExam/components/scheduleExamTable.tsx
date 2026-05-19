@@ -1,8 +1,6 @@
-import type { Variants } from 'framer-motion';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
-import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
@@ -17,8 +15,8 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
-import { Box, Tab, Card, Tabs, Button, MenuList, MenuItem } from '@mui/material';
+import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
+import { Box, Tab, Tabs, Paper, Button, MenuList, MenuItem } from '@mui/material';
 import {
   usePublishExamMutation,
   useUpdateExamStatusMutation,
@@ -38,6 +36,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   isScheduleExamButton = true,
   isAction = true,
   getExams,
+  activeStatus,
+  onStatusChange,
 }) => {
   const publishExamDialog = useBoolean();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -51,8 +51,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExamStatusMutation,
   });
-  // Initialize tabs with default value of 'Pending'
-  const tabs = useTabs(ScheduleExamStatus.Pending);
+  // Initialize tabs with the current active status driven by the parent
+  const tabs = useTabs(activeStatus ?? examScheduledStatus.Pending);
   // Add this outside your component
   // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
@@ -62,7 +62,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       if (selectedTimetable?.examId) {
         await updateExamStatus({
           examId: selectedTimetable.examId,
-          body: { status: ScheduleExamStatus.Published },
+          body: { status: examScheduledStatus.Published },
         }).unwrap();
         shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
         publishExamDialog.onFalse();
@@ -77,9 +77,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   const examCounts = useMemo(() => {
     const items = getExams?.data?.items || [];
     return {
-      pending: items.filter((i: any) => i.status === 0).length || 0,
-      published: items.filter((i: any) => i.status === 2).length || 0,
-      complated: items.filter((i: any) => i.status === 5).length || 0,
+      pending: items.filter((i: any) => i.status === examScheduledStatus.Pending).length || 0,
+      published: items.filter((i: any) => i.status === examScheduledStatus.Published).length || 0,
+      complated: items.filter((i: any) => i.status === examScheduledStatus.Completed).length || 0,
     };
   }, [getExams?.data?.items]);
 
@@ -88,36 +88,34 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     () => [
       {
         label: 'Pending',
-        value: 0,
+        value: examScheduledStatus.Pending,
         count: getExams?.data?.pendingCount || 0,
         color: 'warning',
       },
       {
         label: 'Published',
-        value: 1,
+        value: examScheduledStatus.Published,
         count: getExams?.data?.publishedCount || 0,
         color: 'info',
       },
       {
         label: 'Complated',
-        value: 2,
-        count: getExams?.data?.complatedCount || 0,
+        value: examScheduledStatus.Completed,
+        count: getExams?.data?.completedCount || 0,
         color: 'success',
       },
     ],
-    [getExams?.data?.publishedCount, getExams?.data?.pendingCount, getExams?.data?.complatedCount]
+    [getExams?.data?.pendingCount, getExams?.data?.publishedCount, getExams?.data?.completedCount]
   );
 
-  // Handle tab change event
+  // Handle tab change event — update UI state and notify parent to refetch with new Status
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
+    onStatusChange?.(newValue as number);
   };
 
-  // Filter table data based on selected tab value
-  const tableData = useMemo(
-    () => (getExams?.data?.items || []).filter((i: any) => i.status === tabs.value),
-    [getExams?.data?.items, tabs.value]
-  );
+  // Table data comes pre-filtered from the backend via the Status query param
+  const tableData = useMemo(() => getExams?.data?.items || [], [getExams?.data?.items]);
 
   // Actions component for the three dots menu
   // Renders menu items for printing and publishing timetables
@@ -139,7 +137,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
           {/* Menu item for publishing the timetable 
               Sets the selected timetable name and shows confirmation dialog */}
-          {row.status === ScheduleExamStatus.Pending && (
+          {row.status === examScheduledStatus.Pending && (
             <MenuItem
               onClick={() => {
                 publishExamDialog.onTrue();
@@ -157,47 +155,45 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [publishExamDialog]
   );
 
-  const headerItemVariant: Variants = {
-    hidden: { opacity: 0, y: -12 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
-  };
-
   return (
     <>
-      <Card sx={{ boxShadow: 'var(--shadows-4)', px: 1, mb: 1 }}>
-        <Box display="flex" justifyContent="space-between">
-          <motion.div variants={headerItemVariant}>
-            <Tabs value={tabs.value} onChange={handleTabChange}>
-              {TABS.map((tab) => (
-                <Tab
-                  sx={{ fontSize: '12px' }}
-                  key={tab.value}
-                  label={
-                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                      {tab.label}{' '}
-                      <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
-                    </Box>
-                  }
-                  value={tab.value}
-                />
-              ))}
-            </Tabs>
-          </motion.div>
-          {isScheduleExamButton && (
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={() => {
-                setOpenDialog?.(true);
-              }}
-              sx={{ px: '32px', mt: 1 }}
-            >
-              Schedule Exam
-            </Button>
-          )}
-        </Box>
-      </Card>
+      <Paper
+        elevation={2}
+        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, mb: 1, borderRadius: '15px' }}
+      >
+        <Tabs
+          value={tabs.value}
+          onChange={handleTabChange}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 2 }, flexGrow: 1 }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}{' '}
+                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                </Box>
+              }
+              value={tab.value}
+            />
+          ))}
+        </Tabs>
+        {isScheduleExamButton && (
+          <Button
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            onClick={() => {
+              setOpenDialog?.(true);
+            }}
+            sx={{ px: '32px' }}
+          >
+            Schedule Exam
+          </Button>
+        )}
+      </Paper>
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"

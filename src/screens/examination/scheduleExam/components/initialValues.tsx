@@ -106,7 +106,7 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
     examTypeId: values.examType,
     examName: values.examName,
     standardId: values.className,
-    divisionIds: values.divisions,
+    divisionIds: values.divisions.filter((id) => id !== 'all'),
     subjectIds: values.subjects.map((s) => s.electiveGroupId || s.subjectId),
   };
 }

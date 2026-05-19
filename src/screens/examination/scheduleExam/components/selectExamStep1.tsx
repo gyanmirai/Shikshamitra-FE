@@ -158,7 +158,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       options={allClass}
                       onChange={(val) => {
                         formik.setFieldValue('className', val as string);
+                        // Reset all class-dependent fields on class change
+                        formik.setFieldValue('divisions', []);
+                        formik.setFieldValue('subjects', []);
+                        formik.setFieldValue('roomDetails', {});
                         formik.setFieldTouched(`className`, false);
+                        formik.setFieldTouched('divisions', false);
+                        formik.setFieldTouched('subjects', false);
                       }}
                       label="Class *"
                       labelKey="name"
@@ -185,6 +191,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       valueKey="id"
                       multiple
                       disabled={!formik.values.className}
+                      isLoading={isTableLoading || isFetchingSubjects}
                       options={[
                         { id: 'all', name: 'All' },
                         ...(allClass?.find((i: Standards) => i.id === formik.values.className)
@@ -268,6 +275,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <Autocomplete
                       multiple
                       options={subjectOptions}
+                      loading={isTableLoading || isFetchingSubjects}
                       getOptionLabel={(option: any) =>
                         option?.electiveGroupName ||
                         option?.subjects?.[0]?.subjectName ||
