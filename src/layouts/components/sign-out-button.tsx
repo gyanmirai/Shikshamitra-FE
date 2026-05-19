@@ -20,7 +20,8 @@ export function SignOutButton({ onClose, ...other }: Props) {
       setLoading(true);
       // await dispatch(signOutUser() as any).unwrap();
       await signOut({
-        callbackUrl: `${window.location.origin}/login`,
+        // callbackUrl: `/login`,
+        redirectTo: '/login',
       });
       setLoading(false);
       onClose?.();
