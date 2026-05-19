@@ -37,14 +37,9 @@ import {
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
 import {
-  useGetEmployeeSalaryStructureQuery,
-  useUpdateEmployeeSalaryStructureMutation,
-} from 'src/redux/hr/employee-salary-structure-api';
-import {
   Box,
   Card,
   Grid,
-  Paper,
   Button,
   Avatar,
   MenuList,
@@ -52,6 +47,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/hr/employee-salary-structure-api';
 
 import EmployeeView from './employee-view';
 // eslint-disable-next-line import/no-named-as-default
@@ -408,8 +407,8 @@ const HrEmployee = () => {
             heading="Employee List"
             links={[
               { name: 'HR/Staff', href: hrPaths.dashboard },
-              { name: 'Employee', href: hrPaths.employee.list },
-              { name: 'Employee List', href: hrPaths.employee.list },
+              { name: 'Employee' },
+              { name: 'Employee List' },
             ]}
             action={
               <Button
@@ -489,8 +488,18 @@ const HrEmployee = () => {
             maxWidth="lg"
             open={payrollDialog.value}
             handleClose={handleClosePayroll}
-            title="Salary Structure"
-            paperProps={{ sx: { maxHeight: '70vh' } }}
+            title={
+              <Box>
+                <Typography variant="h5">Salary Structure</Typography>
+                {editData?.fullName && (
+                  <Typography variant="caption" color="text.secondary">
+                    {editData.fullName}
+                    {editData.employeeIdentifier ? ` · ${editData.employeeIdentifier}` : ''}
+                  </Typography>
+                )}
+              </Box>
+            }
+            paperProps={{ sx: { maxHeight: '80vh' } }}
           >
             {payrollDialog.value && editData && (
               <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
@@ -608,28 +617,28 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         {isLoading ? (
           <LoadingScreen />
         ) : (
-          <Paper elevation={2} sx={{ p: 1 }}>
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RenderComponents
-                  formik={formik}
-                  name="earningComponents"
-                  label="Earning Components"
-                  type="earning"
-                  showTempAdd
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <RenderComponents
-                  formik={formik}
-                  name="deductionComponents"
-                  label="Deduction Components"
-                  type="deduction"
-                  showTempAdd
-                />
-              </Grid>
+          // <Paper elevation={0} sx={{ p: 2, border: (t: any) => `1px solid ${t.vars.palette.divider}`, borderRadius: 2 }}>
+          <Grid container spacing={1}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <RenderComponents
+                formik={formik}
+                name="earningComponents"
+                label="Earning Components"
+                type="earning"
+                showTempAdd
+              />
             </Grid>
-          </Paper>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <RenderComponents
+                formik={formik}
+                name="deductionComponents"
+                label="Deduction Components"
+                type="deduction"
+                showTempAdd
+              />
+            </Grid>
+          </Grid>
+          // </Paper>
         )}
       </DialogScrollContent>
 

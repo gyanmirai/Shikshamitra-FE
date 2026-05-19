@@ -459,7 +459,7 @@ const LeaveBalance = ({ mode = 'hr', showBreadcrumbs = true, employeeId }: Leave
 
       {/* ── Section A: Summary Stat Cards ── */}
       {!selfAccessError && (
-        <Grid container spacing={1} sx={{ mt: 0.5 }}>
+        <Grid container spacing={1}>
           {summaryCards.map((card) =>
             isLoadingBalance ? (
               <Grid size={{ xs: 6, sm: 3 }} key={card.title}>

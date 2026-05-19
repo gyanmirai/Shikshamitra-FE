@@ -995,7 +995,7 @@ const ManualAttendanceScreen = () => {
       <CustomBreadcrumbs
         heading="Mark Attendance"
         links={[
-          { name: 'HR', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance Management', href: '/hr/attendance-tracking' },
           { name: 'Mark Attendance' },
         ]}

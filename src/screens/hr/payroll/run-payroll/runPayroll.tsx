@@ -580,8 +580,8 @@ const RunPayroll = () => {
         alignItems="center"
         spacing={1}
         sx={{
-          mb: 1.25,
-          p: 1.25,
+          mb: 1,
+          p: 1,
           border: (theme) => `1px solid ${theme.palette.divider}`,
           borderRadius: 1.5,
           bgcolor: 'background.paper',
@@ -603,6 +603,7 @@ const RunPayroll = () => {
         <LoadingButton
           variant="contained"
           loading={previewLoading}
+          size="small"
           disabled={!month}
           startIcon={<Iconify icon="solar:rocket-bold" />}
           onClick={() => loadPreview(true)}
@@ -611,7 +612,7 @@ const RunPayroll = () => {
         </LoadingButton>
       </Stack>
 
-      <Card variant="outlined" sx={{ mb: 1.25, p: 0 }}>
+      <Card variant="outlined" sx={{ mb: 1, p: 0 }}>
         <Stack
           direction="row"
           alignItems="center"
