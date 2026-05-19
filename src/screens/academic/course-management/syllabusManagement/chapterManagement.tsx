@@ -131,9 +131,9 @@ const Subjects = () => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersByStandardQuery,
-    params: { assignedStandardId: subjectId },
+    params: { standardId: classId, subjectId },
     options: {
-      skip: !subjectId,
+      skip: !classId || !subjectId,
     },
   });
 
@@ -239,6 +239,7 @@ const Subjects = () => {
                     // Reset subject selection when class changes
                     setSubjectId('');
                     setSubjectSelectValue('');
+                    setSubject('');
                   }}
                 />
                 <CustomSelect
@@ -380,7 +381,7 @@ const Subjects = () => {
                   dispatchFn(
                     chaptersApi.util.updateQueryData(
                       'getChaptersByStandard',
-                      { assignedStandardId: subjectId },
+                      { standardId: classId, subjectId },
                       (draft: any) => {
                         const list = draft?.data ?? draft;
                         const index = list.findIndex(

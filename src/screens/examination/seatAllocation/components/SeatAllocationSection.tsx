@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Chip, Grid, Paper, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Chip, Grid, Paper, Skeleton, Typography } from '@mui/material';
 import {
   useGetSeatLayoutQuery,
   useGetSeatAllocationStudentsQuery,
@@ -36,6 +36,215 @@ const itemVariants = {
   show: { opacity: 1, x: 0 },
 };
 
+// ── Empty state shown before division + room are both selected ─────────────────
+const SeatAllocationEmptyState = ({
+  division: div,
+  classRoom: room,
+}: {
+  division: string;
+  classRoom: string;
+}) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 'calc(100vh - 150px)',
+      gap: 2,
+      px: 2,
+    }}
+  >
+    <Box
+      sx={{
+        width: 80,
+        height: 80,
+        borderRadius: '50%',
+        bgcolor: 'action.hover',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Iconify
+        icon={!div ? 'mdi:table-chair' : 'mdi:door-open'}
+        width={40}
+        sx={{ color: 'text.disabled' }}
+      />
+    </Box>
+    <Typography variant="h6" color="text.disabled" textAlign="center">
+      {!div ? 'Select a Division and Room to begin' : 'Select a Room to view the seat layout'}
+    </Typography>
+    <Typography
+      variant="body2"
+      color="text.disabled"
+      textAlign="center"
+      maxWidth={400}
+      lineHeight={1.6}
+    >
+      {!div
+        ? 'Choose a division from the toolbar above to load students, then select a room to view and manage the seat layout.'
+        : 'Choose a room from the toolbar above to load the seat layout and begin allocating seats.'}
+    </Typography>
+    <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <Chip
+        icon={<Iconify icon="mdi:numeric-1-circle-outline" width={16} />}
+        label="Select Division"
+        size="small"
+        color={div ? 'success' : 'default'}
+        variant={div ? 'soft' : 'outlined'}
+      />
+      <Chip
+        icon={<Iconify icon="mdi:numeric-2-circle-outline" width={16} />}
+        label="Select Room"
+        size="small"
+        color={room ? 'success' : 'default'}
+        variant={room ? 'soft' : 'outlined'}
+      />
+    </Box>
+  </Box>
+);
+
+// ── Skeleton shown while seat-layout / student data is fetching ────────────────
+const SeatAllocationLoadingSkeleton = () => (
+  <Grid container spacing={1} height="calc(100vh - 150px)" p={1}>
+    {/* Sidebar skeleton */}
+    <Grid size={2.5} height="100%">
+      <Paper
+        elevation={3}
+        sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}
+      >
+        {/* Header stats */}
+        <Box sx={{ pb: 1.5, mb: 1, borderBottom: '1px dashed', borderColor: 'divider' }}>
+          <Skeleton variant="text" width="55%" height={22} sx={{ mb: 1 }} />
+          {[0, 1, 2].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 0.75,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Skeleton variant="circular" width={14} height={14} />
+                <Skeleton variant="text" width={56} height={16} />
+              </Box>
+              <Skeleton variant="rounded" width={28} height={20} />
+            </Box>
+          ))}
+        </Box>
+        {/* Student card skeletons */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 0.5 }}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <Box
+              key={i}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                p: 1,
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Skeleton variant="circular" width={32} height={32} sx={{ flexShrink: 0 }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Skeleton variant="text" width="75%" height={14} />
+                <Skeleton variant="text" width="45%" height={12} />
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      </Paper>
+    </Grid>
+
+    {/* Main area skeleton */}
+    <Grid size={9} height="100%">
+      <Paper
+        elevation={3}
+        sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}
+      >
+        {/* Seat layout header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1 }}>
+          <Skeleton variant="text" width={120} height={32} />
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 3,
+              px: 2,
+              py: 1,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Skeleton variant="text" width={90} height={20} />
+            <Skeleton variant="text" width={70} height={20} />
+          </Box>
+        </Box>
+
+        {/* Board indicator */}
+        <Box sx={{ textAlign: 'center' }}>
+          <Skeleton
+            variant="rounded"
+            width={140}
+            height={28}
+            sx={{ mx: 'auto', borderRadius: 1 }}
+          />
+        </Box>
+
+        {/* Seat grid — 2 columns of bench rows */}
+        <Grid container spacing={4} justifyContent="center" sx={{ flex: 1, overflow: 'hidden' }}>
+          {[0, 1].map((col) => (
+            <Grid key={col} size={{ xs: 12, md: 6 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'background.neutral',
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                }}
+              >
+                {/* Column label */}
+                <Skeleton variant="text" width="35%" height={18} sx={{ mx: 'auto' }} />
+                {/* Bench rows */}
+                {Array.from({ length: 6 }).map((_, row) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Skeleton variant="text" width={30} height={18} sx={{ flexShrink: 0 }} />
+                    <Box
+                      sx={{
+                        flex: 1,
+                        display: 'flex',
+                        gap: 1.5,
+                        p: 1.5,
+                        borderRadius: 1.5,
+                        bgcolor: 'background.paper',
+                        boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      <Skeleton variant="rounded" height={68} sx={{ flex: 1, borderRadius: 1.5 }} />
+                      <Skeleton variant="rounded" height={68} sx={{ flex: 1, borderRadius: 1.5 }} />
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Paper>
+    </Grid>
+  </Grid>
+);
+
 const SeatAllocationSection = ({
   division,
   classRoom,
@@ -52,9 +261,7 @@ const SeatAllocationSection = ({
 
   const {
     data: seatAllocationStudentsData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: seatAllocationStudentsLoading,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching: seatAllocationStudentsFetching,
   } = useQueryAndMutation({
     type: 'query',
@@ -70,7 +277,6 @@ const SeatAllocationSection = ({
 
   const {
     data: seatLayoutData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: seatLayoutLoading,
     isFetching: seatLayoutFetching,
   } = useQueryAndMutation({
@@ -200,118 +406,145 @@ const SeatAllocationSection = ({
     });
   };
 
+  // Show skeleton while either dataset is in-flight (only relevant once both division + room are set,
+  // since queries are skipped until then)
+  const isDataLoading =
+    seatAllocationStudentsLoading ||
+    seatAllocationStudentsFetching ||
+    seatLayoutLoading ||
+    seatLayoutFetching;
+
   return (
-    <Grid container spacing={1} height="calc(100vh - 150px)" p={1}>
-      <Grid size={2.5} height="100%">
-        <Paper
-          elevation={3}
-          sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}
-        >
-          {/* NON-BREAKING: enhanced sidebar header with stats */}
-          <Box sx={{ pb: 1.5, mb: 1, borderBottom: '1px dashed', borderColor: 'divider' }}>
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-              Students
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-              {/* Total */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Iconify
-                    icon="mdi:account-group-outline"
-                    width={14}
-                    sx={{ color: 'text.secondary' }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Total
-                  </Typography>
-                </Box>
-                <Chip
-                  label={seatAllocationStudentsData?.totalCount ?? 0}
-                  size="small"
-                  sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
-                />
-              </Box>
-              {/* Allocated */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Iconify
-                    icon="mdi:check-circle-outline"
-                    width={14}
-                    sx={{ color: 'success.main' }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Allocated
-                  </Typography>
-                </Box>
-                <Chip
-                  label={students.filter((s) => s.isSeatAllocate).length}
-                  size="small"
-                  color="success"
-                  variant="soft"
-                  sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
-                />
-              </Box>
-              {/* Unassigned */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Iconify icon="mdi:clock-outline" width={14} sx={{ color: 'warning.main' }} />
-                  <Typography variant="caption" color="text.secondary">
-                    Pending
-                  </Typography>
-                </Box>
-                <Chip
-                  label={students.filter((s) => !s.isSeatAllocate).length}
-                  size="small"
-                  color="warning"
-                  variant="soft"
-                  sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
-                />
-              </Box>
-            </Box>
-          </Box>
-          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-            <motion.div
-              variants={listVariants}
-              initial="hidden"
-              animate="show"
-              style={{
-                marginTop: '8px',
-                padding: '4px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}
+    <>
+      {/* ── Gate 1: prompt user to select division / room ── */}
+      {(!division || !classRoom) && (
+        <SeatAllocationEmptyState division={division} classRoom={classRoom} />
+      )}
+
+      {/* ── Gate 2: skeleton while data fetches ── */}
+      {division && classRoom && isDataLoading && <SeatAllocationLoadingSkeleton />}
+
+      {/* ── Gate 3: full UI only when both selections are made and data is ready ── */}
+      {division && classRoom && !isDataLoading && (
+        <Grid container spacing={1} height="calc(100vh - 150px)" p={1}>
+          <Grid size={2.5} height="100%">
+            <Paper
+              elevation={3}
+              sx={{ p: 1.5, height: '100%', display: 'flex', flexDirection: 'column' }}
             >
-              {[...students]
-                .sort((a, b) => Number(a.isSeatAllocate) - Number(b.isSeatAllocate))
-                .map((student) => (
-                  <motion.div key={student.studentId} variants={itemVariants}>
-                    <StudentCard student={student} theme={theme} />
-                  </motion.div>
-                ))}
-            </motion.div>
-          </Scrollbar>
-        </Paper>
-      </Grid>
-      <Grid size={9} height="100%">
-        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-          <SeatManagement
-            selectedRoom={{
-              id: classRoom,
-              roomName: seatLayoutData?.roomId ?? classRoom,
-              capacity: seatLayoutData?.totalSeats ?? 0,
-              rows: 6,
-              columns: 2,
-              benchCapacity: 2,
-            }}
-            onStudentRemove={handleStudentRemove}
-            assignedData={assignedData}
-            onStudentDrop={handleStudentDrop}
-            onSeatSwap={handleSeatSwap}
-          />
-        </Paper>
-      </Grid>
-    </Grid>
+              {/* NON-BREAKING: enhanced sidebar header with stats */}
+              <Box sx={{ pb: 1.5, mb: 1, borderBottom: '1px dashed', borderColor: 'divider' }}>
+                <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                  Students
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                  {/* Total */}
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Iconify
+                        icon="mdi:account-group-outline"
+                        width={14}
+                        sx={{ color: 'text.secondary' }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Total
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={seatAllocationStudentsData?.totalCount ?? 0}
+                      size="small"
+                      sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                    />
+                  </Box>
+                  {/* Allocated */}
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Iconify
+                        icon="mdi:check-circle-outline"
+                        width={14}
+                        sx={{ color: 'success.main' }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Allocated
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={students.filter((s) => s.isSeatAllocate).length}
+                      size="small"
+                      color="success"
+                      variant="soft"
+                      sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                    />
+                  </Box>
+                  {/* Unassigned */}
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Iconify icon="mdi:clock-outline" width={14} sx={{ color: 'warning.main' }} />
+                      <Typography variant="caption" color="text.secondary">
+                        Pending
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={students.filter((s) => !s.isSeatAllocate).length}
+                      size="small"
+                      color="warning"
+                      variant="soft"
+                      sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+              <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+                <motion.div
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="show"
+                  style={{
+                    marginTop: '8px',
+                    padding: '4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  {[...students]
+                    .sort((a, b) => Number(a.isSeatAllocate) - Number(b.isSeatAllocate))
+                    .map((student) => (
+                      <motion.div key={student.studentId} variants={itemVariants}>
+                        <StudentCard student={student} theme={theme} />
+                      </motion.div>
+                    ))}
+                </motion.div>
+              </Scrollbar>
+            </Paper>
+          </Grid>
+          <Grid size={9} height="100%">
+            <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
+              <SeatManagement
+                selectedRoom={{
+                  id: classRoom,
+                  roomName: seatLayoutData?.roomId ?? classRoom,
+                  capacity: seatLayoutData?.totalSeats ?? 0,
+                  rows: 6,
+                  columns: 2,
+                  benchCapacity: 2,
+                }}
+                onStudentRemove={handleStudentRemove}
+                assignedData={assignedData}
+                onStudentDrop={handleStudentDrop}
+                onSeatSwap={handleSeatSwap}
+              />
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+    </>
   );
 };
 

@@ -25,7 +25,10 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersByStandardQuery,
-    params: { assignedStandardId: subject?.assignedSubjectId },
+    params: { standardId: subject?.classId, subjectId: subject?.subjectId },
+    options: {
+      skip: !subject?.classId || !subject?.subjectId,
+    },
   });
 
   if (_isLoading || _isFetching) {

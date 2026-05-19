@@ -311,14 +311,14 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps, setActi
     type: 'query',
     currentQueryAndMutation: useGetExamScheduleQuery,
     params: { examId },
-    options: { skip: !examId || step !== 1 },
+    options: { skip: !examId || !isEditMode },
   });
 
   const { data: roomAssignmentData, isLoading: roomLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamRoomAssignmentsQuery,
     params: { examId },
-    options: { skip: !examId || step !== 2 },
+    options: { skip: !examId || !isEditMode },
   });
 
   // Fetch exam subjects to get names/colors (needed when schedule hasn't been set yet)

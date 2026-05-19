@@ -1,4 +1,5 @@
 import type { FormikProps } from 'formik';
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
@@ -6,10 +7,13 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Box, Chip, Stack, Button, Divider, Tooltip, TextField, Typography } from '@mui/material';
+import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 
 import type { IExamFormValues } from '../type';
 
@@ -29,17 +33,37 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
     formik.setFieldValue('subjects', updated);
   };
 
+  const hasAnyValue = !!(bulkStartTime || bulkEndTime || bulkTotalMarks || bulkPassingMarks);
+
+  const handleApplyAll = () => {
+    if (bulkStartTime) {
+      applyToAll('startTime', bulkStartTime);
+      setBulkStartTime(null);
+    }
+    if (bulkEndTime) {
+      applyToAll('endTime', bulkEndTime);
+      setBulkEndTime(null);
+    }
+    if (bulkTotalMarks) {
+      applyToAll('totalMarks', bulkTotalMarks);
+      setBulkTotalMarks('');
+    }
+    if (bulkPassingMarks) {
+      applyToAll('passingMarks', bulkPassingMarks);
+      setBulkPassingMarks('');
+    }
+  };
+
   return (
     <Stack
       direction="row"
       alignItems="center"
       flexWrap="wrap"
-      divider={<Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto', mx: 0.5 }} />}
       sx={{
         px: 2,
         py: 1.25,
         mb: 1.5,
-        gap: 0.5,
+        gap: 1,
         borderRadius: 1.5,
         border: '1px dashed',
         borderColor: 'divider',
@@ -47,7 +71,7 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
       }}
     >
       {/* Section label */}
-      <Box sx={{ pr: 1.5, flexShrink: 0 }}>
+      <Box sx={{ pr: 1, flexShrink: 0 }}>
         <Typography
           variant="caption"
           fontWeight={700}
@@ -58,125 +82,71 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
         </Typography>
       </Box>
 
+      <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
+
       {/* Bulk Start Time */}
-      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
-        <TimePicker
-          value={bulkStartTime}
-          label="Start Time"
-          format="hh:mm a"
-          onChange={(t) => setBulkStartTime(t)}
-          viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-          slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
-        />
-        <Tooltip title="Set this start time for all subjects" arrow>
-          <span>
-            <Button
-              size="small"
-              variant="soft"
-              color="primary"
-              disabled={!bulkStartTime}
-              onClick={() => {
-                applyToAll('startTime', bulkStartTime);
-                setBulkStartTime(null);
-              }}
-              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
-            >
-              Apply
-            </Button>
-          </span>
-        </Tooltip>
-      </Stack>
+      <TimePicker
+        value={bulkStartTime}
+        label="Start Time"
+        format="hh:mm a"
+        onChange={(t) => setBulkStartTime(t)}
+        viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+        slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
+      />
 
       {/* Bulk End Time */}
-      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
-        <TimePicker
-          value={bulkEndTime}
-          label="End Time"
-          format="hh:mm a"
-          onChange={(t) => setBulkEndTime(t)}
-          viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-          slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
-        />
-        <Tooltip title="Set this end time for all subjects" arrow>
-          <span>
-            <Button
-              size="small"
-              variant="soft"
-              color="primary"
-              disabled={!bulkEndTime}
-              onClick={() => {
-                applyToAll('endTime', bulkEndTime);
-                setBulkEndTime(null);
-              }}
-              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
-            >
-              Apply
-            </Button>
-          </span>
-        </Tooltip>
-      </Stack>
+      <TimePicker
+        value={bulkEndTime}
+        label="End Time"
+        format="hh:mm a"
+        onChange={(t) => setBulkEndTime(t)}
+        viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+        slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
+      />
+
+      <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
 
       {/* Bulk Total Marks */}
-      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
-        <TextField
-          value={bulkTotalMarks}
-          label="Total Marks"
-          type="number"
-          size="small"
-          sx={{ width: 115 }}
-          inputProps={{ min: 0 }}
-          onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
-          onChange={(e) => setBulkTotalMarks(e.target.value)}
-        />
-        <Tooltip title="Set total marks for all subjects" arrow>
-          <span>
-            <Button
-              size="small"
-              variant="soft"
-              color="primary"
-              disabled={!bulkTotalMarks}
-              onClick={() => {
-                applyToAll('totalMarks', bulkTotalMarks);
-                setBulkTotalMarks('');
-              }}
-              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
-            >
-              Apply
-            </Button>
-          </span>
-        </Tooltip>
-      </Stack>
+      <TextField
+        value={bulkTotalMarks}
+        label="Total Marks"
+        type="number"
+        size="small"
+        sx={{ width: 115 }}
+        inputProps={{ min: 0 }}
+        onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+        onChange={(e) => setBulkTotalMarks(e.target.value)}
+      />
 
       {/* Bulk Passing Marks */}
-      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ px: 1 }}>
-        <TextField
-          value={bulkPassingMarks}
-          label="Passing Marks"
-          type="number"
-          size="small"
-          sx={{ width: 125 }}
-          inputProps={{ min: 0 }}
-          onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
-          onChange={(e) => setBulkPassingMarks(e.target.value)}
-        />
-        <Tooltip title="Set passing marks for all subjects" arrow>
+      <TextField
+        value={bulkPassingMarks}
+        label="Passing Marks"
+        type="number"
+        size="small"
+        sx={{ width: 115 }}
+        inputProps={{ min: 0 }}
+        onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+        onChange={(e) => setBulkPassingMarks(e.target.value)}
+      />
+
+      {/* Single Apply button */}
+      <Box sx={{ ml: 'auto', flexShrink: 0 }}>
+        <Tooltip title="Apply filled values to all subjects" arrow>
           <span>
             <Button
               size="small"
               variant="soft"
               color="primary"
-              disabled={!bulkPassingMarks}
-              onClick={() => {
-                applyToAll('passingMarks', bulkPassingMarks);
-                setBulkPassingMarks('');
-              }}
-              sx={{ minWidth: 64, fontWeight: 600, fontSize: '0.72rem' }}
+              disabled={!hasAnyValue}
+              onClick={handleApplyAll}
+              sx={{ minWidth: 72, fontWeight: 600, fontSize: '0.72rem' }}
             >
               Apply
             </Button>
           </span>
         </Tooltip>
-      </Stack>
+      </Box>
     </Stack>
   );
 };
@@ -184,7 +154,17 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   // Formik instance for form handling and validation
   const formik: any = props;
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: gradeScalings, isLoading: isGradeScalingsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGradeScalingsQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
+
   return (
     <Box
       component={motion.div}
@@ -445,6 +425,40 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             },
           },
           {
+            id: 'gradeScalingId',
+            label: 'Grade Scale',
+            isFilter: false,
+            isSort: false,
+            align: 'left',
+            minWidth: 180,
+            render(value, row) {
+              return (
+                <CustomSelect
+                  label="Grade Scale"
+                  options={gradeScalings?.data ?? []}
+                  value={value}
+                  labelKey="name"
+                  valueKey="id"
+                  isLoading={isGradeScalingsLoading}
+                  formControlProps={{ sx: { width: 165 } }}
+                  onChange={(selectedId) => {
+                    formik.setFieldValue(
+                      `subjects.${row.index}.gradeScalingId`,
+                      selectedId || null
+                    );
+                    const selectedScale = (gradeScalings?.data ?? []).find(
+                      (s: any) => s.id === selectedId
+                    );
+                    formik.setFieldValue(
+                      `subjects.${row.index}.totalMarks`,
+                      selectedScale?.totalMarks ?? ''
+                    );
+                  }}
+                />
+              );
+            },
+          },
+          {
             id: 'totalMarks',
             label: 'Total Marks',
             isFilter: false,
@@ -508,7 +522,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
-            minWidth: 150,
+            minWidth: 160,
             render(value, row) {
               // NON-BREAKING: inline UI-only warning when passing > total
               const totalVal = Number(formik.values.subjects?.[row.index]?.totalMarks);

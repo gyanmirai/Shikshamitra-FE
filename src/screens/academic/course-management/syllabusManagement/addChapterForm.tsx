@@ -83,23 +83,31 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     validationSchema: getChapterValidationSchema(currentYear),
     onSubmit: async (values) => {
       try {
+        if (!classId || !subjectId) {
+          shikshaMitraToast.error({
+            message: 'Class and Subject must be selected before saving a chapter.',
+          });
+          return;
+        }
+
+        const documents = (values.documents ?? []).filter(
+          (doc): doc is string => typeof doc === 'string' && Boolean(doc)
+        );
+
         const payload = {
           assignedSubjectId: subjectId,
-          chapterNumber: values.chapterNo,
-          chapterName: values.chapterName,
-          chapterStartTime: dateConvertor(values?.startDate?.format(dateFormat) || '', false),
-          chapterEndTime: dateConvertor(values?.endDate?.format(dateFormat) || '', false),
+          chapterNo: values.chapterNo,
+          chapterName: values.chapterName.trim(),
+          startDate: dateConvertor(values?.startDate?.format(dateFormat) || '', false),
+          endDate: dateConvertor(values?.endDate?.format(dateFormat) || '', false),
           description: values.description,
-          documents:
-            formik.values.documents?.map((doc: File | string) =>
-              typeof doc === 'string' ? doc : doc
-            ) || [],
+          documents,
         };
 
         if (initialValues) {
           // For update, include the chapter ID
           const updatePayload = {
-            id: initialValues.id, // Assuming initialValues has an 'id' for the chapter
+            id: initialValues.id,
             body: payload,
           };
           await updateChapter(updatePayload).unwrap();
@@ -107,7 +115,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in ${className}`,
           });
         } else {
-          await addChapter(payload).unwrap();
+          await addChapter({ standardId: classId, subjectId, body: payload }).unwrap();
           shikshaMitraToast.success({
             message: `Chapter ${values.chapterNo} : ${values.chapterName} has been added successfully to ${subject} in ${className}`,
           });
