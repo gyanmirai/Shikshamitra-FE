@@ -7,23 +7,23 @@ import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { Flag, Event, Description, CurrencyRupee } from '@mui/icons-material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 
-import type { IChargeData } from '../type';
+import type { IChargeDetailData } from '../type';
 
 interface ChargeDetailsCardProps {
-  charge: IChargeData | null;
+  charge: IChargeDetailData | null;
 }
 
 const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => {
-  // Convert numeric priority to label & color
+  // Backend enum: Low=0, Medium=1, High=2
   const getPriorityLabel = (value?: number) => {
     switch (value) {
+      case 0:
+        return { label: 'Low', color: 'success' as const };
       case 1:
-        return { label: 'High', color: '#FF4842', bg: 'rgba(255,72,66,0.1)' };
+        return { label: 'Medium', color: 'warning' as const };
       case 2:
-        return { label: 'Medium', color: '#FFC107', bg: 'rgba(255,193,7,0.1)' };
-      case 3:
       default:
-        return { label: 'Low', color: '#00A76F', bg: 'rgba(0,167,111,0.1)' };
+        return { label: 'High', color: 'error' as const };
     }
   };
 
@@ -47,7 +47,7 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
             Charge Details
           </Typography>
         </Stack>
-        <Label variant="soft" color="success">
+        <Label variant="soft" color={priority.color}>
           {priority.label}
         </Label>
       </Stack>

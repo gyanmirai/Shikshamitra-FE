@@ -16,11 +16,13 @@ import {
   ChargesPaymentStatusOptions,
 } from 'src/enums/fee-charges-status';
 
-import type {
-  IChargeData,
-  ISingleCharge,
-  IStudentChargeData,
-} from '../ChargesManage/Component/type';
+import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
+
+const PRIORITY_LABELS: Record<number, string> = {
+  0: 'Low',
+  1: 'Medium',
+  2: 'High',
+};
 
 const ViewStudentAllCharges = ({
   data,
@@ -29,7 +31,6 @@ const ViewStudentAllCharges = ({
   data: IStudentChargeData;
   onDelete: (charge: IChargeData) => void;
 }) => {
-  // row actions
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -49,17 +50,17 @@ const ViewStudentAllCharges = ({
 
   const tableData = useMemo(
     () =>
-      (data?.charges || []).map((item: ISingleCharge) => ({
+      (data?.charges || []).map((item: IChargeData) => ({
         ...item,
-        category: item.category || '-', // fallback if missing
-        description: item.description || '-', // ensure description exists
+        categoryName: item.categoryName || '-',
+        purposeDescription: item.purposeDescription || '-',
         amount:
           item.amount !== undefined && item.amount !== null
-            ? parseFloat(String(item.amount).replace(/,/g, '')) // clean string to number
+            ? parseFloat(String(item.amount).replace(/,/g, ''))
             : 0,
-        dueDate: item.dueDate ? dayjs(item.dueDate).toISOString() : null, // ISO for datepicker/render
-        priority: item.priority ?? '-', // numeric/enum fallback
-        status: item.status ?? ChargesPaymentStatus.Pending, // default enum if missing
+        dueDate: item.dueDate ? dayjs(item.dueDate).toISOString() : null,
+        priority: item.priority ?? 0,
+        status: item.status ?? ChargesPaymentStatus.Pending,
       })),
     [data]
   );
@@ -86,7 +87,7 @@ const ViewStudentAllCharges = ({
               Roll No.
             </Typography>
             <Typography variant="body1" fontWeight="medium">
-              {data?.rollNo || '-'}
+              {data?.rollNumber ?? '-'}
             </Typography>
           </Grid>
 
@@ -95,7 +96,7 @@ const ViewStudentAllCharges = ({
               GR No.
             </Typography>
             <Typography variant="body1" fontWeight="medium">
-              {data?.grNo || '-'}
+              {data?.grNumber || '-'}
             </Typography>
           </Grid>
 
@@ -104,7 +105,7 @@ const ViewStudentAllCharges = ({
               Class/Division
             </Typography>
             <Typography variant="body1" fontWeight="medium">
-              {`${data?.class || '-'} / ${data?.division || '-'}`}
+              {`${data?.standardName || '-'} / ${data?.divisionName || '-'}`}
             </Typography>
           </Grid>
         </Grid>
@@ -118,14 +119,14 @@ const ViewStudentAllCharges = ({
         noDataText="No charges found"
         columns={[
           {
-            id: 'category',
+            id: 'categoryName',
             label: 'Category',
             align: 'left',
             sticky: true,
             minWidth: 150,
           },
           {
-            id: 'description',
+            id: 'purposeDescription',
             label: 'Description',
             align: 'left',
             minWidth: 220,
@@ -165,6 +166,7 @@ const ViewStudentAllCharges = ({
             label: 'Priority',
             align: 'left',
             minWidth: 100,
+            render: (value) => PRIORITY_LABELS[value as number] ?? '-',
           },
           {
             id: 'status',

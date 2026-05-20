@@ -15,7 +15,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { chargesApi, useDeleteChargeMutation } from 'src/redux/finance/ChargeManagement/chargeApi';
+import { useDeleteChargeMutation } from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import ChargeForm from './Component/ChargeForm';
 import ChargesTable from './Component/ChargesTable';
@@ -333,22 +333,10 @@ const ChargesManagement = () => {
               if (selectedChargeData) {
                 confirmWithUndo({
                   item: selectedChargeData,
-                  onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
-                    dispatchFn(
-                      chargesApi.util.updateQueryData('getCharges', undefined, (draft) => {
-                        const index = draft.findIndex(
-                          (item: any) => item.chargeId === selectedChargeData.chargeId
-                        );
-                        if (index !== -1) {
-                          setDeleteIndex(index);
-                          draft.splice(index, 1);
-                        }
-                      })
-                    );
+                  onOptimisticRemove: (_dispatchFn, _setDeleteIndex) => {
                     setSelectedChargeData(null);
                   },
-                  onUndoRestore: () => {
-                    // Refetch table data when undo is clicked
+                  onUndoRestore: (_dispatch, _deleteIndex) => {
                     if (chargeRefetchRef.current) {
                       chargeRefetchRef.current();
                     }

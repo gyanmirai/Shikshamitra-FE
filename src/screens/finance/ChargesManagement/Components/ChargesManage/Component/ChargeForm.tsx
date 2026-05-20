@@ -97,7 +97,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     if (isEdit && editData) {
       return {
         chargeCategoryId: editData.chargeCategoryId || '',
-        chargeCategoryName: editData.chargeCategoryName || '',
+        chargeCategoryName: editData.categoryName || '',
         purposeDescription: editData.purposeDescription || '',
         amount: editData.amount || '',
         dueDate: editData.dueDate ? dayjs(editData.dueDate, 'DD-MM-YYYY') : null,
@@ -190,10 +190,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         } else {
           const createPayload = {
             ...payload,
-            boardId: values.boardId,
-            educationMediumId: values.educationMediumId,
-            standardId: values.standardId,
-            divisionId: values.divisionId,
             studentId: values.studentId,
           };
           await postCharge({ academicYearId: currentYear?.id, body: createPayload }).unwrap();
