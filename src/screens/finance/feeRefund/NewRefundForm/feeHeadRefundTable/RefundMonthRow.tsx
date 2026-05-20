@@ -20,7 +20,8 @@ export interface RefundMonthRowProps {
   refundValue: number;
   showInputError: boolean;
   onToggle: () => void;
-  onAmountChange: (raw: string) => void;
+  /** Receives the parsed float value from react-number-format's onValueChange. */
+  onAmountChange: (value: number) => void;
 }
 
 const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
@@ -126,7 +127,7 @@ const RefundMonthRow: React.FC<RefundMonthRowProps> = ({
           <NumericFormatCustom
             size="small"
             value={refundValue}
-            onChange={(e) => onAmountChange(e.target.value)}
+            onValueChange={(vals) => onAmountChange(vals.floatValue ?? 0)}
             onClick={(e) => e.stopPropagation()}
             isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= refundable}
             error={showInputError}

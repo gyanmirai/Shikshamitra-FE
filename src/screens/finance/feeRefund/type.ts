@@ -10,6 +10,7 @@ export interface IStudentFeeData {
   division: string;
   grNo: string;
   rollNo: string;
+  contactNo?: string;
   totalPaidFees: number;
   totalPendingFees: number;
   refundAmount?: number;

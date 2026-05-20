@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
+import type { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 
 import { Add } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
@@ -9,13 +10,16 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+// useQueryAndMutation removed — now using RTK Query hooks directly
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetFeeRefundQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import {
+  useGetFeeRefundsQuery,
+  useUpdateFeeRefundStatusMutation,
+} from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import RefundProcessForm from './Components/RefundProcessForm';
@@ -25,128 +29,55 @@ import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm
 
 import type { IStudentFeeData } from './type';
 
-const DUMMY_FEE_REFUND_DATA: IStudentFeeData[] = [
-  {
-    id: 1,
-    name: 'Aarav Sharma',
-    avatarUrl: '',
-    board: 'CBSE',
-    medium: 'English',
-    class: '10',
-    division: 'A',
-    grNo: 'GR001',
-    rollNo: '101',
-    totalPaidFees: 45000,
-    totalPendingFees: 0,
-    refundAmount: 5000,
-    requestDate: '2026-04-10',
-    reasonOfRefund: 'TC Issued',
-    parentName: 'Rajesh Sharma',
-    status: FeeRefundStatusType.Approved,
-    refundMethod: 'Bank Transfer',
-  },
-  {
-    id: 2,
-    name: 'Priya Patel',
-    avatarUrl: '',
-    board: 'CBSE',
-    medium: 'English',
-    class: '9',
-    division: 'B',
-    grNo: 'GR002',
-    rollNo: '205',
-    totalPaidFees: 38000,
-    totalPendingFees: 2000,
-    refundAmount: 3000,
-    requestDate: '2026-04-15',
-    reasonOfRefund: 'Excess Payment',
-    parentName: 'Suresh Patel',
-    status: FeeRefundStatusType.Pending,
-    refundMethod: 'Cash',
-  },
-  {
-    id: 3,
-    name: 'Rohan Mehta',
-    avatarUrl: '',
-    board: 'SSC',
-    medium: 'Gujarati',
-    class: '8',
-    division: 'A',
-    grNo: 'GR003',
-    rollNo: '310',
-    totalPaidFees: 30000,
-    totalPendingFees: 0,
-    refundAmount: 2500,
-    requestDate: '2026-04-20',
-    reasonOfRefund: 'School Transfer',
-    parentName: 'Amit Mehta',
-    status: FeeRefundStatusType.UnderReview,
-    refundMethod: 'Cheque',
-  },
-  {
-    id: 4,
-    name: 'Sneha Joshi',
-    avatarUrl: '',
-    board: 'CBSE',
-    medium: 'English',
-    class: '7',
-    division: 'C',
-    grNo: 'GR004',
-    rollNo: '412',
-    totalPaidFees: 28000,
-    totalPendingFees: 1000,
-    refundAmount: 1500,
-    requestDate: '2026-04-22',
-    reasonOfRefund: 'Double Payment',
-    parentName: 'Vijay Joshi',
-    status: FeeRefundStatusType.Rejected,
-    refundMethod: 'Bank Transfer',
-  },
-  {
-    id: 5,
-    name: 'Karan Desai',
-    avatarUrl: '',
-    board: 'SSC',
-    medium: 'English',
-    class: '11',
-    division: 'A',
-    grNo: 'GR005',
-    rollNo: '502',
-    totalPaidFees: 52000,
-    totalPendingFees: 0,
-    refundAmount: 7000,
-    requestDate: '2026-04-28',
-    reasonOfRefund: 'Stream Change',
-    parentName: 'Nilesh Desai',
-    status: FeeRefundStatusType.ImageUploaded,
-    refundMethod: 'Bank Transfer',
-  },
-];
-
 const FeeRefund = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // Local state to store filtered boards based on academic year
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-  // Boolean state to control the visibility of add concession request modal/form
   const addRefundRequest = useBoolean();
   const viewRefundRequest = useBoolean();
   const processRefundDialog = useBoolean();
   const onConfirmDialg = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
-  // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
 
-  // Fetch fee refund data using custom query hook
-  const { data: feeRefundData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeRefundQuery,
+  // Real API — paginated list of refund requests, filtered by medium when one is selected
+  const { data: refundListData, isLoading: refundListLoading } = useGetFeeRefundsQuery({
+    academicMediumId: selectedMedium || undefined,
+    maxResultCount: 100,
   });
+  const [updateStatus, { isLoading: statusUpdating }] = useUpdateFeeRefundStatusMutation();
+
+  // Map API items to the IStudentFeeData shape expected by FeeRefundTable
+  const feeRefundData: IStudentFeeData[] = (refundListData?.items ?? []).map((item, idx) => ({
+    id: idx + 1,
+    name: item.studentName || item.studentId,
+    board: '',
+    medium: '',
+    class: item.className ?? '',
+    division: item.divisionName ?? '',
+    grNo: item.studentGrNo != null ? String(item.studentGrNo) : '',
+    rollNo: item.studentRollNo != null ? String(item.studentRollNo) : '',
+    contactNo: item.studentContactNo ?? '',
+    totalPaidFees: item.totalAmount,
+    totalPendingFees: 0,
+    refundAmount: item.totalAmount,
+    requestDate: item.creationTime
+      ? new Date(item.creationTime).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '',
+    reasonOfRefund: item.reason ?? '',
+    status: item.status as FeeRefundStatusType,
+    refundMethod: item.refundMethod ?? '',
+    // Carry the API id for status updates
+    _refundRequestId: item.id,
+  })) as IStudentFeeData[];
 
   // State to store the selected student fee refund data
   // null when no student is selected
@@ -256,7 +187,7 @@ const FeeRefund = () => {
 
       {!addRefundRequest.value && !viewRefundRequest.value && (
         <StudentFeeRefundTable
-          data={feeRefundData?.length ? feeRefundData : DUMMY_FEE_REFUND_DATA}
+          data={feeRefundData}
           boards={boards || []}
           mediums={mediums || []}
           selectedBoard={selectedBoard}
@@ -365,7 +296,33 @@ const FeeRefund = () => {
         }}
         maxWidth="xs"
       >
-        <FeeRefundReasonApprovalForm onClose={handleRequstClose} mode={selectedMode} />
+        <FeeRefundReasonApprovalForm
+          onClose={async (e, isSubmit, notes) => {
+            if (isSubmit && selectedFeeRefund) {
+              try {
+                const refundId = (selectedFeeRefund as any)._refundRequestId;
+                await updateStatus({
+                  id: refundId,
+                  body: {
+                    status: selectedMode === 'Approve' ? 2 : 3,
+                    notes: notes ?? undefined,
+                  },
+                }).unwrap();
+                shikshaMitraToast.success({
+                  message: `Refund request ${selectedMode === 'Approve' ? 'approved' : 'rejected'} successfully.`,
+                });
+                handleRequstClose(e, true);
+              } catch (err: any) {
+                shikshaMitraToast.error({
+                  message: err?.data?.error?.message ?? 'Status update failed.',
+                });
+              }
+            } else {
+              handleRequstClose(e, isSubmit);
+            }
+          }}
+          mode={selectedMode}
+        />
       </CustomDialog>
     </Box>
   );
