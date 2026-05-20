@@ -264,7 +264,6 @@ const FeeCollectComponentForm = ({
       setPreviewOpen(true);
     },
   });
-  console.log('formik values', formik.values);
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
@@ -368,90 +367,113 @@ const FeeCollectComponentForm = ({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      display="flex"
-      flexDirection="column"
-      height="100%"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+        bgcolor: (t) => alpha(t.palette.background.neutral ?? t.palette.action.hover, 0.25),
+        borderRadius: 2,
+      }}
     >
       <Box
         sx={{
-          p: 1,
+          p: { xs: 0.75, md: 1.25 },
           overflow: 'hidden',
-          height: {
-            xs: 'calc(100dvh - 220px)',
-            sm: 'calc(100dvh - 205px)',
-            md: 'calc(100dvh - 190px)',
-            lg: 'calc(100dvh - 175px)',
-            xl: 'calc(100dvh - 160px)',
-          },
+          flex: 1,
+          minHeight: 0,
         }}
       >
-        <Grid container spacing={1.5} sx={{ height: '100%' }}>
+        <Grid container spacing={{ xs: 1.25, md: 1.75 }} sx={{ height: '100%' }}>
           {/* ── LEFT: Student + Ledger ── */}
-          <Grid size={{ xs: 12, md: 7 }} sx={{ height: '100%' }}>
-            <Scrollbar sx={{ height: '100%', pr: 0.5 }}>
-              <StudentFeeSummaryCard student={student} />
+          <Grid
+            size={{ xs: 12, md: 7 }}
+            sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}
+          >
+            <StudentFeeSummaryCard student={student} />
 
-              <Box mt={1}>
-                <FeeLedgerFilterBar
-                  filters={filters}
-                  onFilterChange={setFilters}
-                  entryCount={entryCount}
-                />
-
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  mt={1}
-                  minHeight={24}
-                >
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {selectedCount > 0 && (
-                      <Chip
-                        label={`${selectedCount} selected`}
-                        size="small"
-                        color="primary"
-                        variant="soft"
-                        onDelete={handleRemoveAll}
-                        deleteIcon={<Iconify icon={GlobalIcons.cancel} width={14} />}
-                      />
-                    )}
-                    {formik.errors.selectedItems && formik.touched.selectedItems && (
-                      <Typography variant="caption" color="error">
-                        {formik.errors.selectedItems as string}
-                      </Typography>
-                    )}
-                  </Box>
-
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Button
+            <Box
+              mt={0.75}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                minHeight: 0,
+              }}
+            >
+              <FeeLedgerFilterBar
+                filters={filters}
+                onFilterChange={setFilters}
+                entryCount={entryCount}
+              />
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                mt={0.85}
+                minHeight={24}
+                sx={{
+                  p: 1,
+                  pl: 1.25,
+                  borderRadius: 1.5,
+                  border: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
+                  bgcolor: (t) => alpha(t.palette.background.paper, 0.82),
+                  ml: 0.25,
+                  gap: 1,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <Box display="flex" alignItems="center" gap={1}>
+                  {selectedCount > 0 && (
+                    <Chip
+                      label={`${selectedCount} selected`}
                       size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon="solar:check-read-linear" />}
-                      onClick={handleSelectAll}
-                      sx={{
-                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08) },
-                      }}
-                    >
-                      Select All
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      disabled={selectedCount === 0}
-                      startIcon={<Iconify icon="solar:trash-bin-trash-linear" />}
-                      onClick={handleRemoveAll}
-                      sx={{
-                        '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) },
-                      }}
-                    >
-                      Remove All
-                    </Button>
-                  </Box>
+                      color="primary"
+                      variant="soft"
+                      onDelete={handleRemoveAll}
+                      deleteIcon={<Iconify icon={GlobalIcons.cancel} width={14} />}
+                      sx={{ fontWeight: 600 }}
+                    />
+                  )}
+                  {formik.errors.selectedItems && formik.touched.selectedItems && (
+                    <Typography variant="caption" color="error">
+                      {formik.errors.selectedItems as string}
+                    </Typography>
+                  )}
                 </Box>
 
-                <Box mt={1}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="solar:check-read-linear" />}
+                    onClick={handleSelectAll}
+                    sx={{
+                      borderColor: (t) => alpha(t.palette.primary.main, 0.35),
+                      '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08) },
+                    }}
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    disabled={selectedCount === 0}
+                    startIcon={<Iconify icon="solar:trash-bin-trash-linear" />}
+                    onClick={handleRemoveAll}
+                    sx={{
+                      borderColor: (t) => alpha(t.palette.error.main, 0.35),
+                      '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) },
+                    }}
+                  >
+                    Remove All
+                  </Button>
+                </Box>
+              </Box>
+              <Box mt={0.85} sx={{ flex: 1, minHeight: 0 }}>
+                <Scrollbar sx={{ height: '100%', pr: 0.5 }}>
                   <FeeLedgerList
                     data={ledgerData}
                     activeTab={filters.activeTab}
@@ -462,21 +484,37 @@ const FeeCollectComponentForm = ({
                     onChargesChange={handleChargesChange}
                     year={currentYear?.year ?? new Date().getFullYear()}
                   />
-                </Box>
+                </Scrollbar>
               </Box>
-            </Scrollbar>
+            </Box>
           </Grid>
 
           {/* ── RIGHT: Summary + Payment ── */}
-          <Grid size={{ xs: 12, md: 5 }} sx={{ height: '100%' }}>
+          <Grid
+            size={{ xs: 12, md: 5 }}
+            sx={{
+              height: '100%',
+              position: 'relative',
+            }}
+          >
             <Scrollbar sx={{ height: '100%', pr: 0.5 }}>
               {/* ── Fee Summary Card ── */}
-              <Card sx={{ p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)', ml: 0.5 }}>
+              <Card
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2.25,
+                  ml: 0.25,
+                  border: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
+                  boxShadow: (t) => `0 6px 16px ${alpha(t.palette.common.black, 0.05)}`,
+                }}
+              >
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <Iconify icon="solar:calculator-bold" sx={{ color: 'primary.main', width: 24 }} />
-                  <Typography variant="h6">Fee Summary</Typography>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Fee Summary
+                  </Typography>
                 </Box>
-                <Divider sx={{ mb: 1 }} />
+                <Divider sx={{ mb: 1.1 }} />
 
                 {formik.values.selectedItems.length === 0 && formik.values.charges.length === 0 ? (
                   <Typography
@@ -497,7 +535,14 @@ const FeeCollectComponentForm = ({
                           display="flex"
                           alignItems="center"
                           justifyContent="space-between"
-                          py={0.5}
+                          py={0.55}
+                          px={0.5}
+                          sx={{
+                            borderRadius: 1,
+                            '&:hover': {
+                              bgcolor: (t) => alpha(t.palette.action.hover, 0.5),
+                            },
+                          }}
                         >
                           <Box display="flex" gap={1}>
                             <Typography variant="body2">{feeHeadName}</Typography>
@@ -519,7 +564,7 @@ const FeeCollectComponentForm = ({
                             </Typography>
                             <IconButton
                               size="small"
-                              sx={{ p: 0.25 }}
+                              sx={{ p: 0.35 }}
                               onClick={() => {
                                 const newItems = formik.values.selectedItems.filter(
                                   (_, i) => i !== idx
@@ -529,7 +574,7 @@ const FeeCollectComponentForm = ({
                             >
                               <Iconify
                                 icon={GlobalIcons.cancel}
-                                width={25}
+                                width={20}
                                 sx={{ color: 'error.main' }}
                               />
                             </IconButton>
@@ -548,6 +593,14 @@ const FeeCollectComponentForm = ({
                               display="flex"
                               alignItems="center"
                               justifyContent="space-between"
+                              px={0.5}
+                              py={0.35}
+                              sx={{
+                                borderRadius: 1,
+                                '&:hover': {
+                                  bgcolor: (t) => alpha(t.palette.action.hover, 0.5),
+                                },
+                              }}
                             >
                               <Box flex={1} minWidth={0}>
                                 <Typography variant="body2">{charge.chargeName}</Typography>
@@ -566,6 +619,7 @@ const FeeCollectComponentForm = ({
                                 </Typography>
                                 <IconButton
                                   size="small"
+                                  sx={{ p: 0.35 }}
                                   onClick={() => {
                                     const newCharges = formik.values.charges.filter(
                                       (id) => id !== charge.chargeId
@@ -575,7 +629,7 @@ const FeeCollectComponentForm = ({
                                 >
                                   <Iconify
                                     icon={GlobalIcons.cancel}
-                                    width={25}
+                                    width={20}
                                     sx={{ color: 'error.main' }}
                                   />
                                 </IconButton>
@@ -599,11 +653,20 @@ const FeeCollectComponentForm = ({
 
               {/* ── Payment Methods Card ── */}
               <Card
-                sx={{ mt: 1.5, p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)', ml: 0.5 }}
+                sx={{
+                  mt: 1.25,
+                  p: 1.5,
+                  borderRadius: 2.25,
+                  ml: 0.25,
+                  border: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
+                  boxShadow: (t) => `0 6px 16px ${alpha(t.palette.common.black, 0.05)}`,
+                }}
               >
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <Iconify icon="solar:card-bold" sx={{ color: 'primary.main', width: 24 }} />
-                  <Typography variant="h6">Payment Methods</Typography>
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Payment Methods
+                  </Typography>
                 </Box>
                 <Divider sx={{ mb: 1.5 }} />
 
@@ -775,9 +838,10 @@ const FeeCollectComponentForm = ({
                 {formik.values.payment.paymentMethod && (
                   <Box
                     mt={1.5}
-                    p={1}
+                    p={1.1}
                     sx={{
-                      borderRadius: 1,
+                      borderRadius: 1.25,
+                      border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
                       bgcolor:
                         balance === 0
                           ? alpha(theme.palette.success.main, 0.08)
@@ -822,7 +886,7 @@ const FeeCollectComponentForm = ({
               </Card>
 
               {/* ── Remarks ── */}
-              <Box mt={1.5} mb={1}>
+              <Box mt={1.25} mb={1} ml={0.25}>
                 <TextField
                   label="Remarks (Optional)"
                   value={formik.values.remarks ?? ''}
@@ -840,7 +904,17 @@ const FeeCollectComponentForm = ({
       </Box>
 
       {/* ── Actions ── */}
-      <DialogActions>
+      <DialogActions
+        sx={{
+          px: { xs: 1, md: 1.5 },
+          py: 0.9,
+          mt: 0,
+          bgcolor: (t) => alpha(t.palette.background.paper, 0.95),
+          borderTop: (t) => `1px solid ${alpha(t.palette.grey[500], 0.16)}`,
+          flexShrink: 0,
+          backdropFilter: 'blur(6px)',
+        }}
+      >
         <Box display="flex" justifyContent="space-between" gap={1} alignItems="center" width="100%">
           {balance < 0 && (
             <Box flex={2} display="flex" justifyContent="center">
@@ -865,6 +939,7 @@ const FeeCollectComponentForm = ({
               disabled={loading}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              sx={{ minWidth: 88 }}
             >
               Cancel
             </Button>
@@ -878,6 +953,7 @@ const FeeCollectComponentForm = ({
               }}
               startIcon={<Iconify icon={GlobalIcons.submit} />}
               disabled={loading}
+              sx={{ minWidth: 96 }}
             >
               Submit
             </LoadingButton>

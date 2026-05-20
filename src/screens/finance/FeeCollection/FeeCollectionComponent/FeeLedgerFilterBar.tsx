@@ -82,11 +82,15 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
   return (
     <Card
       sx={{
-        p: 1.5,
-        boxShadow: 'var(--shadows-4)',
-        borderRadius: 2,
-        ml: 0.5,
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.6)}`,
+        p: { xs: 1.25, md: 1.5 },
+        boxShadow: (t) => `0 6px 16px ${alpha(t.palette.common.black, 0.05)}`,
+        borderRadius: 2.5,
+        ml: 0.25,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
+        position: { md: 'sticky' },
+        top: { md: 8 },
+        zIndex: 3,
+        backdropFilter: 'blur(8px)',
       }}
     >
       {/* ── Header row: title + tabs ── */}
@@ -94,18 +98,18 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1.25,
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          mb: 1.25,
+          mb: 1,
         }}
       >
         {/* Title + entry count */}
         <Box display="flex" alignItems="center" gap={1}>
           <Box
             sx={{
-              width: 30,
-              height: 30,
+              width: 32,
+              height: 32,
               borderRadius: 1.25,
               display: 'flex',
               alignItems: 'center',
@@ -122,7 +126,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           <Typography
             variant="subtitle1"
             fontWeight={700}
-            sx={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}
+            sx={{ fontSize: '0.95rem', letterSpacing: '-0.01em' }}
           >
             Fee Ledger
           </Typography>
@@ -135,8 +139,9 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               sx={{
                 borderRadius: 999,
                 fontWeight: 600,
-                fontSize: '0.7rem',
+                fontSize: '0.72rem',
                 height: 22,
+                border: (t) => `1px solid ${alpha(t.palette.divider, 0.8)}`,
               }}
             />
           )}
@@ -147,7 +152,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            minHeight: 30,
+            minHeight: 34,
+            border: (t) => `1px solid ${alpha(t.palette.divider, 0.8)}`,
+            borderRadius: 1.25,
+            bgcolor: (t) => alpha(t.palette.background.neutral ?? t.palette.action.hover, 0.45),
             '& .MuiTabs-indicator': { borderRadius: 999 },
           }}
           slotProps={{
@@ -162,10 +170,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               icon={tab.icon ? <Iconify icon={tab.icon} width={13} /> : undefined}
               iconPosition="start"
               sx={{
-                minHeight: 30,
+                minHeight: 32,
                 py: 0.5,
-                px: 1.5,
-                fontSize: '0.75rem',
+                px: 1.25,
+                fontSize: '0.77rem',
                 fontWeight: 600,
                 letterSpacing: '0.01em',
               }}
@@ -178,10 +186,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
       <Box
         sx={{
           display: 'flex',
-          gap: 1.25,
+          gap: 1,
           flexWrap: 'wrap',
-          pt: 1,
-          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+          pt: 1.1,
+          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
         }}
       >
         <CustomSelect
@@ -191,7 +199,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.month}
           onChange={(value) => onFilterChange({ ...filters, month: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
           size="small"
         />
 
@@ -203,7 +211,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={filters.feeHead}
           isLoading={isFeeHeadLoading || isFeeHeadFetching}
           onChange={(value) => onFilterChange({ ...filters, feeHead: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
           size="small"
         />
 
@@ -214,7 +222,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.status}
           onChange={(value) => onFilterChange({ ...filters, status: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
           size="small"
         />
       </Box>

@@ -50,12 +50,14 @@ const FeeHeadGroup = ({
   return (
     <Box
       sx={{
-        border: `1px solid ${isAllSelected ? alpha(theme.palette.primary.main, 0.28) : theme.palette.divider}`,
-        borderRadius: 2,
+        border: `1px solid ${isAllSelected ? alpha(theme.palette.primary.main, 0.28) : alpha(theme.palette.divider, 0.9)}`,
+        borderRadius: 2.25,
         overflow: 'hidden',
-        mb: 1.5,
+        mb: 1.25,
         transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-        boxShadow: isAllSelected ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}` : 'none',
+        boxShadow: isAllSelected
+          ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`
+          : `0 4px 12px ${alpha(theme.palette.common.black, 0.03)}`,
       }}
     >
       <GroupHeader

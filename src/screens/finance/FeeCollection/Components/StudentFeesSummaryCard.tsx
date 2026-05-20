@@ -40,32 +40,35 @@ export const StudentFeeSummaryCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        borderRadius: 2,
+        borderRadius: 2.5,
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
-        ml: 0.5,
-        mt: 0.5,
-        mb: 1.25,
-        p: 1.75,
-        boxShadow: 'var(--shadows-4)',
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+        ml: 0.25,
+        mt: 0.25,
+        mb: 1,
+        p: { xs: 1.5, md: 1.75 },
+        boxShadow: (t) => `0 6px 18px ${alpha(t.palette.common.black, 0.05)}`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
       }}
     >
       {showHeader && (
-        <Grid container spacing={1.5} alignItems="center">
+        <Grid container spacing={1.75} alignItems="center">
           {/* ── Student identity column ── */}
           <Grid
             size={{ xs: 12, md: 5, lg: 4 }}
             sx={{
-              borderRight: (t) => ({ md: `1px dashed ${t.palette.divider}` }),
-              borderBottom: (t) => ({ xs: `1px dashed ${t.palette.divider}`, md: 'none' }),
+              borderRight: (t) => ({ md: `1px solid ${alpha(t.palette.divider, 0.7)}` }),
+              borderBottom: (t) => ({
+                xs: `1px solid ${alpha(t.palette.divider, 0.7)}`,
+                md: 'none',
+              }),
               pr: { md: 2 },
               pb: { xs: 1.5, md: 0 },
               mb: { xs: 0.5, md: 0 },
             }}
           >
-            <Box display="flex" alignItems="center" gap={1.75}>
+            <Box display="flex" alignItems="center" gap={1.5}>
               <motion.div
                 initial={{ scale: 0.75, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -73,13 +76,13 @@ export const StudentFeeSummaryCard: React.FC<{
               >
                 <Avatar
                   sx={{
-                    width: 52,
-                    height: 52,
+                    width: 50,
+                    height: 50,
                     bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
                     color: 'primary.main',
-                    fontSize: '1.35rem',
+                    fontSize: '1.2rem',
                     fontWeight: 800,
-                    border: (t) => `1.5px solid ${alpha(t.palette.primary.main, 0.22)}`,
+                    border: (t) => `1.5px solid ${alpha(t.palette.primary.main, 0.2)}`,
                     boxShadow: (t) => `0 0 0 4px ${alpha(t.palette.primary.main, 0.07)}`,
                   }}
                 >
@@ -91,7 +94,7 @@ export const StudentFeeSummaryCard: React.FC<{
                 <Typography
                   variant="subtitle1"
                   fontWeight={700}
-                  sx={{ lineHeight: 1.2, mb: 0.5, fontSize: '0.95rem', letterSpacing: '-0.01em' }}
+                  sx={{ lineHeight: 1.2, mb: 0.5, fontSize: '1rem', letterSpacing: '-0.01em' }}
                 >
                   {student.name || 'Aarav Sharma'}
                 </Typography>
@@ -108,9 +111,7 @@ export const StudentFeeSummaryCard: React.FC<{
                   />
 
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {(student.className || '10') && (student.division || 'A')
-                      ? `${student.className || '10'}-${student.division || 'A'}`
-                      : 'N/A'}
+                    {`${student.className || '10'}-${student.division || 'A'}`}
                   </Typography>
 
                   <Divider
@@ -121,14 +122,14 @@ export const StudentFeeSummaryCard: React.FC<{
 
                   <Box
                     sx={{
-                      px: 0.875,
-                      py: 0.2,
+                      px: 0.9,
+                      py: 0.3,
                       borderRadius: 999,
-                      bgcolor: (t) => alpha(t.palette.action.selected, 0.9),
+                      bgcolor: (t) => alpha(t.palette.action.selected, 0.55),
                       border: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
                     }}
                   >
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                       Roll No : {student.rollNumber || '01'}
                     </Typography>
                   </Box>
@@ -179,18 +180,19 @@ export const StudentFeeSummaryCard: React.FC<{
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1], delay: index * 0.06 }}
                   whileHover={{ y: -2, transition: { duration: 0.18 } }}
                   sx={{
-                    p: 1.25,
-                    borderRadius: 1.75,
-                    bgcolor: (t) => alpha(t.palette[item.color].main, 0.06),
-                    border: (t) => `1px solid ${alpha(t.palette[item.color].main, 0.14)}`,
+                    p: 1.1,
+                    borderRadius: 1.5,
+                    bgcolor: (t) => alpha(t.palette[item.color].main, 0.05),
+                    border: (t) => `1px solid ${alpha(t.palette[item.color].main, 0.16)}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 1,
                     cursor: 'default',
-                    transition: 'box-shadow 0.2s ease',
+                    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
                     '&:hover': {
-                      boxShadow: (t) => `0 4px 16px ${alpha(t.palette[item.color].main, 0.14)}`,
+                      boxShadow: (t) => `0 6px 16px ${alpha(t.palette[item.color].main, 0.12)}`,
+                      borderColor: (t) => alpha(t.palette[item.color].main, 0.24),
                     },
                   }}
                 >
@@ -200,10 +202,9 @@ export const StudentFeeSummaryCard: React.FC<{
                       sx={{
                         color: 'text.secondary',
                         fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        fontSize: '0.62rem',
-                        mb: 0.5,
+                        letterSpacing: '0.02em',
+                        fontSize: '0.68rem',
+                        mb: 0.35,
                         display: 'block',
                       }}
                     >
@@ -214,7 +215,7 @@ export const StudentFeeSummaryCard: React.FC<{
                       sx={{
                         color: (t) => t.palette[item.color].main,
                         fontWeight: 800,
-                        fontSize: '0.875rem',
+                        fontSize: '0.95rem',
                         fontVariantNumeric: 'tabular-nums',
                         lineHeight: 1.2,
                       }}
@@ -265,7 +266,7 @@ export const FinanceCollectionCard = ({
   >
     <Card
       sx={{
-        p: 2.5,
+        p: 2.25,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
@@ -274,10 +275,10 @@ export const FinanceCollectionCard = ({
         cursor: 'pointer',
         height: '100%',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        border: '1px solid',
-        borderColor: 'divider',
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
+        boxShadow: (t) => `0 6px 18px ${alpha(t.palette.common.black, 0.05)}`,
         '&:hover': {
-          transform: 'translateY(-4px)',
+          transform: 'translateY(-2px)',
           boxShadow: (theme) => theme.customShadows?.z8 || 4,
           borderColor: color,
         },

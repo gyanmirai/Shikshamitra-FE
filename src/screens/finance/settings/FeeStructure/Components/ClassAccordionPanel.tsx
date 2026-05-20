@@ -56,8 +56,12 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   feeStructureMetaDataId,
   onDirtyChange,
 }) => {
-  const [localDrafts, setLocalDrafts] = useState<IClassWiseFeeStructureCard[]>([]);
+  type DraftCard = IClassWiseFeeStructureCard & { __draftId: string };
+
+  const [localDrafts, setLocalDrafts] = useState<DraftCard[]>([]);
+  const [deletedServerIds, setDeletedServerIds] = useState<Set<string>>(new Set());
   const dirtySet = useRef<Set<string>>(new Set());
+  const draftCounterRef = useRef(0);
 
   const handleCardDirtyChange = useCallback(
     (cardKey: string, dirty: boolean) => {
@@ -73,18 +77,33 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
 
   const { data: rawStructures, isLoading, isFetching } = useFetchStandardFeeStructures(classId);
 
-  const serverCards: IClassWiseFeeStructureCard[] = (
-    Array.isArray(rawStructures)
-      ? rawStructures
-      : (rawStructures?.standardFeeStructures ?? rawStructures?.data ?? [])
-  ).map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId));
+  const rawServerStructures: any[] = Array.isArray(rawStructures)
+    ? rawStructures
+    : (rawStructures?.standardFeeStructures ?? rawStructures?.data ?? []);
 
-  const allCards = [...serverCards, ...localDrafts];
+  const serverCards: IClassWiseFeeStructureCard[] = rawServerStructures
+    .map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId))
+    .filter((card) => !card._id || !deletedServerIds.has(card._id));
+
+  const allCards = [
+    ...serverCards.map((card) => ({
+      card,
+      cardKey: card._id as string,
+      isDraft: false,
+    })),
+    ...localDrafts.map((card) => ({
+      card,
+      cardKey: card.__draftId,
+      isDraft: true,
+    })),
+  ];
 
   const handleAddNew = () => {
+    draftCounterRef.current += 1;
     setLocalDrafts((prev) => [
       ...prev,
       {
+        __draftId: `draft-${classId}-${draftCounterRef.current}`,
         _id: undefined,
         name: '',
         feeHeads: [],
@@ -160,22 +179,31 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
       )}
 
       <AnimatePresence>
-        {allCards.map((card, idx) => (
+        {allCards.map(({ card, cardKey, isDraft }, idx) => (
           <IndependentFeeStructureCard
-            key={card._id ?? `draft-${classId}-${idx}`}
+            key={cardKey}
             initialData={card}
             index={idx}
             onSaved={() => {
-              setLocalDrafts((prev) => prev.filter((d) => d !== card));
-            }}
-            onDeleted={() => {
-              if (!card._id) {
-                setLocalDrafts((prev) => prev.filter((d) => d !== card));
+              if (isDraft) {
+                setLocalDrafts((prev) => prev.filter((d) => d.__draftId !== cardKey));
               }
             }}
-            onDirtyChange={(dirty) =>
-              handleCardDirtyChange(card._id ?? `draft-${classId}-${idx}`, dirty)
-            }
+            onDeleted={() => {
+              dirtySet.current.delete(cardKey);
+              onDirtyChange?.(dirtySet.current.size > 0);
+
+              if (isDraft) {
+                setLocalDrafts((prev) => prev.filter((d) => d.__draftId !== cardKey));
+              } else if (card._id) {
+                setDeletedServerIds((prev) => {
+                  const next = new Set(prev);
+                  next.add(card._id as string);
+                  return next;
+                });
+              }
+            }}
+            onDirtyChange={(dirty) => handleCardDirtyChange(cardKey, dirty)}
           />
         ))}
       </AnimatePresence>
