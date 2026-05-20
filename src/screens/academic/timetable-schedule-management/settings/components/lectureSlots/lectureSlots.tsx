@@ -187,9 +187,7 @@ const LectureSlots = () => {
             { name: 'View Slots' },
           ]}
           isBack
-          onBack={() => {
-            viewSlotsDialog.onFalse();
-          }}
+          onBack={() => handleClose(null)}
         />
       ) : addLectureSlotDialog.value ? (
         <CustomBreadcrumbs
@@ -203,9 +201,7 @@ const LectureSlots = () => {
             { name: `${isEdit ? 'Update' : 'Add'} Lecture Slot` },
           ]}
           isBack
-          onBack={() => {
-            addLectureSlotDialog.onFalse();
-          }}
+          onBack={() => handleClose(null)}
         />
       ) : (
         <CustomBreadcrumbs
@@ -222,8 +218,9 @@ const LectureSlots = () => {
               sx={{ width: '160px' }}
               startIcon={<Add />}
               onClick={() => {
-                addLectureSlotDialog.onTrue();
+                setEditData(null);
                 setIsEdit(false);
+                addLectureSlotDialog.onTrue();
               }}
               variant="contained"
               size="small"

@@ -499,7 +499,7 @@ const TimeTableGrid = () => {
   );
 
   const {
-    data: timetableManagementData,
+    currentData: timetableManagementData,
     isLoading: isTimetableManagementLoading,
     isFetching: isTimetableManagementFetching,
     refetch: refetchTimetableManagement,

@@ -99,7 +99,7 @@ export function useSubjectAssignmentForm({
         if (isEdit && data?.id) {
           await updateSubjectAssignment({ assignmentId: data.id, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `Subject Assignment updated successfully for class ${values.className}`,
+            message: `Subject Assignment updated successfully for  ${values.className}`,
           });
         } else {
           await addSubjectAssignment({
@@ -109,8 +109,8 @@ export function useSubjectAssignmentForm({
           shikshaMitraToast.success({
             message:
               values.status === 0
-                ? `Subject Assignment saved as draft for class ${values.className}`
-                : `Subject Assignment published successfully for class ${values.className}`,
+                ? `Subject Assignment saved as draft for  ${values.className}`
+                : `Subject Assignment published successfully for  ${values.className}`,
           });
         }
 
