@@ -33,7 +33,6 @@ export const STATUS_COLOR: Record<string, LabelColor> = {
   Pending: 'warning',
   Partial: 'info',
   Paid: 'success',
-  Overdue: 'error',
 };
 
 export const toPeriod = (month: string, year: number): string =>
@@ -56,7 +55,10 @@ export const ColHeader = ({
     pr={2}
     py={0.9}
     sx={{
-      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.035),
+      bgcolor: (theme) =>
+        theme.palette.mode === 'dark'
+          ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.62)
+          : alpha(theme.palette.text.primary, 0.035),
       borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.7)}`,
     }}
   >
@@ -140,13 +142,18 @@ export const FeeRow = ({
         cursor: isDisabled ? 'default' : 'pointer',
         opacity: isDisabled ? 0.45 : 1,
         transition: 'background-color 0.18s ease, opacity 0.18s ease, border-color 0.18s ease',
-        borderLeft: `2px solid ${isSelected ? alpha(theme.palette.primary.main, 0.7) : 'transparent'}`,
-        bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.055) : 'transparent',
+        bgcolor: isSelected
+          ? alpha(theme.palette.primary.main, 0.055)
+          : theme.palette.mode === 'dark'
+            ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.22)
+            : 'transparent',
         '&:hover': !isDisabled
           ? {
               bgcolor: isSelected
                 ? alpha(theme.palette.primary.main, 0.085)
-                : alpha(theme.palette.action.hover, 0.6),
+                : theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.action.hover, 0.72)
+                  : alpha(theme.palette.action.hover, 0.6),
             }
           : {},
       }}
