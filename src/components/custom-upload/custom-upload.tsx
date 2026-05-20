@@ -37,7 +37,7 @@ interface CustomUploadProps {
   secondaryText?: string;
 }
 
-function isImageUrl(url) {
+function isImageUrl(url: string) {
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
 }
 

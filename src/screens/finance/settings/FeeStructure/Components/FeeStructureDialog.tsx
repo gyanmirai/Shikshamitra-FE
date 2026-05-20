@@ -6,8 +6,8 @@ import React, { useState, useEffect } from 'react';
 import { Button, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 
 import type { IFeeStructure } from '../type';
 
@@ -51,7 +51,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
       updated.push({
         _id: crypto.randomUUID(),
         name: feeStructureName || `Fee Structure ${updated.length + 1}`,
-        status: FeeStructureClassStatusType.Current,
+        status: FeeStructureLockStatusType.Unlocked,
         feeHeads: [],
       });
     }

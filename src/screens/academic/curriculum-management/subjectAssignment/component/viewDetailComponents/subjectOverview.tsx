@@ -43,7 +43,7 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
         variant="subtitle2"
         component="p"
         sx={{ fontWeight: 600, color: 'text.primary', wordBreak: 'break-word' }}
-        dangerouslySetInnerHTML={{ __html: value || 'N/A' }}
+        dangerouslySetInnerHTML={{ __html: String(value ?? 'N/A') }}
       />
     </Box>
   </Box>
