@@ -27,7 +27,7 @@ export const HighchartsClient = forwardRef<HighchartsReactRefObject, Props>(
   ({ options, containerProps }, ref) => (
     <Chart
       ref={ref as any}
-      options={options}
+      options={options as any}
       containerProps={containerProps ?? { style: { width: '100%', height: '100%' } }}
     />
   )

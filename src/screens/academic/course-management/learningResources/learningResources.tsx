@@ -105,7 +105,7 @@ const LearningResources = (props: TabComponentType) => {
 
       <HierarchyTree
         onEdit={(doc) => {
-          setSelectedEntry(doc);
+          setSelectedEntry(doc as unknown as IResourceData);
           editResourceDialog.onTrue();
         }}
       />
