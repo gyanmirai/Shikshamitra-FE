@@ -18,9 +18,9 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, MenuList, MenuItem, TextField, Typography, Autocomplete } from '@mui/material';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import { usePublishExamMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
-import { Box, MenuList, MenuItem, TextField, Typography, Autocomplete } from '@mui/material';
 import { useGetSubjectsQuery } from 'src/redux/classManagementApi/subjectProgressManageApi/subjectProgressManageApi';
 
 import AssignGrade from './components/assignGradeForm';
@@ -387,14 +387,14 @@ const GradeEntry = (props: TabComponentType) => {
           title={
             <Box display="flex" flexDirection="row" gap={1} alignItems="center">
               <Typography variant="h5">
-                {selectedStudent?.marks ? 'Update Marks' : 'Assign Marks'}
+                {selectedStudent?.status === 1 ? 'Update Marks' : 'Assign Marks'}
               </Typography>
               <CustomTooltip
                 sx={{ textAlign: 'justify' }}
                 arrow
                 placement="right"
                 title={
-                  selectedStudent?.marks
+                  selectedStudent?.status === 1
                     ? 'You can modify the existing marks, grades and feedback for this student.'
                     : 'Input marks, assign grades, and give feedback for the student.'
                 }

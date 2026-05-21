@@ -33,7 +33,7 @@ const TABS = [
   },
 ];
 
-const AcademicTabs = () => {
+const AcademicTabs = ({ student }: { student?: any }) => {
   const tabs = useTabs('timetable');
 
   return (
@@ -116,7 +116,12 @@ const AcademicTabs = () => {
           <Card sx={{ p: 1, flexGrow: 1, height: '100%', overflow: 'hidden' }}>
             <Scrollbar sx={{ height: '100%' }}>
               <Box sx={{ p: 1, gap: 1, minWidth: 360, display: 'flex', flexDirection: 'column' }}>
-                {tabs.value === 'timetable' && <AcademicTimetable />}
+                {tabs.value === 'timetable' && (
+                  <AcademicTimetable
+                    standardId={student?.standardId}
+                    divisionId={student?.divisionId}
+                  />
+                )}
                 {tabs.value === 'subjectPerformace' && <SubjectPerformance />}
                 {tabs.value === 'homework/assignments' && <MyProfileSubmission />}
                 {tabs.value === 'examination' && <ProfileExamination />}
