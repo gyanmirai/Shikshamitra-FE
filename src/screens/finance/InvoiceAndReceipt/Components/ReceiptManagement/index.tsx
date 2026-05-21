@@ -1,306 +1,301 @@
 import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
-import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
+import type {
+  FeeReceiptListItem,
+  GetFeeReceiptListParams,
+} from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
+import { Box, Chip } from '@mui/material';
 import { Label } from 'src/components/label';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Tab, Tabs, Typography } from '@mui/material';
-import React, { useMemo, useState, useEffect } from 'react';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetReceiptDataQuery } from 'src/redux/invoiceAndReceipt/receiptApi';
+import CustomizableTable from 'src/components/customizabaleTable';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import {
+  FeeReceiptKind,
+  FEE_RECEIPT_KIND_COLORS,
+  FEE_RECEIPT_KIND_LABELS,
+  useGetFeeReceiptListQuery,
+  FeeReceiptVerificationStatus,
+  FEE_RECEIPT_VERIFICATION_LABELS,
+} from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
-import ReceiptTable from './Components/receiptTable';
-import StudentTableView from './Components/StudentReceiptTable';
+import ReceiptPreviewDialog from './Components/ReceiptPreviewDialog';
 
-import type { IFeeReceipt } from './type';
+// ── Month options ─────────────────────────────────────────────────────────────
 
-const STATIC_RECEIPTS: IFeeReceipt[] = [
+const MONTHS = [
+  { label: 'January', value: 1 },
+  { label: 'February', value: 2 },
+  { label: 'March', value: 3 },
+  { label: 'April', value: 4 },
+  { label: 'May', value: 5 },
+  { label: 'June', value: 6 },
+  { label: 'July', value: 7 },
+  { label: 'August', value: 8 },
+  { label: 'September', value: 9 },
+  { label: 'October', value: 10 },
+  { label: 'November', value: 11 },
+  { label: 'December', value: 12 },
+];
+
+const RECEIPT_KIND_OPTIONS = [
+  { label: 'All Types', value: '' },
+  { label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.FinalFee], value: FeeReceiptKind.FinalFee },
   {
-    student: 'Dharmik Jinjala',
-    rollNo: '101',
-    class: '10',
-    division: 'A',
-    totalPaidFees: 10000,
-    totalPendingFees: 5000,
-    grNo: 111,
-    lastPaymentDate: '10-08-2025',
-    paymentTerm: 'Monthly',
-    status: 'Partial',
+    label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.ProvisionalFee],
+    value: FeeReceiptKind.ProvisionalFee,
   },
   {
-    student: 'Prerna Atre',
-    rollNo: '102',
-    class: '10',
-    division: 'A',
-    totalPaidFees: 13500,
-    totalPendingFees: 0,
-    grNo: 112,
-    lastPaymentDate: '12-08-2025',
-    paymentTerm: 'Quarterly',
-    status: 'Paid',
-  },
-  {
-    student: 'Aarav Mehta',
-    rollNo: '103',
-    class: '10',
-    division: 'B',
-    totalPaidFees: 9500,
-    totalPendingFees: 5500,
-    grNo: 113,
-    lastPaymentDate: '15-08-2025',
-    paymentTerm: 'Half-Yearly',
-    status: 'Partial',
-  },
-  {
-    student: 'Siya Patel',
-    rollNo: '104',
-    class: '10',
-    division: 'A',
-    totalPaidFees: 15000,
-    totalPendingFees: 0,
-    grNo: 114,
-    lastPaymentDate: '17-08-2025',
-    paymentTerm: 'Annually',
-    status: 'Paid',
-  },
-  {
-    student: 'Rohan Sharma',
-    rollNo: '105',
-    class: '10',
-    division: 'B',
-    totalPaidFees: 8000,
-    totalPendingFees: 7000,
-    grNo: 115,
-    lastPaymentDate: '18-08-2025',
-    paymentTerm: 'Monthly',
-    status: 'Partial',
-  },
-  {
-    student: 'Ananya Desai',
-    rollNo: '106',
-    class: '9',
-    division: 'A',
-    totalPaidFees: 12000,
-    totalPendingFees: 0,
-    grNo: 116,
-    lastPaymentDate: '20-08-2025',
-    paymentTerm: 'Quarterly',
-    status: 'Paid',
-  },
-  {
-    student: 'Vivaan Shah',
-    rollNo: '107',
-    class: '9',
-    division: 'B',
-    totalPaidFees: 0,
-    totalPendingFees: 11000,
-    grNo: 117,
-    lastPaymentDate: '-',
-    paymentTerm: 'Half-Yearly',
-    status: 'Pending',
+    label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.ProvisionalCharge],
+    value: FeeReceiptKind.ProvisionalCharge,
   },
 ];
 
+const DEFAULT_PAGE_SIZE = 20;
+
 const ReceiptManagement = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  // ── Filter state ──────────────────────────────────────────────────────────
+
   const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [division, setDivision] = useState<string>('');
-  const viewReceiptDetailsDialog = useBoolean();
-  const [selectedReceiptData, setSelectedReceiptData] = useState<IFeeReceipt | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedKind, setSelectedKind] = useState<string>('');
 
-  const { data: receiptData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetReceiptDataQuery,
-  });
+  // ── Pagination state ──────────────────────────────────────────────────────
 
-  const tableData = receiptData?.length ? receiptData : STATIC_RECEIPTS;
+  const [skipCount, setSkipCount] = useState(0);
+  const [maxResultCount, setMaxResultCount] = useState(DEFAULT_PAGE_SIZE);
 
-  const statusTabs = useTabs('All');
+  // ── Preview state ──────────────────────────────────────────────────────────
 
-  const getPaymentStatus = (row: IFeeReceipt) => {
-    if (row.totalPendingFees <= 0) return 'Paid';
-    if (row.totalPaidFees > 0) return 'Partial';
-    return 'Pending';
-  };
+  const [previewReceiptId, setPreviewReceiptId] = useState<string | null>(null);
 
-  const statusCounts = useMemo(() => {
-    const list = tableData || [];
-    return {
-      All: list.length,
-      Paid: list.filter((i: IFeeReceipt) => getPaymentStatus(i) === 'Paid').length,
-      Partial: list.filter((i: IFeeReceipt) => getPaymentStatus(i) === 'Partial').length,
-      Pending: list.filter((i: IFeeReceipt) => getPaymentStatus(i) === 'Pending').length,
-    };
-  }, [tableData]);
+  // ── Board/Medium cascade from global state ────────────────────────────────
 
-  const STATUS_TABS = useMemo(
-    () => [
-      { value: 'All', label: 'All', count: statusCounts.All, color: 'default' },
-      { value: 'Paid', label: 'Paid', count: statusCounts.Paid, color: 'success' },
-      { value: 'Partial', label: 'Partial', count: statusCounts.Partial, color: 'info' },
-      { value: 'Pending', label: 'Pending', count: statusCounts.Pending, color: 'warning' },
-    ],
-    [statusCounts]
-  );
-
-  const filteredReceiptData = useMemo(() => {
-    const list = tableData || [];
-    if (statusTabs.value === 'All') return list;
-    return list.filter((i: IFeeReceipt) => getPaymentStatus(i) === statusTabs.value);
-  }, [tableData, statusTabs.value]);
-
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  // Sync boards from current year
   useEffect(() => {
     setBoards(currentYear?.boards || []);
   }, [currentYear?.boards]);
 
-  // Board → Medium cascade
   useEffect(() => {
-    const board = boards.find((item: Board) => item.id === selectedBoard);
+    const board = boards.find((b: Board) => b.id === selectedBoard);
     setMediums(board?.educationMediums || []);
+    setSelectedMedium('');
   }, [boards, selectedBoard]);
 
-  // Medium → Class cascade
-  useEffect(() => {
-    const medium = mediums?.find((item: Medium) => item.id === selectedMedium);
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    setAllClass(allClasses);
-    setClass('');
-  }, [mediums, selectedMedium]);
+  const resetPagination = useCallback(() => setSkipCount(0), []);
 
-  // Class → Division cascade
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
-    setDivision('');
-  }, [allClass, classes]);
+  // ── RTK Query ─────────────────────────────────────────────────────────────
+
+  const queryParams = useMemo<GetFeeReceiptListParams | null>(() => {
+    if (!currentYear?.id || !selectedBoard || !selectedMedium) return null;
+    return {
+      academicYearId: currentYear.id,
+      boardId: selectedBoard,
+      educationMediumId: selectedMedium,
+      month: selectedMonth ? Number(selectedMonth) : undefined,
+      receiptKind: selectedKind ? (Number(selectedKind) as FeeReceiptKind) : undefined,
+      skipCount,
+      maxResultCount,
+    };
+  }, [
+    currentYear?.id,
+    selectedBoard,
+    selectedMedium,
+    selectedMonth,
+    selectedKind,
+    skipCount,
+    maxResultCount,
+  ]);
+
+  const { data, isFetching } = useGetFeeReceiptListQuery(queryParams!, {
+    skip: queryParams === null,
+  });
+
+  const tableData: FeeReceiptListItem[] = data?.items ?? [];
+  const totalCount: number = data?.totalCount ?? 0;
+
+  // ── Columns ───────────────────────────────────────────────────────────────
+
+  const columns = useMemo(
+    () => [
+      {
+        id: 'receiptNumber',
+        label: 'Receipt No.',
+        renderCell: (value: string, row: FeeReceiptListItem) => (
+          <Box
+            component="span"
+            sx={{ color: 'primary.main', cursor: 'pointer', fontWeight: 600 }}
+            onClick={() => setPreviewReceiptId(row.id)}
+          >
+            {value}
+          </Box>
+        ),
+      },
+      {
+        id: 'receiptKind',
+        label: 'Receipt Type',
+        renderCell: (value: FeeReceiptKind, row: FeeReceiptListItem) => (
+          <Box display="flex" flexDirection="column" gap={0.5}>
+            <Label variant="soft" color={FEE_RECEIPT_KIND_COLORS[value] as LabelColor}>
+              {FEE_RECEIPT_KIND_LABELS[value] ?? row.receiptKindLabel}
+            </Label>
+            {row.verificationStatus !== FeeReceiptVerificationStatus.NotApplicable &&
+              row.verificationStatus !== FeeReceiptVerificationStatus.PendingVerification && (
+                <Chip
+                  size="small"
+                  label={FEE_RECEIPT_VERIFICATION_LABELS[row.verificationStatus]}
+                  color={
+                    row.verificationStatus === FeeReceiptVerificationStatus.Verified
+                      ? 'success'
+                      : 'error'
+                  }
+                  sx={{ height: 18, fontSize: 10 }}
+                />
+              )}
+          </Box>
+        ),
+      },
+      {
+        id: 'studentName',
+        label: 'Student Name',
+        renderCell: (value: string, row: FeeReceiptListItem) => (
+          <Box>
+            <Box fontWeight={600}>{value}</Box>
+            {row.grNo && (
+              <Box component="span" fontSize={11} color="text.secondary">
+                GR: {row.grNo}
+              </Box>
+            )}
+          </Box>
+        ),
+      },
+      {
+        id: 'rollNo',
+        label: 'Roll No.',
+        renderCell: (value: string | null) => value ?? '—',
+      },
+      {
+        id: 'totalPaidAmount',
+        label: 'Paid Amount',
+        renderCell: (value: number) =>
+          `₹ ${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      },
+      {
+        id: 'receiptDate',
+        label: 'Receipt Date',
+        renderCell: (value: string) => {
+          const d = new Date(value);
+          return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IN');
+        },
+      },
+    ],
+    []
+  );
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* ── Filter bar ──────────────────────────────────────────────────────── */}
       <Box
         display="flex"
+        flexWrap="wrap"
+        gap={1.5}
         sx={{
           borderRadius: 2,
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
           mb: 1,
-          p: 1,
-          pb: 0,
-          gap: 2,
+          p: 1.5,
         }}
       >
         <CustomSelect
-          options={boards || []}
-          label="Board"
+          options={boards}
+          label="Board *"
           value={selectedBoard}
           onChange={(val) => {
             setSelectedBoard(val as string);
-            setSelectedMedium('');
-            setClass('');
-            setDivision('');
+            resetPagination();
           }}
           labelKey="name"
           valueKey="id"
-          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: 180, width: '100%' } }}
         />
         <CustomSelect
-          options={mediums || []}
-          label="Medium"
+          options={mediums}
+          label="Medium *"
           value={selectedMedium}
           onChange={(val) => {
             setSelectedMedium(val as string);
-            setClass('');
-            setDivision('');
+            resetPagination();
           }}
           labelKey="name"
           valueKey="id"
           disabled={!selectedBoard}
-          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: 180, width: '100%' } }}
         />
         <CustomSelect
-          options={allClass || []}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="name"
-          disabled={!selectedMedium}
-          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
+          options={[{ label: 'All Months', value: '' }, ...MONTHS]}
+          label="Month"
+          value={selectedMonth}
+          onChange={(val) => {
+            setSelectedMonth(val as string);
+            resetPagination();
+          }}
+          labelKey="label"
+          valueKey="value"
+          formControlProps={{ sx: { maxWidth: 160, width: '100%' } }}
         />
         <CustomSelect
-          options={allDivision || []}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="name"
-          disabled={!classes}
-          formControlProps={{ sx: { maxWidth: '180px', width: '100%' } }}
+          options={RECEIPT_KIND_OPTIONS}
+          label="Receipt Type"
+          value={selectedKind}
+          onChange={(val) => {
+            setSelectedKind(val as string);
+            resetPagination();
+          }}
+          labelKey="label"
+          valueKey="value"
+          formControlProps={{ sx: { maxWidth: 200, width: '100%' } }}
         />
-        <Tabs
-          value={statusTabs.value}
-          onChange={statusTabs.onChange}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' }, flexGrow: 1 }}
-        >
-          {STATUS_TABS.map((tab) => (
-            <Tab
-              key={tab.value}
-              value={tab.value}
-              sx={{ fontSize: '12px' }}
-              label={
-                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                  {tab.label}{' '}
-                  <Label variant="soft" color={(tab.color as LabelColor) || 'default'}>
-                    {tab.count}
-                  </Label>
-                </Box>
-              }
-            />
-          ))}
-        </Tabs>
       </Box>
 
-      <ReceiptTable
-        data={filteredReceiptData}
-        onView={(data) => {
-          viewReceiptDetailsDialog.onTrue();
-          setSelectedReceiptData(data);
+      {/* ── Table ────────────────────────────────────────────────────────────── */}
+      <CustomizableTable
+        tableId="fee-receipts"
+        columns={columns}
+        data={tableData}
+        isLoading={isFetching}
+        serverSide
+        onServerPagination={(page: number, rowsPerPage: number) => {
+          setSkipCount(page * rowsPerPage);
+          setMaxResultCount(rowsPerPage);
         }}
-      />
-      <CustomDialog
-        open={viewReceiptDetailsDialog.value}
-        handleClose={() => {
-          viewReceiptDetailsDialog?.onFalse();
-          setSelectedReceiptData(null);
-        }}
-        title={
-          <Box>
-            <Typography variant="h6" fontWeight={700}>
-              Receipt Details
-            </Typography>
-            {selectedReceiptData && (
-              <Typography variant="caption" color="text.secondary">
-                {selectedReceiptData.student}
-              </Typography>
-            )}
-          </Box>
+        totalCount={totalCount}
+        maxServerRowsPerPage={maxResultCount}
+        noDataText={
+          !selectedBoard || !selectedMedium ? (
+            <>Select a Board and Medium to view receipts</>
+          ) : (
+            <>No receipts found for the selected filters</>
+          )
         }
-        maxWidth="sm"
-      >
-        <StudentTableView selectedStudent={selectedReceiptData} />
-      </CustomDialog>
+      />
+
+      {/* ── Preview dialog ────────────────────────────────────────────────────── */}
+      {previewReceiptId && (
+        <ReceiptPreviewDialog
+          receiptId={previewReceiptId}
+          onClose={() => setPreviewReceiptId(null)}
+        />
+      )}
     </Box>
   );
 };
