@@ -120,6 +120,8 @@ export const TableHeader = React.memo(
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
                       cursor: column.isSort !== false ? 'pointer' : 'default',
                       userSelect: 'none',
                       fontWeight: 'bold',
@@ -138,67 +140,78 @@ export const TableHeader = React.memo(
                       textOverflow="ellipsis"
                       width={!column?.renderColumn ? 'auto' : 'inherit'}
                       component="span"
+                      sx={{ flex: 1, minWidth: 0 }}
                     >
                       {column.label} {column?.renderColumn?.(column)}
                     </Box>
-                    {column.isSort !== false && (
-                      <Box
-                        width="18px"
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                        sx={{ flexShrink: 0, display: 'flex', justifyContent: 'start' }}
-                      >
-                        {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                          <Box component="span" sx={{ fontSize: '0.75em' }}>
-                            {sorts.findIndex((sort) => sort.column === column.id) + 1}
-                          </Box>
-                        )}
-                        <IconButton
-                          size="small"
-                          sx={{
-                            opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
-                            p: 0.25,
-                          }}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        ml: 'auto',
+                        flexShrink: 0,
+                        gap: 1,
+                      }}
+                    >
+                      {column.isSort !== false && (
+                        <Box
+                          width="18px"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          sx={{ flexShrink: 0, display: 'flex', justifyContent: 'start' }}
                         >
-                          {sorts.find((sort) => sort.column === column.id)?.direction === 'asc' ? (
-                            <ArrowUpwardIcon fontSize="inherit" />
-                          ) : (
-                            <ArrowDownwardIcon fontSize="inherit" />
+                          {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                            <Box component="span" sx={{ fontSize: '0.75em' }}>
+                              {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                            </Box>
                           )}
-                        </IconButton>
-                      </Box>
-                    )}
-                    {column.isFilter && (
-                      <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
-                        <Iconify
-                          icon="fluent:filter-12-filled"
-                          className="column-filter-icon"
-                          sx={{
-                            height: 16,
-                            width: 16,
-                            cursor: 'pointer',
-                            // ml: 0.5,
-                            m: 0,
-                            color: 'text.disabled',
-                          }}
-                          onClick={(e) => onColumnFilterClick(e, column)}
-                        />
-                        {filters.some((f) => f.column === column.id) && (
-                          <Box
+                          <IconButton
+                            size="small"
                             sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              bgcolor: 'primary.main',
-                              position: 'absolute',
-                              top: '-4px',
-                              right: '-4px',
+                              opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
+                              p: 0.25,
                             }}
+                          >
+                            {sorts.find((sort) => sort.column === column.id)?.direction ===
+                            'asc' ? (
+                              <ArrowUpwardIcon fontSize="inherit" />
+                            ) : (
+                              <ArrowDownwardIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        </Box>
+                      )}
+                      {column.isFilter && (
+                        <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
+                          <Iconify
+                            icon="fluent:filter-12-filled"
+                            className="column-filter-icon"
+                            sx={{
+                              height: 16,
+                              width: 16,
+                              cursor: 'pointer',
+                              m: 0,
+                              color: 'text.disabled',
+                            }}
+                            onClick={(e) => onColumnFilterClick(e, column)}
                           />
-                        )}
-                      </Box>
-                    )}
+                          {filters.some((f) => f.column === column.id) && (
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                bgcolor: 'primary.main',
+                                position: 'absolute',
+                                top: '-4px',
+                                right: '-4px',
+                              }}
+                            />
+                          )}
+                        </Box>
+                      )}
+                    </Box>
                   </Box>
                   <Box
                     className="resize-handle"

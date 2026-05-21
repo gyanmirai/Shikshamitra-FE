@@ -35,7 +35,10 @@ export interface IFeeRefundEditData {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface IFeeHeadMonthRefund {
+  /** Month label (e.g. "April") — for display only. */
   month: string;
+  /** Stable DueFee row ID — sent to the create-refund API. */
+  dueFeeId: string;
   amount: number;
 }
 
@@ -44,6 +47,16 @@ export interface IFeeHeadRefundItem {
   months: IFeeHeadMonthRefund[];
 }
 
+/** Shape sent to POST /api/fee-refunds */
+export interface IFeeRefundApiPayload {
+  studentId: string;
+  academicYearId: string;
+  lines: { dueFeeId: string; amount: number }[];
+  refundMethod: string;
+  reason: string;
+}
+
+/** Legacy in-form shape kept for backward compat with other consumers */
 export interface IFeeRefundPayload {
   studentId: string;
   studentName: string;
@@ -66,9 +79,24 @@ export interface IRefundFormValues {
   feeHeadRefunds: IFeeHeadRefundItem[];
 }
 
-// ─── Build payload from formik values ────────────────────────────────────────
-// feeHeadRefunds is already in the correct array format — pass through directly.
+// ─── Build API payload from formik values ────────────────────────────────────
 
+export const buildFeeRefundApiPayload = (
+  values: IRefundFormValues,
+  academicYearId: string
+): IFeeRefundApiPayload => ({
+  studentId: values.studentId,
+  academicYearId,
+  refundMethod: values.refundMethod,
+  reason: values.notes,
+  lines: (values.feeHeadRefunds || []).flatMap((fh) =>
+    fh.months
+      .filter((m) => Number(m.amount) > 0 && m.dueFeeId)
+      .map((m) => ({ dueFeeId: m.dueFeeId, amount: Number(m.amount) }))
+  ),
+});
+
+// Legacy helper kept for backward compat
 export const buildFeeRefundPayload = (values: IRefundFormValues): IFeeRefundPayload => ({
   studentId: values.studentId,
   studentName: values.studentName,
@@ -125,10 +153,11 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
 
       return Yup.object(
         Object.fromEntries(
-          paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig].map((field) => [
-            field.name,
-            buildFieldValidation(field, currentYear, context?.parent),
-          ])
+          paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig]
+            // 'amount' is filtered from the refund UI (captured via the fee-head table instead),
+            // so skip its validation here to avoid an invisible required-field blocker.
+            .filter((field) => field.name !== 'amount')
+            .map((field) => [field.name, buildFieldValidation(field, currentYear, context?.parent)])
         )
       );
     }),

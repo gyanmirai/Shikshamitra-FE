@@ -85,7 +85,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   onDeleted,
   onDirtyChange,
 }) => {
-  console.log('initialData----', initialData);
   const theme = useTheme();
   const [cardId, setCardId] = useState<string | undefined>(initialData._id);
   const [status, setStatus] = useState(initialData.status);
@@ -146,6 +145,11 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     const updated = formik.values.feeHeads.map((fh, i) =>
       i === idx ? { ...fh, [field]: value } : fh
     );
+    formik.setFieldValue('feeHeads', updated);
+  };
+
+  const updateFeeHeadFields = (idx: number, fields: Partial<IClassWiseFeeItem>) => {
+    const updated = formik.values.feeHeads.map((fh, i) => (i === idx ? { ...fh, ...fields } : fh));
     formik.setFieldValue('feeHeads', updated);
   };
 
@@ -271,7 +275,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         elevation={0}
         defaultExpanded={isNew}
         sx={{
-          mb: 1.5,
           border: `1px solid ${varAlpha(theme.palette.grey['500Channel'], isLocked ? 0.2 : 0.12)}`,
           borderRadius: '10px !important',
           opacity: isLocked ? 0.9 : 1,
@@ -281,12 +284,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.closest('button') || target.closest('[role="button"]')) {
-              e.stopPropagation();
-            }
-          }}
           sx={{
             px: 2,
             minHeight: 52,
@@ -304,15 +301,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             },
           }}
         >
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={1.5}
-            flex={1}
-            minWidth={0}
-            overflow="hidden"
-            onClick={(e) => isEditing && !isLocked && e.stopPropagation()}
-          >
+          <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0} overflow="hidden">
             <Box
               sx={{
                 width: 28,
@@ -339,6 +328,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  onClick={(e) => e.stopPropagation()}
                   label="Fee Structure Name *"
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
@@ -591,8 +581,10 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           onClick={() => {
                             if (!isEditing || isLocked) return;
                             const newVal = !item.isOneTime;
-                            updateFeeHead(idx, 'isOneTime', newVal);
-                            if (!newVal) updateFeeHead(idx, 'paybleMonth', undefined);
+                            updateFeeHeadFields(idx, {
+                              isOneTime: newVal,
+                              paybleMonth: newVal ? item.paybleMonth : undefined,
+                            });
                           }}
                           sx={{
                             display: 'flex',

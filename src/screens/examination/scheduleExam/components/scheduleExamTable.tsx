@@ -73,16 +73,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }
   };
 
-  // Calculate counts of exams by status
-  const examCounts = useMemo(() => {
-    const items = getExams?.data?.items || [];
-    return {
-      pending: items.filter((i: any) => i.status === examScheduledStatus.Pending).length || 0,
-      published: items.filter((i: any) => i.status === examScheduledStatus.Published).length || 0,
-      complated: items.filter((i: any) => i.status === examScheduledStatus.Completed).length || 0,
-    };
-  }, [getExams?.data?.items]);
-
   // Define tab configuration with labels, values, counts and colors
   const TABS = useMemo(
     () => [

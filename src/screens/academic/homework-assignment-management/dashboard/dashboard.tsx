@@ -138,7 +138,7 @@ const Dashboard = (props: TabComponentType) => {
       </Card>
       <Grid container spacing={2} mt={1}>
         <DashboardCards />
-        <HomeworkAssignmentCards />
+        <HomeworkAssignmentCards standardId={classes} divisionId={division} subjectId={subject} />
       </Grid>
       {/* <Typography variant="h6" gutterBottom color="text.primary" sx={{ mt: 2 }}>
         Welcome, [John Doe]

@@ -23,7 +23,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's1',
+          subjectId: 's1',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -43,7 +44,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's2',
+          subjectId: 's2',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#b615a1ff',
           roomId: 'r102',
@@ -73,7 +75,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's3',
+          subjectId: 's3',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r105',
@@ -103,7 +106,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's4',
+          subjectId: 's4',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#b615a1ff',
           roomId: 'r101',
@@ -125,7 +129,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's5',
+          subjectId: 's5',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r103',
@@ -145,7 +150,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's6',
+          subjectId: 's6',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -175,7 +181,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's7',
+          subjectId: 's7',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r102',
@@ -205,7 +212,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's8',
+          subjectId: 's8',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r105',
@@ -227,7 +235,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's9',
+          subjectId: 's9',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -247,7 +256,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's10',
+          subjectId: 's10',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r103',
@@ -277,7 +287,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's11',
+          subjectId: 's11',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r102',
@@ -307,7 +318,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's12',
+          subjectId: 's12',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r105',
@@ -329,7 +341,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's13',
+          subjectId: 's13',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -349,7 +362,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's14',
+          subjectId: 's14',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#b615a1ff',
           roomId: 'r102',
@@ -379,7 +393,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's15',
+          subjectId: 's15',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r103',
@@ -409,7 +424,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's16',
+          subjectId: 's16',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -431,7 +447,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's17',
+          subjectId: 's17',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r105',
@@ -451,7 +468,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's18',
+          subjectId: 's18',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -481,7 +499,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's19',
+          subjectId: 's19',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r102',
@@ -511,7 +530,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's20',
+          subjectId: 's20',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r103',
@@ -533,7 +553,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's21',
+          subjectId: 's21',
+          subjectAssignmentId: '',
           name: 'Mathematics',
           color: '#1573b6ff',
           roomId: 'r101',
@@ -563,7 +584,8 @@ const TEACHER_SLOTS: Record<DayOfWeek, TimeSlot[]> = {
       type: SlotType.LECTURE,
       subjects: [
         {
-          id: 's22',
+          subjectId: 's22',
+          subjectAssignmentId: '',
           name: 'Science',
           color: '#197020ff',
           roomId: 'r105',

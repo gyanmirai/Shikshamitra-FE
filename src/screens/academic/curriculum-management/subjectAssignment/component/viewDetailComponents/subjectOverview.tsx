@@ -2,6 +2,7 @@ import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { sanitizeHtml } from 'src/utils/sanitize-html';
 import { Box, Grid, Card, Chip, Avatar, Typography, CardContent } from '@mui/material';
 
 import type { ISubjectDetail } from '../type';
@@ -43,7 +44,7 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
         variant="subtitle2"
         component="p"
         sx={{ fontWeight: 600, color: 'text.primary', wordBreak: 'break-word' }}
-        dangerouslySetInnerHTML={{ __html: value || 'N/A' }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(value ?? '')) || 'N/A' }}
       />
     </Box>
   </Box>

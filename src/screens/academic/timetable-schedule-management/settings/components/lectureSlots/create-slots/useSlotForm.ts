@@ -88,8 +88,9 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   }, [medium]);
 
   const initialValues = useMemo(
-    () => getInitialValues(classes, lectureSlots),
-    [classes, lectureSlots]
+    () => getInitialValues(classes, isEdit ? lectureSlots : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [classes, isEdit, lectureSlots]
   );
 
   const validationSchema = useMemo(() => getValidationSchema(), []);
