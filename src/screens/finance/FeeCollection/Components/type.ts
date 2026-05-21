@@ -202,6 +202,7 @@ export interface FeeLedgerData {
 // ─── Fee Collection Form Value Types ──────────────────────────────────────────
 
 export interface SelectedItem {
+  dueFeeId?: string; // DueFee id for allocation payload; resolved via dueFeeIdMap when absent
   feeHeadId: string;
   period: string; // e.g. "2026-04"
   dueAmount: number;

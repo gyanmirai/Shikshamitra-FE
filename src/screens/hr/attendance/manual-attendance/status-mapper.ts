@@ -48,7 +48,7 @@ export const buildManualAttendanceSaveEntries = (rows: ManualAttendanceSaveRow[]
     const statusWire = mapManualAttendanceStatusToWire(row.status);
     const employeeId = row.employeeId || row.id;
 
-    if (!employeeId) {
+    if (!employeeId || !statusWire || statusWire === 'NOT_MARKED') {
       return [];
     }
 

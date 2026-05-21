@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
+import { toast } from 'sonner';
 import { useFormik } from 'formik';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
@@ -18,6 +19,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import {
@@ -33,6 +35,13 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
+import {
+  type ChargeDetail,
+  type FeeLedgerLine,
+  type FeeLedgerMonth,
+  useCollectFeeMutation,
+  useGetCollectFormQuery,
+} from 'src/redux/feeCollection/feeCollection';
 
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
@@ -51,104 +60,6 @@ import type {
   FeeCollectionPayment,
   FeeCollectionFormValues,
 } from '../Components/type';
-
-// ─── Dummy Data ────────────────────────────────────────────────────────────────
-
-const DUMMY_LEDGER_DATA: FeeLedgerData = {
-  monthWise: [
-    {
-      month: 'April',
-      totalDue: 4200,
-      items: [
-        {
-          feeHeadId: 'fh1',
-          feeHeadName: 'Tuition',
-          total: 2000,
-          paid: 0,
-          due: 2000,
-          status: FeeCollectionStatusType.Pending,
-        },
-        {
-          feeHeadId: 'fh2',
-          feeHeadName: 'Hostel',
-          total: 3000,
-          paid: 1000,
-          due: 2000,
-          status: FeeCollectionStatusType.Partial,
-        },
-        {
-          feeHeadId: 'fh3',
-          feeHeadName: 'Transport',
-          total: 800,
-          paid: 800,
-          due: 0,
-          status: FeeCollectionStatusType.Paid,
-        },
-        {
-          feeHeadId: 'fh4',
-          feeHeadName: 'Library',
-          total: 200,
-          paid: 0,
-          due: 200,
-          status: FeeCollectionStatusType.Pending,
-        },
-      ],
-    },
-    {
-      month: 'May',
-      totalDue: 5800,
-      items: [
-        {
-          feeHeadId: 'fh1',
-          feeHeadName: 'Tuition',
-          total: 2000,
-          paid: 0,
-          due: 2000,
-          status: FeeCollectionStatusType.Pending,
-        },
-      ],
-    },
-  ],
-  feeHeadWise: [
-    {
-      feeHeadId: 'fh1',
-      feeHeadName: 'Tuition',
-      months: 3,
-      totalDue: 6000,
-      items: [
-        {
-          month: 'April',
-          total: 2000,
-          paid: 0,
-          due: 2000,
-          status: FeeCollectionStatusType.Pending,
-        },
-        { month: 'May', total: 2000, paid: 0, due: 2000, status: FeeCollectionStatusType.Pending },
-      ],
-    },
-    {
-      feeHeadId: 'fh2',
-      feeHeadName: 'Hostel',
-      months: 2,
-      totalDue: 5000,
-      items: [
-        {
-          month: 'April',
-          total: 3000,
-          paid: 1000,
-          due: 2000,
-          status: FeeCollectionStatusType.Partial,
-        },
-        { month: 'May', total: 3000, paid: 0, due: 3000, status: FeeCollectionStatusType.Pending },
-      ],
-    },
-  ],
-};
-
-const DUMMY_CHARGES: IFeeCharge[] = [
-  { chargeId: 'ch1', chargeName: 'Late Fee', amount: 500 },
-  { chargeId: 'ch2', chargeName: 'Transport Fine', amount: 300 },
-];
 
 const buildDetailsForMethod = (method: string): Record<string, any> => {
   const config = paymentMethodsConfig[method as keyof typeof paymentMethodsConfig] ?? [];
@@ -223,23 +134,109 @@ const SummaryRow = ({
 
 const FeeCollectComponentForm = ({
   student,
-  ledgerData = DUMMY_LEDGER_DATA,
-  chargesData = DUMMY_CHARGES,
-  onSubmit,
   onCancel,
-  loading = false,
 }: {
   student: IStudentFee | null;
-  ledgerData?: FeeLedgerData;
-  chargesData?: IFeeCharge[];
-  onSubmit?: (values: FeeCollectionFormValues & { subtotal: number; finalAmount: number }) => void;
   onCancel?: (e: any, isSubmit: boolean) => void;
-  loading?: boolean;
 }) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState<FeeLedgerFilters>(FEE_LEDGER_INITIAL_FILTERS);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  // ── Fetch collect form data from V2 API ────────────────────────────────────
+  const { data: collectFormData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCollectFormQuery,
+    params: {
+      studentId: String(student?.id ?? ''),
+      academicYearId: currentYear?.id ?? '',
+    },
+    options: { skip: !student?.id || !currentYear?.id },
+  });
+
+  const [collectFee, { isLoading: collectLoading }] = useCollectFeeMutation();
+
+  // Map V2 API ledger → FeeLedgerData shape used by existing UI components
+  const ledgerData: FeeLedgerData = useMemo(() => {
+    const months: FeeLedgerMonth[] = collectFormData?.ledger ?? [];
+    return {
+      monthWise: months.map((m: FeeLedgerMonth) => ({
+        month: m.month,
+        totalDue: m.totalDue,
+        items: m.items.map((item: FeeLedgerLine) => ({
+          feeHeadId: item.feeHeadId,
+          feeHeadName: item.feeHeadName,
+          total: item.total,
+          paid: item.paid,
+          due: item.due,
+          status:
+            item.status === 'Paid' ? FeeCollectionStatusType.Paid : FeeCollectionStatusType.Pending,
+        })),
+      })),
+      // Build feeHeadWise from month data
+      feeHeadWise: Object.values(
+        months
+          .flatMap((m: FeeLedgerMonth) =>
+            m.items.map((item: FeeLedgerLine) => ({
+              feeHeadId: item.feeHeadId,
+              feeHeadName: item.feeHeadName,
+              month: m.month,
+              year: m.year,
+              total: item.total,
+              paid: item.paid,
+              due: item.due,
+              status:
+                item.status === 'Paid'
+                  ? FeeCollectionStatusType.Paid
+                  : FeeCollectionStatusType.Pending,
+            }))
+          )
+          .reduce((acc: Record<string, any>, line) => {
+            if (!acc[line.feeHeadId]) {
+              acc[line.feeHeadId] = {
+                feeHeadId: line.feeHeadId,
+                feeHeadName: line.feeHeadName,
+                months: 0,
+                totalDue: 0,
+                items: [],
+              };
+            }
+            acc[line.feeHeadId].months += 1;
+            acc[line.feeHeadId].totalDue += line.due;
+            acc[line.feeHeadId].items.push({
+              month: line.month,
+              total: line.total,
+              paid: line.paid,
+              due: line.due,
+              status: line.status,
+            });
+            return acc;
+          }, {})
+      ),
+    };
+  }, [collectFormData]);
+
+  const chargesData: IFeeCharge[] = useMemo(
+    () =>
+      (collectFormData?.charges ?? []).map((c: ChargeDetail) => ({
+        chargeId: c.chargeId,
+        chargeName: c.name,
+        amount: c.pendingAmount,
+      })),
+    [collectFormData]
+  );
+
+  // Map ledger items to DueFeeId lookup (for allocation payload)
+  const dueFeeIdMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (collectFormData?.ledger ?? []).forEach((m: FeeLedgerMonth) => {
+      m.items.forEach((item: FeeLedgerLine) => {
+        map[`${item.feeHeadId}|${m.month}|${m.year}`] = item.dueFeeId;
+      });
+    });
+    return map;
+  }, [collectFormData]);
 
   // ── Formik ─────────────────────────────────────────────────────────────────
   const formik = useFormik<FeeCollectionFormValues>({
@@ -264,7 +261,6 @@ const FeeCollectComponentForm = ({
       setPreviewOpen(true);
     },
   });
-  console.log('formik values', formik.values);
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
@@ -307,19 +303,81 @@ const FeeCollectComponentForm = ({
       details: { ...formik.values.payment.details, [detailKey]: value },
     });
 
-  const handleConfirmCollect = () => {
-    onSubmit?.({ ...formik.values, subtotal, finalAmount });
-    setPreviewOpen(false);
-    onCancel?.(null, true);
+  const handleConfirmCollect = async () => {
+    try {
+      const year = currentYear?.year ?? new Date().getFullYear();
+
+      // Group selected items by feeHeadId and build DueFee allocations
+      const feeHeadGroups: Record<
+        string,
+        { amount: number; allocations: { dueFeeId: string; amount: number }[] }
+      > = {};
+      formik.values.selectedItems.forEach((item) => {
+        if (!feeHeadGroups[item.feeHeadId]) {
+          feeHeadGroups[item.feeHeadId] = { amount: 0, allocations: [] };
+        }
+        feeHeadGroups[item.feeHeadId].amount += item.dueAmount;
+
+        const [monthStr, yearStr] = item.period.split('-');
+        const dueFeeId =
+          dueFeeIdMap[`${item.feeHeadId}|${monthStr}|${yearStr ?? year}`] ?? item.dueFeeId;
+        if (dueFeeId) {
+          feeHeadGroups[item.feeHeadId].allocations.push({ dueFeeId, amount: item.dueAmount });
+        }
+      });
+
+      const receivedAmount = Number(
+        String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, '')
+      );
+
+      await collectFee({
+        studentId: String(student?.id ?? ''),
+        academicYearId: currentYear?.id ?? '',
+        totalAmount: subtotal,
+        receivedAmount,
+        notes: formik.values.remarks ?? undefined,
+        selectedFeeHeads: Object.entries(feeHeadGroups).map(
+          ([feeHeadId, group]: [
+            string,
+            { amount: number; allocations: { dueFeeId: string; amount: number }[] },
+          ]) => ({
+            feeHeadId,
+            amount: group.amount,
+            allocations: group.allocations.length > 0 ? group.allocations : undefined,
+          })
+        ),
+        selectedCharges:
+          formik.values.charges.length > 0
+            ? chargesData
+                .filter((c) => formik.values.charges.includes(c.chargeId))
+                .map((c) => ({ chargeId: c.chargeId, amount: c.amount }))
+            : undefined,
+        payments: [
+          {
+            paymentMethod: formik.values.payment.paymentMethod,
+            amount: receivedAmount,
+            details: formik.values.payment.details,
+          },
+        ],
+      }).unwrap();
+
+      toast.success('Fee collected successfully');
+      setPreviewOpen(false);
+      onCancel?.(null, true);
+    } catch {
+      toast.error('Failed to collect fee. Please try again.');
+      setPreviewOpen(false);
+    }
   };
   const handleSelectAll = () => {
-    const year = currentYear?.year ?? new Date().getFullYear();
+    const yr = currentYear?.year ?? new Date().getFullYear();
     const allItems: SelectedItem[] = [];
-    (ledgerData.monthWise ?? []).forEach((group) => {
-      const period = toPeriod(group.month, year);
-      group.items.forEach((item) => {
+    (collectFormData?.ledger ?? []).forEach((group: FeeLedgerMonth) => {
+      const period = toPeriod(group.month, group.year);
+      group.items.forEach((item: FeeLedgerLine) => {
         if (item.due > 0) {
           allItems.push({
+            dueFeeId: item.dueFeeId,
             feeHeadId: item.feeHeadId,
             period,
             dueAmount: item.due,
@@ -862,7 +920,7 @@ const FeeCollectComponentForm = ({
               onClick={() => {
                 onCancel?.(null, false);
               }}
-              disabled={loading}
+              disabled={collectLoading}
               size="small"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
             >
@@ -871,13 +929,12 @@ const FeeCollectComponentForm = ({
             <LoadingButton
               type="submit"
               variant="contained"
-              // loading={isCollectFeeLoading}
+              loading={collectLoading}
               size="small"
               onClick={(e: any) => {
                 formik.handleSubmit(e);
               }}
               startIcon={<Iconify icon={GlobalIcons.submit} />}
-              disabled={loading}
             >
               Submit
             </LoadingButton>
@@ -890,7 +947,7 @@ const FeeCollectComponentForm = ({
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         onConfirm={handleConfirmCollect}
-        loading={loading}
+        loading={collectLoading}
         formValues={formik.values}
         student={student}
         chargesData={chargesData ?? []}

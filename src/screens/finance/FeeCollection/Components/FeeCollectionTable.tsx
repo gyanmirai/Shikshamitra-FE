@@ -22,87 +22,6 @@ import {
 
 import type { IFeeData, IFeeTableProps } from './type';
 
-const DUMMY_FEE_COLLECTION_DATA = [
-  {
-    id: '1',
-    studentName: 'Aarav Sharma',
-    grNo: 'GR001',
-    standardName: '10',
-    divisionName: 'A',
-    rollNo: '01',
-    totalFees: 45000,
-    paidFees: 45000,
-    pendingFees: 0,
-    overdueFees: 0,
-    status: FeeCollectionStatusType.Paid,
-  },
-  {
-    id: '2',
-    studentName: 'Priya Mehta',
-    grNo: 'GR002',
-    standardName: '10',
-    divisionName: 'A',
-    rollNo: '02',
-    totalFees: 45000,
-    paidFees: 20000,
-    pendingFees: 25000,
-    overdueFees: 0,
-    status: FeeCollectionStatusType.Pending,
-  },
-  {
-    id: '3',
-    studentName: 'Rohan Patel',
-    grNo: 'GR003',
-    standardName: '9',
-    divisionName: 'B',
-    rollNo: '15',
-    totalFees: 42000,
-    paidFees: 10000,
-    pendingFees: 20000,
-    overdueFees: 12000,
-    status: FeeCollectionStatusType.Overdue,
-  },
-  {
-    id: '4',
-    studentName: 'Sneha Joshi',
-    grNo: 'GR004',
-    standardName: '8',
-    divisionName: 'C',
-    rollNo: '08',
-    totalFees: 38000,
-    paidFees: 38000,
-    pendingFees: 0,
-    overdueFees: 0,
-    status: FeeCollectionStatusType.Paid,
-  },
-  {
-    id: '5',
-    studentName: 'Karan Desai',
-    grNo: 'GR005',
-    standardName: '11',
-    divisionName: 'A',
-    rollNo: '22',
-    totalFees: 52000,
-    paidFees: 30000,
-    pendingFees: 22000,
-    overdueFees: 0,
-    status: FeeCollectionStatusType.Pending,
-  },
-  {
-    id: '6',
-    studentName: 'Ananya Singh',
-    grNo: 'GR006',
-    standardName: '12',
-    divisionName: 'B',
-    rollNo: '05',
-    totalFees: 55000,
-    paidFees: 15000,
-    pendingFees: 20000,
-    overdueFees: 20000,
-    status: FeeCollectionStatusType.Overdue,
-  },
-];
-
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onAddFee,
   selectedBoard,
@@ -119,12 +38,12 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetFeeCollectionListQuery,
     params: {
-      AcademicYearId: currentYear?.id,
-      BoardId: selectedBoard,
-      MediumId: selectedMedium,
+      academicYearId: currentYear?.id,
+      boardId: selectedBoard,
+      educationMediumId: selectedMedium,
     },
     options: {
-      skip: !selectedBoard || !selectedMedium, // Skip query if board or medium is not selected
+      skip: !selectedBoard || !selectedMedium,
     },
   });
   useEffect(() => {
@@ -159,7 +78,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     <MenuList>
       <MenuItem
         onClick={() => {
-          onCollectFee(row as IFeeData);
+          // V2 rows carry `studentId` (not `id`)
+          onCollectFee({ ...row, id: row.studentId ?? row.id } as IFeeData);
         }}
       >
         <Iconify icon="fluent:payment-16-regular" sx={{ height: '16px', width: '16px' }} />
@@ -170,15 +90,12 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
 
   const tableData = useMemo(
     () =>
-      (
-        (feeCollectionData?.items?.length
-          ? feeCollectionData.items
-          : DUMMY_FEE_COLLECTION_DATA) as any[]
-      ).map((item) => ({
+      (feeCollectionData?.items ?? []).map((item: any) => ({
         ...item,
-        nameValue: `${item.studentName || '-'}${item.grNo ? ` (${item.grNo})` : ''}`,
-        classDivValue: `${item.standardName || '-'}-${item.divisionName || ''}`,
-        rollNoValue: item.rollNo || '-',
+        // V2 summary uses standardDivision as a combined field
+        nameValue: `${item.studentName || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
+        classDivValue: item.standardDivision || '-',
+        rollNoValue: item.rollNumber || '-',
         totalFeesValue: item.totalFees ?? 0,
         paidFeesValue: item.paidFees ?? 0,
         pendingFeesValue: item.pendingFees ?? 0,
@@ -313,7 +230,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
                     placement="right-top"
                     showViewIcon
                     handleViewClick={() => {
-                      onView(row as IFeeData);
+                      onView({ ...row, id: row.studentId ?? row.id } as IFeeData);
                     }}
                   />
                 );
