@@ -7,7 +7,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
     // Get fee collection list (table view)
     getFeeCollectionList: builder.query({
       query: (params) => ({
-        url: '/fee-collections',
+        url: 'v2/fee-collections',
         method: 'GET',
         params,
       }),

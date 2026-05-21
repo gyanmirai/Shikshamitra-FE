@@ -30,7 +30,16 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
   const theme = useTheme();
 
   return (
-    <Card sx={{ p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-4)', ml: 0.5, mt: 2 }}>
+    <Card
+      sx={{
+        p: 1.5,
+        borderRadius: 2.25,
+        ml: 0.25,
+        mt: 1.5,
+        boxShadow: (t) => `0 6px 16px ${alpha(t.palette.common.black, 0.05)}`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
+      }}
+    >
       {/* Section header */}
       <Box display="flex" alignItems="center" gap={1} mb={1.25} px={0.5}>
         <Box
@@ -41,7 +50,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: alpha(theme.palette.error.main, 0.1),
+            bgcolor: alpha(theme.palette.error.main, 0.09),
             flexShrink: 0,
           }}
         >
@@ -51,7 +60,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
           variant="subtitle2"
           fontWeight={700}
           color="error.main"
-          sx={{ fontSize: '0.8rem' }}
+          sx={{ fontSize: '0.84rem' }}
         >
           Additional Charges
         </Typography>
@@ -85,7 +94,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
                 ? {
                     bgcolor: isSelected
                       ? alpha(theme.palette.error.main, 0.08)
-                      : alpha(theme.palette.action.hover, 0.7),
+                      : alpha(theme.palette.action.hover, 0.6),
                     borderColor: alpha(theme.palette.error.main, 0.25),
                   }
                 : {},
@@ -241,8 +250,8 @@ const FeeLedgerList = ({
         textAlign="center"
         sx={{
           borderRadius: 2,
-          border: (t) => `1px dashed ${t.palette.divider}`,
-          bgcolor: (t) => alpha(t.palette.action.hover, 0.4),
+          border: (t) => `1px dashed ${alpha(t.palette.divider, 0.85)}`,
+          bgcolor: (t) => alpha(t.palette.action.hover, 0.25),
         }}
       >
         <Iconify
@@ -260,7 +269,7 @@ const FeeLedgerList = ({
   }
 
   return (
-    <Box>
+    <Box sx={{ pl: 0.25 }}>
       {activeTab === 'by-month' && (
         <ByMonthView
           groups={data.monthWise}

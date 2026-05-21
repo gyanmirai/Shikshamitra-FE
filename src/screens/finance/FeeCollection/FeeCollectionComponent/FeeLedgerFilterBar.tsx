@@ -50,12 +50,17 @@ const MONTH_OPTIONS = [
   ...FeeMonthOptions.map((m) => ({ label: m.label, value: String(m.value) })),
 ];
 
+const QUICK_MONTH_OPTIONS = [
+  { label: 'All', value: 'All' },
+  ...FeeMonthOptions.map((m) => ({ label: m.label.slice(0, 3), value: String(m.value) })),
+];
+
 const STATUS_OPTIONS = [
   { label: 'All', value: 'All' },
   ...FeeCollectionStatusOptions.map((s) => ({ label: s.label, value: String(s.value) })),
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────────────────────
 
 const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFilterBarProps) => {
   const theme = useTheme();
@@ -82,11 +87,15 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
   return (
     <Card
       sx={{
-        p: 1.5,
-        boxShadow: 'var(--shadows-4)',
-        borderRadius: 2,
-        ml: 0.5,
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.6)}`,
+        p: { xs: 1.25, md: 1.5 },
+        boxShadow: (t) => `0 8px 18px ${alpha(t.palette.common.black, 0.06)}`,
+        borderRadius: 2.6,
+        border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.14)}`,
+        position: { md: 'sticky' },
+        top: { md: 8 },
+        zIndex: 3,
+        // bgcolor: (t) => alpha(t.palette.background.paper, 0.95),
+        backdropFilter: 'blur(10px)',
       }}
     >
       {/* ── Header row: title + tabs ── */}
@@ -94,18 +103,18 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: 1.25,
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          mb: 1.25,
+          mb: 1,
         }}
       >
         {/* Title + entry count */}
         <Box display="flex" alignItems="center" gap={1}>
           <Box
             sx={{
-              width: 30,
-              height: 30,
+              width: 32,
+              height: 32,
               borderRadius: 1.25,
               display: 'flex',
               alignItems: 'center',
@@ -122,9 +131,9 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           <Typography
             variant="subtitle1"
             fontWeight={700}
-            sx={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}
+            sx={{ fontSize: '0.95rem', letterSpacing: '-0.01em' }}
           >
-            Fee Ledger
+            Fee Timeline Navigator
           </Typography>
           {entryCount !== undefined && (
             <Chip
@@ -135,8 +144,9 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               sx={{
                 borderRadius: 999,
                 fontWeight: 600,
-                fontSize: '0.7rem',
+                fontSize: '0.72rem',
                 height: 22,
+                border: (t) => `1px solid ${alpha(t.palette.divider, 0.8)}`,
               }}
             />
           )}
@@ -147,7 +157,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            minHeight: 30,
+            minHeight: 34,
+            border: (t) => `1px solid ${alpha(t.palette.divider, 0.8)}`,
+            borderRadius: 1.25,
+            // bgcolor: (t) => alpha(t.palette.background.neutral ?? t.palette.action.hover, 0.45),
             '& .MuiTabs-indicator': { borderRadius: 999 },
           }}
           slotProps={{
@@ -162,10 +175,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               icon={tab.icon ? <Iconify icon={tab.icon} width={13} /> : undefined}
               iconPosition="start"
               sx={{
-                minHeight: 30,
+                minHeight: 32,
                 py: 0.5,
-                px: 1.5,
-                fontSize: '0.75rem',
+                px: 1.25,
+                fontSize: '0.77rem',
                 fontWeight: 600,
                 letterSpacing: '0.01em',
               }}
@@ -178,10 +191,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
       <Box
         sx={{
           display: 'flex',
-          gap: 1.25,
+          gap: 1,
           flexWrap: 'wrap',
-          pt: 1,
-          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+          pt: 1.1,
+          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
         }}
       >
         <CustomSelect
@@ -191,7 +204,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.month}
           onChange={(value) => onFilterChange({ ...filters, month: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
           size="small"
         />
 
@@ -203,7 +216,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={filters.feeHead}
           isLoading={isFeeHeadLoading || isFeeHeadFetching}
           onChange={(value) => onFilterChange({ ...filters, feeHead: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
           size="small"
         />
 
@@ -214,9 +227,42 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.status}
           onChange={(value) => onFilterChange({ ...filters, status: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
+          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
           size="small"
         />
+
+        <Box
+          sx={{
+            width: '100%',
+            mt: 0.3,
+            pt: 0.9,
+            borderTop: (t) => `1px dashed ${alpha(t.palette.divider, 0.85)}`,
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary', fontWeight: 700, mb: 0.7, display: 'block' }}
+          >
+            Quick Month Selection
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.65, flexWrap: 'wrap' }}>
+            {QUICK_MONTH_OPTIONS.map((month) => (
+              <Chip
+                key={month.value}
+                label={month.label}
+                size="small"
+                onClick={() => onFilterChange({ ...filters, month: month.value })}
+                color={filters.month === month.value ? 'primary' : 'default'}
+                variant={filters.month === month.value ? 'filled' : 'outlined'}
+                sx={{
+                  fontWeight: 700,
+                  height: 23,
+                  borderRadius: 1,
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
       </Box>
     </Card>
   );

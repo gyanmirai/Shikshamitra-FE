@@ -87,7 +87,7 @@ const FeeCollection = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Fee Collection"
+          heading="Collections"
           description="Select class and division to view students. Click a student to see their fee details and collect fees or send reminders."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },

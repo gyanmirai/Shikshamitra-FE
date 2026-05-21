@@ -72,7 +72,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
 
     generateFeeStructure: builder.mutation({
       query: ({ academicYearId }) => ({
-        url: '/fee-structures/generate',
+        url: '/fee-structures-metadata/generate',
         method: 'POST',
         params: { academicYearId },
       }),

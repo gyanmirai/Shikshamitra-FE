@@ -11,9 +11,11 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { RouterLink } from 'src/routes/components';
+import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -538,18 +540,18 @@ const RunPayroll = () => {
       {
         id: 'actions',
         label: '',
-        minWidth: 72,
+        minWidth: 68,
         isFilter: false,
         isSort: false,
         sticky: true,
         stickyPosition: 'right',
         render(_value, row) {
           return (
-            <Stack direction="row" spacing={0.5}>
-              <IconButton size="small" onClick={() => setActiveRow(row as PayrollRow)}>
-                <Iconify icon="solar:eye-linear" width={18} />
-              </IconButton>
-            </Stack>
+            <ThreeDotsActions
+              showViewIcon
+              showThreeDots={false}
+              handleViewClick={() => setActiveRow(row as PayrollRow)}
+            />
           );
         },
       },
@@ -566,7 +568,15 @@ const RunPayroll = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+      }}
+    >
       <CustomBreadcrumbs
         heading="Run Payroll"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll Management' }, { name: 'Run Payroll' }]}
@@ -816,122 +826,143 @@ const RunPayroll = () => {
         anchor="right"
         open={Boolean(activeRow)}
         onClose={() => setActiveRow(null)}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, p: 2 } }}
+        PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, p: 0, overflow: 'hidden' } }}
       >
         {activeRow ? (
-          <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography variant="h6">{activeRow.employeeName}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {activeRow.employeeIdentifier} • {activeRow.employeeGroup}
+          <Scrollbar sx={{ height: '100%' }}>
+            <Stack spacing={1} sx={{ p: 2 }}>
+              <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+                <Box>
+                  {/* Name + Status */}
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Typography variant="h6">{activeRow.employeeName}</Typography>
+
+                    <Label
+                      variant="soft"
+                      color={statusColor[activeRow.status as keyof typeof statusColor] as any}
+                    >
+                      {String(activeRow.status).toLowerCase()}
+                    </Label>
+                  </Stack>
+
+                  {/* Identifier + Group */}
+                  <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 0.5 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {activeRow.employeeIdentifier}
+                    </Typography>
+
+                    <Typography variant="body2" color="text.disabled">
+                      •
+                    </Typography>
+
+                    <Typography variant="body2" color="text.secondary">
+                      {activeRow.employeeGroup}
+                    </Typography>
+                  </Stack>
+                </Box>
+
+                <IconButton onClick={() => setActiveRow(null)}>
+                  <Iconify icon="mingcute:close-line" />
+                </IconButton>
+              </Stack>
+              <Divider />
+              <Grid container spacing={1}>
+                <Grid size={3}>
+                  <Typography variant="caption" color="text.secondary">
+                    Payable days
+                  </Typography>
+                  <Typography variant="subtitle2">
+                    {activeRow.payableDays} / {activeRow.totalWorkingDays}
+                  </Typography>
+                </Grid>
+                <Grid size={3}>
+                  <Typography variant="caption" color="text.secondary">
+                    Proration
+                  </Typography>
+                  <Typography variant="subtitle2">
+                    {activeRow.prorationFactor.toFixed(4)}
+                  </Typography>
+                </Grid>
+                <Grid size={3}>
+                  <Typography variant="caption" color="text.secondary">
+                    Total salary
+                  </Typography>
+                  <Typography variant="subtitle2">
+                    {formatCurrency(activeRow.fullGrossSalary)}
+                  </Typography>
+                </Grid>
+                <Grid size={3}>
+                  <Typography variant="caption" color="text.secondary">
+                    Day rule
+                  </Typography>
+                  <Typography variant="subtitle2">{activeRow.dayCalculationMode}</Typography>
+                </Grid>
+              </Grid>
+              <Card variant="outlined" sx={{ p: 1.25, overflow: 'visible' }}>
+                <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
+                  View all issues
                 </Typography>
-              </Box>
-              <IconButton onClick={() => setActiveRow(null)}>
-                <Iconify icon="mingcute:close-line" />
-              </IconButton>
+                {activeRow.issueCodes.length === 0 ? (
+                  <Chip size="small" label="Clean payroll row" color="success" variant="outlined" />
+                ) : (
+                  <Stack spacing={0.75}>
+                    {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
+                      const codes = activeRow.issueCodes.filter(
+                        (code) => ISSUE_LABELS[code]?.severity === severity
+                      );
+                      if (!codes.length) return null;
+                      const color =
+                        severity === 'CRITICAL'
+                          ? 'error'
+                          : severity === 'WARNING'
+                            ? 'warning'
+                            : 'info';
+                      return (
+                        <Stack
+                          key={severity}
+                          direction="row"
+                          spacing={0.75}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          <Chip size="small" color={color} label={severity} />
+                          {codes.map((code) => (
+                            <Chip
+                              key={code}
+                              size="small"
+                              variant="outlined"
+                              color={color}
+                              label={ISSUE_LABELS[code]?.label || code}
+                            />
+                          ))}
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                )}
+              </Card>
+              <SalaryDetailsTableCard
+                title="Earnings"
+                subheader="Payroll preview earnings"
+                icon="solar:hand-money-linear"
+                iconColor={{ bg: 'success.lighter', color: 'success.main' }}
+                data={activeRow.earningComponents}
+                tableId="payroll-workbench-earnings"
+                nameColumnLabel="Earning"
+                noDataText="No earnings found"
+              />
+              <SalaryDetailsTableCard
+                title="Deductions"
+                subheader="Payroll preview deductions"
+                icon="solar:minus-circle-linear"
+                iconColor={{ bg: 'error.lighter', color: 'error.main' }}
+                data={activeRow.deductionComponents}
+                tableId="payroll-workbench-deductions"
+                nameColumnLabel="Deduction"
+                noDataText="No deductions found"
+              />
             </Stack>
-            <Divider />
-            <Grid container spacing={1}>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Payable days
-                </Typography>
-                <Typography variant="subtitle2">
-                  {activeRow.payableDays} / {activeRow.totalWorkingDays}
-                </Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Proration
-                </Typography>
-                <Typography variant="subtitle2">{activeRow.prorationFactor.toFixed(4)}</Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Total salary
-                </Typography>
-                <Typography variant="subtitle2">
-                  {formatCurrency(activeRow.fullGrossSalary)}
-                </Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Day rule
-                </Typography>
-                <Typography variant="subtitle2">{activeRow.dayCalculationMode}</Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Review status
-                </Typography>
-                <Typography variant="subtitle2">{activeRow.status}</Typography>
-              </Grid>
-            </Grid>
-            <Card variant="outlined" sx={{ p: 1.25, overflow: 'visible' }}>
-              <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-                View all issues
-              </Typography>
-              {activeRow.issueCodes.length === 0 ? (
-                <Chip size="small" label="Clean payroll row" color="success" variant="outlined" />
-              ) : (
-                <Stack spacing={0.75}>
-                  {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
-                    const codes = activeRow.issueCodes.filter(
-                      (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity
-                    );
-                    if (!codes.length) return null;
-                    const color =
-                      severity === 'CRITICAL'
-                        ? 'error'
-                        : severity === 'WARNING'
-                          ? 'warning'
-                          : 'info';
-                    return (
-                      <Stack
-                        key={severity}
-                        direction="row"
-                        spacing={0.75}
-                        flexWrap="wrap"
-                        useFlexGap
-                      >
-                        <Chip size="small" color={color} label={severity} />
-                        {codes.map((code) => (
-                          <Chip
-                            key={code}
-                            size="small"
-                            variant="outlined"
-                            color={color}
-                            label={ISSUE_LABELS[code]?.label || code}
-                          />
-                        ))}
-                      </Stack>
-                    );
-                  })}
-                </Stack>
-              )}
-            </Card>
-            <SalaryDetailsTableCard
-              title="Earnings"
-              subheader="Payroll preview earnings"
-              icon="solar:hand-money-linear"
-              iconColor={{ bg: 'success.lighter', color: 'success.main' }}
-              data={activeRow.earningComponents}
-              tableId="payroll-workbench-earnings"
-              nameColumnLabel="Earning"
-              noDataText="No earnings found"
-            />
-            <SalaryDetailsTableCard
-              title="Deductions"
-              subheader="Payroll preview deductions"
-              icon="solar:minus-circle-linear"
-              iconColor={{ bg: 'error.lighter', color: 'error.main' }}
-              data={activeRow.deductionComponents}
-              tableId="payroll-workbench-deductions"
-              nameColumnLabel="Deduction"
-              noDataText="No deductions found"
-            />
-          </Stack>
+          </Scrollbar>
         ) : null}
       </Drawer>
 

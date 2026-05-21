@@ -33,7 +33,6 @@ export const STATUS_COLOR: Record<string, LabelColor> = {
   Pending: 'warning',
   Partial: 'info',
   Paid: 'success',
-  Overdue: 'error',
 };
 
 export const toPeriod = (month: string, year: number): string =>
@@ -51,13 +50,16 @@ export const ColHeader = ({
   <Box
     display="flex"
     alignItems="center"
-    pl={1}
+    pl={1.25}
     gap={1}
     pr={2}
-    py={0.75}
+    py={0.9}
     sx={{
-      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
-      borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+      bgcolor: (theme) =>
+        theme.palette.mode === 'dark'
+          ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.62)
+          : alpha(theme.palette.text.primary, 0.035),
+      borderBottom: (theme) => `1px solid ${alpha(theme.palette.divider, 0.7)}`,
     }}
   >
     {/* Checkbox placeholder */}
@@ -67,9 +69,9 @@ export const ColHeader = ({
       color="text.disabled"
       fontWeight={700}
       textTransform="uppercase"
-      letterSpacing="0.06em"
+      letterSpacing="0.05em"
       flex={1}
-      sx={{ fontSize: '0.68rem' }}
+      sx={{ fontSize: '0.7rem' }}
     >
       {firstLabel}
     </Typography>
@@ -80,8 +82,8 @@ export const ColHeader = ({
         color="text.disabled"
         fontWeight={700}
         textTransform="uppercase"
-        letterSpacing="0.06em"
-        sx={{ width: 100, textAlign: 'right', fontSize: '0.68rem' }}
+        letterSpacing="0.05em"
+        sx={{ width: 105, textAlign: 'right', fontSize: '0.7rem' }}
       >
         {col}
       </Typography>
@@ -92,8 +94,8 @@ export const ColHeader = ({
         color="text.disabled"
         fontWeight={700}
         textTransform="uppercase"
-        letterSpacing="0.06em"
-        sx={{ width: 100, textAlign: 'center', fontSize: '0.68rem' }}
+        letterSpacing="0.05em"
+        sx={{ width: 102, textAlign: 'center', fontSize: '0.7rem' }}
       >
         STATUS
       </Typography>
@@ -135,17 +137,23 @@ export const FeeRow = ({
       gap={1}
       pl={4}
       pr={2}
-      py={0.875}
+      py={0.95}
       sx={{
         cursor: isDisabled ? 'default' : 'pointer',
         opacity: isDisabled ? 0.45 : 1,
-        transition: 'background-color 0.18s ease, opacity 0.18s ease',
-        bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.06) : 'transparent',
+        transition: 'background-color 0.18s ease, opacity 0.18s ease, border-color 0.18s ease',
+        bgcolor: isSelected
+          ? alpha(theme.palette.primary.main, 0.055)
+          : theme.palette.mode === 'dark'
+            ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.22)
+            : 'transparent',
         '&:hover': !isDisabled
           ? {
               bgcolor: isSelected
-                ? alpha(theme.palette.primary.main, 0.09)
-                : alpha(theme.palette.action.hover, 0.7),
+                ? alpha(theme.palette.primary.main, 0.085)
+                : theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.action.hover, 0.72)
+                  : alpha(theme.palette.action.hover, 0.6),
             }
           : {},
       }}
@@ -163,13 +171,21 @@ export const FeeRow = ({
         }}
       />
       <Box display="flex" alignItems="center" gap={1} flex={1} minWidth={0}>
-        <Typography variant="body2">{name}</Typography>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {name}
+        </Typography>
       </Box>
 
       {/* TOTAL */}
       <Typography
         variant="body2"
-        sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+        sx={{
+          width: 110,
+          textAlign: 'right',
+          flexShrink: 0,
+          fontVariantNumeric: 'tabular-nums',
+          color: 'text.secondary',
+        }}
       >
         ₹{formatNumber(total)}
       </Typography>
@@ -177,7 +193,13 @@ export const FeeRow = ({
       {/* PAID */}
       <Typography
         variant="body2"
-        sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+        sx={{
+          width: 110,
+          textAlign: 'right',
+          flexShrink: 0,
+          fontVariantNumeric: 'tabular-nums',
+          color: 'text.secondary',
+        }}
       >
         ₹{formatNumber(paid)}
       </Typography>
@@ -185,7 +207,13 @@ export const FeeRow = ({
       {/* PENDING / DUE */}
       <Typography
         variant="body2"
-        sx={{ width: 110, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+        sx={{
+          width: 110,
+          textAlign: 'right',
+          flexShrink: 0,
+          fontVariantNumeric: 'tabular-nums',
+          fontWeight: 600,
+        }}
       >
         ₹{formatNumber(due)}
       </Typography>
@@ -235,18 +263,19 @@ export const GroupHeader = ({
       alignItems="center"
       gap={1}
       px={1.5}
-      py={1}
+      py={1.05}
       sx={{
         bgcolor: isAllSelected
-          ? alpha(theme.palette.primary.main, 0.08)
-          : alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 1),
+          ? alpha(theme.palette.primary.main, 0.075)
+          : alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.72),
         cursor: 'pointer',
         userSelect: 'none',
-        transition: 'background-color 0.18s ease',
+        transition: 'background-color 0.18s ease, border-color 0.18s ease',
+        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.65)}`,
         '&:hover': {
           bgcolor: isAllSelected
-            ? alpha(theme.palette.primary.main, 0.12)
-            : alpha(theme.palette.action.hover, 0.85),
+            ? alpha(theme.palette.primary.main, 0.1)
+            : alpha(theme.palette.action.hover, 0.75),
         },
       }}
       onClick={onExpandToggle}
@@ -268,7 +297,7 @@ export const GroupHeader = ({
         variant="subtitle2"
         fontWeight={700}
         sx={{
-          fontSize: '0.8125rem',
+          fontSize: '0.84rem',
           color: isAllSelected ? 'primary.main' : 'text.primary',
           transition: 'color 0.15s',
         }}
@@ -280,17 +309,17 @@ export const GroupHeader = ({
       <Box
         sx={{
           px: 1,
-          py: 0.15,
+          py: 0.2,
           borderRadius: 999,
-          bgcolor: alpha(theme.palette.text.secondary, 0.1),
-          border: `1px solid ${alpha(theme.palette.text.secondary, 0.12)}`,
+          bgcolor: alpha(theme.palette.text.secondary, 0.09),
+          border: `1px solid ${alpha(theme.palette.text.secondary, 0.14)}`,
         }}
       >
         <Typography
           variant="caption"
           color="text.secondary"
           fontWeight={600}
-          sx={{ fontSize: '0.68rem' }}
+          sx={{ fontSize: '0.7rem' }}
         >
           {badge}
         </Typography>
@@ -303,9 +332,9 @@ export const GroupHeader = ({
         <Box
           sx={{
             px: 1,
-            py: 0.2,
+            py: 0.22,
             borderRadius: 999,
-            bgcolor: alpha(theme.palette.error.main, 0.08),
+            bgcolor: alpha(theme.palette.error.main, 0.09),
             border: `1px solid ${alpha(theme.palette.error.main, 0.18)}`,
             mr: 0.5,
           }}

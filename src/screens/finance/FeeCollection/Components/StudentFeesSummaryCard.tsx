@@ -6,7 +6,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
-import { Box, Card, Grid, Stack, Avatar, Divider, Typography } from '@mui/material';
+import { Box, Card, Grid, Avatar, Divider, Typography } from '@mui/material';
 
 import type { IStudentFee } from './type';
 
@@ -33,6 +33,30 @@ export const StudentFeeSummaryCard: React.FC<{
     );
   }
 
+  const feeStatusLabel = student.pendingFees === 0 ? 'Paid' : 'Pending';
+  const feeStatusColor: LabelColor = feeStatusLabel === 'Paid' ? 'success' : 'warning';
+
+  const kpis = [
+    {
+      label: 'Total Due',
+      value: student.pendingFees || 0,
+      color: 'primary' as const,
+      icon: 'solar:wallet-bold',
+    },
+    {
+      label: 'Paid This Year',
+      value: student.paidFees || 0,
+      color: 'success' as const,
+      icon: 'solar:check-circle-bold',
+    },
+    {
+      label: 'Upcoming Fees',
+      value: Math.max(student.totalFees - student.paidFees - student.pendingFees, 0),
+      color: 'warning' as const,
+      icon: 'solar:calendar-bold',
+    },
+  ];
+
   return (
     <Card
       component={motion.div}
@@ -40,137 +64,113 @@ export const StudentFeeSummaryCard: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        borderRadius: 2,
+        borderRadius: 2.75,
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
-        ml: 0.5,
-        mt: 0.5,
-        mb: 1.25,
-        p: 1.75,
-        boxShadow: 'var(--shadows-4)',
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
+        p: { xs: 1.25, md: 1.5 },
+        boxShadow: (t) => `0 10px 24px ${alpha(t.palette.common.black, 0.06)}`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
       {showHeader && (
-        <Grid container spacing={1.5} alignItems="center">
-          {/* ── Student identity column ── */}
+        <Grid container spacing={1.5} alignItems="stretch">
           <Grid
-            size={{ xs: 12, md: 5, lg: 4 }}
+            size={{ xs: 12, lg: 4 }}
             sx={{
-              borderRight: (t) => ({ md: `1px dashed ${t.palette.divider}` }),
-              borderBottom: (t) => ({ xs: `1px dashed ${t.palette.divider}`, md: 'none' }),
-              pr: { md: 2 },
-              pb: { xs: 1.5, md: 0 },
-              mb: { xs: 0.5, md: 0 },
+              borderRight: (t) => ({ lg: `1px solid ${alpha(t.palette.divider, 0.7)}` }),
+              borderBottom: (t) => ({
+                xs: `1px solid ${alpha(t.palette.divider, 0.7)}`,
+                lg: 'none',
+              }),
+              pr: { lg: 1.75 },
+              pb: { xs: 1.2, lg: 0 },
             }}
           >
-            <Box display="flex" alignItems="center" gap={1.75}>
-              <motion.div
-                initial={{ scale: 0.75, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            <Box display="flex" alignItems="center" gap={1.4}>
+              <Avatar
+                src={student.profileImage}
+                sx={{
+                  width: 58,
+                  height: 58,
+                  bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
+                  color: 'primary.main',
+                  fontSize: '1.35rem',
+                  fontWeight: 800,
+                  border: (t) => `1.5px solid ${alpha(t.palette.primary.main, 0.2)}`,
+                  boxShadow: (t) => `0 0 0 4px ${alpha(t.palette.primary.main, 0.07)}`,
+                }}
               >
-                <Avatar
-                  sx={{
-                    width: 52,
-                    height: 52,
-                    bgcolor: (t) => alpha(t.palette.primary.main, 0.1),
-                    color: 'primary.main',
-                    fontSize: '1.35rem',
-                    fontWeight: 800,
-                    border: (t) => `1.5px solid ${alpha(t.palette.primary.main, 0.22)}`,
-                    boxShadow: (t) => `0 0 0 4px ${alpha(t.palette.primary.main, 0.07)}`,
-                  }}
-                >
-                  {(student.name || 'Aarav Sharma')?.charAt(0).toUpperCase()}
-                </Avatar>
-              </motion.div>
+                {(student.name || 'Aarav Sharma')?.charAt(0).toUpperCase()}
+              </Avatar>
 
-              <Box>
+              <Box flex={1} minWidth={0}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={800}
+                    sx={{ lineHeight: 1.2, mb: 0.5, fontSize: '1.03rem', letterSpacing: '-0.01em' }}
+                  >
+                    {student.name || 'Aarav Sharma'}
+                  </Typography>
+                </Box>
+
                 <Typography
-                  variant="subtitle1"
-                  fontWeight={700}
-                  sx={{ lineHeight: 1.2, mb: 0.5, fontSize: '0.95rem', letterSpacing: '-0.01em' }}
+                  variant="caption"
+                  sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 0.6 }}
                 >
-                  {student.name || 'Aarav Sharma'}
+                  Grade: {`${student.className || '10'}-${student.division || 'A'}`} • Admission:{' '}
+                  {student.grNumber || 'GR001'}
                 </Typography>
 
-                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
+                <Box display="flex" alignItems="center" gap={0.8} flexWrap="wrap">
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {student.grNumber || 'GR001'}
+                    Roll: {student.rollNumber || '01'}
                   </Typography>
-
                   <Divider
                     orientation="vertical"
                     flexItem
                     sx={{ height: 12, alignSelf: 'center' }}
                   />
-
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {(student.className || '10') && (student.division || 'A')
-                      ? `${student.className || '10'}-${student.division || 'A'}`
-                      : 'N/A'}
+                    Parent: {student.parentName || 'N/A'}
                   </Typography>
-
                   <Divider
                     orientation="vertical"
                     flexItem
                     sx={{ height: 12, alignSelf: 'center' }}
                   />
-
-                  <Box
-                    sx={{
-                      px: 0.875,
-                      py: 0.2,
-                      borderRadius: 999,
-                      bgcolor: (t) => alpha(t.palette.action.selected, 0.9),
-                      border: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
-                    }}
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    Contact: {student.contactNumber || 'N/A'}
+                  </Typography>
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ height: 12, alignSelf: 'center' }}
+                  />
+                  <Label
+                    color={feeStatusColor}
+                    variant="soft"
+                    sx={{ fontWeight: 700, lineHeight: 1 }}
                   >
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Roll No : {student.rollNumber || '01'}
-                    </Typography>
-                  </Box>
-                </Stack>
+                    {feeStatusLabel}
+                  </Label>
+                </Box>
               </Box>
             </Box>
           </Grid>
 
-          {/* ── Summary stats column ── */}
-          <Grid size={{ xs: 12, md: 7, lg: 8 }}>
+          <Grid size={{ xs: 12, lg: 8 }}>
             <Box
               display="grid"
               gridTemplateColumns={{
-                xs: 'repeat(2, 1fr)',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(2, 1fr)',
-                lg: 'repeat(4, 1fr)',
+                xs: 'repeat(1, minmax(0, 1fr))',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                md: 'repeat(3, minmax(0, 1fr))',
               }}
-              gap={1.25}
+              gap={1.05}
             >
-              {[
-                {
-                  label: 'Total Fee',
-                  value: student.totalFees || 45000,
-                  color: 'primary' as const,
-                },
-                {
-                  label: 'Paid',
-                  value: student.paidFees || 30000,
-                  color: 'success' as const,
-                },
-                {
-                  label: 'Pending',
-                  value: student.pendingFees || 15000,
-                  color: 'warning' as const,
-                },
-                {
-                  label: 'Concession',
-                  value: student.concessionAmount || 2500,
-                  color: 'info' as const,
-                },
-              ].map((item, index) => (
+              {kpis.map((item, index) => (
                 <Box
                   component={motion.div}
                   key={index}
@@ -179,42 +179,42 @@ export const StudentFeeSummaryCard: React.FC<{
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1], delay: index * 0.06 }}
                   whileHover={{ y: -2, transition: { duration: 0.18 } }}
                   sx={{
-                    p: 1.25,
-                    borderRadius: 1.75,
-                    bgcolor: (t) => alpha(t.palette[item.color].main, 0.06),
-                    border: (t) => `1px solid ${alpha(t.palette[item.color].main, 0.14)}`,
+                    p: 1.15,
+                    borderRadius: 1.5,
+                    bgcolor: (t) => alpha(t.palette[item.color].main, 0.05),
+                    border: (t) => `1px solid ${alpha(t.palette[item.color].main, 0.16)}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 1,
                     cursor: 'default',
-                    transition: 'box-shadow 0.2s ease',
+                    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
                     '&:hover': {
-                      boxShadow: (t) => `0 4px 16px ${alpha(t.palette[item.color].main, 0.14)}`,
+                      boxShadow: (t) => `0 6px 16px ${alpha(t.palette[item.color].main, 0.12)}`,
+                      borderColor: (t) => alpha(t.palette[item.color].main, 0.24),
                     },
                   }}
                 >
-                  <Box>
+                  <Box minWidth={0}>
                     <Typography
                       variant="caption"
                       sx={{
                         color: 'text.secondary',
                         fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        fontSize: '0.62rem',
-                        mb: 0.5,
+                        letterSpacing: '0.02em',
+                        fontSize: '0.7rem',
+                        mb: 0.35,
                         display: 'block',
                       }}
                     >
                       {item.label}
                     </Typography>
                     <Typography
-                      variant="body2"
+                      variant="subtitle1"
                       sx={{
                         color: (t) => t.palette[item.color].main,
-                        fontWeight: 800,
-                        fontSize: '0.875rem',
+                        fontWeight: 900,
+                        fontSize: '1rem',
                         fontVariantNumeric: 'tabular-nums',
                         lineHeight: 1.2,
                       }}
@@ -222,6 +222,11 @@ export const StudentFeeSummaryCard: React.FC<{
                       {formatNumber(item.value ?? 0, 'INR')}
                     </Typography>
                   </Box>
+                  <Iconify
+                    icon={item.icon}
+                    width={18}
+                    sx={{ color: (t) => t.palette[item.color].main }}
+                  />
                 </Box>
               ))}
             </Box>
@@ -265,7 +270,7 @@ export const FinanceCollectionCard = ({
   >
     <Card
       sx={{
-        p: 2.5,
+        p: 2.25,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
@@ -274,10 +279,10 @@ export const FinanceCollectionCard = ({
         cursor: 'pointer',
         height: '100%',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        border: '1px solid',
-        borderColor: 'divider',
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
+        boxShadow: (t) => `0 6px 18px ${alpha(t.palette.common.black, 0.05)}`,
         '&:hover': {
-          transform: 'translateY(-4px)',
+          transform: 'translateY(-2px)',
           boxShadow: (theme) => theme.customShadows?.z8 || 4,
           borderColor: color,
         },
@@ -323,7 +328,6 @@ export const FinanceCollectionCard = ({
         <Iconify icon={icon} width={28} />
       </Box>
 
-      {/* Decorative background circle */}
       <Box
         sx={{
           position: 'absolute',
