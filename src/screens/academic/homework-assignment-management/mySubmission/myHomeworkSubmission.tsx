@@ -6,19 +6,17 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { SubmissionType, SubmissionTypeOptions } from 'src/enums/submission_type';
-import mySubmissionData from 'src/json/academic/homeworkAssignment/mySubmissionData.json';
+import { useGetHomeworksQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import {
   ScheduleExamStatus,
   ScheduleExamStatusColor,
@@ -46,87 +44,43 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
   // State to track currently selected homework for operations
   const [selectedHomework, setSelectedHomework] = useState<IHomework | null>(null);
 
-  // Memoized calculation of homework counts by status
-  const examCounts = useMemo(
-    () => ({
-      pending:
-        mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Pending)
-          ?.length || 0,
-      completed:
-        mySubmissionData?.filter((i) => i.submissionStatus === ScheduleExamStatus.Submitted)
-          ?.length || 0,
-    }),
-    []
-  );
-
-  // Memoized tab configuration array with status counts and styling
-  useMemo(
-    () => [
-      {
-        label: 'Pending',
-        value: ScheduleExamStatus.Pending,
-        count: examCounts.pending,
-        color: 'warning',
-      },
-      {
-        label: 'Completed',
-        value: ScheduleExamStatus.Submitted,
-        count: examCounts.completed,
-        color: 'success',
-      },
-    ],
-    [examCounts]
-  );
-
-  // Callback for rendering action menu items based on homework status
-  useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {tabs.value === 0 ? (
-          <MenuItem
-            onClick={() => {
-              homeworkSubmissionDialog.onTrue();
-              setSelectedHomework(row);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.upload} />
-            Upload
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={() => {
-              viewSubmissionDialog.onTrue();
-              setSelectedHomework(row);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.eye} />
-            View Submission
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
-    [homeworkSubmissionDialog, tabs.value, viewSubmissionDialog]
-  );
-
   // Redux state management
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
-  // Event handler for tab changes
-  // const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
-  //   tabs.onChange(event, newValue);
-  // };
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // State for managing selected date with dayjs
   const [date, setDate] = useState<Dayjs | null>(dayjs());
 
-  // Memoized filtered table data based on active tab
-  const tableData = useMemo(
-    () => mySubmissionData?.filter((i: any) => i.submissionStatus === tabs.value),
-    [tabs.value]
+  const { data: homeworkData, isLoading } = useGetHomeworksQuery(
+    {
+      academicMediumId: medium?.id,
+      HomeworkDate: date ? date.format('YYYY-MM-DD') : undefined,
+    },
+    { skip: !medium?.id }
   );
+
+  // Filtered table data based on active tab
+  const tableData = useMemo(() => {
+    const raw: any[] =
+      homeworkData?.data ??
+      homeworkData?.items ??
+      (Array.isArray(homeworkData) ? homeworkData : []);
+    return raw
+      .filter((i: any) => (i.submissionStatus ?? i.status ?? 0) === tabs.value)
+      .map((i: any) => ({
+        id: i.id ?? i.homeworkId ?? '',
+        subject: i.subjectName ?? i.subject ?? '',
+        title: i.title ?? i.name ?? '',
+        homeworkType: i.homeworkType ?? '',
+        startDate: i.startDate ?? i.createdAt ?? '',
+        endDate: i.dueDate ?? i.endDate ?? '',
+        createdBy: i.teacherName ?? i.createdBy ?? '',
+        submissionType: i.submissionType ?? 0,
+        feedback: i.feedback ?? '',
+        status: i.submissionStatus ?? i.status ?? 0,
+      }));
+  }, [homeworkData, tabs.value]);
 
   // Handler for closing dialogs with unsaved changes check
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -272,6 +226,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
           // },
         ]}
         data={tableData}
+        isLoading={isLoading}
       />
       <CustomDialog
         title={selectedHomework?.title || 'Homework Details'}

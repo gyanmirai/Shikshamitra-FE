@@ -2,6 +2,7 @@ import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { sanitizeHtml } from 'src/utils/sanitize-html';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
@@ -142,7 +143,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
                     color="text.secondary"
                     sx={{ lineHeight: 1.8 }}
                     dangerouslySetInnerHTML={{
-                      __html: chapter.description || 'No description provided.',
+                      __html: sanitizeHtml(chapter.description) || 'No description provided.',
                     }}
                   />
                 </AccordionDetails>
