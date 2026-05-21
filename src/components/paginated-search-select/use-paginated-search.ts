@@ -23,6 +23,10 @@ export function usePaginatedSearch<T>({
 
   // Keep track of the latest query to avoid race conditions
   const latestQueryRef = useRef('');
+  // Synchronous loading guard — prevents concurrent duplicate requests
+  const loadingRef = useRef(false);
+  // Track the last requested page per query to prevent duplicate page fetches
+  const lastRequestedPageRef = useRef<{ query: string; page: number } | null>(null);
 
   const loadOptions = useCallback(
     async (query: string, pageNum: number, append: boolean) => {
@@ -31,6 +35,20 @@ export function usePaginatedSearch<T>({
         return;
       }
 
+      // For new searches (append=false), always allow through and reset tracking state.
+      // For load-more (append=true), use synchronous guard to block duplicate scroll events
+      // that fire before React's async `loading` state update propagates.
+      if (append) {
+        if (loadingRef.current) return;
+        const lastReq = lastRequestedPageRef.current;
+        if (lastReq && lastReq.query === query && lastReq.page === pageNum) return;
+      } else {
+        // New query — reset refs so a fresh load is always allowed
+        lastRequestedPageRef.current = null;
+      }
+
+      loadingRef.current = true;
+      lastRequestedPageRef.current = { query, page: pageNum };
       setLoading(true);
       setError(null);
       latestQueryRef.current = query;
@@ -55,6 +73,7 @@ export function usePaginatedSearch<T>({
         setError('Failed to load results');
       } finally {
         if (latestQueryRef.current === query) {
+          loadingRef.current = false;
           setLoading(false);
         }
       }

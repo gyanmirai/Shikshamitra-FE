@@ -3,12 +3,12 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Chip, Tooltip } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Chip, Tooltip, Typography, LinearProgress } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import {
@@ -368,33 +368,6 @@ const NewExamStepForm = ({ activeStep: step, formik, editData, allSteps, setActi
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box>
         {/* NON-BREAKING: Step progress indicator */}
-        <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 0.75,
-            }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-              letterSpacing={0.4}
-            >
-              Step {step + 1} of 4 &bull; {steps[step]}
-            </Typography>
-            <Typography variant="caption" color="primary.main" fontWeight={700}>
-              {Math.round(((step + 1) / 4) * 100)}%
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={((step + 1) / 4) * 100}
-            sx={{ height: 3, borderRadius: 2, bgcolor: 'grey.200' }}
-          />
-        </Box>
 
         {/* NON-BREAKING: Persistent context chips — visible from Step 2 onwards */}
         <ExamContextHeader formik={formik} step={step} />

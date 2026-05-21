@@ -53,6 +53,9 @@ const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentDocumentsQuery,
     params: { subjectAssignmentId: subject?.subjectAssignmentId, subjectId: subject?.id },
+    options: {
+      skip: !(subject?.subjectAssignmentId && subject?.id),
+    },
   });
   return (
     <Box>

@@ -1,6 +1,7 @@
 import { getIn } from 'formik';
 import { useMemo, useState } from 'react';
 import { Editor } from 'src/components/editor';
+import CloseIcon from '@mui/icons-material/Close';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
@@ -14,8 +15,10 @@ import {
   Box,
   Grid,
   Chip,
+  Tooltip,
   Accordion,
   TextField,
+  IconButton,
   Typography,
   FormHelperText,
   AccordionSummary,
@@ -36,6 +39,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onFileUpload,
   activeSubjectId,
   onAccordionToggle,
+  onRemove,
 }) => {
   const {
     primaryTeacherObj,
@@ -147,6 +151,25 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </Box>
             )}
           </Box>
+
+          {!isPublished && onRemove && (
+            <Tooltip title="Remove subject">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                sx={{
+                  mr: 0.5,
+                  color: 'text.secondary',
+                  '&:hover': { color: 'error.main', bgcolor: 'error.lighter' },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </AccordionSummary>
 
         <AccordionDetails sx={{ p: 3, bgcolor: 'background.paper' }}>
