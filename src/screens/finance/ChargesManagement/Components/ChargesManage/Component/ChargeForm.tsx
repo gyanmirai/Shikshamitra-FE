@@ -72,11 +72,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     [studentsData?.items]
   );
   // Get charge categories data
-  const {
-    data: chargeCategories,
-    isLoading: chargeCategoriesLoading,
-    refetch: chargeCategoriesRefetch,
-  } = useQueryAndMutation({
+  const { data: chargeCategories, isLoading: chargeCategoriesLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
@@ -97,7 +93,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     if (isEdit && editData) {
       return {
         chargeCategoryId: editData.chargeCategoryId || '',
-        chargeCategoryName: editData.chargeCategoryName || '',
+        chargeCategoryName: editData.categoryName || '',
         purposeDescription: editData.purposeDescription || '',
         amount: editData.amount || '',
         dueDate: editData.dueDate ? dayjs(editData.dueDate, 'DD-MM-YYYY') : null,
@@ -136,7 +132,10 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     enableReinitialize: true,
     validationSchema: Yup.object({
       chargeCategoryId: Yup.string().required('Charge Category is required'),
-      purposeDescription: Yup.string().required('Purpose/Description is required'),
+      purposeDescription: Yup.string()
+        .required('Purpose/Description is required')
+        .min(10, 'Purpose/Description must be at least 10 characters')
+        .max(500, 'Purpose/Description cannot exceed 500 characters'),
       amount: Yup.string()
         .required('Amount is required')
         .transform((value) => value.replace(/[^0-9.]/g, ''))
@@ -185,20 +184,16 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         if (isEdit && editData) {
           await updateCharge({ id: editData.chargeId, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `Charge updated successfully for ${values.chargeCategoryName}`,
+            message: `Charge updated successfully for ${values.chargeCategoryName} and assigned to ${values.selectedStudent?.label}`,
           });
         } else {
           const createPayload = {
             ...payload,
-            boardId: values.boardId,
-            educationMediumId: values.educationMediumId,
-            standardId: values.standardId,
-            divisionId: values.divisionId,
             studentId: values.studentId,
           };
           await postCharge({ academicYearId: currentYear?.id, body: createPayload }).unwrap();
           shikshaMitraToast.success({
-            message: `Charge added successfully for ${values.chargeCategoryName}`,
+            message: `Charge added successfully for ${values.chargeCategoryName} and assigned to ${values.selectedStudent?.label}`,
           });
         }
         onClose(null, true);
@@ -218,7 +213,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
 
   // Load boards on year change
   useEffect(() => {
+    formik.resetForm();
     setBoards(currentYear?.boards || []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear]);
 
   // Load mediums when board changes

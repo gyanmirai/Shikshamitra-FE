@@ -1,88 +1,91 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+// Flat list item returned by GET /charges (list response)
 export interface IChargeData {
   chargeId: string;
   chargeCategoryId: string;
-  chargeCategoryName?: string;
   categoryName?: string;
-  standardId: string;
-  divisionId: string;
-  grNo: number;
-  studentId: string; // total count
-  studentName?: string; // Student name for display in edit mode
-  rollNo: number;
-  studentList?: {
-    id: string;
-    name: string;
-    division: string;
-    rollNo?: string; // Added for table
-    grNo?: string; // Added for table
-  }[]; // optional detailed list
+  studentId: string;
+  studentName?: string;
+  grNumber?: string;
+  rollNumber?: number;
+  standardId?: string;
+  standardName?: string;
+  divisionId?: string;
+  divisionName?: string;
+  boardId?: string;
+  educationMediumId?: string;
   amount: number;
   priority: number;
-  dueDate: string; // ISO or formatted string (e.g. "2025-08-31")
-  status?: number; // number enum
+  dueDate: string;
+  status?: number;
   purposeDescription: string;
-  academicYear: string;
-  boardId: string;
-  educationMediumId: string;
   additionalNotes?: string;
-  // Added missing properties for RequestorInfoCard
-  requestorName?: string;
-  department?: string;
-  requestedOn?: string;
 }
 
-export interface ISingleCharge {
-  id: string;
-  category: string;
-  class: string;
-  division: string[];
+// Nested detail object returned by GET /charges/{chargeId}
+export interface IChargeDetailData {
+  chargeId?: string;
+  id?: string;
+  chargeCategoryId?: string;
+  categoryName?: string;
   amount: number;
   priority: number;
-  dueDate: string; // ISO or formatted string (e.g. "2025-08-31")
-  status?: number; // number enum
-  description: string;
-  academicYear: string;
-  board: string;
-  medium: string;
+  dueDate: string;
+  status?: number;
+  purposeDescription: string;
   additionalNotes?: string;
-  // Added missing properties for RequestorInfoCard
-  requestorName?: string;
-  department?: string;
-  requestedOn?: string;
+  appliedOn?: string;
+  student?: {
+    studentId?: string;
+    studentName?: string;
+    grNumber?: string;
+    rollNumber?: number;
+    standardName?: string;
+    divisionName?: string;
+    contactNumber?: string;
+    emailAddress?: string;
+  };
+  requestor?: {
+    requestorName?: string;
+    requestorRole?: string;
+    requestedOn?: string;
+  };
+  approvalDetails?: {
+    approvalNotes?: string;
+    approvedBy?: string;
+    approvedOn?: string;
+  };
+  rejectionDetails?: {
+    rejectionReason?: string;
+    rejectedBy?: string;
+    rejectedOn?: string;
+  };
 }
 
+// Student-wise grouped view, derived client-side from IChargeData list
 export interface IStudentChargeData {
-  id: string;
+  studentId: string;
   studentName: string;
-  rollNo?: string;
-  grNo?: string;
-  class: string;
-  division: string;
-  contactNo?: string;
-  parentName?: string;
-  email?: string;
-  sibling?: string;
-  academicYear: string;
-  board: string;
-  medium: string;
-  // Each student can have multiple charges
-  charges: ISingleCharge[];
+  rollNumber?: number;
+  grNumber?: string;
+  standardName?: string;
+  divisionName?: string;
+  charges: IChargeData[];
 }
 
 export interface IChargeFormProps {
   open: UseBooleanReturn;
   onClose: (event?: any, reason?: boolean) => void;
-  editData?: IChargeData | null; // Data to be edited
-  isEdit?: boolean; // Flag to indicate if form is in edit mode
+  editData?: IChargeData | null;
+  isEdit?: boolean;
 }
 
 export interface ViewChargeProps {
-  charge: IChargeData | null; // Made nullable for consistency
+  charge: IChargeData | null;
   isActionShow?: boolean;
 }
 
 export interface RequestorInfoProps {
-  charge: IChargeData | null;
+  charge: IChargeDetailData | null;
 }
