@@ -6,7 +6,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getCharges: builder.query({
       query: (params) => ({
-        url: '/app/charges',
+        url: '/charges',
         method: 'GET',
         params,
       }),
@@ -14,7 +14,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
     }),
     postCharge: builder.mutation({
       query: ({ academicYearId, body }) => ({
-        url: '/app/charges',
+        url: '/charges',
         method: 'POST',
         body,
         params: { academicYearId },
@@ -23,7 +23,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
     }),
     updateCharge: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/charges/${id}`,
+        url: `/charges/${id}`,
         method: 'PUT',
         body,
       }),
@@ -31,14 +31,14 @@ export const chargesApi = financeModuleApi.injectEndpoints({
     }),
     deleteCharge: builder.mutation({
       query: (id) => ({
-        url: `/app/charges/${id}`,
+        url: `/charges/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: [financeModuleType.charges],
     }),
     approveCharge: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/charges/${id}/approve`,
+        url: `/charges/${id}/approve`,
         method: 'POST',
         body,
       }),
@@ -46,7 +46,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
     }),
     rejectCharge: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/charges/${id}/reject`,
+        url: `/charges/${id}/reject`,
         method: 'POST',
         body,
       }),
@@ -54,7 +54,7 @@ export const chargesApi = financeModuleApi.injectEndpoints({
     }),
     getChargeById: builder.query({
       query: (id) => ({
-        url: `/app/charges/${id}`,
+        url: `/charges/${id}`,
         method: 'GET',
       }),
       providesTags: [financeModuleType.charges],

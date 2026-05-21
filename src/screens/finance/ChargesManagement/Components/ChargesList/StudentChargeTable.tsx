@@ -9,10 +9,15 @@ import type { IStudentChargeData } from '../ChargesManage/Component/type';
 
 interface ICombinedProps {
   data: IStudentChargeData[];
+  isLoading?: boolean;
   onViewAllCharges?: (student: IStudentChargeData) => void;
 }
 
-const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharges }) => {
+const StudentChargeListTable: React.FC<ICombinedProps> = ({
+  data,
+  isLoading = false,
+  onViewAllCharges,
+}) => {
   const tableData = useMemo(
     () =>
       (data || []).map((item: IStudentChargeData) => ({
@@ -89,6 +94,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharg
           ),
         },
       ]}
+      isLoading={isLoading}
       data={tableData || []}
     />
   );

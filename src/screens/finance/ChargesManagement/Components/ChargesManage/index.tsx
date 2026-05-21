@@ -276,6 +276,10 @@ const ChargesManagement = () => {
               setSelectedMode('Reject');
               setSelectedChargeData(selectedChargeData);
             }}
+            onCancel={() => {
+              viewChargeDetailsDialog.onFalse();
+              setSelectedChargeData(null);
+            }}
           />
         </Card>
       )}
@@ -300,12 +304,20 @@ const ChargesManagement = () => {
         handleClose={() => {
           onConfirmDialg.onFalse();
           setSelectedMode('');
-          setSelectedChargeData(null);
+          if (!viewChargeDetailsDialog.value) {
+            setSelectedChargeData(null);
+          }
         }}
         maxWidth="xs"
       >
         <ChargeReasonApprovalForm
-          onClose={handleClose}
+          onClose={() => {
+            onConfirmDialg.onFalse();
+            setSelectedMode('');
+            if (!viewChargeDetailsDialog.value) {
+              setSelectedChargeData(null);
+            }
+          }}
           mode={selectedMode}
           selectedCharge={selectedChargeData}
         />

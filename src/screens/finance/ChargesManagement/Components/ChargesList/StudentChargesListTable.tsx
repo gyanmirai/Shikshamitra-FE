@@ -10,6 +10,7 @@ import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Grid, MenuItem, MenuList, Typography } from '@mui/material';
+import { ChargesPriorityStatus } from 'src/enums/charges-priority-status';
 import {
   ChargesPaymentStatus,
   ChargesPaymentStatusColors,
@@ -17,12 +18,6 @@ import {
 } from 'src/enums/fee-charges-status';
 
 import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
-
-const PRIORITY_LABELS: Record<number, string> = {
-  0: 'Low',
-  1: 'Medium',
-  2: 'High',
-};
 
 const ViewStudentAllCharges = ({
   data,
@@ -166,7 +161,11 @@ const ViewStudentAllCharges = ({
             label: 'Priority',
             align: 'left',
             minWidth: 100,
-            render: (value) => PRIORITY_LABELS[value as number] ?? '-',
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {ChargesPriorityStatus[value as number] ?? '-'}
+              </Typography>
+            ),
           },
           {
             id: 'status',

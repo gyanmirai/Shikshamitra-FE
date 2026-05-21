@@ -14,6 +14,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
@@ -35,15 +36,6 @@ const ChargesList = () => {
 
   const skipQuery = !selectedBoard || !selectedMedium || !currentYear?.id;
 
-  // Backend status param is non-nullable int (default 0).
-  // Fetch all three statuses in parallel and merge to build full charge history.
-  const queryOptions = {
-    refetchOnMountOrArgChange: true,
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-    skip: skipQuery,
-  };
-
   const baseParams = {
     academicYearId: currentYear?.id,
     boardId: selectedBoard,
@@ -51,18 +43,30 @@ const ChargesList = () => {
     pageSize: 100,
   };
 
-  const { data: pendingData } = useGetChargesQuery(
-    { ...baseParams, status: ChargesPaymentStatus.Pending },
-    queryOptions
-  );
-  const { data: approvedData } = useGetChargesQuery(
-    { ...baseParams, status: ChargesPaymentStatus.Approved },
-    queryOptions
-  );
-  const { data: rejectedData } = useGetChargesQuery(
-    { ...baseParams, status: ChargesPaymentStatus.Rejected },
-    queryOptions
-  );
+  // Backend status param is non-nullable int (default 0).
+  // Fetch all three statuses in parallel and merge to build full charge history.
+  const { data: pendingData, isLoading: pendingLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargesQuery,
+    params: { ...baseParams, status: ChargesPaymentStatus.Pending },
+    options: { skip: skipQuery },
+  });
+
+  const { data: approvedData, isLoading: approvedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargesQuery,
+    params: { ...baseParams, status: ChargesPaymentStatus.Approved },
+    options: { skip: skipQuery },
+  });
+
+  const { data: rejectedData, isLoading: rejectedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargesQuery,
+    params: { ...baseParams, status: ChargesPaymentStatus.Rejected },
+    options: { skip: skipQuery },
+  });
+
+  const isLoading = pendingLoading || approvedLoading || rejectedLoading;
 
   // Group all charges by studentId to produce per-student rows
   const studentChargesList = useMemo<IStudentChargeData[]>(() => {
@@ -141,6 +145,7 @@ const ChargesList = () => {
 
       <StudentChargeListTable
         data={studentChargesList}
+        isLoading={isLoading}
         onViewAllCharges={(data) => {
           setSelectedCharge(data);
           onViewAllCharges.onTrue();
