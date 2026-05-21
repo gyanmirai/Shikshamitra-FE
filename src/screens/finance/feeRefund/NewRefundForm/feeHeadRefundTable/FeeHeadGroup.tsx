@@ -17,7 +17,7 @@ export interface FeeHeadGroupProps {
   selectedMonths: string[];
   formik: RefundFormik;
   showValidation: boolean;
-  onToggleMonth: (month: string) => void;
+  onToggleMonth: (month: string, dueFeeId: string) => void;
   onToggleAll: () => void;
 }
 
@@ -63,13 +63,12 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     () =>
       feeHead.items
         .filter((i) => selectedMonths.includes(i.month))
-        .reduce((s, i) => s + Math.max(0, i.paid - i.refunded), 0),
+        .reduce((s, i) => s + Math.max(0, i.refundable), 0),
     [feeHead.items, selectedMonths]
   );
 
-  const handleAmountChange = (month: string, refundable: number, rawValue: string): void => {
-    if (rawValue !== '' && (Number.isNaN(Number(rawValue)) || Number(rawValue) < 0)) return;
-    const clamped = rawValue === '' ? 0 : Math.min(Number(rawValue), refundable);
+  const handleAmountChange = (month: string, refundable: number, value: number): void => {
+    const clamped = Math.min(Math.max(0, value), refundable);
     const refunds = formik.values.feeHeadRefunds;
     const updated = refunds.map((fh) =>
       fh.feeHeadId === feeHead.feeHeadId
@@ -83,7 +82,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
     formik.setFieldTouched('feeHeadRefunds', true, false);
   };
 
-  const hasSelectable = feeHead.items.some((i) => Math.max(0, i.paid - i.refunded) > 0);
+  const hasSelectable = feeHead.items.some((i) => i.refundable > 0);
   const visibleItems = feeHead.items.filter((item) => item.paid > 0);
 
   return (
@@ -121,7 +120,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
         <RefundColHeader />
 
         {visibleItems.map((item, idx) => {
-          const refundable = Math.max(0, item.paid - item.refunded);
+          const refundable = Math.max(0, item.refundable);
           const isSelected = selectedMonths.includes(item.month);
           const refundValue = fhEntry?.months.find((m) => m.month === item.month)?.amount ?? 0;
           const inputError =
@@ -135,8 +134,8 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
                 isDisabled={refundable === 0}
                 refundValue={refundValue}
                 showInputError={inputError}
-                onToggle={() => onToggleMonth(item.month)}
-                onAmountChange={(raw) => handleAmountChange(item.month, refundable, raw)}
+                onToggle={() => onToggleMonth(item.month, (item as any).dueFeeId ?? '')}
+                onAmountChange={(value) => handleAmountChange(item.month, refundable, value)}
               />
               {idx < visibleItems.length - 1 && <Divider sx={{ mx: 1.5, opacity: 0.35 }} />}
             </React.Fragment>

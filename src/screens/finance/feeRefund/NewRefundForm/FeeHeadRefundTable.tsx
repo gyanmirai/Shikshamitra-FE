@@ -1,110 +1,36 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { Box, Alert, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeHeadGroup from './feeHeadRefundTable/FeeHeadGroup';
 import OverallSummaryCard from './feeHeadRefundTable/OverallSummaryCard';
 import RefundTableSkeleton from './feeHeadRefundTable/RefundTableSkeleton';
 
-import type { RefundFormik, IFeeHeadPayment } from './types';
+import type { IMonthItem, RefundFormik, IFeeHeadPayment } from './types';
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-// TODO: Replace with API call → useGetStudentFeePaymentsQuery(studentId)
+// ─── Month name mapping (matches backend MonthEnum integer values) ─────────────
 
-const DUMMY_REFUND_FEE_HEAD_WISE: IFeeHeadPayment[] = [
-  {
-    feeHeadId: 'fh-1',
-    feeHeadName: 'Tuition Fee',
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 3000,
-        refunded: 1000,
-        status: FeeCollectionStatusType.Partial,
-      },
-      { month: 'May', total: 3000, paid: 3000, refunded: 0, status: FeeCollectionStatusType.Paid },
-      {
-        month: 'June',
-        total: 3000,
-        paid: 3000,
-        refunded: 1000,
-        status: FeeCollectionStatusType.Partial,
-      },
-    ],
-  },
-  {
-    feeHeadId: 'fh-2',
-    feeHeadName: 'Hostel Fee',
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 3000,
-        refunded: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      { month: 'May', total: 3000, paid: 3000, refunded: 0, status: FeeCollectionStatusType.Paid },
-    ],
-  },
-  {
-    feeHeadId: 'fh-3',
-    feeHeadName: 'Exam Fee',
-    items: [
-      {
-        month: 'April',
-        total: 1200,
-        paid: 1200,
-        refunded: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'August',
-        total: 1200,
-        paid: 800,
-        refunded: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'December',
-        total: 1200,
-        paid: 1200,
-        refunded: 1200,
-        status: FeeCollectionStatusType.Paid,
-      },
-    ],
-  },
-  {
-    feeHeadId: 'fh-4',
-    feeHeadName: 'Transport Fee',
-    items: [
-      {
-        month: 'April',
-        total: 2000,
-        paid: 2000,
-        refunded: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'May',
-        total: 2000,
-        paid: 2000,
-        refunded: 500,
-        status: FeeCollectionStatusType.Partial,
-      },
-      {
-        month: 'July',
-        total: 2000,
-        paid: 2000,
-        refunded: 2000,
-        status: FeeCollectionStatusType.Paid,
-      },
-    ],
-  },
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -124,7 +50,16 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 }): React.ReactElement | null => {
   const theme = useTheme();
   const { studentId } = formik.values;
-  const isLoading = false; // TODO: replace with RTK Query isLoading
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const {
+    data: eligibility,
+    isLoading,
+    isFetching,
+  } = useGetRefundEligibilityQuery(
+    { studentId, academicYearId: currentYear?.id ?? '' },
+    { skip: !studentId || !currentYear?.id }
+  );
 
   const [showValidation, setShowValidation] = useState(false);
 
@@ -142,7 +77,31 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     return result;
   }, [formik.values.feeHeadRefunds]);
 
-  const feeHeads: IFeeHeadPayment[] = studentId ? DUMMY_REFUND_FEE_HEAD_WISE : [];
+  // Map eligibility API response to IFeeHeadPayment shape used by child components
+  const feeHeads: IFeeHeadPayment[] = useMemo(() => {
+    if (!eligibility?.feeHeads) return [];
+    return eligibility.feeHeads.map((fh) => ({
+      feeHeadId: fh.feeHeadId,
+      feeHeadName: fh.feeHeadName,
+      items: fh.months.map(
+        (m): IMonthItem => ({
+          dueFeeId: m.dueFeeId,
+          month: MONTH_NAMES[m.month] ?? `Month ${m.month}`,
+          year: m.year,
+          total: m.total,
+          paid: m.paid,
+          refunded: m.refunded,
+          refundable: m.refundable,
+          status:
+            m.paid >= m.total
+              ? FeeCollectionStatusType.Paid
+              : m.paid > 0
+                ? FeeCollectionStatusType.Partial
+                : FeeCollectionStatusType.Pending,
+        })
+      ),
+    }));
+  }, [eligibility]);
 
   // Reset refund state when student changes
   useEffect(() => {
@@ -164,22 +123,20 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
    *   parent re-renders for unrelated state changes
    */
   const toggleMonth = useCallback(
-    (feeHeadId: string, month: string): void => {
+    (feeHeadId: string, month: string, dueFeeId: string): void => {
       const refunds = formik.values.feeHeadRefunds;
       const existing = refunds.find((fh) => fh.feeHeadId === feeHeadId);
 
       let updated;
       if (!existing) {
-        // Fee head not yet in formik — add it with this month
-        updated = [...refunds, { feeHeadId, months: [{ month, amount: 0 }] }];
+        updated = [...refunds, { feeHeadId, months: [{ month, dueFeeId, amount: 0 }] }];
       } else {
         const hasMonth = existing.months.some((m) => m.month === month);
         const updatedMonths = hasMonth
           ? existing.months.filter((m) => m.month !== month)
-          : [...existing.months, { month, amount: 0 }];
+          : [...existing.months, { month, dueFeeId, amount: 0 }];
 
         if (updatedMonths.length === 0) {
-          // Last month deselected — remove the fee head entry entirely
           updated = refunds.filter((fh) => fh.feeHeadId !== feeHeadId);
         } else {
           updated = refunds.map((fh) =>
@@ -200,9 +157,10 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
    */
   const toggleAll = useCallback(
     (feeHead: IFeeHeadPayment): void => {
-      const refundableMonths = feeHead.items
-        .filter((i) => Math.max(0, i.paid - i.refunded) > 0)
-        .map((i) => i.month);
+      const refundableItems = feeHead.items.filter(
+        (i) => Math.max(0, i.refundable ?? i.paid - i.refunded) > 0
+      );
+      const refundableMonths = refundableItems.map((i) => i.month);
       const refunds = formik.values.feeHeadRefunds;
       const existing = refunds.find((fh) => fh.feeHeadId === feeHead.feeHeadId);
       const curr = existing?.months.map((m) => m.month) ?? [];
@@ -210,22 +168,23 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
       let updated;
       if (isAllSelected) {
-        // Deselect all — remove this fee head entry entirely
         updated = refunds.filter((fh) => fh.feeHeadId !== feeHead.feeHeadId);
       } else if (!existing) {
-        // Fee head not yet in formik — add it with all refundable months
         updated = [
           ...refunds,
           {
             feeHeadId: feeHead.feeHeadId,
-            months: refundableMonths.map((m) => ({ month: m, amount: 0 })),
+            months: refundableItems.map((i) => ({
+              month: i.month,
+              dueFeeId: i.dueFeeId,
+              amount: 0,
+            })),
           },
         ];
       } else {
-        // Add only missing months, preserve existing amounts
-        const toAdd = refundableMonths
-          .filter((m) => !existing.months.some((e) => e.month === m))
-          .map((m) => ({ month: m, amount: 0 }));
+        const toAdd = refundableItems
+          .filter((i) => !existing.months.some((e) => e.month === i.month))
+          .map((i) => ({ month: i.month, dueFeeId: i.dueFeeId, amount: 0 }));
         updated = refunds.map((fh) =>
           fh.feeHeadId === feeHead.feeHeadId ? { ...fh, months: [...fh.months, ...toAdd] } : fh
         );
@@ -247,7 +206,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   );
 
   if (!studentId) return null;
-  if (isLoading) return <RefundTableSkeleton />;
+  if (isLoading || isFetching) return <RefundTableSkeleton />;
 
   const feeHeadsWithPayments = feeHeads.filter((fh) => fh.items.some((m) => m.paid > 0));
 
@@ -344,7 +303,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           selectedMonths={selectedMonths[feeHead.feeHeadId] ?? []}
           formik={formik}
           showValidation={showValidation}
-          onToggleMonth={(month) => toggleMonth(feeHead.feeHeadId, month)}
+          onToggleMonth={(month, dueFeeId) => toggleMonth(feeHead.feeHeadId, month, dueFeeId)}
           onToggleAll={() => toggleAll(feeHead)}
         />
       ))}
