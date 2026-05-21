@@ -1,10 +1,10 @@
 import confetti from 'canvas-confetti';
-import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { Add } from '@mui/icons-material';
-import { Box, Paper, Button } from '@mui/material';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Box, Paper, Alert, Button, AlertTitle, Typography } from '@mui/material';
 import CreateSlotsForm from 'src/screens/academic/timetable-schedule-management/settings/components/lectureSlots/createSlotsForm';
 
 import { SlotType } from './types';
@@ -259,6 +259,43 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     return counts;
   })();
 
+  // --- Conflict Detection ---
+  const conflicts = useMemo(() => {
+    const warnings: string[] = [];
+    (Object.keys(slots) as DayOfWeek[]).forEach((day) => {
+      slots[day].forEach((slot) => {
+        if (!slot.subjects || slot.subjects.length < 2) return;
+
+        // Teacher double-booking within the same time slot
+        const teacherIds = slot.subjects.map((s) => s.teacherId).filter(Boolean);
+        const seenTeachers = new Set<string>();
+        teacherIds.forEach((id) => {
+          if (id && seenTeachers.has(id)) {
+            warnings.push(
+              `${day.charAt(0) + day.slice(1).toLowerCase()}: Same teacher double-booked at ${slot.startTime}–${slot.endTime}`
+            );
+          } else if (id) {
+            seenTeachers.add(id);
+          }
+        });
+
+        // Room double-booking within the same time slot
+        const roomIds = slot.subjects.map((s) => s.roomId).filter(Boolean);
+        const seenRooms = new Set<string>();
+        roomIds.forEach((id) => {
+          if (id && seenRooms.has(id)) {
+            warnings.push(
+              `${day.charAt(0) + day.slice(1).toLowerCase()}: Same room double-booked at ${slot.startTime}–${slot.endTime}`
+            );
+          } else if (id) {
+            seenRooms.add(id);
+          }
+        });
+      });
+    });
+    return [...new Set(warnings)]; // deduplicate
+  }, [slots]);
+
   const content = (
     <Box
       sx={{
@@ -414,7 +451,27 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     </Box>
   );
 
-  return <DndProvider backend={HTML5Backend}>{content}</DndProvider>;
+  return (
+    <DndProvider backend={HTML5Backend}>
+      {conflicts.length > 0 && !readOnly && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 1, borderRadius: 1 }}
+          onClose={() => {
+            /* dismissed visually — conflicts persist until resolved */
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: 700 }}>Scheduling Conflicts Detected</AlertTitle>
+          {conflicts.map((msg, i) => (
+            <Typography key={i} variant="body2" sx={{ lineHeight: 1.8 }}>
+              • {msg}
+            </Typography>
+          ))}
+        </Alert>
+      )}
+      {content}
+    </DndProvider>
+  );
 };
 
 export default TimetableBoard;

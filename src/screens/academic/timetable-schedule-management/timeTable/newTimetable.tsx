@@ -17,7 +17,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { DEFAULT_CONFIG } from 'src/components/timetable/utils';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -381,16 +380,11 @@ const TimeTableGrid = () => {
   // Dialog state for creating time slots modal
   // const createSlotsDialog = useBoolean();
   const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
-  // Dialog state for publishing marks modal (currently unused)
-  const publishTimetableDialog = useBoolean();
-  const draftTimetableDialog = useBoolean();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard name
   const [classes, setClasses] = useState<string>('');
   const [selectedStandardId, setSelectedStandardId] = useState<string>('');
-  const [slotConfigStandardId, setSlotConfigStandardId] = useState<string>('');
-  const [slotConfigDivisionId, setSlotConfigDivisionId] = useState<string>('');
   const [division, setDivision] = useState<string>('');
   const [selectedDivisionId, setSelectedDivisionId] = useState<string>('');
 
@@ -455,8 +449,6 @@ const TimeTableGrid = () => {
                 setDivision(row.divisionName);
                 setSelectedDivisionId(row.divisionId);
                 setIsEdit(true);
-                setSlotConfigStandardId(selectedStandardId);
-                setSlotConfigDivisionId(row.divisionId);
               }}
             >
               <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
@@ -466,7 +458,7 @@ const TimeTableGrid = () => {
         </MenuList>
       </>
     ),
-    [handleOpenDialog, selectedStandardId]
+    [handleOpenDialog]
   );
   const columns: IColumn[] = useMemo(
     () => [
@@ -502,26 +494,12 @@ const TimeTableGrid = () => {
     currentData: timetableManagementData,
     isLoading: isTimetableManagementLoading,
     isFetching: isTimetableManagementFetching,
-    refetch: refetchTimetableManagement,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetTimetableManagementByStandardQuery,
     params: selectedStandardId,
     options: {
       skip: !selectedStandardId,
-    },
-  });
-
-  const {
-    data: slotConfigData,
-    isLoading: isSlotConfigLoading,
-    isFetching: isSlotConfigFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetTimetableByStandardDivisionQuery,
-    params: { standardId: slotConfigStandardId, divisionId: slotConfigDivisionId },
-    options: {
-      skip: !slotConfigStandardId || !slotConfigDivisionId,
     },
   });
 
@@ -621,45 +599,6 @@ const TimeTableGrid = () => {
           />{' '}
         </>
       )}
-
-      <ConfirmDialog
-        open={publishTimetableDialog.value}
-        onClose={() => {
-          publishTimetableDialog.onFalse();
-          // setSelectedExam(null);
-        }}
-        title="Publish"
-        content="Are you sure you want to Publish Timetable ?"
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {}}
-          >
-            Publish
-          </Button>
-        }
-      />
-
-      <ConfirmDialog
-        open={draftTimetableDialog.value}
-        onClose={() => {
-          draftTimetableDialog.onFalse();
-        }}
-        title="Draft"
-        content="Are you sure you want to Draft Timetable ?"
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-            onClick={() => {}}
-          >
-            Draft
-          </Button>
-        }
-      />
     </Box>
   );
 };
@@ -878,11 +817,12 @@ const TimeTableForm = ({
       skip: !classId || !divisionId,
     },
   });
-  const [createTimetable, { isLoading: isSubmitting, isFetching: isTimetableFetching }] =
-    useQueryAndMutation({
-      type: 'mutation',
-      currentQueryAndMutation: useCreateTimetableMutation,
-    });
+  const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateTimetableMutation,
+  });
+
+  const draftTimetableDialog = useBoolean();
 
   const transformSlotsToPayload = useCallback(
     (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
@@ -924,7 +864,9 @@ const TimeTableForm = ({
     async (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
       const body = transformSlotsToPayload(slots, status);
       await createTimetable({ standardId, divisionId, body }).unwrap();
-      shikshaMitraToast.success({ message: 'Timetable published successfully.' });
+      shikshaMitraToast.success({
+        message: status === 1 ? 'Timetable saved as draft.' : 'Timetable published successfully.',
+      });
       onClose();
     },
     [createTimetable, divisionId, onClose, standardId, transformSlotsToPayload]
@@ -1108,7 +1050,8 @@ const TimeTableForm = ({
               size="small"
               color="inherit"
               startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-              onClick={() => {}}
+              onClick={() => draftTimetableDialog.onTrue()}
+              disabled={isSubmitting}
               sx={{
                 borderColor: 'divider',
                 color: 'text.secondary',
