@@ -344,7 +344,7 @@ const AssignElectiveSubject = () => {
                           overflow: 'hidden',
                           border: '1px solid',
                           borderColor: isSelected ? s.subjectColor : 'divider',
-                          backgroundColor: isSelected ? `${s.subjectColor}14` : 'grey.50',
+                          backgroundColor: isSelected ? `${s.subjectColor}14` : 'background.paper',
                           '&:hover': {
                             backgroundColor: `${s.subjectColor}20`,
                             borderColor: s.subjectColor,
@@ -355,7 +355,7 @@ const AssignElectiveSubject = () => {
                           sx={{
                             width: 4,
                             alignSelf: 'stretch',
-                            backgroundColor: isSelected ? s.subjectColor : 'grey.400',
+                            backgroundColor: isSelected ? s.subjectColor : 'text.disabled',
                             flexShrink: 0,
                           }}
                         />
@@ -394,7 +394,7 @@ const AssignElectiveSubject = () => {
                         overflow: 'hidden',
                         border: '1px solid',
                         borderColor: isSelected ? s.subjectColor : 'divider',
-                        backgroundColor: isSelected ? `${s.subjectColor}14` : 'grey.50',
+                        backgroundColor: isSelected ? `${s.subjectColor}14` : 'background.paper',
                         '&:hover': {
                           backgroundColor: `${s.subjectColor}20`,
                           borderColor: s.subjectColor,
@@ -405,7 +405,7 @@ const AssignElectiveSubject = () => {
                         sx={{
                           width: 4,
                           alignSelf: 'stretch',
-                          backgroundColor: isSelected ? s.subjectColor : 'grey.400',
+                          backgroundColor: isSelected ? s.subjectColor : 'text.disabled',
                           flexShrink: 0,
                         }}
                       />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, ButtonBase, Typography } from '@mui/material';
 
 import { dayMarks } from '../utils/dayMarks';
 
@@ -85,55 +85,83 @@ const ActiveDaysSlider: React.FC<IActiveDaysSliderProps> = ({
           const isInterior = isSelected && !isBoundary;
 
           const chipLabel = (
-            <Chip
+            <ButtonBase
               key={day.value}
-              label={day.label}
-              size="small"
               onClick={isInterior || disabled ? undefined : () => handleChipClick(day.value)}
               aria-pressed={isSelected}
               aria-label={`${day.label}: ${isSelected ? 'active' : 'inactive'}`}
+              focusRipple={!isInterior && !disabled}
+              disableRipple={isInterior || disabled}
+              tabIndex={disabled ? -1 : 0}
               sx={{
                 height: 32,
+                minWidth: 44,
+                px: 1.5,
+                borderRadius: '8px',
                 fontSize: '0.75rem',
                 fontWeight: isSelected ? 700 : 500,
+                fontFamily: 'inherit',
+                letterSpacing: '0.02em',
+                lineHeight: 1,
                 cursor: disabled ? 'not-allowed' : isInterior ? 'default' : 'pointer',
                 userSelect: 'none',
-                transition: 'all 150ms ease',
+                border: '1.5px solid',
+                transition:
+                  'background-color 150ms ease, border-color 150ms ease, color 150ms ease',
                 ...(isSelected
                   ? {
-                      bgcolor: (theme) =>
+                      backgroundColor: (theme) =>
                         alpha(
                           theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.2 : 0.1
+                          theme.palette.mode === 'dark' ? 0.2 : 0.12
                         ),
-                      color: 'primary.main',
-                      border: (theme) =>
-                        `1.5px solid ${alpha(theme.palette.primary.main, isBoundary ? 0.65 : 0.3)}`,
+                      color: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? theme.palette.primary.light // #5BE49B — high contrast on dark bg
+                          : theme.palette.primary.main,
+                      borderColor: (theme) =>
+                        alpha(
+                          theme.palette.primary.main,
+                          isBoundary ? 0.8 : theme.palette.mode === 'dark' ? 0.55 : 0.35
+                        ),
                       '&:hover':
                         disabled || isInterior
                           ? {}
                           : {
-                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
+                              backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.28),
                               borderColor: 'primary.main',
                             },
-                      '& .MuiChip-label': { px: 1.25 },
+                      '&:focus-visible': {
+                        outline: (theme) => `2px solid ${theme.palette.primary.main}`,
+                        outlineOffset: '2px',
+                      },
                     }
                   : {
-                      bgcolor: 'transparent',
-                      color: 'text.secondary',
-                      border: '1.5px solid',
-                      borderColor: 'divider',
+                      backgroundColor: 'transparent',
+                      color: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? theme.palette.grey[300] // #DFE3E8 — ~10:1 contrast on dark surfaces
+                          : theme.palette.text.secondary,
+                      borderColor: (theme) =>
+                        theme.palette.mode === 'dark'
+                          ? alpha(theme.palette.grey[400], 0.5) // clear outline on dark bg
+                          : alpha(theme.palette.grey[500], 0.35),
                       '&:hover': disabled
                         ? {}
                         : {
-                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
-                            borderColor: (theme) => alpha(theme.palette.primary.main, 0.35),
+                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                            borderColor: (theme) => alpha(theme.palette.primary.main, 0.45),
                             color: 'primary.main',
                           },
-                      '& .MuiChip-label': { px: 1.25 },
+                      '&:focus-visible': {
+                        outline: (theme) => `2px solid ${theme.palette.primary.main}`,
+                        outlineOffset: '2px',
+                      },
                     }),
               }}
-            />
+            >
+              {day.label}
+            </ButtonBase>
           );
 
           if (isBoundary && !disabled) {

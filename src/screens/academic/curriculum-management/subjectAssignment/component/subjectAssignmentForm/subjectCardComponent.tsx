@@ -135,7 +135,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     sx={{ height: 22, fontSize: '0.75rem' }}
                   />
                 )}
-                {subject.primaryTeacher && (
+                {(primaryTeacherObj?.label || subject.primaryTeacher?.name) && (
                   <Chip
                     label={`Lead: ${primaryTeacherObj?.label || subject.primaryTeacher?.name}`}
                     size="small"
