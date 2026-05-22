@@ -18,9 +18,13 @@ import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/e
 import type { IExamFormValues } from '../type';
 
 // ---------------------------------------------------------------------------
-// ApplyToAllBar — NON-BREAKING helper toolbar for bulk-filling schedule rows
+// ApplyToAllBar — bulk-fill helper toolbar for schedule rows
 // ---------------------------------------------------------------------------
-const ApplyToAllBar = ({ formik }: { formik: any }) => {
+interface ApplyToAllBarProps {
+  formik: any;
+}
+
+const ApplyToAllBar = ({ formik }: ApplyToAllBarProps) => {
   const [bulkStartTime, setBulkStartTime] = useState<any>(null);
   const [bulkEndTime, setBulkEndTime] = useState<any>(null);
   const [bulkTotalMarks, setBulkTotalMarks] = useState<string>('');
@@ -28,30 +32,35 @@ const ApplyToAllBar = ({ formik }: { formik: any }) => {
 
   if (!formik.values.subjects?.length) return null;
 
-  const applyToAll = (field: string, value: any) => {
-    const updated = formik.values.subjects.map((sub: any) => ({ ...sub, [field]: value }));
-    formik.setFieldValue('subjects', updated);
-  };
-
   const hasAnyValue = !!(bulkStartTime || bulkEndTime || bulkTotalMarks || bulkPassingMarks);
 
   const handleApplyAll = () => {
-    if (bulkStartTime) {
-      applyToAll('startTime', bulkStartTime);
-      setBulkStartTime(null);
-    }
-    if (bulkEndTime) {
-      applyToAll('endTime', bulkEndTime);
-      setBulkEndTime(null);
-    }
-    if (bulkTotalMarks) {
-      applyToAll('totalMarks', bulkTotalMarks);
-      setBulkTotalMarks('');
-    }
-    if (bulkPassingMarks) {
-      applyToAll('passingMarks', bulkPassingMarks);
-      setBulkPassingMarks('');
-    }
+    // Collect all filled bulk values into a single update object.
+    // This prevents the stale-closure bug where multiple sequential
+    // setFieldValue('subjects', ...) calls each read the same snapshot
+    // and overwrite one another — causing only the last field to apply.
+    const updates: Record<string, any> = {};
+
+    if (bulkStartTime !== null) updates.startTime = bulkStartTime;
+    if (bulkEndTime !== null) updates.endTime = bulkEndTime;
+
+    // Explicit totalMarks
+    if (bulkTotalMarks !== '') updates.totalMarks = bulkTotalMarks;
+    if (bulkPassingMarks !== '') updates.passingMarks = bulkPassingMarks;
+
+    if (Object.keys(updates).length === 0) return;
+
+    // Single atomic update — setValues with shouldValidate=true forces immediate
+    // re-validation so errors for fields that now have valid values are cleared,
+    // preventing stale error messages after bulk apply.
+    const updated = formik.values.subjects.map((sub: any) => ({ ...sub, ...updates }));
+    formik.setValues({ ...formik.values, subjects: updated }, true);
+
+    // Reset all bulk inputs after applying
+    setBulkStartTime(null);
+    setBulkEndTime(null);
+    setBulkTotalMarks('');
+    setBulkPassingMarks('');
   };
 
   return (
@@ -173,7 +182,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       sx={{ height: '100%' }}
     >
-      {/* NON-BREAKING: Apply-to-all bulk helper bar */}
+      {/* Bulk apply helper bar */}
       <ApplyToAllBar formik={formik} />
       <CustomizableTable
         isFilter={false}
@@ -541,65 +550,55 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 passingVal > totalVal;
 
               return (
-                <Box>
-                  <ShakingTextField
+                <ShakingTextField
+                  error={
+                    (typeof formik.errors.subjects?.[row.index] === 'object' &&
+                      !!(formik.errors.subjects?.[row.index] as any)?.passingMarks &&
+                      !!formik.touched.subjects?.[row.index]?.passingMarks) ||
+                    exceedsTotal
+                  }
+                >
+                  <TextField
+                    value={value}
+                    type="number"
+                    label="Passing Marks *"
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      formik.setFieldValue(`subjects.${row.index}.passingMarks`, e.target.value);
+                      formik.setFieldTouched(`subjects.${row.index}.passingMarks`, false, false);
+                    }}
+                    size="small"
                     error={
-                      (typeof formik.errors.subjects?.[row.index] === 'object' &&
-                        !!(formik.errors.subjects?.[row.index] as any)?.passingMarks &&
-                        !!formik.touched.subjects?.[row.index]?.passingMarks) ||
+                      (Boolean(formik.touched.subjects?.[row.index]?.passingMarks) &&
+                        !!(formik.errors.subjects?.[row.index] as any)?.passingMarks) ||
                       exceedsTotal
                     }
-                  >
-                    <TextField
-                      value={value}
-                      type="number"
-                      label="Passing Marks *"
-                      onKeyDown={(e) => {
-                        if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      onChange={(e) => {
-                        formik.setFieldValue(`subjects.${row.index}.passingMarks`, e.target.value);
-                        formik.setFieldTouched(`subjects.${row.index}.passingMarks`, false, false);
-                      }}
-                      size="small"
-                      error={
-                        (Boolean(formik.touched.subjects?.[row.index]?.passingMarks) &&
-                          !!(formik.errors.subjects?.[row.index] as any)?.passingMarks) ||
-                        exceedsTotal
-                      }
-                      helperText={
-                        formik.touched.subjects?.[row.index]?.passingMarks &&
-                        (formik.errors.subjects?.[row.index] as any)?.passingMarks
+                    helperText={
+                      exceedsTotal
+                        ? 'Exceeds total marks'
+                        : formik.touched.subjects?.[row.index]?.passingMarks &&
+                            (formik.errors.subjects?.[row.index] as any)?.passingMarks
                           ? (formik.errors.subjects?.[row.index] as any)?.passingMarks
                           : ' '
-                      }
-                      FormHelperTextProps={{
-                        sx: {
-                          margin: 0,
-                          position: 'static',
-                          whiteSpace: 'normal',
-                        },
-                      }}
-                      InputLabelProps={{
-                        sx: {
-                          lineHeight: '1.2em',
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                  {/* NON-BREAKING: UI-only inline warning chip */}
-                  {exceedsTotal && (
-                    <Chip
-                      label="Exceeds total"
-                      size="small"
-                      color="warning"
-                      variant="soft"
-                      sx={{ fontSize: '0.65rem', height: 18, mt: 0.25 }}
-                    />
-                  )}
-                </Box>
+                    }
+                    FormHelperTextProps={{
+                      sx: {
+                        margin: 0,
+                        position: 'static',
+                        whiteSpace: 'normal',
+                      },
+                    }}
+                    InputLabelProps={{
+                      sx: {
+                        lineHeight: '1.2em',
+                      },
+                    }}
+                  />
+                </ShakingTextField>
               );
             },
           },

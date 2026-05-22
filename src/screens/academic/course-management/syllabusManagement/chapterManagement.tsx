@@ -281,12 +281,22 @@ const Subjects = () => {
                   onChange={(val) => {
                     const strVal = String(val);
 
-                    // The API always needs the plain item.id (groupId), not the composite key.
-                    const apiId = strVal.includes('::') ? strVal.split('::')[0] : strVal;
+                    // Resolve the individual subjectId for API calls.
+                    // Elective: composite "assignmentId::subjectId" — extract the individual subjectId.
+                    // Regular: value is item.id (assignment record) — look up subjects[0].subjectId.
+                    const resolvedSubjectId = (() => {
+                      if (strVal.includes('::')) {
+                        return strVal.split('::')[1];
+                      }
+                      const selected = subjectOptionsData?.data?.items?.find(
+                        (item: any) => item.id === strVal
+                      );
+                      return selected?.subjects?.[0]?.subjectId || strVal;
+                    })();
 
                     const label = (() => {
                       if (strVal.includes('::')) {
-                        // Composite key: "groupId::subjectId"
+                        // Composite key: "assignmentId::subjectId"
                         const [groupId, subId] = strVal.split('::');
                         const groupItem = subjectOptionsData?.data?.items?.find(
                           (item: any) => item.id === groupId
@@ -294,10 +304,9 @@ const Subjects = () => {
                         const matchedSub = groupItem?.subjects?.find(
                           (sub: any, idx: number) => (sub.subjectId || String(idx)) === subId
                         );
-                        const subName = matchedSub?.subjectName || '';
-                        return subName;
+                        return matchedSub?.subjectName || '';
                       }
-                      // Regular subject — value is simply item.id
+                      // Regular subject — value is item.id (assignment record)
                       const selected = subjectOptionsData?.data?.items?.find(
                         (item: any) => item.id === strVal
                       );
@@ -309,8 +318,8 @@ const Subjects = () => {
                     })();
 
                     setSubject(label);
-                    setSubjectSelectValue(strVal); // full composite key — keeps dropdown in sync
-                    setSubjectId(apiId); // plain item.id — safe for API
+                    setSubjectSelectValue(strVal); // composite key — keeps dropdown display in sync
+                    setSubjectId(resolvedSubjectId); // individual subjectId — used for API calls
                   }}
                   label="Subject"
                   valueKey="value"

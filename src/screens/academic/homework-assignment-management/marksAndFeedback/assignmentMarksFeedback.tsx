@@ -22,6 +22,8 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   // Dialog state for modal/popup control
   const [subject, setSubject] = useState('');
+  // Composite key for subject dropdown display (handles elective groups: "assignmentId::subjectId")
+  const [subjectSelectValue, setSubjectSelectValue] = useState('');
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -53,6 +55,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
     setSubject('');
+    setSubjectSelectValue('');
   }, [allClass, classes]);
 
   useEffect(() => {
@@ -136,21 +139,40 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           disabled={!classes}
         />
         <CustomSelect
-          options={
-            subjectOptionsData?.data?.items?.map((item: any) => ({
-              id: item.id,
-              name:
-                item.subjects?.length > 1
-                  ? item.electiveGroupName
-                  : item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName || '',
-            })) || []
-          }
+          options={(() => {
+            const allOptions: { value: string; label: string }[] = [];
+            subjectOptionsData?.data?.items?.forEach((item: any) => {
+              if (item.subjects?.length > 1 && item.electiveGroupName) {
+                // Elective group — each subject as its own dropdown entry
+                item.subjects.forEach((sub: any, index: number) => {
+                  const subId = sub.subjectId || String(index);
+                  allOptions.push({
+                    value: `${item.id}::${subId}`,
+                    label: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+                  });
+                });
+              } else {
+                // Regular single subject
+                allOptions.push({
+                  value: `${item.id}::${item.subjects?.[0]?.subjectId || item.id}`,
+                  label: item.subjects?.[0]?.subject?.name || item.subjects?.[0]?.subjectName || '',
+                });
+              }
+            });
+            return allOptions;
+          })()}
           isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
           label="Subject"
-          value={subject}
-          onChange={(val) => setSubject(val as string)}
-          labelKey="name"
-          valueKey="id"
+          value={subjectSelectValue}
+          onChange={(val) => {
+            const strVal = String(val);
+            // Extract the actual subjectId from composite key "assignmentId::subjectId"
+            const resolvedSubjectId = strVal.includes('::') ? strVal.split('::')[1] : strVal;
+            setSubjectSelectValue(strVal);
+            setSubject(resolvedSubjectId);
+          }}
+          labelKey="label"
+          valueKey="value"
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           disabled={!division}
         />

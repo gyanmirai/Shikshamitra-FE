@@ -16,6 +16,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, MenuList, MenuItem, TextField, Typography, Autocomplete } from '@mui/material';
@@ -130,6 +131,7 @@ const GradeEntry = (props: TabComponentType) => {
       StandardId: classes,
       DivisionId: division,
       SubjectId: subject,
+      Status: examScheduledStatus.Completed,
       ...(assignmentType ? { ExamType: assignmentType } : {}),
     },
     options: {

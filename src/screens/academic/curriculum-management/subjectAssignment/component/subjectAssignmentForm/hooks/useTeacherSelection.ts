@@ -58,9 +58,9 @@ export function useTeacherSelection({
    * Stable reference prevents unnecessary search resets.
    */
   const fetchPrimaryTeacherOptions = useCallback(
-    async (query: string) => {
-      const res = await getPrimaryTeacherOptions({ search: query }).unwrap();
-      const hasMore = res.currentPage <= res.totalPages;
+    async (query: string, page: number = 1) => {
+      const res = await getPrimaryTeacherOptions({ search: query, page }).unwrap();
+      const hasMore = res.currentPage < res.totalPages;
       return {
         data: (res?.items ?? []).map((item: { id: string; fullName: string }) => ({
           id: item.id,
@@ -78,9 +78,9 @@ export function useTeacherSelection({
    * Stable reference prevents unnecessary search resets.
    */
   const fetchSecondaryTeacherOptions = useCallback(
-    async (query: string) => {
-      const res = await getSecondaryTeacherOptions({ search: query }).unwrap();
-      const hasMore = res.currentPage <= res.totalPages;
+    async (query: string, page: number = 1) => {
+      const res = await getSecondaryTeacherOptions({ search: query, page }).unwrap();
+      const hasMore = res.currentPage < res.totalPages;
       return {
         data: (res?.items ?? []).map((item: { id: string; fullName: string }) => ({
           id: item.id,

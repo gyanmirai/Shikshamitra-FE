@@ -74,7 +74,9 @@ const CourseProgress = () => {
           />
         </Box>
       </Card>
-      <CourseProgressComponent isAction selectedClass={classes} selectedDivision={division} />
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CourseProgressComponent isAction selectedClass={classes} selectedDivision={division} />
+      </Box>
     </Box>
   );
 };
