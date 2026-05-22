@@ -1,9 +1,11 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Checkbox, Typography } from '@mui/material';
+import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 import ByMonthView from './FeeLedgerByMonth';
 import { toPeriod } from './FeeLedgerShared';
@@ -31,13 +33,18 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
 
   return (
     <Card
+      component={motion.div}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        p: 1.5,
-        borderRadius: 2.25,
-        ml: 0.25,
-        mt: 1.5,
-        boxShadow: (t) => `0 6px 16px ${alpha(t.palette.common.black, 0.05)}`,
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        display: 'flex',
+        flexDirection: 'column',
+        p: { xs: 1.25, md: 1.5 },
+        boxShadow: (t) => `var(--shadows-4)`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
       {/* Section header */}
@@ -67,7 +74,8 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
       </Box>
       {chargesData.map((charge) => {
         const isSelected = selectedCharges.includes(charge.chargeId);
-        const isDisabled = charge.status === 0 || charge.status === 'Paid';
+        const isDisabled =
+          charge.status === FeeCollectionStatusType.Paid || charge.status === 'Paid';
 
         return (
           <Box
@@ -94,7 +102,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
                 ? {
                     bgcolor: isSelected
                       ? alpha(theme.palette.error.main, 0.08)
-                      : alpha(theme.palette.action.hover, 0.6),
+                      : alpha(theme.palette.action.hover, 0.7),
                     borderColor: alpha(theme.palette.error.main, 0.25),
                   }
                 : {},
@@ -180,7 +188,7 @@ const FeeLedgerList = ({
 
   // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
-    const period = toPeriod(group.month, year);
+    const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
     const selectableItems = group.items.filter((i) => i.due > 0);
     const isAllSelected = selectableItems.every((i) =>
       selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
@@ -204,10 +212,11 @@ const FeeLedgerList = ({
 
   // ── Fee head group toggle ──────────────────────────────────────────────────
   const toggleFeeHeadGroup = (group: FeeHeadWiseGroup) => {
-    const getPeriod = (month: string) => toPeriod(month, year);
+    const getPeriod = (item: { month: any; year?: number }) =>
+      toPeriod(FeeMonth[item.month] as string, item.year ?? year);
     const selectableItems = group.items.filter((i) => i.due > 0);
     const isAllSelected = selectableItems.every((i) => {
-      const period = getPeriod(i.month);
+      const period = getPeriod(i);
       return selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
     });
 
@@ -217,17 +226,17 @@ const FeeLedgerList = ({
           (s) =>
             !(
               s.feeHeadId === group.feeHeadId &&
-              selectableItems.some((i) => getPeriod(i.month) === s.period)
+              selectableItems.some((i) => getPeriod(i) === s.period)
             )
         )
       );
     } else {
       const toAdd = selectableItems
         .filter((i) => {
-          const period = getPeriod(i.month);
+          const period = getPeriod(i);
           return !selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
         })
-        .map((i) => ({ feeHeadId: group.feeHeadId, period: getPeriod(i.month), dueAmount: i.due }));
+        .map((i) => ({ feeHeadId: group.feeHeadId, period: getPeriod(i), dueAmount: i.due }));
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };

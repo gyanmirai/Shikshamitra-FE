@@ -1,6 +1,6 @@
 import type { FormikProps } from 'formik';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-import type { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import type { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 export interface IFeeData {
   id: string | number;
@@ -66,7 +66,7 @@ export interface IStudentFee {
   overdueFees: number;
   chargesPaid?: number;
   chargesTotal?: number;
-  status: string;
+  status: FeeCollectionStatusType;
   terms: IFeeTerm[];
   paymentDetails?: IPaymentDetails;
   contactNumber?: string;
@@ -164,6 +164,7 @@ export type FeeEntryStatus = 'Pending' | 'Partial' | 'Paid' | 'Overdue';
 export type PaymentModeType = 'Cash' | 'Cheque' | 'UPI' | 'Card' | 'Demand Draft (DD)';
 
 export interface MonthWiseFeeItem {
+  dueFeeId?: string;
   feeHeadId: string;
   feeHeadName: string;
   total: number;
@@ -173,13 +174,15 @@ export interface MonthWiseFeeItem {
 }
 
 export interface MonthWiseGroup {
-  month: string; // e.g. "April"
+  month: FeeMonth; // e.g. "April"
+  year?: number;
   totalDue: number;
   items: MonthWiseFeeItem[];
 }
 
 export interface FeeHeadWiseFeeItem {
-  month: string;
+  month: FeeMonth;
+  year: number;
   total: number;
   paid: number;
   due: number;

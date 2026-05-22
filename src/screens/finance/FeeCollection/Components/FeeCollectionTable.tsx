@@ -9,11 +9,11 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, Card, MenuList, MenuItem } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
@@ -38,16 +38,19 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  const feeCollectionQueryParams = useMemo(
-    () => ({
-      AcademicYearId: currentYear?.id,
-      BoardId: selectedBoard,
-      EducationMediumId: selectedMedium,
-      MaxResultCount: 1000,
-      SkipCount: 0,
-    }),
-    [currentYear?.id, selectedBoard, selectedMedium]
-  );
+  const [feeCollectionParams, setFeeCollectionParams] = useState({
+    page: 1,
+    pageSize: 10,
+    search: '',
+  });
+
+  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
+    setFeeCollectionParams((pre) => ({ ...pre, page, pageSize: rowsPerPage }));
+  }, []);
+
+  const handleServerSearch = useCallback((search: string) => {
+    setFeeCollectionParams((pre) => ({ ...pre, page: 1, search }));
+  }, []);
 
   const {
     data: feeCollectionData,
@@ -56,46 +59,41 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCollectionListQuery,
-    params: feeCollectionQueryParams,
+    params: {
+      AcademicYearId: currentYear?.id,
+      BoardId: selectedBoard,
+      EducationMediumId: selectedMedium,
+      MaxResultCount: feeCollectionParams.pageSize,
+      SkipCount: (feeCollectionParams.page - 1) * feeCollectionParams.pageSize,
+      Search: feeCollectionParams.search || undefined,
+    },
     options: {
       skip: !currentYear?.id || !selectedBoard || !selectedMedium,
     },
   });
+
   useEffect(() => {
-    const yearBoards = currentYear?.boards || [];
-    setBoards(yearBoards);
-
-    // Auto-select first board if none selected
-    if (!selectedBoard && yearBoards.length > 0) {
-      const firstBoard = yearBoards[0] as unknown as Board;
-      setSelectedBoard(firstBoard.id);
-      const firstMediums = firstBoard.educationMediums || [];
-      setMediums(firstMediums);
-      // Auto-select first medium of the first board
-      if (firstMediums.length > 0) {
-        setSelectedMedium(firstMediums[0].id);
-      }
-      return;
+    if (currentYear?.boards) {
+      setBoards(currentYear.boards);
+      // Only set initial values if not already selected
+      setSelectedBoard(currentYear.boards[0].id);
+      setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear.boards]);
+  // State to store the selected student concession data
+  // null when no student is selected
+  useEffect(() => {
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
 
-    // Update mediums when board changes
-    const board = yearBoards.find((item: any) => item.id === selectedBoard);
-    const boardMediums = (board as unknown as Board)?.educationMediums || [];
-    setMediums(boardMediums);
-
-    // Auto-select first medium if none selected for the current board
-    if (selectedBoard && !selectedMedium && boardMediums.length > 0) {
-      setSelectedMedium(boardMediums[0].id);
-    }
-  }, [currentYear?.boards, selectedBoard, selectedMedium, setSelectedBoard, setSelectedMedium]);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   const tableData = useMemo(
     () =>
-      (
-        (feeCollectionData?.items?.length
-          ? feeCollectionData.items
-          : DUMMY_FEE_COLLECTION_LIST.items) as any[]
-      ).map((item) => ({
+      feeCollectionData?.items?.map((item: any) => ({
         ...item,
         name: `${item.studentName || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
         standardDivision: item.standardDivision || '-',
@@ -107,6 +105,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       })),
     [feeCollectionData?.items]
   );
+  console.log('tableData----', tableData);
 
   return (
     <>
@@ -141,6 +140,11 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           tableId="fee-collection-table"
           noDataText={<>Fee Collection Data Not Found </>}
           isLoading={feeCollectionLoading || feeCollectionFetching}
+          serverSidePagination
+          totalCount={feeCollectionData?.totalCount || DUMMY_FEE_COLLECTION_LIST.totalCount}
+          onServerPagination={handleServerPagination}
+          serverSideSearch
+          onServerSearch={handleServerSearch}
           columns={[
             {
               id: 'name',
@@ -247,7 +251,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               },
             },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       ) : (
         <EmptyContent title="Please select board and medium to view fee collection data." />

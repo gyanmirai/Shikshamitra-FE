@@ -1,3 +1,5 @@
+import type { FeeMonth } from 'src/enums/fee-collection-type';
+
 import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
@@ -87,11 +89,11 @@ export interface FeeLedgerLine {
   total: number;
   paid: number;
   due: number;
-  status: 'Pending' | 'Paid' | 'Overdue';
+  status: number | string;
 }
 
 export interface FeeLedgerMonth {
-  month: string;
+  month: FeeMonth;
   year: number;
   totalDue: number;
   items: FeeLedgerLine[];
@@ -103,7 +105,7 @@ export interface ChargeDetail {
   amount: number;
   paidAmount: number;
   pendingAmount: number;
-  status: 'Pending' | 'Paid';
+  status: number | string;
 }
 
 export interface FeeCollectFormDto {
