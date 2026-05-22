@@ -89,7 +89,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         color: 'info',
       },
       {
-        label: 'Complated',
+        label: 'Completed',
         value: examScheduledStatus.Completed,
         count: getExams?.data?.completedCount || 0,
         color: 'success',
@@ -98,10 +98,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     [getExams?.data?.pendingCount, getExams?.data?.publishedCount, getExams?.data?.completedCount]
   );
 
-  // Handle tab change event — update UI state and notify parent to refetch with new Status
+  // Handle tab change event — update UI state, notify parent, and refetch with new Status
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
     onStatusChange?.(newValue as number);
+    getExams?.refetch?.();
   };
 
   // Table data comes pre-filtered from the backend via the Status query param
@@ -187,7 +188,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"
-          isLoading={getExams?.isLoading}
+          isLoading={getExams?.isLoading || getExams?.isFetching}
           noDataText={
             <>
               Exam Data Not Found{' '}
@@ -264,7 +265,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       ) : (
         <CustomizableTable
           tableId="schedule-exam-table"
-          isLoading={getExams?.isLoading}
+          isLoading={getExams?.isLoading || getExams?.isFetching}
           noDataText={
             <>
               Exam Data Not Found{' '}

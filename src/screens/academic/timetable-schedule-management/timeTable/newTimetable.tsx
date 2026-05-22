@@ -462,7 +462,7 @@ const TimeTableGrid = () => {
   );
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'divisionName', label: 'Division' },
+      { id: 'divisionName', label: 'Division', align: 'left' },
       {
         id: 'status',
         label: 'Status',

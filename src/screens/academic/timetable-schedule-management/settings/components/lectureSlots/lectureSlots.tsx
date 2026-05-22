@@ -85,12 +85,13 @@ const LectureSlots = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'standardName', label: 'Class', filterType: 'number' },
+      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
       {
         id: 'slotConfigurations',
         label: 'Slot Configuration',
         isSort: false,
         isFilter: false,
+        align: 'left',
         render: (_: any, row: any) => (
           <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 1 }}>
             {row?.slotConfigurations?.map((item: any, index: number) => {

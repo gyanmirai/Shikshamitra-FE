@@ -136,6 +136,7 @@ export interface ISubjectCardProps {
   onSubjectChange: (subjectId: string, field: string, value: any) => void;
   activeSubjectId: string | null;
   onAccordionToggle: (subjectId: string) => void;
+  onRemove?: () => void;
 }
 
 export type IDocType =

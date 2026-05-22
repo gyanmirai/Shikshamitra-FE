@@ -62,6 +62,20 @@ const SubjectAssignmentForm = ({
     subjectTableData,
   });
 
+  // Remove a subject card by filtering it out of selectedSubjects then letting
+  // handleSubjectChange rebuild the subjects array consistently.
+  const handleRemoveSubject = useCallback(
+    (subject: { subjectId: string; electiveGroupId?: string; subjectType: number }) => {
+      const removeKey = subject.subjectType === 1 ? subject.electiveGroupId : subject.subjectId;
+      const nextSelected = (formik.values.selectedSubjects || []).filter(
+        (opt: any) => opt.value !== removeKey
+      );
+      handleSubjectChange(nextSelected);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formik.values.selectedSubjects, handleSubjectChange]
+  );
+
   if (isLoading) {
     return (
       <Box sx={{ p: 2 }}>
@@ -218,6 +232,7 @@ const SubjectAssignmentForm = ({
                       onFileUpload={handleFileUpload}
                       activeSubjectId={activeSubjectId}
                       onAccordionToggle={handleAccordionToggle}
+                      onRemove={() => handleRemoveSubject(subject)}
                     />
                   ))}
                 </Grid>

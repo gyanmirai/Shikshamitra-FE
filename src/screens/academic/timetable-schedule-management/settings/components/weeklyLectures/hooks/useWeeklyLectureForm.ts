@@ -185,7 +185,7 @@ export function useWeeklyLectureForm({
             subjectCode: '',
             subjectColor: item.color,
             noOfLecture: '',
-            subjectId: item.electiveGroupId,
+            subjectId: item.subjects?.[0]?.subjectId,
             electiveGroupId: item.electiveGroupId,
             subjectType: item.subjectType,
             subjects: item.subjects,

@@ -104,6 +104,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'startTime',
         label: 'Start Time',
         minWidth: 150,
+        align: 'left',
         render(value: unknown, row: ITimeSlot) {
           const index = slots.findIndex((s) => s.id === row.id);
           if (index < 0) return null;
@@ -137,6 +138,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'endTime',
         label: 'End Time',
         minWidth: 150,
+        align: 'left',
         render(value: any, row: ITimeSlot) {
           const index = slots.findIndex((s) => s.id === row.id);
           if (index < 0) return null;
@@ -170,6 +172,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
       {
         id: 'totalTime',
         label: 'Duration',
+        align: 'left',
         minWidth: 100,
         render(_v: unknown, row: ITimeSlot) {
           const start = row.startTime ? dayjs(row.startTime) : null;

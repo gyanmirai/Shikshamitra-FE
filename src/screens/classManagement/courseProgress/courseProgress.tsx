@@ -124,15 +124,23 @@ const CourseProgressComponent = ({
       subjectData?.records ??
       (Array.isArray(subjectData) ? subjectData : []);
 
-    return raw.map((s: any) => ({
-      id: s.id ?? s.subjectId,
-      name: s.subjectName ?? s.name ?? '',
-      color: s.color ?? '#1976d2',
-      progress: s.progress ?? 0,
-      completedChapter: s.completedChapter ?? 0,
-      totalChapter: s.totalChapter ?? 0,
-      details: s.details ?? [],
-    }));
+    const seen = new Set<string>();
+    return raw
+      .map((s: any) => ({
+        id: s.id ?? s.subjectId,
+        name: s.subjectName ?? s.name ?? '',
+        color: s.color ?? '#1976d2',
+        progress: s.progress ?? 0,
+        completedChapter: s.completedChapter ?? 0,
+        totalChapter: s.totalChapter ?? 0,
+        details: s.details ?? [],
+      }))
+      .filter((course) => {
+        const key = String(course.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   }, [subjectData, courseData, isApiActive]);
 
   // State to store the selected course details
@@ -283,7 +291,15 @@ const CourseProgressComponent = ({
               />
             </Box>
           ) : (
-            <Card sx={{ height: '100%', p: 1, overflow: 'hidden' }}>
+            <Card
+              sx={{
+                height: '100%',
+                p: 1,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
               <CourseCardsGrid
                 key={`${selectedClass}-${selectedDivision}`}
                 courses={courses}
