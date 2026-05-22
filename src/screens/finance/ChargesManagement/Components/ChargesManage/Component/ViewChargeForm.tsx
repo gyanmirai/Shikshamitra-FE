@@ -17,6 +17,7 @@ interface Props {
   isActionShow: boolean;
   onApprove?: () => void;
   onReject?: () => void;
+  onCancel?: () => void;
 }
 
 const ChargeDetailsCard: React.FC<Props> = ({
@@ -24,11 +25,13 @@ const ChargeDetailsCard: React.FC<Props> = ({
   isActionShow = false,
   onApprove,
   onReject,
+  onCancel,
 }) => {
   const { data: selectedCharge, isLoading: isChargeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeByIdQuery,
     params: charge?.chargeId,
+    options: { skip: !charge?.chargeId },
   });
 
   if (isChargeLoading) {
@@ -57,25 +60,37 @@ const ChargeDetailsCard: React.FC<Props> = ({
       </Scrollbar>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          variant="soft"
-          color="error"
-          onClick={onReject}
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-        >
-          Reject
-        </Button>
-
-        <Button
-          variant="soft"
-          color="success"
-          onClick={onApprove}
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.tick} />}
-        >
-          Approve
-        </Button>
+        {selectedCharge?.data?.status === 0 ? (
+          <>
+            <Button
+              variant="soft"
+              color="error"
+              onClick={onReject}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Reject
+            </Button>
+            <Button
+              variant="soft"
+              color="success"
+              onClick={onApprove}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.tick} />}
+            >
+              Approve
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="outlined"
+            onClick={onCancel}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+        )}
       </DialogActions>
     </Box>
   );

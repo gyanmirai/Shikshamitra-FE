@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -43,8 +44,14 @@ const ChargeReasonApprovalForm = ({ onClose, mode, selectedCharge }: IReasonAppr
     onSubmit: (values) => {
       if (mode === 'Approve') {
         approveCharge({ id: selectedCharge?.chargeId, body: { approvalNotes: values.reason } });
+        shikshaMitraToast.success({
+          message: `Charge approved successfully for ${selectedCharge?.categoryName} and assigned to ${selectedCharge?.studentName}`,
+        });
       } else {
         rejectCharge({ id: selectedCharge?.chargeId, body: { rejectionReason: values.reason } });
+        shikshaMitraToast.error({
+          message: `Charge rejected for ${selectedCharge?.categoryName} and assigned to ${selectedCharge?.studentName}`,
+        });
       }
       onClose(null, true);
     },
