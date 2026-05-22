@@ -8,7 +8,6 @@ import {
 } from '@mui/icons-material';
 
 import { Iconify } from '../../iconify';
-import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IColumn, IParams } from '../types';
 
@@ -34,14 +33,6 @@ interface TableHeaderProps {
   setHeaderRef: React.Dispatch<React.SetStateAction<number[]>>;
   stickyMap: { left: Record<string, number>; right: Record<string, number> };
   getStickyStyle: (col: IColumn, isHeader: boolean) => React.CSSProperties;
-  columnWidths: Record<string, number>;
-  onResizeStart: (
-    colId: string,
-    event: React.MouseEvent,
-    currentWidth: number,
-    minWidth: number
-  ) => void;
-  onResetWidth: (colId: string) => void;
 }
 
 export const TableHeader = React.memo(
@@ -56,9 +47,6 @@ export const TableHeader = React.memo(
     setHeaderRef,
     stickyMap,
     getStickyStyle,
-    columnWidths,
-    onResizeStart,
-    onResetWidth,
   }: TableHeaderProps) => {
     const theme = useTheme();
 
@@ -82,7 +70,7 @@ export const TableHeader = React.memo(
                     // fontSize: '13px',
                     fontWeight: 600,
                     color: 'text.secondary',
-                    ...getColumnSizeSx(column, columnWidths[column.id]),
+                    width: column.minWidth,
                     whiteSpace: 'nowrap',
                     py: 1.5,
                     px: 2,
@@ -214,41 +202,15 @@ export const TableHeader = React.memo(
                     </Box>
                   </Box>
                   <Box
-                    className="resize-handle"
-                    onMouseDown={(e) => {
-                      const th = (e.currentTarget as HTMLElement).closest('th') as HTMLElement;
-                      const currentWidth = th?.getBoundingClientRect().width ?? 100;
-                      const min = typeof column.minWidth === 'number' ? column.minWidth : 50;
-                      onResizeStart(column.id, e, currentWidth, min);
-                    }}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      onResetWidth(column.id);
-                    }}
                     sx={{
                       position: 'absolute',
-                      top: 0,
+                      top: '20%',
                       right: 0,
-                      width: '2px',
-                      height: '100%',
-                      cursor: 'col-resize',
-                      zIndex: 10,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      '&::after': {
-                        content: '""',
-                        display: 'block',
-                        width: '2px',
-                        height: '50%',
-                        borderRadius: '2px',
-                        backgroundColor: theme.vars.palette.divider,
-                        transition: 'background-color 0.15s, height 0.15s',
-                      },
-                      '&:hover::after': {
-                        backgroundColor: theme.vars.palette.primary.main,
-                        height: '80%',
-                      },
+                      width: '1px',
+                      height: '60%',
+                      borderRadius: '2px',
+                      backgroundColor: theme.vars.palette.divider,
+                      pointerEvents: 'none',
                     }}
                   />
                 </TableCell>

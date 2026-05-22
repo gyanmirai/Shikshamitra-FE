@@ -101,7 +101,7 @@ const SubjectTable = ({
         id: 'statusValue',
         label: 'Status',
         align: 'left',
-        minWidth: 60,
+        minWidth: '60px',
         isSort: false,
         isFilter: false,
         sticky: true,
@@ -140,7 +140,7 @@ const SubjectTable = ({
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 70,
+        minWidth: '70px',
         align: 'left',
         sticky: true,
         isSort: false,

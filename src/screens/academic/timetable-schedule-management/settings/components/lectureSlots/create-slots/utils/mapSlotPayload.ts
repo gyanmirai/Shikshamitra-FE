@@ -1,5 +1,5 @@
 const SLOT_TYPE_MAP: Record<string, number> = { period: 0, break: 1 };
-const BREAK_TYPE_MAP: Record<string, number> = { '': 0, short: 1, lunch: 2 };
+const BREAK_TYPE_MAP: Record<string, number> = { short: 0, lunch: 1 };
 
 export const mapSlotConfigurations = (slotConfigurations: any[]) =>
   slotConfigurations.map((config) => ({

@@ -55,6 +55,23 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   ) => {
     if (readOnly) return;
 
+    // Guard: enforce the weekly lecture limit configured in Weekly Lectures Slots.
+    // This prevents scheduling a subject that has 0 (or already exhausted) lecture slots
+    // even if a drag somehow bypasses the palette's canDrag check.
+    if (!fromSlotId) {
+      const totalLectures = subject.totalLectures ?? 0;
+      if (totalLectures === 0) return;
+      const subjectKey = (subject as any).electiveGroupId || subject.subjectId;
+      let currentCount = 0;
+      Object.values(slots).forEach((daySlots) => {
+        daySlots.forEach((slot: any) => {
+          const key = slot.electiveGroupId || slot.subjectId || slot.subjects?.[0]?.subjectId;
+          if (key === subjectKey) currentCount += 1;
+        });
+      });
+      if (currentCount >= totalLectures) return;
+    }
+
     // 1. Update State
     const newWeeklySlots = { ...slots };
 

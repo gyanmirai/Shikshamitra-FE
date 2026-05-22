@@ -27,10 +27,10 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     allClass,
     isLectureSlotsLoading,
     isSubmitting,
+    handleClassChange,
     handleAddSlotConfiguration,
     handleRemoveSlotConfiguration,
     handleTotalSlotsChange,
-    handleToggleAccordion,
   } = useSlotForm({ isEdit, data, handleClose });
 
   if (isLectureSlotsLoading) {
@@ -150,7 +150,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                 disabled={disabled}
                 isEdit={isEdit}
                 hasData={!!data}
-                onChangeClassName={(val) => formik.setFieldValue('className', val)}
+                onChangeClassName={(val) => handleClassChange(val as string)}
                 onChangePreviousClassSlots={(val) =>
                   formik.setFieldValue('previousClassSlots', val)
                 }
@@ -263,7 +263,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   isEdit={isEdit}
                   hasData={!!data}
                   canRemove={showRemove}
-                  onToggle={() => handleToggleAccordion(configIndex)}
                   onRemove={() => handleRemoveSlotConfiguration(configIndex)}
                   onTotalSlotsChange={(value) => handleTotalSlotsChange(configIndex, value)}
                 />

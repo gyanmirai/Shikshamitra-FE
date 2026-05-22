@@ -22,38 +22,35 @@ import {
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import SettingSubjectForm from './subjectForm';
+import SubjectAddDrawer from './subjectAddDrawer';
 import SettingSubjectTable from './settingSubjectTable';
 
 import type { ISubject } from './type';
 
 const SubjectCreation = () => {
-  // Dialog state for adding disciplinary incidents
-  // const addSubjectDialog = useBoolean();
   const deleteSubjectDialog = useBoolean();
-  // Controls form visibility
   const [open, setOpen] = useState(false);
   const addSubjectDialog = useBoolean(false);
+  const drawerOpen = useBoolean(false);
 
   const [deleteSubject, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteSubjectMutation,
   });
+
   const { confirmWithUndo } = useConfirmWithUndo();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
-  // Breadcrumb navigation links based on form state
-  // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
-  // Redux dispatch
   const dispatch = useDispatch();
-  // Handles closing the incident form
+
+  // ── Edit dialog close handler ──
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
         setSelectedSubject(null);
         dispatch(setIsChanges(false));
-      }, 200); // Adjust timing based on your dialog close animation
+      }, 200);
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -69,7 +66,6 @@ const SubjectCreation = () => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {/* Add separate breadcrumbs for Subject Creation */}
       <CustomBreadcrumbs
         heading="Subject Creation"
         description="Create and manage subjects for your curriculum. Add, edit, or delete subjects as needed."
@@ -84,7 +80,7 @@ const SubjectCreation = () => {
             sx={{ px: '32px' }}
             startIcon={<Add />}
             variant="contained"
-            onClick={addSubjectDialog.onTrue}
+            onClick={drawerOpen.onTrue}
             size="small"
           >
             Subject
@@ -102,34 +98,30 @@ const SubjectCreation = () => {
           addSubjectDialog.onTrue();
         }}
         open={open}
-        onAddSubject={addSubjectDialog}
         setOpenDialog={setOpen}
-        editData={selectedSubject}
         setEditData={setSelectedSubject}
+        onOpenDrawer={drawerOpen.onTrue}
       />
 
+      <SubjectAddDrawer open={drawerOpen.value} onClose={drawerOpen.onFalse} />
+
+      {/* Edit dialog — only opens when a subject is selected for editing */}
       <CustomDialog
-        open={addSubjectDialog.value}
+        open={addSubjectDialog.value && selectedSubject !== null}
         handleClose={() => {
           addSubjectDialog.onFalse();
           setTimeout(() => {
             setSelectedSubject(null);
-          }, 200); // Adjust the delay based on your dialog transition duration
+          }, 200);
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedSubject ? 'Update Subject' : 'Add Subject'}
-            </Typography>
+            <Typography variant="h5">Update Subject</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title={
-                selectedSubject
-                  ? 'You can update the subject details including name and color.'
-                  : 'You can create a new subject by entering the subject name and color.'
-              }
+              title="You can update the subject details including name and color."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -202,7 +194,6 @@ const SubjectCreation = () => {
               deleteSubjectDialog.onFalse();
               setSelectedSubject(null);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>

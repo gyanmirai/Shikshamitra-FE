@@ -64,6 +64,13 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
 }) => {
   const pickerDisabled = !!disabled && !isEdit;
 
+  // O(1) slot index lookup — avoids O(n) findIndex in every cell render
+  const slotIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    slots.forEach((s, i) => map.set(s.id, i));
+    return map;
+  }, [slots]);
+
   const updateSlot = useCallback(
     (index: number, patch: Partial<ITimeSlot>, cascade = false) => {
       if (index < 0 || index >= slots.length) return;
@@ -104,32 +111,37 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'startTime',
         label: 'Start Time',
         minWidth: 150,
+        isFilter: false,
+        isSort: false,
+        align: 'center' as const,
         render(value: unknown, row: ITimeSlot) {
-          const index = slots.findIndex((s) => s.id === row.id);
+          const index = slotIndexMap.get(row.id) ?? -1;
           if (index < 0) return null;
           const err = errors?.[index]?.startTime;
           return (
-            <TimePicker
-              value={toDayjs(value) ?? toDayjs(row.startTime)}
-              format="hh:mm a"
-              views={['hours', 'minutes']}
-              disabled={pickerDisabled}
-              ampm
-              onChange={(t) => handleStartChange(index, t?.isValid?.() ? dayjs(t) : null)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  sx: { width: '200px' },
-                  error: !!err,
-                  helperText: err,
-                },
-              }}
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-                seconds: renderTimeViewClock,
-              }}
-            />
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <TimePicker
+                value={toDayjs(value) ?? toDayjs(row.startTime)}
+                format="hh:mm a"
+                views={['hours', 'minutes']}
+                disabled={pickerDisabled}
+                ampm
+                onChange={(t) => handleStartChange(index, t?.isValid?.() ? dayjs(t) : null)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: { width: '200px' },
+                    error: !!err,
+                    helperText: err,
+                  },
+                }}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+              />
+            </Box>
           );
         },
       },
@@ -137,33 +149,37 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'endTime',
         label: 'End Time',
         minWidth: 150,
+        isFilter: false,
+        isSort: false,
+        align: 'center' as const,
         render(value: any, row: ITimeSlot) {
-          const index = slots.findIndex((s) => s.id === row.id);
+          const index = slotIndexMap.get(row.id) ?? -1;
           if (index < 0) return null;
-          const isLast = index === slots.length - 1;
           const err = errors?.[index]?.endTime;
           return (
-            <TimePicker
-              value={value}
-              format="hh:mm a"
-              views={['hours', 'minutes']}
-              disabled={pickerDisabled}
-              ampm
-              onChange={(t) => handleEndChange(index, t?.isValid?.() ? dayjs(t) : null)}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  sx: { width: '200px' },
-                  error: !!err,
-                  helperText: err,
-                },
-              }}
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-                seconds: renderTimeViewClock,
-              }}
-            />
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <TimePicker
+                value={value}
+                format="hh:mm a"
+                views={['hours', 'minutes']}
+                disabled={pickerDisabled}
+                ampm
+                onChange={(t) => handleEndChange(index, t?.isValid?.() ? dayjs(t) : null)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: { width: '200px' },
+                    error: !!err,
+                    helperText: err,
+                  },
+                }}
+                viewRenderers={{
+                  hours: renderTimeViewClock,
+                  minutes: renderTimeViewClock,
+                  seconds: renderTimeViewClock,
+                }}
+              />
+            </Box>
           );
         },
       },
@@ -171,6 +187,9 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'totalTime',
         label: 'Duration',
         minWidth: 100,
+        isFilter: false,
+        isSort: false,
+        align: 'center' as const,
         render(_v: unknown, row: ITimeSlot) {
           const start = row.startTime ? dayjs(row.startTime) : null;
           let end = row.endTime ? dayjs(row.endTime) : null;
@@ -225,15 +244,17 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'slotType',
         label: 'Slot Type',
         minWidth: 300,
-        align: 'left' as const,
+        align: 'center' as const,
+        isFilter: false,
+        isSort: false,
         render(_v: unknown, row: ITimeSlot) {
-          const index = slots.findIndex((s) => s.id === row.id);
+          const index = slotIndexMap.get(row.id) ?? -1;
           if (index < 0) return null;
           const slotType: string = row.slotType ?? 'period';
           const breakType: string = row.breakType ?? '';
           const slotTypeErr = errors?.[index]?.slotType;
           return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: '270px' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <CustomSelect
                   label="Slot *"
@@ -292,7 +313,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         },
       },
     ],
-    [slots, errors, pickerDisabled, handleStartChange, handleEndChange, updateSlot]
+    [slotIndexMap, errors, pickerDisabled, handleStartChange, handleEndChange, updateSlot]
   );
 
   return (

@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 
 import { EmptyContent } from '../../empty-content'; // Adjusted path
-import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IData, IColumn } from '../types';
 
@@ -43,7 +42,6 @@ interface TableBodyProps {
   noDataText?: React.ReactNode;
   tableRef: any;
   rowsPerPage?: number;
-  columnWidths: Record<string, number>;
   animationKey: string;
 }
 
@@ -61,7 +59,6 @@ export const TableBody = ({
   noDataText = 'No data available',
   tableRef,
   rowsPerPage = 10,
-  columnWidths,
   animationKey,
 }: TableBodyProps) => {
   const theme = useTheme();
@@ -162,7 +159,7 @@ export const TableBody = ({
                       backgroundColor: column.sticky ? 'background.paper' : 'transparent',
                       boxShadow: column.sticky ? '0px 0 4px rgba(0,0,0,0.08)' : 'none',
                       animation: `${fadeSlideIn} 0.4s ease both`,
-                      ...getColumnSizeSx(column, columnWidths[column.id]),
+                      width: column.minWidth,
                       // ...(columnWidths[column.id]
                       //   ? {
                       //       width: columnWidths[column.id],

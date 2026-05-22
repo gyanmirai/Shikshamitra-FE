@@ -221,6 +221,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 155,
+            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -280,6 +281,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 150,
+            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -335,6 +337,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 150,
+            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -431,30 +434,33 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 180,
+            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
-                <CustomSelect
-                  label="Grade Scale"
-                  options={gradeScalings?.data ?? []}
-                  value={value}
-                  labelKey="name"
-                  valueKey="id"
-                  isLoading={isGradeScalingsLoading}
-                  formControlProps={{ sx: { width: 165 } }}
-                  onChange={(selectedId) => {
-                    formik.setFieldValue(
-                      `subjects.${row.index}.gradeScalingId`,
-                      selectedId || null
-                    );
-                    const selectedScale = (gradeScalings?.data ?? []).find(
-                      (s: any) => s.id === selectedId
-                    );
-                    formik.setFieldValue(
-                      `subjects.${row.index}.totalMarks`,
-                      selectedScale?.totalMarks ?? ''
-                    );
-                  }}
-                />
+                <Box sx={{ pb: '20px' }}>
+                  <CustomSelect
+                    label="Grade Scale"
+                    options={gradeScalings?.data ?? []}
+                    value={value}
+                    labelKey="name"
+                    valueKey="id"
+                    isLoading={isGradeScalingsLoading}
+                    formControlProps={{ sx: { width: 165 } }}
+                    onChange={(selectedId) => {
+                      formik.setFieldValue(
+                        `subjects.${row.index}.gradeScalingId`,
+                        selectedId || null
+                      );
+                      const selectedScale = (gradeScalings?.data ?? []).find(
+                        (s: any) => s.id === selectedId
+                      );
+                      formik.setFieldValue(
+                        `subjects.${row.index}.totalMarks`,
+                        selectedScale?.totalMarks ?? ''
+                      );
+                    }}
+                  />
+                </Box>
               );
             },
           },
@@ -465,6 +471,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 150,
+            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -508,7 +515,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                     InputLabelProps={{
                       sx: {
                         lineHeight: '1.2em',
-                        width: '100%',
                       },
                     }}
                   />
@@ -523,6 +529,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 160,
+            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               // NON-BREAKING: inline UI-only warning when passing > total
               const totalVal = Number(formik.values.subjects?.[row.index]?.totalMarks);
@@ -602,7 +609,8 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isFilter: false,
             isSort: false,
             align: 'left',
-            minWidth: 250,
+            minWidth: '250px',
+            cellSx: { verticalAlign: 'top', minWidth: '200px' },
             render(value, row) {
               return (
                 <TextField
