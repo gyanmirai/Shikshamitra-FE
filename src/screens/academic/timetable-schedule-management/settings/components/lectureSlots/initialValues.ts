@@ -17,9 +17,9 @@ export const getInitialValues = (classes: string, editData?: any) => {
                   endTime: slot.endTime ? dayjs(slot.endTime, 'HH,mm:ss') : null,
                   slotType: Number(slot.slotType) === 1 ? 'break' : 'period',
                   breakType:
-                    Number(slot.breakType) === 1
+                    Number(slot.breakType) === 0
                       ? 'short'
-                      : Number(slot.breakType) === 2
+                      : Number(slot.breakType) === 1
                         ? 'lunch'
                         : '',
                 }))
@@ -38,9 +38,9 @@ export const getInitialValues = (classes: string, editData?: any) => {
                     endTime: slot.endTime ? dayjs(slot.endTime) : null,
                     slotType: Number(slot.slotType) === 1 ? 'break' : 'period',
                     breakType:
-                      Number(slot.breakType) === 1
+                      Number(slot.breakType) === 0
                         ? 'short'
-                        : Number(slot.breakType) === 2
+                        : Number(slot.breakType) === 1
                           ? 'lunch'
                           : '',
                   }))

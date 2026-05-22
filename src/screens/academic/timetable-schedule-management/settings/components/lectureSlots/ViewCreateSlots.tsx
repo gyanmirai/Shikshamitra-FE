@@ -1,24 +1,19 @@
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { ExpandMore } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetLectureSlotByIdQuery } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 import {
   Box,
   Chip,
-  Grid,
   Stack,
-  Table,
   Paper,
+  Tooltip,
   Skeleton,
-  TableRow,
   Accordion,
-  TableHead,
-  TableBody,
-  TableCell,
   Typography,
-  TableContainer,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -93,9 +88,9 @@ const mapApiToViewModel = (apiData: any, standardName?: string): NormalisedSlotD
 });
 
 const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
+  const theme = useTheme();
   const [expandedConfigs, setExpandedConfigs] = useState<Record<string, boolean>>({});
 
-  // Fetch full slot detail (includes timeSlots, schoolHours, etc.)
   const { data: slotDetail, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLectureSlotByIdQuery,
@@ -108,376 +103,503 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
     return mapApiToViewModel(slotDetail, data?.standardName);
   }, [slotDetail, data?.standardName]);
 
-  const generalDetails = useMemo(
-    () => [
-      {
-        label: 'Class',
-        icon: 'mdi:google-classroom',
-        value: viewData?.className || '—',
-      },
-    ],
-    [viewData]
-  );
-
   const handleToggleConfig = (configId: string) => {
-    setExpandedConfigs((prev) => ({
-      ...prev,
-      [configId]: !prev[configId],
-    }));
+    setExpandedConfigs((prev) => ({ ...prev, [configId]: !prev[configId] }));
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ p: 2 }}>
-        <Skeleton variant="rounded" height={120} sx={{ mb: 3 }} />
-        <Skeleton variant="rounded" height={80} sx={{ mb: 2 }} />
-        <Skeleton variant="rounded" height={80} />
+      <Box sx={{ p: 3 }}>
+        <Skeleton variant="rounded" height={100} sx={{ mb: 3, borderRadius: 3 }} />
+        {[1, 2].map((i) => (
+          <Skeleton key={i} variant="rounded" height={72} sx={{ mb: 2, borderRadius: 2 }} />
+        ))}
       </Box>
     );
   }
 
   return (
-    <Box
-      sx={{
-        p: 2,
-        maxHeight: 'calc(100vh - 220px)',
-        overflowY: 'auto',
-      }}
-    >
-      {/* General Information - Simple Card */}
+    <Box sx={{ p: 2.5, overflowY: 'auto', maxHeight: 'calc(100vh - 220px)' }}>
+      {/* ── General Information ─────────────────────────────────────── */}
       <Paper
+        elevation={0}
         sx={{
-          p: 3,
           mb: 3,
-          borderRadius: 2,
+          borderRadius: 3,
+          overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
-          boxShadow: 1,
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.01)} 100%)`,
         }}
       >
-        <Typography variant="h6" color="primary.main" mb={2.5}>
-          General Information
-        </Typography>
-        <Grid container spacing={3}>
-          {generalDetails.map((detail) => (
-            <Grid key={detail.label} size={{ xs: 12, sm: 4 }}>
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Iconify icon={detail.icon} width={20} color="text.secondary" />
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                  >
-                    {detail.label}:
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    fontWeight={600}
-                    color="text.primary"
-                    sx={{ fontSize: '0.85rem' }}
-                    noWrap
-                  >
-                    {detail.value}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Grid>
-          ))}
-        </Grid>
-      </Paper>
-
-      {/* Slot Configurations */}
-      {viewData?.slotConfigurations && viewData.slotConfigurations.length > 0 && (
-        <Box>
-          {viewData.slotConfigurations.map((config, index) => (
-            <Accordion
-              key={config.id}
-              expanded={expandedConfigs[config.id] ?? false} // Changed from true to false
-              onChange={() => handleToggleConfig(config.id)}
+        {/* Accent stripe */}
+        <Box
+          sx={{
+            height: 4,
+            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.light, 0.6)})`,
+          }}
+        />
+        <Box sx={{ p: 2.5 }}>
+          <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+            <Box
               sx={{
-                boxShadow: 1,
-                borderRadius: '12px !important',
-                '&:before': { display: 'none' },
-                border: '1px solid',
-                borderColor: 'divider',
-                mb: 2,
+                width: 32,
+                height: 32,
+                borderRadius: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
               }}
             >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
+              <Iconify icon="mdi:information-outline" width={18} color="primary.main" />
+            </Box>
+            <Typography variant="subtitle1" fontWeight={700} color="primary.main">
+              General Information
+            </Typography>
+          </Stack>
+
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                border: '1px solid',
+                borderColor: alpha(theme.palette.primary.main, 0.2),
+              }}
+            >
+              <Iconify icon="mdi:google-classroom" width={16} color="primary.main" />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem' }}>
+                Class:
+              </Typography>
+              <Typography variant="body2" fontWeight={700} color="primary.main">
+                {viewData?.className || '—'}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+      </Paper>
+
+      {/* ── Slot Configurations ────────────────────────────────────────── */}
+      {viewData?.slotConfigurations && viewData.slotConfigurations.length > 0 && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {viewData.slotConfigurations.map((config, index) => {
+            const isExpanded = expandedConfigs[config.id] ?? false;
+            const lectureCount = config.timeSlots.filter((s) => s.slotType !== 'break').length;
+            const breakCount = config.timeSlots.filter((s) => s.slotType === 'break').length;
+
+            return (
+              <Accordion
+                key={config.id}
+                expanded={isExpanded}
+                onChange={() => handleToggleConfig(config.id)}
+                disableGutters
+                elevation={0}
                 sx={{
-                  '& .MuiAccordionSummary-content': {
-                    my: 1.5,
-                    display: 'block',
-                  },
+                  borderRadius: '12px !important',
+                  '&:before': { display: 'none' },
+                  border: '1px solid',
+                  borderColor: isExpanded ? alpha(theme.palette.primary.main, 0.3) : 'divider',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                  boxShadow: isExpanded
+                    ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
+                    : 'none',
                 }}
               >
-                {/* Preview when collapsed */}
-                {!expandedConfigs[config.id] && (
-                  <Grid container spacing={2} mt={0.5}>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Iconify icon="mdi:clock-outline" width={18} color="text.secondary" />
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                          >
-                            Total Slots:
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            color="text.primary"
-                            sx={{ fontSize: '0.75rem' }}
-                            noWrap
-                          >
-                            {config.totalSlots}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Iconify icon="mdi:calendar-range" width={18} color="text.secondary" />
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                          >
-                            Active Days:
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            color="text.primary"
-                            sx={{ fontSize: '0.75rem' }}
-                            noWrap
-                          >
-                            {config.weekRange?.length >= 2
-                              ? `${getDayLabel(config.weekRange[0])} - ${getDayLabel(config.weekRange[1])}`
-                              : '—'}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Iconify icon="mdi:timetable" width={18} color="text.secondary" />
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                          >
-                            Time Slots:
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            color="text.primary"
-                            sx={{ fontSize: '0.75rem' }}
-                            noWrap
-                          >
-                            {config.timeSlots.length}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                  </Grid>
-                )}
-              </AccordionSummary>
-
-              <AccordionDetails sx={{ pt: 0, pb: 3 }}>
-                <Box width="100%">
-                  {/* Configuration Summary - Show when expanded */}
-                  <Grid container spacing={3} mb={3}>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Iconify icon="mdi:clock-outline" width={20} color="text.secondary" />
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                          >
-                            Total Slots:
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            color="text.primary"
-                            sx={{ fontSize: '0.85rem' }}
-                          >
-                            {config.totalSlots}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Iconify icon="mdi:calendar-range" width={20} color="text.secondary" />
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                            sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                          >
-                            Active Days:
-                          </Typography>
-                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
-                            {config.weekRange?.length >= 2 &&
-                              Array.from(
-                                { length: config.weekRange[1] - config.weekRange[0] + 1 },
-                                (_, i) => config.weekRange[0] + i
-                              ).map((day) => (
-                                <Chip
-                                  key={day}
-                                  label={getDayLabel(day)}
-                                  size="small"
-                                  color="primary"
-                                  variant="outlined"
-                                  sx={{ fontSize: '0.7rem', height: '22px' }}
-                                />
-                              ))}
-                          </Box>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                  </Grid>
-
-                  {/* Slot Times - Simple Table */}
-                  {config.timeSlots.length > 0 && (
-                    <Box>
-                      <Typography
-                        variant="subtitle1"
-                        color="primary.main"
-                        fontWeight={600}
-                        gutterBottom
-                        mb={2}
-                      >
-                        Slot Times
-                      </Typography>
-
-                      <TableContainer
-                        component={Paper}
+                <AccordionSummary
+                  expandIcon={
+                    <Box
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        bgcolor: isExpanded
+                          ? alpha(theme.palette.primary.main, 0.1)
+                          : 'action.hover',
+                        transition: 'background-color 0.2s',
+                      }}
+                    >
+                      <ExpandMore
                         sx={{
-                          boxShadow: 0,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
+                          fontSize: 18,
+                          color: isExpanded ? 'primary.main' : 'text.secondary',
+                        }}
+                      />
+                    </Box>
+                  }
+                  sx={{
+                    px: 2,
+                    py: 1.5,
+                    bgcolor: isExpanded
+                      ? alpha(theme.palette.primary.main, 0.04)
+                      : 'background.paper',
+                    '& .MuiAccordionSummary-content': { my: 0, mr: 1 },
+                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    width="100%"
+                    flexWrap="wrap"
+                    gap={1}
+                  >
+                    {/* Config title */}
+                    <Stack direction="row" alignItems="center" spacing={1.25}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: isExpanded ? 'primary.main' : 'text.disabled',
+                          transition: 'background-color 0.2s',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        color={isExpanded ? 'primary.main' : 'text.primary'}
+                      >
+                        Configuration {index + 1}
+                      </Typography>
+                      {/* Day range pill */}
+                      {config.weekRange?.length >= 2 && (
+                        <Chip
+                          icon={<Iconify icon="mdi:calendar-range" width={12} />}
+                          label={`${getDayLabel(config.weekRange[0])} – ${getDayLabel(config.weekRange[1])}`}
+                          size="small"
+                          variant="outlined"
+                          color="default"
+                          sx={{ fontSize: '0.65rem', height: 20, '& .MuiChip-label': { px: 0.75 } }}
+                        />
+                      )}
+                    </Stack>
+
+                    {/* Summary pills */}
+                    <Stack direction="row" spacing={0.75} flexWrap="wrap">
+                      <Chip
+                        label={`${config.timeSlots.length} slots`}
+                        size="small"
+                        color="primary"
+                        sx={{
+                          fontSize: '0.62rem',
+                          height: 20,
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          color: 'primary.main',
+                          fontWeight: 700,
+                          '& .MuiChip-label': { px: 0.75 },
+                        }}
+                      />
+                      <Chip
+                        label={`${lectureCount} lectures`}
+                        size="small"
+                        color="success"
+                        sx={{
+                          fontSize: '0.62rem',
+                          height: 20,
+                          bgcolor: alpha(theme.palette.success.main, 0.15),
+                          color: 'success.main',
+                          fontWeight: 700,
+                          '& .MuiChip-label': { px: 0.75 },
+                        }}
+                      />
+                      {breakCount > 0 && (
+                        <Chip
+                          label={`${breakCount} breaks`}
+                          size="small"
+                          color="warning"
+                          sx={{
+                            fontSize: '0.62rem',
+                            height: 20,
+                            bgcolor: alpha(theme.palette.warning.main, 0.18),
+                            color: 'warning.main',
+                            fontWeight: 700,
+                            '& .MuiChip-label': { px: 0.75 },
+                          }}
+                        />
+                      )}
+                    </Stack>
+                  </Stack>
+                </AccordionSummary>
+
+                <AccordionDetails sx={{ p: 0 }}>
+                  <Box sx={{ px: 2.5, pb: 2.5, pt: 1.5 }}>
+                    {/* Active day chips */}
+                    <Stack direction="row" alignItems="center" spacing={1} mb={2} flexWrap="wrap">
+                      <Typography
+                        variant="overline"
+                        sx={{
+                          fontSize: '0.62rem',
+                          color: 'text.disabled',
+                          letterSpacing: '0.08em',
                         }}
                       >
-                        <Table>
-                          <TableHead>
-                            <TableRow sx={{ backgroundColor: 'background.neutral' }}>
-                              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                                Start Time
-                              </TableCell>
-                              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                                End Time
-                              </TableCell>
-                              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                                Total Time
-                              </TableCell>
-                              <TableCell sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                                Slot Type
-                              </TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {config.timeSlots.map((slot) => {
-                              const duration = slot.endTime?.diff?.(slot.startTime, 'minute') || 0;
-                              const hours = Math.floor(duration / 60);
-                              const minutes = duration % 60;
-                              const durationText =
-                                hours > 0
-                                  ? `${hours}:${minutes.toString().padStart(2, '0')}`
-                                  : `00:${minutes.toString().padStart(2, '0')}`;
+                        Active Days
+                      </Typography>
+                      {config.weekRange?.length >= 2 &&
+                        Array.from(
+                          { length: config.weekRange[1] - config.weekRange[0] + 1 },
+                          (_, i) => config.weekRange[0] + i
+                        ).map((day) => (
+                          <Chip
+                            key={day}
+                            label={getDayLabel(day)}
+                            size="small"
+                            color="primary"
+                            sx={{
+                              height: 24,
+                              fontSize: '0.68rem',
+                              fontWeight: 600,
+                              bgcolor: alpha(theme.palette.primary.main, 0.18),
+                              color: theme.palette.primary.main,
+                              border: '1px solid',
+                              borderColor: alpha(theme.palette.primary.main, 0.4),
+                              '& .MuiChip-label': { px: 1 },
+                            }}
+                          />
+                        ))}
+                    </Stack>
 
-                              return (
-                                <TableRow
-                                  key={slot.id}
+                    {/* ── Timeline slot list ─────────────────────────── */}
+                    {config.timeSlots.length > 0 && (
+                      <Box>
+                        <Typography
+                          variant="overline"
+                          sx={{
+                            fontSize: '0.62rem',
+                            color: 'text.disabled',
+                            letterSpacing: '0.08em',
+                            mb: 1.5,
+                            display: 'block',
+                          }}
+                        >
+                          Time Slots
+                        </Typography>
+
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                          {config.timeSlots.map((slot, si) => {
+                            const isBreak = slot.slotType === 'break';
+                            const duration = slot.endTime?.diff?.(slot.startTime, 'minute') || 0;
+                            const hrs = Math.floor(duration / 60);
+                            const mins = duration % 60;
+                            const durationLabel = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                            const accentColor = isBreak
+                              ? theme.palette.warning.main
+                              : theme.palette.success.main;
+
+                            return (
+                              <Box
+                                key={slot.id}
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1.5,
+                                  px: 1.5,
+                                  py: 1,
+                                  borderRadius: 2,
+                                  // bgcolor: isBreak
+                                  //   ? alpha(theme.palette.warning.main, 0.08)
+                                  //   : alpha(theme.palette.success.main, 0.08),
+                                  border: '1px solid',
+                                  borderColor: isBreak
+                                    ? alpha(theme.palette.warning.main, 0.25)
+                                    : alpha(theme.palette.success.main, 0.25),
+                                  position: 'relative',
+                                  overflow: 'hidden',
+                                  transition: 'box-shadow 0.15s',
+                                  '&:hover': {
+                                    boxShadow: `0 2px 8px ${alpha(accentColor, 0.18)}`,
+                                  },
+                                }}
+                              >
+                                {/* Left accent bar */}
+                                <Box
                                   sx={{
-                                    '&:last-child td': { border: 0 },
-                                    '&:hover': { backgroundColor: 'action.hover' },
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: 3,
+                                    borderRadius: '2px 0 0 2px',
+                                    bgcolor: accentColor,
+                                  }}
+                                />
+
+                                {/* Slot number */}
+                                <Box
+                                  sx={{
+                                    width: 22,
+                                    height: 22,
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    bgcolor: alpha(accentColor, 0.15),
+                                    flexShrink: 0,
                                   }}
                                 >
-                                  <TableCell>
-                                    <Typography variant="body2">
-                                      {slot.startTime?.format?.('hh:mm A') || '—'}
-                                    </Typography>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Typography variant="body2">
-                                      {slot.endTime?.format?.('hh:mm A') || '—'}
-                                    </Typography>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {durationText}
-                                    </Typography>
-                                  </TableCell>
-                                  <TableCell>
+                                  <Typography
+                                    sx={{ fontSize: '0.6rem', fontWeight: 800, color: accentColor }}
+                                  >
+                                    {si + 1}
+                                  </Typography>
+                                </Box>
+
+                                {/* Times */}
+                                <Stack direction="row" alignItems="center" spacing={0.5} flex={1}>
+                                  <Iconify
+                                    icon="mdi:clock-start"
+                                    width={13}
+                                    sx={{ color: 'text.disabled', flexShrink: 0 }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    sx={{ fontSize: '0.78rem', fontFeatureSettings: '"tnum"' }}
+                                  >
+                                    {slot.startTime?.format?.('hh:mm A') || '—'}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: 'text.disabled', mx: 0.25 }}
+                                  >
+                                    →
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    sx={{ fontSize: '0.78rem', fontFeatureSettings: '"tnum"' }}
+                                  >
+                                    {slot.endTime?.format?.('hh:mm A') || '—'}
+                                  </Typography>
+                                </Stack>
+
+                                {/* Duration pill */}
+                                <Tooltip title="Duration" placement="top" arrow>
+                                  <Box
+                                    sx={{
+                                      height: 22,
+                                      px: 1,
+                                      borderRadius: 10,
+                                      // bgcolor: alpha(accentColor, 0.18),
+                                      border: '1px solid',
+                                      borderColor: alpha(accentColor, 0.3),
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 0.5,
+                                      flexShrink: 0,
+                                      verticalAlign: 'middle',
+                                    }}
+                                  >
+                                    <Iconify
+                                      icon="mdi:timer-outline"
+                                      width={12}
+                                      sx={{ color: accentColor, display: 'block' }}
+                                    />
                                     <Typography
-                                      variant="body2"
-                                      color={
-                                        slot.slotType === 'break' ? 'error.main' : 'text.secondary'
-                                      }
+                                      sx={{
+                                        fontSize: '0.62rem',
+                                        fontWeight: 700,
+                                        color: accentColor,
+                                        lineHeight: 'normal',
+                                      }}
                                     >
-                                      {typeof slot.slotType === 'string' && slot.slotType
-                                        ? slot.slotType.charAt(0).toUpperCase() +
-                                          slot.slotType.slice(1)
-                                        : '—'}
+                                      {durationLabel}
                                     </Typography>
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </Box>
-                  )}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+                                  </Box>
+                                </Tooltip>
+
+                                {/* Type badge */}
+                                <Chip
+                                  variant="outlined"
+                                  icon={
+                                    <Iconify
+                                      icon={
+                                        isBreak ? 'mdi:coffee-outline' : 'mdi:book-open-outline'
+                                      }
+                                      width={11}
+                                    />
+                                  }
+                                  label={
+                                    isBreak
+                                      ? slot.breakType
+                                        ? `${slot.breakType.charAt(0).toUpperCase() + slot.breakType.slice(1)} Break`
+                                        : 'Break'
+                                      : 'Lecture'
+                                  }
+                                  size="small"
+                                  color={isBreak ? 'warning' : 'success'}
+                                  sx={{
+                                    height: 22,
+                                    fontSize: '0.62rem',
+                                    fontWeight: 700,
+                                    minWidth: '95px',
+                                    // bgcolor: alpha(accentColor, 0.18),
+                                    color: accentColor,
+                                    border: '1px solid',
+                                    borderColor: alpha(accentColor, 0.3),
+                                    '& .MuiChip-label': { px: 0.75 },
+                                    '& .MuiChip-icon': { ml: 0.5, color: 'inherit' },
+                                  }}
+                                />
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
         </Box>
       )}
 
-      {/* No configurations message */}
+      {/* ── Empty state ──────────────────────────────────────────────── */}
       {(!viewData?.slotConfigurations || viewData.slotConfigurations.length === 0) && (
         <Box
           sx={{
             textAlign: 'center',
             py: 8,
-            px: 2,
+            px: 3,
+            borderRadius: 3,
             border: '2px dashed',
-            borderColor: 'divider',
-            borderRadius: 2,
-            backgroundColor: 'background.neutral',
+            borderColor: alpha(theme.palette.primary.main, 0.15),
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 100%)`,
           }}
         >
-          <Iconify
-            icon="mdi:calendar-clock-outline"
-            width={64}
-            color="text.disabled"
-            sx={{ mb: 2 }}
-          />
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+          <Box
+            sx={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <Iconify icon="mdi:calendar-clock-outline" width={36} color="primary.main" />
+          </Box>
+          <Typography variant="subtitle1" fontWeight={700} color="text.secondary" gutterBottom>
             No Slot Configurations
           </Typography>
-          <Typography variant="body2" color="text.disabled">
+          <Typography variant="body2" color="text.disabled" sx={{ maxWidth: 260, mx: 'auto' }}>
             No slot configurations have been created yet.
           </Typography>
         </Box>

@@ -40,8 +40,9 @@ interface SubjectCardProps {
 
 const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
   const totalLectures = subject.totalLectures ?? 0;
-  const isFull = placedCount >= totalLectures && totalLectures > 0;
-  const progressPct = totalLectures > 0 ? (placedCount / totalLectures) * 100 : 0;
+  // A subject with 0 configured weekly lectures must never be draggable.
+  const isFull = totalLectures === 0 || placedCount >= totalLectures;
+  const progressPct = totalLectures > 0 ? Math.min(100, (placedCount / totalLectures) * 100) : 0;
   const isElective = !!(subject as any).electiveGroupId;
   const theme = useTheme();
 
@@ -289,8 +290,10 @@ const SubjectPalette: React.FC<PaletteProps> = ({
               {
                 subjects.filter(
                   (s) =>
-                    (placedCounts[s.subjectId] ?? 0) >= (s.totalLectures ?? 0) &&
-                    (s.totalLectures ?? 0) > 0
+                    // 0-lecture subjects count as complete — there is nothing left to schedule
+                    (s.totalLectures ?? 0) === 0 ||
+                    ((placedCounts[s.subjectId] ?? 0) >= (s.totalLectures ?? 0) &&
+                      (s.totalLectures ?? 0) > 0)
                 ).length
               }
               /{subjects.length} complete
@@ -321,11 +324,17 @@ const SubjectPalette: React.FC<PaletteProps> = ({
 
             {/* Stats Row */}
             {(() => {
-              const totalPlaced = subjects.reduce(
-                (sum, s) => sum + (placedCounts[s.subjectId] ?? 0),
+              // Exclude zero-lecture subjects from the calculation entirely — they have
+              // no slots to fill and any accidental placements must not inflate the ratio.
+              const schedulableSubjects = subjects.filter((s) => (s.totalLectures ?? 0) > 0);
+              const totalPlaced = schedulableSubjects.reduce(
+                (sum, s) => sum + Math.min(placedCounts[s.subjectId] ?? 0, s.totalLectures ?? 0),
                 0
               );
-              const totalRequired = subjects.reduce((sum, s) => sum + (s.totalLectures ?? 0), 0);
+              const totalRequired = schedulableSubjects.reduce(
+                (sum, s) => sum + (s.totalLectures ?? 0),
+                0
+              );
               const pct = totalRequired > 0 ? Math.round((totalPlaced / totalRequired) * 100) : 0;
               return (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

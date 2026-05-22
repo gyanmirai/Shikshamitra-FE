@@ -10,6 +10,7 @@ import {
   Box,
   Grid,
   Chip,
+  Checkbox,
   Skeleton,
   ListItem,
   TextField,
@@ -61,6 +62,20 @@ const SubjectAssignmentForm = ({
     classId,
     subjectTableData,
   });
+
+  // Remove a subject card by filtering it out of selectedSubjects then letting
+  // handleSubjectChange rebuild the subjects array consistently.
+  const handleRemoveSubject = useCallback(
+    (subject: { subjectId: string; electiveGroupId?: string; subjectType: number }) => {
+      const removeKey = subject.subjectType === 1 ? subject.electiveGroupId : subject.subjectId;
+      const nextSelected = (formik.values.selectedSubjects || []).filter(
+        (opt: any) => opt.value !== removeKey
+      );
+      handleSubjectChange(nextSelected);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formik.values.selectedSubjects, handleSubjectChange]
+  );
 
   if (isLoading) {
     return (
@@ -118,10 +133,14 @@ const SubjectAssignmentForm = ({
                     multiple
                     fullWidth
                     size="small"
+                    disableCloseOnSelect
                     disabled={isPublished}
                     options={subjectsOptions}
                     loading={isSubjectOptionsLoading}
-                    getOptionLabel={(option: { label?: string }) => option?.label ?? ''}
+                    getOptionLabel={(option: { label?: string; value?: string }) =>
+                      option?.label ?? ''
+                    }
+                    isOptionEqualToValue={(option, val) => option.value === val.value}
                     value={formik?.values?.selectedSubjects || []}
                     onChange={(_, newValue) =>
                       handleSubjectChange(
@@ -150,7 +169,7 @@ const SubjectAssignmentForm = ({
                         );
                       })
                     }
-                    renderOption={(props, option) => {
+                    renderOption={(props, option, { selected }) => {
                       const { key, ...restProps } = props;
                       const typedOption = option as { label?: string; type?: number };
                       return (
@@ -165,6 +184,12 @@ const SubjectAssignmentForm = ({
                               '&:hover': { backgroundColor: 'transparent' },
                             }}
                           >
+                            <Checkbox
+                              size="small"
+                              checked={selected}
+                              disableRipple
+                              sx={{ mr: 1, p: 0.5 }}
+                            />
                             <Box
                               sx={{
                                 display: 'flex',
@@ -218,6 +243,7 @@ const SubjectAssignmentForm = ({
                       onFileUpload={handleFileUpload}
                       activeSubjectId={activeSubjectId}
                       onAccordionToggle={handleAccordionToggle}
+                      onRemove={() => handleRemoveSubject(subject)}
                     />
                   ))}
                 </Grid>

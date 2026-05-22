@@ -7,7 +7,6 @@ interface UseStickyColumnsProps {
   columnVisibility: Record<string, boolean>;
   headerRefs: (number | null)[];
   paginatedData: IData[];
-  columnWidths: Record<string, number>;
 }
 
 export const useStickyColumns = ({
@@ -15,7 +14,6 @@ export const useStickyColumns = ({
   columnVisibility,
   headerRefs,
   paginatedData,
-  columnWidths,
 }: UseStickyColumnsProps) => {
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
@@ -61,7 +59,7 @@ export const useStickyColumns = ({
 
       setStickyMap({ left: leftOffsets, right: rightOffsets });
     }, 100);
-  }, [columnVisibility, columns, headerRefs, paginatedData, columnWidths]);
+  }, [columnVisibility, columns, headerRefs, paginatedData]);
 
   /**
    * Memoization Justification:

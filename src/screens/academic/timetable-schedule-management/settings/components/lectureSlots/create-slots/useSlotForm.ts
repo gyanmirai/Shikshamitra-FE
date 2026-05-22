@@ -11,6 +11,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
+  useGetLectureSlotsQuery,
   useAddLectureSlotMutation,
   useGetLectureSlotByIdQuery,
   useUpdateLectureSlotMutation,
@@ -60,14 +61,32 @@ interface IUseSlotFormParams {
 export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
+  const [selectedClassSlotId, setSelectedClassSlotId] = useState<string | undefined>();
 
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
+  // Edit mode: load the slot being edited
   const { data: lectureSlots, isLoading: isLectureSlotsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLectureSlotByIdQuery,
     params: data?.id,
     options: { skip: !data?.id },
+  });
+
+  // Add mode: all slots list — used to find if selected class already has a slot record
+  const { data: allSlotsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLectureSlotsQuery,
+    params: { AcademicMediumId: medium?.id },
+    options: { skip: !medium?.id || !!isEdit },
+  });
+
+  // Add mode: full details of the selected class's existing slot record
+  const { data: existingClassSlotData, isLoading: isExistingSlotLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLectureSlotByIdQuery,
+    params: selectedClassSlotId,
+    options: { skip: !selectedClassSlotId || !!isEdit },
   });
 
   const [addLectureSlot, { isLoading: isAddLoading }] = useQueryAndMutation({
@@ -84,7 +103,7 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
     setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
+    setClasses('');
   }, [medium]);
 
   const initialValues = useMemo(
@@ -141,12 +160,21 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
 
   // Ensure at least one slot configuration + one slot on mount
   useEffect(() => {
-    if (!formik.values.slotConfigurations?.length) {
+    if (!formik.values.slotConfigurations?.length && !isExistingSlotLoading) {
       formik.setFieldValue('slotConfigurations', [createDefaultConfig()]);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.slotConfigurations]);
+  }, [formik.values.slotConfigurations, isExistingSlotLoading]);
+
+  // Add mode: when an existing slot is found for the selected class, pre-populate configs
+  useEffect(() => {
+    if (!isEdit && selectedClassSlotId && existingClassSlotData) {
+      const populated = getInitialValues('', existingClassSlotData);
+      formik.setFieldValue('slotConfigurations', populated.slotConfigurations);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingClassSlotData]);
 
   const handleAddSlotConfiguration = useCallback(() => {
     formik.setFieldValue('slotConfigurations', [
@@ -154,6 +182,24 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
       createDefaultConfig(),
     ]);
   }, [formik]);
+
+  // Add mode: when user picks a class, look up its existing slot record and pre-populate
+  const handleClassChange = useCallback(
+    (classId: string) => {
+      formik.setFieldValue('className', classId);
+      if (!isEdit) {
+        const existing = (allSlotsData?.items ?? []).find((s: any) => s.standardId === classId);
+        if (existing?.id) {
+          setSelectedClassSlotId(existing.id);
+        } else {
+          setSelectedClassSlotId(undefined);
+          formik.setFieldValue('slotConfigurations', []);
+        }
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formik, isEdit, allSlotsData]
+  );
 
   const handleRemoveSlotConfiguration = useCallback(
     (index: number) => {
@@ -192,14 +238,6 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
     [formik]
   );
 
-  const handleToggleAccordion = useCallback(
-    (configIndex: number) => {
-      const currentExpanded = formik.values.slotConfigurations[configIndex].expanded;
-      formik.setFieldValue(`slotConfigurations[${configIndex}].expanded`, !currentExpanded);
-    },
-    [formik]
-  );
-
   const isSubmitting = useMemo(
     () => isAddLoading || isUpdateLoading,
     [isAddLoading, isUpdateLoading]
@@ -208,11 +246,12 @@ export const useSlotForm = ({ isEdit, data, handleClose }: IUseSlotFormParams) =
   return {
     formik,
     allClass,
-    isLectureSlotsLoading,
+    isLectureSlotsLoading:
+      isLectureSlotsLoading || (!!selectedClassSlotId && isExistingSlotLoading),
     isSubmitting,
+    handleClassChange,
     handleAddSlotConfiguration,
     handleRemoveSlotConfiguration,
     handleTotalSlotsChange,
-    handleToggleAccordion,
   };
 };

@@ -85,12 +85,13 @@ const LectureSlots = () => {
 
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'standardName', label: 'Class', filterType: 'number' },
+      { id: 'standardName', label: 'Class', filterType: 'number', align: 'left' },
       {
         id: 'slotConfigurations',
         label: 'Slot Configuration',
         isSort: false,
         isFilter: false,
+        align: 'left',
         render: (_: any, row: any) => (
           <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 1 }}>
             {row?.slotConfigurations?.map((item: any, index: number) => {
@@ -203,6 +204,20 @@ const LectureSlots = () => {
           isBack
           onBack={() => handleClose(null)}
         />
+      ) : assignSlotsDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Assign Lecture Slot"
+          description="Assign this lecture slot configuration to one or more classes."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Timetable', href: '/academic/newTimetable' },
+            { name: 'Settings' },
+            { name: 'Lecture Slots' },
+            { name: 'Assign Lecture Slot' },
+          ]}
+          isBack
+          onBack={() => handleClose(null)}
+        />
       ) : (
         <CustomBreadcrumbs
           heading="Lecture Slots"
@@ -233,7 +248,7 @@ const LectureSlots = () => {
 
       {/* Conditional Card/Table Rendering */}
       {addLectureSlotDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <CreateSlotsForm
             disabled={disabled}
             handleClose={handleClose}
@@ -242,12 +257,16 @@ const LectureSlots = () => {
           />
         </Card>
       ) : viewSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ViewCreateSlots data={editData} />
         </Card>
       ) : assignSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
-          <AssignSlots onClose={handleClose} lectureSlotId={editData?.id} />
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <AssignSlots
+            onClose={handleClose}
+            lectureSlotId={editData?.id}
+            sourceClassName={editData?.standardName}
+          />
         </Card>
       ) : (
         <CustomizableTable

@@ -25,6 +25,7 @@ interface TimetableSlotProps {
   readOnly?: boolean;
   day: DayOfWeek;
   index: number;
+  timelineStartHour?: number;
 }
 
 const TimetableSlot: React.FC<TimetableSlotProps> = ({
@@ -37,8 +38,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   readOnly = false,
   day,
   index,
+  timelineStartHour,
 }) => {
-  console.log('slot====in slot---', slot);
   const deleteDialog = useBoolean();
 
   const handleConfirmRemove = (e: React.MouseEvent) => {
@@ -66,7 +67,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     },
   };
 
-  const { top, height } = calculateSlotPosition(slot.startTime, slot.endTime);
+  const { top, height } = calculateSlotPosition(slot.startTime, slot.endTime, timelineStartHour);
   const isBreak = slot.type === SlotType.BREAK;
   const hasSubjects = slot.subjects && slot.subjects.length > 0;
   const isFilled = hasSubjects || !!attachedSubject;
@@ -283,13 +284,16 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
                 alignItems: 'center',
                 mb: 0.5,
                 px: 0.5,
               }}
             >
-              <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>
+              <Typography
+                variant="caption"
+                sx={{ fontSize: '0.65rem', color: 'text.secondary', textAlign: 'center' }}
+              >
                 {renderTime(slot.startTime)} - {renderTime(slot.endTime)}
               </Typography>
             </Box>

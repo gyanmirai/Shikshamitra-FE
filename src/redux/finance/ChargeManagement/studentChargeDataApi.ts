@@ -1,18 +1,6 @@
-import { financeModuleType } from 'src/redux/tagTypes';
+// Student charge history is now derived from the main charges API (chargeApi.ts).
+// useGetChargesQuery (without a status filter) returns all charges for a board/medium/year
+// and ChargesList.tsx groups them by studentId client-side into IStudentChargeData rows.
+// This file is kept for reference and is no longer imported anywhere.
 
-import { financeModuleApi } from '../financeModuleApi';
-
-export const studentChargeDataApi = financeModuleApi.injectEndpoints({
-  endpoints: (builder) => ({
-    getStudentCharges: builder.query({
-      query: () => ({
-        url: '/studentChargeData', // replace with your actual endpoint
-        method: 'GET',
-      }),
-      providesTags: [financeModuleType.studentCharges],
-    }),
-  }),
-  overrideExisting: false,
-});
-
-export const { useGetStudentChargesQuery } = studentChargeDataApi;
+export {};

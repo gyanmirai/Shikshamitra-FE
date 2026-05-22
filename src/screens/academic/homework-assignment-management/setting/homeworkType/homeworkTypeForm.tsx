@@ -41,7 +41,9 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
-      homeworkTypeName: Yup.string().required('Name is required'),
+      homeworkTypeName: Yup.string()
+        .required('Name is required')
+        .min(3, 'Minimum 3 characters are required'),
     }),
     onSubmit: async (values) => {
       try {

@@ -294,35 +294,35 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               );
             },
           },
-          {
-            id: 'remarks',
-            label: 'Remarks',
-            align: 'left',
-            minWidth: 150,
-            render: (value, row) => {
-              const text = value && value !== '-' ? value : null;
-              return (
-                <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
-                  <Typography
-                    variant="caption"
-                    fontSize="13px"
-                    noWrap
-                    sx={{
-                      maxWidth: 150,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      display: 'block',
-                      color: text ? 'text.primary' : 'text.secondary',
-                      fontStyle: text ? 'normal' : 'italic',
-                    }}
-                  >
-                    {text || 'No remarks'}
-                  </Typography>
-                </CustomTooltip>
-              );
-            },
-          },
+          // {
+          //   id: 'remarks',
+          //   label: 'Remarks',
+          //   align: 'left',
+          //   minWidth: 150,
+          //   render: (value, row) => {
+          //     const text = value && value !== '-' ? value : null;
+          //     return (
+          //       <CustomTooltip title={text || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
+          //         <Typography
+          //           variant="caption"
+          //           fontSize="13px"
+          //           noWrap
+          //           sx={{
+          //             maxWidth: 150,
+          //             overflow: 'hidden',
+          //             textOverflow: 'ellipsis',
+          //             whiteSpace: 'nowrap',
+          //             display: 'block',
+          //             color: text ? 'text.primary' : 'text.secondary',
+          //             fontStyle: text ? 'normal' : 'italic',
+          //           }}
+          //         >
+          //           {text || 'No remarks'}
+          //         </Typography>
+          //       </CustomTooltip>
+          //     );
+          //   },
+          // },
           {
             id: 'status',
             label: 'Status',

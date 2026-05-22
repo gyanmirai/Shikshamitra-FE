@@ -1,7 +1,7 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { alpha, lighten } from '@mui/material/styles';
@@ -41,7 +41,6 @@ interface ISlotConfigurationAccordionProps {
   isEdit?: boolean;
   hasData?: boolean;
   canRemove: boolean;
-  onToggle: () => void;
   onRemove: () => void;
   onTotalSlotsChange: (value: string) => void;
 }
@@ -54,10 +53,11 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
   isEdit,
   hasData,
   canRemove,
-  onToggle,
   onRemove,
   onTotalSlotsChange,
 }) => {
+  // Keep expanded state local — never in formik — so toggling doesn't re-render the whole form
+  const [expanded, setExpanded] = useState<boolean>(config.expanded ?? true);
   const configErrors = formik.errors.slotConfigurations;
   const configErr =
     Array.isArray(configErrors) &&
@@ -149,9 +149,10 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
 
   return (
     <Accordion
-      expanded={config.expanded}
-      onChange={onToggle}
+      expanded={expanded}
+      onChange={() => setExpanded((prev) => !prev)}
       disableGutters
+      TransitionProps={{ mountOnEnter: true }}
       sx={{
         boxShadow: 'none',
         borderRadius: '14px !important',
@@ -194,7 +195,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             transition: 'transform 250ms ease',
           },
           background: (theme) =>
-            config.expanded
+            expanded
               ? `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(
                   theme.palette.primary.main,
                   0
@@ -236,7 +237,7 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
             {configIndex + 1}
           </Box>
 
-          {!config.expanded ? (
+          {!expanded ? (
             <Stack
               direction="row"
               spacing={1}
