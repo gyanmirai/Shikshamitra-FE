@@ -37,9 +37,9 @@ interface FeeLedgerFilterBarProps {
 
 export const FEE_LEDGER_INITIAL_FILTERS: FeeLedgerFilters = {
   activeTab: 'by-month',
-  month: '',
-  feeHead: '',
-  status: '',
+  month: 'All',
+  feeHead: 'All',
+  status: 'All',
 };
 
 const TABS = [

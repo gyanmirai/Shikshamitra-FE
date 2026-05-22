@@ -61,7 +61,7 @@ import {
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
 import QuickActionToolbar from './QuickActionToolbar';
-import { DUMMY_COLLECT_FORM_DATA } from '../Components/dummyData';
+import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
@@ -93,7 +93,12 @@ const buildDetailsForMethod = (method: string): Record<string, any> => {
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object({
-  selectedItems: Yup.array().min(1, 'Select at least one fee item to collect'),
+  selectedItems: Yup.array(),
+  charges: Yup.array().when('selectedItems', {
+    is: (selectedItems: any[]) => !selectedItems || selectedItems.length === 0,
+    then: (schema) => schema.min(1, 'Select at least one fee item or charge to collect'),
+    otherwise: (schema) => schema,
+  }),
   payment: Yup.object({
     paymentMethod: Yup.string().required('Payment method is required'),
     amount: Yup.number()
@@ -258,10 +263,16 @@ const FeeCollectComponentForm = ({
   const [filters, setFilters] = useState<FeeLedgerFilters>(FEE_LEDGER_INITIAL_FILTERS);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [finalReviewOpen, setFinalReviewOpen] = useState(false);
+  const [feeStructureDialogOpen, setFeeStructureDialogOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // ── Fetch collect form data from V2 API ────────────────────────────────────
-  const { data: collectFormData } = useQueryAndMutation({
+  const {
+    data: collectFormData,
+    isLoading: collectFormLoading,
+    isFetching: collectFormFetching,
+    refetch: refetchCollectForm,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetCollectFormQuery,
     params: {
@@ -276,8 +287,7 @@ const FeeCollectComponentForm = ({
     currentQueryAndMutation: useCollectFeeMutation,
   });
 
-  // Use API data or fallback to dummy data for development
-  const formData = collectFormData ?? DUMMY_COLLECT_FORM_DATA;
+  const formData = collectFormData;
 
   // Map V2 API ledger → FeeLedgerData shape used by existing UI components
   const ledgerData = useMemo((): FeeLedgerData => {
@@ -403,6 +413,8 @@ const FeeCollectComponentForm = ({
         chargeId: c.chargeId,
         chargeName: c.name,
         amount: c.pendingAmount,
+        total: c.amount,
+        paid: c.paidAmount,
         status: c.status,
       })),
     [formData]
@@ -424,6 +436,7 @@ const FeeCollectComponentForm = ({
     initialValues: buildInitialValues(student),
     validationSchema,
     enableReinitialize: true,
+    validateOnChange: true,
     validate: (values) => {
       const errors: any = {};
       if (!values.payment.amount) return errors;
@@ -494,8 +507,6 @@ const FeeCollectComponentForm = ({
   // Final submission: collects fee and generates receipt immediately
   const handleFinalCollect = async () => {
     try {
-      const year = currentYear?.year ?? new Date().getFullYear();
-
       const feeHeadGroups: Record<
         string,
         { amount: number; allocations: { dueFeeId: string; amount: number }[] }
@@ -506,9 +517,11 @@ const FeeCollectComponentForm = ({
         }
         feeHeadGroups[item.feeHeadId].amount += item.dueAmount;
 
-        const [monthStr, yearStr] = item.period.split('-');
+        // period format is "YYYY-MM" (e.g. "2026-06"), dueFeeIdMap key uses 0-based FeeMonth
+        const [yearStr, monthStr] = item.period.split('-');
+        const feeMonthIdx = Number(monthStr) - 1; // convert 1-based to 0-based FeeMonth
         const dueFeeId =
-          dueFeeIdMap[`${item.feeHeadId}|${monthStr}|${yearStr ?? year}`] ?? item.dueFeeId;
+          item.dueFeeId ?? dueFeeIdMap[`${item.feeHeadId}|${feeMonthIdx}|${yearStr}`];
         if (dueFeeId) {
           feeHeadGroups[item.feeHeadId].allocations.push({ dueFeeId, amount: item.dueAmount });
         }
@@ -548,7 +561,11 @@ const FeeCollectComponentForm = ({
               )?.[0] ?? 0
             ),
             amount: receivedAmount,
-            details: formik.values.payment.details,
+            details: Object.fromEntries(
+              Object.entries(formik.values.payment.details)
+                .filter(([, v]) => v != null && v !== '')
+                .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
+            ),
           },
         ],
       }).unwrap();
@@ -565,8 +582,6 @@ const FeeCollectComponentForm = ({
   // Save as pending verification (non-cash): calls API with pending status
   const handleSavePending = async () => {
     try {
-      const year = currentYear?.year ?? new Date().getFullYear();
-
       const feeHeadGroups: Record<
         string,
         { amount: number; allocations: { dueFeeId: string; amount: number }[] }
@@ -577,9 +592,11 @@ const FeeCollectComponentForm = ({
         }
         feeHeadGroups[item.feeHeadId].amount += item.dueAmount;
 
-        const [monthStr, yearStr] = item.period.split('-');
+        // period format is "YYYY-MM" (e.g. "2026-06"), dueFeeIdMap key uses 0-based FeeMonth
+        const [yearStr, monthStr] = item.period.split('-');
+        const feeMonthIdx = Number(monthStr) - 1; // convert 1-based to 0-based FeeMonth
         const dueFeeId =
-          dueFeeIdMap[`${item.feeHeadId}|${monthStr}|${yearStr ?? year}`] ?? item.dueFeeId;
+          item.dueFeeId ?? dueFeeIdMap[`${item.feeHeadId}|${feeMonthIdx}|${yearStr}`];
         if (dueFeeId) {
           feeHeadGroups[item.feeHeadId].allocations.push({ dueFeeId, amount: item.dueAmount });
         }
@@ -619,7 +636,11 @@ const FeeCollectComponentForm = ({
               )?.[0] ?? 0
             ),
             amount: receivedAmount,
-            details: { ...formik.values.payment.details, verificationStatus: 'pending' },
+            details: Object.fromEntries(
+              Object.entries({ ...formik.values.payment.details, verificationStatus: 'pending' })
+                .filter(([, v]) => v != null && v !== '')
+                .map(([k, v]) => [k, dayjs.isDayjs(v) ? v.format('YYYY-MM-DD') : String(v)])
+            ),
           },
         ],
       }).unwrap();
@@ -681,6 +702,92 @@ const FeeCollectComponentForm = ({
     );
     return map;
   }, [ledgerData]);
+
+  // ── Show skeleton while loading ─────────────────────────────────────────────
+  if (collectFormLoading || collectFormFetching) {
+    return <FeeCollectionFormSkeleton />;
+  }
+
+  // ── Fee Structure Not Assigned: show empty state ───────────────────────────
+  const isFeeStructureAssigned = formData?.student?.isFeeStructureAssigned;
+
+  const handleFeeStructureDialogClose = (_e: any, isSubmit: boolean) => {
+    setFeeStructureDialogOpen(false);
+    if (isSubmit) {
+      refetchCollectForm();
+    }
+  };
+
+  // if (isFeeStructureAssigned === false) {
+  //   return (
+  //     <Box
+  //       sx={{
+  //         display: 'flex',
+  //         flexDirection: 'column',
+  //         alignItems: 'center',
+  //         justifyContent: 'center',
+  //         flex: 1,
+  //         minHeight: 400,
+  //         gap: 2,
+  //         textAlign: 'center',
+  //         px: 3,
+  //       }}
+  //     >
+  //       <Iconify
+  //         icon="solar:document-add-bold-duotone"
+  //         width={72}
+  //         sx={{ color: 'text.disabled', mb: 1 }}
+  //       />
+  //       <Typography variant="h6" color="text.secondary">
+  //         No Fee Structure Assigned
+  //       </Typography>
+  //       <Typography variant="body2" color="text.secondary" maxWidth={400}>
+  //         A fee structure must be assigned to this student before collecting fees. Please assign a
+  //         fee structure first.
+  //       </Typography>
+  //       <Button
+  //         variant="contained"
+  //         startIcon={<Iconify icon="solar:add-circle-bold" />}
+  //         onClick={() => setFeeStructureDialogOpen(true)}
+  //         sx={{ mt: 1 }}
+  //       >
+  //         Assign Fee Structure
+  //       </Button>
+
+  //       {/* Fee Structure Assignment Dialog */}
+  //       <CustomDialog
+  //         open={feeStructureDialogOpen}
+  //         handleClose={() => setFeeStructureDialogOpen(false)}
+  //         title={
+  //           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+  //             <Typography variant="h5">Assign Fee Structure</Typography>
+  //             <CustomTooltip
+  //               arrow
+  //               placement="right"
+  //               sx={{ textAlign: 'justify' }}
+  //               title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
+  //             >
+  //               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+  //             </CustomTooltip>
+  //           </Box>
+  //         }
+  //         maxWidth="sm"
+  //       >
+  //         <FeeStructureAssignmentForm
+  //           student={
+  //             formData?.student
+  //               ? ({
+  //                 studentId: formData.student.studentId,
+  //                 standardId: formData.student.standardId,
+  //               } as any)
+  //               : null
+  //           }
+  //           handleClose={handleFeeStructureDialogClose}
+  //         />
+  //       </CustomDialog>
+  //     </Box>
+  //   );
+  // }
 
   return (
     <Box
@@ -745,11 +852,13 @@ const FeeCollectComponentForm = ({
             />
           </Box>
 
-          {formik.errors.selectedItems && formik.touched.selectedItems && (
-            <Typography variant="caption" color="error" sx={{ px: 0.5 }}>
-              {formik.errors.selectedItems as string}
-            </Typography>
-          )}
+          {formik.submitCount > 0 &&
+            formik.values.selectedItems.length === 0 &&
+            formik.values.charges.length === 0 && (
+              <Typography variant="caption" color="error" sx={{ px: 0.5 }}>
+                Select at least one fee item or charge to collect
+              </Typography>
+            )}
 
           <Box mt={0.85} sx={{ flex: 1, minHeight: 0 }}>
             <Scrollbar sx={{ height: '100%', pr: 0.3 }}>
