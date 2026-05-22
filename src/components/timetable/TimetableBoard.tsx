@@ -11,9 +11,14 @@ import { SlotType } from './types';
 import DayColumn from './DayColumn';
 import CustomDialog from '../customDialog';
 import SubjectPalette from './SubjectPalette';
-import { generateTimelineStamps } from './utils';
 import AssignRoomDialog from './AssignRoomDialog';
 import AssignTeacherDialog from './AssignTeacherDialog';
+import {
+  TIMELINE_END_HOUR,
+  parseTimeToMinutes,
+  TIMELINE_START_HOUR,
+  generateTimelineStamps,
+} from './utils';
 
 import type { RoomAssignment } from './AssignRoomDialog';
 import type { TeacherAssignment } from './AssignTeacherDialog';
@@ -40,7 +45,38 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   standardId = '',
   divisionId = '',
 }) => {
-  const [timelineStamps] = useState(generateTimelineStamps());
+  const { timelineStartHour, timelineEndHour, timelineStamps } = useMemo(() => {
+    let minMin = Infinity;
+    let maxMin = 0;
+    Object.values(slots).forEach((daySlots) => {
+      daySlots.forEach((slot) => {
+        if (!slot.startTime || !slot.endTime) return;
+        const start = parseTimeToMinutes(slot.startTime);
+        const end = parseTimeToMinutes(slot.endTime);
+        if (start < minMin) minMin = start;
+        if (end > maxMin) maxMin = end;
+      });
+    });
+
+    if (minMin === Infinity || maxMin === 0) {
+      return {
+        timelineStartHour: TIMELINE_START_HOUR,
+        timelineEndHour: TIMELINE_END_HOUR,
+        timelineStamps: generateTimelineStamps(),
+      };
+    }
+
+    const startHour = Math.floor(minMin / 60);
+    // +30 min buffer after last slot, then round up to next whole hour for clean labels
+    const endHour = Math.ceil((maxMin + 30) / 60);
+
+    return {
+      timelineStartHour: startHour,
+      timelineEndHour: endHour,
+      timelineStamps: generateTimelineStamps(startHour, endHour),
+    };
+  }, [slots]);
+
   const createSlotsDialog = useBoolean();
   const [teacherDialog, setTeacherDialog] = useState<TeacherAssignment | null>(null);
   const [roomDialog, setRoomDialog] = useState<RoomAssignment | null>(null);
@@ -414,6 +450,8 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 onAssignRoom={handleAssignRoom}
                 onClearDay={handleClearDay}
                 readOnly={readOnly}
+                timelineStartHour={timelineStartHour}
+                timelineEndHour={timelineEndHour}
               />
             ))}
           </Box>

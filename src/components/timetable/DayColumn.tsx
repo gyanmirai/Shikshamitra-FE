@@ -21,6 +21,8 @@ interface DayColumnProps {
   onAssignRoom: (day: DayOfWeek, slotId: string, subject: Subject) => void;
   readOnly?: boolean;
   onClearDay?: (day: DayOfWeek) => void;
+  timelineStartHour?: number;
+  timelineEndHour?: number;
 }
 
 const DAY_LABELS: Record<DayOfWeek, string> = {
@@ -41,9 +43,11 @@ const DayColumn: React.FC<DayColumnProps> = ({
   onAssignRoom,
   readOnly = false,
   onClearDay,
+  timelineStartHour = TIMELINE_START_HOUR,
+  timelineEndHour = TIMELINE_END_HOUR,
 }) => {
   const theme = useTheme();
-  const dayHeight = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60 * PIXELS_PER_MINUTE;
+  const dayHeight = (timelineEndHour - timelineStartHour) * 60 * PIXELS_PER_MINUTE;
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -83,11 +87,14 @@ const DayColumn: React.FC<DayColumnProps> = ({
           height: '40px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           px: 1,
           fontWeight: 700,
           fontSize: '0.78rem',
-          bgcolor: isToday ? alpha(theme.palette.primary.main, 0.06) : 'background.paper',
+          bgcolor: 'background.paper',
+          backgroundImage: isToday
+            ? `linear-gradient(${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.primary.main, 0.08)})`
+            : 'none',
           borderBottom: 1,
           borderColor: 'divider',
           position: 'sticky',
@@ -98,7 +105,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
           gap: 0.5,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flex: 1, minWidth: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
           <Box
             component="span"
             sx={{
@@ -139,6 +146,8 @@ const DayColumn: React.FC<DayColumnProps> = ({
                 size="small"
                 onClick={handleMenuOpen}
                 sx={{
+                  position: 'absolute',
+                  right: 4,
                   width: 20,
                   height: 20,
                   opacity: 0,
@@ -175,7 +184,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
               </MenuItem>
               <MenuItem
                 dense
-                disabled={filledSlots === 0}
+                disabled={filledSlots === 0 || isLocked}
                 onClick={() => {
                   if (onClearDay) onClearDay(day);
                   handleMenuClose();
@@ -197,6 +206,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
           height: dayHeight,
           backgroundSize: '100% 50px',
           backgroundColor: theme.vars.palette.background.neutral,
+          overflow: 'hidden',
           pointerEvents: isLocked ? 'none' : 'auto',
           '&:hover .day-col-menu-btn': { opacity: 1 },
         }}
@@ -215,6 +225,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
             readOnly={readOnly || isLocked}
             day={day}
             index={index}
+            timelineStartHour={timelineStartHour}
           />
         ))}
       </Box>
