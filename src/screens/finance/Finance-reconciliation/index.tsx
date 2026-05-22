@@ -16,6 +16,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
+import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
 import UpiTable from './Component/UpiTable';
 import WalletTable from './Component/WalletTable';
@@ -24,35 +25,6 @@ import DemandDraftTable from './Component/DemandDraftTable';
 import BankTransferTable from './Component/BankTransferTable';
 import ChequeDetailsForm from './Component/ChequeDetailsTable';
 import OnlineGatewayTable from './Component/OnlineGatewayTable';
-
-// Example data with type property for demonstration
-const exampleData = [
-  // Cheque: 4 records
-  { type: ReconciliationtatusType.Cheque },
-  { type: ReconciliationtatusType.Cheque },
-  { type: ReconciliationtatusType.Cheque },
-  { type: ReconciliationtatusType.Cheque },
-  // Demand Draft: 4 records
-  { type: ReconciliationtatusType.DemandDraft },
-  { type: ReconciliationtatusType.DemandDraft },
-  { type: ReconciliationtatusType.DemandDraft },
-  { type: ReconciliationtatusType.DemandDraft },
-  // Bank Transfer: 2 records
-  { type: ReconciliationtatusType.BankTransfer },
-  { type: ReconciliationtatusType.BankTransfer },
-  // Credit Card: 2 records
-  { type: ReconciliationtatusType.CreditCard },
-  { type: ReconciliationtatusType.CreditCard },
-  // UPI: 2 records
-  { type: ReconciliationtatusType.UPI },
-  { type: ReconciliationtatusType.UPI },
-  // Online Gateway: 2 records
-  { type: ReconciliationtatusType.OnlineGateway },
-  { type: ReconciliationtatusType.OnlineGateway },
-  // Wallet: 2 records
-  { type: ReconciliationtatusType.Wallet },
-  { type: ReconciliationtatusType.Wallet },
-];
 
 // Map enum to label and component
 const reconciliationTabConfig = [
@@ -112,33 +84,31 @@ const FinanceReconciliation = () => {
   const addDiscrepancyDialog = useBoolean(false);
   const addBankStatementsDialog = useBoolean(false);
 
-  // Counts for each reconciliation type
+  // Real tab counts from backend
+  const selectedMonth = date ? date.month() + 1 : undefined;
+  const selectedYear = date ? date.year() : undefined;
+
+  const { data: tabCounts } = useGetReconciliationTabCountsQuery(
+    {
+      academicYearId: currentYear?.id ?? '',
+      month: selectedMonth,
+      year: selectedYear,
+    },
+    { skip: !currentYear?.id }
+  );
+
+  // Map tab counts to per-tab pending counts for badge display
   const counts = useMemo(
     () => ({
-      [ReconciliationtatusType.All]: exampleData.length,
-      [ReconciliationtatusType.Cheque]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.Cheque
-      ).length,
-      [ReconciliationtatusType.DemandDraft]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.DemandDraft
-      ).length,
-      [ReconciliationtatusType.BankTransfer]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.BankTransfer
-      ).length,
-      [ReconciliationtatusType.CreditCard]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.CreditCard
-      ).length,
-      [ReconciliationtatusType.UPI]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.UPI
-      ).length,
-      [ReconciliationtatusType.OnlineGateway]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.OnlineGateway
-      ).length,
-      [ReconciliationtatusType.Wallet]: exampleData.filter(
-        (i) => i.type === ReconciliationtatusType.Wallet
-      ).length,
+      [ReconciliationtatusType.Cheque]: tabCounts?.chequePending ?? 0,
+      [ReconciliationtatusType.DemandDraft]: tabCounts?.demandDraftPending ?? 0,
+      [ReconciliationtatusType.BankTransfer]: tabCounts?.bankTransferPending ?? 0,
+      [ReconciliationtatusType.CreditCard]: tabCounts?.creditCardPending ?? 0,
+      [ReconciliationtatusType.UPI]: tabCounts?.upiPending ?? 0,
+      [ReconciliationtatusType.OnlineGateway]: tabCounts?.onlineGatewayPending ?? 0,
+      [ReconciliationtatusType.Wallet]: tabCounts?.walletPending ?? 0,
     }),
-    []
+    [tabCounts]
   );
 
   // Tabs config with counts
@@ -203,14 +173,15 @@ const FinanceReconciliation = () => {
     [TABS, currentIndex, setSearchParams]
   );
 
-  // Extract month and year from date picker
+  // Extract month, year, academicYearId from date picker + global state
   const queryParams = useMemo(
     () => ({
-      month: date ? date.format('MM') : dayjs().format('MM'),
-      year: date ? date.format('YYYY') : dayjs().format('YYYY'),
+      academicYearId: currentYear?.id ?? '',
+      month: date ? date.month() + 1 : dayjs().month() + 1,
+      year: date ? date.year() : dayjs().year(),
       paymentMethod: activeTab,
     }),
-    [date, activeTab]
+    [date, activeTab, currentYear?.id]
   );
 
   return (
