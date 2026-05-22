@@ -115,6 +115,7 @@ export default function CourseCardsGrid({
           <Card
             key={`${course.id}-${index}`}
             onClick={() => {
+              if (selectedCourseId === course.id) return;
               setSelectedCourseId(course.id);
               handleCardDetails(course);
             }}

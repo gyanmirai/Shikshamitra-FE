@@ -10,6 +10,7 @@ import {
   Box,
   Grid,
   Chip,
+  Checkbox,
   Skeleton,
   ListItem,
   TextField,
@@ -132,10 +133,14 @@ const SubjectAssignmentForm = ({
                     multiple
                     fullWidth
                     size="small"
+                    disableCloseOnSelect
                     disabled={isPublished}
                     options={subjectsOptions}
                     loading={isSubjectOptionsLoading}
-                    getOptionLabel={(option: { label?: string }) => option?.label ?? ''}
+                    getOptionLabel={(option: { label?: string; value?: string }) =>
+                      option?.label ?? ''
+                    }
+                    isOptionEqualToValue={(option, val) => option.value === val.value}
                     value={formik?.values?.selectedSubjects || []}
                     onChange={(_, newValue) =>
                       handleSubjectChange(
@@ -164,7 +169,7 @@ const SubjectAssignmentForm = ({
                         );
                       })
                     }
-                    renderOption={(props, option) => {
+                    renderOption={(props, option, { selected }) => {
                       const { key, ...restProps } = props;
                       const typedOption = option as { label?: string; type?: number };
                       return (
@@ -179,6 +184,12 @@ const SubjectAssignmentForm = ({
                               '&:hover': { backgroundColor: 'transparent' },
                             }}
                           >
+                            <Checkbox
+                              size="small"
+                              checked={selected}
+                              disableRipple
+                              sx={{ mr: 1, p: 0.5 }}
+                            />
                             <Box
                               sx={{
                                 display: 'flex',

@@ -3,7 +3,7 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Tooltip } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -69,76 +69,146 @@ const ExamContextHeader = ({ formik, step }: { formik: any; step: number }) => {
 
   if (!hasContext || step === 0) return null;
 
+  const sections = [
+    {
+      label: 'Exam',
+      show: !!examName,
+      chips: examName ? (
+        <Chip
+          icon={<Iconify icon="mdi:clipboard-text-outline" width={14} />}
+          label={examName}
+          size="small"
+          color="success"
+          variant="soft"
+          sx={{ fontWeight: 600, fontSize: '0.7rem', height: 24 }}
+        />
+      ) : null,
+    },
+    {
+      label: 'Standard',
+      show: !!className,
+      chips: className ? (
+        <Chip
+          icon={<Iconify icon="mdi:school-outline" width={14} />}
+          label={className}
+          size="small"
+          color="primary"
+          variant="soft"
+          sx={{ fontSize: '0.7rem', height: 24 }}
+        />
+      ) : null,
+    },
+    {
+      label: 'Divisions',
+      show: divisions.length > 0,
+      chips:
+        divisions.length > 0 ? (
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+            {divisions.map((div: any) => (
+              <Chip
+                key={div.id}
+                icon={<Iconify icon="mdi:account-group-outline" width={14} />}
+                label={`Div ${div.name}`}
+                size="small"
+                color="secondary"
+                variant="soft"
+                sx={{ fontSize: '0.7rem', height: 24 }}
+              />
+            ))}
+          </Box>
+        ) : null,
+    },
+    {
+      label: 'Subject',
+      show: subjects.length > 0,
+      chips:
+        subjects.length > 0 ? (
+          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+            {subjects.slice(0, 4).map((sub: any) => (
+              <Chip
+                key={sub.subjectId}
+                icon={<Iconify icon="mdi:book-open-outline" width={14} />}
+                label={sub.subjectName}
+                size="small"
+                color="warning"
+                variant="soft"
+                sx={{
+                  fontSize: '0.7rem',
+                  height: 24,
+                  '& .MuiChip-label': { fontWeight: 600 },
+                }}
+              />
+            ))}
+            {subjects.length > 4 && (
+              <Chip
+                label={`+${subjects.length - 4} more`}
+                size="small"
+                variant="soft"
+                sx={{ fontSize: '0.7rem', height: 24, color: 'text.secondary' }}
+              />
+            )}
+          </Box>
+        ) : null,
+    },
+  ].filter((s) => s.show);
+
+  if (sections.length === 0) return null;
+
   return (
     <Box
       sx={{
-        px: 2,
-        py: 1,
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 0.75,
-        alignItems: 'center',
-        borderBottom: '1px solid',
+        mt: 2,
+        mx: 2,
+        borderRadius: 1.5,
+        border: '1px solid',
         borderColor: 'divider',
         bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+        overflow: 'hidden',
       }}
     >
-      {examName && (
-        <Tooltip title="Exam Name" arrow>
-          <Chip
-            icon={<Iconify icon="mdi:clipboard-text-outline" width={14} />}
-            label={examName}
-            size="small"
-            variant="soft"
-            sx={{ fontWeight: 600, fontSize: '0.7rem', height: 22 }}
-          />
-        </Tooltip>
-      )}
-      {className && (
-        <Tooltip title="Class" arrow>
-          <Chip
-            icon={<Iconify icon="mdi:school-outline" width={14} />}
-            label={className}
-            size="small"
-            color="primary"
-            variant="soft"
-            sx={{ fontSize: '0.7rem', height: 22 }}
-          />
-        </Tooltip>
-      )}
-      {divisions.map((div: any) => (
-        <Chip
-          key={div.id}
-          label={`Div ${div.name}`}
-          size="small"
-          color="info"
-          variant="soft"
-          sx={{ fontSize: '0.7rem', height: 22 }}
-        />
-      ))}
-      {subjects.slice(0, 5).map((sub: any) => (
-        <Chip
-          key={sub.subjectId}
-          label={sub.subjectName}
-          size="small"
-          variant="soft"
-          sx={{
-            fontSize: '0.7rem',
-            height: 22,
-            bgcolor: sub.subjectColor ? `${sub.subjectColor}22` : undefined,
-            color: sub.subjectColor || 'text.secondary',
-            '& .MuiChip-label': { fontWeight: 600 },
-          }}
-        />
-      ))}
-      {subjects.length > 5 && (
-        <Chip
-          label={`+${subjects.length - 5} more`}
-          size="small"
-          variant="soft"
-          sx={{ fontSize: '0.7rem', height: 22, color: 'text.secondary' }}
-        />
-      )}
+      {/* Header label */}
+      <Box
+        sx={{
+          px: 2,
+          py: 0.75,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+        }}
+      >
+        <Typography
+          variant="overline"
+          sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'text.disabled', lineHeight: 1 }}
+        >
+          Exam Context
+        </Typography>
+      </Box>
+
+      {/* Sections row */}
+      <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+        {sections.map((section, idx) => (
+          <Box
+            key={section.label}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.75,
+              px: 2,
+              py: 1.25,
+              borderLeft: idx > 0 ? '1px solid' : 'none',
+              borderColor: 'divider',
+            }}
+          >
+            <Typography
+              variant="overline"
+              sx={{ fontSize: '0.6rem', fontWeight: 700, color: 'text.disabled', lineHeight: 1 }}
+            >
+              {section.label}
+            </Typography>
+            {section.chips}
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 };
@@ -242,37 +312,53 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   const allSteps = [SelectExam, ExamDetails, RoomDetails, ExamReviewStep4];
 
   return (
-    <CustomStepperWithFormik
-      initialValues={{ ...defaultExamFormValues, examId: editData?.examId || '' }}
-      steps={steps}
-      activeStep={activeStep}
-      handleBack={() => setActiveStep((prev) => prev - 1)}
-      validateOnChange={false}
-      validationSchema={stepValidationSchemas[activeStep]}
-      handleNext={(isLastStep, values, formik, setIsLoading) => {
-        handleSave(isLastStep, values, formik, setIsLoading, false);
-      }}
-      onSave={(isLastStep, values, formik, setIsLoading) => {
-        handleSave(isLastStep, values, formik, setIsLoading, true);
-      }}
-      onStepClick={(index) => {
-        if (editData) {
-          setActiveStep(index);
-        } else if (index < activeStep) {
-          setActiveStep(index);
-        }
-      }}
-      isDisabledLabel={!editData}
-      renderItem={({ formik, activeStep: step }) => (
-        <NewExamStepForm
-          activeStep={step}
-          formik={formik}
-          editData={editData}
-          allSteps={allSteps}
-          setActiveStep={setActiveStep}
-        />
-      )}
-    />
+    <Box
+      sx={(theme) => ({
+        width: '100%',
+        height: '100%',
+        '& .MuiStepper-root': {
+          pt: 2,
+          pb: 1.5,
+        },
+        ...theme.applyStyles('dark', {
+          '& .MuiStepConnector-line': {
+            borderColor: `${theme.vars.palette.grey[600]} !important`,
+          },
+        }),
+      })}
+    >
+      <CustomStepperWithFormik
+        initialValues={{ ...defaultExamFormValues, examId: editData?.examId || '' }}
+        steps={steps}
+        activeStep={activeStep}
+        handleBack={() => setActiveStep((prev) => prev - 1)}
+        validateOnChange={false}
+        validationSchema={stepValidationSchemas[activeStep]}
+        handleNext={(isLastStep, values, formik, setIsLoading) => {
+          handleSave(isLastStep, values, formik, setIsLoading, false);
+        }}
+        onSave={(isLastStep, values, formik, setIsLoading) => {
+          handleSave(isLastStep, values, formik, setIsLoading, true);
+        }}
+        onStepClick={(index) => {
+          if (editData) {
+            setActiveStep(index);
+          } else if (index < activeStep) {
+            setActiveStep(index);
+          }
+        }}
+        isDisabledLabel={!editData}
+        renderItem={({ formik, activeStep: step }) => (
+          <NewExamStepForm
+            activeStep={step}
+            formik={formik}
+            editData={editData}
+            allSteps={allSteps}
+            setActiveStep={setActiveStep}
+          />
+        )}
+      />
+    </Box>
   );
 };
 

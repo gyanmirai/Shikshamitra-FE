@@ -292,7 +292,10 @@ export const ViewSubject = ({ subject, classId, classes }: IViewSubjectProps) =>
                   <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 3 }}>
                     <Scrollbar sx={{ height: '100%' }}>
                       {currentActiveComponent?.component && (
-                        <currentActiveComponent.component tabs={tabs} subject={sub} />
+                        <currentActiveComponent.component
+                          tabs={tabs}
+                          subject={{ ...sub, classId }}
+                        />
                       )}
                     </Scrollbar>
                   </Box>
