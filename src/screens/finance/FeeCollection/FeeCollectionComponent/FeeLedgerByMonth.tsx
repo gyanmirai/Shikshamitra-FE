@@ -1,9 +1,11 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Chip, Checkbox, Collapse, Typography } from '@mui/material';
+import { FeeMonth } from 'src/enums/fee-collection-type';
+import { Box, Card, Chip, Checkbox, Collapse, Typography } from '@mui/material';
 
 import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
 
@@ -39,7 +41,7 @@ const MonthGroup = ({
   const [open, setOpen] = useState(true);
   const theme = useTheme();
 
-  const period = toPeriod(group.month, year);
+  const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
   const selectableItems = group.items.filter((i) => i.due > 0);
   const selectedCount = selectableItems.filter((i) =>
     selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
@@ -57,21 +59,21 @@ const MonthGroup = ({
           : 'None';
   const urgencyColor =
     urgency === 'High' ? 'error.main' : urgency === 'Medium' ? 'warning.main' : 'success.main';
-
+  console.log('group====', group);
   return (
-    <Box
+    <Card
+      component={motion.div}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        border: `1px solid ${isAllSelected ? alpha(theme.palette.primary.main, 0.28) : alpha(theme.palette.divider, 0.78)}`,
-        borderRadius: 2.4,
-        overflow: 'hidden',
-        mb: 1.25,
+        borderRadius: 1.5,
         bgcolor: 'background.paper',
-        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-        boxShadow: isAllSelected
-          ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.12)}`
-          : theme.palette.mode === 'dark'
-            ? `0 8px 18px ${alpha(theme.palette.common.black, 0.28)}`
-            : `0 6px 16px ${alpha(theme.palette.common.black, 0.04)}`,
+        display: 'flex',
+        mb: 1,
+        flexDirection: 'column',
+        boxShadow: (t) => `var(--shadows-4)`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
       <Box
@@ -112,21 +114,8 @@ const MonthGroup = ({
                 '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
               }}
             />
-            <Box
-              sx={{
-                width: 26,
-                height: 26,
-                borderRadius: 1.1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: alpha(theme.palette.primary.main, 0.12),
-              }}
-            >
-              <Iconify icon="solar:calendar-bold" width={14} sx={{ color: 'primary.main' }} />
-            </Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, letterSpacing: '0.02em' }}>
-              {`${group.month.toUpperCase()} ${year}`}
+              {`${FeeMonth[group.month]} ${year}`}
             </Typography>
             <Chip
               label={`${group.items.length} ${group.items.length === 1 ? 'head' : 'heads'}`}
@@ -136,33 +125,19 @@ const MonthGroup = ({
               sx={{ height: 20, fontWeight: 700 }}
             />
           </Box>
-
-          <Box display="flex" alignItems="center" gap={0.7}>
-            <Chip
-              label={`Urgency: ${urgency}`}
-              size="small"
-              variant={urgency === 'High' ? 'filled' : 'outlined'}
-              sx={{
-                height: 20,
-                color: urgencyColor,
-                borderColor: alpha(theme.palette.text.primary, 0.18),
-                bgcolor: urgency === 'High' ? alpha(theme.palette.error.main, 0.14) : 'transparent',
-                fontWeight: 700,
-              }}
-            />
-            <Typography variant="caption" sx={{ color: 'error.main', fontWeight: 800 }}>
-              Due: ₹{group.totalDue.toLocaleString('en-IN')}
-            </Typography>
-            <Iconify
-              icon="eva:chevron-down-fill"
-              width={17}
-              sx={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s ease' }}
-            />
-          </Box>
+          <Iconify
+            icon="solar:alt-arrow-down-bold"
+            width={18}
+            sx={{
+              color: 'text.secondary',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
+          />
         </Box>
       </Box>
 
-      <Collapse in={open} timeout={180}>
+      <Collapse in={open} timeout={300} easing="cubic-bezier(0.4, 0, 0.2, 1)">
         <ColHeader firstLabel="Fee Head" showStatus />
         {group.items.map((item, idx) => {
           const isSelected = selectedItems.some(
@@ -179,7 +154,9 @@ const MonthGroup = ({
                 showStatus
                 isSelected={isSelected}
                 isDisabled={item.due === 0}
-                onToggle={() => onToggleItem(item.feeHeadId, group.month, item.due)}
+                onToggle={() =>
+                  onToggleItem(item.feeHeadId, FeeMonth[group.month] as string, item.due)
+                }
               />
               {idx < group.items.length - 1 && (
                 <Box
@@ -193,7 +170,7 @@ const MonthGroup = ({
           );
         })}
       </Collapse>
-    </Box>
+    </Card>
   );
 };
 

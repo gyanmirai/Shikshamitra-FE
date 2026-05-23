@@ -1,9 +1,17 @@
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
+import { FeeRefundStatusType, FeeRefundStatusTypeColors } from 'src/enums/feeRefund-status-type';
 
 import type { IStudentFeeData } from '../type';
+
+const statusLabel: Record<FeeRefundStatusType, string> = {
+  [FeeRefundStatusType.Pending]: 'Pending',
+  [FeeRefundStatusType.Rejected]: 'Rejected',
+  [FeeRefundStatusType.Approved]: 'Approved',
+};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -61,7 +69,13 @@ const InfoItem = ({ icon, label, value }: InfoItemProps) => (
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function StudentRefundInfo({ student }: { student: IStudentFeeData }) {
+export default function StudentRefundInfo({
+  student,
+  status,
+}: {
+  student: IStudentFeeData;
+  status?: number;
+}) {
   return (
     <Paper
       variant="outlined"
@@ -73,20 +87,31 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
         '&:hover': { boxShadow: 4 },
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-        <Iconify
-          icon="solar:users-group-rounded-bold-duotone"
-          width={18}
-          sx={{ color: 'primary.main' }}
-        />
-        <Box>
-          <Typography variant="subtitle2" fontWeight={700}>
-            Student Information
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Details of the selected student
-          </Typography>
-        </Box>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1} mb={1.5}>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Iconify
+            icon="solar:users-group-rounded-bold-duotone"
+            width={18}
+            sx={{ color: 'primary.main' }}
+          />
+          <Box>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Student Information
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Details of the selected student
+            </Typography>
+          </Box>
+        </Stack>
+        {status !== undefined && (
+          <Label
+            color={FeeRefundStatusTypeColors[status as FeeRefundStatusType] as any}
+            variant="soft"
+            sx={{ textTransform: 'capitalize', fontWeight: 700 }}
+          >
+            {statusLabel[status as FeeRefundStatusType] ?? 'Unknown'}
+          </Label>
+        )}
       </Stack>
       <Divider sx={{ mb: 2 }} />
 

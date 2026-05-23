@@ -1,3 +1,5 @@
+import type { ConcessionDetail } from 'src/redux/feeCollection/feeCollection';
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -5,27 +7,13 @@ import { alpha, useTheme } from '@mui/material/styles';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import { Box, Card, Chip, Stack, Avatar, Typography, CardContent } from '@mui/material';
 
-const concessions = [
-  {
-    title: 'Sibling Discount',
-    subTitle: 'Tuition Fee',
-    amount: 2000,
-  },
-  {
-    title: 'Scholarship',
-    subTitle: 'Tuition Fee, Transport Fee',
-    amount: 800,
-  },
-  {
-    title: 'Parents Child',
-    subTitle: 'Tuition Fee',
-    amount: 1000,
-  },
-];
-
-export default function ConcessionsCard() {
+export default function ConcessionsCard({ concessions }: { concessions?: ConcessionDetail[] }) {
   const theme = useTheme();
-  const total = concessions.reduce((acc, c) => acc + c.amount, 0);
+  const items = (concessions ?? []).map((c) => ({
+    title: c.concessionTypeName,
+    amount: c.amount ?? 0,
+  }));
+  const total = items.reduce((acc, c) => acc + c.amount, 0);
 
   return (
     <Card
@@ -75,7 +63,7 @@ export default function ConcessionsCard() {
       <CardContent sx={{ p: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Scrollbar sx={{ flexGrow: 1, px: 1, pb: 1, maxHeight: '100%' }}>
           <Stack spacing={1}>
-            {concessions.map((item, index) => (
+            {items.map((item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -18 }}
@@ -121,7 +109,7 @@ export default function ConcessionsCard() {
                       {item.title}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" noWrap display="block">
-                      {item.subTitle}
+                      Concession
                     </Typography>
                   </Box>
 
