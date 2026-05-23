@@ -1,16 +1,17 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
 import { useCreateFeeRefundMutation } from 'src/redux/finance/RefundManagement/feeRefundManage';
@@ -36,7 +37,10 @@ const FeeRefundFormComponent = ({
 }: FeeRefundFormProps): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
-  const [createFeeRefund, { isLoading: isSubmitting }] = useCreateFeeRefundMutation();
+  const [createFeeRefund, { isLoading: isSubmitting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateFeeRefundMutation,
+  });
 
   const formik = useFormik({
     initialValues: buildRefundInitialValues(),
@@ -64,7 +68,10 @@ const FeeRefundFormComponent = ({
       }
     },
   });
-
+  useEffect(() => {
+    formik.resetForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear?.id]);
   // ── Derived totals for sticky footer ────────────────────────────────────────
   const { totalSelectedMonths, totalRefundRequested } = useMemo(() => {
     const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];

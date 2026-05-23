@@ -18,18 +18,9 @@ import type {
   MonthAllocationGroup,
 } from './paymentAllocationUtils';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const STATUS_ICON: Record<FeeCollectionStatusType, string> = {
-  [FeeCollectionStatusType.Paid]: 'solar:check-circle-bold',
-  [FeeCollectionStatusType.Partial]: 'solar:clock-circle-bold',
-  [FeeCollectionStatusType.Pending]: 'solar:hourglass-bold',
-  [FeeCollectionStatusType.Overdue]: 'solar:danger-triangle-bold',
-};
-
 // ─── Column Header ────────────────────────────────────────────────────────────
 
-const ColHeader = () => (
+const ColHeader = ({ firstColumnLabel = 'Fee Head' }: { firstColumnLabel?: string }) => (
   <Box
     display="flex"
     alignItems="center"
@@ -44,7 +35,7 @@ const ColHeader = () => (
       textTransform="uppercase"
       sx={{ letterSpacing: '0.7px', fontSize: '10px', flex: 1 }}
     >
-      Fee Head
+      {firstColumnLabel}
     </Typography>
 
     {(['ORIGINAL', 'PAID', 'REMAINING'] as const).map((col) => (
@@ -196,7 +187,6 @@ const ChargeItemRow = ({ row }: { row: AllocatedChargeRow }) => {
 
       <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
         <Label color={FeeCollectionStatusTypeColors[row.status]} variant="soft">
-          <Iconify icon={STATUS_ICON[row.status]} width={11} sx={{ mr: 0.4 }} />
           {FeeCollectionStatusType[row.status]}
         </Label>
       </Box>
@@ -371,65 +361,10 @@ const ChargesSection = ({ rows }: { rows: AllocatedChargeRow[] }) => {
             {rows.length} {rows.length === 1 ? 'charge' : 'charges'}
           </Typography>
         </Box>
-
-        <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Box textAlign="right">
-            <Typography
-              variant="caption"
-              color="text.disabled"
-              fontWeight={500}
-              sx={{ fontSize: '10px', display: 'block' }}
-            >
-              PAID
-            </Typography>
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.primary"
-              sx={{ fontVariantNumeric: 'tabular-nums' }}
-            >
-              ₹{formatNumber(totalPaid)}
-            </Typography>
-          </Box>
-          {totalRemaining > 0 && (
-            <Box textAlign="right">
-              <Typography
-                variant="caption"
-                color="text.disabled"
-                fontWeight={500}
-                sx={{ fontSize: '10px', display: 'block' }}
-              >
-                DUE
-              </Typography>
-              <Typography
-                variant="caption"
-                fontWeight={700}
-                color="warning.main"
-                sx={{ fontVariantNumeric: 'tabular-nums' }}
-              >
-                ₹{formatNumber(totalRemaining)}
-              </Typography>
-            </Box>
-          )}
-          <IconButton
-            size="small"
-            sx={{
-              color: 'text.secondary',
-              transition: 'transform 200ms ease',
-              transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen((o) => !o);
-            }}
-          >
-            <Iconify icon="eva:chevron-down-fill" width={18} />
-          </IconButton>
-        </Stack>
       </Box>
 
       <Collapse in={open}>
-        <ColHeader />
+        <ColHeader firstColumnLabel="Charge Name" />
         {rows.map((row, idx) => (
           <Box key={row.key}>
             <ChargeItemRow row={row} />

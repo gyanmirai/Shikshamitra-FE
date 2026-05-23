@@ -1,71 +1,101 @@
 'use client';
 
+import type { FeeRefundRequestDto } from 'src/redux/finance/RefundManagement/feeRefundManage';
+
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
-import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
-import { Box, Card, Button, Divider, Typography, DialogActions } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
+import { useGetFeeRefundByIdQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
+import {
+  Box,
+  Card,
+  Stack,
+  Paper,
+  Button,
+  Divider,
+  Skeleton,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import StudentRefundInfo from './StudentRefundInfo';
-import RefundFeeHeadViewTable from './RefundFeeHeadViewTable';
 
-import type { IRefundFormProps } from '../type';
+import type { IStudentFeeData, IRefundFormProps } from '../type';
 
-const DUMMY_REFUND_FEE_HEAD_WISE = [
-  {
-    feeHeadId: 'fh-1',
-    feeHeadName: 'Tuition Fee',
-    totalPaid: 9000,
-    totalRefunded: 2000,
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 1000,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'May',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'June',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 1000,
-        status: FeeCollectionStatusType.Partial,
-      },
-    ],
-  },
-  {
-    feeHeadId: 'fh-2',
-    feeHeadName: 'Hostel Fee',
-    totalPaid: 6000,
-    totalRefunded: 0,
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'May',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-    ],
-  },
-];
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+const RemarksFormSkeleton = () => (
+  <>
+    {/* Student info skeleton */}
+    <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, borderRadius: 2 }}>
+      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+        <Skeleton variant="circular" width={18} height={18} />
+        <Box>
+          <Skeleton variant="text" width={140} height={18} />
+          <Skeleton variant="text" width={200} height={14} />
+        </Box>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      <Box display="flex" flexWrap="wrap" gap={3}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Box key={i} display="flex" alignItems="flex-start" gap={1.5} sx={{ flex: '1 1 200px' }}>
+            <Skeleton variant="rounded" width={36} height={36} />
+            <Box sx={{ flex: 1 }}>
+              <Skeleton variant="text" width="60%" height={12} />
+              <Skeleton variant="text" width="80%" height={18} />
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </Paper>
+    {/* Info card skeleton */}
+    <Card sx={{ mb: 2, borderRadius: 2, overflow: 'hidden' }}>
+      <Box display="flex" alignItems="stretch">
+        {Array.from({ length: 4 }).map((_, i, arr) => (
+          <React.Fragment key={i}>
+            <Box sx={{ flex: 1, px: 3, py: 2 }}>
+              <Skeleton variant="text" width="70%" height={12} />
+              <Skeleton variant="text" width="50%" height={20} sx={{ mt: 0.5 }} />
+            </Box>
+            {i < arr.length - 1 && <Divider orientation="vertical" flexItem />}
+          </React.Fragment>
+        ))}
+      </Box>
+    </Card>
+  </>
+);
+
+// ─── Map API DTO → IStudentFeeData ─────────────────────────────────────────────
+
+const mapDtoToStudentFeeData = (dto: FeeRefundRequestDto): IStudentFeeData => ({
+  id: 0,
+  name: dto.studentName ?? '',
+  board: '',
+  medium: '',
+  class: dto.className ?? '',
+  division: dto.divisionName ?? '',
+  grNo: dto.studentGrNo != null ? String(dto.studentGrNo) : '',
+  rollNo: dto.studentRollNo != null ? String(dto.studentRollNo) : '',
+  contactNo: dto.studentContactNo ?? '',
+  totalPaidFees: dto.totalAmount ?? 0,
+  totalPendingFees: 0,
+  refundAmount: dto.totalAmount ?? 0,
+  requestDate: dto.creationTime
+    ? new Date(dto.creationTime).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '',
+  reasonOfRefund: dto.reason ?? '',
+  refundMethod: dto.refundMethod ?? '',
+  reason: dto.reason ?? '',
+  remarks: dto.approverNotes ?? '',
+});
 
 const RefundRemarksForm: React.FC<IRefundFormProps> = ({
   open,
@@ -73,94 +103,257 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
   student,
   onReject,
   onApprove,
-}) => (
-  <Box display="flex" flexDirection="column" height="100%">
-    <Scrollbar sx={{ p: 2, height: '100%' }}>
-      <StudentRefundInfo student={student} />
+}) => {
+  const refundId = (student as any)?._refundRequestId as string | undefined;
 
-      {/* Info Card */}
-      <Card
-        sx={{
-          mb: 2,
-          boxShadow: 'var(--shadows-10)',
-          borderRadius: 2,
-          overflow: 'hidden',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
-          {[
-            {
-              label: 'Amount Applicable For Refund',
-              value: student?.totalPaidFees ? formatCurrency(student.totalPaidFees) : 'N/A',
-            },
-            {
-              label: 'Refund Amount',
-              value: student?.refundAmount != null ? formatCurrency(student.refundAmount) : 'N/A',
-            },
-            {
-              label: 'Refund Method',
-              value: student?.refundMethod || 'N/A',
-            },
-            {
-              label: 'Reason of Refund',
-              value: student?.reason || 'N/A',
-            },
-          ].map((item, idx, arr) => (
-            <React.Fragment key={item.label}>
-              <Box sx={{ flex: 1, px: 3, py: 2 }}>
-                <Typography
-                  variant="overline"
-                  sx={{
-                    color: 'text.secondary',
-                    display: 'block',
-                    letterSpacing: 1.5,
-                    fontSize: '0.65rem',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {item.label}
-                </Typography>
+  const {
+    data: refundDetail,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeRefundByIdQuery,
+    params: refundId,
+    options: { skip: !refundId },
+  });
 
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, mt: 0.5, fontVariantNumeric: 'tabular-nums' }}
-                >
-                  {item.value}
-                </Typography>
+  const loading = isLoading || isFetching;
+  const dto = refundDetail as FeeRefundRequestDto | undefined;
+  const displayStudent = dto ? mapDtoToStudentFeeData(dto) : student;
+
+  const infoItems = [
+    {
+      label: 'Amount Applicable For Refund',
+      value: displayStudent?.totalPaidFees ? formatCurrency(displayStudent.totalPaidFees) : 'N/A',
+    },
+    {
+      label: 'Refund Amount',
+      value:
+        displayStudent?.refundAmount != null ? formatCurrency(displayStudent.refundAmount) : 'N/A',
+    },
+    {
+      label: 'Refund Method',
+      value: displayStudent?.refundMethod || 'N/A',
+    },
+    {
+      label: 'Reason of Refund',
+      value: displayStudent?.reason || 'N/A',
+    },
+  ];
+
+  return (
+    <Box display="flex" flexDirection="column" height="100%">
+      <Scrollbar sx={{ p: 2, height: '100%' }}>
+        {loading ? (
+          <RemarksFormSkeleton />
+        ) : (
+          <>
+            <StudentRefundInfo
+              student={displayStudent}
+              status={dto?.status ?? (student as any)?.status}
+            />
+
+            {/* Info Card */}
+            <Card
+              sx={{
+                mb: 2,
+                boxShadow: 'var(--shadows-10)',
+                borderRadius: 2,
+                overflow: 'hidden',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'stretch' }}>
+                {infoItems.map((item, idx, arr) => (
+                  <React.Fragment key={item.label}>
+                    <Box sx={{ flex: 1, px: 3, py: 2 }}>
+                      <Typography
+                        variant="overline"
+                        sx={{
+                          color: 'text.secondary',
+                          display: 'block',
+                          letterSpacing: 1.5,
+                          fontSize: '0.65rem',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {item.label}
+                      </Typography>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ fontWeight: 700, mt: 0.5, fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {item.value}
+                      </Typography>
+                    </Box>
+                    {idx < arr.length - 1 && <Divider orientation="vertical" flexItem />}
+                  </React.Fragment>
+                ))}
               </Box>
-              {idx < arr.length - 1 && <Divider orientation="vertical" flexItem />}
-            </React.Fragment>
-          ))}
-        </Box>
-      </Card>
+            </Card>
 
-      <Typography variant="subtitle2" fontWeight={700} mb={1}>
-        Fee Head Refund Details
-      </Typography>
-      <RefundFeeHeadViewTable data={DUMMY_REFUND_FEE_HEAD_WISE} />
-    </Scrollbar>
-    {/* Actions */}
-    <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-      <Button
-        variant="soft"
-        color="error"
-        onClick={onReject}
-        size="small"
-        startIcon={<Iconify icon={GlobalIcons.cancel} />}
-      >
-        Reject
-      </Button>
-      <Button
-        variant="soft"
-        color="success"
-        onClick={onApprove}
-        size="small"
-        startIcon={<Iconify icon={GlobalIcons.tick} />}
-      >
-        Approve
-      </Button>
-    </DialogActions>
-  </Box>
-);
+            {/* Refund Lines */}
+            {dto?.lines && dto.lines.length > 0 && (
+              <>
+                <Typography variant="subtitle2" fontWeight={700} mb={1}>
+                  Refund Lines ({dto.lines.length})
+                </Typography>
+                <Card variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', mb: 2 }}>
+                  {/* Header */}
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    px={2}
+                    py={1}
+                    sx={{
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      bgcolor: 'background.neutral',
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      fontWeight={700}
+                      textTransform="uppercase"
+                      sx={{ flex: 1, letterSpacing: '0.7px', fontSize: '10px' }}
+                    >
+                      #
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      fontWeight={700}
+                      textTransform="uppercase"
+                      sx={{ flex: 3, letterSpacing: '0.7px', fontSize: '10px' }}
+                    >
+                      Due Fee ID
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      fontWeight={700}
+                      textTransform="uppercase"
+                      sx={{
+                        width: 120,
+                        textAlign: 'right',
+                        letterSpacing: '0.7px',
+                        fontSize: '10px',
+                      }}
+                    >
+                      Amount
+                    </Typography>
+                  </Box>
+                  {dto.lines.map((line, idx) => (
+                    <Box
+                      key={line.id}
+                      display="flex"
+                      alignItems="center"
+                      px={2}
+                      py={1}
+                      sx={{
+                        borderBottom: idx < dto.lines.length - 1 ? '1px solid' : 'none',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ flex: 1 }}>
+                        {idx + 1}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          flex: 3,
+                          fontFamily: 'monospace',
+                          fontSize: '0.75rem',
+                          color: 'text.secondary',
+                        }}
+                      >
+                        {line.dueFeeId}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          width: 120,
+                          textAlign: 'right',
+                          fontWeight: 600,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {formatCurrency(line.amount)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Card>
+              </>
+            )}
+
+            {/* Approver Notes */}
+            {dto?.approverNotes && (
+              <Card variant="outlined" sx={{ borderRadius: 2, p: 2, mb: 2 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={600}
+                  textTransform="uppercase"
+                  letterSpacing={1}
+                  display="block"
+                  mb={0.5}
+                >
+                  Approver Notes
+                </Typography>
+                <Typography variant="body2">{dto.approverNotes}</Typography>
+              </Card>
+            )}
+          </>
+        )}
+      </Scrollbar>
+
+      {/* Actions */}
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        {(() => {
+          const currentStatus = dto?.status ?? (student as any)?.status;
+          const isPending =
+            currentStatus === FeeRefundStatusType.Pending || currentStatus === undefined;
+          if (isPending) {
+            return (
+              <>
+                <Button
+                  variant="soft"
+                  color="error"
+                  onClick={onReject}
+                  size="small"
+                  disabled={loading}
+                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                >
+                  Reject
+                </Button>
+                <Button
+                  variant="soft"
+                  color="success"
+                  onClick={onApprove}
+                  size="small"
+                  disabled={loading}
+                  startIcon={<Iconify icon={GlobalIcons.tick} />}
+                >
+                  Approve
+                </Button>
+              </>
+            );
+          }
+          return (
+            <Button
+              variant="soft"
+              color="outlined"
+              onClick={onClose}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+          );
+        })()}
+      </DialogActions>
+    </Box>
+  );
+};
 
 export default RefundRemarksForm;

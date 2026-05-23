@@ -1,18 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
 export enum FeeMonth {
-  January = 1,
-  February = 2,
-  March = 3,
-  April = 4,
-  May = 5,
-  June = 6,
-  July = 7,
-  August = 8,
-  September = 9,
-  October = 10,
-  November = 11,
-  December = 12,
+  January = 0,
+  February = 1,
+  March = 2,
+  April = 3,
+  May = 4,
+  June = 5,
+  July = 6,
+  August = 7,
+  September = 8,
+  October = 9,
+  November = 10,
+  December = 11,
 }
 
 export const FeeMonthOptions = [
@@ -32,33 +32,33 @@ export const FeeMonthOptions = [
 
 export enum FeeCollectionStatusType {
   Pending,
-  Partial,
   Paid,
   Overdue,
+  Reversed,
 }
 
 export const FeeCollectionStatusOptions = [
-  {
-    label: 'Paid',
-    value: FeeCollectionStatusType.Paid,
-  },
-  {
-    label: 'Partial',
-    value: FeeCollectionStatusType.Partial,
-  },
   {
     label: 'Pending',
     value: FeeCollectionStatusType.Pending,
   },
   {
+    label: 'Paid',
+    value: FeeCollectionStatusType.Paid,
+  },
+  {
     label: 'Overdue',
     value: FeeCollectionStatusType.Overdue,
+  },
+  {
+    label: 'Reversed',
+    value: FeeCollectionStatusType.Reversed,
   },
 ];
 
 export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, LabelColor> = {
   [FeeCollectionStatusType.Paid]: 'success',
-  [FeeCollectionStatusType.Partial]: 'warning',
   [FeeCollectionStatusType.Pending]: 'warning',
   [FeeCollectionStatusType.Overdue]: 'error',
+  [FeeCollectionStatusType.Reversed]: 'default',
 };

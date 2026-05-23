@@ -144,7 +144,9 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
 
 export const {
   useGetFeeRefundsQuery,
+  useLazyGetFeeRefundsQuery,
   useGetFeeRefundByIdQuery,
+  useLazyGetFeeRefundByIdQuery,
   useGetRefundEligibilityQuery,
   useLazyGetRefundEligibilityQuery,
   useCreateFeeRefundMutation,

@@ -1,19 +1,31 @@
+import type { PaymentHistoryItem } from 'src/redux/feeCollection/feeCollection';
+
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetPaymentHistoryQuery } from 'src/redux/feeCollection/paymentHistory';
 import { Chip, Paper, Stack, Tooltip, IconButton, Typography } from '@mui/material';
 
 import type { IStudentFee } from '../type';
 
-const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
-  // Mock data usage
-  const { data: feeHistoryData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPaymentHistoryQuery,
-  });
+const PaymentHistory = ({
+  student,
+  payments,
+}: {
+  student: IStudentFee | null;
+  payments?: PaymentHistoryItem[];
+}) => {
+  const tableData = useMemo(
+    () =>
+      (payments ?? []).map((p) => ({
+        receiptNo: p.receiptNumber,
+        date: p.date ? new Date(p.date).toLocaleDateString('en-IN') : '-',
+        amount: p.amount,
+        paymentMethod: p.paymentMethods?.join(', ') ?? '-',
+      })),
+    [payments]
+  );
 
   return (
     <motion.div
@@ -121,7 +133,7 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
               ),
             },
           ]}
-          data={feeHistoryData?.items || []}
+          data={tableData}
         />
       </Paper>
     </motion.div>
