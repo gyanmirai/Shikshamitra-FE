@@ -20,9 +20,9 @@ import type { ISubjectDetail } from '../type';
 
 const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
   const {
-    data: chaptersData,
-    isLoading,
-    isFetching,
+    data: _chaptersData,
+    isLoading: _isLoading,
+    isFetching: _isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersByStandardQuery,
@@ -32,13 +32,7 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
     },
   });
 
-  const chapters: any[] =
-    chaptersData?.data?.items ??
-    chaptersData?.items ??
-    chaptersData?.records ??
-    (Array.isArray(chaptersData) ? chaptersData : []);
-
-  if (isLoading || isFetching) {
+  if (_isLoading || _isFetching) {
     return (
       <Box sx={{ height: '100%' }}>
         <Scrollbar sx={{ height: '100%', pb: 2 }}>
@@ -87,9 +81,9 @@ const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
   return (
     <Box sx={{ height: '100%' }}>
       <Scrollbar sx={{ height: '100%', pb: 2 }}>
-        {chapters.length > 0 ? (
+        {_chaptersData?.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {chapters.map((chapter: any) => (
+            {_chaptersData.map((chapter: any) => (
               <Accordion
                 key={chapter.id}
                 sx={{

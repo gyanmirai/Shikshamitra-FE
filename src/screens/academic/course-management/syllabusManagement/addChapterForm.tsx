@@ -3,8 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { useFormik } from 'formik';
-import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
@@ -44,7 +44,7 @@ import {
 import { getChapterInitialValues } from './initialValues';
 import { getChapterValidationSchema } from './validationSchema';
 
-import type { IChapter, IChapterFormValues, IAddNewChapterProps } from './type';
+import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
 // Component for adding or editing a chapter with form validation and file upload functionality
 export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
@@ -56,7 +56,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   subject,
   classId,
   subjectId,
-  existingChapters = [],
 }: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
@@ -66,11 +65,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
-
-  // Keep a ref to the latest existingChapters so the validate closure always
-  // reads current data without requiring formik to be recreated.
-  const existingChaptersRef = useRef<IChapter[]>(existingChapters);
-  existingChaptersRef.current = existingChapters;
   const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddChapterMutation,
@@ -86,25 +80,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
-    enableReinitialize: true,
     validationSchema: getChapterValidationSchema(currentYear),
-    validate: (values) => {
-      const errors: Partial<Record<keyof IChapterFormValues, string>> = {};
-      const chapterNoNum = Number(values.chapterNo);
-      if (chapterNoNum > 0) {
-        const isDuplicate = existingChaptersRef.current.some(
-          (ch) =>
-            // Same chapter number …
-            ch.chapterNumber === chapterNoNum &&
-            // … but not the chapter currently being edited.
-            ch.id !== initialValues?.id
-        );
-        if (isDuplicate) {
-          errors.chapterNo = `Chapter Number ${chapterNoNum} is already used for this Subject. Please choose a different number.`;
-        }
-      }
-      return errors;
-    },
     onSubmit: async (values) => {
       try {
         if (!classId || !subjectId) {

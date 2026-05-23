@@ -59,5 +59,5 @@ export interface IAppWidgetProps {
 export interface IUpdateProgressProps {
   onClose: (e: any, isSubmit: boolean) => void;
   selectedChapter?: ICourseDetail | null;
-  divisionId?: string;
+  subjectId?: string;
 }
