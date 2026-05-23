@@ -26,6 +26,8 @@ export interface IExamSubject {
   subjectColor: string;
   subjectCode?: string;
   electiveGroupId?: string;
+  /** For elective group entries: scheduling mode per-group (UI-only, not sent to backend) */
+  schedulingMode?: 'combined' | 'separate';
   // Step 2 schedule fields — null until the user fills them
   examDate: Dayjs | null;
   startTime: Dayjs | null;
@@ -34,6 +36,8 @@ export interface IExamSubject {
   passingMarks: number | '';
   notes: string;
   gradeScalingId?: string | null;
+  /** For elective group entries: raw individual subjects from API (used in Separate mode) */
+  subjects?: any[];
 }
 
 /** Room details keyed by subjectId → divisionId */

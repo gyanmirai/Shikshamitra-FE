@@ -14,10 +14,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Card, Button, Avatar } from '@mui/material';
 import sortQueryString from 'src/utils/sort-query-string';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
@@ -45,6 +45,14 @@ const TeacherCell = ({
   const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
   const [selectedTeacher, setSelectedTeacher] = useState<EmployeeOption | null>(null);
 
+  /**
+   * Tracks IDs already returned for the current search query so that the
+   * same teacher is never shown twice regardless of page boundaries or
+   * race-condition appends in usePaginatedSearch. Reset on every new
+   * search (page === 1) so stale IDs from a previous query are cleared.
+   */
+  const seenTeacherIdsRef = useRef<Set<string>>(new Set());
+
   // Pre-load the existing assigned teacher
   useEffect(() => {
     if (!teacherId) {
@@ -61,15 +69,18 @@ const TeacherCell = ({
   }, [teacherId]);
 
   const fetchOptions = useCallback(
-    async (query: string) => {
-      const res = await getEmployees({ search: query }).unwrap();
-      return {
-        data: (res?.items ?? []).map((item: { id: string; fullName: string }) => ({
-          id: item.id,
-          label: item.fullName,
-        })),
-        hasMore: res.currentPage <= res.totalPages,
-      };
+    async (query: string, page: number = 1) => {
+      if (page === 1) seenTeacherIdsRef.current = new Set();
+      const res = await getEmployees({ search: query, page }).unwrap();
+      const hasMore = res.currentPage < res.totalPages;
+      const data = (res?.items ?? [])
+        .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))
+        .filter(({ id }: { id: string }) => {
+          if (seenTeacherIdsRef.current.has(id)) return false;
+          seenTeacherIdsRef.current.add(id);
+          return true;
+        });
+      return { data, hasMore };
     },
     [getEmployees]
   );
@@ -88,9 +99,9 @@ const TeacherCell = ({
         option.id === value.id
       }
       renderOption={(props: any, option: EmployeeOption) => {
-        const { key, ...rest } = props;
+        const { key: _key, ...rest } = props;
         return (
-          <Box component="li" {...rest} key={key} sx={{ display: 'flex', gap: 1 }}>
+          <Box component="li" {...rest} key={option.id} sx={{ display: 'flex', gap: 1 }}>
             <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>{option.label?.[0]}</Avatar>
             {option.label}
           </Box>
@@ -104,14 +115,13 @@ const TeacherCell = ({
         maxWidth: '280px',
         '& .MuiOutlinedInput-root': {
           '& fieldset': {
-            borderColor: isFocused ? 'primary.main' : 'rgba(0,0,0,0.23)',
-            borderWidth: isFocused ? 2 : 1,
+            borderColor: 'black',
           },
           '&:hover fieldset': {
-            borderColor: isFocused ? 'primary.main' : undefined,
+            borderColor: 'black',
           },
           '&.Mui-focused fieldset': {
-            borderColor: isFocused ? 'primary.main' : undefined,
+            borderColor: 'black',
           },
         },
       }}
@@ -155,6 +165,8 @@ const ClassTeacherAssignment = () => {
     },
     options: { skip: !organization },
   });
+
+  console.log('Assignments Data:', assignmentsData);
 
   const [updateAssignments, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
@@ -220,6 +232,14 @@ const ClassTeacherAssignment = () => {
           divisionId: row.divisionId,
           teacherId: row.classTeacher,
         }));
+
+      if (assignments.length === 0) {
+        shikshaMitraToast.error({
+          message: 'Please assign at least one class teacher before saving.',
+        });
+        saveConfirmDialog.onFalse();
+        return;
+      }
 
       const payload = {
         organizationId: organization,
@@ -336,6 +356,7 @@ const ClassTeacherAssignment = () => {
             isSort: false,
             isFilter: false,
             align: 'left',
+            minWidth: 320,
             render: (value: any, row: any) => {
               const rowIndex = tableData.indexOf(row);
               return (

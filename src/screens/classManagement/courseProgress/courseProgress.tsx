@@ -661,7 +661,11 @@ const CourseProgressComponent = ({
           </Box>
         }
       >
-        <ViewChapterLogs onClose={handleClose} selectedChapter={selectedChapter} />
+        <ViewChapterLogs
+          onClose={handleClose}
+          selectedChapter={selectedChapter}
+          divisionId={selectedDivision}
+        />
       </CustomDialog>
     </Box>
   );
