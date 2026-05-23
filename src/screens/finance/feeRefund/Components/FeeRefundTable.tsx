@@ -1,44 +1,57 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Card, Tabs, Avatar, MenuList, MenuItem } from '@mui/material';
-import {
-  FeeRefundStatusType,
-  FeeRefundStatusOptions,
-  FeeRefundStatusTypeColors,
-} from 'src/enums/feeRefund-status-type';
 
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
 
 const REFUND_TABS = [
   { label: 'Pending', value: FeeRefundStatusType.Pending, color: 'warning' },
-  { label: 'Under Review', value: FeeRefundStatusType.UnderReview, color: 'info' },
   { label: 'Approved', value: FeeRefundStatusType.Approved, color: 'success' },
   { label: 'Rejected', value: FeeRefundStatusType.Rejected, color: 'error' },
-  { label: 'Cancelled', value: FeeRefundStatusType.Cancelled, color: 'default' },
 ] as const;
 
 const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
   data,
   onRequestRefund,
   onView,
-  onProcessRefund,
-  boards,
-  mediums,
   selectedBoard,
+  setSelectedBoard,
   selectedMedium,
-  onBoardChange,
-  onMediumChange,
+  setSelectedMedium,
 }) => {
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const tabs = useTabs(FeeRefundStatusType.Pending);
+
+  useEffect(() => {
+    if (currentYear?.boards) {
+      setBoards(currentYear.boards);
+      setSelectedBoard(currentYear.boards[0].id);
+      setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear.boards]);
+
+  useEffect(() => {
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   const tabCounts = useMemo(
     () =>
@@ -61,20 +74,13 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        {row.status === FeeRefundStatusType.Approved && (
-          <MenuItem
-            onClick={() => {
-              pop.onClose();
-              onProcessRefund?.(row);
-            }}
-          >
-            <Iconify icon="uil:process" sx={{ height: '16px', width: '16px' }} />
-            Process for Refund
-          </MenuItem>
-        )}
+        <MenuItem disabled>
+          <Iconify icon="uil:process" sx={{ height: '16px', width: '16px' }} />
+          No actions
+        </MenuItem>
       </MenuList>
     ),
-    [onProcessRefund]
+    []
   );
 
   return (
@@ -89,8 +95,8 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
               valueKey="id"
               value={selectedBoard}
               onChange={(value) => {
-                onBoardChange(value as string);
-                onMediumChange('');
+                setSelectedBoard(value as string);
+                setSelectedMedium('');
               }}
               formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
             />
@@ -101,7 +107,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
               disabled={!selectedBoard}
               valueKey="id"
               value={selectedMedium}
-              onChange={(value) => onMediumChange(value as string)}
+              onChange={(value) => setSelectedMedium(value as string)}
               formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
             />
           </Box>
@@ -176,25 +182,6 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             filterType: 'date',
           },
           {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            minWidth: '120px',
-            filterType: 'enum',
-            isFilter: true,
-            enumOptions: FeeRefundStatusOptions,
-            sticky: true,
-            render: (value) => {
-              if (value === undefined || value === null) return '-';
-              const color = FeeRefundStatusTypeColors[value as FeeRefundStatusType] as LabelColor;
-              return (
-                <Label color={color}>
-                  {FeeRefundStatusOptions.find((opt) => opt.value === value)?.label}
-                </Label>
-              );
-            },
-          },
-          {
             id: 'actions',
             label: 'Actions',
             isFilter: false,
@@ -205,9 +192,8 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  disabled={row.status === FeeRefundStatusType.Approved}
                   actions={(prop) => actions({ ...prop, row })}
-                  showThreeDots={row.status === FeeRefundStatusType.Approved}
+                  showThreeDots={false}
                   showViewIcon
                   handleViewClick={() => {
                     onView?.(row as IStudentFeeData);

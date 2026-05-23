@@ -16,13 +16,12 @@ import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/Curriculu
 import type { ISubject, ISubjectTableProps } from './type';
 
 const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
-  onAddSubject,
-  editData,
   open,
   setOpenDialog,
   setEditData,
   onDelete,
   onEdit,
+  onOpenDrawer,
 }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const {
@@ -91,7 +90,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           Subject Data Not Found{' '}
           <Box
             onClick={() => {
-              onAddSubject.onTrue();
+              onOpenDrawer();
               setOpenDialog(true);
               setEditData(null);
             }}

@@ -8,7 +8,6 @@ import {
 } from '@mui/icons-material';
 
 import { Iconify } from '../../iconify';
-import { getColumnSizeSx } from '../utils/columnSizing';
 
 import type { IColumn, IParams } from '../types';
 
@@ -34,14 +33,6 @@ interface TableHeaderProps {
   setHeaderRef: React.Dispatch<React.SetStateAction<number[]>>;
   stickyMap: { left: Record<string, number>; right: Record<string, number> };
   getStickyStyle: (col: IColumn, isHeader: boolean) => React.CSSProperties;
-  columnWidths: Record<string, number>;
-  onResizeStart: (
-    colId: string,
-    event: React.MouseEvent,
-    currentWidth: number,
-    minWidth: number
-  ) => void;
-  onResetWidth: (colId: string) => void;
 }
 
 export const TableHeader = React.memo(
@@ -56,9 +47,6 @@ export const TableHeader = React.memo(
     setHeaderRef,
     stickyMap,
     getStickyStyle,
-    columnWidths,
-    onResizeStart,
-    onResetWidth,
   }: TableHeaderProps) => {
     const theme = useTheme();
 
@@ -82,7 +70,7 @@ export const TableHeader = React.memo(
                     // fontSize: '13px',
                     fontWeight: 600,
                     color: 'text.secondary',
-                    ...getColumnSizeSx(column, columnWidths[column.id]),
+                    width: column.minWidth,
                     whiteSpace: 'nowrap',
                     py: 1.5,
                     px: 2,
@@ -120,6 +108,8 @@ export const TableHeader = React.memo(
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
                       cursor: column.isSort !== false ? 'pointer' : 'default',
                       userSelect: 'none',
                       fontWeight: 'bold',
@@ -138,104 +128,89 @@ export const TableHeader = React.memo(
                       textOverflow="ellipsis"
                       width={!column?.renderColumn ? 'auto' : 'inherit'}
                       component="span"
+                      sx={{ flex: 1, minWidth: 0 }}
                     >
                       {column.label} {column?.renderColumn?.(column)}
                     </Box>
-                    {column.isSort !== false && (
-                      <Box
-                        width="18px"
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                        sx={{ flexShrink: 0, display: 'flex', justifyContent: 'start' }}
-                      >
-                        {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                          <Box component="span" sx={{ fontSize: '0.75em' }}>
-                            {sorts.findIndex((sort) => sort.column === column.id) + 1}
-                          </Box>
-                        )}
-                        <IconButton
-                          size="small"
-                          sx={{
-                            opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
-                            p: 0.25,
-                          }}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        ml: 'auto',
+                        flexShrink: 0,
+                        gap: 1,
+                      }}
+                    >
+                      {column.isSort !== false && (
+                        <Box
+                          width="18px"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          sx={{ flexShrink: 0, display: 'flex', justifyContent: 'start' }}
                         >
-                          {sorts.find((sort) => sort.column === column.id)?.direction === 'asc' ? (
-                            <ArrowUpwardIcon fontSize="inherit" />
-                          ) : (
-                            <ArrowDownwardIcon fontSize="inherit" />
+                          {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                            <Box component="span" sx={{ fontSize: '0.75em' }}>
+                              {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                            </Box>
                           )}
-                        </IconButton>
-                      </Box>
-                    )}
-                    {column.isFilter && (
-                      <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
-                        <Iconify
-                          icon="fluent:filter-12-filled"
-                          className="column-filter-icon"
-                          sx={{
-                            height: 16,
-                            width: 16,
-                            cursor: 'pointer',
-                            // ml: 0.5,
-                            m: 0,
-                            color: 'text.disabled',
-                          }}
-                          onClick={(e) => onColumnFilterClick(e, column)}
-                        />
-                        {filters.some((f) => f.column === column.id) && (
-                          <Box
+                          <IconButton
+                            size="small"
                             sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              bgcolor: 'primary.main',
-                              position: 'absolute',
-                              top: '-4px',
-                              right: '-4px',
+                              opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
+                              p: 0.25,
                             }}
+                          >
+                            {sorts.find((sort) => sort.column === column.id)?.direction ===
+                            'asc' ? (
+                              <ArrowUpwardIcon fontSize="inherit" />
+                            ) : (
+                              <ArrowDownwardIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        </Box>
+                      )}
+                      {column.isFilter && (
+                        <Box position="relative" display="flex" alignItems="center" flexShrink={0}>
+                          <Iconify
+                            icon="fluent:filter-12-filled"
+                            className="column-filter-icon"
+                            sx={{
+                              height: 16,
+                              width: 16,
+                              cursor: 'pointer',
+                              m: 0,
+                              color: 'text.disabled',
+                            }}
+                            onClick={(e) => onColumnFilterClick(e, column)}
                           />
-                        )}
-                      </Box>
-                    )}
+                          {filters.some((f) => f.column === column.id) && (
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                bgcolor: 'primary.main',
+                                position: 'absolute',
+                                top: '-4px',
+                                right: '-4px',
+                              }}
+                            />
+                          )}
+                        </Box>
+                      )}
+                    </Box>
                   </Box>
                   <Box
-                    className="resize-handle"
-                    onMouseDown={(e) => {
-                      const th = (e.currentTarget as HTMLElement).closest('th') as HTMLElement;
-                      const currentWidth = th?.getBoundingClientRect().width ?? 100;
-                      const min = typeof column.minWidth === 'number' ? column.minWidth : 50;
-                      onResizeStart(column.id, e, currentWidth, min);
-                    }}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      onResetWidth(column.id);
-                    }}
                     sx={{
                       position: 'absolute',
-                      top: 0,
+                      top: '20%',
                       right: 0,
-                      width: '2px',
-                      height: '100%',
-                      cursor: 'col-resize',
-                      zIndex: 10,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      '&::after': {
-                        content: '""',
-                        display: 'block',
-                        width: '2px',
-                        height: '50%',
-                        borderRadius: '2px',
-                        backgroundColor: theme.vars.palette.divider,
-                        transition: 'background-color 0.15s, height 0.15s',
-                      },
-                      '&:hover::after': {
-                        backgroundColor: theme.vars.palette.primary.main,
-                        height: '80%',
-                      },
+                      width: '1px',
+                      height: '60%',
+                      borderRadius: '2px',
+                      backgroundColor: theme.vars.palette.divider,
+                      pointerEvents: 'none',
                     }}
                   />
                 </TableCell>

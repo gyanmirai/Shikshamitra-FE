@@ -10,6 +10,7 @@ export interface IStudentFeeData {
   division: string;
   grNo: string;
   rollNo: string;
+  contactNo?: string;
   totalPaidFees: number;
   totalPendingFees: number;
   refundAmount?: number;
@@ -32,13 +33,10 @@ export interface IStudentFeeTableProps {
   data: IStudentFeeData[];
   onRequestRefund?: (row: IStudentFeeData) => void;
   onView?: (row: IStudentFeeData) => void;
-  onProcessRefund?: (row: IStudentFeeData) => void;
-  boards: any[];
-  mediums: any[];
   selectedBoard: string;
+  setSelectedBoard: (value: string) => void;
   selectedMedium: string;
-  onBoardChange: (value: string) => void;
-  onMediumChange: (value: string) => void;
+  setSelectedMedium: (value: string) => void;
 }
 
 export interface IRefundFormProps {

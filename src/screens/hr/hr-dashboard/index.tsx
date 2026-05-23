@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { Box, Grid } from '@mui/material';
+import { useSession } from 'next-auth/react';
 
 import HRStatsCards from './components/HRStatsCards';
 import LeaveManagement from './components/LeaveManagement';
@@ -10,7 +12,17 @@ import HRQuickActionsPanel from './components/HRQuickActionsPanel';
 import HRDashboardAttendanceTrend from './components/HRDashboardAttendanceTrend';
 import HRBirthdaysAndAnniversaries from './components/HRBirthdaysAndAnniversaries';
 
-const HRDashboardScreen = () => (
+const EmployeeProfileDashboard = dynamic(() => import('../employee/employee-dashboard'));
+
+const hasRole = (role: unknown, expectedRole: string) => {
+  if (Array.isArray(role)) {
+    return role.some((item) => String(item).toLowerCase() === expectedRole);
+  }
+
+  return String(role || '').toLowerCase() === expectedRole;
+};
+
+const AdminDashboard = () => (
   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 1 }}>
     {/* Row 1 – KPI Summary Cards */}
     <HRStatsCards />
@@ -43,5 +55,16 @@ const HRDashboardScreen = () => (
     </Grid>
   </Box>
 );
+
+const HRDashboardScreen = () => {
+  const { data: session } = useSession() as any;
+  const isAdminUser = hasRole(session?.profile?.role, 'admin');
+
+  if (!isAdminUser) {
+    return <EmployeeProfileDashboard editData={{}} />;
+  }
+
+  return <AdminDashboard />;
+};
 
 export default HRDashboardScreen;

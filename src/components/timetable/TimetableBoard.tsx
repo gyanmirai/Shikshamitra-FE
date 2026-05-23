@@ -1,19 +1,24 @@
 import confetti from 'canvas-confetti';
-import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { Add } from '@mui/icons-material';
-import { Box, Paper, Button } from '@mui/material';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Box, Paper, Alert, Button, AlertTitle, Typography } from '@mui/material';
 import CreateSlotsForm from 'src/screens/academic/timetable-schedule-management/settings/components/lectureSlots/createSlotsForm';
 
 import { SlotType } from './types';
 import DayColumn from './DayColumn';
 import CustomDialog from '../customDialog';
 import SubjectPalette from './SubjectPalette';
-import { generateTimelineStamps } from './utils';
 import AssignRoomDialog from './AssignRoomDialog';
 import AssignTeacherDialog from './AssignTeacherDialog';
+import {
+  TIMELINE_END_HOUR,
+  parseTimeToMinutes,
+  TIMELINE_START_HOUR,
+  generateTimelineStamps,
+} from './utils';
 
 import type { RoomAssignment } from './AssignRoomDialog';
 import type { TeacherAssignment } from './AssignTeacherDialog';
@@ -40,7 +45,38 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   standardId = '',
   divisionId = '',
 }) => {
-  const [timelineStamps] = useState(generateTimelineStamps());
+  const { timelineStartHour, timelineEndHour, timelineStamps } = useMemo(() => {
+    let minMin = Infinity;
+    let maxMin = 0;
+    Object.values(slots).forEach((daySlots) => {
+      daySlots.forEach((slot) => {
+        if (!slot.startTime || !slot.endTime) return;
+        const start = parseTimeToMinutes(slot.startTime);
+        const end = parseTimeToMinutes(slot.endTime);
+        if (start < minMin) minMin = start;
+        if (end > maxMin) maxMin = end;
+      });
+    });
+
+    if (minMin === Infinity || maxMin === 0) {
+      return {
+        timelineStartHour: TIMELINE_START_HOUR,
+        timelineEndHour: TIMELINE_END_HOUR,
+        timelineStamps: generateTimelineStamps(),
+      };
+    }
+
+    const startHour = Math.floor(minMin / 60);
+    // +30 min buffer after last slot, then round up to next whole hour for clean labels
+    const endHour = Math.ceil((maxMin + 30) / 60);
+
+    return {
+      timelineStartHour: startHour,
+      timelineEndHour: endHour,
+      timelineStamps: generateTimelineStamps(startHour, endHour),
+    };
+  }, [slots]);
+
   const createSlotsDialog = useBoolean();
   const [teacherDialog, setTeacherDialog] = useState<TeacherAssignment | null>(null);
   const [roomDialog, setRoomDialog] = useState<RoomAssignment | null>(null);
@@ -54,6 +90,23 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     fromSlotId?: string
   ) => {
     if (readOnly) return;
+
+    // Guard: enforce the weekly lecture limit configured in Weekly Lectures Slots.
+    // This prevents scheduling a subject that has 0 (or already exhausted) lecture slots
+    // even if a drag somehow bypasses the palette's canDrag check.
+    if (!fromSlotId) {
+      const totalLectures = subject.totalLectures ?? 0;
+      if (totalLectures === 0) return;
+      const subjectKey = (subject as any).electiveGroupId || subject.subjectId;
+      let currentCount = 0;
+      Object.values(slots).forEach((daySlots) => {
+        daySlots.forEach((slot: any) => {
+          const key = slot.electiveGroupId || slot.subjectId || slot.subjects?.[0]?.subjectId;
+          if (key === subjectKey) currentCount += 1;
+        });
+      });
+      if (currentCount >= totalLectures) return;
+    }
 
     // 1. Update State
     const newWeeklySlots = { ...slots };
@@ -259,6 +312,43 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     return counts;
   })();
 
+  // --- Conflict Detection ---
+  const conflicts = useMemo(() => {
+    const warnings: string[] = [];
+    (Object.keys(slots) as DayOfWeek[]).forEach((day) => {
+      slots[day].forEach((slot) => {
+        if (!slot.subjects || slot.subjects.length < 2) return;
+
+        // Teacher double-booking within the same time slot
+        const teacherIds = slot.subjects.map((s) => s.teacherId).filter(Boolean);
+        const seenTeachers = new Set<string>();
+        teacherIds.forEach((id) => {
+          if (id && seenTeachers.has(id)) {
+            warnings.push(
+              `${day.charAt(0) + day.slice(1).toLowerCase()}: Same teacher double-booked at ${slot.startTime}–${slot.endTime}`
+            );
+          } else if (id) {
+            seenTeachers.add(id);
+          }
+        });
+
+        // Room double-booking within the same time slot
+        const roomIds = slot.subjects.map((s) => s.roomId).filter(Boolean);
+        const seenRooms = new Set<string>();
+        roomIds.forEach((id) => {
+          if (id && seenRooms.has(id)) {
+            warnings.push(
+              `${day.charAt(0) + day.slice(1).toLowerCase()}: Same room double-booked at ${slot.startTime}–${slot.endTime}`
+            );
+          } else if (id) {
+            seenRooms.add(id);
+          }
+        });
+      });
+    });
+    return [...new Set(warnings)]; // deduplicate
+  }, [slots]);
+
   const content = (
     <Box
       sx={{
@@ -360,6 +450,8 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 onAssignRoom={handleAssignRoom}
                 onClearDay={handleClearDay}
                 readOnly={readOnly}
+                timelineStartHour={timelineStartHour}
+                timelineEndHour={timelineEndHour}
               />
             ))}
           </Box>
@@ -414,7 +506,27 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     </Box>
   );
 
-  return <DndProvider backend={HTML5Backend}>{content}</DndProvider>;
+  return (
+    <DndProvider backend={HTML5Backend}>
+      {conflicts.length > 0 && !readOnly && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 1, borderRadius: 1 }}
+          onClose={() => {
+            /* dismissed visually — conflicts persist until resolved */
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: 700 }}>Scheduling Conflicts Detected</AlertTitle>
+          {conflicts.map((msg, i) => (
+            <Typography key={i} variant="body2" sx={{ lineHeight: 1.8 }}>
+              • {msg}
+            </Typography>
+          ))}
+        </Alert>
+      )}
+      {content}
+    </DndProvider>
+  );
 };
 
 export default TimetableBoard;

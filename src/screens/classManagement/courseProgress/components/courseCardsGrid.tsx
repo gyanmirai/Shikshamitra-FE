@@ -69,11 +69,20 @@ export default function CourseCardsGrid({
       sx={{
         display: 'flex',
         flexDirection: isVertical ? 'row' : 'column',
-        gap: isVertical ? 1 : 1.5,
+        gap: isVertical ? 1 : 1,
+        width: '100%',
       }}
     >
       {[1, 2, 3].map((i) => (
-        <Card key={i} sx={{ minWidth: isVertical ? 280 : undefined, p: 1.5, flexShrink: 0 }}>
+        <Card
+          key={i}
+          sx={{
+            minWidth: isVertical ? 280 : undefined,
+            width: isVertical ? undefined : '100%',
+            p: 1.5,
+            flexShrink: 0,
+          }}
+        >
           <Skeleton variant="text" width="60%" height={22} sx={{ mb: 1 }} />
           <Skeleton variant="rectangular" height={8} sx={{ borderRadius: 1, mb: 0.5 }} />
           <Skeleton variant="text" width="40%" height={18} />
@@ -88,28 +97,31 @@ export default function CourseCardsGrid({
         flexDirection: isVertical ? 'row' : 'column',
         flexWrap: isVertical ? 'nowrap' : undefined,
         overflowX: isVertical ? 'auto' : undefined,
-        gap: isVertical ? 1 : 1.5,
-        pr: isVertical ? 0 : 0.5,
+        width: '100%',
+        gap: isVertical ? 1 : 1,
+        pr: isVertical ? 0 : 0,
         pl: isVertical ? 0 : undefined,
-        pb: isVertical ? 0 : 0, // Prevent scrollbar cut off
-        scrollbarWidth: isVertical ? 'none' : undefined, // Firefox
-        msOverflowStyle: isVertical ? 'none' : undefined, // IE and Edge
-        '&::-webkit-scrollbar': isVertical ? { display: 'none' } : undefined, // Chrome, Safari and Opera
+        pb: isVertical ? 0 : 0,
+        scrollbarWidth: isVertical ? 'none' : undefined,
+        msOverflowStyle: isVertical ? 'none' : undefined,
+        '&::-webkit-scrollbar': isVertical ? { display: 'none' } : undefined,
       }}
     >
-      {courses?.map((course) => {
+      {courses?.map((course, index) => {
         const isSelected = selectedCourseId === course.id;
         const courseColor = course.color || '#1976d2';
 
         return (
           <Card
-            key={course.id}
+            key={`${course.id}-${index}`}
             onClick={() => {
+              if (selectedCourseId === course.id) return;
               setSelectedCourseId(course.id);
               handleCardDetails(course);
             }}
             sx={{
               minWidth: isVertical ? 280 : undefined,
+              width: isVertical ? undefined : '100%',
               cursor: 'pointer',
               flexShrink: 0,
               borderRadius: 1,
@@ -212,28 +224,27 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
   return (
     <Box
       sx={{
-        p: 1,
+        p: 1.5,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: 1,
+        gap: 0.75,
       }}
     >
-      {/* Title & Chapter Count */}
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Box display="flex" alignItems="center" gap={1}>
+      {/* Title row & Circular Progress */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={1} sx={{ minWidth: 0, flex: 1 }}>
           <SubjectColorIndicator color={safeColor} />
           <Typography
             variant="subtitle2"
             fontWeight={700}
             noWrap
-            sx={{ color: 'text.primary', letterSpacing: -0.2, mb: 0.3 }}
+            sx={{ color: 'text.primary', letterSpacing: -0.2 }}
           >
             {title}
           </Typography>
         </Box>
-        {/* Progress Bar */}
-        <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+        {/* Circular Progress */}
+        <Box sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
           {/* Background Track */}
           <CircularProgress
             variant="determinate"

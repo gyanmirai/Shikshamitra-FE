@@ -1,4 +1,5 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { IData } from 'src/components/customizabaleTable/types';
 
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
@@ -166,7 +167,8 @@ const CourseManagement = (props: TabComponentType) => {
           {
             id: 'action',
             label: 'Action',
-            render(value: string, row: CourseData) {
+            render(value: string, row: IData) {
+              const typedRow = row as CourseData;
               return (
                 <ThreeDotsActions
                   actions={(actionProps: { popover: { onClose: () => void } }) => (
@@ -174,7 +176,7 @@ const CourseManagement = (props: TabComponentType) => {
                       <MenuItem
                         onClick={() => {
                           setIsEdit(true);
-                          setSelectedEntry(row);
+                          setSelectedEntry(typedRow);
                           dialog.onTrue();
                           actionProps.popover.onClose();
                         }}

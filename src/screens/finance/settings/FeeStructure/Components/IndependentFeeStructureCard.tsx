@@ -1,7 +1,10 @@
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -13,13 +16,14 @@ import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { FeeMonth } from 'src/enums/fee-collection-type';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { FeeMonthOptions } from 'src/enums/fee-collection-type';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
+import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import {
   Box,
   Chip,
@@ -85,8 +89,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   onDeleted,
   onDirtyChange,
 }) => {
-  console.log('initialData----', initialData);
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [cardId, setCardId] = useState<string | undefined>(initialData._id);
   const [status, setStatus] = useState(initialData.status);
   const [isEditing, setIsEditing] = useState(!initialData._id);
@@ -115,6 +119,22 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const updateStructure = useUpdateClassWiseFeeStructure();
   const deleteStructure = useDeleteClassWiseFeeStructure();
   const lockStructure = useLockClassWiseFeeStructure();
+
+  const {
+    data: academicYearMonthsData,
+    isLoading: isMonthsLoading,
+    isFetching: isMonthsFetching,
+  } = useGetAcademicYearMonthsQuery(
+    { academicYearId: currentYear?.id },
+    { skip: !currentYear?.id }
+  );
+
+  const monthOptions = [
+    ...(academicYearMonthsData?.map((item: { month: number; year: number }) => ({
+      label: `${FeeMonth[item.month]}-${item.year}`,
+      value: `${item.month}-${item.year}`,
+    })) || []),
+  ];
 
   const totalAmount = formik.values.feeHeads.reduce((sum, fh) => sum + (fh.amount || 0), 0);
 
@@ -146,6 +166,11 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     const updated = formik.values.feeHeads.map((fh, i) =>
       i === idx ? { ...fh, [field]: value } : fh
     );
+    formik.setFieldValue('feeHeads', updated);
+  };
+
+  const updateFeeHeadFields = (idx: number, fields: Partial<IClassWiseFeeItem>) => {
+    const updated = formik.values.feeHeads.map((fh, i) => (i === idx ? { ...fh, ...fields } : fh));
     formik.setFieldValue('feeHeads', updated);
   };
 
@@ -182,8 +207,9 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         isOneTime: fh.isOneTime,
         isOptional: fh.isOptional,
         isRefundable: fh.isRefundable,
-        // paymentTermId: fh.paymentTermId,
-        // paybleMonth: fh.paybleMonth,
+        ...(fh.isOneTime && fh.paybleMonth !== undefined && fh.payableYear !== undefined
+          ? { payableMonth: Number(fh.paybleMonth), payableYear: Number(fh.payableYear) }
+          : {}),
       }));
       if (isNew) {
         const saved = await createStructure({
@@ -212,12 +238,13 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         });
         formik.resetForm({
           values: {
-            name: saved.name ?? formik.values.name,
-            feeHeads: saved.feeHeads ?? formik.values.feeHeads,
+            name: saved?.name ?? formik.values.name,
+            feeHeads: saved?.feeHeads ?? formik.values.feeHeads,
           },
         });
         setIsEditing(false);
         setIsSaving(false);
+        onSaved?.({ ...initialData, ...saved, _id: cardId });
         shikshaMitraToast.success({ message: 'Fee structure updated successfully' });
       }
     } catch {
@@ -271,7 +298,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         elevation={0}
         defaultExpanded={isNew}
         sx={{
-          mb: 1.5,
           border: `1px solid ${varAlpha(theme.palette.grey['500Channel'], isLocked ? 0.2 : 0.12)}`,
           borderRadius: '10px !important',
           opacity: isLocked ? 0.9 : 1,
@@ -281,12 +307,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.closest('button') || target.closest('[role="button"]')) {
-              e.stopPropagation();
-            }
-          }}
           sx={{
             px: 2,
             minHeight: 52,
@@ -304,15 +324,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             },
           }}
         >
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={1.5}
-            flex={1}
-            minWidth={0}
-            overflow="hidden"
-            onClick={(e) => isEditing && !isLocked && e.stopPropagation()}
-          >
+          <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0} overflow="hidden">
             <Box
               sx={{
                 width: 28,
@@ -339,6 +351,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  onClick={(e) => e.stopPropagation()}
                   label="Fee Structure Name *"
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
@@ -461,7 +474,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             </Tooltip>
 
             {!isNew && (
-              <Tooltip title={isLocked ? 'Unlock Fee Structure' : 'Lock Fee Structure'}>
+              <Tooltip title={isLocked ? 'Cannot Unlock Fee Structure' : 'Lock Fee Structure'}>
                 <span>
                   <LoadingButton
                     loading={isLocking}
@@ -478,6 +491,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           : theme.vars.palette.success.dark,
                       },
                     }}
+                    disabled={isLocked}
                   >
                     <Iconify
                       icon={isLocked ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
@@ -591,8 +605,11 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                           onClick={() => {
                             if (!isEditing || isLocked) return;
                             const newVal = !item.isOneTime;
-                            updateFeeHead(idx, 'isOneTime', newVal);
-                            if (!newVal) updateFeeHead(idx, 'paybleMonth', undefined);
+                            updateFeeHeadFields(idx, {
+                              isOneTime: newVal,
+                              paybleMonth: newVal ? item.paybleMonth : undefined,
+                              payableYear: newVal ? item.payableYear : undefined,
+                            });
                           }}
                           sx={{
                             display: 'flex',
@@ -630,16 +647,22 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                       <Grid size={2} sx={{ pr: 1, display: 'flex', flexDirection: 'column' }}>
                         <CustomSelect
                           label="Month"
-                          options={FeeMonthOptions.map((m) => ({
-                            label: m.label,
-                            value: String(m.value),
-                          }))}
+                          options={monthOptions}
                           disabled={!isEditing || isLocked || !item.isOneTime}
+                          isLoading={isMonthsLoading || isMonthsFetching}
                           labelKey="label"
                           valueKey="value"
-                          value={item.paybleMonth ? String(item.paybleMonth) : ''}
+                          value={
+                            item.paybleMonth !== undefined && item.payableYear !== undefined
+                              ? `${item.paybleMonth}-${item.payableYear}`
+                              : ''
+                          }
                           onChange={(value) => {
-                            updateFeeHead(idx, 'paybleMonth', value);
+                            const [month, year] = (value as string).split('-');
+                            updateFeeHeadFields(idx, {
+                              paybleMonth: Number(month) as any,
+                              payableYear: Number(year),
+                            });
                             formik.setFieldTouched(`feeHeads[${idx}].paybleMonth`, true, false);
                           }}
                           formControlProps={{

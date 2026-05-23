@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
+import type { IData } from 'src/components/customizabaleTable/types';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -203,9 +204,9 @@ const CourseProgress = (props: TabComponentType) => {
                 align: 'left',
                 sticky: true,
                 isFilter: false,
-                render: (value: string, row: ICourseDetail) => (
+                render: (value: string, row: IData) => (
                   <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
+                    actions={(prop) => actions({ ...prop, row: row as ICourseDetail })}
                     placement="right-top"
                   />
                 ),

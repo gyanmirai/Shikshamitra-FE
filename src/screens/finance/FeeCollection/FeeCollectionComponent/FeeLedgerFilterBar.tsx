@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
@@ -12,7 +13,8 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { Box, Tab, Chip, Card, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { FeeMonthOptions, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
+import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
+import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,9 +37,9 @@ interface FeeLedgerFilterBarProps {
 
 export const FEE_LEDGER_INITIAL_FILTERS: FeeLedgerFilters = {
   activeTab: 'by-month',
-  month: '',
-  feeHead: '',
-  status: '',
+  month: 'All',
+  feeHead: 'All',
+  status: 'All',
 };
 
 const TABS = [
@@ -45,9 +47,14 @@ const TABS = [
   { value: 'by-fee-head' as FeeLedgerTab, label: 'By Fee Head', icon: 'solar:tag-bold' },
 ];
 
-const MONTH_OPTIONS = [
+export const getAcademicYearMonthOptions = (
+  data: { month: number; year: number }[] | undefined
+) => [
   { label: 'All', value: 'All' },
-  ...FeeMonthOptions.map((m) => ({ label: m.label, value: String(m.value) })),
+  ...(data?.map((item) => ({
+    label: `${FeeMonth[item.month]}-${item.year}`,
+    value: `${item.month}-${item.year}`,
+  })) || []),
 ];
 
 const STATUS_OPTIONS = [
@@ -62,6 +69,11 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const tabs = useTabs(filters.activeTab);
 
+  const handleTabChange = (_: React.SyntheticEvent, newValue: string | number) => {
+    tabs.onChange(_, newValue);
+    onFilterChange({ ...filters, activeTab: newValue as FeeLedgerTab });
+  };
+
   const {
     data: feeHeadData,
     isLoading: isFeeHeadLoading,
@@ -72,21 +84,34 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
     params: { academicYearId: currentYear?.id },
   });
 
-  const feeHeadOptions = [{ id: 'All', name: 'All' }, ...(feeHeadData?.items || [])];
+  const {
+    data: academicYearMonthsData,
+    isLoading: isMonthsLoading,
+    isFetching: isMonthsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAcademicYearMonthsQuery,
+    params: { academicYearId: currentYear?.id },
+  });
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: string | number) => {
-    tabs.onChange(_, newValue);
-    onFilterChange({ ...filters, activeTab: newValue as FeeLedgerTab });
-  };
+  const monthOptions = getAcademicYearMonthOptions(academicYearMonthsData);
+
+  const feeHeadOptions = [{ id: 'All', name: 'All' }, ...(feeHeadData?.items || [])];
 
   return (
     <Card
+      component={motion.div}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        p: 1.5,
-        boxShadow: 'var(--shadows-4)',
-        borderRadius: 2,
-        ml: 0.5,
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.6)}`,
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        display: 'flex',
+        flexDirection: 'column',
+        p: { xs: 1.25, md: 1.5 },
+        boxShadow: (t) => `var(--shadows-4)`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
       {/* ── Header row: title + tabs ── */}
@@ -186,10 +211,11 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
       >
         <CustomSelect
           label="Month"
-          options={MONTH_OPTIONS}
+          options={monthOptions}
           labelKey="label"
           valueKey="value"
           value={filters.month}
+          isLoading={isMonthsLoading || isMonthsFetching}
           onChange={(value) => onFilterChange({ ...filters, month: value as string })}
           formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"

@@ -1,7 +1,10 @@
 import type { TimetableSlot } from 'src/screens/academic/timetable-schedule-management/timeTable/type';
 
-import { Box, Card, Typography } from '@mui/material';
+import dayjs from 'dayjs';
+import { useMemo } from 'react';
+import { Box, Card, Typography, CircularProgress } from '@mui/material';
 import TimeTableView from 'src/screens/academic/timetable-schedule-management/timeTable/component/timeTableView';
+import { useGetTimetableByStandardDivisionQuery } from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
 
 const studentTimetable: TimetableSlot[] = [
   {
@@ -413,24 +416,102 @@ const studentTimetable: TimetableSlot[] = [
   },
 ];
 
-const AcademicTimetable = () => (
-  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-    <Card sx={{ p: 1.5 }}>
-      <Typography variant="h6" mb={2}>
-        Timetable
-      </Typography>
+const DAY_ABBREV: Record<string, string> = {
+  Monday: 'Mon',
+  Tuesday: 'Tue',
+  Wednesday: 'Wed',
+  Thursday: 'Thu',
+  Friday: 'Fri',
+  Saturday: 'Sat',
+  Sunday: 'Sun',
+};
 
-      <TimeTableView
-        isClassVisible={false}
-        isDivisionVisible={false}
-        isDrag={false}
-        isRoomVisible
-        isTeacherVisible
-        timeTableData={studentTimetable}
-        showThreeDots={false}
-      />
-    </Card>
-  </Box>
-);
+const formatTime = (t: string): string => {
+  const parsed = dayjs(t, 'HH:mm');
+  return parsed.isValid() ? parsed.format('hh:mm A') : t;
+};
+
+const transformToSlots = (timetableData: Record<string, any[]>): TimetableSlot[] => {
+  const slotMap = new Map<string, TimetableSlot>();
+  Object.entries(timetableData).forEach(([dayName, slots]) => {
+    const day = DAY_ABBREV[dayName] ?? dayName;
+    (slots ?? []).forEach((slot: any) => {
+      const key = `${slot.startTime}-${slot.endTime}`;
+      if (!slotMap.has(key)) {
+        slotMap.set(key, {
+          startTime: formatTime(slot.startTime),
+          endTime: formatTime(slot.endTime),
+          isBreak: slot.type === 1,
+          dayData: [],
+        });
+      }
+      if (slot.type !== 1) {
+        const subjects = (slot.subjects ?? []).map((s: any) => ({
+          subject: s.subjectName ?? s.subject ?? '',
+          teacher: s.teacherName ?? '',
+          room: s.roomName ?? '',
+        }));
+        (slotMap.get(key) as TimetableSlot).dayData.push({
+          day,
+          subjectColor: slot.subjects?.[0]?.subjectColor ?? '#90caf9',
+          subjects: subjects.length > 0 ? subjects : [{ subject: '' }],
+        });
+      }
+    });
+  });
+
+  return Array.from(slotMap.values()).sort((a, b) => {
+    const toMin = (t: string) => {
+      const p = dayjs(t, 'hh:mm A');
+      return p.isValid() ? p.hour() * 60 + p.minute() : 0;
+    };
+    return toMin(a.startTime) - toMin(b.startTime);
+  });
+};
+
+interface AcademicTimetableProps {
+  standardId?: string;
+  divisionId?: string;
+}
+
+const AcademicTimetable = ({ standardId, divisionId }: AcademicTimetableProps) => {
+  const { data, isLoading } = useGetTimetableByStandardDivisionQuery(
+    { standardId: standardId!, divisionId: divisionId! },
+    { skip: !standardId || !divisionId }
+  );
+
+  const slots = useMemo((): TimetableSlot[] => {
+    const raw = data?.timetable ?? data?.data?.timetable;
+    if (!raw || typeof raw !== 'object') return [];
+    return transformToSlots(raw as Record<string, any[]>);
+  }, [data]);
+
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" py={4}>
+        <CircularProgress size={32} />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Card sx={{ p: 1.5 }}>
+        <Typography variant="h6" mb={2}>
+          Timetable
+        </Typography>
+        <TimeTableView
+          isClassVisible={false}
+          isDivisionVisible={false}
+          isDrag={false}
+          isRoomVisible
+          isTeacherVisible
+          timeTableData={slots}
+          showThreeDots={false}
+        />
+      </Card>
+    </Box>
+  );
+};
 
 export default AcademicTimetable;

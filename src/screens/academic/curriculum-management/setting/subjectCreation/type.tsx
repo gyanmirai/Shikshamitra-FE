@@ -7,6 +7,12 @@ export interface ISubject {
   createdBy: string;
 }
 
+export interface IPendingRow {
+  tempId: string;
+  name: string;
+  color: string;
+}
+
 export interface ISubjectFormProps {
   open: UseBooleanReturn;
   onClose: (e: any, isSubmit: boolean) => void;
@@ -14,11 +20,10 @@ export interface ISubjectFormProps {
 }
 
 export interface ISubjectTableProps {
-  onAddSubject: UseBooleanReturn;
-  editData?: ISubject | null;
   open: boolean;
   setOpenDialog: (value: boolean) => void;
   setEditData: (value: ISubject | null) => void;
   onDelete: (data: ISubject) => void;
   onEdit: (data: ISubject) => void;
+  onOpenDrawer: () => void;
 }

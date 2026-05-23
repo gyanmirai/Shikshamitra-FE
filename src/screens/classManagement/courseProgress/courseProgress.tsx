@@ -3,6 +3,7 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
@@ -10,7 +11,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { sliderClasses } from '@mui/material/Slider';
-import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -124,15 +124,23 @@ const CourseProgressComponent = ({
       subjectData?.records ??
       (Array.isArray(subjectData) ? subjectData : []);
 
-    return raw.map((s: any) => ({
-      id: s.id ?? s.subjectId,
-      name: s.subjectName ?? s.name ?? '',
-      color: s.color ?? '#1976d2',
-      progress: s.progress ?? 0,
-      completedChapter: s.completedChapter ?? 0,
-      totalChapter: s.totalChapter ?? 0,
-      details: s.details ?? [],
-    }));
+    const seen = new Set<string>();
+    return raw
+      .map((s: any) => ({
+        id: s.id ?? s.subjectId,
+        name: s.subjectName ?? s.name ?? '',
+        color: s.color ?? '#1976d2',
+        progress: s.progress ?? 0,
+        completedChapter: s.completedChapter ?? 0,
+        totalChapter: s.totalChapter ?? 0,
+        details: s.details ?? [],
+      }))
+      .filter((course) => {
+        const key = String(course.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   }, [subjectData, courseData, isApiActive]);
 
   // State to store the selected course details
@@ -140,13 +148,27 @@ const CourseProgressComponent = ({
   // Dedicated string ID so the chapters query gets a stable, clean param on every subject click
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
 
-  // Reset selection whenever class or division changes to avoid stale chapter data
+  // Reset selection only when class changes — division changes should keep the current subject
+  // selected and simply refetch chapter data for the new division via the chapters query params.
   useEffect(() => {
     setSelectedCourse(null);
     setSelectedSubjectId('');
-  }, [selectedClass, selectedDivision]);
+  }, [selectedClass]);
 
-  const { data: chaptersData } = useQueryAndMutation({
+  // Auto-select the first subject once subjects have finished loading and nothing is selected.
+  // Gated by the fetching flags so a class/division change never selects stale cached subjects.
+  useEffect(() => {
+    if (isApiActive && (isSubjectsLoading || isSubjectsFetching)) return;
+    if (courses.length === 0 || selectedCourse) return;
+    setSelectedCourse(courses[0]);
+    setSelectedSubjectId(courses[0].id ? String(courses[0].id) : '');
+  }, [courses, isSubjectsLoading, isSubjectsFetching, isApiActive, selectedCourse]);
+
+  const {
+    data: chaptersData,
+    isLoading: isChaptersLoading,
+    isFetching: isChaptersFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersProgressQuery,
     params: {
@@ -160,8 +182,11 @@ const CourseProgressComponent = ({
     },
   });
 
-  useEffect(() => {
-    if (!chaptersData) return;
+  const chapterDetails = useMemo<ICourseDetail[]>(() => {
+    // Non-API mode (student/HR profile view): use details already embedded in the course
+    if (!isApiActive) return selectedCourse?.details ?? [];
+
+    if (!chaptersData) return [];
 
     const raw: any[] =
       chaptersData?.data?.items ??
@@ -169,16 +194,25 @@ const CourseProgressComponent = ({
       chaptersData?.records ??
       (Array.isArray(chaptersData) ? chaptersData : []);
 
-    setSelectedCourse((prev) => (prev ? { ...prev, details: raw } : null));
-  }, [chaptersData]);
+    return raw;
+  }, [chaptersData, isApiActive, selectedCourse?.details]);
 
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
   // Handler for when a course card is selected
-  const handleCardDetails = (course: ICourse) => {
-    setSelectedCourse(course);
-    setSelectedSubjectId(course.id ? String(course.id) : '');
-  };
+  // Wrapped in useCallback for stable reference (prevents CourseCardsGrid's useEffect
+  // from firing on every parent re-render) and uses functional updates to preserve
+  // existing chapter details when the same subject is clicked again.
+  const handleCardDetails = useCallback((course: ICourse) => {
+    setSelectedCourse((prev) => {
+      if (prev?.id === course.id) return prev; // same subject — preserve populated details
+      return course;
+    });
+    setSelectedSubjectId((prevId) => {
+      const newId = course.id ? String(course.id) : '';
+      return prevId === newId ? prevId : newId; // avoid redundant state update
+    });
+  }, []);
 
   const [selectedChapter, setSelectedChapter] = useState<ICourseDetail | null>(null);
   // Get isChanges state from Redux store to track if there are unsaved changes
@@ -283,7 +317,15 @@ const CourseProgressComponent = ({
               />
             </Box>
           ) : (
-            <Card sx={{ height: '100%', p: 1, overflow: 'hidden' }}>
+            <Card
+              sx={{
+                height: '100%',
+                p: 1,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
               <CourseCardsGrid
                 key={`${selectedClass}-${selectedDivision}`}
                 courses={courses}
@@ -298,260 +340,274 @@ const CourseProgressComponent = ({
         {/* Right Section – Chapter Details */}
         <Grid
           size={{ xs: 12, md: isVertical ? 12 : 9 }}
-          sx={{ height: isVertical ? 'auto' : '100%' }}
+          sx={{ height: isVertical ? 'auto' : '100%', display: 'flex', flexDirection: 'column' }}
         >
-          <Card sx={{ p: 2, height: isVertical ? 'auto' : '100%', overflow: 'hidden' }}>
-            <Scrollbar sx={{ height: '100%' }}>
-              {selectedCourse ? (
-                <>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <SubjectColorIndicator color={selectedCourse.color} />
-                    <Typography variant="h6" fontWeight={700}>
-                      {selectedCourse.name} Details
-                    </Typography>
-                  </Box>
-                  {isAction ? (
-                    <CustomizableTable
-                      tableId="course-progress-table"
-                      noDataText={<>No Chapters Found For This Course Found </>}
-                      columns={[
-                        {
-                          id: 'chapterNumber',
-                          label: 'Chapter No.',
-                          align: 'left',
-                          minWidth: 120,
-                          filterType: 'number',
-                        },
-                        { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
-                        {
-                          id: 'startDate',
-                          label: 'Start Date',
-                          align: 'left',
-                          filterType: 'date',
-                          minWidth: 170,
-                        },
-                        {
-                          id: 'timeLine',
-                          label: 'End Date',
-                          minWidth: 170,
-                          align: 'left',
-                          filterType: 'date',
-                          renderColumn: () => <EndToolTip />,
-                          render(value, row) {
-                            const [day, month, year] = value.split('-');
-                            const endDate = new Date(`${year}-${month}-${day}`);
-                            const today = new Date();
-                            endDate.setHours(0, 0, 0, 0);
-                            today.setHours(0, 0, 0, 0);
-
-                            const diffDays = Math.ceil(
-                              (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-                            );
-
-                            // If progress is 100%, use normal text color
-                            if (row.progress === 100) {
-                              return (
-                                <Typography variant="caption" fontSize="13px">
-                                  {value}
-                                </Typography>
-                              );
-                            }
-
-                            let color = 'text.secondary';
-
-                            if (diffDays <= 7) {
-                              color = 'error.main'; // red
-                            } else if (diffDays <= 30) {
-                              color = 'warning.main'; // yellow
-                            } else {
-                              color = 'success.main'; // green
-                            }
-                            return (
-                              <Typography variant="caption" fontSize="13px" sx={{ color }}>
-                                {value}
-                              </Typography>
-                            );
-                          },
-                        },
-                        {
-                          id: 'progress',
-                          label: 'Progress',
-                          filterType: 'number',
-                          render(value, row) {
-                            return (
-                              // Circular progress indicator with percentage
-                              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                                <CircularProgress variant="determinate" value={value} />
-                                <Box
-                                  sx={{
-                                    top: 0,
-                                    left: 0,
-                                    bottom: 0,
-                                    right: 0,
-                                    position: 'absolute',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}
-                                >
-                                  <Typography
-                                    variant="caption"
-                                    component="div"
-                                    sx={{ color: 'text.secondary' }}
-                                  >
-                                    {value}%
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            );
-                          },
-                        },
-                        {
-                          id: 'actions',
-                          label: 'Actions',
-                          minWidth: 50,
-                          align: 'left',
-                          sticky: true,
-                          isSort: false,
-                          isFilter: false,
-                          render(value: any, row: any) {
-                            return (
-                              <ThreeDotsActions
-                                actions={(prop) => actions({ ...prop, row })}
-                                placement="right-center"
-                              />
-                            );
-                          },
-                        },
-                      ]}
-                      data={selectedCourse.details}
-                      serverSide
-                      onServerSort={(column, sortData) => {
-                        setQuery((prev) => ({
-                          ...prev,
-                          sorting: sortQueryString(sortData),
-                        }));
-                      }}
-                      onServerPagination={(page: number, rowsPerPage: number) => {
-                        setQuery((prev) => ({
-                          ...prev,
-                          skipCount: page * rowsPerPage,
-                          maxResultCount: rowsPerPage,
-                        }));
-                      }}
-                    />
-                  ) : (
-                    <CustomizableTable
-                      tableId="course-progress-table"
-                      noDataText={<>No Chapters Found For This Course Found </>}
-                      columns={[
-                        { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
-                        { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
-                        {
-                          id: 'startDate',
-                          label: 'Start Date',
-                          align: 'left',
-                          filterType: 'date',
-                          minWidth: 170,
-                        },
-                        {
-                          id: 'timeLine',
-                          label: 'End Date',
-                          minWidth: 170,
-                          align: 'left',
-                          filterType: 'date',
-                          renderColumn: () => <EndToolTip />,
-                          render(value, row) {
-                            const [day, month, year] = value.split('-');
-                            const endDate = new Date(`${year}-${month}-${day}`);
-                            const today = new Date();
-                            endDate.setHours(0, 0, 0, 0);
-                            today.setHours(0, 0, 0, 0);
-
-                            const diffDays = Math.ceil(
-                              (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-                            );
-
-                            // If progress is 100%, use normal text color
-                            if (row.progress === 100) {
-                              return (
-                                <Typography variant="caption" fontSize="13px">
-                                  {value}
-                                </Typography>
-                              );
-                            }
-
-                            let color = 'text.secondary';
-
-                            if (diffDays <= 7) {
-                              color = 'error.main'; // red
-                            } else if (diffDays <= 30) {
-                              color = 'warning.main'; // yellow
-                            } else {
-                              color = 'success.main'; // green
-                            }
-                            return (
-                              <Typography variant="caption" fontSize="13px" sx={{ color }}>
-                                {value}
-                              </Typography>
-                            );
-                          },
-                        },
-                        {
-                          id: 'progress',
-                          label: 'Progress',
-                          filterType: 'number',
-                          render(value, row) {
-                            return (
-                              // Circular progress indicator with percentage
-                              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                                <CircularProgress variant="determinate" value={value} />
-                                <Box
-                                  sx={{
-                                    top: 0,
-                                    left: 0,
-                                    bottom: 0,
-                                    right: 0,
-                                    position: 'absolute',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                  }}
-                                >
-                                  <Typography
-                                    variant="caption"
-                                    component="div"
-                                    sx={{ color: 'text.secondary' }}
-                                  >
-                                    {value}%
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            );
-                          },
-                        },
-                      ]}
-                      data={selectedCourse.details}
-                    />
-                  )}
-                </>
-              ) : (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    minHeight: 200,
-                    color: 'text.disabled',
-                    flexDirection: 'column',
-                    gap: 1,
-                  }}
-                >
-                  <Typography variant="body2">Select a subject to view chapter details</Typography>
+          <Card
+            sx={{
+              p: 2,
+              height: isVertical ? 'auto' : '100%',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+            }}
+          >
+            {selectedCourse ? (
+              <>
+                <Box display="flex" alignItems="center" gap={1} sx={{ flexShrink: 0, mb: 1 }}>
+                  <SubjectColorIndicator color={selectedCourse.color} />
+                  <Typography variant="h6" fontWeight={700}>
+                    {selectedCourse.name} Details
+                  </Typography>
                 </Box>
-              )}
-            </Scrollbar>
+                {isAction ? (
+                  <CustomizableTable
+                    tableId="course-progress-table"
+                    isLoading={isChaptersLoading || isChaptersFetching}
+                    noDataText={<>No Chapters Found For This Course Found </>}
+                    columns={[
+                      {
+                        id: 'chapterNumber',
+                        label: 'Chapter No.',
+                        align: 'left',
+                        minWidth: 120,
+                        filterType: 'number',
+                      },
+                      { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
+                      {
+                        id: 'startDate',
+                        label: 'Start Date',
+                        align: 'left',
+                        filterType: 'date',
+                        minWidth: 170,
+                        render: (value) => (
+                          <Typography variant="caption" gutterBottom>
+                            {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
+                          </Typography>
+                        ),
+                      },
+                      {
+                        id: 'timeLine',
+                        label: 'End Date',
+                        minWidth: 170,
+                        align: 'left',
+                        filterType: 'date',
+                        renderColumn: () => <EndToolTip />,
+                        render(value, row) {
+                          const [day, month, year] = value.split('-');
+                          const endDate = new Date(`${year}-${month}-${day}`);
+                          const today = new Date();
+                          endDate.setHours(0, 0, 0, 0);
+                          today.setHours(0, 0, 0, 0);
+
+                          const diffDays = Math.ceil(
+                            (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                          );
+
+                          // If progress is 100%, use normal text color
+                          if (row.progress === 100) {
+                            return (
+                              <Typography variant="caption" fontSize="13px">
+                                {value}
+                              </Typography>
+                            );
+                          }
+
+                          let color = 'text.secondary';
+
+                          if (diffDays <= 7) {
+                            color = 'error.main'; // red
+                          } else if (diffDays <= 30) {
+                            color = 'warning.main'; // yellow
+                          } else {
+                            color = 'success.main'; // green
+                          }
+                          return (
+                            <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                              {value}
+                            </Typography>
+                          );
+                        },
+                      },
+                      {
+                        id: 'progress',
+                        label: 'Progress',
+                        filterType: 'number',
+                        align: 'left',
+                        render(value, row) {
+                          return (
+                            // Circular progress indicator with percentage
+                            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                              <CircularProgress variant="determinate" value={value} />
+                              <Box
+                                sx={{
+                                  top: 0,
+                                  left: 0,
+                                  bottom: 0,
+                                  right: 0,
+                                  position: 'absolute',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  component="div"
+                                  sx={{ color: 'text.secondary' }}
+                                >
+                                  {value}%
+                                </Typography>
+                              </Box>
+                            </Box>
+                          );
+                        },
+                      },
+                      {
+                        id: 'actions',
+                        label: 'Actions',
+                        minWidth: 50,
+                        align: 'left',
+                        sticky: true,
+                        isSort: false,
+                        isFilter: false,
+                        render(value: any, row: any) {
+                          return (
+                            <ThreeDotsActions
+                              actions={(prop) => actions({ ...prop, row })}
+                              placement="right-center"
+                            />
+                          );
+                        },
+                      },
+                    ]}
+                    data={chapterDetails}
+                    serverSide
+                    onServerSort={(column, sortData) => {
+                      setQuery((prev) => ({
+                        ...prev,
+                        sorting: sortQueryString(sortData),
+                      }));
+                    }}
+                    onServerPagination={(page: number, rowsPerPage: number) => {
+                      setQuery((prev) => ({
+                        ...prev,
+                        skipCount: page * rowsPerPage,
+                        maxResultCount: rowsPerPage,
+                      }));
+                    }}
+                  />
+                ) : (
+                  <CustomizableTable
+                    tableId="course-progress-table"
+                    isLoading={isChaptersLoading || isChaptersFetching}
+                    noDataText={<>No Chapters Found For This Course Found </>}
+                    columns={[
+                      { id: 'chapterNumber', label: 'Chapter No.', align: 'left', minWidth: 120 },
+                      { id: 'chapterName', label: 'Chapter Name', align: 'left', minWidth: 260 },
+                      {
+                        id: 'startDate',
+                        label: 'Start Date',
+                        align: 'left',
+                        filterType: 'date',
+                        minWidth: 170,
+                      },
+                      {
+                        id: 'timeLine',
+                        label: 'End Date',
+                        minWidth: 170,
+                        align: 'left',
+                        filterType: 'date',
+                        renderColumn: () => <EndToolTip />,
+                        render(value, row) {
+                          const [day, month, year] = value.split('-');
+                          const endDate = new Date(`${year}-${month}-${day}`);
+                          const today = new Date();
+                          endDate.setHours(0, 0, 0, 0);
+                          today.setHours(0, 0, 0, 0);
+
+                          const diffDays = Math.ceil(
+                            (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+                          );
+
+                          // If progress is 100%, use normal text color
+                          if (row.progress === 100) {
+                            return (
+                              <Typography variant="caption" fontSize="13px">
+                                {value}
+                              </Typography>
+                            );
+                          }
+
+                          let color = 'text.secondary';
+
+                          if (diffDays <= 7) {
+                            color = 'error.main'; // red
+                          } else if (diffDays <= 30) {
+                            color = 'warning.main'; // yellow
+                          } else {
+                            color = 'success.main'; // green
+                          }
+                          return (
+                            <Typography variant="caption" fontSize="13px" sx={{ color }}>
+                              {value}
+                            </Typography>
+                          );
+                        },
+                      },
+                      {
+                        id: 'progress',
+                        label: 'Progress',
+                        filterType: 'number',
+                        render(value, row) {
+                          return (
+                            // Circular progress indicator with percentage
+                            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                              <CircularProgress variant="determinate" value={value} />
+                              <Box
+                                sx={{
+                                  top: 0,
+                                  left: 0,
+                                  bottom: 0,
+                                  right: 0,
+                                  position: 'absolute',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  component="div"
+                                  sx={{ color: 'text.secondary' }}
+                                >
+                                  {value}%
+                                </Typography>
+                              </Box>
+                            </Box>
+                          );
+                        },
+                      },
+                    ]}
+                    data={chapterDetails}
+                  />
+                )}
+              </>
+            ) : (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1,
+                  color: 'text.disabled',
+                  flexDirection: 'column',
+                  gap: 1,
+                }}
+              >
+                <Typography variant="body2">Select a subject to view chapter details</Typography>
+              </Box>
+            )}
           </Card>
         </Grid>
       </Grid>
@@ -565,7 +621,7 @@ const CourseProgressComponent = ({
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Update Progress (%)</Typography>
+            <Typography variant="h5">Update Progress for {selectedChapter?.chapterName}</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -580,7 +636,7 @@ const CourseProgressComponent = ({
         <UpdateProgress
           onClose={handleClose}
           selectedChapter={selectedChapter}
-          subjectId={String(selectedCourse?.id)}
+          divisionId={selectedDivision}
         />
       </CustomDialog>
 
@@ -625,7 +681,7 @@ const marks = [
 const UpdateProgress: React.FC<IUpdateProgressProps> = ({
   onClose,
   selectedChapter,
-  subjectId,
+  divisionId,
 }: IUpdateProgressProps) => {
   const [updateChapterProgress, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -650,9 +706,9 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
         const payload = {
           chapterId: (selectedChapter as any).id || (selectedChapter as any).chapterId,
           data: {
+            divisionId,
             progress: values.completePercentage,
             description: values.description,
-            subjectId,
           },
         };
 
@@ -674,7 +730,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
         >
           <ComponentBlock sx={{ mb: 2 }}>
             <Slider
-              defaultValue={20}
+              value={formik.values.completePercentage}
               onChange={(event, value) => {
                 formik.setFieldValue('completePercentage', value);
               }}

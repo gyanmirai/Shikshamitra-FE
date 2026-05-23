@@ -98,6 +98,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
 
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [subjectSelectValue, setSubjectSelectValue] = useState('');
 
   const [addAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -213,6 +214,24 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
     params: { standardId: formik.values.classId },
     options: { skip: !formik.values.classId },
   });
+
+  // Initialize subjectSelectValue when editing (resolve composite key from stored subjectId)
+  useEffect(() => {
+    if (editData?.id && formik.values.subjectId && subjectOptionsData?.data?.items) {
+      const { subjectId } = formik.values;
+      let selectValue = '';
+      subjectOptionsData.data.items.forEach((item: any) => {
+        if (item.subjects?.length > 1 && item.electiveGroupName) {
+          const matchedSub = item.subjects.find((sub: any) => sub.subjectId === subjectId);
+          if (matchedSub) selectValue = `${item.id}::${subjectId}`;
+        } else if (item.subjects?.[0]?.subjectId === subjectId) {
+          selectValue = `${item.id}::${subjectId}`;
+        }
+      });
+      setSubjectSelectValue(selectValue || subjectId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editData?.id, subjectOptionsData?.data?.items]);
 
   const isLoadingData = isAssignmentByIdLoading || isAssignmentByIdFetching;
 
@@ -342,6 +361,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                         formik.setFieldValue('classId', val);
                         formik.setFieldValue('subjectId', '');
                         formik.setFieldValue('divisions', []);
+                        setSubjectSelectValue('');
                       }}
                       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                       error={!!(formik.touched.classId && formik.errors.classId)}
@@ -410,22 +430,44 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                     <CustomSelect
                       label="Subject *"
                       disabled={!!editData?.id || !formik.values.divisions.length}
-                      options={
-                        subjectOptionsData?.data?.items?.map((item: any) => ({
-                          id: item.id,
-                          name:
-                            item.subjects?.length > 1
-                              ? item.electiveGroupName
-                              : item.subjects?.[0]?.subject?.name ||
+                      options={(() => {
+                        const allOptions: { value: string; label: string }[] = [];
+                        subjectOptionsData?.data?.items?.forEach((item: any) => {
+                          if (item.subjects?.length > 1 && item.electiveGroupName) {
+                            // Elective group — each subject as its own dropdown entry
+                            item.subjects.forEach((sub: any, index: number) => {
+                              const subId = sub.subjectId || String(index);
+                              allOptions.push({
+                                value: `${item.id}::${subId}`,
+                                label: sub.subjectName || `${item.electiveGroupName} ${index + 1}`,
+                              });
+                            });
+                          } else {
+                            // Regular single subject
+                            allOptions.push({
+                              value: `${item.id}::${item.subjects?.[0]?.subjectId || item.id}`,
+                              label:
+                                item.subjects?.[0]?.subject?.name ||
                                 item.subjects?.[0]?.subjectName ||
                                 '',
-                        })) || []
-                      }
-                      value={formik.values.subjectId}
-                      labelKey="name"
-                      valueKey="id"
+                            });
+                          }
+                        });
+                        return allOptions;
+                      })()}
+                      value={subjectSelectValue}
+                      labelKey="label"
+                      valueKey="value"
                       isLoading={isSubjectOptionsLoading || isSubjectOptionsFetching}
-                      onChange={(val) => formik.setFieldValue('subjectId', val)}
+                      onChange={(val) => {
+                        const strVal = String(val);
+                        // Extract the actual subjectId from composite key "assignmentId::subjectId"
+                        const resolvedSubjectId = strVal.includes('::')
+                          ? strVal.split('::')[1]
+                          : strVal;
+                        setSubjectSelectValue(strVal);
+                        formik.setFieldValue('subjectId', resolvedSubjectId);
+                      }}
                       formControlProps={{ fullWidth: true }}
                       error={!!(formik.touched.subjectId && formik.errors.subjectId)}
                       helperText={

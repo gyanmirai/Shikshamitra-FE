@@ -17,9 +17,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import { DEFAULT_CONFIG } from 'src/components/timetable/utils';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
@@ -39,8 +38,6 @@ import {
   Button,
   Divider,
   Skeleton,
-  MenuList,
-  MenuItem,
   Typography,
   LinearProgress,
 } from '@mui/material';
@@ -381,16 +378,14 @@ const TimeTableGrid = () => {
   // Dialog state for creating time slots modal
   // const createSlotsDialog = useBoolean();
   const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
-  // Dialog state for publishing marks modal (currently unused)
-  const publishTimetableDialog = useBoolean();
-  const draftTimetableDialog = useBoolean();
+  const [showConfirm, ConfirmDialog] = useConfirmDialog();
+  const [isDirty, setIsDirty] = useState(false);
+
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard name
   const [classes, setClasses] = useState<string>('');
   const [selectedStandardId, setSelectedStandardId] = useState<string>('');
-  const [slotConfigStandardId, setSlotConfigStandardId] = useState<string>('');
-  const [slotConfigDivisionId, setSlotConfigDivisionId] = useState<string>('');
   const [division, setDivision] = useState<string>('');
   const [selectedDivisionId, setSelectedDivisionId] = useState<string>('');
 
@@ -412,6 +407,24 @@ const TimeTableGrid = () => {
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
+  const handleCloseDialog = async (isSubmit?: boolean) => {
+    if (
+      isSubmit ||
+      !isDirty ||
+      (await showConfirm({
+        title: 'Alert',
+        message: 'Are you sure you want to leave this page? Your changes will be lost.',
+        icon: 'warning',
+      }))
+    ) {
+      setIsDirty(false);
+      setTimetable(initialTimetableData);
+      setSubjectsGroups(initialSubjectsGroups);
+      setOpen(false);
+      setIsEdit(false);
+    }
+  };
+
   // Theme object from Material-UI
   const [initialTimetableData, setInitialTimetableData] = useState<TimetableSlot[]>([]);
   const [initialSubjectsGroups, setInitialSubjectsGroups] = useState<any>([]);
@@ -428,49 +441,9 @@ const TimeTableGrid = () => {
     setOpen(true);
   }, [timetable, subjectsGroups]);
 
-  // Defines action menu items for different timetable statuses
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {/* Show Add Timetable option for Pending status */}
-          {row.status === 0 && (
-            <MenuItem
-              onClick={() => {
-                handleOpenDialog();
-                setDivision(row.divisionName);
-                setSelectedDivisionId(row.divisionId);
-              }}
-            >
-              <Iconify icon="mdi:add" sx={{ height: '16px', width: '16px' }} />
-              Timetable
-            </MenuItem>
-          )}
-          {/* Show Update option for Draft or Published timetables */}
-          {(row.status === 1 || row.status === 2) && (
-            <MenuItem
-              onClick={() => {
-                handleOpenDialog();
-                setDivision(row.divisionName);
-                setSelectedDivisionId(row.divisionId);
-                setIsEdit(true);
-                setSlotConfigStandardId(selectedStandardId);
-                setSlotConfigDivisionId(row.divisionId);
-              }}
-            >
-              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-              Update
-            </MenuItem>
-          )}
-        </MenuList>
-      </>
-    ),
-    [handleOpenDialog, selectedStandardId]
-  );
   const columns: IColumn[] = useMemo(
     () => [
-      { id: 'divisionName', label: 'Division' },
+      { id: 'divisionName', label: 'Division', align: 'left' },
       {
         id: 'status',
         label: 'Status',
@@ -490,38 +463,61 @@ const TimeTableGrid = () => {
         sticky: true,
         isSort: false,
         isFilter: false,
-        render: (value, row) => (
-          <ThreeDotsActions actions={(prop) => actions({ ...prop, row })} placement="right-top" />
-        ),
+        render: (value, row) => {
+          if (row.status === 0) {
+            return (
+              <Button
+                size="small"
+                variant="outlined"
+                sx={{ minWidth: '100px' }}
+                startIcon={<Iconify icon="mdi:add" sx={{ height: '16px', width: '16px' }} />}
+                onClick={() => {
+                  handleOpenDialog();
+                  setDivision(row.divisionName);
+                  setSelectedDivisionId(row.divisionId);
+                }}
+              >
+                Create
+              </Button>
+            );
+          }
+          if (row.status === 1 || row.status === 2) {
+            return (
+              <Button
+                size="small"
+                variant="outlined"
+                sx={{ minWidth: '100px' }}
+                startIcon={
+                  <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+                }
+                onClick={() => {
+                  handleOpenDialog();
+                  setDivision(row.divisionName);
+                  setSelectedDivisionId(row.divisionId);
+                  setIsEdit(true);
+                }}
+              >
+                Update
+              </Button>
+            );
+          }
+          return null;
+        },
       },
     ],
-    [actions]
+    [handleOpenDialog]
   );
 
   const {
-    data: timetableManagementData,
+    currentData: timetableManagementData,
     isLoading: isTimetableManagementLoading,
     isFetching: isTimetableManagementFetching,
-    refetch: refetchTimetableManagement,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetTimetableManagementByStandardQuery,
     params: selectedStandardId,
     options: {
       skip: !selectedStandardId,
-    },
-  });
-
-  const {
-    data: slotConfigData,
-    isLoading: isSlotConfigLoading,
-    isFetching: isSlotConfigFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetTimetableByStandardDivisionQuery,
-    params: { standardId: slotConfigStandardId, divisionId: slotConfigDivisionId },
-    options: {
-      skip: !slotConfigStandardId || !slotConfigDivisionId,
     },
   });
 
@@ -533,9 +529,7 @@ const TimeTableGrid = () => {
           links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
           description="Create and manage class schedules by assigning subjects, teachers and rooms to specific time slots"
           isBack
-          onBack={() => {
-            // handleCloseDialog(false);
-          }}
+          onBack={() => handleCloseDialog()}
         />
       ) : (
         <CustomBreadcrumbs
@@ -562,13 +556,7 @@ const TimeTableGrid = () => {
             </CustomTooltip>{' '}
           </Box>
         }
-        handleClose={() => {
-          // handleCloseDialog(false);
-          setTimetable(initialTimetableData);
-          setSubjectsGroups(initialSubjectsGroups);
-          setOpen(false);
-          setIsEdit(false);
-        }}
+        handleClose={() => handleCloseDialog()}
         open={open}
         fullScreen
       >
@@ -578,13 +566,12 @@ const TimeTableGrid = () => {
           selectedDivision={division}
           standardId={selectedStandardId}
           divisionId={selectedDivisionId}
-          onClose={() => {
-            setOpen(false);
-            setIsEdit(false);
-          }}
+          onClose={() => handleCloseDialog(true)}
+          setIsDirty={setIsDirty}
         />
       </CustomDialog>
 
+      {ConfirmDialog}
       {!open && (
         <>
           <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
@@ -621,45 +608,6 @@ const TimeTableGrid = () => {
           />{' '}
         </>
       )}
-
-      <ConfirmDialog
-        open={publishTimetableDialog.value}
-        onClose={() => {
-          publishTimetableDialog.onFalse();
-          // setSelectedExam(null);
-        }}
-        title="Publish"
-        content="Are you sure you want to Publish Timetable ?"
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {}}
-          >
-            Publish
-          </Button>
-        }
-      />
-
-      <ConfirmDialog
-        open={draftTimetableDialog.value}
-        onClose={() => {
-          draftTimetableDialog.onFalse();
-        }}
-        title="Draft"
-        content="Are you sure you want to Draft Timetable ?"
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-            onClick={() => {}}
-          >
-            Draft
-          </Button>
-        }
-      />
     </Box>
   );
 };
@@ -858,6 +806,7 @@ const TimeTableForm = ({
   standardId,
   divisionId,
   onClose,
+  setIsDirty,
 }: {
   selectedClass: string;
   classId: string;
@@ -865,6 +814,7 @@ const TimeTableForm = ({
   standardId: string;
   divisionId: string;
   onClose: () => void;
+  setIsDirty: (dirty: boolean) => void;
 }) => {
   const {
     data: slotConfigData,
@@ -878,11 +828,12 @@ const TimeTableForm = ({
       skip: !classId || !divisionId,
     },
   });
-  const [createTimetable, { isLoading: isSubmitting, isFetching: isTimetableFetching }] =
-    useQueryAndMutation({
-      type: 'mutation',
-      currentQueryAndMutation: useCreateTimetableMutation,
-    });
+  const [createTimetable, { isLoading: isSubmitting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateTimetableMutation,
+  });
+
+  const draftTimetableDialog = useBoolean();
 
   const transformSlotsToPayload = useCallback(
     (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
@@ -924,22 +875,42 @@ const TimeTableForm = ({
     async (slots: Record<DayOfWeek, TimeSlot[]>, status: number) => {
       const body = transformSlotsToPayload(slots, status);
       await createTimetable({ standardId, divisionId, body }).unwrap();
-      shikshaMitraToast.success({ message: 'Timetable published successfully.' });
+      shikshaMitraToast.success({
+        message: status === 1 ? 'Timetable saved as draft.' : 'Timetable published successfully.',
+      });
+      setIsDirty(false);
       onClose();
     },
-    [createTimetable, divisionId, onClose, standardId, transformSlotsToPayload]
+    [createTimetable, divisionId, onClose, setIsDirty, standardId, transformSlotsToPayload]
   );
+
+  // API returns type as integers (1 = LECTURE, 0 = BREAK). Transform to string
+  // values the rest of the frontend (DayColumn counts, slotSummary, etc.) expects.
+  const initialSlots = useMemo(() => {
+    const empty = {
+      MONDAY: [],
+      TUESDAY: [],
+      WEDNESDAY: [],
+      THURSDAY: [],
+      FRIDAY: [],
+      SATURDAY: [],
+    } as Record<DayOfWeek, TimeSlot[]>;
+    if (!slotConfigData?.days) return empty;
+    return Object.fromEntries(
+      Object.entries(slotConfigData.days).map(([day, daySlots]) => [
+        day,
+        (daySlots as any[]).map((slot: any) => ({
+          ...slot,
+          type: slot.type === 0 ? 'LECTURE' : 'BREAK',
+          breakType: slot.breakType === 0 ? 'SHORT' : slot.breakType === 1 ? 'LUNCH' : 'SHORT',
+        })),
+      ])
+    ) as Record<DayOfWeek, TimeSlot[]>;
+  }, [slotConfigData?.days]);
 
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
-      slots: slotConfigData?.days || {
-        MONDAY: [],
-        TUESDAY: [],
-        WEDNESDAY: [],
-        THURSDAY: [],
-        FRIDAY: [],
-        SATURDAY: [],
-      },
+      slots: initialSlots,
     },
     enableReinitialize: true,
     onSubmit: (values) => {
@@ -1108,7 +1079,8 @@ const TimeTableForm = ({
               size="small"
               color="inherit"
               startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-              onClick={() => {}}
+              onClick={() => draftTimetableDialog.onTrue()}
+              disabled={isSubmitting}
               sx={{
                 borderColor: 'divider',
                 color: 'text.secondary',
@@ -1130,20 +1102,25 @@ const TimeTableForm = ({
             </Button>
           </Box>
         </Box>
-        {isSlotConfigLoading || isSlotConfigFetching ? (
-          <TimetableBoardSkeleton />
-        ) : (
-          <TimetableBoard
-            slots={formik.values.slots}
-            onChange={(value) => formik.setFieldValue('slots', value)}
-            subjects={subjects}
-            readOnly={false}
-            selectedClass={selectedClass}
-            selectedDivision={selectedDivision}
-            standardId={standardId}
-            divisionId={divisionId}
-          />
-        )}
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          {isSlotConfigLoading || isSlotConfigFetching ? (
+            <TimetableBoardSkeleton />
+          ) : (
+            <TimetableBoard
+              slots={formik.values.slots}
+              onChange={(value) => {
+                formik.setFieldValue('slots', value);
+                setIsDirty(true);
+              }}
+              subjects={subjects}
+              readOnly={false}
+              selectedClass={selectedClass}
+              selectedDivision={selectedDivision}
+              standardId={standardId}
+              divisionId={divisionId}
+            />
+          )}
+        </Box>
       </Box>
     </DialogScrollContent>
   );

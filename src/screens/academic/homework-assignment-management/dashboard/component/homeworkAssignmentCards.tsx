@@ -1,9 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useGetHomeworksQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
+import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import {
   Box,
   Grid,
@@ -15,9 +20,66 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 
-const HomeworkAssignmentCards = () => {
-  // const [hoveredResource, setHoveredResource] = useState<string | null>(null);
+interface HomeworkAssignmentCardsProps {
+  standardId?: string;
+  divisionId?: string;
+  subjectId?: string;
+}
+
+const HomeworkAssignmentCards = ({
+  standardId,
+  divisionId,
+  subjectId,
+}: HomeworkAssignmentCardsProps) => {
   const [view, setView] = useState('assignment');
+
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: homeworkData, isLoading: isLoadingHomework } = useGetHomeworksQuery(
+    {
+      academicMediumId: medium?.id,
+      StandardId: standardId,
+      DivisionId: divisionId,
+      SubjectId: subjectId,
+    },
+    { skip: !medium?.id }
+  );
+
+  const { data: assignmentData, isLoading: isLoadingAssignment } = useGetAssignmentsQuery(
+    {
+      academicMediumId: medium?.id,
+      StandardId: standardId,
+      DivisionId: divisionId,
+      SubjectId: subjectId,
+    },
+    { skip: !medium?.id }
+  );
+
+  const homeworkTableData = useMemo(() => {
+    const raw: any[] =
+      homeworkData?.data ??
+      homeworkData?.items ??
+      (Array.isArray(homeworkData) ? homeworkData : []);
+    return raw.map((i: any) => ({
+      homeworkTitle: i.title ?? i.name ?? '',
+      publishedDate: i.startDate ?? i.createdAt ?? '',
+      pendingStudents: i.pendingStudents ?? i.pendingCount ?? 0,
+      dueDate: i.dueDate ?? i.endDate ?? '',
+    }));
+  }, [homeworkData]);
+
+  const assignmentTableData = useMemo(() => {
+    const raw: any[] =
+      assignmentData?.data ??
+      assignmentData?.items ??
+      (Array.isArray(assignmentData) ? assignmentData : []);
+    return raw.map((i: any) => ({
+      assignmentTitle: i.title ?? i.name ?? '',
+      publishedDate: i.startDate ?? i.createdAt ?? '',
+      pendingStudents: i.pendingStudents ?? i.pendingCount ?? 0,
+      dueDate: i.dueDate ?? i.endDate ?? '',
+    }));
+  }, [assignmentData]);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -110,38 +172,8 @@ const HomeworkAssignmentCards = () => {
                 },
               },
             ]}
-            data={[
-              {
-                homeworkTitle: 'Math Homework 1',
-                publishedDate: '2024-02-01',
-                pendingStudents: 5,
-                dueDate: '2024-02-10',
-              },
-              {
-                homeworkTitle: 'Science Project',
-                publishedDate: '2024-02-03',
-                pendingStudents: 8,
-                dueDate: '2024-02-12',
-              },
-              {
-                homeworkTitle: 'History Essay',
-                publishedDate: '2024-02-05',
-                pendingStudents: 3,
-                dueDate: '2024-02-15',
-              },
-              {
-                homeworkTitle: 'English Literature Review',
-                publishedDate: '2024-02-07',
-                pendingStudents: 10,
-                dueDate: '2024-02-18',
-              },
-              {
-                homeworkTitle: 'Physics Lab Report',
-                publishedDate: '2024-02-08',
-                pendingStudents: 6,
-                dueDate: '2024-02-20',
-              },
-            ]}
+            data={homeworkTableData}
+            isLoading={isLoadingHomework}
           />
         </>
       ) : (
@@ -180,38 +212,8 @@ const HomeworkAssignmentCards = () => {
                 },
               },
             ]}
-            data={[
-              {
-                assignmentTitle: 'Math Homework 1',
-                publishedDate: '2024-02-01',
-                pendingStudents: 5,
-                dueDate: '2024-02-10',
-              },
-              {
-                assignmentTitle: 'Science Project',
-                publishedDate: '2024-02-03',
-                pendingStudents: 8,
-                dueDate: '2024-02-12',
-              },
-              {
-                assignmentTitle: 'History Essay',
-                publishedDate: '2024-02-05',
-                pendingStudents: 3,
-                dueDate: '2024-02-15',
-              },
-              {
-                assignmentTitle: 'English Literature Review',
-                publishedDate: '2024-02-07',
-                pendingStudents: 10,
-                dueDate: '2024-02-18',
-              },
-              {
-                assignmentTitle: 'Physics Lab Report',
-                publishedDate: '2024-02-08',
-                pendingStudents: 6,
-                dueDate: '2024-02-20',
-              },
-            ]}
+            data={assignmentTableData}
+            isLoading={isLoadingAssignment}
           />
         </>
       )}

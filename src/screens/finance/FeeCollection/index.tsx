@@ -87,7 +87,7 @@ const FeeCollection = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Fee Collection"
+          heading="Collections"
           description="Select class and division to view students. Click a student to see their fee details and collect fees or send reminders."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
@@ -106,17 +106,17 @@ const FeeCollection = () => {
           onDelete={() => {}}
           onCollectFee={(row) => {
             studentDialog.onTrue();
-            setSelectedStudent(row as IStudentFee);
+            setSelectedStudent(row as any);
           }}
           onView={(row) => {
             viewDialog.onTrue();
-            setSelectedStudent(row as IStudentFee);
+            setSelectedStudent(row as any);
           }}
         />
       )}
       <CustomDialog
         open={studentDialog.value}
-        title="Fee Details"
+        title={`Fee Collection - ${selectedStudent?.name ?? selectedStudent?.name ?? 'Student'}`}
         fullScreen
         handleClose={() => {
           studentDialog.onFalse();

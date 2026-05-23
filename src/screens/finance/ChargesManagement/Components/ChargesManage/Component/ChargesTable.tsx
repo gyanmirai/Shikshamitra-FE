@@ -9,14 +9,13 @@ import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
-import { Cancel, CheckCircle } from '@mui/icons-material';
+import React, { useMemo, useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Tab, Tabs, Card, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
-import { Box, Tab, Tabs, Card, MenuItem, MenuList, Typography } from '@mui/material';
 
 import type { IChargeData } from './type';
 
@@ -74,10 +73,8 @@ const ChargesTable = ({
     if (currentYear?.boards) {
       setBoards(currentYear.boards);
       // Only set initial values if not already selected
-      if (!selectedBoard) {
-        setSelectedBoard(currentYear.boards[0].id);
-        setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
-      }
+      setSelectedBoard(currentYear.boards[0].id);
+      setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear.boards]);
@@ -151,37 +148,6 @@ const ChargesTable = ({
           dueDate: item.dueDate ? dayjs(item.dueDate).format('DD-MM-YYYY') : '-',
         })),
     [chargesData?.items, tabs.value]
-  );
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const isPending = row.status === ChargesPaymentStatus.Pending;
-      return (
-        <MenuList>
-          {row.status === ChargesPaymentStatus.Rejected ? (
-            <MenuItem
-              onClick={() => {
-                onApprove(row as IChargeData);
-                pop.onClose();
-              }}
-            >
-              <CheckCircle sx={{ width: '20px', height: '20px', color: 'success.main' }} /> Approve
-            </MenuItem>
-          ) : (
-            <MenuItem
-              onClick={() => {
-                onReject(row as IChargeData);
-                pop.onClose();
-              }}
-            >
-              <Cancel sx={{ width: '20px', height: '20px', color: 'error.main' }} /> Reject
-            </MenuItem>
-          )}
-        </MenuList>
-      );
-    },
-    [onApprove, onReject]
   );
 
   return (
@@ -354,7 +320,7 @@ const ChargesTable = ({
               return (
                 <ThreeDotsActions
                   placement="right-top"
-                  showViewIcon={row.status === 0}
+                  showViewIcon
                   showEditIcon={row.status === 0}
                   showThreeDots={false}
                   showDeleteIcon={row.status === 0}
