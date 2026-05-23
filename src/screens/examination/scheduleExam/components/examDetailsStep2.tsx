@@ -230,7 +230,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 155,
-            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -290,7 +289,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 150,
-            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -346,7 +344,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 150,
-            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -443,7 +440,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 180,
-            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <Box sx={{ pb: '20px' }}>
@@ -480,7 +476,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 150,
-            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               return (
                 <ShakingTextField
@@ -538,7 +533,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
             isSort: false,
             align: 'left',
             minWidth: 160,
-            cellSx: { verticalAlign: 'top' },
             render(value, row) {
               // NON-BREAKING: inline UI-only warning when passing > total
               const totalVal = Number(formik.values.subjects?.[row.index]?.totalMarks);
