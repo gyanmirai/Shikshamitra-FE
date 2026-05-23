@@ -141,58 +141,54 @@ export function useSubjectAssignmentForm({
 
   /**
    * Memoization Justification:
-   * Checks if a subject/group is already allocated in another assignment for this class.
-   * Depends on subjectTableData and edit-mode context — memoizing avoids
+   * Checks if a subject/group already exists in the table to prevent duplicates.
+   * Depends on subjectTableData which changes on refetch — memoizing avoids
    * recalculating the filter closure on every render.
    */
-  const checkIfSubjectExistsInOtherAllocations = useCallback(
+  const checkIfSubjectExists = useCallback(
     (currentId: string) =>
       subjectTableData?.data?.items?.some(
         (subject: {
-          id?: string;
           subjectType?: number;
           subjects?: Array<{ subjectId?: string }>;
           electiveGroupId?: string;
         }) => {
-          if (isEdit && data?.id && subject.id === data.id) {
-            return false;
-          }
           if (subject.subjectType === SubjectType.Core) {
             return subject.subjects?.[0]?.subjectId === currentId;
           }
           return subject.electiveGroupId === currentId;
         }
       ),
-    [subjectTableData?.data?.items, isEdit, data?.id]
+    [subjectTableData?.data?.items]
   );
 
   /**
    * Memoization Justification:
    * Transforms raw API response into dropdown-compatible option objects.
-
    * Prevents re-mapping on every render when source data hasn't changed.
    */
   const subjectsOptions = useMemo(
     () =>
-      subjectOptionsData?.data
-        ?.filter((item: { id: string }) => !checkIfSubjectExistsInOtherAllocations(item.id))
-        ?.map(
-          (item: {
-            id: string;
-            name: string;
-            subjectType: number;
-            color: string;
-            subjects: unknown[];
-          }) => ({
-            ...item,
-            label: item.name,
-            value: item.id,
-            type: item.subjectType,
-            color: item.color,
-            subjects: item.subjects,
-          })
-        ) || [],
-    [subjectOptionsData?.data, checkIfSubjectExistsInOtherAllocations]
+      (!isEdit
+        ? subjectOptionsData?.data?.filter((item: { id: string }) => !checkIfSubjectExists(item.id))
+        : subjectOptionsData?.data
+      )?.map(
+        (item: {
+          id: string;
+          name: string;
+          subjectType: number;
+          color: string;
+          subjects: unknown[];
+        }) => ({
+          ...item,
+          label: item.name,
+          value: item.id,
+          type: item.subjectType,
+          color: item.color,
+          subjects: item.subjects,
+        })
+      ) || [],
+    [isEdit, subjectOptionsData?.data, checkIfSubjectExists]
   );
 
   /**
@@ -250,34 +246,6 @@ export function useSubjectAssignmentForm({
           });
           return;
         }
-      }
-
-      const persistedItems: Array<{
-        id?: string;
-        subjectType?: number;
-        subjects?: Array<{ subjectId?: string }>;
-        electiveGroupId?: string;
-      }> = subjectTableData?.data?.items || [];
-
-      const isAlreadyPersistedElsewhere = persistedItems.some((allocation) => {
-        // In edit mode, always skip the current allocation being edited.
-        if (isEdit && data?.id && allocation.id === data.id) return false;
-
-        if (addedOption.type === 0) {
-          // Core subject: check if this subjectId is in any other persisted allocation.
-          return allocation.subjects?.some(
-            (s: { subjectId?: string }) => s.subjectId === addedOption.value
-          );
-        }
-        // Elective group: check if this electiveGroupId is in any other persisted allocation.
-        return allocation.electiveGroupId === addedOption.value;
-      });
-
-      if (isAlreadyPersistedElsewhere) {
-        shikshaMitraToast.error({
-          message: `"${addedOption.label}" is already allocated for this class. Please remove the existing allocation before adding it again.`,
-        });
-        return;
       }
     }
 

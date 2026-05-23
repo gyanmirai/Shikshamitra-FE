@@ -115,9 +115,7 @@ const ChapterTable = ({
                 onViewDocuments(row as IChapter);
               }}
               handleEditClick={() => {
-                const rawChapter =
-                  data?.find((c) => c.id === (row as IChapter).id) ?? (row as IChapter);
-                setEditData(rawChapter);
+                setEditData(row as IChapter);
                 addChapterDialog.onTrue();
               }}
               handleDeleteClick={() => onDelete(row as IChapter)}
@@ -126,7 +124,7 @@ const ChapterTable = ({
         },
       },
     ],
-    [addChapterDialog, data, onDelete, onViewDocuments, setEditData]
+    [addChapterDialog, onDelete, onViewDocuments, setEditData]
   );
   return (
     <CustomizableTable

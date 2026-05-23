@@ -153,7 +153,6 @@ const ClassTeacherAssignment = () => {
       organizationId: organization,
       ...query,
     },
-    options: { skip: !organization },
   });
 
   const [updateAssignments, { isLoading: isSaving }] = useQueryAndMutation({
@@ -323,19 +322,16 @@ const ClassTeacherAssignment = () => {
           {
             id: 'className',
             label: 'Class',
-            align: 'left',
           },
           {
             id: 'divisionName',
             label: 'Division',
-            align: 'left',
           },
           {
             id: 'classTeacher',
             label: 'Class Teacher',
             isSort: false,
             isFilter: false,
-            align: 'left',
             render: (value: any, row: any) => {
               const rowIndex = tableData.indexOf(row);
               return (
