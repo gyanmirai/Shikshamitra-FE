@@ -34,7 +34,7 @@ export function CustomBreadcrumbs({
   const renderHeading = (
     <Stack direction="row" alignItems="center" spacing={1}>
       {isBack && (
-        <IconButton size="small" onClick={onBack}>
+        <IconButton aria-label="Back" data-testid="breadcrumb-back" size="small" onClick={onBack}>
           <Iconify icon="ic:outline-arrow-back-ios-new" fontSize={18} />
         </IconButton>
       )}
@@ -104,6 +104,8 @@ export function CustomBreadcrumbs({
       <Stack direction="row" alignItems="center" spacing={1.5}>
         {isBack && (
           <IconButton
+            aria-label="Back"
+            data-testid="breadcrumb-back"
             size="small"
             onClick={onBack}
             sx={{

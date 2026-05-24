@@ -1,19 +1,20 @@
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Card, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { useLazyGetAttendanceEmployeeWiseQuery } from 'src/redux/hr/attendanceApi';
 import {
-  EmployeeAttendanceStatus,
-  EmployeeAttendanceStatusColor,
-} from 'src/enums/employee-attendance-status';
+  mapEmployeeWiseAttendanceRow,
+  useGetEmployeeWiseAttendanceQuery,
+} from 'src/redux/attendanceTracking/attendanceTrackingApi';
+
+import { getAttendanceTrackingStatusLabel } from './status-mapper';
 
 const TeacherAttendanceTracking = ({
   searchParams,
@@ -34,20 +35,21 @@ const TeacherAttendanceTracking = ({
       searchParams.endDate ? dayjs(searchParams.endDate, 'DD-MM-YYYY') : dayjs().endOf('month'),
     [searchParams.endDate]
   );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const educationMediumStageId = medium?.educationMediumStages?.[0]?.id || '';
 
-  const [getAttendance, { data, isLoading: attendanceLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetAttendanceEmployeeWiseQuery,
-  });
+  const { data, isLoading: attendanceLoading } = useGetEmployeeWiseAttendanceQuery(
+    {
+      employeeId: `${searchParams.employeeId}`,
+      startDate: startDate.format('DD/MM/YYYY'),
+      endDate: endDate.format('DD/MM/YYYY'),
+      educationMediumStageId,
+    },
+    { skip: !searchParams?.employeeId || !educationMediumStageId }
+  );
 
-  useEffect(() => {
-    if (searchParams?.employeeId && startDate) {
-      getAttendance({
-        employeeId: `${searchParams.employeeId}`,
-        month: dateConvertor(dayjs(startDate, 'DD-MM-YYYY').format(dateFormat), true),
-      });
-    }
-  }, [searchParams?.employeeId, getAttendance, startDate]);
+  const attendanceItems = data?.items || [];
+  const summary = data?.attendanceSummary || {};
 
   return (
     <>
@@ -86,7 +88,7 @@ const TeacherAttendanceTracking = ({
         >
           <Typography variant="subtitle1">Total Present Days</Typography>
 
-          <Typography variant="h3">{data?.[0]?.presentDays || 0}</Typography>
+          <Typography variant="h3">{summary.present || 0}</Typography>
         </Card>
         <Card
           sx={{
@@ -99,7 +101,7 @@ const TeacherAttendanceTracking = ({
         >
           <Typography variant="subtitle1">Full Day Leave</Typography>
 
-          <Typography variant="h3">{data?.[0]?.leaveDays || 0}</Typography>
+          <Typography variant="h3">{summary.absent || 0}</Typography>
         </Card>
         <Card
           sx={{
@@ -112,49 +114,49 @@ const TeacherAttendanceTracking = ({
         >
           <Typography variant="subtitle1">Half Day Leave</Typography>
 
-          <Typography variant="h3">{data?.[0]?.halfDayLeaves || 0}</Typography>
+          <Typography variant="h3">{summary.halfDay || 0}</Typography>
         </Card>
       </Box>
       <CustomizableTable
-        noDataText={<>No Data Availabel For Attendance </>}
+        noDataText={<>No Data Available For Attendance </>}
         tableId="teacher-attendance-tracking"
         isLoading={attendanceLoading}
         columns={[
           {
-            id: 'attendanceDate',
+            id: 'date',
             label: 'Date',
             filterType: 'date',
             render(value, row) {
-              return dayjs(value, 'YYYY-MM-DD').format('DD-MM-YYYY');
+              return value ? dayjs(value).format('DD-MM-YYYY') : '-';
             },
           },
 
-          { id: 'timeIn', label: 'In-Time' },
-          { id: 'timeOut', label: 'Out-Time' },
-          { id: 'employeeCode', label: 'Employee Code' },
-          { id: 'contacrNo.', label: 'Contact No.' },
-          { id: 'totalHoursWorked', label: 'Hours Worked' },
+          { id: 'inTime', label: 'In-Time' },
+          { id: 'outTime', label: 'Out-Time' },
+          { id: 'hoursWorked', label: 'Hours Worked' },
           {
             id: 'status',
             label: 'Status',
-            render(value: number, row) {
-              const statusKey = value as unknown as keyof typeof EmployeeAttendanceStatus;
-              const colorKey = value as keyof typeof EmployeeAttendanceStatusColor;
+            render(value: number | string, row) {
+              const statusLabel = getAttendanceTrackingStatusLabel(Number(value));
+              const color =
+                statusLabel === 'Present'
+                  ? 'success'
+                  : statusLabel === 'Absent'
+                    ? 'error'
+                    : statusLabel === 'Half Day'
+                      ? 'info'
+                      : 'warning';
 
               return (
-                <Label variant="soft" color={EmployeeAttendanceStatusColor[colorKey] as LabelColor}>
-                  {EmployeeAttendanceStatus[statusKey]}
+                <Label variant="soft" color={color as LabelColor}>
+                  {statusLabel}
                 </Label>
               );
             },
           },
         ]}
-        data={
-          data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
-            ...i,
-            status: EmployeeAttendanceStatus[i.statusType as keyof typeof EmployeeAttendanceStatus],
-          })) || []
-        }
+        data={attendanceItems?.map(mapEmployeeWiseAttendanceRow) || []}
       />
     </>
   );

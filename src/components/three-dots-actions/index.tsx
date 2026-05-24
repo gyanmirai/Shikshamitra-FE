@@ -59,6 +59,7 @@ const ThreeDotsActions = ({
     <Box display="flex" gap={2} alignItems="center" {...props}>
       {showViewIcon && (
         <IconButton
+          data-testid="table-action-view"
           onClick={(e) => {
             e.stopPropagation();
             handleViewClick(e);
@@ -73,6 +74,7 @@ const ThreeDotsActions = ({
       )}
       {showEditIcon && (
         <IconButton
+          data-testid="table-action-edit"
           onClick={(e) => {
             e.stopPropagation();
             handleEditClick(e);
@@ -87,6 +89,7 @@ const ThreeDotsActions = ({
       )}
       {showDeleteIcon && (
         <IconButton
+          data-testid="table-action-delete"
           onClick={(e) => {
             e.stopPropagation();
             handleDeleteClick(e);
@@ -102,6 +105,7 @@ const ThreeDotsActions = ({
       )}
       {showThreeDots && (
         <IconButton
+          data-testid="table-action-more"
           onClick={(e) => {
             e.stopPropagation();
             popover.onOpen(e as any);

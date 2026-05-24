@@ -28,7 +28,7 @@ const QUICK_ACTIONS = [
     label: 'Shift Settings',
     icon: 'mdi:clock-outline',
     color: 'info',
-    href: hrPaths.attendance.setting.attendanceConfiguration,
+    href: hrPaths.attendance.setting.shiftManagement,
   },
   {
     label: 'Download Report',

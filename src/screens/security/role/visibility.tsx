@@ -1,10 +1,9 @@
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
-import { navData } from 'src/layouts/config-nav-dashboard';
 import { EmptyContent } from 'src/components/empty-content';
+import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
 import {
   Box,
   Card,
@@ -116,12 +115,8 @@ const Visibility = ({
   const [currentSelected, setCurrentSelected] = useState<any>(null);
 
   const theme = useTheme();
-  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
 
-  const data = useMemo(
-    () => navData(mainModuleVisibility).flatMap((item) => item.items),
-    [mainModuleVisibility]
-  );
+  const data = useMemo(() => fullSecurityNavData().flatMap((item) => item.items), []);
 
   // ============================================================
   // HANDLE VISIBILITY TOGGLE

@@ -52,8 +52,6 @@ export interface IAddNewChapterProps {
   subject?: string;
   classId?: string;
   subjectId?: string;
-  /** All existing chapters for the selected Class + Subject, used for duplicate chapter-number validation. */
-  existingChapters?: IChapter[];
 }
 
 export interface IChapterTableProps {

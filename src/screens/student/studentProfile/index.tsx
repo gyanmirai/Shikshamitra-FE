@@ -23,7 +23,7 @@ import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-import { useGetStudentByIdQuery, useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
+import { useGetStudentByIdQuery, useGetStudentsByDivisionQuery } from 'src/redux/student';
 import {
   Box,
   Tab,
@@ -168,9 +168,7 @@ export function StudentProfile() {
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const { currentMedium: medium, currentYear: year } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update organizations when medium changes
   useEffect(() => {
@@ -195,22 +193,35 @@ export function StudentProfile() {
   const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({ student: '' });
   const searchParams = getAllParams();
 
-  // Query hook for fetching filtered student data
-  // Returns getStudents function, StudentsData response and loading state
-  const [getStudents, { data: StudentsData, isLoading, isFetching }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
+  const selectedOrganization = useMemo(
+    () => medium?.educationMediumStages?.find((item: any) => item?.id === organization),
+    [medium?.educationMediumStages, organization]
+  );
+  const selectedClass = useMemo(
+    () => selectedOrganization?.standards?.find((item: any) => item?.id === classes),
+    [classes, selectedOrganization?.standards]
+  );
+  const selectedDivision = useMemo(
+    () => selectedClass?.divisions?.find((item: any) => item?.id === division),
+    [division, selectedClass?.divisions]
+  );
+  const resolvedDivision = selectedDivision?.id || '';
+  const shouldFetchStudents = Boolean(
+    medium?.id && selectedOrganization?.id && selectedClass?.id && resolvedDivision
+  );
+  const {
+    data: StudentsData,
+    isLoading,
+    isFetching,
+  } = useGetStudentsByDivisionQuery(resolvedDivision, {
+    skip: !shouldFetchStudents,
   });
 
-  useEffect(() => {
-    if (division && classes && organization) {
-      getStudents(division);
-    }
-  }, [division, classes, organization, getStudents]);
-
   // Transform students data to include full name
-  const tableData = useMemo(
-    () =>
+  const tableData = useMemo(() => {
+    if (!shouldFetchStudents) return [];
+
+    return (
       StudentsData?.items?.map((item: any) => ({
         ...item,
         name: `${item.lastName} ${item.firstName} ${item.middleName}`,
@@ -222,9 +233,9 @@ export function StudentProfile() {
           '-',
         RTE: item?.studentAdditionalDetails?.rightToEducation ? 'Yes' : 'No',
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-      })) || [],
-    [StudentsData?.items]
-  );
+      })) || []
+    );
+  }, [shouldFetchStudents, StudentsData?.items]);
 
   // Find currently selected student based on search params
   const currentStudent: boolean = !!searchParams?.student;

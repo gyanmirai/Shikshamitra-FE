@@ -164,16 +164,37 @@ const icardFields = [
   },
 ];
 
-const StudentIDCardCreator = () => {
+export type IDCardConfiguration = {
+  cardDimensions: { width: number; height: number };
+  fields: any[];
+  cardBackground?: string;
+  cardBackgroundColor?: string;
+};
+
+type StudentIDCardCreatorProps = {
+  initialConfiguration?: Partial<IDCardConfiguration>;
+  onSave?: (configuration: IDCardConfiguration) => void | Promise<void>;
+  saveLabel?: string;
+  sampleData?: Record<string, any>;
+};
+
+const StudentIDCardCreator = ({
+  initialConfiguration,
+  onSave,
+  saveLabel = 'Save',
+  sampleData = {},
+}: StudentIDCardCreatorProps) => {
   const isVisibleGrid = useBoolean(true);
   const [cardDimensions, setCardDimensions] = useState({
-    width: 400,
-    height: 300,
+    width: initialConfiguration?.cardDimensions?.width ?? 400,
+    height: initialConfiguration?.cardDimensions?.height ?? 300,
   });
   const [opacity, setOpacity] = useState(1);
-  const [cardBackground, setCardBackground] = useState('');
-  const [cardBackgroundColor, setCardBackgroundColor] = useState('#ffffff');
-  const [fields, setFields] = useState<any>([]);
+  const [cardBackground, setCardBackground] = useState(initialConfiguration?.cardBackground ?? '');
+  const [cardBackgroundColor, setCardBackgroundColor] = useState(
+    initialConfiguration?.cardBackgroundColor ?? '#ffffff'
+  );
+  const [fields, setFields] = useState<any>(initialConfiguration?.fields ?? []);
   const [openFieldDialog, setOpenFieldDialog] = useState(false);
   const [editingField, setEditingField] = useState<any>(null);
   const [newField, setNewField] = useState<any>({
@@ -283,13 +304,17 @@ const StudentIDCardCreator = () => {
     }
   };
 
-  const handleSaveConfiguration = () => {
+  const handleSaveConfiguration = async () => {
     const configuration = {
       cardDimensions,
       fields,
       cardBackground,
       cardBackgroundColor,
     };
+    if (onSave) {
+      await onSave(configuration);
+      return;
+    }
     localStorage.setItem('idCardConfiguration', JSON.stringify(configuration));
     alert('Configuration saved successfully!');
   };
@@ -335,7 +360,7 @@ const StudentIDCardCreator = () => {
           Add Field
         </Button>
         <Button variant="contained" color="primary" onClick={handleSaveConfiguration}>
-          Save
+          {saveLabel}
         </Button>
 
         <Button color="warning" variant="contained" onClick={(e: any) => handlePrint(e)}>
@@ -478,7 +503,7 @@ const StudentIDCardCreator = () => {
                 onEdit={handleEditField}
                 onDelete={handleDeleteField}
               >
-                {field.dummyValue}
+                {sampleData[field.name] ?? field.dummyValue}
               </DraggableField>
             ))}
           </Paper>

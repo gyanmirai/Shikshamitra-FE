@@ -1,9 +1,8 @@
 // Redesigned module assignment view with table layout and hierarchical permissions
-import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import React, { useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { navData } from 'src/layouts/config-nav-dashboard';
+import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
 import {
   Box,
   Paper,
@@ -85,8 +84,7 @@ const collectPermissionNames = (node: any, type: string): string[] => {
 const CustomCheckbox = (props: any) => <Checkbox {...props} />;
 
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
-  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
-  const data = navData(mainModuleVisibility).flatMap((item) => item.items);
+  const data = fullSecurityNavData().flatMap((item) => item.items);
 
   const [selectSubModule, setSelectSubModule] = useState<any>(data[0] || null); // Default to first module
 

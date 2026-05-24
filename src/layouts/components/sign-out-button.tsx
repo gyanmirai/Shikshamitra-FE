@@ -3,7 +3,9 @@ import type { Theme, SxProps } from '@mui/material/styles';
 
 import { LoadingButton } from '@mui/lab';
 import { signOut } from 'next-auth/react';
+import { useDispatch } from 'react-redux';
 import { useState, useCallback } from 'react';
+import { clearUser } from 'src/redux/auth/authSlice';
 
 // ----------------------------------------------------------------------
 
@@ -14,21 +16,23 @@ type Props = ButtonProps & {
 
 export function SignOutButton({ onClose, ...other }: Props) {
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const handleLogout = useCallback(async () => {
     try {
       setLoading(true);
-      // await dispatch(signOutUser() as any).unwrap();
+      dispatch(clearUser());
       await signOut({
         // callbackUrl: `/login`,
         redirectTo: '/login',
       });
-      setLoading(false);
       onClose?.();
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
-  }, [onClose]);
+  }, [dispatch, onClose]);
 
   return (
     <LoadingButton

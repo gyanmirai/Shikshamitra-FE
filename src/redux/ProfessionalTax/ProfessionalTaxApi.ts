@@ -1,26 +1,28 @@
 import { api } from 'src/redux/service';
 import { professionalType } from 'src/redux/tagTypes';
 
+export const professionalTaxEndpoint = '/payroll/professional-taxes';
+
 export const ProfessionalApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getProfessionalTax: builder.query({
       query: () => ({
-        url: '/app/professional-tax',
+        url: professionalTaxEndpoint,
         method: 'GET',
       }),
       providesTags: [professionalType.pf],
     }),
     addProfessionalTax: builder.mutation({
-      query: (data) => ({
-        url: '/app/professional-tax',
+      query: (body) => ({
+        url: professionalTaxEndpoint,
         method: 'POST',
-        data,
+        body,
       }),
       invalidatesTags: [professionalType.pf],
     }),
     updateProfessionalTax: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/professional-tax/${id}`,
+        url: `${professionalTaxEndpoint}/${id}`,
         method: 'PUT',
         body,
       }),
@@ -28,7 +30,7 @@ export const ProfessionalApi = api.injectEndpoints({
     }),
     deleteProfessionalTax: builder.mutation({
       query: (id) => ({
-        url: `/app/professional-tax/${id}`,
+        url: `${professionalTaxEndpoint}/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: [professionalType.pf],

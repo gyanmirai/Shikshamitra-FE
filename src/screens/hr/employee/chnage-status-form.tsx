@@ -8,6 +8,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
 import {
   Box,
@@ -18,11 +19,8 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-import {
-  EmployeeStatusType,
-  EmployeeStatusTypeArray,
-  EmployeeStatusTypeInformation,
-} from 'src/enums/employee-status-type';
+
+import { getEmployeeStatusOptions, changeStatusValidationSchema } from './change-status-utils';
 
 const ChangeStatusForm = ({
   handleClose,
@@ -35,11 +33,7 @@ const ChangeStatusForm = ({
   status: EmployeeStatusType;
   employeeName: string;
 }) => {
-  const options = EmployeeStatusTypeArray.map((item, index) => ({
-    label: EmployeeStatusType[index],
-    value: index,
-    description: EmployeeStatusTypeInformation[item as keyof typeof EmployeeStatusTypeInformation], // Helper function to get status description
-  }));
+  const options = getEmployeeStatusOptions(status);
   const [updateStatus, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeStatusMutation,
@@ -52,6 +46,7 @@ const ChangeStatusForm = ({
       status: { label: EmployeeStatusType[status || 0], value: status, description: '' },
       remarks: '',
     },
+    validationSchema: changeStatusValidationSchema,
     onSubmit: async (values) => {
       try {
         await updateStatus({
@@ -67,6 +62,12 @@ const ChangeStatusForm = ({
         handleClose();
       } catch (error) {
         console.error(error);
+        shikshaMitraToast.error({
+          message:
+            (error as any)?.data?.message ||
+            (error as any)?.error ||
+            `Failed to update status of ${employeeName}.`,
+        });
       }
     },
   });
@@ -80,7 +81,7 @@ const ChangeStatusForm = ({
             options={options}
             value={formik.values.status}
             onChange={(_, newValue) => {
-              formik.setFieldValue('status', newValue || 0);
+              formik.setFieldValue('status', newValue);
             }}
             size="small"
             disableClearable
@@ -116,7 +117,14 @@ const ChangeStatusForm = ({
               </Box>
             )}
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Select Status" fullWidth />
+              <TextField
+                {...params}
+                size="small"
+                label="Select Status"
+                fullWidth
+                error={formik.touched.status && Boolean(formik.errors.status)}
+                helperText={formik.touched.status && (formik.errors.status as any)?.value}
+              />
             )}
           />
           <TextField
@@ -125,6 +133,9 @@ const ChangeStatusForm = ({
             name="remarks"
             value={formik.values.remarks}
             onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.remarks && Boolean(formik.errors.remarks)}
+            helperText={formik.touched.remarks && formik.errors.remarks}
             multiline
             rows={4}
           />
