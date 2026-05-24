@@ -38,14 +38,26 @@ const SubjectTable = ({
       subjectTableData?.map((item) => ({
         ...item,
         subjectTypeValue: SubjectType[item.subjectType] || 'Core',
-        subjectName:
-          item?.subjects
-            ?.map((sub: { color?: string; subjectName?: string; subjectCode?: string }) =>
-              [sub.subjectName, sub.subjectCode ? `(${sub.subjectCode})` : '']
-                .filter(Boolean)
-                .join(' ')
-            )
-            .join(', ') || '',
+        subjectName: (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+            {item?.subjects?.map(
+              (
+                sub: { color?: string; subjectName?: string; subjectCode?: string },
+                subIndex: number
+              ) => (
+                <Box
+                  key={`${item.id}-${subIndex}`}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <SubjectColorIndicator color={sub.color} />
+                  <Typography variant="body2">
+                    {sub.subjectName} ({sub.subjectCode})
+                  </Typography>
+                </Box>
+              )
+            )}
+          </Box>
+        ),
         statusValue: SubjectAssignmentStatus[item.status] || 'Draft',
       })) || [],
     [subjectTableData]
@@ -76,7 +88,6 @@ const SubjectTable = ({
         label: 'Subject Type',
         align: 'left',
         minWidth: '80px',
-        width: '80px',
         sticky: true,
         // render: (value) => <Typography variant="body2">{value}</Typography>,
       },
@@ -86,30 +97,12 @@ const SubjectTable = ({
         align: 'left',
         isFilter: false,
         isSort: false,
-        render: (_value, row) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-            {(
-              row.subjects as { color?: string; subjectName?: string; subjectCode?: string }[]
-            )?.map((sub, subIndex) => (
-              <Box
-                key={`${row.id}-${subIndex}`}
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
-                <SubjectColorIndicator color={sub.color} />
-                <Typography variant="body2">
-                  {sub.subjectName} ({sub.subjectCode})
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ),
       },
       {
         id: 'statusValue',
         label: 'Status',
         align: 'left',
-        minWidth: 60,
-        width: 60,
+        minWidth: '60px',
         isSort: false,
         isFilter: false,
         sticky: true,
@@ -148,8 +141,7 @@ const SubjectTable = ({
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 70,
-        width: 70,
+        minWidth: '70px',
         align: 'left',
         sticky: true,
         isSort: false,

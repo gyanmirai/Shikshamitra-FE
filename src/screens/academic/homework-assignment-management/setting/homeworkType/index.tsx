@@ -186,18 +186,16 @@ const HomeworkTypeCreation = () => {
             size="small"
             color="error"
             onClick={async () => {
-              const homeworkTypeId = selectedData?.id;
-              const academicMediumId = (medium as Medium)?.id;
               confirmWithUndo({
                 item: selectedData,
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     homeworkTypesApi.util.updateQueryData(
                       'getHomeworkTypes',
-                      { academicMediumId },
+                      { academicMediumId: (medium as Medium)?.id },
                       (draft: any) => {
                         const index = draft.data.findIndex(
-                          (item: any) => item.id === homeworkTypeId
+                          (item: any) => item.id === selectedData?.id
                         );
                         setDeleteIndex(index);
                         if (index !== -1) draft.data.splice(index, 1);
@@ -207,14 +205,12 @@ const HomeworkTypeCreation = () => {
                 onUndoRestore: () => refetch(),
                 onCommit: () =>
                   deleteHomeworkType({
-                    academicMediumId,
-                    homeworkTypeId,
+                    academicMediumId: (medium as Medium)?.id,
+                    homeworkTypeId: selectedData?.id,
                   }),
               });
               deleteDialog.onFalse();
-              setTimeout(() => {
-                setSelectedData(null);
-              }, 200);
+              setSelectedData(null);
             }}
           >
             Yes

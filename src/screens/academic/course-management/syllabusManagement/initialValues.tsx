@@ -7,8 +7,8 @@ export const getChapterInitialValues = (editData?: IChapter | null) => {
     chapterNo: editData?.chapterNumber ?? 0,
     chapterName: editData?.chapterName || '',
     description: editData?.description || '',
-    startDate: editData?.chapterStartTime ? dayjs(editData.chapterStartTime) : null,
-    endDate: editData?.chapterEndTime ? dayjs(editData.chapterEndTime) : null,
+    startDate: editData?.chapterStartTime ? dayjs(editData.chapterStartTime, 'DD-MM-YYYY') : null,
+    endDate: editData?.chapterEndTime ? dayjs(editData.chapterEndTime, 'DD-MM-YYYY') : null,
     documents: [] as string[],
   };
   return initialValues;
