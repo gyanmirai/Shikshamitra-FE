@@ -4,6 +4,7 @@ interface AuthState {
   user: any | null;
   isAuthenticated: boolean;
   loading: boolean;
+  permissionsInitialized: boolean;
   employee: any;
   permissions: { name: string; isGranted: boolean }[];
   mainModuleVisibility: boolean[];
@@ -18,15 +19,39 @@ export function extractGrantedPermissions(groups: any): { name: string; isGrante
     }))
   );
 }
+
+const mainModulePermissionOrder = [
+  'ShikshaMitra.Module.Dashboard',
+  'ShikshaMitra.Module.Students',
+  'ShikshaMitra.Module.Academics',
+  'ShikshaMitra.Module.ClassManagement',
+  'ShikshaMitra.Module.HR',
+  'ShikshaMitra.Module.Finance',
+  'ShikshaMitra.Module.Communication',
+  'ShikshaMitra.Module.Calendar',
+  'ShikshaMitra.Module.Library',
+  'ShikshaMitra.Module.Transport',
+  'ShikshaMitra.Module.ResourceManagement',
+  'ShikshaMitra.Module.Hostel',
+  'ShikshaMitra.Module.Security',
+  'ShikshaMitra.Module.SecurityGuard',
+  'ShikshaMitra.Module.InstituteSetup',
+];
+
+const buildModuleVisibility = (permissions: { name: string; isGranted: boolean }[]) =>
+  mainModulePermissionOrder.map((permissionName) =>
+    permissions.some(
+      (permission) =>
+        permission.isGranted &&
+        (permission.name === permissionName || permission.name === `${permissionName}.View`)
+    )
+  );
+
 export const loadUser = createAsyncThunk(
   'auth/loadUser',
   async (userSession: any, { dispatch, rejectWithValue }) => {
     try {
       if (userSession?.profile?.sub) {
-        const mainModuleVisibility = userSession?.profile?.module_mask || '';
-        const mainModuleVisibilityArray: boolean[] = mainModuleVisibility
-          .split('')
-          .map((item: string) => (item === '1' ? true : false));
         const fetchPermssion = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${userSession.profile.sub}`,
           {
@@ -41,7 +66,8 @@ export const loadUser = createAsyncThunk(
 
         const permissionData = extractGrantedPermissions(jsonData?.groups || []);
         return {
-          mainModuleVisibility: mainModuleVisibilityArray,
+          user: userSession.profile,
+          mainModuleVisibility: buildModuleVisibility(permissionData),
           permissionData,
         };
       }
@@ -56,16 +82,13 @@ export const getEmployee = createAsyncThunk(
   'auth/getEmployee',
   async (userData: any, { rejectWithValue }) => {
     try {
-      const employeeRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || ''}/api/app/employee/employee-by-user-id/${userData.profile.sub}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${userData?.accessToken}`,
-          },
-        }
-      );
+      const employeeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/employees/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userData?.accessToken}`,
+        },
+      });
       if (!employeeRes.ok) {
         return null;
       }
@@ -81,6 +104,7 @@ const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   loading: false,
+  permissionsInitialized: false,
   employee: null,
   permissions: [],
   mainModuleVisibility: [],
@@ -97,12 +121,18 @@ const authSlice = createSlice({
     clearUser: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.loading = false;
+      state.employee = null;
+      state.permissions = [];
+      state.mainModuleVisibility = [];
+      state.permissionsInitialized = false;
     },
     setMainModuleVisibility: (state, action: PayloadAction<boolean[]>) => {
       state.mainModuleVisibility = action.payload;
     },
     setPermissions: (state, action: PayloadAction<{ name: string; isGranted: boolean }[]>) => {
       state.permissions = action.payload;
+      state.permissionsInitialized = true;
     },
   },
   extraReducers: (builder) => {
@@ -111,14 +141,17 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(loadUser.fulfilled, (state, action) => {
-        state.isAuthenticated = !!action.payload;
+        state.user = action.payload.user;
+        state.isAuthenticated = !!action.payload.user;
         state.mainModuleVisibility = action.payload.mainModuleVisibility;
         state.permissions = action.payload.permissionData;
         state.loading = false;
+        state.permissionsInitialized = true;
       })
       .addCase(loadUser.rejected, (state) => {
         // state.error = action.payload;
         state.loading = false;
+        state.permissionsInitialized = true;
       })
       .addCase(getEmployee.pending, (state) => {
         // state.loading = true;

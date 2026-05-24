@@ -1,5 +1,6 @@
 import { it, expect, describe } from 'vitest';
 import {
+  mapEmployeeWiseAttendanceRow,
   buildDateWiseAttendanceParams,
   buildEmployeeWiseAttendanceParams,
 } from 'src/redux/attendanceTracking/attendanceTrackingApi';
@@ -40,6 +41,27 @@ describe('attendanceTrackingApi contract helpers', () => {
       search: undefined,
       page: 1,
       pageSize: 10,
+    });
+  });
+
+  it('maps employee-wise response rows using the BE response field names', () => {
+    expect(
+      mapEmployeeWiseAttendanceRow({
+        date: '2026-04-22T00:00:00+00:00',
+        inTime: '08:30 AM',
+        outTime: '05:30 PM',
+        hoursWorked: '09H 00M',
+        status: 0,
+        description: 'On time',
+        employeeCode: 'ignored',
+      })
+    ).toEqual({
+      date: '2026-04-22T00:00:00+00:00',
+      inTime: '08:30 AM',
+      outTime: '05:30 PM',
+      hoursWorked: '09H 00M',
+      status: 0,
+      description: 'On time',
     });
   });
 });

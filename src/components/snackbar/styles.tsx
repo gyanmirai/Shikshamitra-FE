@@ -15,13 +15,13 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
       backgroundColor: 'unset',
     },
     toastColor: {
-      padding: theme.spacing(0.5, 1, 0.5, 0.5),
+      padding: theme.spacing(0.75, 1.25, 0.75, 0.75),
       boxShadow: theme.customShadows.z8,
       color: theme.vars.palette.text.primary,
       backgroundColor: theme.vars.palette.background.paper,
     },
     toastLoader: {
-      padding: theme.spacing(0.5, 1, 0.5, 0.5),
+      padding: theme.spacing(0.75, 1.25, 0.75, 0.75),
       boxShadow: theme.customShadows.z8,
       color: theme.vars.palette.text.primary,
       backgroundColor: theme.vars.palette.background.paper,
@@ -53,17 +53,19 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
   };
 
   return {
-    width: 300,
+    width: 'min(420px, calc(100vw - 32px))',
     [`& .${toasterClasses.toast}`]: {
-      gap: 12,
+      gap: 10,
       width: '100%',
-      maxWidth: '400px',
+      maxWidth: 'min(420px, calc(100vw - 32px))',
       minHeight: 52,
       display: 'flex',
+      position: 'relative',
       borderRadius: 12,
       alignItems: 'center',
       padding: 0,
-      backgroundColor: 'none',
+      overflow: 'visible',
+      backgroundColor: 'transparent',
     },
     /*
      * Content
@@ -71,9 +73,13 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
     [`& .${toasterClasses.content}`]: {
       gap: 0,
       flex: '1 1 auto',
+      minWidth: 0,
+      paddingRight: 28,
     },
     [`& .${toasterClasses.title}`]: {
       fontSize: theme.typography.subtitle2.fontSize,
+      lineHeight: 1.45,
+      overflowWrap: 'anywhere',
     },
     [`& .${toasterClasses.description}`]: {
       ...theme.typography.caption,
@@ -85,12 +91,12 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
     [`& .${toasterClasses.actionButton}`]: {},
     [`& .${toasterClasses.cancelButton}`]: {},
     [`& .${toasterClasses.closeButton}`]: {
-      top: 0,
-      right: 0,
+      top: 8,
+      right: 8,
       left: 'auto',
       color: 'currentColor',
       backgroundColor: 'transparent',
-      transform: 'translate(-6px, 6px)',
+      transform: 'none',
       borderColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
       transition: theme.transitions.create(['background-color', 'border-color']),
       '&:hover': {
@@ -105,10 +111,11 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
       margin: 0,
       width: 48,
       height: 48,
+      flex: '0 0 48px',
       alignItems: 'center',
       borderRadius: 'inherit',
       justifyContent: 'center',
-      alignSelf: 'flex-start',
+      alignSelf: 'stretch',
       [`& .${toasterClasses.iconSvg}`]: {
         width: 24,
         height: 24,
@@ -125,7 +132,7 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
       ...baseStyles.toastDefault,
       [`&:has(${toasterClasses.closeBtnVisible})`]: {
         [`& .${toasterClasses.content}`]: {
-          paddingRight: 32,
+          paddingRight: 36,
         },
       },
       [`&:has(.${toasterClasses.loader})`]: baseStyles.toastLoader,
@@ -140,6 +147,9 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
      */
     [`& .${toasterClasses.error}`]: {
       ...baseStyles.toastColor,
+      [`&:has(${toasterClasses.closeBtnVisible}) .${toasterClasses.content}`]: {
+        paddingRight: 36,
+      },
       [`& .${toasterClasses.icon}`]: {
         color: theme.palette.error.main,
         backgroundColor: varAlpha(theme.vars.palette.error.mainChannel, 0.08),
@@ -150,6 +160,9 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
      */
     [`& .${toasterClasses.success}`]: {
       ...baseStyles.toastColor,
+      [`&:has(${toasterClasses.closeBtnVisible}) .${toasterClasses.content}`]: {
+        paddingRight: 36,
+      },
       [`& .${toasterClasses.icon}`]: {
         color: theme.vars.palette.success.main,
         backgroundColor: varAlpha(theme.vars.palette.success.mainChannel, 0.08),
@@ -160,6 +173,9 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
      */
     [`& .${toasterClasses.warning}`]: {
       ...baseStyles.toastColor,
+      [`&:has(${toasterClasses.closeBtnVisible}) .${toasterClasses.content}`]: {
+        paddingRight: 36,
+      },
       [`& .${toasterClasses.icon}`]: {
         color: theme.vars.palette.warning.main,
         backgroundColor: varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
@@ -170,6 +186,9 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
      */
     [`& .${toasterClasses.info}`]: {
       ...baseStyles.toastColor,
+      [`&:has(${toasterClasses.closeBtnVisible}) .${toasterClasses.content}`]: {
+        paddingRight: 36,
+      },
       [`& .${toasterClasses.icon}`]: {
         color: theme.vars.palette.info.main,
         backgroundColor: varAlpha(theme.vars.palette.info.mainChannel, 0.08),

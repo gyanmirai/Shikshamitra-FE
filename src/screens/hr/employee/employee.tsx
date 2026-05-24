@@ -16,6 +16,8 @@ import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -61,6 +63,7 @@ import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salar
 
 const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const dispatch = useDispatch();
   const statusDialog = useBoolean();
 
@@ -96,6 +99,7 @@ const HrEmployee = () => {
     page: 1,
     pageSize: 10,
     search: '',
+    mediumStageId: '',
   });
 
   const payrollDialog = useBoolean();
@@ -177,16 +181,26 @@ const HrEmployee = () => {
 
   const tableData = useMemo(
     () =>
-      employee?.items?.map((item: any) => ({
-        ...item,
-        dob: dayjs(item?.dob).format('DD-MM-YYYY'),
-        genderValue: item?.gender,
-        doi: dayjs(item?.doj).format('DD-MM-YYYY'),
-        roleValue: item?.roleName || 'Not Assigned',
-        statusValue: EmployeeStatusType[item?.status],
-        shiftName: `${item?.shift.name} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
-        organization: item?.educationMediumStage?.name,
-      })),
+      employee?.items?.map((item: any) => {
+        const shiftTime =
+          item?.shift?.startTime && item?.shift?.endTime
+            ? ` (${dayjs(item.shift.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item.shift.endTime, 'HH:mm:ss').format('hh:mm A')})`
+            : '';
+
+        return {
+          ...item,
+          dob: dayjs(item?.dob).format('DD-MM-YYYY'),
+          genderValue: item?.gender,
+          doi: dayjs(item?.doj).format('DD-MM-YYYY'),
+          roleValue: item?.roleName || 'Not Assigned',
+          statusValue: EmployeeStatusType[item?.status],
+          shiftName: item?.shift?.name ? `${item.shift.name}${shiftTime}` : 'Not Assigned',
+          organization:
+            item?.organizationNames?.join(', ') ||
+            item?.organizations?.map((org: any) => org.name).join(', ') ||
+            '',
+        };
+      }),
     [employee?.items]
   );
   const sendInstantNotificationDialogValue = useBoolean();
@@ -332,6 +346,14 @@ const HrEmployee = () => {
       },
       // { id: 'organization', label: 'Organization', align: 'left' },
       {
+        id: 'organization',
+        label: 'Organization',
+        align: 'left',
+        width: 180,
+        minWidth: 160,
+        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+      },
+      {
         id: 'status',
         label: 'Status',
         filterType: 'enum',
@@ -378,9 +400,12 @@ const HrEmployee = () => {
     [actions, setOpen, setSearchParams]
   );
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      data-testid="hr-employee-page"
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       {open ? (
-        <Box display="flex" flexDirection="column" height="100%">
+        <Box data-testid="hr-employee-form" display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
             heading={`${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
             links={[
@@ -412,6 +437,7 @@ const HrEmployee = () => {
             ]}
             action={
               <Button
+                data-testid="hr-employee-add-button"
                 variant="contained"
                 size="small"
                 startIcon={<Add />}
@@ -423,6 +449,27 @@ const HrEmployee = () => {
             }
             description="This section displays the employees list. Click 'View' to see their detailed profile information."
           />
+          <Box data-testid="hr-employee-list" sx={{ mb: 2, maxWidth: 280 }}>
+            <CustomSelect
+              fullWidth
+              label="Organization"
+              options={[
+                { id: '', name: 'All Organizations' },
+                ...(currentMedium?.educationMediumStages || []),
+              ]}
+              value={employeeParams.mediumStageId}
+              valueKey="id"
+              labelKey="name"
+              onChange={(value) => {
+                const nextValue = Array.isArray(value) ? value[0] : value;
+                setEmployeeParams((pre) => ({
+                  ...pre,
+                  page: 1,
+                  mediumStageId: nextValue == null ? '' : String(nextValue),
+                }));
+              }}
+            />
+          </Box>
           <CustomizableTable
             noDataText={
               <>
@@ -458,6 +505,7 @@ const HrEmployee = () => {
             data={tableData || []}
           />
           <CustomDialog
+            data-testid="hr-employee-status-dialog"
             open={statusDialog.value}
             handleClose={handleCloseStatus}
             title={
@@ -485,6 +533,7 @@ const HrEmployee = () => {
           {/*  <EmployeeFrom editData={editData} handleClose={handleClose} /> */}
           {/* </CustomDialog> */}
           <CustomDialog
+            data-testid="hr-employee-salary-dialog"
             maxWidth="lg"
             open={payrollDialog.value}
             handleClose={handleClosePayroll}
@@ -597,6 +646,12 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         handleClose();
       } catch (error) {
         console.error(error);
+        shikshaMitraToast.error({
+          message:
+            (error as any)?.data?.message ||
+            (error as any)?.error ||
+            'Failed to update salary structure.',
+        });
       }
     },
   });

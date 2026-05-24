@@ -1,13 +1,16 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -16,6 +19,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  useGetLeaveRequestsQuery,
+  useRejectLeaveRequestMutation,
+  useApproveLeaveRequestMutation,
+} from 'src/redux/hr/leaveApi';
 import {
   Box,
   Card,
@@ -147,6 +155,46 @@ const LeaveManagement = () => {
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const isConfirmDialog = useBoolean(false);
   const viewPopover = usePopover();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { data, isLoading } = useGetLeaveRequestsQuery(
+    { academicYearId: currentYear?.id, page: 1, pageSize: 20 },
+    { skip: !currentYear?.id }
+  );
+
+  const leaveRequests = useMemo(
+    () =>
+      (data?.items || []).map((item: any) => {
+        const start = dayjs(item.startDate);
+        const end = dayjs(item.endDate);
+        const status =
+          typeof item.status === 'string'
+            ? item.status
+            : ['Pending', 'Approved', 'Rejected'][item.status] || 'Pending';
+        return {
+          id: item.id,
+          name: item.name || item.employeeName || '-',
+          role: item.roleName || item.designation || '-',
+          type: item.leaveType || item.leaveTypeName || 'Leave',
+          duration: `${item.totalDays || 0} Day${Number(item.totalDays || 0) === 1 ? '' : 's'}`,
+          dateRange: `${start.isValid() ? start.format('DD MMM') : '-'} - ${end.isValid() ? end.format('DD MMM') : '-'}`,
+          status,
+          pending: status.toLowerCase() === 'pending',
+        };
+      }),
+    [data?.items]
+  );
+
+  const summary = useMemo(
+    () => ({
+      pending: leaveRequests.filter((item: any) => item.status.toLowerCase() === 'pending').length,
+      approved: leaveRequests.filter((item: any) => item.status.toLowerCase() === 'approved')
+        .length,
+      sick: leaveRequests.filter((item: any) => item.type === 'Sick Leave').length,
+      casual: leaveRequests.filter((item: any) => item.type === 'Casual Leave').length,
+      paid: leaveRequests.filter((item: any) => item.type === 'Paid Leave').length,
+    }),
+    [leaveRequests]
+  );
 
   const leaveColumns: any[] = [
     { id: 'name', label: 'Employee Name', align: 'left', sticky: true },
@@ -207,13 +255,13 @@ const LeaveManagement = () => {
           <Stack direction="row" spacing={0.75} alignItems="center">
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'warning.main' }} />
             <Typography variant="caption" color="warning.main" fontWeight={600}>
-              Pending: 5
+              Pending: {summary.pending}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.75} alignItems="center">
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
             <Typography variant="caption" color="success.main" fontWeight={600}>
-              Approved: 12
+              Approved: {summary.approved}
             </Typography>
           </Stack>
         </Stack>
@@ -222,18 +270,28 @@ const LeaveManagement = () => {
       {/* Summary Cards */}
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <LeaveCard title="Sick Leave" count={12} color="#D81B60" icon="solar:stethoscope-bold" />
+          <LeaveCard
+            title="Sick Leave"
+            count={summary.sick}
+            color="#D81B60"
+            icon="solar:stethoscope-bold"
+          />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <LeaveCard
             title="Casual Leave"
-            count={8}
+            count={summary.casual}
             color="#1E88E5"
             icon="solar:calendar-mark-bold"
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <LeaveCard title="Paid Leave" count={3} color="#43A047" icon="solar:wallet-money-bold" />
+          <LeaveCard
+            title="Paid Leave"
+            count={summary.paid}
+            color="#43A047"
+            icon="solar:wallet-money-bold"
+          />
         </Grid>
       </Grid>
 
@@ -258,7 +316,7 @@ const LeaveManagement = () => {
 
       <Scrollbar sx={{ flexGrow: 1, maxHeight: 320 }}>
         <List disablePadding>
-          {requests.map((req) => (
+          {leaveRequests.map((req: any) => (
             <ListItem
               key={req.id}
               disableGutters
@@ -383,6 +441,13 @@ const LeaveManagement = () => {
               )}
             </ListItem>
           ))}
+          {!leaveRequests.length && (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+              {currentYear?.id
+                ? 'No leave requests found.'
+                : 'Select an academic year to view leave requests.'}
+            </Typography>
+          )}
         </List>
       </Scrollbar>
 
@@ -406,7 +471,8 @@ const LeaveManagement = () => {
       >
         <CustomizableTable
           columns={leaveColumns}
-          data={requests}
+          data={leaveRequests}
+          isLoading={isLoading}
           tableId="leave-requests-table"
           isSearch={false}
           isFilter
@@ -512,6 +578,8 @@ export const LeaveApproveRejectForm = ({
   handleClose: (e?: any, isSubmit?: boolean) => void;
   editData: any;
 }) => {
+  const [approveLeaveRequest, { isLoading: isApproveLoading }] = useApproveLeaveRequestMutation();
+  const [rejectLeaveRequest, { isLoading: isRejectLoading }] = useRejectLeaveRequestMutation();
   const { values, handleChange, errors, touched, handleSubmit } = useFormik({
     initialValues: {
       remarks: '',
@@ -522,7 +590,14 @@ export const LeaveApproveRejectForm = ({
     }),
     onSubmit: async () => {
       try {
-        // TODO: Add API call for approve/reject
+        if (editData?.type === 'reject') {
+          await rejectLeaveRequest({ id: editData.id, body: { remarks: values.remarks } }).unwrap();
+        } else {
+          await approveLeaveRequest({
+            id: editData.id,
+            body: { remarks: values.remarks },
+          }).unwrap();
+        }
         handleClose(null, true);
       } catch (error) {
         console.error(error);
@@ -557,7 +632,7 @@ export const LeaveApproveRejectForm = ({
         </Button>
         <LoadingButton
           variant="contained"
-          loading={false}
+          loading={isApproveLoading || isRejectLoading}
           onClick={(e: any) => handleSubmit(e)}
           size="small"
           startIcon={

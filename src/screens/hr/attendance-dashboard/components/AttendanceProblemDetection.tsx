@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Iconify } from 'src/components/iconify';
+import { motion, type Variants } from 'framer-motion';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
 import {
@@ -73,7 +73,7 @@ const REPEAT_OFFENDERS = [
   { id: 3, name: 'Sunita Patel', dept: 'HR', corrections: 5, type: 'Leave Override' },
 ];
 
-const sectionVariants = {
+const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   show: {
     opacity: 1,

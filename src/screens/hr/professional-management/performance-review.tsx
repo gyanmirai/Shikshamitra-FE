@@ -1,35 +1,81 @@
-import type { Dayjs } from 'dayjs';
+import type { ProfessionalReview } from 'src/redux/hr/professional-management-api';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { Search } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import React, { useMemo, useState, useEffect } from 'react';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
-  Card,
-  Avatar,
+  Stack,
   Button,
-  Slider,
   Rating,
+  MenuItem,
   TextField,
   Typography,
-  CardContent,
   DialogActions,
   InputAdornment,
 } from '@mui/material';
+import {
+  useGetProfessionalCycleReviewsQuery,
+  useGetProfessionalReviewCyclesQuery,
+  useSubmitProfessionalReviewMutation,
+  useSaveProfessionalReviewDraftMutation,
+  useCreateProfessionalReviewCycleMutation,
+} from 'src/redux/hr/professional-management-api';
+
+const cycleStatus = ['Draft', 'Active', 'Closed'];
+const reviewStatus = ['Draft', 'Submitted'];
 
 const PerformanceReview = () => {
   const reviewDialog = useBoolean();
+  const cycleDialog = useBoolean();
+  const [search, setSearch] = useState('');
+  const [selectedCycleId, setSelectedCycleId] = useState('');
+  const [selectedReview, setSelectedReview] = useState<ProfessionalReview | null>(null);
+
+  const { data: cyclesData } = useGetProfessionalReviewCyclesQuery({ page: 1, pageSize: 50 });
+  const cycles = useMemo(() => cyclesData?.items || [], [cyclesData?.items]);
+
+  useEffect(() => {
+    if (!selectedCycleId && cycles[0]?.id) {
+      setSelectedCycleId(cycles[0].id);
+    }
+  }, [cycles, selectedCycleId]);
+
+  const { data: reviewsData, isLoading } = useGetProfessionalCycleReviewsQuery(
+    { id: selectedCycleId, search },
+    { skip: !selectedCycleId }
+  );
+
+  const reviews = reviewsData?.items || [];
 
   return (
     <Box>
-      <Box sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} gap={2} sx={{ mb: 3 }}>
+        <TextField
+          select
+          label="Review Cycle"
+          value={selectedCycleId}
+          onChange={(event) => setSelectedCycleId(event.target.value)}
+          size="small"
+          sx={{ minWidth: 260 }}
+        >
+          {cycles.map((cycle: any) => (
+            <MenuItem key={cycle.id} value={cycle.id}>
+              {cycle.name} ({cycleStatus[cycle.status]})
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
           fullWidth
-          placeholder="Search by department or performance period."
+          placeholder="Search employee or employee code."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -37,26 +83,70 @@ const PerformanceReview = () => {
               </InputAdornment>
             ),
           }}
-          sx={{
-            backgroundColor: 'background.paper',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-            },
-          }}
         />
-      </Box>
+        <Button variant="contained" onClick={cycleDialog.onTrue}>
+          New Cycle
+        </Button>
+      </Stack>
 
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <ReviewCard onReview={reviewDialog.onTrue} />
-        <ReviewCard onReview={reviewDialog.onTrue} />
-      </Box>
+      <CustomizableTable
+        tableId="professional-review"
+        isLoading={isLoading}
+        columns={[
+          { id: 'employeeName', label: 'Employee' },
+          { id: 'employeeIdentifier', label: 'Code' },
+          { id: 'employeeRole', label: 'Role' },
+          {
+            id: 'communicationScore',
+            label: 'Communication',
+            render: (value) => <Rating readOnly value={Number(value || 0)} />,
+          },
+          {
+            id: 'problemSolvingScore',
+            label: 'Problem Solving',
+            render: (value) => <Rating readOnly value={Number(value || 0)} />,
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            render: (value) => reviewStatus[value] || 'Draft',
+          },
+          {
+            id: 'actions',
+            label: 'Actions',
+            render: (_value, row) => (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  setSelectedReview(row as unknown as ProfessionalReview);
+                  reviewDialog.onTrue();
+                }}
+              >
+                Review
+              </Button>
+            ),
+          },
+        ]}
+        data={reviews}
+        noDataText={
+          selectedCycleId ? 'No employees found for this cycle.' : 'Create a review cycle to start.'
+        }
+      />
 
       <CustomDialog
         open={reviewDialog.value}
         handleClose={reviewDialog.onFalse}
         title="Review & feedback"
       >
-        <ReviewForm />
+        <ReviewForm review={selectedReview} onClose={reviewDialog.onFalse} />
+      </CustomDialog>
+      <CustomDialog
+        open={cycleDialog.value}
+        handleClose={cycleDialog.onFalse}
+        title="New review cycle"
+      >
+        <CycleForm onClose={cycleDialog.onFalse} />
       </CustomDialog>
     </Box>
   );
@@ -64,161 +154,154 @@ const PerformanceReview = () => {
 
 export default PerformanceReview;
 
-interface ReviewCardProps {
-  onReview?: () => void;
-}
+function CycleForm({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState('');
+  const [periodStart, setPeriodStart] = useState(dayjs());
+  const [periodEnd, setPeriodEnd] = useState(dayjs().add(6, 'month'));
+  const [createCycle, { isLoading }] = useCreateProfessionalReviewCycleMutation();
 
-const ReviewCard = ({ onReview }: ReviewCardProps) => (
-  <Card sx={{ borderRadius: 2, p: 2, width: 300 }}>
-    <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
-      <Avatar
-        src="https://example.com/avatar.jpg"
-        alt="Selina Boyer"
-        sx={{ width: 50, height: 50, mr: 2 }}
-      />
-      <Box>
-        <Typography variant="h6">Selina Boyer</Typography>
-        <Typography variant="body2" color="textSecondary">
-          Teacher
-        </Typography>
-      </Box>
-    </CardContent>
-
-    <Box sx={{ px: 2 }}>
-      <Slider
-        value={30}
-        valueLabelDisplay="on"
-        step={10}
-        sx={{
-          color: 'primary.main',
-          height: 8,
-          '& .MuiSlider-thumb': {
-            width: 24,
-            height: 24,
-            backgroundColor: '#fff',
-            border: '2px solid currentColor',
-          },
-          '& .MuiSlider-track': {
-            border: 'none',
-          },
-          '& .MuiSlider-rail': {
-            opacity: 0.2,
-            backgroundColor: '#37404f',
-          },
-        }}
-      />
-    </Box>
-
-    <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2 }}>
-      <Button variant="outlined" fullWidth onClick={onReview}>
-        Review & Feedback
-      </Button>
-    </Box>
-  </Card>
-);
-
-interface ReviewData {
-  rating: number;
-  comment: string;
-}
-
-interface Reviews {
-  communication: ReviewData;
-  problemSolving: ReviewData;
-}
-
-type CategoryType = keyof Reviews;
-
-function ReviewForm() {
-  const [date, setDate] = useState<null | Dayjs>(dayjs());
-  const [reviews, setReviews] = useState<Reviews>({
-    communication: { rating: 0, comment: '' },
-    problemSolving: { rating: 0, comment: '' },
-  });
-
-  const handleRatingChange = (category: CategoryType, newRating: number | null) => {
-    if (newRating !== null) {
-      setReviews((prev) => ({
-        ...prev,
-        [category]: { ...prev[category], rating: newRating },
-      }));
-    }
+  const handleSubmit = async () => {
+    await createCycle({
+      name,
+      periodStart: periodStart.startOf('day').toISOString(),
+      periodEnd: periodEnd.startOf('day').toISOString(),
+      status: 1,
+    }).unwrap();
+    toast.success('Review cycle created');
+    onClose();
   };
 
-  const handleCommentChange = (category: CategoryType, newComment: string) => {
-    setReviews((prev) => ({
-      ...prev,
-      [category]: { ...prev[category], comment: newComment },
-    }));
+  return (
+    <>
+      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
+        <Stack spacing={2}>
+          <TextField
+            label="Cycle Name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            fullWidth
+          />
+          <DatePicker
+            label="Period Start"
+            value={periodStart}
+            onChange={(value) => value && setPeriodStart(value)}
+          />
+          <DatePicker
+            label="Period End"
+            value={periodEnd}
+            onChange={(value) => value && setPeriodEnd(value)}
+          />
+        </Stack>
+      </Scrollbar>
+      <DialogActions>
+        <Button variant="outlined" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="contained" disabled={!name.trim() || isLoading} onClick={handleSubmit}>
+          Create
+        </Button>
+      </DialogActions>
+    </>
+  );
+}
+
+function ReviewForm({
+  review,
+  onClose,
+}: {
+  review: ProfessionalReview | null;
+  onClose: () => void;
+}) {
+  const [communicationScore, setCommunicationScore] = useState(review?.communicationScore || 0);
+  const [problemSolvingScore, setProblemSolvingScore] = useState(review?.problemSolvingScore || 0);
+  const [comments, setComments] = useState(review?.comments || '');
+  const [feedback, setFeedback] = useState(review?.feedback || '');
+  const [saveDraft, draftState] = useSaveProfessionalReviewDraftMutation();
+  const [submitReview, submitState] = useSubmitProfessionalReviewMutation();
+  const isSubmitted = review?.status === 1;
+
+  useEffect(() => {
+    setCommunicationScore(review?.communicationScore || 0);
+    setProblemSolvingScore(review?.problemSolvingScore || 0);
+    setComments(review?.comments || '');
+    setFeedback(review?.feedback || '');
+  }, [review]);
+
+  const body = { communicationScore, problemSolvingScore, comments, feedback };
+
+  const handleSaveDraft = async () => {
+    if (!review?.id) return;
+    await saveDraft({ id: review.id, body }).unwrap();
+    toast.success('Draft saved');
+    onClose();
   };
 
-  const handleSubmit = () => {};
-
-  const handleSaveDraft = () => {};
-
-  const handleCancel = () => {
-    setReviews({
-      communication: { rating: 0, comment: '' },
-      problemSolving: { rating: 0, comment: '' },
-    });
+  const handleSubmit = async () => {
+    if (!review?.id) return;
+    await submitReview({ id: review.id, body }).unwrap();
+    toast.success('Review submitted');
+    onClose();
   };
 
   return (
     <Box>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <DatePicker
-          label="Select Date"
-          format="DD-MM-YYYY"
-          value={date}
-          onChange={(newValue) => setDate(newValue)}
-          slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-          sx={{ mb: 2 }}
-        />
-        {(['communication', 'problemSolving'] as const).map((category) => (
-          <Box key={category} mb={3}>
-            <Typography variant="subtitle1" gutterBottom>
-              {category === 'communication' ? 'Communication' : 'Problem-Solving'}
-            </Typography>
-            <Rating
-              value={reviews[category].rating}
-              onChange={(event, newValue) => handleRatingChange(category, newValue)}
-            />
-            <TextField
-              variant="outlined"
-              placeholder="Leave a comment"
-              fullWidth
-              multiline
-              minRows={3}
-              value={reviews[category].comment}
-              onChange={(event) => handleCommentChange(category, event.target.value)}
-              sx={{
-                mt: 1,
-              }}
-            />
-          </Box>
-        ))}
         <Typography variant="subtitle1" gutterBottom>
-          Feedback
+          {review?.employeeName}
         </Typography>
+        <Box mb={3}>
+          <Typography variant="subtitle2">Communication</Typography>
+          <Rating
+            value={communicationScore}
+            readOnly={isSubmitted}
+            onChange={(_, value) => setCommunicationScore(value || 0)}
+          />
+        </Box>
+        <Box mb={3}>
+          <Typography variant="subtitle2">Problem Solving</Typography>
+          <Rating
+            value={problemSolvingScore}
+            readOnly={isSubmitted}
+            onChange={(_, value) => setProblemSolvingScore(value || 0)}
+          />
+        </Box>
         <TextField
-          variant="outlined"
-          placeholder="Leave a comment"
+          label="Comments"
           fullWidth
           multiline
           minRows={3}
-          sx={{
-            mt: 1,
-          }}
+          value={comments}
+          onChange={(event) => setComments(event.target.value)}
+          disabled={isSubmitted}
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Feedback"
+          fullWidth
+          multiline
+          minRows={3}
+          value={feedback}
+          onChange={(event) => setFeedback(event.target.value)}
+          disabled={isSubmitted}
         />
       </Scrollbar>
       <DialogActions>
-        <Button variant="outlined" onClick={handleCancel}>
+        <Button variant="outlined" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={handleSaveDraft}>
+        <Button
+          variant="contained"
+          disabled={isSubmitted || draftState.isLoading}
+          onClick={handleSaveDraft}
+        >
           Save Draft
         </Button>
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={isSubmitted || submitState.isLoading}
+          onClick={handleSubmit}
+        >
           Submit
         </Button>
       </DialogActions>

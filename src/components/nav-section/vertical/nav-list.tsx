@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { usePathname } from 'src/routes/hooks';
 import { useEffect, useCallback } from 'react';
 import { isExternalLink } from 'src/routes/utils';
+import { hasGrantedPermission } from 'src/utils/permissions';
 
 import { NavItem } from './nav-item';
 import { navSectionClasses } from '../classes';
@@ -26,9 +27,7 @@ export function NavList({
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const isGranted = permissions.find(
-    (perm: any) => perm.name === data.permissionName || perm.name === `${data.permissionName}.View`
-  )?.isGranted;
+  const isGranted = hasGrantedPermission(permissions, data.permissionName);
 
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);
@@ -97,7 +96,7 @@ export function NavList({
       onClick={handleToggleMenu}
     />
   );
-  if (!isGranted) return null;
+  if (data.permissionName && !isGranted) return null;
   // Hidden item by role
   if (data.roles && slotProps?.currentRole) {
     if (!data?.roles?.includes(slotProps?.currentRole)) {

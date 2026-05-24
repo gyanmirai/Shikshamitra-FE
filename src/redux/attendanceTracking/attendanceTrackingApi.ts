@@ -60,6 +60,15 @@ export const buildEmployeeWiseAttendanceParams = ({
   pageSize,
 });
 
+export const mapEmployeeWiseAttendanceRow = (row: any) => ({
+  date: row?.date,
+  inTime: row?.inTime,
+  outTime: row?.outTime,
+  hoursWorked: row?.hoursWorked,
+  status: row?.status,
+  description: row?.description,
+});
+
 export const attendanceTrackingApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     // Employee-wise attendance (date range)
