@@ -4,8 +4,10 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useSession } from 'next-auth/react';
 import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -47,6 +49,16 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
+
+const EmployeeProfileDashboard = dynamic(() => import('../employee/employee-dashboard'));
+
+const hasRole = (role: unknown, expectedRole: string) => {
+  if (Array.isArray(role)) {
+    return role.some((item) => String(item).toLowerCase() === expectedRole);
+  }
+
+  return String(role || '').toLowerCase() === expectedRole;
+};
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
@@ -686,7 +698,7 @@ const StaffSnapshotCard = ({
   </Card>
 );
 
-const HRDashboardScreen = () => {
+const AdminDashboard = () => {
   const dashboardParams = useMemo(() => buildHRDashboardDefaultParams(), []);
   const { data, isLoading, isFetching, isError, refetch } =
     useGetHRDashboardSummaryQuery(dashboardParams);
@@ -872,6 +884,17 @@ const HRDashboardScreen = () => {
       </Grid>
     </Box>
   );
+};
+
+const HRDashboardScreen = () => {
+  const { data: session } = useSession() as any;
+  const isAdminUser = hasRole(session?.profile?.role, 'admin');
+
+  if (!isAdminUser) {
+    return <EmployeeProfileDashboard editData={{}} />;
+  }
+
+  return <AdminDashboard />;
 };
 
 export default HRDashboardScreen;

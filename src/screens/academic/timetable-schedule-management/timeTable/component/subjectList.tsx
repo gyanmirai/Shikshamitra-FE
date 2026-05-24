@@ -225,6 +225,7 @@ const SubjectList: React.FC<SubjectListProps> = ({
           editData={null}
           onClose={handleClose}
           selectedClass={selectedClass}
+          tableData={undefined}
         />
       </CustomDialog>
     </Box>

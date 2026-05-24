@@ -4,14 +4,16 @@ import type { Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import {
   Box,
@@ -24,33 +26,10 @@ import {
   DialogActions,
   DialogContentText,
 } from '@mui/material';
-
-const curriculumInitialData = [
-  {
-    id: 1,
-    curriculumName: 'First Grade Curriculum',
-    className: '1',
-    subjects: 4, // Count of subjects directly
-    lastUpdated: dayjs('2024-10-01'), // Example date
-    status: 'Unpublish',
-  },
-  {
-    id: 2,
-    curriculumName: 'Second Grade Curriculum',
-    className: '2',
-    subjects: 4, // Count of subjects directly
-    lastUpdated: dayjs('2024-09-15'),
-    status: 'Publish',
-  },
-  {
-    id: 3,
-    curriculumName: 'Third Grade Curriculum',
-    className: '3',
-    subjects: 4, // Count of subjects directly
-    lastUpdated: dayjs('2024-08-20'),
-    status: 'Unpublish',
-  },
-];
+import {
+  useGetSubjectAssignmentsQuery,
+  usePublishSubjectAssignmentMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 const CarriculumListDashboardComponent = (props: TabComponentType) => {
   const theme = useTheme();
@@ -59,25 +38,56 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const [curriculumTableData, setCurriculumTableData] = useState<any[]>(curriculumInitialData);
+  const [classId, setClassId] = useState('');
+  const [publishSubjectAssignment] = usePublishSubjectAssignmentMutation();
   const [classes, setClasses] = useState('');
   const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: number;
-    newValue: string;
+    id: string;
+    newValue: PublishUnpublishStatusType;
   } | null>(null);
   const confirmPublishDialog = useBoolean();
 
-  const handleStatusChange = (id: number, value: string) => {
-    setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
+  const { data: assignmentsData, isLoading: isAssignmentsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { standardId: classId, page: 1, pageSize: 100 },
+    options: { skip: !classId },
+  });
+
+  const curriculumTableData = useMemo(() => {
+    const items: any[] = assignmentsData?.items ?? assignmentsData?.data?.items ?? [];
+    return items.map((item: any) => ({
+      id: item.subjectAssignmentId ?? item.id ?? '',
+      curriculumName: item.name ?? item.curriculumName ?? `${item.standardName ?? ''} Curriculum`,
+      className: item.standardName ?? item.className ?? '',
+      subjects: item.subjectCount ?? item.subjects?.length ?? 0,
+      lastUpdated: item.updatedAt ?? item.lastModifiedAt ?? item.createdAt ?? new Date(),
+      status: item.status ?? PublishUnpublishStatusType.Draft,
+    }));
+  }, [assignmentsData]);
+
+  const handleStatusChange = (id: string, currentStatus: PublishUnpublishStatusType) => {
+    const newStatus =
+      currentStatus === PublishUnpublishStatusType.Published
+        ? PublishUnpublishStatusType.Draft
+        : PublishUnpublishStatusType.Published;
+    setPendingStatusChange({ id, newValue: newStatus });
     confirmPublishDialog.onTrue();
   };
 
-  const confirmStatusChange = () => {
+  const confirmStatusChange = async () => {
     if (pendingStatusChange) {
       const { id, newValue } = pendingStatusChange;
-      setCurriculumTableData((curriculum) =>
-        curriculum.map((curr) => (curr.id === id ? { ...curr, status: newValue } : curr))
-      );
+      try {
+        await publishSubjectAssignment({ assignmentId: id, status: newValue }).unwrap();
+        shikshaMitraToast.success({
+          message: `Curriculum ${
+            newValue === PublishUnpublishStatusType.Published ? 'published' : 'unpublished'
+          } successfully.`,
+        });
+      } catch {
+        shikshaMitraToast.error({ message: 'Failed to update curriculum status.' });
+      }
     }
     confirmPublishDialog.onFalse();
     setPendingStatusChange(null);
@@ -89,17 +99,30 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
   };
 
   useEffect(() => {
-    if (!classes) {
-      const firstClass = classData?.items[0];
-      setClasses(firstClass?.name);
+    if (!classId && classData?.items?.length > 0) {
+      const firstClass = classData.items[0];
+      setClasses(firstClass?.name ?? '');
+      setClassId(firstClass?.id ?? '');
     }
-  }, [classData?.items, classes]);
+  }, [classData?.items, classId]);
 
   return (
     <Box>
-      <Typography variant="h6">Curriculum Overview</Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+        <Typography variant="h6">Curriculum Overview</Typography>
+        <CustomSelect
+          label="Class"
+          options={classData?.items || []}
+          labelKey="name"
+          valueKey="id"
+          value={classId}
+          onChange={(val) => setClassId(val as string)}
+          formControlProps={{ sx: { minWidth: 120 } }}
+        />
+      </Box>
       <CustomizableTable
         tableId="curriculum-table"
+        isLoading={isAssignmentsLoading}
         columns={[
           { id: 'curriculumName', label: 'Curriculum Name' },
           { id: 'className', label: 'Class' },
@@ -116,12 +139,12 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
           {
             id: 'status',
             label: 'Publish',
-            render: (value: string, row: any) => (
+            render: (value: PublishUnpublishStatusType, row: any) => (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
                   size="small"
-                  checked={value === 'Publish'}
-                  onChange={() => handleStatusChange(row.id, value as string)}
+                  checked={value === PublishUnpublishStatusType.Published}
+                  onChange={() => handleStatusChange(row.id, value)}
                 />
               </Box>
             ),
@@ -138,7 +161,10 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
       >
         <DialogContent>
           <DialogContentText>
-            Are you sure to {pendingStatusChange?.newValue === 'Publish' ? 'Publish' : 'Unpublish'}{' '}
+            Are you sure to{' '}
+            {pendingStatusChange?.newValue === PublishUnpublishStatusType.Published
+              ? 'Publish'
+              : 'Unpublish'}{' '}
             this Subject?
           </DialogContentText>
         </DialogContent>

@@ -72,7 +72,7 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
 
     generateFeeStructure: builder.mutation({
       query: ({ academicYearId }) => ({
-        url: '/fee-structures/generate',
+        url: '/fee-structures-metadata/generate',
         method: 'POST',
         params: { academicYearId },
       }),
@@ -146,6 +146,14 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         { type: financeModuleType.classWiseFeeStructure, id: classId },
       ],
     }),
+
+    getAcademicYearMonths: builder.query({
+      query: (params) => ({
+        url: '/fee-structures/academic-year-months',
+        method: 'GET',
+        params,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -165,4 +173,5 @@ export const {
   useDeleteClassWiseFeeStructureMutation,
   useLockClassWiseFeeStructureMutation,
   useUnlockClassWiseFeeStructureMutation,
+  useGetAcademicYearMonthsQuery,
 } = financeFeeStructureApi;

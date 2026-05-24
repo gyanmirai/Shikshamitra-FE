@@ -23,10 +23,11 @@ export function WeeklyLectureClassPicker({
   isEditLocked,
 }: WeeklyLectureClassPickerProps) {
   const handleChange = useCallback(
-    (val: string) => {
-      formik.setFieldValue('classId', val);
-      const found = allClass.find((c) => c.id === val);
-      formik.setFieldValue('className', found?.name || val);
+    (val: string | number | string[] | number[]) => {
+      const strVal = val as string;
+      formik.setFieldValue('classId', strVal);
+      const found = allClass.find((c) => c.id === strVal);
+      formik.setFieldValue('className', found?.name || strVal);
       formik.setFieldValue('subjects', []);
       formik.setFieldValue('totalLectures', 0);
     },

@@ -1,22 +1,26 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
+import { shikshaMitraToast } from 'src/components/toast';
 import { formatCurrency } from 'src/utils/cureencyFormater';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Paper, Stack, Button, Divider, Typography } from '@mui/material';
+import { useCreateFeeRefundMutation } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
 import {
   buildRefundInitialValues,
+  buildFeeRefundApiPayload,
   buildRefundValidationSchema,
 } from './initialValuesAndValidation';
 
@@ -33,17 +37,41 @@ const FeeRefundFormComponent = ({
 }: FeeRefundFormProps): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
+  const [createFeeRefund, { isLoading: isSubmitting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateFeeRefundMutation,
+  });
 
   const formik = useFormik({
     initialValues: buildRefundInitialValues(),
     validationSchema: buildRefundValidationSchema(currentYear),
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: () => {
-      // onSubmit?.(buildFeeRefundPayload(values));
+    onSubmit: async (values, helpers) => {
+      if (!currentYear?.id) {
+        shikshaMitraToast.error({ message: 'Academic year not set. Please reload and try again.' });
+        return;
+      }
+      try {
+        const payload = buildFeeRefundApiPayload(values, currentYear.id);
+        if (payload.lines.length === 0) {
+          shikshaMitraToast.error({ message: 'Enter a refund amount for at least one month.' });
+          return;
+        }
+        await createFeeRefund(payload).unwrap();
+        shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+        helpers.resetForm();
+        onCancel?.(new MouseEvent('click') as any, true);
+      } catch (err: any) {
+        const message = err?.data?.error?.message ?? 'Failed to submit refund request.';
+        shikshaMitraToast.error({ message });
+      }
     },
   });
-
+  useEffect(() => {
+    formik.resetForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear?.id]);
   // ── Derived totals for sticky footer ────────────────────────────────────────
   const { totalSelectedMonths, totalRefundRequested } = useMemo(() => {
     const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];
@@ -167,7 +195,7 @@ const FeeRefundFormComponent = ({
               variant="outlined"
               color="inherit"
               size="small"
-              disabled={loading}
+              disabled={loading || isSubmitting}
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={(e) => onCancel?.(e, false)}
             >
@@ -177,12 +205,12 @@ const FeeRefundFormComponent = ({
               type="submit"
               variant="contained"
               size="small"
-              loading={loading}
+              loading={loading || isSubmitting}
               loadingPosition="start"
               startIcon={<Iconify icon="solar:money-bag-bold" />}
               onClick={() => formik.handleSubmit()}
             >
-              Submit{' '}
+              Submit Refund
             </LoadingButton>
           </Box>
         </Box>

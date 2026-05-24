@@ -5,7 +5,7 @@ export const noOfLectureValidationSchema = Yup.object().shape({
   subjects: Yup.array()
     .of(
       Yup.object().shape({
-        name: Yup.string().required('Subject name is required'),
+        name: Yup.string(),
         // subjectColor: Yup.string().required('Subject color is required'),
         noOfLecture: Yup.number()
           .required('Weekly Lectures are required')

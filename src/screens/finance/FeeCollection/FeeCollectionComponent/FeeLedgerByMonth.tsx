@@ -1,10 +1,13 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import React, { useState } from 'react';
-import { Box, Collapse } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { FeeMonth } from 'src/enums/fee-collection-type';
+import { Box, Card, Chip, Checkbox, Collapse, Typography } from '@mui/material';
 
-import { FeeRow, toPeriod, ColHeader, GroupHeader } from './FeeLedgerShared';
+import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
 
 import type { SelectedItem, MonthWiseGroup } from '../Components/type';
 
@@ -38,7 +41,7 @@ const MonthGroup = ({
   const [open, setOpen] = useState(true);
   const theme = useTheme();
 
-  const period = toPeriod(group.month, year);
+  const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
   const selectableItems = group.items.filter((i) => i.due > 0);
   const selectedCount = selectableItems.filter((i) =>
     selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
@@ -46,31 +49,95 @@ const MonthGroup = ({
 
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
-
+  const urgency =
+    group.totalDue > 6000
+      ? 'High'
+      : group.totalDue > 0
+        ? 'Medium'
+        : selectableItems.length > 0
+          ? 'Low'
+          : 'None';
+  const urgencyColor =
+    urgency === 'High' ? 'error.main' : urgency === 'Medium' ? 'warning.main' : 'success.main';
+  console.log('group====', group);
   return (
-    <Box
+    <Card
+      component={motion.div}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        border: `1px solid ${isAllSelected ? alpha(theme.palette.primary.main, 0.28) : theme.palette.divider}`,
-        borderRadius: 2,
-        overflow: 'hidden',
-        mb: 1.5,
-        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-        boxShadow: isAllSelected ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}` : 'none',
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        display: 'flex',
+        mb: 1,
+        flexDirection: 'column',
+        boxShadow: (t) => `var(--shadows-4)`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
-      <GroupHeader
-        label={group.month}
-        badge={`${group.items.length} ${group.items.length === 1 ? 'item' : 'items'}`}
-        totalDue={group.totalDue}
-        isAllSelected={isAllSelected}
-        isPartialSelected={isPartialSelected}
-        isDisabled={selectableItems.length === 0}
-        isOpen={open}
-        onCheckboxToggle={() => onToggleGroup(group)}
-        onExpandToggle={() => setOpen((o) => !o)}
-      />
+      <Box
+        sx={{
+          px: 1.35,
+          py: 1,
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.65)}`,
+          bgcolor: isAllSelected
+            ? alpha(theme.palette.primary.main, 0.08)
+            : theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.55)
+              : alpha(theme.palette.background.default, 0.35),
+          cursor: 'pointer',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 3,
+            bgcolor: isAllSelected ? 'primary.main' : alpha(theme.palette.primary.main, 0.35),
+          },
+        }}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Checkbox
+              size="small"
+              checked={isAllSelected}
+              indeterminate={isPartialSelected}
+              disabled={selectableItems.length === 0}
+              onChange={() => onToggleGroup(group)}
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                p: 0.35,
+                '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
+              }}
+            />
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, letterSpacing: '0.02em' }}>
+              {`${FeeMonth[group.month]} ${year}`}
+            </Typography>
+            <Chip
+              label={`${group.items.length} ${group.items.length === 1 ? 'head' : 'heads'}`}
+              size="small"
+              variant="soft"
+              color="default"
+              sx={{ height: 20, fontWeight: 700 }}
+            />
+          </Box>
+          <Iconify
+            icon="solar:alt-arrow-down-bold"
+            width={18}
+            sx={{
+              color: 'text.secondary',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
+          />
+        </Box>
+      </Box>
 
-      <Collapse in={open} timeout={180}>
+      <Collapse in={open} timeout={300} easing="cubic-bezier(0.4, 0, 0.2, 1)">
         <ColHeader firstLabel="Fee Head" showStatus />
         {group.items.map((item, idx) => {
           const isSelected = selectedItems.some(
@@ -87,7 +154,9 @@ const MonthGroup = ({
                 showStatus
                 isSelected={isSelected}
                 isDisabled={item.due === 0}
-                onToggle={() => onToggleItem(item.feeHeadId, group.month, item.due)}
+                onToggle={() =>
+                  onToggleItem(item.feeHeadId, FeeMonth[group.month] as string, item.due)
+                }
               />
               {idx < group.items.length - 1 && (
                 <Box
@@ -101,7 +170,7 @@ const MonthGroup = ({
           );
         })}
       </Collapse>
-    </Box>
+    </Card>
   );
 };
 

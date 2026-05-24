@@ -51,19 +51,19 @@ export const useFeeStructureCardForm = (initial: IClassWiseFeeStructureCard) => 
   }, []);
 
   const lockSuccess = useCallback(() => {
-    setData((prev) => ({ ...prev, lockStatus: FeeStructureLockStatusType.Locked }));
+    setData((prev) => ({ ...prev, status: FeeStructureLockStatusType.Locked }));
     setIsLocking(false);
   }, []);
 
   const unlockSuccess = useCallback(() => {
-    setData((prev) => ({ ...prev, lockStatus: FeeStructureLockStatusType.Unlocked }));
+    setData((prev) => ({ ...prev, status: FeeStructureLockStatusType.Unlocked }));
     setIsLocking(false);
   }, []);
 
   const isDirty =
     isEditing && originalData !== null && JSON.stringify(data) !== JSON.stringify(originalData);
 
-  const isLocked = data.lockStatus === FeeStructureLockStatusType.Locked;
+  const isLocked = data.status === FeeStructureLockStatusType.Locked;
 
   return {
     data,

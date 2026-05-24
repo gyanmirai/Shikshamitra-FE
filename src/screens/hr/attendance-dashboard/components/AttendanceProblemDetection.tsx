@@ -78,7 +78,7 @@ const sectionVariants: Variants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 260, damping: 22 },
+    transition: { type: 'spring' as const, stiffness: 260, damping: 22 },
   },
 };
 

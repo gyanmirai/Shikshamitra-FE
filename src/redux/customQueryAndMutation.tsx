@@ -46,17 +46,21 @@ function useQueryAndMutation<T>({
   useEffect(() => {
     if (isError && popupConfig.error) {
       const parsed = parseApiProblemDetail(error);
-      toast.custom((t) => (
-        <Alert
-          severity="error"
-          variant="filled"
-          onClose={() => {
-            toast.dismiss(t);
-          }}
-        >
-          {parsed.detail || popupConfig.errorMessage}
-        </Alert>
-      ));
+      const message = parsed.detail || popupConfig.errorMessage;
+      toast.custom(
+        (t) => (
+          <Alert
+            severity="error"
+            variant="filled"
+            onClose={() => {
+              toast.dismiss(t);
+            }}
+          >
+            {message}
+          </Alert>
+        ),
+        { id: message }
+      );
       // toast.error(error?.data?.error?.message || popupConfig.errorMessage);
     }
   }, [error, isError, popupConfig.error, popupConfig.errorMessage]);

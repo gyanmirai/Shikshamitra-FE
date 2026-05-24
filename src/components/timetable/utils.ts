@@ -111,21 +111,28 @@ export const TIMELINE_END_HOUR = getTimelineEndHour();
 export const SLOT_HEIGHT_BASE = 50; // px for 30 mins
 export const MINUTE_HEIGHT_RATIO = SLOT_HEIGHT_BASE / 30;
 
-export const generateTimelineStamps = (): string[] => {
+export const generateTimelineStamps = (
+  startHour: number = TIMELINE_START_HOUR,
+  endHour: number = TIMELINE_END_HOUR
+): string[] => {
   const stamps: string[] = [];
-  for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h += 1) {
+  for (let h = startHour; h <= endHour; h += 1) {
     stamps.push(`${h.toString().padStart(2, '0')}:00`);
-    if (h !== TIMELINE_END_HOUR) {
+    if (h !== endHour) {
       stamps.push(`${h.toString().padStart(2, '0')}:30`);
     }
   }
   return stamps;
 };
 
-export const calculateSlotPosition = (startTime: string, endTime: string) => {
+export const calculateSlotPosition = (
+  startTime: string,
+  endTime: string,
+  timelineStartHour: number = TIMELINE_START_HOUR
+) => {
   const startMin = parseTimeToMinutes(startTime);
   const endMin = parseTimeToMinutes(endTime);
-  const timelineStartMin = TIMELINE_START_HOUR * 60;
+  const timelineStartMin = timelineStartHour * 60;
 
   const top = (startMin - timelineStartMin) * MINUTE_HEIGHT_RATIO;
   const height = (endMin - startMin) * MINUTE_HEIGHT_RATIO;

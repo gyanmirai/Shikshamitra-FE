@@ -9,21 +9,26 @@ import type { IStudentChargeData } from '../ChargesManage/Component/type';
 
 interface ICombinedProps {
   data: IStudentChargeData[];
+  isLoading?: boolean;
   onViewAllCharges?: (student: IStudentChargeData) => void;
 }
 
-const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharges }) => {
+const StudentChargeListTable: React.FC<ICombinedProps> = ({
+  data,
+  isLoading = false,
+  onViewAllCharges,
+}) => {
   const tableData = useMemo(
     () =>
       (data || []).map((item: IStudentChargeData) => ({
         ...item,
-        studentName: item.studentName || '-', // fallback if missing
-        grNo: item.grNo || '-', // student GR No.
-        rollNo: item.rollNo ?? '-', // roll number
-        class: item.class || '-', // standard name or class
-        division: item.division || '-', // division letter
-        classDivision: `${item.class || '-'}-${item.division || '-'}`, // combined
-        charges: Array.isArray(item.charges) ? item.charges : [], // ensure array
+        studentName: item.studentName || '-',
+        grNumber: item.grNumber || '-',
+        rollNumber: item.rollNumber ?? '-',
+        standardName: item.standardName || '-',
+        divisionName: item.divisionName || '-',
+        classDivision: `${item.standardName || '-'}-${item.divisionName || '-'}`,
+        charges: Array.isArray(item.charges) ? item.charges : [],
       })),
     [data]
   );
@@ -48,9 +53,9 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharg
             </Box>
           ),
         },
-        { id: 'grNo', label: 'GR No.', align: 'left', isFilter: true, minWidth: 80 },
+        { id: 'grNumber', label: 'GR No.', align: 'left', isFilter: true, minWidth: 80 },
         {
-          id: 'rollNo',
+          id: 'rollNumber',
           label: 'Roll No.',
           align: 'left',
           isFilter: true,
@@ -62,7 +67,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharg
           label: 'Class/Division',
           align: 'left',
           minWidth: 120,
-          render: (value, row) => `${row.class}-${row.division}`,
+          render: (value, row) => `${row.standardName}-${row.divisionName}`,
         },
         {
           id: 'charges',
@@ -89,6 +94,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharg
           ),
         },
       ]}
+      isLoading={isLoading}
       data={tableData || []}
     />
   );

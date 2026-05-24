@@ -274,13 +274,13 @@ const hrModule = (isDdvs: boolean) => ({
                   permissionName: hrPermissions.payroll.settings.pfRule,
                   icon: menuIconView('mdi:bank-outline'),
                 },
-                {
-                  title: 'Professional tax',
-                  path: hrPaths.payroll.settings.professionalTax,
-                  _action: 'payroll-setting-professional-tax',
-                  permissionName: hrPermissions.payroll.settings.professionalTax,
-                  icon: menuIconView('mdi:map-marker-radius-outline'),
-                },
+                // {
+                //   title: 'Professional tax',
+                //   path: hrPaths.payroll.settings.professionalTax,
+                //   _action: 'payroll-setting-professional-tax',
+                //   permissionName: hrPermissions.payroll.settings.professionalTax,
+                //   icon: menuIconView('mdi:map-marker-radius-outline'),
+                // },
                 // {
                 //   title: 'TDS',
                 //   path: hrPaths.payroll.settings.tds,

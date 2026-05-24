@@ -8,22 +8,24 @@ import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Stack, Button, DialogActions } from '@mui/material';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Chip, Stack, Button, Typography } from '@mui/material';
 import { useAssignLectureSlotToClassesMutation } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 
 interface AssignSlotsProps {
   onClose: (e: any, isSubmit: boolean) => void;
   lectureSlotId?: string;
+  sourceClassName?: string;
 }
 
-const AssignSlots = ({ onClose, lectureSlotId }: AssignSlotsProps) => {
+const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsProps) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -35,10 +37,8 @@ const AssignSlots = ({ onClose, lectureSlotId }: AssignSlotsProps) => {
 
   // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
     setAllClass(allClasses);
   }, [medium]);
 
@@ -64,37 +64,216 @@ const AssignSlots = ({ onClose, lectureSlotId }: AssignSlotsProps) => {
   });
 
   return (
-    <Box>
-      <DialogScrollContent>
-        <Stack spacing={0}>
-          <ShakingTextField error={formik.touched.classNames && Boolean(formik.errors.classNames)}>
-            <CustomSelect
-              options={allClass}
-              value={formik.values.classNames}
-              onChange={(val) => {
-                formik.setFieldValue('classNames', val);
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+      {/* Scrollable content area */}
+      <Scrollbar sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+        <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2.5, pb: 14 }}>
+          {/* From → To flow indicator */}
+          {sourceClassName && (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                mb: 2.5,
+                p: 2,
+                borderRadius: 2,
+                bgcolor: (theme) =>
+                  alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.12 : 0.06),
+                border: '1px solid',
+                borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
               }}
-              label="Class"
-              multiple
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
-              error={formik.touched.classNames && Boolean(formik.errors.classNames)}
-              helperText={
-                formik.touched.classNames && typeof formik.errors.classNames === 'string'
-                  ? formik.errors.classNames
-                  : undefined
-              }
-            />
-          </ShakingTextField>
-        </Stack>
-      </DialogScrollContent>
+            >
+              <Box
+                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.3 }}
+              >
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  Copy from
+                </Typography>
+                <Chip
+                  label={sourceClassName}
+                  size="small"
+                  color="primary"
+                  variant="filled"
+                  sx={{ fontWeight: 700, fontSize: '0.82rem', height: 26 }}
+                />
+              </Box>
 
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '100%',
+                    gap: 0.5,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      flex: 1,
+                      height: '2px',
+                      bgcolor: 'primary.main',
+                      opacity: 0.4,
+                      borderRadius: 1,
+                    }}
+                  />
+                  <Iconify
+                    icon="mdi:arrow-right"
+                    sx={{ color: 'primary.main', width: 20, height: 20 }}
+                  />
+                  <Box
+                    sx={{
+                      flex: 1,
+                      height: '2px',
+                      bgcolor: 'primary.main',
+                      opacity: 0.4,
+                      borderRadius: 1,
+                    }}
+                  />
+                </Box>
+                <Typography
+                  variant="caption"
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{ mt: 0.3 }}
+                >
+                  Assign slots to
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.3 }}
+              >
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  Copy to
+                </Typography>
+                {formik.values.classNames.length === 0 ? (
+                  <Chip
+                    label="Not selected"
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      fontWeight: 500,
+                      fontSize: '0.78rem',
+                      height: 26,
+                      color: 'text.disabled',
+                      borderStyle: 'dashed',
+                    }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 0.5,
+                      justifyContent: 'center',
+                      maxWidth: 200,
+                    }}
+                  >
+                    {formik.values.classNames.map((id) => {
+                      const cls = allClass.find((c: any) => c.id === id);
+                      return (
+                        <Chip
+                          key={id}
+                          label={cls?.name ?? id}
+                          size="small"
+                          color="success"
+                          variant="filled"
+                          sx={{ fontWeight: 700, fontSize: '0.82rem', height: 26 }}
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          <Box
+            sx={{
+              borderRadius: 2.5,
+              border: '1px solid',
+              borderColor: 'divider',
+              p: { xs: 2, sm: 2.5 },
+              bgcolor: 'background.paper',
+              backgroundImage: (theme) =>
+                `linear-gradient(180deg, ${alpha(
+                  theme.palette.primary.main,
+                  theme.palette.mode === 'dark' ? 0.08 : 0.04
+                )} 0%, ${alpha(theme.palette.background.paper, 0)} 70%)`,
+              transition: 'box-shadow 200ms ease, border-color 200ms ease',
+              '&:hover': {
+                borderColor: (theme) => alpha(theme.palette.primary.main, 0.4),
+                boxShadow: (theme) =>
+                  `0 4px 18px ${alpha(
+                    theme.palette.primary.main,
+                    theme.palette.mode === 'dark' ? 0.18 : 0.08
+                  )}`,
+              },
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={600} mb={0.5}>
+              Select Target Classes
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2.5}>
+              Choose one or more classes to assign this lecture slot configuration to.
+            </Typography>
+
+            <Stack spacing={0}>
+              <ShakingTextField
+                error={formik.touched.classNames && Boolean(formik.errors.classNames)}
+              >
+                <CustomSelect
+                  options={allClass}
+                  value={formik.values.classNames}
+                  onChange={(val) => {
+                    formik.setFieldValue('classNames', val);
+                  }}
+                  label="Class"
+                  multiple
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  error={formik.touched.classNames && Boolean(formik.errors.classNames)}
+                  helperText={
+                    formik.touched.classNames && typeof formik.errors.classNames === 'string'
+                      ? formik.errors.classNames
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
+            </Stack>
+          </Box>
+        </Box>
+      </Scrollbar>
+
+      {/* Sticky footer — same pattern as FormFooter */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          bgcolor: (theme) => theme.vars.palette.background.paper,
+          backdropFilter: 'saturate(180%) blur(10px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(10px)',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          px: { xs: 2, sm: 3 },
+          py: 1.5,
+          display: 'flex',
+          gap: 1.25,
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          zIndex: 10,
+          boxShadow: (theme) =>
+            `0 -6px 20px ${alpha(theme.palette.common.black, theme.palette.mode === 'dark' ? 0.4 : 0.06)}`,
+        }}
+      >
         <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          variant="outlined"
+          variant="text"
           size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => onClose?.(null, false)}
         >
           Cancel
@@ -106,9 +285,9 @@ const AssignSlots = ({ onClose, lectureSlotId }: AssignSlotsProps) => {
           loading={isLoading}
           onClick={() => formik.handleSubmit()}
         >
-          Submit
+          Assign Slots
         </LoadingButton>
-      </DialogActions>
+      </Box>
     </Box>
   );
 };

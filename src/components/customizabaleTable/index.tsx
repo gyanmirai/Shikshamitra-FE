@@ -118,17 +118,15 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     columnWidths,
   });
 
-  // When any column has been resized, seed ALL columns with their measured widths
-  // so that table-layout: fixed has explicit widths for every column.
   const effectiveColumnWidths = useMemo(() => {
     if (Object.keys(columnWidths).length === 0) return {} as Record<string, number>;
     const widths: Record<string, number> = {};
-    memoizedColumns.forEach((col, i) => {
+    memoizedColumns.forEach((col, index) => {
       const configuredWidth = typeof col.width === 'number' ? col.width : undefined;
-      widths[col.id] = columnWidths[col.id] ?? configuredWidth ?? (headerRefs[i] as number) ?? 100;
+      widths[col.id] = columnWidths[col.id] ?? configuredWidth ?? headerRefs[index] ?? 100;
     });
     return widths;
-  }, [columnWidths, memoizedColumns, headerRefs]);
+  }, [columnWidths, headerRefs, memoizedColumns]);
 
   // Changes whenever search/filter/sort/page changes → triggers row re-animation
   const animationKey = useMemo(

@@ -6,75 +6,24 @@ import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
-import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import type { IReasonApprovalFormProps } from '../../Concession/type';
+/** Extended props that also pass the entered notes/reason back on close. */
+interface IFeeRefundApprovalFormProps {
+  onClose: (e: any, isSubmit: boolean, notes?: string) => void;
+  mode: string;
+}
 
-const DUMMY_REFUND_FEE_HEAD_WISE = [
-  {
-    feeHeadId: 'fh-1',
-    feeHeadName: 'Tuition Fee',
-    totalPaid: 9000,
-    totalRefunded: 2000,
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 1000,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'May',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'June',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 1000,
-        status: FeeCollectionStatusType.Partial,
-      },
-    ],
-  },
-  {
-    feeHeadId: 'fh-2',
-    feeHeadName: 'Hostel Fee',
-    totalPaid: 6000,
-    totalRefunded: 0,
-    items: [
-      {
-        month: 'April',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-      {
-        month: 'May',
-        total: 3000,
-        paid: 3000,
-        refundAmount: 0,
-        status: FeeCollectionStatusType.Paid,
-      },
-    ],
-  },
-];
-
-const FeeRefundReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
+const FeeRefundReasonApprovalForm = ({ onClose, mode }: IFeeRefundApprovalFormProps) => {
   const formik = useFormik({
     initialValues: {
       reason: '',
     },
     validationSchema: Yup.object().shape({
-      reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
+      reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(),
     }),
     onSubmit: (values) => {
-      onClose(null, true);
+      onClose(null, true, values.reason || undefined);
     },
   });
 

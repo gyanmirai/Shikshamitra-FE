@@ -14,6 +14,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useGetStandardFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
 import {
   useAssignFeeStructureMutation,
@@ -132,10 +133,12 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   };
   const feeStructureOptions = useMemo(
     () =>
-      (financeFeeStructures?.standardFeeStructures ?? []).map((fs: any) => ({
-        ...fs,
-        name: `${fs.name}`,
-      })),
+      (financeFeeStructures?.standardFeeStructures ?? [])
+        .map((fs: any) => ({
+          ...fs,
+          name: `${fs.name}`,
+        }))
+        .filter((fs: any) => fs.status === FeeStructureLockStatusType.Locked),
     [financeFeeStructures]
   );
 

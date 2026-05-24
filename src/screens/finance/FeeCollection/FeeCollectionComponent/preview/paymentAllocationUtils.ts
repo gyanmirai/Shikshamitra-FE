@@ -48,7 +48,7 @@ const resolveAllocationStatus = (
   originalAmount: number
 ): FeeCollectionStatusType => {
   if (paidAmount <= 0) return FeeCollectionStatusType.Pending;
-  if (paidAmount < originalAmount) return FeeCollectionStatusType.Partial;
+  if (paidAmount < originalAmount) return FeeCollectionStatusType.Pending;
   return FeeCollectionStatusType.Paid;
 };
 
@@ -56,16 +56,14 @@ const resolveAllocationStatus = (
 
 /**
  * Attempts to allocate from the wallet toward a single fee item.
- * Returns the updated wallet. Items that receive ₹0 are excluded.
+ * Returns the updated wallet. All items are included (even with ₹0 allocation).
  */
 const allocateFeeItem = (
   wallet: AllocationWallet,
   item: SelectedItem,
   feeHeadMap: Record<string, string>
 ): AllocationWallet => {
-  if (wallet.remaining <= 0) return wallet;
-
-  const paidAmount = Math.min(wallet.remaining, item.dueAmount);
+  const paidAmount = wallet.remaining > 0 ? Math.min(wallet.remaining, item.dueAmount) : 0;
 
   return {
     remaining: wallet.remaining - paidAmount,
@@ -87,12 +85,10 @@ const allocateFeeItem = (
 
 /**
  * Attempts to allocate from the wallet toward a single charge.
- * Returns the updated wallet. Charges that receive ₹0 are excluded.
+ * Returns the updated wallet. All charges are included (even with ₹0 allocation).
  */
 const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): AllocationWallet => {
-  if (wallet.remaining <= 0) return wallet;
-
-  const paidAmount = Math.min(wallet.remaining, charge.amount);
+  const paidAmount = wallet.remaining > 0 ? Math.min(wallet.remaining, charge.amount) : 0;
 
   return {
     remaining: wallet.remaining - paidAmount,
@@ -114,7 +110,7 @@ const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): Allocatio
 // ─── Public API ────────────────────────────────────────────────────────────────
 
 export interface PaymentAllocationResult {
-  /** Rows that received at least ₹1 of the payment (items + charges interleaved). */
+  /** All selected rows with their allocation amounts (items that receive ₹0 are shown as Pending). */
   allocatedRows: AllocatedRow[];
   /** Total amount distributed across all rows. */
   allocatedAmount: number;
@@ -128,7 +124,7 @@ export interface PaymentAllocationResult {
  *   2. Charges   — in order received.
  *
  * Supports partial payment on the first item/charge that exhausts the wallet.
- * Items/charges that receive ₹0 are omitted from the result.
+ * All selected items/charges are included — those that receive ₹0 are marked as Pending.
  */
 export const allocatePayment = (
   selectedItems: SelectedItem[],

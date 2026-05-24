@@ -20,7 +20,7 @@ export const userApi = api.injectEndpoints({
       query: (id) => ({ url: `/identity/users/${id}` }),
     }),
     getUsers: builder.query({
-      query: () => ({ url: `/identity/users` }),
+      query: () => ({ url: `/identity/users`, params: { maxResultCount: 1000 } }),
     }),
   }),
 });

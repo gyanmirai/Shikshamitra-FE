@@ -323,7 +323,7 @@ export function EmployeeCard({
 }: {
   employee: any;
   initialTab?: string;
-  setSearchParams: any;
+  setSearchParams?: any;
 }) {
   const tabs = useTabs(initialTab || 'dashboard');
   const currentActiveComponent = useMemo(
@@ -446,7 +446,7 @@ export function EmployeeCard({
                 setIsBackClick(false);
               }
               tabs.onChange(...rest);
-              setSearchParams('tab', rest[1]);
+              setSearchParams?.('tab', rest[1]);
             }}
             sx={{
               px: 1.5,

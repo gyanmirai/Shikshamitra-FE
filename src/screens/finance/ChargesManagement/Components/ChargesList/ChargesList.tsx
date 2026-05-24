@@ -4,10 +4,10 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
@@ -15,8 +15,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetStudentChargesQuery } from 'src/redux/finance/ChargeManagement/studentChargeDataApi';
+import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import StudentChargeListTable from './StudentChargeTable';
 import ViewStudentAllCharges from './StudentChargesListTable';
@@ -24,12 +25,7 @@ import ViewStudentAllCharges from './StudentChargesListTable';
 import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
 
 const ChargesList = () => {
-  const {
-    currentYear,
-    // currentBoard,
-    // currentMedium: medium,
-    // setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
@@ -38,12 +34,68 @@ const ChargesList = () => {
 
   const onViewAllCharges = useBoolean();
 
-  const { data: chargesData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentChargesQuery,
-  });
-  const publish_modal = useBoolean();
+  const skipQuery = !selectedBoard || !selectedMedium || !currentYear?.id;
 
+  const baseParams = {
+    academicYearId: currentYear?.id,
+    boardId: selectedBoard,
+    educationMediumId: selectedMedium,
+    pageSize: 100,
+  };
+
+  // Backend status param is non-nullable int (default 0).
+  // Fetch all three statuses in parallel and merge to build full charge history.
+  const { data: pendingData, isLoading: pendingLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargesQuery,
+    params: { ...baseParams, status: ChargesPaymentStatus.Pending },
+    options: { skip: skipQuery },
+  });
+
+  const { data: approvedData, isLoading: approvedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargesQuery,
+    params: { ...baseParams, status: ChargesPaymentStatus.Approved },
+    options: { skip: skipQuery },
+  });
+
+  const { data: rejectedData, isLoading: rejectedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChargesQuery,
+    params: { ...baseParams, status: ChargesPaymentStatus.Rejected },
+    options: { skip: skipQuery },
+  });
+
+  const isLoading = pendingLoading || approvedLoading || rejectedLoading;
+
+  // Group all charges by studentId to produce per-student rows
+  const studentChargesList = useMemo<IStudentChargeData[]>(() => {
+    const allItems: IChargeData[] = [
+      ...(pendingData?.items || []),
+      ...(approvedData?.items || []),
+      ...(rejectedData?.items || []),
+    ];
+
+    const map = new Map<string, IStudentChargeData>();
+    allItems.forEach((charge: IChargeData) => {
+      if (!map.has(charge.studentId)) {
+        map.set(charge.studentId, {
+          studentId: charge.studentId,
+          studentName: charge.studentName || '',
+          grNumber: charge.grNumber,
+          rollNumber: charge.rollNumber,
+          standardName: charge.standardName,
+          divisionName: charge.divisionName,
+          charges: [],
+        });
+      }
+      map.get(charge.studentId)!.charges.push(charge);
+    });
+
+    return Array.from(map.values());
+  }, [pendingData?.items, approvedData?.items, rejectedData?.items]);
+
+  const publish_modal = useBoolean();
   const [selectedCharge, setSelectedCharge] = useState<IStudentChargeData | null>(null);
   const [deleteCharge, setDeleteCharge] = useState<IChargeData | null>(null);
 
@@ -92,7 +144,8 @@ const ChargesList = () => {
       </Box>
 
       <StudentChargeListTable
-        data={chargesData}
+        data={studentChargesList}
+        isLoading={isLoading}
         onViewAllCharges={(data) => {
           setSelectedCharge(data);
           onViewAllCharges.onTrue();
