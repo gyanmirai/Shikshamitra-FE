@@ -6,7 +6,23 @@ import { Provider, useDispatch } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import store, { persistor } from './store';
-import { loadUser, getEmployee } from './auth/authSlice';
+import { loadUser, clearUser, getEmployee } from './auth/authSlice';
+
+const getSessionRoles = (sessionData: any): string[] => {
+  const roleClaim = sessionData?.profile?.role;
+
+  if (Array.isArray(roleClaim)) {
+    return roleClaim;
+  }
+
+  return typeof roleClaim === 'string' ? [roleClaim] : [];
+};
+
+const shouldLoadEmployeeProfile = (sessionData: any): boolean => {
+  const roles = getSessionRoles(sessionData).map((role) => role.toLowerCase());
+
+  return !roles.some((role) => role === 'admin' || role === 'super-admin');
+};
 
 const ReduxProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
@@ -43,17 +59,32 @@ export default ReduxProvider;
 const LoadUser = memo(() => {
   const dispatch = useDispatch();
   const session: any = useSession();
-  const { data: sessionData } = session;
+  const { data: sessionData, status } = session;
 
-  const isInitialize = useRef(false);
+  const loadedUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (sessionData?.profile?.sub && !isInitialize.current) {
+    const sessionUserId = sessionData?.profile?.sub || null;
+
+    if (sessionUserId && loadedUserId.current !== sessionUserId) {
+      const loadEmployeeProfile = shouldLoadEmployeeProfile(sessionData);
+
+      if (loadedUserId.current || !loadEmployeeProfile) {
+        dispatch(clearUser());
+      }
       dispatch(loadUser(sessionData) as any);
-      dispatch(getEmployee(sessionData) as any);
-      isInitialize.current = true;
+      if (loadEmployeeProfile) {
+        dispatch(getEmployee(sessionData) as any);
+      }
+      loadedUserId.current = sessionUserId;
+      return;
     }
-  }, [dispatch, sessionData]);
+
+    if (status === 'unauthenticated' && loadedUserId.current) {
+      dispatch(clearUser());
+      loadedUserId.current = null;
+    }
+  }, [dispatch, sessionData, status]);
 
   return null;
 });

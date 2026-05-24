@@ -4,6 +4,8 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
+import { SplashScreen } from 'src/components/loading-screen';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { studentPermissions } from 'src/constants/student-menu';
 
 const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
@@ -11,14 +13,13 @@ const StudentLayout: React.FC<{ children: React.ReactNode }> = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { permissions } = useSelector((state: RootState) => state.auth);
+  const { permissions, loading, permissionsInitialized } = useSelector(
+    (state: RootState) => state.auth
+  );
 
-  console.log('permissions', permissions);
+  const hasPermission = hasGrantedPermission(permissions, studentPermissions.root);
 
-  const hasPermission = permissions.find(
-    (perm: any) => perm.name === studentPermissions.root
-  )?.isGranted;
-
+  if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? children : <View403 />;
 };
 

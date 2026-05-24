@@ -9,37 +9,13 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/hr/employeeApi';
 
 const HrAttendanceNotificationScreen = () => {
-  useQueryAndMutation({
+  const { data: notificationHistory, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeNotificationHistoryQuery,
   });
-
-  const dummyData = [
-    {
-      id: 1,
-      name: 'John Doe',
-      date: '2023-05-15',
-      recipient: 'Parent',
-      notificationType: 'Absent',
-      status: 'Delivered',
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      date: '2023-05-16',
-      recipient: 'Student',
-      notificationType: 'Late Arrival',
-      status: 'Pending',
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      date: '2023-05-17',
-      recipient: 'Teacher',
-      notificationType: 'Early Departure',
-      status: 'Delivered',
-    },
-  ];
+  const rows = Array.isArray(notificationHistory)
+    ? notificationHistory
+    : notificationHistory?.items || [];
 
   return (
     <Box>
@@ -53,6 +29,8 @@ const HrAttendanceNotificationScreen = () => {
       />
       <CustomizableTable
         tableId="hr-attendance-notification"
+        isLoading={isLoading}
+        noDataText="No attendance notification history found."
         columns={[
           { id: 'name', label: 'Name' },
           { id: 'date', label: 'Date' },
@@ -66,7 +44,7 @@ const HrAttendanceNotificationScreen = () => {
             },
           },
         ]}
-        data={dummyData}
+        data={rows}
       />
     </Box>
   );

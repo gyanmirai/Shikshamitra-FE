@@ -5,7 +5,6 @@ import Card from '@mui/material/Card';
 import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
-import { useSelector } from 'react-redux';
 import Button from '@mui/material/Button';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
@@ -13,8 +12,8 @@ import Typography from '@mui/material/Typography';
 import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Tooltip, CircularProgress } from '@mui/material';
-import { navData } from 'src/layouts/config-nav-dashboard';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
 import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
 
 import { extractGrantedPermissions } from '.';
@@ -36,12 +35,6 @@ export default function Permission({
   providerName: string;
   initialData: any;
 }) {
-  console.log(
-    'Permission component rendered with providerName:',
-    providerName,
-    'and editData:',
-    editData
-  );
   const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPermissionsQuery,
@@ -59,9 +52,7 @@ export default function Permission({
     }
   }, [_permissionData, initialData, setPermissionData]);
 
-  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
-
-  const navigationData = useMemo(() => navData(mainModuleVisibility), [mainModuleVisibility]);
+  const navigationData = useMemo(() => fullSecurityNavData(), []);
   const modules = useMemo(() => navigationData.flatMap((group) => group.items), [navigationData]);
 
   const [selectedModule, setSelectedModule] = useState<any>(modules[0]);
@@ -84,9 +75,7 @@ export default function Permission({
 
   const handlePermissionToggle = (key: string, type: PermissionType) => {
     const targetName = `${key}.${type}`;
-    console.log('Toggling permission:', targetName);
     const targetItem = permissionData.find((item) => item.name === targetName);
-    console.log(permissionData, 'Current permission value:', targetItem);
     const newValue = targetItem ? !targetItem.isGranted : false;
 
     setPermissionData(
@@ -202,7 +191,6 @@ export default function Permission({
       </Scrollbar>
     </Card>
   );
-  console.log(selectedModule.submodule, 'selectedModule.submodule');
   const renderSubModules = (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
       <Box sx={{ p: 2.5, borderBottom: '1px dashed', borderColor: 'divider' }}>
@@ -317,8 +305,6 @@ export default function Permission({
                       ? getAllChildrenData(activeSubModule)
                       : [activeSubModule];
 
-                  console.log(itemsToShow, 'itemsToShow');
-
                   // Check if all items have this permission enabled
                   const isGlobalChecked = itemsToShow.every((item: any) => {
                     const key = `${item.permissionName}.${type}`;
@@ -334,7 +320,6 @@ export default function Permission({
                         size="small"
                         checked={isGlobalChecked}
                         onChange={(e) => {
-                          console.log(itemsToShow, 'itemsToShow');
                           const isChecked = e.target.checked;
                           const newPermissions: { name: string; isGranted: boolean }[] = [
                             ...permissionData,

@@ -1,5 +1,8 @@
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -7,7 +10,29 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Grid, Chip, Paper, Button, Divider, TextField, Typography } from '@mui/material';
+import {
+  useGetPayrollPoliciesQuery,
+  useGetAttendancePoliciesQuery,
+  useGetPolicyAssignmentPreviewQuery,
+} from 'src/redux/hr/hr-policy-api';
+import {
+  Box,
+  Grid,
+  Chip,
+  Paper,
+  Alert,
+  Select,
+  Button,
+  Switch,
+  Divider,
+  MenuItem,
+  TextField,
+  Typography,
+  InputLabel,
+  FormControl,
+  FormHelperText,
+  FormControlLabel,
+} from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
@@ -336,7 +361,35 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
 const RenderPayrollFields = (props: any) => {
   const { formik, isMainForm } = props;
   const { values, handleChange } = formik;
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const isEditable = useBoolean(isMainForm);
+  const policyEffectiveDate = values.dateOfJoining?.format
+    ? values.dateOfJoining.format('YYYY-MM-DD')
+    : dayjs().format('YYYY-MM-DD');
+  const { data: policyPreview, isFetching: isPreviewLoading } = useGetPolicyAssignmentPreviewQuery(
+    {
+      academicYearId: currentYear?.id,
+      date: policyEffectiveDate,
+      employeeId: values.employeeId || undefined,
+    },
+    {
+      skip: !currentYear?.id || !policyEffectiveDate || !values.employeeId,
+    }
+  );
+  const { data: payrollPolicies } = useGetPayrollPoliciesQuery(
+    { academicYearId: currentYear?.id, maxResultCount: 100 },
+    { skip: !currentYear?.id }
+  );
+  const { data: attendancePolicies } = useGetAttendancePoliciesQuery(
+    { academicYearId: currentYear?.id, maxResultCount: 100 },
+    { skip: !currentYear?.id }
+  );
+  const activePayrollPolicies = (payrollPolicies?.items || []).filter(
+    (item) => item.status === 'active'
+  );
+  const activeAttendancePolicies = (attendancePolicies?.items || []).filter(
+    (item) => item.status === 'active'
+  );
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -362,6 +415,178 @@ const RenderPayrollFields = (props: any) => {
         </Box>
       )}
       <SectionCard title="Payroll Details">
+        <Grid size={{ xs: 12 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 1.5,
+              border: (theme) => `1px solid ${theme.vars.palette.divider}`,
+              borderRadius: 1,
+              bgcolor: (theme) => theme.vars.palette.background.neutral,
+            }}
+          >
+            <Box display="flex" justifyContent="space-between" gap={1.5} flexWrap="wrap">
+              <Typography variant="subtitle2" fontWeight={700}>
+                Policy Assignment
+              </Typography>
+              <Chip
+                size="small"
+                color={policyPreview?.policySource === 'default' ? 'default' : 'primary'}
+                label={isPreviewLoading ? 'Resolving...' : policyPreview?.policySource || 'Default'}
+              />
+            </Box>
+            <Grid container spacing={1.25} sx={{ mt: 1 }}>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Payroll Policy
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {policyPreview?.payrollPolicy?.name || '-'}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Attendance Policy
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {policyPreview?.attendancePolicy?.name || '-'}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Payroll Calendar
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {policyPreview?.payrollWorkCalendarPolicy?.name || '-'}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Attendance Calendar
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {policyPreview?.attendanceWorkCalendarPolicy?.name || '-'}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Source
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {policyPreview?.matchedTargetDisplayName ||
+                    policyPreview?.matchedTargetKey ||
+                    policyPreview?.policySource ||
+                    '-'}
+                  {policyPreview?.matchedPriority != null
+                    ? ` · Priority ${policyPreview.matchedPriority}`
+                    : ''}
+                </Typography>
+              </Grid>
+            </Grid>
+            {!policyPreview && !isPreviewLoading ? (
+              <Alert severity="info" sx={{ mt: 1.5 }}>
+                Select employee scope fields and joining date to preview effective policies.
+              </Alert>
+            ) : null}
+            <Divider sx={{ my: 1.5 }} />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(values.policyOverrideEnabled)}
+                  disabled={!isEditable.value}
+                  onChange={(event) =>
+                    formik.setFieldValue('policyOverrideEnabled', event.target.checked)
+                  }
+                />
+              }
+              label="Override for this employee"
+            />
+            {values.policyOverrideEnabled ? (
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Payroll Policy *</InputLabel>
+                    <Select
+                      label="Payroll Policy *"
+                      value={values.policyOverridePayrollPolicyId || ''}
+                      disabled={!isEditable.value}
+                      onChange={(event) =>
+                        formik.setFieldValue('policyOverridePayrollPolicyId', event.target.value)
+                      }
+                      error={
+                        Boolean(formik.touched.policyOverridePayrollPolicyId) &&
+                        Boolean(formik.errors.policyOverridePayrollPolicyId)
+                      }
+                    >
+                      {activePayrollPolicies.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formik.touched.policyOverridePayrollPolicyId &&
+                    formik.errors.policyOverridePayrollPolicyId ? (
+                      <FormHelperText error>
+                        {formik.errors.policyOverridePayrollPolicyId}
+                      </FormHelperText>
+                    ) : null}
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Attendance Policy *</InputLabel>
+                    <Select
+                      label="Attendance Policy *"
+                      value={values.policyOverrideAttendancePolicyId || ''}
+                      disabled={!isEditable.value}
+                      onChange={(event) =>
+                        formik.setFieldValue('policyOverrideAttendancePolicyId', event.target.value)
+                      }
+                      error={
+                        Boolean(formik.touched.policyOverrideAttendancePolicyId) &&
+                        Boolean(formik.errors.policyOverrideAttendancePolicyId)
+                      }
+                    >
+                      {activeAttendancePolicies.map((item) => (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formik.touched.policyOverrideAttendancePolicyId &&
+                    formik.errors.policyOverrideAttendancePolicyId ? (
+                      <FormHelperText error>
+                        {formik.errors.policyOverrideAttendancePolicyId}
+                      </FormHelperText>
+                    ) : null}
+                  </FormControl>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    type="date"
+                    label="Effective From *"
+                    InputLabelProps={{ shrink: true }}
+                    disabled={!isEditable.value}
+                    value={values.policyOverrideEffectiveFrom || policyEffectiveDate}
+                    onChange={(event) =>
+                      formik.setFieldValue('policyOverrideEffectiveFrom', event.target.value)
+                    }
+                    error={
+                      Boolean(formik.touched.policyOverrideEffectiveFrom) &&
+                      Boolean(formik.errors.policyOverrideEffectiveFrom)
+                    }
+                    helperText={
+                      formik.touched.policyOverrideEffectiveFrom &&
+                      formik.errors.policyOverrideEffectiveFrom
+                    }
+                  />
+                </Grid>
+              </Grid>
+            ) : null}
+          </Paper>
+        </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <ShakingTextField error={formik.touched.bankName && Boolean(formik.errors.bankName)}>
             <TextField

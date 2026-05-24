@@ -10,6 +10,20 @@ import { CardActions, SectionCard } from './InformationFields';
 
 import type { FieldsType } from './types';
 
+const pincodeInputProps = {
+  maxLength: 6,
+  inputMode: 'numeric',
+  pattern: '[0-9]*',
+} as const;
+
+const setPincodeFieldValue = (formik: any, fieldName: string, rawValue: string) => {
+  const value = rawValue.replace(/\D/g, '');
+  if (value.length <= 6) {
+    formik.setFieldValue(fieldName, value);
+    formik.validateField(fieldName);
+  }
+};
+
 function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
 
@@ -163,11 +177,7 @@ function FatherAddressComponent(props: any) {
             label="PIN Code"
             value={formik.values.fatherPinCode || ''}
             onChange={(e) => {
-              const { value } = e.target;
-              if (value.length <= 6) {
-                formik.handleChange(e);
-                formik.validateField('fatherPinCode');
-              }
+              setPincodeFieldValue(formik, 'fatherPinCode', e.target.value);
             }}
             onKeyDown={(e) => {
               if (['e', 'E', '+', '-', '.'].includes(e.key)) {
@@ -177,7 +187,8 @@ function FatherAddressComponent(props: any) {
             error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
             helperText={formik.touched.fatherPinCode && formik.errors.fatherPinCode}
             fullWidth
-            type="number"
+            type="text"
+            inputProps={pincodeInputProps}
             size="small"
             disabled={!!disabled}
           />
@@ -336,11 +347,7 @@ function MotherAddressComponent(props: any) {
             label="PIN Code"
             value={formik.values.motherPinCode || ''}
             onChange={(e) => {
-              const { value } = e.target;
-              if (value.length <= 6) {
-                formik.handleChange(e);
-                formik.validateField('motherPinCode');
-              }
+              setPincodeFieldValue(formik, 'motherPinCode', e.target.value);
             }}
             onKeyDown={(e) => {
               if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
@@ -349,7 +356,8 @@ function MotherAddressComponent(props: any) {
             helperText={formik.touched.motherPinCode && formik.errors.motherPinCode}
             fullWidth
             size="small"
-            type="number"
+            type="text"
+            inputProps={pincodeInputProps}
             disabled={!!disabled}
           />
         </ShakingTextField>
@@ -507,11 +515,7 @@ function SpouseAddressComponent(props: any) {
             label="PIN Code"
             value={formik.values.spousePinCode || ''}
             onChange={(e) => {
-              const { value } = e.target;
-              if (value.length <= 6) {
-                formik.handleChange(e);
-                formik.validateField('spousePinCode');
-              }
+              setPincodeFieldValue(formik, 'spousePinCode', e.target.value);
             }}
             onKeyDown={(e) => {
               if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
@@ -520,7 +524,8 @@ function SpouseAddressComponent(props: any) {
             helperText={formik.touched.spousePinCode && formik.errors.spousePinCode}
             fullWidth
             size="small"
-            type="number"
+            type="text"
+            inputProps={pincodeInputProps}
             disabled={!!disabled}
           />
         </ShakingTextField>
@@ -655,8 +660,6 @@ const FamilyMemberSection = ({
 
 function RenderFamilyInformation(props: any) {
   const { formik, isMainForm, editData } = props;
-  console.log('formik errors----', formik.errors);
-  console.log('formik values----', formik.values);
   return (
     <Box sx={{ width: '100%' }}>
       <FamilyMemberSection

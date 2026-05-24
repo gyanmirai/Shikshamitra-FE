@@ -2,79 +2,6 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
-export interface DayCalculationRequest {
-  academicYearId?: string;
-  dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
-  saturdayWorkPolicy?: SaturdayWorkPolicy;
-  holidaySyncMode?: HolidaySyncMode;
-  manualDays?: number;
-  manualMonthDays?: DayCalculationManualMonth[];
-  holidayOverrides?: PayrollHolidayOverride[];
-}
-
-export type SaturdayWorkPolicy = 'full-day' | 'half-day' | 'off';
-export type HolidaySyncMode = 'synced-with-overrides';
-
-export interface DayCalculationManualMonth {
-  year: number;
-  month: number;
-  manualDays: number;
-}
-
-export interface DayCalculationMonthPreview {
-  year: number;
-  month: number;
-  calendarDays: number;
-  sundays: number;
-  saturdays: number;
-  saturdayUnits: number;
-  weeklyOffDays: number;
-  holidayDays: number;
-  payrollHolidayDays: number;
-  payrollHolidayUnits: number;
-  workingDays: number;
-  manualDays?: number | null;
-  basisDays: number;
-  dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
-  locked: boolean;
-  holidayNames: string[];
-  holidays: PayrollResolvedHoliday[];
-}
-
-export interface DayCalculationSetting {
-  academicYearId?: string;
-  dayCalculationType: 'working-days' | 'total-month-days' | 'manual-days';
-  saturdayWorkPolicy: SaturdayWorkPolicy;
-  holidaySyncMode: HolidaySyncMode;
-  manualDays?: number | null;
-  manualMonthDays: DayCalculationManualMonth[];
-  holidayOverrides: PayrollHolidayOverride[];
-  usedFallbackSetting: boolean;
-  months: DayCalculationMonthPreview[];
-}
-
-export interface PayrollHolidayOverride {
-  date: string;
-  holidayName: string;
-  includedInPayroll: boolean;
-  calendarHolidayId?: string | null;
-}
-
-export interface PayrollResolvedHoliday {
-  date: string;
-  calendarHolidayId?: string | null;
-  holidayName: string;
-  source: 'calendar' | 'payroll' | string;
-  includedInPayroll: boolean;
-  isEditable: boolean;
-}
-
-export interface DayCalculationResponse {
-  success: boolean;
-  message: string;
-  setting?: DayCalculationSetting;
-}
-
 export const employeePayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getDeductionComponents: builder.query({
@@ -201,32 +128,6 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
         employeeType.salaryStructure,
       ],
     }),
-    saveDayCalculationSettings: builder.mutation({
-      query: ({ body }) => ({
-        url: '/payroll/day-calculation',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [employeeType.runPayroll],
-    }),
-    getDayCalculationSettings: builder.query<DayCalculationSetting, { academicYearId: string }>({
-      query: ({ academicYearId }) => ({
-        url: '/payroll/day-calculation',
-        method: 'GET',
-        params: { academicYearId },
-      }),
-      providesTags: [employeeType.runPayroll],
-    }),
-    previewDayCalculationSettings: builder.mutation<
-      DayCalculationSetting,
-      { body: DayCalculationRequest }
-    >({
-      query: ({ body }) => ({
-        url: '/payroll/day-calculation/preview',
-        method: 'POST',
-        body,
-      }),
-    }),
   }),
 });
 
@@ -245,7 +146,4 @@ export const {
   useGetEarningComponentByIdQuery,
   useDeleteDeductionComponentMutation,
   useDeleteEarningComponentMutation,
-  useSaveDayCalculationSettingsMutation,
-  useGetDayCalculationSettingsQuery,
-  usePreviewDayCalculationSettingsMutation,
 } = employeePayrollApi;

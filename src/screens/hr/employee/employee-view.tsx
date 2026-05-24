@@ -336,9 +336,13 @@ export function EmployeeCard({
   );
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <Box
+      data-testid="hr-employee-profile"
+      sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
+    >
       <motion.div variants={fadeSlideUp} initial="hidden" animate="show">
         <Paper
+          data-testid="hr-employee-profile-header"
           sx={{
             mb: 1,
             borderTopLeftRadius: 0,
@@ -405,6 +409,17 @@ export function EmployeeCard({
                     </Typography>
                     <Typography fontWeight={500} variant="body2">
                       {employee?.roleName}
+                    </Typography>
+                  </Box>
+                </motion.div>
+                <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
+                <motion.div variants={staggerItem}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Organization
+                    </Typography>
+                    <Typography fontWeight={500} variant="body2">
+                      {employee?.organizationNames?.join(', ') || '-'}
                     </Typography>
                   </Box>
                 </motion.div>

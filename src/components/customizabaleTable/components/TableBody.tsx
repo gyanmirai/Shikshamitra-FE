@@ -126,6 +126,7 @@ export const TableBody = ({
           <TableRow
             hover
             tabIndex={-1}
+            data-row-id={typeof row?.id === 'string' ? row.id : undefined}
             onClick={() => onRowClick(row, index)}
             {...rowProps(row, index)}
             sx={{

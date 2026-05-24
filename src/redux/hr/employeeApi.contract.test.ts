@@ -1,6 +1,11 @@
 import { it, expect, describe } from 'vitest';
+import { employeeType } from 'src/redux/tagTypes';
 
-import { buildWorkExperienceUrl, buildEmployeeSubresourceUrl } from './employeeApi';
+import {
+  buildWorkExperienceUrl,
+  buildEmployeeSubresourceUrl,
+  employeePayrollInvalidationTags,
+} from './employeeApi';
 
 describe('employeeApi contracts', () => {
   it('builds work experience URL from an object argument', () => {
@@ -26,6 +31,16 @@ describe('employeeApi contracts', () => {
   it('does not place literal undefined in employee subresource URLs', () => {
     expect(() => buildEmployeeSubresourceUrl({ employeeId: undefined }, 'family-info')).toThrow(
       'Employee id is required to access family-info.'
+    );
+  });
+
+  it('invalidates effective policy preview data after payroll details are saved', () => {
+    expect(employeePayrollInvalidationTags).toEqual(
+      expect.arrayContaining([
+        employeeType.employee,
+        employeeType.attendanceRule,
+        employeeType.runPayroll,
+      ])
     );
   });
 });

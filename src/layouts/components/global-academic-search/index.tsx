@@ -18,6 +18,7 @@ import { setDriverNextEnabled } from 'src/utils/driverBtnConfig';
 import { findCurrentAcademicYear } from 'src/utils/academic-year';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
+import { useGetUserScopeHierarchyQuery } from 'src/redux/userScope/userScopeApi';
 import {
   setCurrentYear,
   setCurrentBoard,
@@ -25,6 +26,84 @@ import {
 } from 'src/redux/globalState/globalSlice';
 
 import type { GlobalAcademicSearchOption } from './types';
+
+const hasNodeAccess = (node: any, fullAccessKey?: string) =>
+  !!node?.hasAccess || (fullAccessKey ? !!node?.[fullAccessKey] : false);
+
+const hasAccessibleStandard = (standardScope: any) =>
+  hasNodeAccess(standardScope, 'hasFullDivisionAccess') ||
+  standardScope?.divisions?.some((divisionScope: any) => divisionScope?.hasAccess);
+
+const hasAccessibleMediumStage = (mediumStageScope: any) =>
+  hasNodeAccess(mediumStageScope, 'hasFullStandardAccess') ||
+  mediumStageScope?.standards?.some(hasAccessibleStandard);
+
+const hasAccessibleMedium = (mediumScope: any) =>
+  hasNodeAccess(mediumScope, 'hasFullMediumStageAccess') ||
+  mediumScope?.mediumStages?.some(hasAccessibleMediumStage);
+
+const hasAccessibleBoard = (boardScope: any) =>
+  hasNodeAccess(boardScope, 'hasFullMediumAccess') ||
+  boardScope?.mediums?.some(hasAccessibleMedium);
+
+const getScopedAcademicData = (
+  academicData: Array<AcademicYear & { boards: Board[] }>,
+  accessControl: any
+) => {
+  if (!academicData.length) return [];
+  if (accessControl?.isAdmin) return academicData;
+
+  const hierarchy = accessControl?.accessibleHierarchy;
+  if (!Array.isArray(hierarchy)) return [];
+
+  return academicData
+    .map((year) => {
+      const yearScope = hierarchy.find((item: any) => item.academicYearId === year.id);
+      if (!yearScope) return null;
+
+      if (yearScope.hasFullBoardAccess) {
+        return year;
+      }
+
+      const boards = year.boards
+        .map((board) => {
+          const boardScope = yearScope.boards?.find((item: any) => item.boardId === board.id);
+          if (!hasAccessibleBoard(boardScope)) return null;
+
+          if (boardScope.hasFullMediumAccess) {
+            return board;
+          }
+
+          const educationMediums = board.educationMediums.filter((medium) => {
+            const mediumScope = boardScope.mediums?.find(
+              (item: any) => item.mediumId === medium.id
+            );
+            return hasAccessibleMedium(mediumScope);
+          });
+
+          return educationMediums.length ? { ...board, educationMediums } : null;
+        })
+        .filter(Boolean) as Board[];
+
+      return boards.length ? { ...year, boards } : null;
+    })
+    .filter(Boolean) as Array<AcademicYear & { boards: Board[] }>;
+};
+
+const getScopedAcademicYears = (
+  academicData: Array<AcademicYear & { boards: Board[] }>,
+  accessControl: any
+) => {
+  if (!academicData.length) return [];
+  if (accessControl?.isAdmin) return academicData;
+
+  const hierarchy = accessControl?.accessibleHierarchy;
+  if (!Array.isArray(hierarchy)) return [];
+
+  return academicData.filter((year) =>
+    hierarchy.some((item: any) => item.academicYearId === year.id)
+  );
+};
 
 // Define keyframes using the theme
 const createPulseAnimation = (theme: Theme) => keyframes`
@@ -82,6 +161,11 @@ const GlobalAcademicSearch = () => {
     },
   });
 
+  const { data: accessControl, isLoading: isScopeLoading } = useGetUserScopeHierarchyQuery(
+    { userId: data?.profile?.sub },
+    { skip: !data?.profile?.sub || !data?.accessToken }
+  );
+
   // Memoized computation of merged academic data
   const allData = useMemo(() => {
     if (!years?.items?.length) return [];
@@ -92,13 +176,22 @@ const GlobalAcademicSearch = () => {
     return mergedData || [];
   }, [boardData?.items, years?.items]);
 
+  const scopedData = useMemo(
+    () => getScopedAcademicData(allData, accessControl),
+    [accessControl, allData]
+  );
+  const scopedYears = useMemo(
+    () => getScopedAcademicYears(allData, accessControl),
+    [accessControl, allData]
+  );
+
   /**
    * Generates options for the division autocomplete
    * @returns Array of division options with formatted labels
    */
   const getDivisionOptions = useCallback((): GlobalAcademicSearchOption[] => {
     const options: GlobalAcademicSearchOption[] = [];
-    allData.forEach((year: AcademicYear & { boards: Board[] }) => {
+    scopedData.forEach((year: AcademicYear & { boards: Board[] }) => {
       year.boards.forEach((board: Board) => {
         board.educationMediums.forEach((medium: Medium) => {
           options.push({
@@ -112,13 +205,29 @@ const GlobalAcademicSearch = () => {
       });
     });
     return options;
-  }, [allData]);
+  }, [scopedData]);
 
   // State for selected division in autocomplete
   const [selectedDivision, setSelectedDivision] = React.useState<GlobalAcademicSearchOption | null>(
     null
   );
   const options = useMemo(() => getDivisionOptions(), [getDivisionOptions]);
+  const yearOptions = useMemo(
+    () =>
+      scopedYears.map((year) => ({
+        label: year.name,
+        value: year.id,
+        academicYear: year,
+        board: {} as Board,
+        medium: {} as Medium,
+      })),
+    [scopedYears]
+  );
+  const selectedYearOption = useMemo(
+    () =>
+      yearOptions.find((option) => option.academicYear.id === currentYear?.id) ?? selectedDivision,
+    [currentYear?.id, selectedDivision, yearOptions]
+  );
   const autoSelectedAccessTokenRef = React.useRef<string | null>(null);
 
   const clearAcademicSelection = useCallback(
@@ -135,7 +244,7 @@ const GlobalAcademicSearch = () => {
 
   // Clear persisted selections that do not belong to the freshly loaded tenant data.
   useEffect(() => {
-    if (isYearLoading || !years?.items) {
+    if (isYearLoading || isScopeLoading || !years?.items) {
       return;
     }
 
@@ -157,16 +266,14 @@ const GlobalAcademicSearch = () => {
       return;
     }
 
-    const persistedBoard = currentBoard?.id
-      ? boardData.items.find(
-          (board: Board) => board.id === currentBoard.id && board.academicYearId === currentYear.id
-        )
-      : null;
-    const persistedMediumExists =
-      !currentMedium?.id ||
-      persistedBoard?.educationMediums?.some((medium: Medium) => medium.id === currentMedium.id);
+    const persistedOptionExists = options.some(
+      (option) =>
+        option.academicYear.id === currentYear.id &&
+        option.board.id === currentBoard.id &&
+        option.medium.id === currentMedium.id
+    );
 
-    if (!persistedBoard || !persistedMediumExists) {
+    if (!persistedOptionExists) {
       clearAcademicSelection(false);
     }
   }, [
@@ -175,8 +282,10 @@ const GlobalAcademicSearch = () => {
     currentBoard?.id,
     currentMedium?.id,
     currentYear?.id,
+    isScopeLoading,
     isBoardLoading,
     isYearLoading,
+    options,
     years?.items,
   ]);
 
@@ -188,6 +297,7 @@ const GlobalAcademicSearch = () => {
       autoSelectedAccessTokenRef.current === accessToken ||
       isYearLoading ||
       isBoardLoading ||
+      isScopeLoading ||
       !years?.items?.length
     ) {
       return;
@@ -199,16 +309,28 @@ const GlobalAcademicSearch = () => {
       return;
     }
 
+    const defaultYearOption = yearOptions.find(
+      (option) => option.academicYear.id === academicYear.id
+    );
     const defaultOption = options.find((option) => option.academicYear.id === academicYear.id);
 
-    dispatch(setCurrentYear(defaultOption?.academicYear ?? academicYear));
+    dispatch(setCurrentYear(defaultOption?.academicYear ?? defaultYearOption?.academicYear ?? {}));
     dispatch(setCurrentBoard(defaultOption?.board ?? {}));
     dispatch(setCurrentMedium(defaultOption?.medium ?? {}));
-    setSelectedDivision(defaultOption ?? null);
+    setSelectedDivision(defaultOption ?? defaultYearOption ?? null);
     setDriverNextEnabled(true);
 
     autoSelectedAccessTokenRef.current = accessToken;
-  }, [data?.accessToken, dispatch, isBoardLoading, isYearLoading, options, years?.items]);
+  }, [
+    data?.accessToken,
+    dispatch,
+    isBoardLoading,
+    isScopeLoading,
+    isYearLoading,
+    options,
+    yearOptions,
+    years?.items,
+  ]);
 
   // Effect to update selected division when current selections change
   useEffect(() => {
@@ -246,7 +368,7 @@ const GlobalAcademicSearch = () => {
 
   return (
     <Box data-onboarding="academic-year">
-      {isYearLoading || isBoardLoading ? (
+      {isYearLoading || isBoardLoading || isScopeLoading ? (
         <Skeleton
           variant="rounded"
           height={56}
@@ -267,11 +389,9 @@ const GlobalAcademicSearch = () => {
                   onOpen={() => setIsDropdownOpen(true)}
                   onClose={() => setIsDropdownOpen(false)}
                   // disablePortal={false}
-                  options={Array.from(
-                    new Map(options.map((item) => [item.academicYear.name, item])).values()
-                  )}
+                  options={yearOptions}
                   getOptionLabel={(option) => option.academicYear.name}
-                  value={selectedDivision}
+                  value={selectedYearOption}
                   loading={isYearLoading || isBoardLoading}
                   clearIcon={false}
                   disableClearable={!!selectedDivision}
@@ -286,8 +406,8 @@ const GlobalAcademicSearch = () => {
                     });
                     if (confirmed) {
                       dispatch(setCurrentYear(newValue?.academicYear));
-                      dispatch(setCurrentBoard(newValue?.board));
-                      dispatch(setCurrentMedium(newValue?.medium));
+                      dispatch(setCurrentBoard({}));
+                      dispatch(setCurrentMedium({}));
                       setSelectedDivision(newValue);
                     }
 

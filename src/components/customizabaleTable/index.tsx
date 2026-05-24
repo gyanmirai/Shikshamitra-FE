@@ -263,6 +263,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         <Card
           ref={(el) => setTableRef(el?.getBoundingClientRect()?.width || 0)}
           id={tableUniqId}
+          data-testid={tableId}
           sx={{
             // boxShadow: theme.customShadows?.z20 || '0px 4px 20px rgba(0, 0, 0, 0.05)',
             borderRadius: 2,
@@ -587,6 +588,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       handleRowsPerPageChange,
       handleChangeParams,
       tableTitle,
+      tableId,
       sortedData,
       effectiveColumnWidths,
       animationKey,

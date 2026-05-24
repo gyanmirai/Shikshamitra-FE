@@ -166,6 +166,7 @@ export const earningComponentType = {
 // ===== Employee API (reducerPath: employeeApi) =====
 export const employeeType = {
   employee: 'Employee',
+  hrDashboard: 'HR-Dashboard',
   employeeDocument: 'EmployeeDocument',
   employeeType: 'Employee-Type',
   deductionComponents: 'Deduction-Components',
@@ -180,6 +181,8 @@ export const employeeType = {
   attendanceRule: 'AttendanceRule',
   attendance: 'Attendance',
   attendanceImport: 'Attendance-Import',
+  employeeICardTemplate: 'Employee-Icard-Template',
+  professionalReview: 'Professional-Review',
 } as const;
 
 // ===== Enrollment Report API (reducerPath: EnrollmentReportApi) =====

@@ -1,9 +1,13 @@
+import type { RootState } from 'src/redux/store';
+
 import Paper from '@mui/material/Paper';
 import { paper } from 'src/theme/styles';
+import { useSelector } from 'react-redux';
 import Popover from '@mui/material/Popover';
 import { usePathname } from 'src/routes/hooks';
 import { useTheme } from '@mui/material/styles';
 import { isExternalLink } from 'src/routes/utils';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { NavItem } from './nav-item';
@@ -23,6 +27,8 @@ export function NavList({
   enabledRootRedirect,
 }: NavListProps) {
   const theme = useTheme();
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const isGranted = hasGrantedPermission(permissions, data.permissionName);
 
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
@@ -79,6 +85,10 @@ export function NavList({
   );
 
   // Hidden item by role
+  if (data.permissionName && !isGranted) {
+    return null;
+  }
+
   if (data.roles && slotProps?.currentRole) {
     if (!data?.roles?.includes(slotProps?.currentRole)) {
       return null;

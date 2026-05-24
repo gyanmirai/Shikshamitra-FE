@@ -3,11 +3,13 @@
 import { Add } from '@mui/icons-material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { Tab, Box, Paper, Button } from '@mui/material';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Tab, Box, Paper, Stack, Button, Typography } from '@mui/material';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import LeaveType from './leave-type';
@@ -17,9 +19,15 @@ import ShiftManagement from './shift-management';
 const TABS = [
   {
     value: 'shiftManagement',
-    label: 'Shift Management',
+    label: 'Shifts',
     icon: <Iconify icon="mdi:clock" width={20} />,
     component: (props: any) => <ShiftManagement {...props} />,
+  },
+  {
+    value: 'attendancePolicy',
+    label: 'Attendance Policy',
+    icon: <Iconify icon="mdi:account-clock-outline" width={20} />,
+    component: () => <AttendancePolicyBridge />,
   },
   // {
   //   value: 'method',
@@ -44,6 +52,12 @@ const TABS = [
     label: 'Leave Policy',
     icon: <Iconify icon="iconoir:privacy-policy" width={20} />,
     component: (props: any) => <LeavePolicy {...props} />,
+  },
+  {
+    value: 'deviceIntegration',
+    label: 'Device Integration',
+    icon: <Iconify icon="mdi:fingerprint" width={20} />,
+    component: () => <DeviceIntegrationBridge />,
   },
   // {
   //   value: 'lateArrivalPolicy',
@@ -99,6 +113,18 @@ const HrAttendanceSettingScreen = () => {
           Shift Rule
         </Button>
       ),
+      attendancePolicy: (
+        <Button
+          sx={{ width: '190px' }}
+          component={RouterLink}
+          href="/hr/policies?tab=attendance"
+          startIcon={<Iconify icon="mdi:open-in-new" />}
+          variant="contained"
+          size="small"
+        >
+          Open Policies
+        </Button>
+      ),
       leaveType: (
         <Button
           sx={{ width: '160px' }}
@@ -108,6 +134,18 @@ const HrAttendanceSettingScreen = () => {
           onClick={leaveTypeDialog.onTrue}
         >
           Leave Type
+        </Button>
+      ),
+      deviceIntegration: (
+        <Button
+          sx={{ width: '190px' }}
+          component={RouterLink}
+          href={hrPaths.attendance.biometricAttendance}
+          startIcon={<Iconify icon="mdi:open-in-new" />}
+          variant="contained"
+          size="small"
+        >
+          Open Devices
         </Button>
       ),
     }),
@@ -141,7 +179,7 @@ const HrAttendanceSettingScreen = () => {
           { name: 'Setting' },
         ]}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
-        description="Configure attendance settings including shift management, leave types, and leave policies for effective workforce management"
+        description="Keep standard attendance simple: set shifts, use one standard attendance policy, and connect imports or devices when required."
       />
       <Paper
         sx={{
@@ -197,3 +235,70 @@ const HrAttendanceSettingScreen = () => {
 };
 
 export default HrAttendanceSettingScreen;
+
+const AttendancePolicyBridge = () => (
+  <Stack
+    spacing={2}
+    sx={{
+      p: 3,
+      minHeight: 220,
+      border: (theme) => `1px solid ${theme.palette.divider}`,
+      borderRadius: 1,
+      bgcolor: 'background.paper',
+    }}
+  >
+    <Stack direction="row" spacing={1.25} alignItems="center">
+      <Iconify icon="mdi:account-clock-outline" width={24} />
+      <Typography variant="h6">Standard Attendance Policy</Typography>
+    </Stack>
+    <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
+      Most schools can run HR attendance with one active default policy: 75% full day, 50% half day,
+      missing punches sent for review, manual correction enabled, and payroll impact visible.
+      Detailed late, overtime, holiday, and sandwich rules stay inside Advanced Settings.
+    </Typography>
+    <Box>
+      <Button
+        component={RouterLink}
+        href="/hr/policies?tab=attendance"
+        variant="contained"
+        size="small"
+        startIcon={<Iconify icon="mdi:open-in-new" />}
+      >
+        Open Attendance Policies
+      </Button>
+    </Box>
+  </Stack>
+);
+
+const DeviceIntegrationBridge = () => (
+  <Stack
+    spacing={2}
+    sx={{
+      p: 3,
+      minHeight: 220,
+      border: (theme) => `1px solid ${theme.palette.divider}`,
+      borderRadius: 1,
+      bgcolor: 'background.paper',
+    }}
+  >
+    <Stack direction="row" spacing={1.25} alignItems="center">
+      <Iconify icon="mdi:fingerprint" width={24} />
+      <Typography variant="h6">Device Integration</Typography>
+    </Stack>
+    <Typography color="text.secondary" sx={{ maxWidth: 760 }}>
+      Excel import is available now. Biometric, RFID, and vendor-specific device sync will stay as
+      placeholders until the device company requirements are finalized.
+    </Typography>
+    <Box>
+      <Button
+        component={RouterLink}
+        href={hrPaths.attendance.biometricAttendance}
+        variant="contained"
+        size="small"
+        startIcon={<Iconify icon="mdi:open-in-new" />}
+      >
+        Open Device Integration
+      </Button>
+    </Box>
+  </Stack>
+);

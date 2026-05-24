@@ -22,6 +22,7 @@ import {
   financePath,
   studentPath,
   libraryPath,
+  settingPath,
   securityPath,
   academicPath,
   calendarPath,
@@ -96,6 +97,7 @@ export const settingMenu = {
   path: instituteSetupPaths.academicSetup,
   icon: ICONS.school,
   _action: 'setting',
+  permissionName: `${defaultModulePermissionName}InstituteSetup`,
 };
 
 export const navData = (visibility: boolean[]) => [
@@ -250,6 +252,24 @@ export const navData = (visibility: boolean[]) => [
         visibility: visibility[13],
         submodule: securityGuardModule[securityGuardPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}SecurityGuard`,
+      },
+    ],
+  },
+];
+
+export const fullModuleVisibility = Array(15).fill(true);
+
+export const fullNavData = () => navData(fullModuleVisibility);
+
+export const fullSecurityNavData = () => [
+  {
+    subheader: 'Management',
+    items: [
+      ...navData(fullModuleVisibility).flatMap((group) => group.items),
+      {
+        ...settingMenu,
+        visibility: true,
+        submodule: instituteSetupModule[settingPath].flatMap((list) => list.items),
       },
     ],
   },

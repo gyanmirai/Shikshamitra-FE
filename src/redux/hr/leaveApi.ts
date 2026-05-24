@@ -176,7 +176,7 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
     }),
     createMyLeaveRequest: builder.mutation({
       query: ({ academicYearId, body }) => ({
@@ -185,7 +185,7 @@ export const leaveApi = api.injectEndpoints({
         params: { academicYearId },
         body,
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
     }),
     getLeaveRequestById: builder.query({
       query: ({ id }) => ({
@@ -221,7 +221,7 @@ export const leaveApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
     }),
     rejectLeaveRequest: builder.mutation({
       query: ({ id, body }) => ({
@@ -229,7 +229,7 @@ export const leaveApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: [employeeType.employee, employeeType.hrDashboard],
     }),
 
     // Leave Balance

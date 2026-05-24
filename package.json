@@ -25,6 +25,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "start:out": "npx serve@latest out -p 8083",
     "prepare": "husky install",
     "prepush-check": "node -e \"console.log('Skipping heavy pre-push checks. Use npm run prepush-check:full when needed.')\"",
@@ -143,6 +146,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.60.0",
     "@svgr/webpack": "^8.1.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/autosuggest-highlight": "^3.2.3",
