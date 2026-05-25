@@ -1,6 +1,8 @@
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -8,6 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, Typography, IconButton } from '@mui/material';
@@ -23,18 +26,24 @@ import { ApproveRejectForm } from './DemandDraftTable';
 const UpiTable = ({
   queryParams,
 }: {
-  queryParams?: { month: string; year: string; paymentMethod: string };
+  queryParams?: { academicYearId: string; month: number; year: number; paymentMethod: string };
 }) => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
   const [isClearCheck, setIsClearCheck] = useState(false);
   const isDialog = useBoolean(false);
 
-  const { data, isLoading } = useQueryAndMutation({
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canApproveReject = permissions.some(
+    (perm: any) => perm.name === financePermissions.accounts.reconciliationAdd && perm.isGranted
+  );
+
+  const { data: listResponse, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReconciliationListQuery,
     params: queryParams,
   });
+  const data = listResponse?.items ?? [];
 
   const columns: IColumn[] = useMemo(
     () => [
@@ -151,6 +160,7 @@ const UpiTable = ({
         sticky: true,
         align: 'left',
         render(value, row: any) {
+          if (!canApproveReject) return null;
           return (
             <MenuList>
               <Box sx={{ display: 'flex' }}>
@@ -194,7 +204,7 @@ const UpiTable = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [canApproveReject]
   );
 
   return (
@@ -202,7 +212,7 @@ const UpiTable = ({
       <CustomizableTable
         tableId="upi-table"
         columns={columns}
-        data={data || []}
+        data={data}
         isLoading={isLoading}
         noDataText={<>No UPI Data Found</>}
       />

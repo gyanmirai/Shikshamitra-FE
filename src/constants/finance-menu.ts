@@ -87,6 +87,7 @@ export const financePermissions = {
   accounts: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Accounts`,
     reconciliation: `${defaultFinancePermissionName}Accounts.Reconciliation`,
+    reconciliationAdd: `${defaultFinancePermissionName}Accounts.Reconciliation.Add`,
     expense: `${defaultFinancePermissionName}Accounts.ExpenseTracking`,
     income: `${defaultFinancePermissionName}Accounts.IncomeTracking`,
     settings: {
