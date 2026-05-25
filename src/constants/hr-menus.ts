@@ -93,6 +93,7 @@ export const hrPermissions = {
     runPayroll: `${defaultHrPermissionName}PayrollManagement.RunPayroll`,
     runPayrollLock: `${defaultHrPermissionName}PayrollManagement.RunPayroll.Lock`,
     runPayrollViewAudit: `${defaultHrPermissionName}PayrollManagement.RunPayroll.ViewAudit`,
+    runPayrollAdjustments: `${defaultHrPermissionName}PayrollManagement.RunPayroll.Adjustments`,
     generateSalarySlip: `${defaultHrPermissionName}PayrollManagement.GenerateSalarySlip`,
     payrollStructure: `${defaultHrPermissionName}PayrollManagement.PayrollStructure`,
     settings: {
@@ -111,6 +112,7 @@ export const hrPermissions = {
     biometricAttendance: `${defaultHrPermissionName}AttendanceAndLeave.BiometricAttendance`,
     leaveManagement: `${defaultHrPermissionName}AttendanceAndLeave.LeaveManagement`,
     attendanceTracking: `${defaultHrPermissionName}AttendanceAndLeave.AttendanceTracking`,
+    evaluationsViewAudit: `${defaultHrPermissionName}AttendanceAndLeave.Evaluations.ViewAudit`,
     setting: {
       root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement.Settings`,
       shiftManagement: `${defaultHrPermissionName}AttendanceAndLeave.Setting.ShiftManagement`,

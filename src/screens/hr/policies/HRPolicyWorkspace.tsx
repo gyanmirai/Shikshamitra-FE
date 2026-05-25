@@ -13,6 +13,7 @@ import type {
   WorkCalendarPolicy,
   WorkCalendarHoliday,
   HrPolicyImpactPreview,
+  HrPolicyVersionCompare,
   HrPolicyAssignmentConflict,
 } from 'src/redux/hr/hr-policy-api';
 
@@ -20,14 +21,28 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { toast } from 'src/components/snackbar';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
+import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
+import {
+  formatHrAuditValue,
+  parseHrAuditContext,
+  formatHrAuditDateTime,
+} from 'src/utils/hr-audit-format';
+import {
+  useGetGroupsQuery,
+  useGetGroupMembersQuery,
+} from 'src/redux/calendar/GroupManagement/groupManagementApi';
+import {
+  getHolidayToDate,
+  getHolidayFromDate,
+  findIncludedHolidayOverlap,
+  mergeNonOverlappingHolidayRows,
+} from 'src/screens/hr/policies/holiday-overlap-utils';
 import {
   Box,
   Tab,
@@ -62,33 +77,41 @@ import {
   InputAdornment,
   TableContainer,
   LinearProgress,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
   useGetPolicyVersionsQuery,
   useGetPayrollPoliciesQuery,
-  useGetAttendancePoliciesQuery,
   useClonePayrollPolicyMutation,
-  useGetPolicyAuditSummaryQuery,
   useComparePolicyVersionsQuery,
+  useGetAttendancePoliciesQuery,
+  useGetPolicyAuditSummaryQuery,
+  useCreatePayrollPolicyMutation,
   useGetHrEntityAuditEventsQuery,
   useGetHrPolicyAssignmentsQuery,
-  useCreatePayrollPolicyMutation,
   usePreviewPolicyImpactMutation,
+  useGetPolicyRestorePreviewQuery,
   useGetWorkCalendarPoliciesQuery,
   useCloneAttendancePolicyMutation,
   useCreateAttendancePolicyMutation,
-  useGetPolicyAssignmentPreviewQuery,
+  useUnarchivePayrollPolicyMutation,
   useCloneWorkCalendarPolicyMutation,
+  useGetPolicyAssignmentPreviewQuery,
   useCreateWorkCalendarPolicyMutation,
   useRestorePolicyVersionDraftMutation,
+  useUnarchiveAttendancePolicyMutation,
   useGetPolicyHolidayImpactPreviewQuery,
+  useUnarchiveWorkCalendarPolicyMutation,
+  useDeletePayrollPolicyWithTokenMutation,
   useUpdatePayrollPolicyWithTokenMutation,
   usePreviewPolicyAssignmentImpactMutation,
   useLazyGetWorkCalendarPolicyHolidaysQuery,
+  useDeleteAttendancePolicyWithTokenMutation,
   useUpdateAttendancePolicyWithTokenMutation,
   useSetDefaultPayrollPolicyWithTokenMutation,
   useCreateHrPolicyAssignmentWithTokenMutation,
+  useDeleteWorkCalendarPolicyWithTokenMutation,
   useUpdateHrPolicyAssignmentWithTokenMutation,
   useUpdateWorkCalendarPolicyWithTokenMutation,
   useSetDefaultAttendancePolicyWithTokenMutation,
@@ -120,6 +143,25 @@ type PendingImpactAction = {
   run: (token?: string) => Promise<void>;
 } | null;
 
+type PolicyOperationKey =
+  | 'clone-policy'
+  | 'restore-version'
+  | 'save-calendar'
+  | 'save-payroll'
+  | 'save-attendance'
+  | 'save-assignment'
+  | 'archive-policy'
+  | 'unarchive-policy'
+  | 'set-default'
+  | 'preview-impact'
+  | 'confirm-impact';
+
+type PolicyOperationState = {
+  key: PolicyOperationKey;
+  title: string;
+  message: string;
+} | null;
+
 type AuditTarget = {
   entityType: string;
   entityId: string;
@@ -133,6 +175,14 @@ type VersionTarget = {
   policyId: string;
   policyName: string;
 } | null;
+
+type RestoreVersionState = {
+  version: HrPolicyVersion;
+  name: string;
+  reason: string;
+} | null;
+
+type VersionDifference = HrPolicyVersionCompare['differences'][number];
 
 type WorkCalendarForm = {
   name: string;
@@ -229,6 +279,7 @@ type AssignmentFilters = {
 
 type LookupOption = {
   id?: string;
+  userId?: string | null;
   name?: string;
   displayName?: string;
   employeeName?: string;
@@ -466,14 +517,6 @@ function overlapsDateRange(item: HrPolicyAssignment, from: string, to: string) {
   return true;
 }
 
-function getHolidayFromDate(item: WorkCalendarHoliday) {
-  return item.fromDate || item.date;
-}
-
-function getHolidayToDate(item: WorkCalendarHoliday) {
-  return item.toDate || item.fromDate || item.date;
-}
-
 function getHolidayDayCount(item: WorkCalendarHoliday) {
   if (typeof item.dayCount === 'number' && item.dayCount > 0) return item.dayCount;
   const from = dayjs(getHolidayFromDate(item));
@@ -637,20 +680,19 @@ function holidayRowKey(item: WorkCalendarHoliday) {
 }
 
 function mergeHolidayRows(currentRows: WorkCalendarHoliday[], importedRows: WorkCalendarHoliday[]) {
-  const existingKeys = new Set(currentRows.map(holidayRowKey));
-  const additions = importedRows.filter((item) => !existingKeys.has(holidayRowKey(item)));
-  return [...currentRows, ...additions].sort(
-    (left, right) =>
-      dayjs(getHolidayFromDate(left)).valueOf() - dayjs(getHolidayFromDate(right)).valueOf()
-  );
+  return mergeNonOverlappingHolidayRows(currentRows, importedRows, holidayRowKey).rows;
 }
 
-function countNewHolidayRows(
-  currentRows: WorkCalendarHoliday[],
-  importedRows: WorkCalendarHoliday[]
-) {
-  const existingKeys = new Set(currentRows.map(holidayRowKey));
-  return importedRows.filter((item) => !existingKeys.has(holidayRowKey(item))).length;
+function formatHolidayOverlapMessage(conflict: {
+  holiday: WorkCalendarHoliday;
+  overlapFrom: string;
+  overlapTo: string;
+}) {
+  const dateText =
+    conflict.overlapFrom === conflict.overlapTo
+      ? conflict.overlapFrom
+      : `${conflict.overlapFrom} to ${conflict.overlapTo}`;
+  return `Holiday overlaps with ${conflict.holiday.holidayName} on ${dateText}. Remove or edit the existing holiday first.`;
 }
 
 function isDateInsideRange(date: string, from?: string, to?: string) {
@@ -947,7 +989,7 @@ function PolicyName({
   items: Array<{ id: string; name: string }>;
 }) {
   if (!id) return <>-</>;
-  return <>{items.find((item) => item.id === id)?.name || id}</>;
+  return <>{items.find((item) => item.id === id)?.name || 'Unknown policy'}</>;
 }
 
 function toLabel(value?: string | null) {
@@ -958,6 +1000,17 @@ function toLabel(value?: string | null) {
     .replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
+function cleanVersionDisplayValue(value?: string | null) {
+  if (!value || value === 'null' || value === 'undefined') return 'Not set';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
+    return 'Unknown reference';
+  }
+  if (value.trim().startsWith('{') || value.trim().startsWith('[')) {
+    return 'Changed';
+  }
+  return value;
+}
+
 function formatNumber(value?: number | null) {
   return value == null ? '-' : value.toLocaleString();
 }
@@ -966,10 +1019,12 @@ function DrawerHeader({
   title,
   subtitle,
   onClose,
+  closeDisabled = false,
 }: {
   title: string;
   subtitle?: string;
   onClose: () => void;
+  closeDisabled?: boolean;
 }) {
   return (
     <Stack
@@ -987,10 +1042,53 @@ function DrawerHeader({
           </Typography>
         ) : null}
       </Box>
-      <IconButton onClick={onClose}>
+      <IconButton onClick={onClose} disabled={closeDisabled}>
         <Iconify icon="mdi:close" />
       </IconButton>
     </Stack>
+  );
+}
+
+function PolicyOperationOverlay({ operation }: { operation: PolicyOperationState }) {
+  if (!operation) return null;
+
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: (theme) => theme.zIndex.modal + 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        px: 2,
+        bgcolor: 'rgba(15, 23, 42, 0.38)',
+        backdropFilter: 'blur(2px)',
+      }}
+    >
+      <Paper
+        elevation={8}
+        role="status"
+        aria-live="polite"
+        sx={{
+          width: 'min(360px, 100%)',
+          p: 3,
+          borderRadius: 1,
+          textAlign: 'center',
+        }}
+      >
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress size={42} thickness={4.5} />
+          <Stack spacing={0.5}>
+            <Typography variant="subtitle1">{operation.title}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {operation.message}
+            </Typography>
+          </Stack>
+          <LinearProgress sx={{ width: 1 }} />
+        </Stack>
+      </Paper>
+    </Box>
   );
 }
 
@@ -1002,6 +1100,7 @@ function PolicyDrawerLayout({
   onSave,
   loading,
   disabled,
+  operation,
   children,
 }: {
   title: string;
@@ -1011,13 +1110,25 @@ function PolicyDrawerLayout({
   onSave: () => void;
   loading: boolean;
   disabled: boolean;
+  operation?: PolicyOperationState;
   children: React.ReactNode;
 }) {
   return (
     <Box
-      sx={{ display: 'flex', flexDirection: 'column', height: 1, bgcolor: 'background.default' }}
+      sx={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        height: 1,
+        bgcolor: 'background.default',
+      }}
     >
-      <DrawerHeader title={title} subtitle={subtitle} onClose={onClose} />
+      <DrawerHeader
+        title={title}
+        subtitle={subtitle}
+        onClose={onClose}
+        closeDisabled={Boolean(operation)}
+      />
       <Divider />
       <Box sx={{ flex: 1, overflow: 'auto', px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
         <Stack spacing={2.5} sx={{ width: 1, maxWidth: 1080, mx: 'auto' }}>
@@ -1039,13 +1150,19 @@ function PolicyDrawerLayout({
           zIndex: 1,
         }}
       >
-        <Button variant="outlined" onClick={onClose}>
+        <Button variant="outlined" onClick={onClose} disabled={Boolean(operation)}>
           Cancel
         </Button>
-        <LoadingButton variant="contained" disabled={disabled} loading={loading} onClick={onSave}>
-          Save
+        <LoadingButton
+          variant="contained"
+          disabled={disabled || Boolean(operation)}
+          loading={loading || Boolean(operation)}
+          onClick={onSave}
+        >
+          {operation ? 'Saving...' : 'Save'}
         </LoadingButton>
       </Stack>
+      <PolicyOperationOverlay operation={operation || null} />
     </Box>
   );
 }
@@ -1291,11 +1408,19 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const [assignmentConflict, setAssignmentConflict] = useState<HrPolicyAssignmentConflict | null>(
     null
   );
+  const [impactDrawerOpen, setImpactDrawerOpen] = useState(false);
   const [impactPreview, setImpactPreview] = useState<HrPolicyImpactPreview | null>(null);
+  const [impactPreviewError, setImpactPreviewError] = useState('');
   const [pendingImpactAction, setPendingImpactAction] = useState<PendingImpactAction>(null);
   const [auditTarget, setAuditTarget] = useState<AuditTarget>(null);
   const [versionTarget, setVersionTarget] = useState<VersionTarget>(null);
   const [compareVersionIds, setCompareVersionIds] = useState({ from: '', to: '' });
+  const [versionFilters, setVersionFilters] = useState({
+    search: '',
+    action: 'all',
+  });
+  const [restoreVersion, setRestoreVersion] = useState<RestoreVersionState>(null);
+  const [activePolicyOperation, setActivePolicyOperation] = useState<PolicyOperationState>(null);
   const [holidayFilters, setHolidayFilters] = useState({
     workCalendarPolicyId: '',
     payrollPolicyId: '',
@@ -1346,6 +1471,19 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const activeCalendars = calendars.filter((item) => item.status === 'active');
   const activePayroll = payroll.filter((item) => item.status === 'active');
   const activeAttendance = attendance.filter((item) => item.status === 'active');
+  const isPolicyOperationActive = Boolean(activePolicyOperation);
+  const runPolicyOperation = async <T,>(
+    operation: Exclude<PolicyOperationState, null>,
+    task: () => Promise<T>
+  ): Promise<T | undefined> => {
+    if (isPolicyOperationActive) return undefined;
+    setActivePolicyOperation(operation);
+    try {
+      return await task();
+    } finally {
+      setActivePolicyOperation(null);
+    }
+  };
   const defaultPayroll = payroll.find((item) => item.isDefault) || activePayroll[0];
   const defaultAttendance = attendance.find((item) => item.isDefault) || activeAttendance[0];
   const employeeOptions = getItems<LookupOption>(employees);
@@ -1465,6 +1603,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const [updateWorkCalendarPolicyWithToken, updateCalendarState] =
     useUpdateWorkCalendarPolicyWithTokenMutation();
   const [cloneWorkCalendarPolicy, cloneCalendarState] = useCloneWorkCalendarPolicyMutation();
+  const [deleteWorkCalendarPolicyWithToken, deleteCalendarState] =
+    useDeleteWorkCalendarPolicyWithTokenMutation();
+  const [unarchiveWorkCalendarPolicy, unarchiveCalendarState] =
+    useUnarchiveWorkCalendarPolicyMutation();
   const [loadCalendarHolidays, loadCalendarHolidaysState] =
     useLazyGetWorkCalendarPolicyHolidaysQuery();
   const [loadHolidayImportPreview, loadHolidayImportPreviewState] =
@@ -1473,10 +1615,17 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const [updatePayrollPolicyWithToken, updatePayrollState] =
     useUpdatePayrollPolicyWithTokenMutation();
   const [clonePayrollPolicy, clonePayrollState] = useClonePayrollPolicyMutation();
+  const [deletePayrollPolicyWithToken, deletePayrollState] =
+    useDeletePayrollPolicyWithTokenMutation();
+  const [unarchivePayrollPolicy, unarchivePayrollState] = useUnarchivePayrollPolicyMutation();
   const [createAttendancePolicy, createAttendanceState] = useCreateAttendancePolicyMutation();
   const [updateAttendancePolicyWithToken, updateAttendanceState] =
     useUpdateAttendancePolicyWithTokenMutation();
   const [cloneAttendancePolicy, cloneAttendanceState] = useCloneAttendancePolicyMutation();
+  const [deleteAttendancePolicyWithToken, deleteAttendanceState] =
+    useDeleteAttendancePolicyWithTokenMutation();
+  const [unarchiveAttendancePolicy, unarchiveAttendanceState] =
+    useUnarchiveAttendancePolicyMutation();
   const [setDefaultPayrollPolicyWithToken, payrollDefaultState] =
     useSetDefaultPayrollPolicyWithTokenMutation();
   const [setDefaultAttendancePolicyWithToken, attendanceDefaultState] =
@@ -1524,6 +1673,29 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       : { policyType: 'work_calendar', policyId: '', fromVersionId: '', toVersionId: '' },
     { skip: !versionTarget || !compareVersionIds.from || !compareVersionIds.to }
   );
+  const { data: restorePreview, isFetching: restorePreviewLoading } =
+    useGetPolicyRestorePreviewQuery(
+      versionTarget && restoreVersion
+        ? {
+            policyType: versionTarget.policyType,
+            policyId: versionTarget.policyId,
+            versionId: restoreVersion.version.id,
+          }
+        : { policyType: 'work_calendar', policyId: '', versionId: '' },
+      { skip: !versionTarget || !restoreVersion }
+    );
+
+  useEffect(() => {
+    const versions = versionHistory?.items || [];
+    if (!versionTarget || compareVersionIds.from || compareVersionIds.to || versions.length < 2) {
+      return;
+    }
+    const latest = versions[0];
+    const previous = versions[1];
+    if (latest?.id && previous?.id) {
+      setCompareVersionIds({ from: previous.id, to: latest.id });
+    }
+  }, [compareVersionIds.from, compareVersionIds.to, versionHistory?.items, versionTarget]);
 
   const selectedHolidayCalendarId =
     holidayFilters.workCalendarPolicyId ||
@@ -1567,6 +1739,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         (!effectiveFilters.employeeId && !effectiveFilters.groupId),
     }
   );
+  const { data: selectedGroupMemberUserIds, isFetching: selectedGroupMembersLoading } =
+    useGetGroupMembersQuery(effectiveFilters.groupId, { skip: !effectiveFilters.groupId });
 
   const {
     data: assignmentPreview,
@@ -1588,6 +1762,48 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         !assignmentForm.targetKey,
     }
   );
+
+  const effectiveEmployeeGroupIds = useMemo(() => {
+    if (!effectiveFilters.employeeId || !effectivePreview?.resolutionSteps?.length) {
+      return null;
+    }
+
+    return new Set(
+      effectivePreview.resolutionSteps
+        .filter((step) => step.targetType === 'group' && step.targetKey)
+        .map((step) => step.targetKey as string)
+    );
+  }, [effectiveFilters.employeeId, effectivePreview?.resolutionSteps]);
+  const effectiveGroupMemberUserIdSet = useMemo(
+    () => new Set((selectedGroupMemberUserIds || []).map((item) => String(item).toLowerCase())),
+    [selectedGroupMemberUserIds]
+  );
+  const effectiveEmployeeOptions = useMemo(() => {
+    if (!effectiveFilters.groupId || selectedGroupMembersLoading) {
+      return employeeOptions;
+    }
+
+    return employeeOptions.filter((employee) => {
+      const employeeId = employee.id?.toLowerCase();
+      const userId = employee.userId?.toLowerCase();
+      return (
+        (employeeId && effectiveGroupMemberUserIdSet.has(employeeId)) ||
+        (userId && effectiveGroupMemberUserIdSet.has(userId))
+      );
+    });
+  }, [
+    effectiveFilters.groupId,
+    effectiveGroupMemberUserIdSet,
+    employeeOptions,
+    selectedGroupMembersLoading,
+  ]);
+  const effectiveGroupOptions = useMemo(() => {
+    if (!effectiveFilters.employeeId || !effectiveEmployeeGroupIds || effectiveLoading) {
+      return groupOptions;
+    }
+
+    return groupOptions.filter((group) => group.id && effectiveEmployeeGroupIds.has(group.id));
+  }, [effectiveEmployeeGroupIds, effectiveFilters.employeeId, effectiveLoading, groupOptions]);
 
   const isLoading =
     calendarsLoading ||
@@ -1730,15 +1946,34 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     setDrawer({ kind: 'assignment', mode: item ? 'edit' : 'create', item });
   };
 
-  const closeDrawer = () => {
+  const clearDrawer = () => {
     setDrawer(null);
     setFormError('');
     setAssignmentDateError('');
     setAssignmentConflict(null);
   };
 
-  const closeImpactDrawer = () => {
+  const closeDrawer = () => {
+    if (isPolicyOperationActive) return;
+    clearDrawer();
+  };
+
+  const clearImpactDrawer = () => {
+    setImpactDrawerOpen(false);
     setImpactPreview(null);
+    setImpactPreviewError('');
+    setPendingImpactAction(null);
+  };
+
+  const closeImpactDrawer = () => {
+    if (isPolicyOperationActive) return;
+    clearImpactDrawer();
+  };
+
+  const openImpactDrawerLoading = () => {
+    setImpactDrawerOpen(true);
+    setImpactPreview(null);
+    setImpactPreviewError('');
     setPendingImpactAction(null);
   };
 
@@ -1747,7 +1982,9 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     label: string,
     run: (token?: string) => Promise<void>
   ) => {
+    setImpactDrawerOpen(true);
     setImpactPreview(preview);
+    setImpactPreviewError('');
     if (preview.blockingWarnings?.length || preview.requiresConfirmation) {
       setPendingImpactAction({ label, run });
       return;
@@ -1758,12 +1995,21 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const confirmPendingImpactAction = async () => {
     if (!pendingImpactAction || !impactPreview) return;
     if (impactPreview.blockingWarnings?.length) return;
-    try {
-      await pendingImpactAction.run(impactPreview.confirmationToken || undefined);
-      closeImpactDrawer();
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not complete confirmed policy action.'));
-    }
+    await runPolicyOperation(
+      {
+        key: 'confirm-impact',
+        title: pendingImpactAction.label,
+        message: 'Applying the confirmed policy change...',
+      },
+      async () => {
+        try {
+          await pendingImpactAction.run(impactPreview.confirmationToken || undefined);
+          clearImpactDrawer();
+        } catch (error) {
+          toast.error(getErrorMessage(error, 'Could not complete confirmed policy action.'));
+        }
+      }
+    );
   };
 
   const previewPolicyRowImpact = async (
@@ -1771,17 +2017,28 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     item: WorkCalendarPolicy | PayrollPolicy | AttendancePolicy,
     action = 'update'
   ) => {
-    try {
-      const response = await previewPolicyImpact({
-        policyType,
-        policyId: item.id,
-        academicYearId: item.academicYearId,
-        action,
-      }).unwrap();
-      setImpactPreview(response);
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not preview policy impact.'));
-    }
+    openImpactDrawerLoading();
+    await runPolicyOperation(
+      {
+        key: 'preview-impact',
+        title: 'Checking impact',
+        message:
+          'Finding employees, assignments, and locked payroll periods affected by this action...',
+      },
+      async () => {
+        try {
+          const response = await previewPolicyImpact({
+            policyType,
+            policyId: item.id,
+            academicYearId: item.academicYearId,
+            action,
+          }).unwrap();
+          setImpactPreview(response);
+        } catch (error) {
+          setImpactPreviewError(getErrorMessage(error, 'Could not preview policy impact.'));
+        }
+      }
+    );
   };
 
   const openVersionHistory = (
@@ -1817,56 +2074,79 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
 
   const restoreVersionAsDraft = async (version: HrPolicyVersion) => {
     if (!versionTarget) return;
-    try {
-      const restored = await restorePolicyVersionDraft({
-        policyType: versionTarget.policyType,
-        policyId: versionTarget.policyId,
-        versionId: version.id,
-        name: `${version.name} v${version.versionNumber} Restore Draft`,
-        changeReason: 'Restored from version history',
-      }).unwrap();
-      toast.success('Version restored as draft');
-      setVersionTarget(null);
-      if (versionTarget.policyType === 'work_calendar') {
-        openCalendarDrawer(restored as WorkCalendarPolicy);
-      } else if (versionTarget.policyType === 'payroll') {
-        openPayrollDrawer(restored as PayrollPolicy);
-      } else {
-        openAttendanceDrawer(restored as AttendancePolicy);
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not restore policy version.'));
+    if (!restoreVersion?.reason.trim()) {
+      toast.error('Enter a restore reason before creating the draft.');
+      return;
     }
+    await runPolicyOperation(
+      {
+        key: 'restore-version',
+        title: 'Restoring version',
+        message: 'Creating a new draft from the selected policy version...',
+      },
+      async () => {
+        try {
+          const restored = await restorePolicyVersionDraft({
+            policyType: versionTarget.policyType,
+            policyId: versionTarget.policyId,
+            versionId: version.id,
+            name: restoreVersion.name.trim(),
+            changeReason: restoreVersion.reason.trim(),
+          }).unwrap();
+          toast.success('Version restored as draft');
+          setVersionTarget(null);
+          setRestoreVersion(null);
+          if (versionTarget.policyType === 'work_calendar') {
+            openCalendarDrawer(restored as WorkCalendarPolicy);
+          } else if (versionTarget.policyType === 'payroll') {
+            openPayrollDrawer(restored as PayrollPolicy);
+          } else {
+            openAttendanceDrawer(restored as AttendancePolicy);
+          }
+        } catch (error) {
+          toast.error(getErrorMessage(error, 'Could not restore policy version.'));
+        }
+      }
+    );
   };
 
   const clonePolicy = async (
     type: 'calendar' | 'payroll' | 'attendance',
     item: WorkCalendarPolicy | PayrollPolicy | AttendancePolicy
   ) => {
-    try {
-      if (type === 'calendar') {
-        const cloned = await cloneWorkCalendarPolicy({
-          id: item.id,
-          name: `${item.name} Copy`,
-        }).unwrap();
-        openCalendarDrawer(cloned);
-      } else if (type === 'payroll') {
-        const cloned = await clonePayrollPolicy({
-          id: item.id,
-          name: `${item.name} Copy`,
-        }).unwrap();
-        openPayrollDrawer(cloned);
-      } else {
-        const cloned = await cloneAttendancePolicy({
-          id: item.id,
-          name: `${item.name} Copy`,
-        }).unwrap();
-        openAttendanceDrawer(cloned);
+    await runPolicyOperation(
+      {
+        key: 'clone-policy',
+        title: 'Cloning policy',
+        message: 'Preparing a draft copy for editing...',
+      },
+      async () => {
+        try {
+          if (type === 'calendar') {
+            const cloned = await cloneWorkCalendarPolicy({
+              id: item.id,
+              name: `${item.name} Copy`,
+            }).unwrap();
+            openCalendarDrawer(cloned);
+          } else if (type === 'payroll') {
+            const cloned = await clonePayrollPolicy({
+              id: item.id,
+              name: `${item.name} Copy`,
+            }).unwrap();
+            openPayrollDrawer(cloned);
+          } else {
+            const cloned = await cloneAttendancePolicy({
+              id: item.id,
+              name: `${item.name} Copy`,
+            }).unwrap();
+            openAttendanceDrawer(cloned);
+          }
+          toast.success('Draft policy cloned');
+        } catch (error) {
+          toast.error(getErrorMessage(error, 'Could not clone policy.'));
+        }
       }
-      toast.success('Draft policy cloned');
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not clone policy.'));
-    }
+    );
   };
 
   const saveCalendar = async () => {
@@ -1928,27 +2208,43 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         dayCount: getHolidayDayCount(holiday),
       })),
     };
-    try {
-      if (drawer?.mode === 'edit' && drawer.item?.id) {
-        const preview = await previewPolicyImpact({
-          policyType: 'work_calendar',
-          policyId: drawer.item.id,
-          academicYearId,
-          action: 'update',
-        }).unwrap();
-        await runWithImpactConfirmation(preview, 'Save work calendar', async (token) => {
-          await updateWorkCalendarPolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
-          toast.success('Work calendar saved');
-          closeDrawer();
-        });
-      } else {
-        await createWorkCalendarPolicy(body).unwrap();
-        toast.success('Work calendar saved');
-        closeDrawer();
+    await runPolicyOperation(
+      {
+        key: 'save-calendar',
+        title: drawer?.mode === 'edit' ? 'Saving work calendar' : 'Creating work calendar',
+        message:
+          drawer?.mode === 'edit'
+            ? 'Checking impact and saving the work calendar...'
+            : 'Saving the new work calendar...',
+      },
+      async () => {
+        try {
+          if (drawer?.mode === 'edit' && drawer.item?.id) {
+            const preview = await previewPolicyImpact({
+              policyType: 'work_calendar',
+              policyId: drawer.item.id,
+              academicYearId,
+              action: 'update',
+            }).unwrap();
+            await runWithImpactConfirmation(preview, 'Save work calendar', async (token) => {
+              await updateWorkCalendarPolicyWithToken({
+                id: drawer.item!.id,
+                body,
+                token,
+              }).unwrap();
+              toast.success('Work calendar saved');
+              clearDrawer();
+            });
+          } else {
+            await createWorkCalendarPolicy(body).unwrap();
+            toast.success('Work calendar saved');
+            clearDrawer();
+          }
+        } catch (error) {
+          setFormError(getErrorMessage(error, 'Could not save work calendar policy.'));
+        }
       }
-    } catch (error) {
-      setFormError(getErrorMessage(error, 'Could not save work calendar policy.'));
-    }
+    );
   };
 
   const savePayroll = async () => {
@@ -1985,27 +2281,39 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       saturdayWorkPolicy: payrollForm.saturdayWorkPolicy,
       holidayOverrides: (drawer?.item as PayrollPolicy | undefined)?.holidayOverrides || [],
     };
-    try {
-      if (drawer?.mode === 'edit' && drawer.item?.id) {
-        const preview = await previewPolicyImpact({
-          policyType: 'payroll',
-          policyId: drawer.item.id,
-          academicYearId,
-          action: 'update',
-        }).unwrap();
-        await runWithImpactConfirmation(preview, 'Save payroll policy', async (token) => {
-          await updatePayrollPolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
-          toast.success('Payroll policy saved');
-          closeDrawer();
-        });
-      } else {
-        await createPayrollPolicy(body).unwrap();
-        toast.success('Payroll policy saved');
-        closeDrawer();
+    await runPolicyOperation(
+      {
+        key: 'save-payroll',
+        title: drawer?.mode === 'edit' ? 'Saving payroll policy' : 'Creating payroll policy',
+        message:
+          drawer?.mode === 'edit'
+            ? 'Checking impact and saving the payroll policy...'
+            : 'Saving the new payroll policy...',
+      },
+      async () => {
+        try {
+          if (drawer?.mode === 'edit' && drawer.item?.id) {
+            const preview = await previewPolicyImpact({
+              policyType: 'payroll',
+              policyId: drawer.item.id,
+              academicYearId,
+              action: 'update',
+            }).unwrap();
+            await runWithImpactConfirmation(preview, 'Save payroll policy', async (token) => {
+              await updatePayrollPolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
+              toast.success('Payroll policy saved');
+              clearDrawer();
+            });
+          } else {
+            await createPayrollPolicy(body).unwrap();
+            toast.success('Payroll policy saved');
+            clearDrawer();
+          }
+        } catch (error) {
+          setFormError(getErrorMessage(error, 'Could not save payroll policy.'));
+        }
       }
-    } catch (error) {
-      setFormError(getErrorMessage(error, 'Could not save payroll policy.'));
-    }
+    );
   };
 
   const saveAttendance = async () => {
@@ -2047,27 +2355,39 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       sandwichRuleEnabled: formToSave.sandwichRuleEnabled,
       payrollPreviewEnabled: formToSave.payrollPreviewEnabled,
     };
-    try {
-      if (drawer?.mode === 'edit' && drawer.item?.id) {
-        const preview = await previewPolicyImpact({
-          policyType: 'attendance',
-          policyId: drawer.item.id,
-          academicYearId,
-          action: 'update',
-        }).unwrap();
-        await runWithImpactConfirmation(preview, 'Save attendance policy', async (token) => {
-          await updateAttendancePolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
-          toast.success('Attendance policy saved');
-          closeDrawer();
-        });
-      } else {
-        await createAttendancePolicy(body).unwrap();
-        toast.success('Attendance policy saved');
-        closeDrawer();
+    await runPolicyOperation(
+      {
+        key: 'save-attendance',
+        title: drawer?.mode === 'edit' ? 'Saving attendance policy' : 'Creating attendance policy',
+        message:
+          drawer?.mode === 'edit'
+            ? 'Checking impact and saving the attendance policy...'
+            : 'Saving the new attendance policy...',
+      },
+      async () => {
+        try {
+          if (drawer?.mode === 'edit' && drawer.item?.id) {
+            const preview = await previewPolicyImpact({
+              policyType: 'attendance',
+              policyId: drawer.item.id,
+              academicYearId,
+              action: 'update',
+            }).unwrap();
+            await runWithImpactConfirmation(preview, 'Save attendance policy', async (token) => {
+              await updateAttendancePolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
+              toast.success('Attendance policy saved');
+              clearDrawer();
+            });
+          } else {
+            await createAttendancePolicy(body).unwrap();
+            toast.success('Attendance policy saved');
+            clearDrawer();
+          }
+        } catch (error) {
+          setFormError(getErrorMessage(error, 'Could not save attendance policy.'));
+        }
       }
-    } catch (error) {
-      setFormError(getErrorMessage(error, 'Could not save attendance policy.'));
-    }
+    );
   };
 
   const saveAssignment = async () => {
@@ -2097,106 +2417,154 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       assignmentReason: assignmentForm.assignmentReason || null,
       isActive: assignmentForm.isActive,
     };
-    try {
-      setAssignmentConflict(null);
-      const action = drawer?.mode === 'edit' ? 'update' : 'create';
-      const assignmentId = drawer?.mode === 'edit' ? drawer.item?.id : undefined;
-      const preview = await previewPolicyAssignmentImpact({
-        action,
-        assignmentId,
-        assignment: body,
-      }).unwrap();
-      if (drawer?.mode === 'edit' && drawer.item?.id) {
-        await runWithImpactConfirmation(preview, 'Save policy assignment', async (token) => {
-          await updateHrPolicyAssignmentWithToken({ id: drawer.item!.id, body, token }).unwrap();
-          toast.success('Policy assignment saved');
-          closeDrawer();
-        });
-      } else {
-        await runWithImpactConfirmation(preview, 'Save policy assignment', async (token) => {
-          await createHrPolicyAssignmentWithToken({ body, token }).unwrap();
-          toast.success('Policy assignment saved');
-          closeDrawer();
-        });
+    await runPolicyOperation(
+      {
+        key: 'save-assignment',
+        title: drawer?.mode === 'edit' ? 'Saving assignment' : 'Creating assignment',
+        message: 'Checking assignment impact and applying the policy assignment...',
+      },
+      async () => {
+        try {
+          setAssignmentConflict(null);
+          const action = drawer?.mode === 'edit' ? 'update' : 'create';
+          const assignmentId = drawer?.mode === 'edit' ? drawer.item?.id : undefined;
+          const preview = await previewPolicyAssignmentImpact({
+            action,
+            assignmentId,
+            assignment: body,
+          }).unwrap();
+          if (drawer?.mode === 'edit' && drawer.item?.id) {
+            await runWithImpactConfirmation(preview, 'Save policy assignment', async (token) => {
+              await updateHrPolicyAssignmentWithToken({
+                id: drawer.item!.id,
+                body,
+                token,
+              }).unwrap();
+              toast.success('Policy assignment saved');
+              clearDrawer();
+            });
+          } else {
+            await runWithImpactConfirmation(preview, 'Save policy assignment', async (token) => {
+              await createHrPolicyAssignmentWithToken({ body, token }).unwrap();
+              toast.success('Policy assignment saved');
+              clearDrawer();
+            });
+          }
+        } catch (error) {
+          const conflict = getAssignmentConflict(error);
+          const message = getErrorMessage(
+            error,
+            'Assignment overlaps an active rule for the same target and date range.'
+          );
+          if (conflict) {
+            setAssignmentConflict(conflict);
+            setAssignmentDateError('This date range overlaps another active assignment.');
+          } else if (message.toLowerCase().includes('overlap')) {
+            setAssignmentDateError(message);
+          } else {
+            setFormError(message);
+          }
+        }
       }
-    } catch (error) {
-      const conflict = getAssignmentConflict(error);
-      const message = getErrorMessage(
-        error,
-        'Assignment overlaps an active rule for the same target and date range.'
-      );
-      if (conflict) {
-        setAssignmentConflict(conflict);
-        setAssignmentDateError('This date range overlaps another active assignment.');
-      } else if (message.toLowerCase().includes('overlap')) {
-        setAssignmentDateError(message);
-      } else {
-        setFormError(message);
-      }
-    }
+    );
   };
 
   const archivePolicy = async (
     type: 'payroll' | 'attendance' | 'calendar',
     item: PayrollPolicy | AttendancePolicy | WorkCalendarPolicy
   ) => {
-    try {
-      const policyType = type === 'calendar' ? 'work_calendar' : type;
-      const preview = await previewPolicyImpact({
-        policyType,
-        policyId: item.id,
-        academicYearId: item.academicYearId,
-        action: 'archive',
-      }).unwrap();
-      await runWithImpactConfirmation(preview, 'Archive policy', async (token) => {
-        if (type === 'payroll') {
-          await updatePayrollPolicyWithToken({
-            id: item.id,
-            body: { ...(item as PayrollPolicy), status: 'archived' },
-            token,
+    openImpactDrawerLoading();
+    await runPolicyOperation(
+      {
+        key: 'archive-policy',
+        title: 'Archiving policy',
+        message: 'Checking impact before archiving this policy...',
+      },
+      async () => {
+        try {
+          const policyType = type === 'calendar' ? 'work_calendar' : type;
+          const preview = await previewPolicyImpact({
+            policyType,
+            policyId: item.id,
+            academicYearId: item.academicYearId,
+            action: 'archive',
           }).unwrap();
-        } else if (type === 'attendance') {
-          await updateAttendancePolicyWithToken({
-            id: item.id,
-            body: { ...(item as AttendancePolicy), status: 'archived' },
-            token,
-          }).unwrap();
-        } else {
-          await updateWorkCalendarPolicyWithToken({
-            id: item.id,
-            body: { ...(item as WorkCalendarPolicy), status: 'archived' },
-            token,
-          }).unwrap();
+          await runWithImpactConfirmation(preview, 'Archive policy', async (token) => {
+            if (type === 'payroll') {
+              await deletePayrollPolicyWithToken({ id: item.id, token }).unwrap();
+            } else if (type === 'attendance') {
+              await deleteAttendancePolicyWithToken({ id: item.id, token }).unwrap();
+            } else {
+              await deleteWorkCalendarPolicyWithToken({ id: item.id, token }).unwrap();
+            }
+            toast.success('Policy archived');
+          });
+        } catch (error) {
+          setImpactPreviewError(getErrorMessage(error, 'Could not archive policy.'));
         }
-        toast.success('Policy archived');
-      });
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not archive policy.'));
-    }
+      }
+    );
+  };
+
+  const unarchivePolicy = async (
+    type: 'payroll' | 'attendance' | 'calendar',
+    item: PayrollPolicy | AttendancePolicy | WorkCalendarPolicy
+  ) => {
+    await runPolicyOperation(
+      {
+        key: 'unarchive-policy',
+        title: 'Unarchiving policy',
+        message: 'Restoring this policy as a draft...',
+      },
+      async () => {
+        try {
+          if (type === 'payroll') {
+            await unarchivePayrollPolicy(item.id).unwrap();
+          } else if (type === 'attendance') {
+            await unarchiveAttendancePolicy(item.id).unwrap();
+          } else {
+            await unarchiveWorkCalendarPolicy(item.id).unwrap();
+          }
+          toast.success('Policy unarchived as draft');
+        } catch (error) {
+          toast.error(getErrorMessage(error, 'Could not unarchive policy.'));
+        }
+      }
+    );
   };
 
   const setDefaultWithImpact = async (
     type: 'payroll' | 'attendance',
     item: PayrollPolicy | AttendancePolicy
   ) => {
-    try {
-      const preview = await previewPolicyImpact({
-        policyType: type,
-        policyId: item.id,
-        academicYearId: item.academicYearId,
-        action: 'set-default',
-      }).unwrap();
-      await runWithImpactConfirmation(preview, 'Set default policy', async (token) => {
-        if (type === 'payroll') {
-          await setDefaultPayrollPolicyWithToken({ id: item.id, token }).unwrap();
-        } else {
-          await setDefaultAttendancePolicyWithToken({ id: item.id, token }).unwrap();
+    openImpactDrawerLoading();
+    await runPolicyOperation(
+      {
+        key: 'set-default',
+        title: 'Setting default policy',
+        message: 'Checking impact before changing the default policy...',
+      },
+      async () => {
+        try {
+          const preview = await previewPolicyImpact({
+            policyType: type,
+            policyId: item.id,
+            academicYearId: item.academicYearId,
+            action: 'set-default',
+          }).unwrap();
+          await runWithImpactConfirmation(preview, 'Set default policy', async (token) => {
+            if (type === 'payroll') {
+              await setDefaultPayrollPolicyWithToken({ id: item.id, token }).unwrap();
+            } else {
+              await setDefaultAttendancePolicyWithToken({ id: item.id, token }).unwrap();
+            }
+            toast.success('Default policy updated');
+          });
+        } catch (error) {
+          setImpactPreviewError(getErrorMessage(error, 'Could not set default policy.'));
         }
-        toast.success('Default policy updated');
-      });
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'Could not set default policy.'));
-    }
+      }
+    );
   };
 
   const setTarget = (key: string, displayName?: string) => {
@@ -2213,32 +2581,42 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       return;
     }
 
-    try {
-      const response = await previewPolicyAssignmentImpact({
-        action: drawer?.mode === 'edit' ? 'update' : 'create',
-        assignmentId: drawer?.item?.id,
-        assignment: {
-          academicYearId,
-          targetType: assignmentForm.targetType,
-          targetKey: assignmentForm.targetKey.trim(),
-          targetDisplayName: assignmentForm.targetDisplayName || null,
-          payrollPolicyId: assignmentForm.payrollPolicyId,
-          attendancePolicyId: assignmentForm.attendancePolicyId,
-          effectiveFrom: assignmentForm.effectiveFrom,
-          effectiveTo: assignmentForm.effectiveTo || null,
-          priority: Number(assignmentForm.priority || 0),
-          assignmentReason: assignmentForm.assignmentReason || null,
-          isActive: assignmentForm.isActive,
-        },
-      }).unwrap();
-      setImpactPreview(response);
-    } catch (error) {
-      const conflict = getAssignmentConflict(error);
-      if (conflict) {
-        setAssignmentConflict(conflict);
+    openImpactDrawerLoading();
+    await runPolicyOperation(
+      {
+        key: 'preview-impact',
+        title: 'Checking assignment impact',
+        message: 'Finding affected employees and policy conflicts for this assignment...',
+      },
+      async () => {
+        try {
+          const response = await previewPolicyAssignmentImpact({
+            action: drawer?.mode === 'edit' ? 'update' : 'create',
+            assignmentId: drawer?.item?.id,
+            assignment: {
+              academicYearId,
+              targetType: assignmentForm.targetType,
+              targetKey: assignmentForm.targetKey.trim(),
+              targetDisplayName: assignmentForm.targetDisplayName || null,
+              payrollPolicyId: assignmentForm.payrollPolicyId,
+              attendancePolicyId: assignmentForm.attendancePolicyId,
+              effectiveFrom: assignmentForm.effectiveFrom,
+              effectiveTo: assignmentForm.effectiveTo || null,
+              priority: Number(assignmentForm.priority || 0),
+              assignmentReason: assignmentForm.assignmentReason || null,
+              isActive: assignmentForm.isActive,
+            },
+          }).unwrap();
+          setImpactPreview(response);
+        } catch (error) {
+          const conflict = getAssignmentConflict(error);
+          if (conflict) {
+            setAssignmentConflict(conflict);
+          }
+          setImpactPreviewError(getErrorMessage(error, 'Could not preview assignment impact.'));
+        }
       }
-      toast.error(getErrorMessage(error, 'Could not preview assignment impact.'));
-    }
+    );
   };
 
   const renderAssignmentTargetPicker = () => {
@@ -2391,14 +2769,28 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                     </IconButton>
                   </span>
                 </Tooltip>
-                <Tooltip title="Archive">
+                <Tooltip title={item.status === 'archived' ? 'Unarchive' : 'Archive'}>
                   <span>
                     <IconButton
                       size="small"
-                      disabled={!canArchivePolicy || item.status === 'archived'}
-                      onClick={() => archivePolicy('calendar', item)}
+                      disabled={
+                        !canArchivePolicy ||
+                        deleteCalendarState.isLoading ||
+                        unarchiveCalendarState.isLoading
+                      }
+                      onClick={() =>
+                        item.status === 'archived'
+                          ? unarchivePolicy('calendar', item)
+                          : archivePolicy('calendar', item)
+                      }
                     >
-                      <Iconify icon="mdi:archive-outline" />
+                      <Iconify
+                        icon={
+                          item.status === 'archived'
+                            ? 'mdi:archive-arrow-up-outline'
+                            : 'mdi:archive-outline'
+                        }
+                      />
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -2455,7 +2847,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             'Calendar',
             type === 'payroll' ? 'Day Mode' : 'Thresholds',
             'Integration',
-            'Version',
+            'Ver.',
             'Updated',
             'Actions',
           ]}
@@ -2478,7 +2870,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                 <TableCell>
                   <Chip size="small" label="Per employee attendance" variant="outlined" />
                 </TableCell>
-                <TableCell>{item.version}</TableCell>
+                <TableCell>{`v${item.version}`}</TableCell>
                 <TableCell>
                   {formatDate(item.lastModificationTime || item.lastUpdatedAt || item.creationTime)}
                 </TableCell>
@@ -2568,14 +2960,30 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                       </IconButton>
                     </span>
                   </Tooltip>
-                  <Tooltip title="Archive">
+                  <Tooltip title={item.status === 'archived' ? 'Unarchive' : 'Archive'}>
                     <span>
                       <IconButton
                         size="small"
-                        disabled={!canArchivePolicy || item.status === 'archived'}
-                        onClick={() => archivePolicy(type, item)}
+                        disabled={
+                          !canArchivePolicy ||
+                          deletePayrollState.isLoading ||
+                          deleteAttendanceState.isLoading ||
+                          unarchivePayrollState.isLoading ||
+                          unarchiveAttendanceState.isLoading
+                        }
+                        onClick={() =>
+                          item.status === 'archived'
+                            ? unarchivePolicy(type, item)
+                            : archivePolicy(type, item)
+                        }
                       >
-                        <Iconify icon="mdi:archive-outline" />
+                        <Iconify
+                          icon={
+                            item.status === 'archived'
+                              ? 'mdi:archive-arrow-up-outline'
+                              : 'mdi:archive-outline'
+                          }
+                        />
                       </IconButton>
                     </span>
                   </Tooltip>
@@ -3140,7 +3548,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       </Typography>
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
         <Autocomplete
-          options={employeeOptions}
+          options={effectiveEmployeeOptions}
           getOptionLabel={optionLabel}
           sx={{ minWidth: 220, flex: 1 }}
           value={employeeOptions.find((item) => item.id === effectiveFilters.employeeId) || null}
@@ -3154,7 +3562,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           renderInput={(params) => <TextField {...params} label="Employee" size="small" />}
         />
         <Autocomplete
-          options={groupOptions}
+          options={effectiveGroupOptions}
           getOptionLabel={optionLabel}
           sx={{ minWidth: 220, flex: 1 }}
           value={groupOptions.find((item) => item.id === effectiveFilters.groupId) || null}
@@ -3183,8 +3591,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
         <Alert severity="info" sx={{ flex: 1 }}>
           Source: {effectivePreview?.policySource || '-'}
-          {effectivePreview?.matchedTargetDisplayName
-            ? ` (${effectivePreview.matchedTargetDisplayName})`
+          {effectivePreview?.matchedTargetDisplayName || effectivePreview?.matchedTargetKey
+            ? ` (${effectivePreview.matchedTargetDisplayName || effectivePreview.matchedTargetKey})`
             : ''}
         </Alert>
         <Alert severity="success" sx={{ flex: 1 }}>
@@ -3310,131 +3718,149 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const renderImpactDrawer = () => (
     <Drawer
       anchor="right"
-      open={Boolean(impactPreview)}
+      open={impactDrawerOpen}
       onClose={closeImpactDrawer}
-      PaperProps={{ sx: { width: { xs: '100%', md: 560 } } }}
+      PaperProps={{ sx: { position: 'relative', width: { xs: '100%', md: 560 } } }}
     >
-      <DrawerHeader title="Policy Impact" onClose={closeImpactDrawer} />
+      <DrawerHeader
+        title="Policy Impact"
+        onClose={closeImpactDrawer}
+        closeDisabled={isPolicyOperationActive}
+      />
       <Divider />
       <Stack spacing={2} sx={{ p: 2.5 }}>
         {previewPolicyImpactState.isLoading || previewPolicyAssignmentImpactState.isLoading ? (
           <LinearProgress />
         ) : null}
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          <Chip
-            size="small"
-            label={toLabel(impactPreview?.policyType)}
-            color="primary"
-            variant="outlined"
-          />
-          <Chip size="small" label={toLabel(impactPreview?.action)} variant="outlined" />
-          <Chip
-            size="small"
-            label={`v${impactPreview?.currentVersion ?? '-'} -> v${impactPreview?.proposedVersion ?? '-'}`}
-          />
-        </Stack>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          <Chip
-            size="small"
-            label={`${formatNumber(impactPreview?.affectedEmployeeCount)} employees`}
-          />
-          <Chip
-            size="small"
-            label={`${formatNumber(impactPreview?.affectedAssignmentCount)} assignments`}
-          />
-          <Chip
-            size="small"
-            label={`${formatNumber(impactPreview?.lockedPayrollMonths?.length)} locked months`}
-            color={impactPreview?.lockedPayrollMonths?.length ? 'error' : 'default'}
-          />
-        </Stack>
-        {impactPreview?.warnings?.map((warning) => (
-          <Alert
-            key={`${warning.code}-${warning.message}`}
-            severity={warning.severity === 'blocking' ? 'error' : warning.severity}
-          >
-            {warning.message}
-          </Alert>
-        ))}
-        {impactPreview?.requiresConfirmation ? (
-          <Alert severity={impactPreview.blockingWarnings?.length ? 'error' : 'warning'}>
-            {impactPreview.blockingWarnings?.length
-              ? 'This action is blocked until the listed risks are resolved.'
-              : `Confirmation is required${impactPreview.expiresAt ? ` before ${formatDate(impactPreview.expiresAt)}` : ''}.`}
-          </Alert>
+        {impactPreviewError ? <Alert severity="error">{impactPreviewError}</Alert> : null}
+        {!impactPreview && !impactPreviewError ? (
+          <Alert severity="info">Loading impact preview...</Alert>
         ) : null}
-        {impactPreview?.effectiveAssignmentConflicts?.length ? (
-          <Alert severity="warning">
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Effective policy conflicts
-            </Typography>
-            <Stack spacing={1}>
-              {impactPreview.effectiveAssignmentConflicts.slice(0, 5).map((conflict) => (
-                <Box key={`${conflict.employeeId}-${conflict.date}`}>
-                  <Typography variant="body2" fontWeight={600}>
-                    {conflict.employeeName || conflict.employeeId}
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    Winner:{' '}
-                    {conflict.winningAssignment?.targetDisplayName ||
-                      conflict.winningAssignment?.targetKey ||
-                      '-'}
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    Candidates:{' '}
-                    {conflict.candidateAssignments
-                      .map(
-                        (candidate) =>
-                          `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
-                      )
-                      .join(', ')}
-                  </Typography>
-                </Box>
-              ))}
+        {impactPreview ? (
+          <>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              <Chip
+                size="small"
+                label={toLabel(impactPreview?.policyType)}
+                color="primary"
+                variant="outlined"
+              />
+              <Chip size="small" label={toLabel(impactPreview?.action)} variant="outlined" />
+              <Chip
+                size="small"
+                label={`v${impactPreview?.currentVersion ?? '-'} -> v${impactPreview?.proposedVersion ?? '-'}`}
+              />
             </Stack>
-          </Alert>
-        ) : null}
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Affected Employees
-          </Typography>
-          <SectionTable columns={['Employee', 'Department', 'Type']}>
-            {impactPreview?.affectedEmployees?.length ? (
-              impactPreview.affectedEmployees.map((employee) => (
-                <TableRow key={employee.employeeId} hover>
-                  <TableCell>
-                    <Stack spacing={0.25}>
-                      <Typography variant="body2">
-                        {employee.employeeName || employee.employeeId}
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              <Chip
+                size="small"
+                label={`${formatNumber(impactPreview?.affectedEmployeeCount)} employees`}
+              />
+              <Chip
+                size="small"
+                label={`${formatNumber(impactPreview?.affectedAssignmentCount)} assignments`}
+              />
+              <Chip
+                size="small"
+                label={`${formatNumber(impactPreview?.lockedPayrollMonths?.length)} locked months`}
+                color={impactPreview?.lockedPayrollMonths?.length ? 'error' : 'default'}
+              />
+            </Stack>
+            {impactPreview?.warnings?.map((warning) => (
+              <Alert
+                key={`${warning.code}-${warning.message}`}
+                severity={warning.severity === 'blocking' ? 'error' : warning.severity}
+              >
+                {warning.message}
+              </Alert>
+            ))}
+            {impactPreview?.requiresConfirmation ? (
+              <Alert severity={impactPreview.blockingWarnings?.length ? 'error' : 'warning'}>
+                {impactPreview.blockingWarnings?.length
+                  ? 'This action is blocked until the listed risks are resolved.'
+                  : `Confirmation is required${impactPreview.expiresAt ? ` before ${formatDate(impactPreview.expiresAt)}` : ''}.`}
+              </Alert>
+            ) : null}
+            {impactPreview?.effectiveAssignmentConflicts?.length ? (
+              <Alert severity="warning">
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Effective policy conflicts
+                </Typography>
+                <Stack spacing={1}>
+                  {impactPreview.effectiveAssignmentConflicts.slice(0, 5).map((conflict) => (
+                    <Box key={`${conflict.employeeId}-${conflict.date}`}>
+                      <Typography variant="body2" fontWeight={600}>
+                        {conflict.employeeName || conflict.employeeId}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {employee.employeeCode}
+                      <Typography variant="caption" display="block">
+                        Winner:{' '}
+                        {conflict.winningAssignment?.targetDisplayName ||
+                          conflict.winningAssignment?.targetKey ||
+                          '-'}
                       </Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{employee.department || '-'}</TableCell>
-                  <TableCell>{employee.employeeType || '-'}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <EmptyRows colSpan={3} message="No employees found in preview." />
-            )}
-          </SectionTable>
-        </Box>
-        {pendingImpactAction ? (
-          <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={closeImpactDrawer}>Cancel</Button>
-            <LoadingButton
-              variant="contained"
-              color="warning"
-              disabled={Boolean(impactPreview?.blockingWarnings?.length)}
-              onClick={confirmPendingImpactAction}
-            >
-              Confirm {pendingImpactAction.label}
-            </LoadingButton>
-          </Stack>
+                      <Typography variant="caption" display="block">
+                        Candidates:{' '}
+                        {conflict.candidateAssignments
+                          .map(
+                            (candidate) =>
+                              `${candidate.targetDisplayName || candidate.targetKey} (${candidate.status}: ${candidate.skipReason})`
+                          )
+                          .join(', ')}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              </Alert>
+            ) : null}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Affected Employees
+              </Typography>
+              <SectionTable columns={['Employee', 'Department', 'Type']}>
+                {impactPreview?.affectedEmployees?.length ? (
+                  impactPreview.affectedEmployees.map((employee) => (
+                    <TableRow key={employee.employeeId} hover>
+                      <TableCell>
+                        <Stack spacing={0.25}>
+                          <Typography variant="body2">
+                            {employee.employeeName || employee.employeeId}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {employee.employeeCode}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{employee.department || '-'}</TableCell>
+                      <TableCell>{employee.employeeType || '-'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <EmptyRows colSpan={3} message="No employees found in preview." />
+                )}
+              </SectionTable>
+            </Box>
+            {pendingImpactAction ? (
+              <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                <Button onClick={closeImpactDrawer} disabled={isPolicyOperationActive}>
+                  Cancel
+                </Button>
+                <LoadingButton
+                  variant="contained"
+                  color="warning"
+                  disabled={
+                    Boolean(impactPreview?.blockingWarnings?.length) || isPolicyOperationActive
+                  }
+                  loading={activePolicyOperation?.key === 'confirm-impact'}
+                  onClick={confirmPendingImpactAction}
+                >
+                  Confirm {pendingImpactAction.label}
+                </LoadingButton>
+              </Stack>
+            ) : null}
+          </>
         ) : null}
       </Stack>
+      <PolicyOperationOverlay operation={activePolicyOperation} />
     </Drawer>
   );
 
@@ -3461,78 +3887,112 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           <Stack spacing={0.5}>
             <Typography variant="caption" color="text.secondary">
               Created by {auditSummary.createdByName || auditSummary.creatorId || 'Unknown'} on{' '}
-              {formatDate(auditSummary.creationTime)}
+              {formatHrAuditDateTime(auditSummary.creationTime)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Last edited by{' '}
               {auditSummary.lastModifiedByName || auditSummary.lastModifierId || 'Unknown'} on{' '}
-              {formatDate(auditSummary.lastModificationTime)}
+              {formatHrAuditDateTime(auditSummary.lastModificationTime)}
             </Typography>
           </Stack>
         ) : null}
         <Divider />
         {(auditEvents?.items || []).length ? (
-          <Stack spacing={1.5}>
-            {auditEvents!.items.map((event) => (
-              <Paper key={event.id} variant="outlined" sx={{ p: 1.5 }}>
-                <Stack spacing={1}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1}
-                  >
-                    <Chip
-                      size="small"
-                      label={toLabel(event.action)}
-                      color="primary"
-                      variant="outlined"
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDate(event.occurredAt)}
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body2" fontWeight={700}>
-                    {event.summary}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {event.actorNameSnapshot || event.actorUserId || 'Unknown actor'}
-                  </Typography>
-                  {event.reason ? (
-                    <Typography variant="body2">Reason: {event.reason}</Typography>
-                  ) : null}
-                  {event.changedFields?.length ? (
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Field</TableCell>
-                          <TableCell>Before</TableCell>
-                          <TableCell>After</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {event.changedFields.slice(0, 8).map((field) => (
-                          <TableRow key={field.field}>
-                            <TableCell>{toLabel(field.field)}</TableCell>
-                            <TableCell>{field.oldValue || '-'}</TableCell>
-                            <TableCell>{field.newValue || '-'}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : null}
-                  {event.contextJson ? (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ wordBreak: 'break-word' }}
+          <Stack spacing={0}>
+            {auditEvents!.items.map((event, index) => {
+              const context = parseHrAuditContext(event.contextJson);
+              return (
+                <Stack key={event.id} direction="row" spacing={1.5} sx={{ position: 'relative' }}>
+                  <Stack alignItems="center" sx={{ pt: 1 }}>
+                    <Box
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        typography: 'caption',
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontWeight: 700,
+                      }}
                     >
-                      Context: {event.contextJson}
-                    </Typography>
-                  ) : null}
+                      {index + 1}
+                    </Box>
+                    {index < auditEvents!.items.length - 1 ? (
+                      <Box sx={{ width: 2, flex: 1, minHeight: 24, bgcolor: 'divider' }} />
+                    ) : null}
+                  </Stack>
+                  <Paper variant="outlined" sx={{ p: 1.5, mb: 1.5, flex: 1, minWidth: 0 }}>
+                    <Stack spacing={1}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={1}
+                      >
+                        <Chip
+                          size="small"
+                          label={event.actionLabel || toLabel(event.action)}
+                          color="primary"
+                          variant="outlined"
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {formatHrAuditDateTime(event.occurredAt, event.occurredAtDisplay)}
+                        </Typography>
+                      </Stack>
+                      <Typography variant="body2" fontWeight={700}>
+                        {event.summary}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {event.actorDisplayName ||
+                          event.actorNameSnapshot ||
+                          event.actorUserId ||
+                          'Unknown actor'}
+                      </Typography>
+                      {event.reason ? (
+                        <Typography variant="body2">Reason: {event.reason}</Typography>
+                      ) : null}
+                      {event.changedFields?.length ? (
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Field</TableCell>
+                              <TableCell>Before</TableCell>
+                              <TableCell>After</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {event.changedFields.slice(0, 8).map((field) => (
+                              <TableRow key={field.field}>
+                                <TableCell>{toLabel(field.field)}</TableCell>
+                                <TableCell>{formatHrAuditValue(field.oldValue)}</TableCell>
+                                <TableCell>{formatHrAuditValue(field.newValue)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : null}
+                      {context ? (
+                        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                          {Object.entries(context)
+                            .slice(0, 6)
+                            .map(([key, value]) => (
+                              <Chip
+                                key={key}
+                                size="small"
+                                variant="outlined"
+                                label={`${toLabel(key)}: ${formatHrAuditValue(value)}`}
+                                sx={{ maxWidth: '100%' }}
+                              />
+                            ))}
+                        </Stack>
+                      ) : null}
+                    </Stack>
+                  </Paper>
                 </Stack>
-              </Paper>
-            ))}
+              );
+            })}
           </Stack>
         ) : auditSummary ? (
           <Stack spacing={1.5}>
@@ -3548,7 +4008,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                       {toLabel(event.action)}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {formatDate(event.timestamp)} ·{' '}
+                      {formatHrAuditDateTime(event.timestamp)} ·{' '}
                       {event.actorName || event.actorId || 'Unknown actor'}
                     </Typography>
                     {event.sourceMethod ? (
@@ -3575,14 +4035,44 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
 
   const renderVersionDrawer = () => {
     const versions = versionHistory?.items || [];
+    const filteredVersions = versions.filter((version) => {
+      const matchesAction =
+        versionFilters.action === 'all' || version.changeAction === versionFilters.action;
+      const search = versionFilters.search.trim().toLowerCase();
+      const matchesSearch =
+        !search ||
+        version.name.toLowerCase().includes(search) ||
+        (version.changeReason || '').toLowerCase().includes(search) ||
+        (version.createdByName || version.creatorId || '').toLowerCase().includes(search) ||
+        toLabel(version.changeAction).toLowerCase().includes(search);
+      return matchesAction && matchesSearch;
+    });
+    const actions = Array.from(new Set(versions.map((version) => version.changeAction))).filter(
+      Boolean
+    );
+    const groupedDifferences = (versionCompare?.differences || []).reduce(
+      (differenceGroups, diff) => {
+        const category = diff.category || 'Other changes';
+        differenceGroups[category] = differenceGroups[category] || [];
+        differenceGroups[category].push(diff);
+        return differenceGroups;
+      },
+      {} as Record<string, VersionDifference[]>
+    );
     return (
       <Drawer
         anchor="right"
         open={Boolean(versionTarget)}
-        onClose={() => setVersionTarget(null)}
-        PaperProps={{ sx: { width: { xs: '100%', md: 720 } } }}
+        onClose={() => {
+          if (!isPolicyOperationActive) setVersionTarget(null);
+        }}
+        PaperProps={{ sx: { position: 'relative', width: { xs: '100%', md: 720 } } }}
       >
-        <DrawerHeader title="Policy Versions" onClose={() => setVersionTarget(null)} />
+        <DrawerHeader
+          title="Policy Versions"
+          onClose={() => setVersionTarget(null)}
+          closeDisabled={isPolicyOperationActive}
+        />
         <Divider />
         <Stack spacing={2} sx={{ p: 2.5 }}>
           {versionHistoryLoading || versionCompareLoading ? <LinearProgress /> : null}
@@ -3593,9 +4083,37 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               modify the active policy.
             </Typography>
           </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <TextField
+              size="small"
+              label="Search history"
+              value={versionFilters.search}
+              onChange={(event) =>
+                setVersionFilters((current) => ({ ...current, search: event.target.value }))
+              }
+              fullWidth
+            />
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Action</InputLabel>
+              <Select
+                label="Action"
+                value={versionFilters.action}
+                onChange={(event) =>
+                  setVersionFilters((current) => ({ ...current, action: event.target.value }))
+                }
+              >
+                <MenuItem value="all">All actions</MenuItem>
+                {actions.map((action) => (
+                  <MenuItem key={action} value={action}>
+                    {toLabel(action)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
           <SectionTable columns={['Version', 'Action', 'Created', 'Reason', 'Actions']}>
-            {versions.length ? (
-              versions.map((version) => (
+            {filteredVersions.length ? (
+              filteredVersions.map((version) => (
                 <TableRow
                   key={version.id}
                   hover
@@ -3612,8 +4130,15 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                     </Stack>
                   </TableCell>
                   <TableCell>{toLabel(version.changeAction)}</TableCell>
-                  <TableCell>{formatDate(version.creationTime)}</TableCell>
-                  <TableCell>{version.changeReason || '-'}</TableCell>
+                  <TableCell>
+                    <Stack spacing={0.25}>
+                      <Typography variant="body2">{formatDate(version.creationTime)}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {version.createdByName || 'Unknown user'}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>{version.changeReason || version.summary || '-'}</TableCell>
                   <TableCell align="right">
                     <Tooltip title="Compare from this version">
                       <IconButton
@@ -3639,8 +4164,18 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                       <span>
                         <IconButton
                           size="small"
-                          disabled={!canClonePolicy || restoreVersionState.isLoading}
-                          onClick={() => restoreVersionAsDraft(version)}
+                          disabled={
+                            !canClonePolicy ||
+                            restoreVersionState.isLoading ||
+                            isPolicyOperationActive
+                          }
+                          onClick={() =>
+                            setRestoreVersion({
+                              version,
+                              name: `${version.name} v${version.versionNumber} Restore Draft`,
+                              reason: '',
+                            })
+                          }
                         >
                           <Iconify icon="mdi:file-restore-outline" />
                         </IconButton>
@@ -3650,7 +4185,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                 </TableRow>
               ))
             ) : (
-              <EmptyRows colSpan={5} message="No policy versions captured yet." />
+              <EmptyRows colSpan={5} message="No matching policy versions." />
             )}
           </SectionTable>
           {versionCompare ? (
@@ -3660,32 +4195,128 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                   Comparing v{versionCompare.fromVersion.versionNumber} to v
                   {versionCompare.toVersion.versionNumber}
                 </Typography>
-                <SectionTable columns={['Field', 'From', 'To']}>
-                  {versionCompare.differences.length ? (
-                    versionCompare.differences.map((diff) => (
-                      <TableRow key={diff.field}>
-                        <TableCell>{toLabel(diff.field)}</TableCell>
-                        <TableCell sx={{ maxWidth: 240, wordBreak: 'break-word' }}>
-                          {diff.fromValue || '-'}
-                        </TableCell>
-                        <TableCell sx={{ maxWidth: 240, wordBreak: 'break-word' }}>
-                          {diff.toValue || '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <EmptyRows colSpan={3} message="No differences found." />
-                  )}
-                </SectionTable>
+                {versionCompare.differences.length ? (
+                  Object.entries(groupedDifferences).map(([category, differences]) => (
+                    <Stack key={category} spacing={1}>
+                      <Typography variant="subtitle2">{category}</Typography>
+                      <SectionTable columns={['Field', 'From', 'To']}>
+                        {differences.map((diff) => (
+                          <TableRow key={`${category}-${diff.fieldKey || diff.field}`}>
+                            <TableCell>{diff.fieldLabel || toLabel(diff.field)}</TableCell>
+                            <TableCell sx={{ maxWidth: 240, wordBreak: 'break-word' }}>
+                              {cleanVersionDisplayValue(diff.fromDisplayValue || diff.fromValue)}
+                            </TableCell>
+                            <TableCell sx={{ maxWidth: 240, wordBreak: 'break-word' }}>
+                              {cleanVersionDisplayValue(diff.toDisplayValue || diff.toValue)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </SectionTable>
+                    </Stack>
+                  ))
+                ) : (
+                  <Alert severity="info">No differences found.</Alert>
+                )}
               </Stack>
             </Paper>
           ) : versions.length >= 2 ? (
-            <Alert severity="info">Select one version as “from” and one as “to” to compare.</Alert>
+            <Alert severity="info">
+              Latest change is compared automatically. Select different versions to compare another
+              range.
+            </Alert>
           ) : null}
         </Stack>
+        <PolicyOperationOverlay operation={activePolicyOperation} />
       </Drawer>
     );
   };
+
+  const renderRestoreVersionDialog = () => (
+    <Dialog
+      open={Boolean(restoreVersion)}
+      onClose={() => {
+        if (!isPolicyOperationActive) setRestoreVersion(null);
+      }}
+      fullWidth
+      maxWidth="sm"
+    >
+      <DialogTitle>Restore Version As Draft</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          {restorePreviewLoading ? <LinearProgress /> : null}
+          <Alert severity="info">
+            Restore creates a new draft. The current active policy is not changed.
+          </Alert>
+          {restorePreview ? (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Chip
+                size="small"
+                label={`${formatNumber(restorePreview.affectedEmployeeCount)} employees`}
+                variant="outlined"
+              />
+              <Chip
+                size="small"
+                label={`${formatNumber(restorePreview.affectedAssignmentCount)} assignments`}
+                variant="outlined"
+              />
+              {restorePreview.hasStalePayrollRisk ? (
+                <Chip size="small" color="warning" label="Payroll risk" variant="outlined" />
+              ) : null}
+            </Stack>
+          ) : null}
+          {restorePreview?.warnings?.length ? (
+            <Stack spacing={1}>
+              {restorePreview.warnings.slice(0, 3).map((warning) => (
+                <Alert
+                  key={warning.code}
+                  severity={warning.severity === 'blocking' ? 'error' : 'warning'}
+                >
+                  {warning.message}
+                </Alert>
+              ))}
+            </Stack>
+          ) : null}
+          <TextField
+            label="Draft name"
+            value={restoreVersion?.name || ''}
+            onChange={(event) =>
+              setRestoreVersion((current) =>
+                current ? { ...current, name: event.target.value } : current
+              )
+            }
+            fullWidth
+            required
+          />
+          <TextField
+            label="Restore reason"
+            value={restoreVersion?.reason || ''}
+            onChange={(event) =>
+              setRestoreVersion((current) =>
+                current ? { ...current, reason: event.target.value } : current
+              )
+            }
+            fullWidth
+            required
+            multiline
+            minRows={3}
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setRestoreVersion(null)} disabled={isPolicyOperationActive}>
+          Cancel
+        </Button>
+        <LoadingButton
+          variant="contained"
+          loading={restoreVersionState.isLoading || isPolicyOperationActive}
+          disabled={!restoreVersion?.name.trim() || !restoreVersion?.reason.trim()}
+          onClick={() => restoreVersion && restoreVersionAsDraft(restoreVersion.version)}
+        >
+          Create Draft
+        </LoadingButton>
+      </DialogActions>
+    </Dialog>
+  );
 
   const importCentralHolidays = async () => {
     if (!academicYearId) {
@@ -3705,14 +4336,23 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         );
         return;
       }
+      const mergeResult = mergeNonOverlappingHolidayRows(
+        calendarForm.holidays,
+        rows,
+        holidayRowKey
+      );
       setCalendarForm((current) => ({
         ...current,
-        holidays: mergeHolidayRows(current.holidays, rows),
+        holidays: mergeResult.rows,
       }));
-      const importedCount = countNewHolidayRows(calendarForm.holidays, rows);
+      if (mergeResult.skippedOverlapCount > 0) {
+        setHolidayReviewInfo(
+          `${mergeResult.skippedOverlapCount} central holiday${mergeResult.skippedOverlapCount === 1 ? '' : 'ies'} skipped because an included holiday already exists on the same date.`
+        );
+      }
       toast.success(
-        importedCount
-          ? `${importedCount} central holidays added`
+        mergeResult.addedCount
+          ? `${mergeResult.addedCount} central holidays added`
           : 'Central holidays are already in this work calendar'
       );
     } catch (error) {
@@ -3743,6 +4383,29 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     setManualHolidayForm({ holidayName: '', fromDate: '', toDate: '', notes: '' });
   };
 
+  const manualHolidayConflict = useMemo(() => {
+    const toDate = manualHolidayForm.toDate || manualHolidayForm.fromDate;
+    if (!manualHolidayForm.fromDate || !toDate) return null;
+    if (dayjs(toDate).isBefore(dayjs(manualHolidayForm.fromDate), 'day')) return null;
+    return findIncludedHolidayOverlap(
+      calendarForm.holidays,
+      {
+        fromDate: manualHolidayForm.fromDate,
+        toDate,
+      },
+      editingManualHolidayIndex
+    );
+  }, [
+    calendarForm.holidays,
+    editingManualHolidayIndex,
+    manualHolidayForm.fromDate,
+    manualHolidayForm.toDate,
+  ]);
+
+  const manualHolidayConflictMessage = manualHolidayConflict
+    ? formatHolidayOverlapMessage(manualHolidayConflict)
+    : '';
+
   const saveManualHoliday = () => {
     const toDate = manualHolidayForm.toDate || manualHolidayForm.fromDate;
     if (
@@ -3767,6 +4430,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       )
     ) {
       setFormError('Manual holiday range must be inside the work calendar effective date range.');
+      return;
+    }
+    if (manualHolidayConflict) {
+      setFormError(manualHolidayConflictMessage);
       return;
     }
     const row: WorkCalendarHoliday = {
@@ -3818,6 +4485,11 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
 
   const renderDrawerContent = () => {
     if (!drawer) return null;
+    const isCurrentSaveOperation =
+      activePolicyOperation?.key === 'save-calendar' ||
+      activePolicyOperation?.key === 'save-payroll' ||
+      activePolicyOperation?.key === 'save-attendance' ||
+      activePolicyOperation?.key === 'save-assignment';
     if (drawer.kind === 'calendar') {
       const previewWeeklyOffs = getWeeklyOffsForRule(
         calendarForm.weeklyOffPattern,
@@ -3864,6 +4536,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           onSave={saveCalendar}
           disabled={drawer.mode === 'edit' ? !canEditPolicy : !canCreatePolicy}
           loading={createCalendarState.isLoading || updateCalendarState.isLoading}
+          operation={isCurrentSaveOperation ? activePolicyOperation : null}
         >
           <PolicySection title="Policy Details">
             <DrawerFormGrid>
@@ -4365,6 +5038,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           onSave={savePayroll}
           disabled={drawer.mode === 'edit' ? !canEditPolicy : !canCreatePolicy}
           loading={createPayrollState.isLoading || updatePayrollState.isLoading}
+          operation={isCurrentSaveOperation ? activePolicyOperation : null}
         >
           <PolicySection title="Policy Details">
             <DrawerFormGrid alignItems="center">
@@ -4702,6 +5376,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           onSave={saveAttendance}
           disabled={drawer.mode === 'edit' ? !canEditPolicy : !canCreatePolicy}
           loading={createAttendanceState.isLoading || updateAttendanceState.isLoading}
+          operation={isCurrentSaveOperation ? activePolicyOperation : null}
         >
           <PolicySection title="Policy Details">
             <DrawerFormGrid columns={4} rowGap={1.5} alignItems="center">
@@ -5038,13 +5713,22 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       );
     }
     return (
-      <>
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          height: 1,
+          bgcolor: 'background.default',
+        }}
+      >
         <DrawerHeader
           title={`${drawer.mode === 'edit' ? 'Edit' : 'New'} Assignment`}
           onClose={closeDrawer}
+          closeDisabled={isPolicyOperationActive}
         />
         <Divider />
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ flex: 1, overflow: 'auto', p: { xs: 2, sm: 3 } }}>
           {formError ? (
             <Alert severity="error" sx={{ mb: 2 }}>
               {formError}
@@ -5216,19 +5900,26 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               <Stack direction="row" spacing={1}>
                 <LoadingButton
                   variant="outlined"
-                  disabled={!canPreviewImpact}
-                  loading={previewPolicyAssignmentImpactState.isLoading}
+                  disabled={!canPreviewImpact || isPolicyOperationActive}
+                  loading={
+                    previewPolicyAssignmentImpactState.isLoading ||
+                    activePolicyOperation?.key === 'preview-impact'
+                  }
                   onClick={previewCurrentAssignmentImpact}
                 >
                   Preview impact
                 </LoadingButton>
                 <LoadingButton
                   variant="contained"
-                  disabled={!canAssignPolicy}
-                  loading={createAssignmentState.isLoading || updateAssignmentState.isLoading}
+                  disabled={!canAssignPolicy || isPolicyOperationActive}
+                  loading={
+                    createAssignmentState.isLoading ||
+                    updateAssignmentState.isLoading ||
+                    activePolicyOperation?.key === 'save-assignment'
+                  }
                   onClick={saveAssignment}
                 >
-                  Save
+                  {activePolicyOperation?.key === 'save-assignment' ? 'Saving...' : 'Save'}
                 </LoadingButton>
               </Stack>
             </Stack>
@@ -5237,12 +5928,13 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             </Box>
           </Stack>
         </Box>
-      </>
+        <PolicyOperationOverlay operation={isCurrentSaveOperation ? activePolicyOperation : null} />
+      </Box>
     );
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ position: 'relative', minHeight: 360, p: 3 }}>
       <Stack spacing={2}>
         <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1.5}>
           <Box>
@@ -5330,6 +6022,9 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
+            {formError || manualHolidayConflictMessage ? (
+              <Alert severity="error">{manualHolidayConflictMessage || formError}</Alert>
+            ) : null}
             <TextField
               fullWidth
               size="small"
@@ -5393,7 +6088,11 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         </DialogContent>
         <DialogActions>
           <Button onClick={closeManualHolidayDialog}>Cancel</Button>
-          <Button variant="contained" onClick={saveManualHoliday}>
+          <Button
+            variant="contained"
+            disabled={Boolean(manualHolidayConflict)}
+            onClick={saveManualHoliday}
+          >
             Save Holiday
           </Button>
         </DialogActions>
@@ -5401,6 +6100,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       {renderImpactDrawer()}
       {renderAuditDrawer()}
       {renderVersionDrawer()}
+      {renderRestoreVersionDialog()}
+      <PolicyOperationOverlay
+        operation={drawer || impactDrawerOpen ? null : activePolicyOperation}
+      />
     </Box>
   );
 }

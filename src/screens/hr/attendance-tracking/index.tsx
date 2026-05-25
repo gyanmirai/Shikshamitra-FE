@@ -18,34 +18,42 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
-  useGetAttendanceRegisterQuery,
   useAdjustAttendanceRegisterMutation,
+  useGetGroupedAttendanceRegisterQuery,
   useBulkAdjustAttendanceRegisterMutation,
 } from 'src/redux/hr/attendanceApi';
 import {
   Box,
+  Chip,
   Stack,
+  Table,
   Button,
   Dialog,
   Select,
   Divider,
   Popover,
-  MenuItem,
+  Collapse,
   Checkbox,
+  MenuItem,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
   TextField,
+  IconButton,
   InputLabel,
   Typography,
-  IconButton,
   DialogTitle,
   FormControl,
   Autocomplete,
-  useMediaQuery,
-  DialogContent,
   DialogActions,
+  DialogContent,
+  useMediaQuery,
 } from '@mui/material';
 
 type RegisterStatus = 'Present' | 'HalfDayLeave' | 'FullDayLeave';
 type PayrollState = 'All' | 'Editable' | 'Locked';
+type ExceptionFilter = 'All' | 'NeedsAttention' | 'Absent' | 'HalfDay' | 'MissingPunch' | 'Locked';
 
 type AttendanceRegisterRow = {
   attendanceId: string;
@@ -69,6 +77,26 @@ type AttendanceRegisterRow = {
   lockReason?: string | null;
 };
 
+type GroupedAttendanceRegisterRow = {
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  department?: string | null;
+  employeeGroup?: string | null;
+  educationMediumStageId?: string | null;
+  educationMediumStageName?: string | null;
+  roleId?: string | null;
+  recordedDays: number;
+  present: number;
+  halfDay: number;
+  absent: number;
+  editable: number;
+  locked: number;
+  missingPunch: number;
+  hasExceptions: boolean;
+  days: AttendanceRegisterRow[];
+};
+
 const STATUS_OPTIONS = [
   { label: 'Present', value: 'Present', wire: 'PRESENT', color: 'success' },
   { label: 'Half day', value: 'HalfDayLeave', wire: 'HALF_DAY', color: 'warning' },
@@ -79,6 +107,15 @@ const PAYROLL_STATES: Array<{ label: string; value: PayrollState }> = [
   { label: 'All payroll states', value: 'All' },
   { label: 'Editable only', value: 'Editable' },
   { label: 'Locked only', value: 'Locked' },
+];
+
+const EXCEPTION_FILTERS: Array<{ label: string; value: ExceptionFilter }> = [
+  { label: 'All', value: 'All' },
+  { label: 'Needs attention', value: 'NeedsAttention' },
+  { label: 'Absent', value: 'Absent' },
+  { label: 'Half day', value: 'HalfDay' },
+  { label: 'Missing punch', value: 'MissingPunch' },
+  { label: 'Locked', value: 'Locked' },
 ];
 
 const normalizeStatus = (value: RegisterStatus | number | string): RegisterStatus => {
@@ -104,6 +141,7 @@ const getDefaultFilters = () => ({
   isTeaching: '',
   status: '',
   payrollState: 'All' as PayrollState,
+  exceptionFilter: 'All' as ExceptionFilter,
   search: '',
 });
 
@@ -293,6 +331,7 @@ const AttendanceTrackingScreen = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editRow, setEditRow] = useState<AttendanceRegisterRow | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [draft, setDraft] = useState({
     status: 'Present' as RegisterStatus,
     inTime: '',
@@ -318,6 +357,7 @@ const AttendanceTrackingScreen = () => {
       isTeaching: filters.isTeaching === '' ? undefined : filters.isTeaching === 'true',
       status: filters.status || undefined,
       payrollState: filters.payrollState,
+      exceptionFilter: filters.exceptionFilter,
       search: filters.search,
       skipCount: (page - 1) * pageSize,
       maxResultCount: pageSize,
@@ -327,7 +367,7 @@ const AttendanceTrackingScreen = () => {
 
   const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAttendanceRegisterQuery,
+    currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
     params: queryParams,
     options: { skip: !filters.startDate || !filters.endDate },
   });
@@ -342,10 +382,11 @@ const AttendanceTrackingScreen = () => {
     currentQueryAndMutation: useBulkAdjustAttendanceRegisterMutation,
   });
 
-  const rows = useMemo(() => (data?.items || []) as AttendanceRegisterRow[], [data?.items]);
+  const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
+  const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
   const selectedRows = useMemo(
-    () => rows.filter((row) => selectedIds.includes(row.attendanceId)),
-    [rows, selectedIds]
+    () => allDayRows.filter((row) => selectedIds.includes(row.attendanceId)),
+    [allDayRows, selectedIds]
   );
   const blockedSelectedCount = selectedRows.filter((row) => !row.canEdit).length;
   const editableSelectedIds = selectedRows
@@ -416,108 +457,273 @@ const AttendanceTrackingScreen = () => {
     }
   };
 
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'select',
-        label: (
-          <Checkbox
-            size="small"
-            checked={rows.length > 0 && rows.every((row) => selectedIds.includes(row.attendanceId))}
-            indeterminate={
-              selectedIds.length > 0 && !rows.every((row) => selectedIds.includes(row.attendanceId))
-            }
-            onChange={(event) => {
-              setSelectedIds(event.target.checked ? rows.map((row) => row.attendanceId) : []);
-            }}
-          />
-        ),
-        minWidth: 52,
-        isSort: false,
-        isFilter: false,
-        render: (_value, row: any) => (
-          <Checkbox
-            size="small"
-            checked={selectedIds.includes(row.attendanceId)}
-            onChange={(event) => {
-              setSelectedIds((prev) =>
-                event.target.checked
-                  ? [...prev, row.attendanceId]
-                  : prev.filter((id) => id !== row.attendanceId)
-              );
-            }}
-          />
-        ),
-      },
-      {
-        id: 'employeeName',
-        label: 'Employee',
-        minWidth: 220,
-        sticky: true,
-        stickyPosition: 'left',
-        render: (value, row: any) => (
-          <Box>
-            <Typography variant="body2">{value}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {row.employeeCode}
-            </Typography>
-          </Box>
-        ),
-      },
-      { id: 'attendanceDate', label: 'Date', minWidth: 120 },
-      { id: 'educationMediumStageName', label: 'Organization', minWidth: 160 },
-      { id: 'employeeGroup', label: 'Group', minWidth: 120 },
-      { id: 'department', label: 'Department', minWidth: 140 },
-      {
-        id: 'status',
-        label: 'Status',
-        minWidth: 110,
-        render: (value) => {
-          const meta = statusMeta(value);
-          return <Label color={meta.color as any}>{meta.label}</Label>;
-        },
-      },
-      { id: 'inTime', label: 'In', minWidth: 90, render: (value) => toTimeValue(value) || '-' },
-      { id: 'outTime', label: 'Out', minWidth: 90, render: (value) => toTimeValue(value) || '-' },
-      { id: 'hoursWorked', label: 'Hours', minWidth: 90, render: (value) => value || '-' },
-      { id: 'remarks', label: 'Remarks', minWidth: 180, render: (value) => value || '-' },
-      {
-        id: 'lock',
-        label: 'Lock',
-        minWidth: 150,
-        render: (_value, row: any) =>
-          row.canEdit ? (
-            <Label color="success">Editable</Label>
-          ) : (
-            <CustomTooltip title={row.lockReason || 'Locked'} arrow>
-              <span>
-                <Label color="error">Locked</Label>
-              </span>
-            </CustomTooltip>
-          ),
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        minWidth: 90,
-        align: 'center',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        stickyPosition: 'right',
-        render: (_value, row: any) => (
-          <CustomTooltip title={row.canEdit ? 'Edit attendance' : row.lockReason || 'Locked'} arrow>
-            <span>
-              <IconButton size="small" disabled={!row.canEdit} onClick={() => openEdit(row)}>
-                <Iconify icon="solar:pen-bold" width={18} />
-              </IconButton>
-            </span>
-          </CustomTooltip>
-        ),
-      },
-    ],
-    [rows, selectedIds]
+  const getEditableDayIds = (group: GroupedAttendanceRegisterRow) =>
+    (group.days || []).filter((day) => day.canEdit).map((day) => day.attendanceId);
+
+  const isGroupSelected = (group: GroupedAttendanceRegisterRow) => {
+    const editableIds = getEditableDayIds(group);
+    return editableIds.length > 0 && editableIds.every((id) => selectedIds.includes(id));
+  };
+
+  const isGroupIndeterminate = (group: GroupedAttendanceRegisterRow) => {
+    const editableIds = getEditableDayIds(group);
+    const selectedEditableCount = editableIds.filter((id) => selectedIds.includes(id)).length;
+    return selectedEditableCount > 0 && selectedEditableCount < editableIds.length;
+  };
+
+  const toggleGroupSelection = (group: GroupedAttendanceRegisterRow, checked: boolean) => {
+    const editableIds = getEditableDayIds(group);
+    setSelectedIds((prev) =>
+      checked
+        ? Array.from(new Set([...prev, ...editableIds]))
+        : prev.filter((id) => !editableIds.includes(id))
+    );
+  };
+
+  const toggleDaySelection = (attendanceId: string, checked: boolean) => {
+    setSelectedIds((prev) =>
+      checked
+        ? Array.from(new Set([...prev, attendanceId]))
+        : prev.filter((id) => id !== attendanceId)
+    );
+  };
+
+  const stickyDayActionSx = {
+    position: 'sticky',
+    right: 0,
+    width: 140,
+    minWidth: 140,
+    maxWidth: 140,
+    bgcolor: 'background.paper',
+    boxShadow: '-4px 0 8px rgba(0,0,0,0.08)',
+    zIndex: 2,
+  };
+
+  const renderDailyRows = (group: GroupedAttendanceRegisterRow) => (
+    <Box sx={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
+      <Table
+        size="small"
+        sx={{
+          minWidth: 980,
+          borderCollapse: 'separate',
+          borderSpacing: 0,
+          '& th, & td': {
+            whiteSpace: 'nowrap',
+          },
+        }}
+      >
+        <TableHead>
+          <TableRow>
+            <TableCell width={44} />
+            <TableCell>Date</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>In</TableCell>
+            <TableCell>Out</TableCell>
+            <TableCell>Hours</TableCell>
+            <TableCell>Remarks</TableCell>
+            <TableCell>Lock</TableCell>
+            <TableCell
+              align="center"
+              sx={{ ...stickyDayActionSx, bgcolor: 'background.neutral', zIndex: 4 }}
+            >
+              Actions
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {(group.days || []).map((day) => {
+            const meta = statusMeta(day.status);
+            const missingPunch =
+              normalizeStatus(day.status) === 'Present' && (!day.inTime || !day.outTime);
+            return (
+              <TableRow key={day.attendanceId} hover>
+                <TableCell>
+                  <Checkbox
+                    size="small"
+                    disabled={!day.canEdit}
+                    checked={selectedIds.includes(day.attendanceId)}
+                    onChange={(event) => toggleDaySelection(day.attendanceId, event.target.checked)}
+                  />
+                </TableCell>
+                <TableCell>{dayjs(day.attendanceDate).format('DD MMM YYYY')}</TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={0.75} alignItems="center">
+                    <Label color={meta.color as any}>{meta.label}</Label>
+                    {missingPunch && <Label color="warning">Missing punch</Label>}
+                  </Stack>
+                </TableCell>
+                <TableCell>{toTimeValue(day.inTime) || '-'}</TableCell>
+                <TableCell>{toTimeValue(day.outTime) || '-'}</TableCell>
+                <TableCell>{day.hoursWorked || '-'}</TableCell>
+                <TableCell>{day.remarks || '-'}</TableCell>
+                <TableCell>
+                  {day.canEdit ? (
+                    <Label color="success">Editable</Label>
+                  ) : (
+                    <CustomTooltip title={day.lockReason || 'Locked'} arrow>
+                      <span>
+                        <Label color="error">Locked</Label>
+                      </span>
+                    </CustomTooltip>
+                  )}
+                </TableCell>
+                <TableCell align="center" sx={stickyDayActionSx}>
+                  <CustomTooltip
+                    title={day.canEdit ? 'Adjust this day' : day.lockReason || 'Locked'}
+                    arrow
+                  >
+                    <span>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        disabled={!day.canEdit}
+                        startIcon={<Iconify icon="solar:pen-bold" width={16} />}
+                        onClick={() => openEdit(day)}
+                      >
+                        Adjust
+                      </Button>
+                    </span>
+                  </CustomTooltip>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Box>
   );
+
+  const columns: IColumn[] = [
+    {
+      id: 'select',
+      label: (
+        <Checkbox
+          size="small"
+          checked={
+            allDayRows.filter((row) => row.canEdit).length > 0 &&
+            allDayRows
+              .filter((row) => row.canEdit)
+              .every((row) => selectedIds.includes(row.attendanceId))
+          }
+          indeterminate={
+            selectedIds.length > 0 &&
+            !allDayRows
+              .filter((row) => row.canEdit)
+              .every((row) => selectedIds.includes(row.attendanceId))
+          }
+          onChange={(event) => {
+            setSelectedIds(
+              event.target.checked
+                ? allDayRows.filter((row) => row.canEdit).map((row) => row.attendanceId)
+                : []
+            );
+          }}
+        />
+      ),
+      minWidth: 52,
+      isSort: false,
+      isFilter: false,
+      render: (_value, row: any) => (
+        <Checkbox
+          size="small"
+          disabled={!row.editable}
+          checked={isGroupSelected(row)}
+          indeterminate={isGroupIndeterminate(row)}
+          onChange={(event) => toggleGroupSelection(row, event.target.checked)}
+        />
+      ),
+    },
+    {
+      id: 'employeeName',
+      label: 'Employee',
+      minWidth: 250,
+      sticky: true,
+      stickyPosition: 'left',
+      render: (value, row: any) => (
+        <Box>
+          <Typography variant="body2">{value}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {[row.employeeCode, row.educationMediumStageName].filter(Boolean).join(' • ')}
+          </Typography>
+        </Box>
+      ),
+      children: (row: any) => renderDailyRows(row),
+    },
+    {
+      id: 'present',
+      label: 'Attendance',
+      minWidth: 150,
+      render: (_value, row: any) => (
+        <Box>
+          <Typography variant="body2" fontWeight={600}>
+            Present {row.present} / {row.recordedDays}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Recorded days
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      id: 'exceptions',
+      label: 'Exceptions',
+      minWidth: 260,
+      isSort: false,
+      render: (_value, row: any) => (
+        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+          {row.absent > 0 && <Label color="error">Absent {row.absent}</Label>}
+          {row.halfDay > 0 && <Label color="warning">Half day {row.halfDay}</Label>}
+          {row.missingPunch > 0 && <Label color="warning">Missing punch {row.missingPunch}</Label>}
+          {row.locked > 0 && <Label color="error">Locked {row.locked}</Label>}
+          {!row.hasExceptions && <Label color="success">Clear</Label>}
+        </Stack>
+      ),
+    },
+    { id: 'employeeGroup', label: 'Group', minWidth: 120 },
+    { id: 'department', label: 'Department', minWidth: 140 },
+    {
+      id: 'editability',
+      label: 'Editability',
+      minWidth: 150,
+      render: (_value, row: any) => `${row.editable} editable, ${row.locked} locked`,
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      minWidth: 90,
+      align: 'center',
+      isSort: false,
+      isFilter: false,
+      sticky: true,
+      stickyPosition: 'right',
+      headerSx: {
+        right: 0,
+        boxShadow: '-4px 0 8px rgba(0,0,0,0.08)',
+      },
+      cellSx: {
+        right: 0,
+        bgcolor: 'background.paper',
+        boxShadow: '-4px 0 8px rgba(0,0,0,0.08)',
+      },
+      render: (_value, row: any) => (
+        <CustomTooltip title="Bulk adjust editable days for this employee" arrow>
+          <span>
+            <IconButton
+              size="small"
+              disabled={!row.editable}
+              onClick={() => {
+                toggleGroupSelection(row, true);
+                setDraft({ status: 'Present', inTime: '', outTime: '', remarks: '', reason: '' });
+                setBulkOpen(true);
+              }}
+            >
+              <Iconify icon="solar:pen-2-bold" width={18} />
+            </IconButton>
+          </span>
+        </CustomTooltip>
+      ),
+    },
+  ];
 
   const renderAdjustmentDialog = (isBulk: boolean) => (
     <Dialog
@@ -615,108 +821,28 @@ const AttendanceTrackingScreen = () => {
         sx={{ p: 1.5, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 'var(--shadows-2)' }}
       >
         <Stack spacing={1.5}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-            <DateRangeSelector
-              startDate={filters.startDate}
-              endDate={filters.endDate}
-              onChange={(start, end) => {
-                setFilters((prev) => ({ ...prev, startDate: start, endDate: end }));
-                resetPaging();
-              }}
-            />
-            <FormControl size="small" fullWidth>
-              <InputLabel>Organization</InputLabel>
-              <Select
-                label="Organization"
-                value={filters.educationMediumStageId}
-                onChange={(event) => setFilter('educationMediumStageId', event.target.value)}
-              >
-                <MenuItem value="">All organizations</MenuItem>
-                {stages.map((stage: any) => (
-                  <MenuItem key={stage.id} value={stage.id}>
-                    {stage.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Autocomplete
-              size="small"
-              fullWidth
-              options={employeeOptions?.items || []}
-              getOptionLabel={(option: any) =>
-                `${option.employeeName || option.fullName || option.firstName || ''} ${option.employeeCode ? `(${option.employeeCode})` : ''}`
-              }
-              onChange={(_event, value: any) => setFilter('employeeId', value?.id || '')}
-              renderInput={(params) => <TextField {...params} label="Employee" />}
-            />
-          </Stack>
-
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Group</InputLabel>
-              <Select
-                label="Group"
-                value={filters.employeeGroup}
-                onChange={(event) => setFilter('employeeGroup', event.target.value)}
-              >
-                <MenuItem value="">All groups</MenuItem>
-                <MenuItem value="Teaching">Teaching</MenuItem>
-                <MenuItem value="NonTeaching">Non teaching</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              size="small"
-              fullWidth
-              label="Department"
-              value={filters.department}
-              onChange={(event) => setFilter('department', event.target.value)}
-            />
-            <FormControl size="small" fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                label="Status"
-                value={filters.status}
-                onChange={(event) => setFilter('status', event.target.value)}
-              >
-                <MenuItem value="">All statuses</MenuItem>
-                {STATUS_OPTIONS.map((item) => (
-                  <MenuItem key={item.value} value={item.value}>
-                    {item.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Payroll state</InputLabel>
-              <Select
-                label="Payroll state"
-                value={filters.payrollState}
-                onChange={(event) => setFilter('payrollState', event.target.value)}
-              >
-                {PAYROLL_STATES.map((item) => (
-                  <MenuItem key={item.value} value={item.value}>
-                    {item.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              size="small"
-              fullWidth
-              label="Search"
-              value={filters.search}
-              onChange={(event) => setFilter('search', event.target.value)}
-            />
-          </Stack>
-
           <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Label color="default">Staff {data?.summary?.staffCount || 0}</Label>
               <Label color="success">Present {data?.summary?.present || 0}</Label>
               <Label color="warning">Half day {data?.summary?.halfDay || 0}</Label>
               <Label color="error">Absent {data?.summary?.absent || 0}</Label>
+              <Label color="warning">Missing punch {data?.summary?.missingPunch || 0}</Label>
               <Label color="info">Editable {data?.summary?.editable || 0}</Label>
+              <Label color="error">Locked {data?.summary?.locked || 0}</Label>
             </Stack>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} flexShrink={0}>
+              <Button
+                variant="text"
+                startIcon={
+                  <Iconify
+                    icon={filtersOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'}
+                  />
+                }
+                onClick={() => setFiltersOpen((prev) => !prev)}
+              >
+                Filters
+              </Button>
               <Button
                 variant="outlined"
                 startIcon={<Iconify icon="solar:restart-bold" />}
@@ -740,6 +866,117 @@ const AttendanceTrackingScreen = () => {
               </Button>
             </Stack>
           </Stack>
+
+          <Collapse in={filtersOpen} timeout="auto" unmountOnExit>
+            <Stack spacing={1.5} sx={{ pt: 0.5 }}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                <DateRangeSelector
+                  startDate={filters.startDate}
+                  endDate={filters.endDate}
+                  onChange={(start, end) => {
+                    setFilters((prev) => ({ ...prev, startDate: start, endDate: end }));
+                    resetPaging();
+                  }}
+                />
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Organization</InputLabel>
+                  <Select
+                    label="Organization"
+                    value={filters.educationMediumStageId}
+                    onChange={(event) => setFilter('educationMediumStageId', event.target.value)}
+                  >
+                    <MenuItem value="">All organizations</MenuItem>
+                    {stages.map((stage: any) => (
+                      <MenuItem key={stage.id} value={stage.id}>
+                        {stage.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Autocomplete
+                  size="small"
+                  fullWidth
+                  options={employeeOptions?.items || []}
+                  getOptionLabel={(option: any) =>
+                    `${option.employeeName || option.fullName || option.firstName || ''} ${option.employeeCode ? `(${option.employeeCode})` : ''}`
+                  }
+                  onChange={(_event, value: any) => setFilter('employeeId', value?.id || '')}
+                  renderInput={(params) => <TextField {...params} label="Employee" />}
+                />
+              </Stack>
+
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Group</InputLabel>
+                  <Select
+                    label="Group"
+                    value={filters.employeeGroup}
+                    onChange={(event) => setFilter('employeeGroup', event.target.value)}
+                  >
+                    <MenuItem value="">All groups</MenuItem>
+                    <MenuItem value="Teaching">Teaching</MenuItem>
+                    <MenuItem value="NonTeaching">Non teaching</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Department"
+                  value={filters.department}
+                  onChange={(event) => setFilter('department', event.target.value)}
+                />
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    label="Status"
+                    value={filters.status}
+                    onChange={(event) => setFilter('status', event.target.value)}
+                  >
+                    <MenuItem value="">All statuses</MenuItem>
+                    {STATUS_OPTIONS.map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Payroll state</InputLabel>
+                  <Select
+                    label="Payroll state"
+                    value={filters.payrollState}
+                    onChange={(event) => setFilter('payrollState', event.target.value)}
+                  >
+                    {PAYROLL_STATES.map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Search"
+                  value={filters.search}
+                  onChange={(event) => setFilter('search', event.target.value)}
+                />
+              </Stack>
+
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {EXCEPTION_FILTERS.map((item) => (
+                  <Chip
+                    key={item.value}
+                    size="small"
+                    label={item.label}
+                    color={filters.exceptionFilter === item.value ? 'primary' : 'default'}
+                    variant={filters.exceptionFilter === item.value ? 'filled' : 'outlined'}
+                    onClick={() => setFilter('exceptionFilter', item.value)}
+                  />
+                ))}
+              </Stack>
+            </Stack>
+          </Collapse>
         </Stack>
       </Box>
 
@@ -759,8 +996,10 @@ const AttendanceTrackingScreen = () => {
           setPage(nextPage);
           setPageSize(nextPageSize);
         }}
-        tableContainerProps={{ sx: { maxHeight: 'calc(100vh - 360px)' } }}
-        noDataText="No attendance rows found for the selected filters."
+        tableContainerProps={{
+          sx: { maxHeight: filtersOpen ? 'calc(100vh - 360px)' : 'calc(100vh - 230px)' },
+        }}
+        noDataText="No employee attendance found for the selected filters."
       />
 
       {renderAdjustmentDialog(false)}
