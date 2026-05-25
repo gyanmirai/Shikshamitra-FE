@@ -11,9 +11,14 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
-import { Box, Card, Grid, Stack, Button, Avatar, CardHeader } from '@mui/material';
+import { Box, Card, Grid, Stack, Alert, Button, Avatar, Skeleton, CardHeader } from '@mui/material';
+import {
+  useGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipPdfQuery,
+} from 'src/redux/runPayroll/runPayrollApi';
 
-// ── Animation variants ──────────────────────
+import { toSalarySlipMonthYear } from './payroll-summary-utils';
+
 const enterCurve = [0.22, 1, 0.36, 1] as const;
 
 const staggerContainer = {
@@ -28,6 +33,45 @@ const slideUpItem = {
 
 const PayrollSummary = ({ employee }: any) => {
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
+  const employeeId = employee?.id;
+  const salarySlipMonth = toSalarySlipMonthYear(monthYear);
+
+  const {
+    data: salarySlip,
+    isFetching,
+    isError,
+  } = useGetEmployeeSalarySlipQuery(
+    { employeeId, monthYear: salarySlipMonth },
+    { skip: !employeeId || !salarySlipMonth }
+  );
+  const [getSalarySlipPdf, { isFetching: isDownloading }] = useLazyGetEmployeeSalarySlipPdfQuery();
+
+  const hasSalarySlip = !!salarySlip;
+  const earnings = salarySlip?.earnings || [];
+  const deductions = salarySlip?.deductions || [];
+
+  const handleDownload = async () => {
+    if (!employeeId || !salarySlipMonth || !hasSalarySlip || isDownloading) return;
+
+    const blob = await getSalarySlipPdf({ employeeId, monthYear: salarySlipMonth }).unwrap();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const employeeName = (
+      employee?.fullName ||
+      employee?.name ||
+      salarySlip?.employeeName ||
+      'Employee'
+    )
+      .trim()
+      .replace(/[<>:"/\\|?*]/g, '-')
+      .replace(/\s+/g, '-');
+    link.href = url;
+    link.download = `Payslip_${employeeName}_${monthYear?.format('MMM-YYYY') || 'unknown'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
@@ -39,19 +83,8 @@ const PayrollSummary = ({ employee }: any) => {
           style={{ display: 'flex', flexDirection: 'column' }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 1 }}>
-            {/* Header & Actions */}
             <motion.div variants={slideUpItem}>
-              <Card
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  pt: 0,
-                  pb: 1,
-                  pl: 1,
-                  pr: 1,
-                }}
-              >
+              <Card sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 1 }}>
                 <Stack
                   direction={{ xs: 'column', md: 'row' }}
                   alignItems="center"
@@ -74,6 +107,7 @@ const PayrollSummary = ({ employee }: any) => {
                       startIcon={<Iconify icon="solar:eye-linear" />}
                       variant="outlined"
                       color="inherit"
+                      disabled={!hasSalarySlip}
                     >
                       Preview
                     </Button>
@@ -82,14 +116,17 @@ const PayrollSummary = ({ employee }: any) => {
                       startIcon={<Iconify icon="solar:download-linear" />}
                       variant="outlined"
                       color="inherit"
+                      disabled={!hasSalarySlip || isDownloading}
+                      onClick={handleDownload}
                     >
-                      Download
+                      {isDownloading ? 'Downloading...' : 'Download'}
                     </Button>
                     <Button
                       size="small"
                       startIcon={<Iconify icon="solar:printer-linear" />}
                       variant="outlined"
                       color="inherit"
+                      disabled
                     >
                       Print
                     </Button>
@@ -98,6 +135,7 @@ const PayrollSummary = ({ employee }: any) => {
                       startIcon={<Iconify icon="solar:plain-linear" />}
                       variant="outlined"
                       color="inherit"
+                      disabled
                     >
                       Email
                     </Button>
@@ -106,172 +144,158 @@ const PayrollSummary = ({ employee }: any) => {
               </Card>
             </motion.div>
 
-            {/* Summary Stats */}
-            <Grid container spacing={1}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <motion.div variants={slideUpItem}>
-                  <DashboardCard
-                    title="Total Salary"
-                    value={formatCurrency(40000)}
-                    icon="solar:wallet-bold-duotone"
-                    color="success.dark"
-                    bgColor="success.lighter"
-                  />
-                </motion.div>
-              </Grid>
+            {isFetching ? (
+              <PayrollSummarySkeleton />
+            ) : isError ? (
+              <Alert severity="info">
+                No finalized salary slip found for this employee and month.
+              </Alert>
+            ) : hasSalarySlip ? (
+              <>
+                <Grid container spacing={1}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <motion.div variants={slideUpItem}>
+                      <DashboardCard
+                        title="Total Salary"
+                        value={formatCurrency(salarySlip.totalEarning || 0)}
+                        icon="solar:wallet-bold-duotone"
+                        color="success.dark"
+                        bgColor="success.lighter"
+                      />
+                    </motion.div>
+                  </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
-                <motion.div variants={slideUpItem}>
-                  <DashboardCard
-                    title="Total Deduction"
-                    value={formatCurrency(10000)}
-                    icon="solar:bill-list-bold-duotone"
-                    color="error.dark"
-                    bgColor="error.lighter"
-                  />
-                </motion.div>
-              </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <motion.div variants={slideUpItem}>
+                      <DashboardCard
+                        title="Total Deduction"
+                        value={formatCurrency(salarySlip.totalDeduction || 0)}
+                        icon="solar:bill-list-bold-duotone"
+                        color="error.dark"
+                        bgColor="error.lighter"
+                      />
+                    </motion.div>
+                  </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
-                <motion.div variants={slideUpItem}>
-                  <DashboardCard
-                    title="Net Payable"
-                    value={formatCurrency(30000)}
-                    icon="solar:card-send-bold-duotone"
-                    color="info.dark"
-                    bgColor="info.lighter"
-                  />
-                </motion.div>
-              </Grid>
-            </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <motion.div variants={slideUpItem}>
+                      <DashboardCard
+                        title="Net Payable"
+                        value={formatCurrency(salarySlip.netSalary ?? salarySlip.netPay ?? 0)}
+                        icon="solar:card-send-bold-duotone"
+                        color="info.dark"
+                        bgColor="info.lighter"
+                      />
+                    </motion.div>
+                  </Grid>
+                </Grid>
 
-            {/* Tables Section */}
-            <Grid container spacing={1} alignItems="stretch">
-              <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
-                <motion.div
-                  variants={slideUpItem}
-                  style={{ display: 'flex', flexDirection: 'column', flex: 1 }}
-                >
-                  <Card sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <CardHeader
+                <Grid container spacing={1} alignItems="stretch">
+                  <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <PayrollLineTable
                       title="Earnings"
                       subheader="Breakdown of earnings"
-                      avatar={
-                        <Avatar
-                          sx={{
-                            bgcolor: 'success.lighter',
-                            color: 'success.main',
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          <Iconify icon="solar:hand-money-linear" width={20} />
-                        </Avatar>
-                      }
-                      sx={{ p: 2 }}
-                    />
-
-                    <CustomizableTable
-                      noDataText="No Data Found For Earning Section"
+                      icon="solar:hand-money-linear"
+                      iconColor={{ bgcolor: 'success.lighter', color: 'success.main' }}
+                      nameColumnLabel="Earning Type"
                       tableId="earning-section"
-                      isFilter={false}
-                      isSearch={false}
-                      columns={[
-                        { id: 'employeeType', label: 'Earning Type' },
-                        {
-                          id: 'amount',
-                          label: 'Amount',
-                          filterType: 'number',
-                          render(value) {
-                            return formatCurrency(value);
-                          },
-                        },
-                        {
-                          id: 'total',
-                          label: 'Total',
-                          filterType: 'number',
-                          render(value) {
-                            return formatCurrency(value);
-                          },
-                        },
-                      ]}
-                      data={[
-                        { employeeType: 'Teaching Allowance', amount: 5000, total: 5000 },
-                        { employeeType: 'Transport Allowance', amount: 2000, total: 2000 },
-                        { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
-                        { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
-                      ]}
-                      wrapperProps={{
-                        sx: { flex: 1, '& .MuiTable-root': { minWidth: 'auto' } },
-                      }}
+                      noDataText="No Data Found For Earning Section"
+                      data={earnings}
                     />
-                  </Card>
-                </motion.div>
-              </Grid>
+                  </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
-                <motion.div
-                  variants={slideUpItem}
-                  style={{ display: 'flex', flexDirection: 'column', flex: 1 }}
-                >
-                  <Card sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <CardHeader
+                  <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <PayrollLineTable
                       title="Deductions"
                       subheader="Breakdown of deductions"
-                      avatar={
-                        <Avatar
-                          sx={{
-                            bgcolor: 'error.lighter',
-                            color: 'error.main',
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          <Iconify icon="solar:minus-circle-linear" width={20} />
-                        </Avatar>
-                      }
-                      sx={{ p: 2 }}
-                    />
-                    <CustomizableTable
-                      noDataText="No Data Found For Deduction"
+                      icon="solar:minus-circle-linear"
+                      iconColor={{ bgcolor: 'error.lighter', color: 'error.main' }}
+                      nameColumnLabel="Deduction Type"
                       tableId="deduction-section"
-                      isSearch={false}
-                      wrapperProps={{ sx: { flex: 1 } }}
-                      columns={[
-                        { id: 'deductionType', label: 'Deduction Type' },
-                        {
-                          id: 'amount',
-                          label: 'Amount',
-                          filterType: 'number',
-                          render(value) {
-                            return formatCurrency(value);
-                          },
-                        },
-                        {
-                          id: 'totalDeduction',
-                          label: 'Total',
-                          filterType: 'number',
-                          render(value) {
-                            return formatCurrency(value);
-                          },
-                        },
-                      ]}
-                      data={[
-                        { deductionType: 'Income Tax', amount: 5000, totalDeduction: 5000 },
-                        { deductionType: 'Provident Fund', amount: 3000, totalDeduction: 3000 },
-                        { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
-                        { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
-                      ]}
+                      noDataText="No Data Found For Deduction"
+                      data={deductions}
                     />
-                  </Card>
-                </motion.div>
-              </Grid>
-            </Grid>
+                  </Grid>
+                </Grid>
+              </>
+            ) : (
+              <Alert severity="info">Select a month to view finalized payroll summary.</Alert>
+            )}
           </Box>
         </motion.div>
       </Scrollbar>
     </Box>
   );
 };
+
+const PayrollSummarySkeleton = () => (
+  <>
+    <Grid container spacing={1}>
+      {[1, 2, 3].map((item) => (
+        <Grid size={{ xs: 12, md: 4 }} key={item}>
+          <Card sx={{ p: 1 }}>
+            <Skeleton variant="text" width="45%" height={24} />
+            <Skeleton variant="text" width="65%" height={42} />
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+    <Grid container spacing={1}>
+      {[1, 2].map((item) => (
+        <Grid size={{ xs: 12, md: 6 }} key={item}>
+          <Card sx={{ p: 2 }}>
+            <Skeleton variant="text" width="40%" height={28} />
+            <Skeleton variant="rounded" width="100%" height={180} />
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  </>
+);
+
+const PayrollLineTable = ({
+  title,
+  subheader,
+  icon,
+  iconColor,
+  nameColumnLabel,
+  tableId,
+  noDataText,
+  data,
+}: any) => (
+  <motion.div variants={slideUpItem} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <Card sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        avatar={
+          <Avatar sx={{ ...iconColor, width: 32, height: 32 }}>
+            <Iconify icon={icon} width={20} />
+          </Avatar>
+        }
+        sx={{ p: 2 }}
+      />
+      <CustomizableTable
+        noDataText={noDataText}
+        tableId={tableId}
+        isFilter={false}
+        isSearch={false}
+        columns={[
+          { id: 'name', label: nameColumnLabel },
+          {
+            id: 'amount',
+            label: 'Amount',
+            filterType: 'number',
+            render(value) {
+              return formatCurrency(value || 0);
+            },
+          },
+        ]}
+        data={data}
+        wrapperProps={{ sx: { flex: 1, '& .MuiTable-root': { minWidth: 'auto' } } }}
+      />
+    </Card>
+  </motion.div>
+);
 
 export default PayrollSummary;

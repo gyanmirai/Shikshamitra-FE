@@ -23,6 +23,9 @@ export interface IPersonalInformationResponse {
   department: string;
   roleId: string;
   shiftId: string;
+  organizationIds: string[];
+  organizations?: { id: string; name: string }[];
+  organizationNames?: string[];
   address1: string;
   address2: string;
   address3: string;
@@ -36,6 +39,8 @@ export interface IPersonalInformationResponse {
   };
   city: string;
   pinCode: string;
+  profilePicture?: string | null;
+  thumbnailPicture?: string | null;
 }
 
 export interface IFamilyMemberDetails {

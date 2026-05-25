@@ -106,6 +106,37 @@ const segmentBtnBase = {
   transition: 'all 0.2s',
 };
 
+const DEVICE_INTEGRATION_MODES = [
+  {
+    title: 'Excel / CSV Import',
+    status: 'Available',
+    color: 'success' as LabelColor,
+    icon: 'mdi:file-excel-outline',
+    description: 'Use the standard import template to upload employee attendance punches.',
+  },
+  {
+    title: 'Biometric Device Sync',
+    status: 'Coming soon',
+    color: 'warning' as LabelColor,
+    icon: 'mdi:fingerprint',
+    description: 'Device-company connector will be added after vendor requirements are finalized.',
+  },
+  {
+    title: 'RFID / Device API Sync',
+    status: 'Coming soon',
+    color: 'warning' as LabelColor,
+    icon: 'mdi:card-account-details-outline',
+    description: 'API-based sync remains a placeholder until the device contract is known.',
+  },
+  {
+    title: 'Vendor-specific Connector',
+    status: 'Requirement pending',
+    color: 'default' as LabelColor,
+    icon: 'mdi:puzzle-outline',
+    description: 'No vendor fields are required now; this will be configured when selected.',
+  },
+];
+
 // ─── Preview table columns (defined outside component to be stable refs) ───────
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -605,12 +636,12 @@ const AttendanceImportHistoryScreen = () => {
       {/* Breadcrumbs */}
       {viewImportDialog.value ? (
         <CustomBreadcrumbs
-          heading=" Automated Marking"
-          description="Track uploaded biometric attendance files, review records, and manage imports."
+          heading="Device Integration"
+          description="Review imported attendance batches and keep device sync placeholders visible until vendor requirements are finalized."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
             { name: 'Attendance Management' },
-            { name: 'Automated Marking' },
+            { name: 'Device Integration' },
           ]}
           isBack
           onBack={() => {
@@ -620,12 +651,12 @@ const AttendanceImportHistoryScreen = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Automated Marking"
-          description="Track uploaded biometric attendance files, review records, and manage imports."
+          heading="Device Integration"
+          description="Excel import is available now. Biometric, RFID, and vendor-specific sync will be enabled after device requirements are confirmed."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard/' },
             { name: 'Attendance Management' },
-            { name: 'Automated Marking' },
+            { name: 'Device Integration' },
           ]}
         />
       )}
@@ -633,6 +664,40 @@ const AttendanceImportHistoryScreen = () => {
       {/* Toolbar: Month Picker + Tabs */}
       {!viewImportDialog.value ? (
         <>
+          <Grid container spacing={1.5} sx={{ mb: 1 }}>
+            {DEVICE_INTEGRATION_MODES.map((mode) => (
+              <Grid key={mode.title} size={{ xs: 12, sm: 6, lg: 3 }}>
+                <Card sx={{ height: '100%', p: 2 }}>
+                  <Stack spacing={1.25}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      spacing={1}
+                      alignItems="center"
+                    >
+                      <Box
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 1,
+                          display: 'grid',
+                          placeItems: 'center',
+                          bgcolor: 'background.neutral',
+                        }}
+                      >
+                        <Iconify icon={mode.icon} width={20} />
+                      </Box>
+                      <Label color={mode.color}>{mode.status}</Label>
+                    </Stack>
+                    <Typography variant="subtitle2">{mode.title}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {mode.description}
+                    </Typography>
+                  </Stack>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
           <Box
             display="flex"
             justifyContent="space-between"

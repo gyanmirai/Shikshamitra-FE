@@ -1,4 +1,6 @@
 // import { useTheme } from '@mui/material/styles';
+import type { FeeHeadSummary, FeeChargeDetail } from 'src/redux/feeCollection/feeCollection';
+
 import { motion } from 'framer-motion';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -22,47 +24,32 @@ import {
   TableContainer,
 } from '@mui/material';
 
-import feeCollectionData from '../../../../../../financeFeeCollection.json';
+interface ConsolidatedFeeDetailsProps {
+  feeHeads?: FeeHeadSummary[];
+  charges?: FeeChargeDetail[];
+}
 
-export const ConsolidatedFeeDetails = () => {
+export const ConsolidatedFeeDetails = ({
+  feeHeads = [],
+  charges = [],
+}: ConsolidatedFeeDetailsProps) => {
   const theme = useTheme();
 
-  // Aggregate Fee Heads
-  const consolidatedFeeHeads: Record<string, any> = {};
-  feeCollectionData?.terms.forEach((term: any) => {
-    term.feeHeads.forEach((head: any) => {
-      const key = `${head.name}-${head.category}`;
-      if (!consolidatedFeeHeads[key]) {
-        consolidatedFeeHeads[key] = {
-          ...head,
-          paid: 0,
-          total: 0,
-        };
-      }
-      consolidatedFeeHeads[key].paid += head.paid;
-      consolidatedFeeHeads[key].total += head.total;
-    });
-  });
+  const feeHeadList = feeHeads.map((h) => ({
+    name: h.feeHeadName,
+    total: h.amount,
+    paid: h.paidAmount,
+    pending: h.pendingAmount ?? h.amount - h.paidAmount,
+    status: h.status,
+  }));
 
-  // Aggregate Additional Charges
-  const consolidatedCharges: Record<string, any> = {};
-  feeCollectionData?.terms.forEach((term: any) => {
-    term.charges?.forEach((charge: any) => {
-      const key = `${charge.name}-${charge.category}`;
-      if (!consolidatedCharges[key]) {
-        consolidatedCharges[key] = {
-          ...charge,
-          paid: 0,
-          total: 0,
-        };
-      }
-      consolidatedCharges[key].paid += charge.paid;
-      consolidatedCharges[key].total += charge.total;
-    });
-  });
-
-  const feeHeadList = Object.values(consolidatedFeeHeads);
-  const chargeList = Object.values(consolidatedCharges);
+  const chargeList = charges.map((c) => ({
+    name: c.name,
+    total: c.amount,
+    paid: c.paidAmount,
+    pending: c.pendingAmount,
+    status: c.status,
+  }));
 
   const getStatus = (paid: number, total: number) => {
     if (paid >= total) return FeeCollectionStatusType.Paid;
@@ -135,9 +122,6 @@ export const ConsolidatedFeeDetails = () => {
                       <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
                         Fee Head
                       </TableCell>
-                      <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        Category
-                      </TableCell>
                       <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                         Total
                       </TableCell>
@@ -154,7 +138,7 @@ export const ConsolidatedFeeDetails = () => {
                   </TableHead>
 
                   <TableBody>
-                    {feeHeadList.map((head: any, index: number) => {
+                    {feeHeadList.map((head, index) => {
                       const status = getStatus(head.paid, head.total);
                       return (
                         <TableRow
@@ -163,7 +147,6 @@ export const ConsolidatedFeeDetails = () => {
                           sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         >
                           <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
-                          <TableCell sx={{ color: 'text.secondary' }}>{head.category}</TableCell>
                           <TableCell align="right" sx={{ fontWeight: 600 }}>
                             ₹ {formatNumber(head.total)}
                           </TableCell>
@@ -171,7 +154,7 @@ export const ConsolidatedFeeDetails = () => {
                             ₹ {formatNumber(head.paid)}
                           </TableCell>
                           <TableCell align="right" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                            ₹ {formatNumber(head.total - head.paid)}
+                            ₹ {formatNumber(head.pending)}
                           </TableCell>
                           <TableCell align="center">
                             <Label
@@ -215,9 +198,6 @@ export const ConsolidatedFeeDetails = () => {
                         <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
                           Charge Name
                         </TableCell>
-                        <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                          Category
-                        </TableCell>
                         <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                           Total
                         </TableCell>
@@ -234,7 +214,7 @@ export const ConsolidatedFeeDetails = () => {
                     </TableHead>
 
                     <TableBody>
-                      {chargeList.map((charge: any, index: number) => {
+                      {chargeList.map((charge, index) => {
                         const status = getStatus(charge.paid, charge.total);
                         return (
                           <TableRow
@@ -243,9 +223,6 @@ export const ConsolidatedFeeDetails = () => {
                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                           >
                             <TableCell sx={{ fontWeight: 500 }}>{charge.name}</TableCell>
-                            <TableCell sx={{ color: 'text.secondary' }}>
-                              {charge.category}
-                            </TableCell>
                             <TableCell align="right" sx={{ fontWeight: 600 }}>
                               ₹ {formatNumber(charge.total)}
                             </TableCell>
@@ -259,7 +236,7 @@ export const ConsolidatedFeeDetails = () => {
                               align="right"
                               sx={{ color: 'warning.dark', fontWeight: 600 }}
                             >
-                              ₹ {formatNumber(charge.total - charge.paid)}
+                              ₹ {formatNumber(charge.pending)}
                             </TableCell>
                             <TableCell align="center">
                               <Label

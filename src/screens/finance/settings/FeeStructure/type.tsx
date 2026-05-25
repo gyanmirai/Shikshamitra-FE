@@ -10,6 +10,7 @@ export interface IClassWiseFeeItem {
   amount: number;
   isOneTime: boolean;
   paybleMonth?: FeeMonth; // for monthly fee heads
+  payableYear?: number;
   isOptional: boolean;
   isRefundable?: boolean;
   paymentTermId?: string;

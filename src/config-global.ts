@@ -45,7 +45,7 @@ export const CONFIG: ConfigValue = {
     basePath: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
     version: packageJson.version,
   },
-  isStaticExport: JSON.parse(`${process.env.BUILD_STATIC_EXPORT}`),
+  isStaticExport: process.env.BUILD_STATIC_EXPORT === 'true',
   /**
    * Auth
    * @method jwt | amplify | firebase | supabase | auth0

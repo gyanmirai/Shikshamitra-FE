@@ -3,60 +3,431 @@ import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { memo, useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import { Box, Chip, Stack, Button, Divider, Tooltip, TextField, Typography } from '@mui/material';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
+import {
+  Box,
+  Chip,
+  Stack,
+  Paper,
+  Table,
+  Button,
+  Divider,
+  Tooltip,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  TextField,
+  Typography,
+  ToggleButton,
+  TableContainer,
+  ToggleButtonGroup,
+} from '@mui/material';
 
 import type { IExamFormValues } from '../type';
 
 // ---------------------------------------------------------------------------
-// ApplyToAllBar — bulk-fill helper toolbar for schedule rows
+// Helpers
 // ---------------------------------------------------------------------------
-interface ApplyToAllBarProps {
-  formik: any;
+
+function DurationCell({ startTime, endTime }: { startTime: any; endTime: any }) {
+  if (!startTime || !endTime) {
+    return (
+      <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+        &mdash;
+      </Typography>
+    );
+  }
+  const diffMins = dayjs(endTime).diff(dayjs(startTime), 'minute');
+  if (diffMins <= 0) {
+    return (
+      <Chip
+        label="Invalid"
+        size="small"
+        color="error"
+        variant="soft"
+        sx={{ fontSize: '0.68rem', height: 20 }}
+      />
+    );
+  }
+  const hrs = Math.floor(diffMins / 60);
+  const mins = diffMins % 60;
+  const label = hrs > 0 ? `${hrs}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`;
+  return (
+    <Chip
+      label={label}
+      size="small"
+      color="info"
+      variant="soft"
+      sx={{ fontSize: '0.68rem', height: 22, fontWeight: 600 }}
+    />
+  );
 }
 
-const ApplyToAllBar = ({ formik }: ApplyToAllBarProps) => {
+const HELPER_TEXT_PROPS = {
+  sx: { margin: 0, position: 'static' as const, whiteSpace: 'normal' as const },
+};
+const LABEL_PROPS = { sx: { lineHeight: '1.2em' } };
+
+// ---------------------------------------------------------------------------
+// ScheduleTableHead
+// ---------------------------------------------------------------------------
+const COLUMNS = [
+  { label: 'Subject', minWidth: 200, sticky: true },
+  { label: 'Date', minWidth: 155 },
+  { label: 'Start Time', minWidth: 155 },
+  { label: 'End Time', minWidth: 155 },
+  { label: 'Duration', minWidth: 90 },
+  { label: 'Grade Scale', minWidth: 180 },
+  { label: 'Total Marks', minWidth: 155 },
+  { label: 'Passing Marks', minWidth: 165 },
+  { label: 'Notes', minWidth: 200 },
+];
+
+const ScheduleTableHead = memo(() => (
+  <TableHead>
+    <TableRow>
+      {COLUMNS.map((col) => (
+        <TableCell
+          key={col.label}
+          sx={{
+            minWidth: col.minWidth,
+            fontWeight: 700,
+            fontSize: '0.68rem',
+            letterSpacing: '0.06em',
+            color: 'text.secondary',
+            textTransform: 'uppercase',
+            py: 1,
+            px: 1.5,
+            bgcolor: (theme: any) => varAlpha(theme.vars.palette.grey['500Channel'], 0.06),
+            borderBottom: '2px solid',
+            borderColor: 'divider',
+            ...(col.sticky
+              ? {
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 3,
+                }
+              : {}),
+          }}
+        >
+          {col.label}
+        </TableCell>
+      ))}
+    </TableRow>
+  </TableHead>
+));
+ScheduleTableHead.displayName = 'ScheduleTableHead';
+
+// ---------------------------------------------------------------------------
+// SubjectScheduleRow
+// ---------------------------------------------------------------------------
+interface SubjectRowValues {
+  subjectColor?: string;
+  subjectName?: string;
+  subjectCode?: string;
+  examDate?: any;
+  startTime?: any;
+  endTime?: any;
+  gradeScalingId?: string | null;
+  totalMarks?: any;
+  passingMarks?: any;
+  notes?: string;
+}
+
+interface SubjectScheduleRowProps {
+  values: SubjectRowValues;
+  errors?: Record<string, string>;
+  touched?: Record<string, boolean>;
+  onFieldChange: (field: string, value: any) => void;
+  onFieldBlur: (field: string) => void;
+  gradeScalings: any[];
+  isGradeScalingsLoading: boolean;
+  currentYear: any;
+  isReadOnly?: boolean;
+}
+
+const SubjectScheduleRow = memo(
+  ({
+    values,
+    errors = {},
+    touched = {},
+    onFieldChange,
+    onFieldBlur,
+    gradeScalings,
+    isGradeScalingsLoading,
+    currentYear,
+    isReadOnly = false,
+  }: SubjectScheduleRowProps) => (
+    <TableRow
+      sx={{
+        '&:hover': {
+          bgcolor: (theme: any) => varAlpha(theme.vars.palette.grey['500Channel'], 0.03),
+        },
+        '&:last-child td': { borderBottom: 0 },
+        opacity: isReadOnly ? 0.55 : 1,
+        ...(isReadOnly ? { pointerEvents: 'none', userSelect: 'none' } : {}),
+      }}
+    >
+      {/* Subject */}
+      <TableCell
+        sx={{
+          position: 'sticky',
+          left: 0,
+          zIndex: 1,
+          bgcolor: 'background.paper',
+          minWidth: 200,
+          py: 1.25,
+          px: 1.5,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              width: 5,
+              height: 24,
+              borderRadius: '3px',
+              flexShrink: 0,
+              bgcolor: values.subjectColor || '#9E9E9E',
+            }}
+          />
+          <Box>
+            <Typography variant="caption" fontWeight={600} display="block" lineHeight={1.4}>
+              {values.subjectName}
+            </Typography>
+            {values.subjectCode && (
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                {values.subjectCode}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </TableCell>
+
+      {/* Date */}
+      <TableCell sx={{ minWidth: 155, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <ShakingTextField error={!!(touched.examDate && errors.examDate)}>
+          <DatePicker
+            value={values.examDate || null}
+            format="DD/MM/YYYY"
+            label="Date *"
+            onChange={(v) => {
+              onFieldChange('examDate', v);
+              onFieldBlur('examDate');
+            }}
+            minDate={dayjs()}
+            maxDate={dayjs(currentYear?.endDate)}
+            slotProps={{
+              textField: {
+                size: 'small',
+                sx: { width: 145 },
+                error: !!(touched.examDate && errors.examDate),
+                helperText: touched.examDate && errors.examDate ? errors.examDate : ' ',
+                FormHelperTextProps: HELPER_TEXT_PROPS,
+                InputLabelProps: LABEL_PROPS,
+              },
+            }}
+          />
+        </ShakingTextField>
+      </TableCell>
+
+      {/* Start Time */}
+      <TableCell sx={{ minWidth: 155, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <ShakingTextField error={!!(touched.startTime && errors.startTime)}>
+          <TimePicker
+            value={values.startTime || null}
+            format="hh:mm a"
+            label="Start Time *"
+            onChange={(v) => {
+              onFieldChange('startTime', v);
+              onFieldBlur('startTime');
+            }}
+            viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+            slotProps={{
+              textField: {
+                size: 'small',
+                sx: { width: 140 },
+                error: !!(touched.startTime && errors.startTime),
+                helperText: touched.startTime && errors.startTime ? errors.startTime : ' ',
+                FormHelperTextProps: HELPER_TEXT_PROPS,
+                InputLabelProps: { sx: { lineHeight: '1.2em', width: '80%' } },
+              },
+            }}
+          />
+        </ShakingTextField>
+      </TableCell>
+
+      {/* End Time */}
+      <TableCell sx={{ minWidth: 155, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <ShakingTextField error={!!(touched.endTime && errors.endTime)}>
+          <TimePicker
+            value={values.endTime || null}
+            format="hh:mm a"
+            label="End Time *"
+            onChange={(v) => {
+              onFieldChange('endTime', v);
+              onFieldBlur('endTime');
+            }}
+            viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
+            slotProps={{
+              textField: {
+                size: 'small',
+                sx: { width: 140 },
+                error: !!(touched.endTime && errors.endTime),
+                helperText: touched.endTime && errors.endTime ? errors.endTime : ' ',
+                FormHelperTextProps: HELPER_TEXT_PROPS,
+                InputLabelProps: LABEL_PROPS,
+              },
+            }}
+          />
+        </ShakingTextField>
+      </TableCell>
+
+      {/* Duration */}
+      <TableCell sx={{ minWidth: 90, py: 1, px: 1.5 }}>
+        <DurationCell startTime={values.startTime} endTime={values.endTime} />
+      </TableCell>
+
+      {/* Grade Scale */}
+      <TableCell sx={{ minWidth: 180, py: 1, px: 1.5 }}>
+        <Box sx={{ pb: '20px' }}>
+          <CustomSelect
+            label="Scale"
+            options={gradeScalings}
+            value={values.gradeScalingId ?? ''}
+            labelKey="name"
+            valueKey="id"
+            isLoading={isGradeScalingsLoading}
+            formControlProps={{ sx: { width: 165 } }}
+            onChange={(selectedId) => {
+              onFieldChange('gradeScalingId', selectedId || null);
+              const selected = gradeScalings.find((s: any) => s.id === selectedId);
+              if (selected?.totalMarks !== undefined) {
+                onFieldChange('totalMarks', selected.totalMarks ?? '');
+              }
+            }}
+          />
+        </Box>
+      </TableCell>
+
+      {/* Total Marks */}
+      <TableCell sx={{ minWidth: 155, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <ShakingTextField error={!!(touched.totalMarks && errors.totalMarks)}>
+          <TextField
+            value={values.totalMarks ?? ''}
+            type="number"
+            label="Total Marks *"
+            size="small"
+            onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+            onChange={(e) => {
+              onFieldChange('totalMarks', e.target.value);
+              onFieldBlur('totalMarks');
+            }}
+            error={!!(touched.totalMarks && errors.totalMarks)}
+            helperText={touched.totalMarks && errors.totalMarks ? errors.totalMarks : ' '}
+            FormHelperTextProps={HELPER_TEXT_PROPS}
+            InputLabelProps={LABEL_PROPS}
+          />
+        </ShakingTextField>
+      </TableCell>
+
+      {/* Passing Marks */}
+      <TableCell sx={{ minWidth: 165, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        {(() => {
+          const totalVal = Number(values.totalMarks);
+          const passingVal = Number(values.passingMarks);
+          const exceedsTotal =
+            !Number.isNaN(totalVal) &&
+            !Number.isNaN(passingVal) &&
+            totalVal > 0 &&
+            passingVal > totalVal;
+          const hasError = !!(touched.passingMarks && errors.passingMarks) || exceedsTotal;
+          return (
+            <ShakingTextField error={hasError}>
+              <TextField
+                value={values.passingMarks ?? ''}
+                type="number"
+                label="Passing Marks *"
+                size="small"
+                onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
+                onChange={(e) => {
+                  onFieldChange('passingMarks', e.target.value);
+                  onFieldBlur('passingMarks');
+                }}
+                error={hasError}
+                helperText={
+                  exceedsTotal
+                    ? 'Exceeds total marks'
+                    : touched.passingMarks && errors.passingMarks
+                      ? errors.passingMarks
+                      : ' '
+                }
+                FormHelperTextProps={HELPER_TEXT_PROPS}
+                InputLabelProps={LABEL_PROPS}
+              />
+            </ShakingTextField>
+          );
+        })()}
+      </TableCell>
+
+      {/* Notes */}
+      <TableCell sx={{ minWidth: 200, py: 1, px: 1.5, verticalAlign: 'top' }}>
+        <TextField
+          value={values.notes ?? ''}
+          multiline
+          rows={1}
+          label="Notes"
+          size="small"
+          onChange={(e) => onFieldChange('notes', e.target.value)}
+          helperText=" "
+          FormHelperTextProps={HELPER_TEXT_PROPS}
+          InputLabelProps={LABEL_PROPS}
+        />
+      </TableCell>
+    </TableRow>
+  )
+);
+SubjectScheduleRow.displayName = 'SubjectScheduleRow';
+
+// ---------------------------------------------------------------------------
+// ApplyToAllBar
+// ---------------------------------------------------------------------------
+interface ApplyToAllValues {
+  startTime?: any;
+  endTime?: any;
+  totalMarks?: string;
+  passingMarks?: string;
+}
+
+interface ApplyToAllBarProps {
+  onApply: (values: ApplyToAllValues) => void;
+}
+
+const ApplyToAllBar = memo(({ onApply }: ApplyToAllBarProps) => {
   const [bulkStartTime, setBulkStartTime] = useState<any>(null);
   const [bulkEndTime, setBulkEndTime] = useState<any>(null);
-  const [bulkTotalMarks, setBulkTotalMarks] = useState<string>('');
-  const [bulkPassingMarks, setBulkPassingMarks] = useState<string>('');
-
-  if (!formik.values.subjects?.length) return null;
+  const [bulkTotalMarks, setBulkTotalMarks] = useState('');
+  const [bulkPassingMarks, setBulkPassingMarks] = useState('');
 
   const hasAnyValue = !!(bulkStartTime || bulkEndTime || bulkTotalMarks || bulkPassingMarks);
 
-  const handleApplyAll = () => {
-    // Collect all filled bulk values into a single update object.
-    // This prevents the stale-closure bug where multiple sequential
-    // setFieldValue('subjects', ...) calls each read the same snapshot
-    // and overwrite one another — causing only the last field to apply.
-    const updates: Record<string, any> = {};
-
+  const handleApply = () => {
+    const updates: ApplyToAllValues = {};
     if (bulkStartTime !== null) updates.startTime = bulkStartTime;
     if (bulkEndTime !== null) updates.endTime = bulkEndTime;
-
-    // Explicit totalMarks
     if (bulkTotalMarks !== '') updates.totalMarks = bulkTotalMarks;
     if (bulkPassingMarks !== '') updates.passingMarks = bulkPassingMarks;
-
-    if (Object.keys(updates).length === 0) return;
-
-    // Single atomic update — setValues with shouldValidate=true forces immediate
-    // re-validation so errors for fields that now have valid values are cleared,
-    // preventing stale error messages after bulk apply.
-    const updated = formik.values.subjects.map((sub: any) => ({ ...sub, ...updates }));
-    formik.setValues({ ...formik.values, subjects: updated }, true);
-
-    // Reset all bulk inputs after applying
+    if (!Object.keys(updates).length) return;
+    onApply(updates);
     setBulkStartTime(null);
     setBulkEndTime(null);
     setBulkTotalMarks('');
@@ -68,88 +439,72 @@ const ApplyToAllBar = ({ formik }: ApplyToAllBarProps) => {
       direction="row"
       alignItems="center"
       flexWrap="wrap"
+      gap={1}
       sx={{
         px: 2,
         py: 1.25,
-        mb: 1.5,
-        gap: 1,
         borderRadius: 1.5,
         border: '1px dashed',
         borderColor: 'divider',
-        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+        bgcolor: (theme: any) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
       }}
     >
-      {/* Section label */}
-      <Box sx={{ pr: 1, flexShrink: 0 }}>
-        <Typography
-          variant="caption"
-          fontWeight={700}
-          color="text.secondary"
-          sx={{ whiteSpace: 'nowrap', letterSpacing: '0.01em' }}
-        >
-          Apply to all rows
-        </Typography>
-      </Box>
-
+      <Typography
+        variant="caption"
+        fontWeight={700}
+        color="text.secondary"
+        sx={{ whiteSpace: 'nowrap', letterSpacing: '0.01em', pr: 0.5, flexShrink: 0 }}
+      >
+        Apply to all
+      </Typography>
       <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
-
-      {/* Bulk Start Time */}
       <TimePicker
         value={bulkStartTime}
         label="Start Time"
         format="hh:mm a"
-        onChange={(t) => setBulkStartTime(t)}
+        onChange={setBulkStartTime}
         viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
         slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
       />
-
-      {/* Bulk End Time */}
       <TimePicker
         value={bulkEndTime}
         label="End Time"
         format="hh:mm a"
-        onChange={(t) => setBulkEndTime(t)}
+        onChange={setBulkEndTime}
         viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
         slotProps={{ textField: { size: 'small', sx: { width: 150 } } }}
       />
-
       <Divider orientation="vertical" flexItem sx={{ height: 28, my: 'auto' }} />
-
-      {/* Bulk Total Marks */}
       <TextField
         value={bulkTotalMarks}
-        label="Total Marks"
+        label="Total marks"
         type="number"
         size="small"
-        sx={{ width: 115 }}
+        sx={{ width: 120 }}
         inputProps={{ min: 0 }}
         onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
         onChange={(e) => setBulkTotalMarks(e.target.value)}
       />
-
-      {/* Bulk Passing Marks */}
       <TextField
         value={bulkPassingMarks}
-        label="Passing Marks"
+        label="Passing marks"
         type="number"
         size="small"
-        sx={{ width: 115 }}
+        sx={{ width: 130 }}
         inputProps={{ min: 0 }}
         onKeyDown={(e) => ['e', 'E', '+', '-', '.'].includes(e.key) && e.preventDefault()}
         onChange={(e) => setBulkPassingMarks(e.target.value)}
       />
-
-      {/* Single Apply button */}
       <Box sx={{ ml: 'auto', flexShrink: 0 }}>
         <Tooltip title="Apply filled values to all subjects" arrow>
           <span>
             <Button
               size="small"
-              variant="soft"
-              color="primary"
+              variant="contained"
+              color="success"
               disabled={!hasAnyValue}
-              onClick={handleApplyAll}
-              sx={{ minWidth: 72, fontWeight: 600, fontSize: '0.72rem' }}
+              onClick={handleApply}
+              sx={{ minWidth: 72, fontWeight: 700, fontSize: '0.72rem', borderRadius: 1 }}
             >
               Apply
             </Button>
@@ -158,10 +513,389 @@ const ApplyToAllBar = ({ formik }: ApplyToAllBarProps) => {
       </Box>
     </Stack>
   );
+});
+ApplyToAllBar.displayName = 'ApplyToAllBar';
+
+// ---------------------------------------------------------------------------
+// SectionHeader
+// ---------------------------------------------------------------------------
+interface SectionHeaderProps {
+  icon: string;
+  accent: 'primary' | 'warning';
+  title: string;
+  chips: Array<{ label: string; color: 'primary' | 'warning' | 'default' | 'info' }>;
+}
+
+const SectionHeader = memo(({ icon, accent, title, chips }: SectionHeaderProps) => (
+  <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+    <Box
+      sx={{
+        width: 36,
+        height: 36,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 1.5,
+        flexShrink: 0,
+        bgcolor: (theme: any) =>
+          accent === 'primary'
+            ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
+            : varAlpha(theme.vars.palette.warning.mainChannel, 0.14),
+        color: accent === 'primary' ? 'primary.main' : 'warning.main',
+      }}
+    >
+      <Iconify icon={icon} width={20} />
+    </Box>
+    <Typography variant="subtitle1" fontWeight={700}>
+      {title}
+    </Typography>
+    {chips.map((chip) => (
+      <Chip
+        key={chip.label}
+        label={chip.label}
+        size="small"
+        color={chip.color}
+        variant="soft"
+        sx={{ fontSize: '0.72rem', height: 22, fontWeight: 600 }}
+      />
+    ))}
+  </Stack>
+));
+SectionHeader.displayName = 'SectionHeader';
+
+// ---------------------------------------------------------------------------
+// Separate-mode inline validator — mirrors validationSchema Step 1 rules
+// ---------------------------------------------------------------------------
+function validateSepSubject(sub: any): Record<string, string> {
+  const errs: Record<string, string> = {};
+
+  if (!sub?.examDate || !dayjs(sub.examDate).isValid()) {
+    errs.examDate = 'Exam date is required';
+  } else if (!dayjs(sub.examDate).isSameOrAfter(dayjs().startOf('day'))) {
+    errs.examDate = 'Exam date cannot be in the past';
+  }
+
+  if (!sub?.startTime || !dayjs(sub.startTime).isValid()) {
+    errs.startTime = 'Start time is required';
+  }
+
+  if (!sub?.endTime || !dayjs(sub.endTime).isValid()) {
+    errs.endTime = 'End time is required';
+  } else if (sub?.startTime && dayjs(sub.startTime).isValid()) {
+    if (!dayjs(sub.endTime).isAfter(dayjs(sub.startTime))) {
+      errs.endTime = 'End time must be after start time';
+    } else if (dayjs(sub.endTime).diff(dayjs(sub.startTime), 'minute') < 30) {
+      errs.endTime = 'Exam duration must be at least 30 minutes';
+    }
+  }
+
+  const totalN = Number(sub?.totalMarks);
+  if (sub?.totalMarks === '' || sub?.totalMarks === null || sub?.totalMarks === undefined) {
+    errs.totalMarks = 'Total Marks is required';
+  } else if (Number.isNaN(totalN) || totalN < 1) {
+    errs.totalMarks = 'Total marks must be at least 1';
+  } else if (totalN > 1000) {
+    errs.totalMarks = 'Total marks cannot exceed 1000';
+  } else if (!Number.isInteger(totalN)) {
+    errs.totalMarks = 'Total marks must be a whole number';
+  }
+
+  const passingN = Number(sub?.passingMarks);
+  if (sub?.passingMarks === '' || sub?.passingMarks === null || sub?.passingMarks === undefined) {
+    errs.passingMarks = 'Passing Marks is required';
+  } else if (Number.isNaN(passingN) || passingN < 1) {
+    errs.passingMarks = 'Passing marks must be at least 1';
+  } else if (!Number.isNaN(totalN) && totalN > 0 && passingN > totalN) {
+    errs.passingMarks = 'Passing marks cannot exceed total marks';
+  }
+
+  return errs;
+}
+
+const ALL_FIELDS_TOUCHED: Record<string, boolean> = {
+  examDate: true,
+  startTime: true,
+  endTime: true,
+  totalMarks: true,
+  passingMarks: true,
 };
 
+// ---------------------------------------------------------------------------
+// ElectiveGroupCard
+// ---------------------------------------------------------------------------
+interface ElectiveGroupCardProps {
+  formik: any;
+  groupIndex: number;
+  gradeScalings: any[];
+  isGradeScalingsLoading: boolean;
+  currentYear: any;
+}
+
+const ElectiveGroupCard = memo(
+  ({
+    formik,
+    groupIndex,
+    gradeScalings,
+    isGradeScalingsLoading,
+    currentYear,
+  }: ElectiveGroupCardProps) => {
+    const group = formik.values.subjects[groupIndex];
+    const groupName: string = group?.subjectName || group?.electiveGroupName || 'Elective Group';
+    const individualSubjects: any[] = group?.subjects || [];
+    const mode: 'combined' | 'separate' = group?.schedulingMode ?? 'combined';
+
+    const handleModeChange = useCallback(
+      (_: any, newMode: string | null) => {
+        if (!newMode) return;
+        formik.setFieldValue(`subjects.${groupIndex}.schedulingMode`, newMode);
+      },
+      [formik, groupIndex]
+    );
+
+    const handleGroupFieldChange = useCallback(
+      (field: string, value: any) => {
+        formik.setFieldValue(`subjects.${groupIndex}.${field}`, value);
+      },
+      [formik, groupIndex]
+    );
+    const handleGroupFieldBlur = useCallback(
+      (field: string) => {
+        formik.setFieldTouched(`subjects.${groupIndex}.${field}`, false, false);
+      },
+      [formik, groupIndex]
+    );
+
+    const handleSubjectFieldChange = useCallback(
+      (subjectIdx: number, field: string, value: any) => {
+        formik.setFieldValue(`subjects.${groupIndex}.subjects.${subjectIdx}.${field}`, value);
+      },
+      [formik, groupIndex]
+    );
+
+    // Separate mode: local touched state per subject per field
+    const [sepTouched, setSepTouched] = useState<Record<number, Record<string, boolean>>>({});
+
+    const handleSepFieldBlur = useCallback((subjectIdx: number, field: string) => {
+      setSepTouched((prev) => ({
+        ...prev,
+        [subjectIdx]: { ...(prev[subjectIdx] || {}), [field]: true },
+      }));
+    }, []);
+
+    // When Formik has attempted validation and found errors, reveal all field errors
+    const showAllSepErrors = Boolean(formik.errors?.subjects);
+
+    const groupErrors =
+      typeof formik.errors.subjects?.[groupIndex] === 'object'
+        ? (formik.errors.subjects[groupIndex] as any)
+        : {};
+    const groupTouched = formik.touched.subjects?.[groupIndex] ?? {};
+
+    return (
+      <Paper
+        variant="outlined"
+        sx={{
+          mb: 2,
+          overflow: 'hidden',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        {/* Group header */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+          sx={{
+            px: 2,
+            py: 1.25,
+            bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.07),
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              bgcolor: 'warning.main',
+              flexShrink: 0,
+            }}
+          />
+          <Typography variant="subtitle2" fontWeight={700}>
+            {groupName}
+          </Typography>
+          <Chip
+            label={`${individualSubjects.length} subject${individualSubjects.length !== 1 ? 's' : ''}`}
+            size="small"
+            color="warning"
+            variant="soft"
+            sx={{ fontSize: '0.7rem', height: 20, fontWeight: 600 }}
+          />
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={600}
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              Scheduling mode
+            </Typography>
+            <ToggleButtonGroup
+              value={mode}
+              exclusive
+              size="small"
+              onChange={handleModeChange}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 1.5,
+                  py: 0.35,
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  lineHeight: 1.5,
+                  '&.Mui-selected': {
+                    bgcolor: 'warning.main',
+                    color: 'warning.contrastText',
+                    borderColor: 'warning.main',
+                    '&:hover': { bgcolor: 'warning.dark' },
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="combined">Combined</ToggleButton>
+              <ToggleButton value="separate">Separate</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        </Stack>
+
+        {/* Mode helper text */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          gap={0.75}
+          sx={{
+            px: 2,
+            py: 0.75,
+            bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.04),
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Iconify icon="eva:info-fill" width={14} sx={{ color: 'warning.main', flexShrink: 0 }} />
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
+            {mode === 'combined'
+              ? 'All subjects in this group share the same exam schedule.'
+              : 'Each subject in this group has its own independent schedule.'}
+          </Typography>
+        </Stack>
+
+        {/* Schedule table */}
+        <TableContainer>
+          <Table size="small" sx={{ tableLayout: 'auto' }}>
+            <ScheduleTableHead />
+            <TableBody>
+              {mode === 'combined' ? (
+                <>
+                  <SubjectScheduleRow
+                    key={`combined-group-${groupIndex}`}
+                    values={{
+                      subjectColor: '#F59E0B',
+                      subjectName: groupName,
+                      subjectCode:
+                        individualSubjects.length > 0
+                          ? `${individualSubjects.length} subjects`
+                          : undefined,
+                      examDate: group.examDate,
+                      startTime: group.startTime,
+                      endTime: group.endTime,
+                      gradeScalingId: group.gradeScalingId,
+                      totalMarks: group.totalMarks,
+                      passingMarks: group.passingMarks,
+                      notes: group.notes,
+                    }}
+                    errors={groupErrors}
+                    touched={groupTouched}
+                    onFieldChange={handleGroupFieldChange}
+                    onFieldBlur={handleGroupFieldBlur}
+                    gradeScalings={gradeScalings}
+                    isGradeScalingsLoading={isGradeScalingsLoading}
+                    currentYear={currentYear}
+                  />
+                  {individualSubjects.map((sub: any, j: number) => (
+                    <SubjectScheduleRow
+                      key={`combined-sub-${groupIndex}-${j}`}
+                      values={{
+                        subjectColor: sub.subjectColor || sub.color || '#9E9E9E',
+                        subjectName: sub.subjectName || sub.name || '',
+                        subjectCode: sub.subjectCode || sub.code,
+                        examDate: group.examDate,
+                        startTime: group.startTime,
+                        endTime: group.endTime,
+                        gradeScalingId: group.gradeScalingId,
+                        totalMarks: group.totalMarks,
+                        passingMarks: group.passingMarks,
+                        notes: group.notes,
+                      }}
+                      onFieldChange={() => {}}
+                      onFieldBlur={() => {}}
+                      gradeScalings={gradeScalings}
+                      isGradeScalingsLoading={isGradeScalingsLoading}
+                      currentYear={currentYear}
+                      isReadOnly
+                    />
+                  ))}
+                </>
+              ) : (
+                individualSubjects.map((sub: any, j: number) => {
+                  const subSchedule = group.subjects?.[j] || sub;
+                  const subErrors = validateSepSubject(subSchedule);
+                  const subTouched = showAllSepErrors ? ALL_FIELDS_TOUCHED : (sepTouched[j] ?? {});
+                  return (
+                    <SubjectScheduleRow
+                      key={`sep-${groupIndex}-${j}-${sub.subjectId || j}`}
+                      values={{
+                        subjectColor: sub.subjectColor || sub.color || '#9E9E9E',
+                        subjectName: sub.subjectName || sub.name || '',
+                        subjectCode: sub.subjectCode || sub.code,
+                        examDate: subSchedule.examDate || null,
+                        startTime: subSchedule.startTime || null,
+                        endTime: subSchedule.endTime || null,
+                        gradeScalingId: subSchedule.gradeScalingId ?? null,
+                        totalMarks: subSchedule.totalMarks ?? '',
+                        passingMarks: subSchedule.passingMarks ?? '',
+                        notes: subSchedule.notes ?? '',
+                      }}
+                      errors={subErrors}
+                      touched={subTouched}
+                      onFieldChange={(field, value) => handleSubjectFieldChange(j, field, value)}
+                      onFieldBlur={(field) => handleSepFieldBlur(j, field)}
+                      gradeScalings={gradeScalings}
+                      isGradeScalingsLoading={isGradeScalingsLoading}
+                      currentYear={currentYear}
+                    />
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    );
+  }
+);
+ElectiveGroupCard.displayName = 'ElectiveGroupCard';
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 const ExamDetails = (props: FormikProps<IExamFormValues>) => {
-  // Formik instance for form handling and validation
   const formik: any = props;
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
 
@@ -169,10 +903,56 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
     type: 'query',
     currentQueryAndMutation: useGetGradeScalingsQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: {
-      skip: !(currentMedium as Medium)?.id,
-    },
+    options: { skip: !(currentMedium as Medium)?.id },
   });
+
+  const gradeScalingsList: any[] = gradeScalings?.data ?? [];
+
+  const { coreSubjects, electiveGroups } = useMemo(() => {
+    const core: Array<{ subject: any; index: number }> = [];
+    const elective: Array<{ subject: any; index: number }> = [];
+    formik.values.subjects.forEach((sub: any, index: number) => {
+      if (sub.electiveGroupId) {
+        elective.push({ subject: sub, index });
+      } else {
+        core.push({ subject: sub, index });
+      }
+    });
+    return { coreSubjects: core, electiveGroups: elective };
+  }, [formik.values.subjects]);
+
+  const totalElectiveSubjects = useMemo(
+    () => electiveGroups.reduce((acc, { subject }) => acc + (subject.subjects?.length ?? 0), 0),
+    [electiveGroups]
+  );
+
+  const handleApplyAllCore = useCallback(
+    (values: ApplyToAllValues) => {
+      if (!Object.keys(values).length) return;
+      const updated = formik.values.subjects.map((sub: any) =>
+        sub.electiveGroupId ? sub : { ...sub, ...values }
+      );
+      formik.setValues({ ...formik.values, subjects: updated }, true);
+    },
+    [formik]
+  );
+
+  const handleApplyAllElective = useCallback(
+    (values: ApplyToAllValues) => {
+      if (!Object.keys(values).length) return;
+      const updated = formik.values.subjects.map((sub: any) => {
+        if (!sub.electiveGroupId) return sub;
+        if (sub.schedulingMode === 'separate') {
+          return { ...sub, subjects: (sub.subjects || []).map((s: any) => ({ ...s, ...values })) };
+        }
+        return { ...sub, ...values };
+      });
+      formik.setValues({ ...formik.values, subjects: updated }, true);
+    },
+    [formik]
+  );
+
+  const hasNoSubjects = coreSubjects.length === 0 && electiveGroups.length === 0;
 
   return (
     <Box
@@ -180,477 +960,138 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      sx={{ height: '100%' }}
     >
-      {/* Bulk apply helper bar */}
-      <ApplyToAllBar formik={formik} />
-      <CustomizableTable
-        isFilter={false}
-        isPagination={false}
-        isScrollbar={false}
-        isShowedDense={false}
-        isSearch={false}
-        wrapperProps={{
-          sx: {
-            height: '100%',
-          },
-        }}
-        tableId="examschedule-table"
-        columns={[
-          {
-            id: 'subjectName',
-            label: 'Subject',
-            minWidth: '200px',
-            align: 'left',
-            isFilter: false,
-            isSort: false,
-            sticky: true,
-            render(value, row) {
-              return (
-                <Box key={row.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box
-                    sx={{
-                      width: 5,
-                      height: 18,
-                      borderRadius: 1,
-                      backgroundColor: row.subjectColor,
-                    }}
-                  />
-                  <Typography variant="caption" fontWeight="13px">
-                    {value} {row.subjectCode && `(${row.subjectCode})`}
-                  </Typography>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'examDate',
-            label: 'Date',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 155,
-            cellSx: { verticalAlign: 'top' },
-            render(value, row) {
-              return (
-                <ShakingTextField
-                  error={
-                    typeof formik.errors.subjects?.[row.index] === 'object' &&
-                    !!(formik.errors.subjects?.[row.index] as any)?.examDate &&
-                    !!formik.touched.subjects?.[row.index]?.examDate
-                  }
-                >
-                  <DatePicker
-                    value={row.examDate || null}
-                    format="DD/MM/YYYY"
-                    label="Date *"
-                    onChange={(newTime) => {
-                      formik.setFieldValue(`subjects.${row.index}.examDate`, newTime);
-                      formik.setFieldTouched(`subjects.${row.index}.examDate`, false, false);
-                    }}
-                    minDate={dayjs()}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        sx: { width: 145 },
-                        error:
-                          typeof formik.errors.subjects?.[row.index] === 'object' &&
-                          !!(formik.errors.subjects?.[row.index] as any)?.examDate &&
-                          !!formik.touched.subjects?.[row.index]?.examDate,
-                        helperText:
-                          formik.touched.subjects?.[row.index]?.examDate &&
-                          typeof formik.errors.subjects?.[row.index] === 'object'
-                            ? (formik.errors.subjects?.[row.index] as any)?.examDate
-                            : ' ',
-                        FormHelperTextProps: {
-                          sx: {
-                            // minHeight: '20px', // prevents jump by reserving height
-                            margin: 0,
-                            position: 'static',
-                            // lineHeight: '1.25rem',
-                            whiteSpace: 'normal',
-                            width: '100%',
-                          },
-                        },
-                        InputLabelProps: {
-                          sx: { lineHeight: '1.2em' },
-                        },
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              );
-            },
-          },
-          {
-            id: 'startTime',
-            label: 'Start Time',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 150,
-            cellSx: { verticalAlign: 'top' },
-            render(value, row) {
-              return (
-                <ShakingTextField
-                  error={
-                    typeof formik.errors.subjects?.[row.index] === 'object' &&
-                    !!(formik.errors.subjects?.[row.index] as any)?.startTime &&
-                    !!formik.touched.subjects?.[row.index]?.startTime
-                  }
-                >
-                  <TimePicker
-                    value={row.startTime || null}
-                    format="hh:mm a"
-                    label="Start Time *"
-                    onChange={(newTime) => {
-                      formik.setFieldValue(`subjects.${row.index}.startTime`, newTime);
-                      formik.setFieldTouched(`subjects.${row.index}.startTime`, false, false);
-                    }}
-                    viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        sx: { width: 140 },
-                        error:
-                          typeof formik.errors.subjects?.[row.index] === 'object' &&
-                          !!(formik.errors.subjects?.[row.index] as any)?.startTime &&
-                          !!formik.touched.subjects?.[row.index]?.startTime,
-                        helperText:
-                          formik.touched.subjects?.[row.index]?.startTime &&
-                          typeof formik.errors.subjects?.[row.index] === 'object'
-                            ? (formik.errors.subjects?.[row.index] as any)?.startTime
-                            : ' ',
-                        FormHelperTextProps: {
-                          sx: {
-                            margin: 0,
-                            position: 'static',
-                            whiteSpace: 'normal',
-                          },
-                        },
-                        InputLabelProps: {
-                          sx: { lineHeight: '1.2em', width: '80%' },
-                        },
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              );
-            },
-          },
-          {
-            id: 'endTime',
-            label: 'End Time',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 150,
-            cellSx: { verticalAlign: 'top' },
-            render(value, row) {
-              return (
-                <ShakingTextField
-                  error={
-                    typeof formik.errors.subjects?.[row.index] === 'object' &&
-                    !!(formik.errors.subjects?.[row.index] as any)?.endTime &&
-                    !!formik.touched.subjects?.[row.index]?.endTime
-                  }
-                >
-                  <TimePicker
-                    value={row.endTime || null}
-                    format="hh:mm a"
-                    label="End Time *"
-                    onChange={(newTime) => {
-                      formik.setFieldValue(`subjects.${row.index}.endTime`, newTime);
-                      formik.setFieldTouched(`subjects.${row.index}.endTime`, false, false);
-                    }}
-                    viewRenderers={{ hours: renderTimeViewClock, minutes: renderTimeViewClock }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        sx: { width: 140 },
-                        error:
-                          typeof formik.errors.subjects?.[row.index] === 'object' &&
-                          !!(formik.errors.subjects?.[row.index] as any)?.endTime &&
-                          !!formik.touched.subjects?.[row.index]?.endTime,
-                        helperText:
-                          formik.touched.subjects?.[row.index]?.endTime &&
-                          typeof formik.errors.subjects?.[row.index] === 'object'
-                            ? (formik.errors.subjects?.[row.index] as any)?.endTime
-                            : ' ',
-                        FormHelperTextProps: {
-                          sx: {
-                            margin: 0,
-                            position: 'static',
-                            whiteSpace: 'normal',
-                          },
-                        },
-                        InputLabelProps: {
-                          sx: { lineHeight: '1.2em' },
-                        },
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              );
-            },
-          },
-          // NON-BREAKING: Duration badge column — calculated from start/end time, display only
-          {
-            id: 'duration',
-            label: 'Duration',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 90,
-            render(_value: any, row: any) {
-              if (!row.startTime || !row.endTime) {
-                return (
-                  <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
-                    &mdash;
-                  </Typography>
-                );
-              }
-              const diffMins = dayjs(row.endTime).diff(dayjs(row.startTime), 'minute');
-              if (diffMins <= 0) {
-                return (
-                  <Chip
-                    label="Invalid"
-                    size="small"
-                    color="error"
-                    variant="soft"
-                    sx={{ fontSize: '0.68rem', height: 20 }}
-                  />
-                );
-              }
-              const hrs = Math.floor(diffMins / 60);
-              const mins = diffMins % 60;
-              return (
-                <Chip
-                  label={hrs > 0 ? `${hrs}h${mins > 0 ? ` ${mins}m` : ''}` : `${mins}m`}
-                  size="small"
-                  color="info"
-                  variant="soft"
-                  sx={{ fontSize: '0.68rem', height: 22, fontWeight: 600 }}
-                />
-              );
-            },
-          },
-          {
-            id: 'gradeScalingId',
-            label: 'Grade Scale',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 180,
-            cellSx: { verticalAlign: 'top' },
-            render(value, row) {
-              return (
-                <Box sx={{ pb: '20px' }}>
-                  <CustomSelect
-                    label="Grade Scale"
-                    options={gradeScalings?.data ?? []}
-                    value={value}
-                    labelKey="name"
-                    valueKey="id"
-                    isLoading={isGradeScalingsLoading}
-                    formControlProps={{ sx: { width: 165 } }}
-                    onChange={(selectedId) => {
-                      formik.setFieldValue(
-                        `subjects.${row.index}.gradeScalingId`,
-                        selectedId || null
-                      );
-                      const selectedScale = (gradeScalings?.data ?? []).find(
-                        (s: any) => s.id === selectedId
-                      );
-                      formik.setFieldValue(
-                        `subjects.${row.index}.totalMarks`,
-                        selectedScale?.totalMarks ?? ''
-                      );
-                    }}
-                  />
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'totalMarks',
-            label: 'Total Marks',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 150,
-            cellSx: { verticalAlign: 'top' },
-            render(value, row) {
-              return (
-                <ShakingTextField
-                  error={
-                    typeof formik.errors.subjects?.[row.index] === 'object' &&
-                    !!(formik.errors.subjects?.[row.index] as any)?.totalMarks &&
-                    !!formik.touched.subjects?.[row.index]?.totalMarks
-                  }
-                >
-                  <TextField
-                    value={value}
-                    type="number"
-                    label="Total Marks *"
-                    onChange={(e) => {
-                      formik.setFieldValue(`subjects.${row.index}.totalMarks`, e.target.value);
-                      formik.setFieldTouched(`subjects.${row.index}.totalMarks`, false, false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    size="small"
-                    error={
-                      Boolean(formik.touched.subjects?.[row.index]?.totalMarks) &&
-                      !!(formik.errors.subjects?.[row.index] as any)?.totalMarks
-                    }
-                    helperText={
-                      formik.touched.subjects?.[row.index]?.totalMarks &&
-                      (formik.errors.subjects?.[row.index] as any)?.totalMarks
-                        ? (formik.errors.subjects?.[row.index] as any)?.totalMarks
-                        : ' '
-                    }
-                    FormHelperTextProps={{
-                      sx: {
-                        margin: 0,
-                        position: 'static',
-                        whiteSpace: 'normal',
-                      },
-                    }}
-                    InputLabelProps={{
-                      sx: {
-                        lineHeight: '1.2em',
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              );
-            },
-          },
-          {
-            id: 'passingMarks',
-            label: 'Passing Marks',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: 160,
-            cellSx: { verticalAlign: 'top' },
-            render(value, row) {
-              // NON-BREAKING: inline UI-only warning when passing > total
-              const totalVal = Number(formik.values.subjects?.[row.index]?.totalMarks);
-              const passingVal = Number(value);
-              const exceedsTotal =
-                !Number.isNaN(totalVal) &&
-                !Number.isNaN(passingVal) &&
-                totalVal > 0 &&
-                passingVal > totalVal;
+      {/* ═══════════════════════════════════
+          CORE SUBJECTS SECTION
+      ═══════════════════════════════════ */}
+      {coreSubjects.length > 0 && (
+        <Paper
+          variant="outlined"
+          sx={{
+            mb: 3,
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Box sx={{ p: 2, pb: 1.5 }}>
+            <SectionHeader
+              icon="solar:list-bold-duotone"
+              accent="primary"
+              title="Core subjects"
+              chips={[
+                {
+                  label: `${coreSubjects.length} subject${coreSubjects.length !== 1 ? 's' : ''}`,
+                  color: 'primary',
+                },
+              ]}
+            />
+            <ApplyToAllBar onApply={handleApplyAllCore} />
+          </Box>
+          <TableContainer>
+            <Table size="small" sx={{ tableLayout: 'auto' }}>
+              <ScheduleTableHead />
+              <TableBody>
+                {coreSubjects.map(({ subject, index }) => {
+                  const subErrors =
+                    typeof formik.errors.subjects?.[index] === 'object'
+                      ? (formik.errors.subjects[index] as any)
+                      : {};
+                  const subTouched = formik.touched.subjects?.[index] ?? {};
+                  return (
+                    <SubjectScheduleRow
+                      key={subject.subjectId || index}
+                      values={subject}
+                      errors={subErrors}
+                      touched={subTouched}
+                      onFieldChange={(field, value) => {
+                        formik.setFieldValue(`subjects.${index}.${field}`, value);
+                      }}
+                      onFieldBlur={(field) => {
+                        formik.setFieldTouched(`subjects.${index}.${field}`, false, false);
+                      }}
+                      gradeScalings={gradeScalingsList}
+                      isGradeScalingsLoading={isGradeScalingsLoading}
+                      currentYear={currentYear}
+                    />
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
 
-              return (
-                <ShakingTextField
-                  error={
-                    (typeof formik.errors.subjects?.[row.index] === 'object' &&
-                      !!(formik.errors.subjects?.[row.index] as any)?.passingMarks &&
-                      !!formik.touched.subjects?.[row.index]?.passingMarks) ||
-                    exceedsTotal
-                  }
-                >
-                  <TextField
-                    value={value}
-                    type="number"
-                    label="Passing Marks *"
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                    onChange={(e) => {
-                      formik.setFieldValue(`subjects.${row.index}.passingMarks`, e.target.value);
-                      formik.setFieldTouched(`subjects.${row.index}.passingMarks`, false, false);
-                    }}
-                    size="small"
-                    error={
-                      (Boolean(formik.touched.subjects?.[row.index]?.passingMarks) &&
-                        !!(formik.errors.subjects?.[row.index] as any)?.passingMarks) ||
-                      exceedsTotal
-                    }
-                    helperText={
-                      exceedsTotal
-                        ? 'Exceeds total marks'
-                        : formik.touched.subjects?.[row.index]?.passingMarks &&
-                            (formik.errors.subjects?.[row.index] as any)?.passingMarks
-                          ? (formik.errors.subjects?.[row.index] as any)?.passingMarks
-                          : ' '
-                    }
-                    FormHelperTextProps={{
-                      sx: {
-                        margin: 0,
-                        position: 'static',
-                        whiteSpace: 'normal',
-                      },
-                    }}
-                    InputLabelProps={{
-                      sx: {
-                        lineHeight: '1.2em',
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              );
-            },
-          },
-          {
-            id: 'notes',
-            label: 'Notes',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            minWidth: '250px',
-            cellSx: { verticalAlign: 'top', minWidth: '200px' },
-            render(value, row) {
-              return (
-                <TextField
-                  value={value}
-                  multiline
-                  rows={1}
-                  label="Notes"
-                  onChange={(e) => {
-                    formik.setFieldValue(`subjects.${row.index}.notes`, e.target.value);
-                  }}
-                  size="small"
-                  error={
-                    Boolean(formik.touched.subjects?.[row.index]?.notes) &&
-                    !!(formik.errors.subjects?.[row.index] as any)?.notes
-                  }
-                  helperText={
-                    formik.touched.subjects?.[row.index]?.notes &&
-                    (formik.errors.subjects?.[row.index] as any)?.notes
-                      ? (formik.errors.subjects?.[row.index] as any)?.notes
-                      : ' '
-                  }
-                  FormHelperTextProps={{
-                    sx: {
-                      margin: 0,
-                      position: 'static',
-                      whiteSpace: 'normal',
-                    },
-                  }}
-                  InputLabelProps={{
-                    sx: {
-                      lineHeight: '1.2em',
-                    },
-                  }}
-                />
-              );
-            },
-          },
-        ]}
-        data={formik.values.subjects.map((s: any, i: number) => ({ ...s, index: i }))}
-      />
+      {/* ═══════════════════════════════════
+          ELECTIVE SUBJECTS SECTION
+      ═══════════════════════════════════ */}
+      {electiveGroups.length > 0 && (
+        <Box>
+          <Paper
+            variant="outlined"
+            sx={{
+              mb: 2,
+              p: 2,
+              pb: 1.5,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <SectionHeader
+              icon="solar:star-bold-duotone"
+              accent="warning"
+              title="Elective subjects"
+              chips={[
+                {
+                  label: `${electiveGroups.length} group${electiveGroups.length !== 1 ? 's' : ''}`,
+                  color: 'warning',
+                },
+                {
+                  label: `${totalElectiveSubjects} subject${totalElectiveSubjects !== 1 ? 's' : ''}`,
+                  color: 'default',
+                },
+              ]}
+            />
+            <ApplyToAllBar onApply={handleApplyAllElective} />
+          </Paper>
+
+          {electiveGroups.map(({ index }) => (
+            <ElectiveGroupCard
+              key={formik.values.subjects[index]?.electiveGroupId || index}
+              formik={formik}
+              groupIndex={index}
+              gradeScalings={gradeScalingsList}
+              isGradeScalingsLoading={isGradeScalingsLoading}
+              currentYear={currentYear}
+            />
+          ))}
+        </Box>
+      )}
+
+      {/* Empty state */}
+      {hasNoSubjects && (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1.5,
+            py: 10,
+            color: 'text.disabled',
+            textAlign: 'center',
+          }}
+        >
+          <Iconify icon="solar:calendar-bold-duotone" width={52} sx={{ opacity: 0.4 }} />
+          <Typography variant="body2" color="text.secondary">
+            No subjects selected. Go back to Step 1 to select subjects.
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };
+
 export default ExamDetails;

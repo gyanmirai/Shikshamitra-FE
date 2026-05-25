@@ -10,7 +10,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetRunPayrollPreviewQuery } from 'src/redux/runPayroll/runPayrollApi';
+import { useGetRunPayrollReadinessQuery } from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Card,
@@ -23,55 +23,37 @@ import {
   CardContent,
 } from '@mui/material';
 
+import { getSuggestedActiveStepIndex } from '../payroll-cycle/payroll-cycle-helpers';
 import PayrollAdvancedRoadmapCard from '../payroll-advanced-roadmap/PayrollAdvancedRoadmapCard';
-import {
-  getSuggestedActiveStepIndex,
-  inferIssuesFromRunPayrollItems,
-} from '../payroll-cycle/payroll-cycle-helpers';
-
-const formatInr = (n: number) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(n);
 
 const PayrollHome = () => {
   const router = useRouter();
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
 
   const monthKey = month?.format('YYYY-MM') ?? '';
-  const { data, isLoading, isFetching, isError, refetch } = useGetRunPayrollPreviewQuery(
+  const { data, isLoading, isFetching, isError, refetch } = useGetRunPayrollReadinessQuery(
     { month: monthKey },
     { skip: !monthKey }
   );
 
-  const items = data?.items as any[] | undefined;
-
   const stats = useMemo(() => {
-    const rows = items || [];
-    const { locked, netTotal } = rows.reduce(
-      (acc, row) => ({
-        locked: acc.locked + (row?.isLocked ? 1 : 0),
-        netTotal: acc.netTotal + Number(row?.netPay ?? 0),
-      }),
-      { locked: 0, netTotal: 0 }
-    );
-    const total = rows.length;
-    const pending = total - locked;
-    return { total, locked, pending, netTotal };
-  }, [items]);
+    const total = Number(data?.employeeCount || 0);
+    const locked = Number(data?.lockedCount || 0);
+    const pending = Math.max(0, total - locked);
+    return { total, locked, pending, netTotal: 0 };
+  }, [data]);
 
-  const { issueCounts, hasBlockers } = inferIssuesFromRunPayrollItems(
-    (items || []).map((r: any) => ({
-      isLocked: r?.isLocked,
-      totalWorkingDays: r?.totalWorkingDays,
-      payableDays: r?.payableDays,
-      netPay: r?.netPay,
-    }))
+  const issueCounts = {
+    attendance_gap: Number(data?.missingAttendanceCount || 0),
+    negative_net: 0,
+  };
+  const hasBlockers = Boolean(
+    data?.missingAttendanceCount ||
+    data?.missingSalaryStructureCount ||
+    data?.policyConfigurationIssueCount
   );
 
-  const { nextLabel, nextPath } = getSuggestedActiveStepIndex(items, isLoading || isFetching);
+  const { nextLabel, nextPath } = getSuggestedActiveStepIndex(undefined, isLoading || isFetching);
 
   const periodLabel = month ? month.format('MMMM YYYY') : '';
 
@@ -85,7 +67,7 @@ const PayrollHome = () => {
 
       {isError ? (
         <Alert severity="error" sx={{ mb: 1 }}>
-          Could not load payroll preview for this month. Please refresh and try again.
+          Could not load payroll readiness for this month. Please refresh and try again.
         </Alert>
       ) : null}
 
@@ -144,7 +126,7 @@ const PayrollHome = () => {
               <Stack spacing={0.75}>
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Employees in preview
+                    Employees
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
                     {isLoading ? '...' : stats.total}
@@ -168,10 +150,10 @@ const PayrollHome = () => {
                 </Stack>
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Net pay (preview total)
+                    Existing preview rows
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
-                    {isLoading ? '...' : formatInr(stats.netTotal)}
+                    {isLoading ? '...' : Number(data?.snapshotCount || 0)}
                   </Typography>
                 </Stack>
               </Stack>

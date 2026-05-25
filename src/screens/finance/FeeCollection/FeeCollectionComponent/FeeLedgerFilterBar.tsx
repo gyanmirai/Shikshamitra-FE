@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
@@ -11,8 +12,9 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Box, Tab, Chip, Card, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { FeeMonthOptions, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
+import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
+import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
+import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,15 +31,16 @@ interface FeeLedgerFilterBarProps {
   filters: FeeLedgerFilters;
   onFilterChange: (filters: FeeLedgerFilters) => void;
   entryCount?: number;
+  studentId?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const FEE_LEDGER_INITIAL_FILTERS: FeeLedgerFilters = {
   activeTab: 'by-month',
-  month: '',
-  feeHead: '',
-  status: '',
+  month: 'All',
+  feeHead: 'All',
+  status: 'All',
 };
 
 const TABS = [
@@ -45,14 +48,14 @@ const TABS = [
   { value: 'by-fee-head' as FeeLedgerTab, label: 'By Fee Head', icon: 'solar:tag-bold' },
 ];
 
-const MONTH_OPTIONS = [
+export const getAcademicYearMonthOptions = (
+  data: { month: number; year: number }[] | undefined
+) => [
   { label: 'All', value: 'All' },
-  ...FeeMonthOptions.map((m) => ({ label: m.label, value: String(m.value) })),
-];
-
-const QUICK_MONTH_OPTIONS = [
-  { label: 'All', value: 'All' },
-  ...FeeMonthOptions.map((m) => ({ label: m.label.slice(0, 3), value: String(m.value) })),
+  ...(data?.map((item) => ({
+    label: `${FeeMonth[item.month]}-${item.year}`,
+    value: `${item.month}-${item.year}`,
+  })) || []),
 ];
 
 const STATUS_OPTIONS = [
@@ -60,42 +63,68 @@ const STATUS_OPTIONS = [
   ...FeeCollectionStatusOptions.map((s) => ({ label: s.label, value: String(s.value) })),
 ];
 
-// ─── Component ───────────────────────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────────────────────────
 
-const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFilterBarProps) => {
+const FeeLedgerFilterBar = ({
+  filters,
+  onFilterChange,
+  entryCount,
+  studentId,
+}: FeeLedgerFilterBarProps) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const tabs = useTabs(filters.activeTab);
-
-  const {
-    data: feeHeadData,
-    isLoading: isFeeHeadLoading,
-    isFetching: isFeeHeadFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeHeadsQuery,
-    params: { academicYearId: currentYear?.id },
-  });
-
-  const feeHeadOptions = [{ id: 'All', name: 'All' }, ...(feeHeadData?.items || [])];
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(_, newValue);
     onFilterChange({ ...filters, activeTab: newValue as FeeLedgerTab });
   };
 
+  const {
+    data: studentFeeStructureData,
+    isLoading: isFeeHeadLoading,
+    isFetching: isFeeHeadFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentFeeStructureQuery,
+    params: { studentId },
+    options: { skip: !studentId },
+  });
+
+  const {
+    data: academicYearMonthsData,
+    isLoading: isMonthsLoading,
+    isFetching: isMonthsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAcademicYearMonthsQuery,
+    params: { academicYearId: currentYear?.id },
+  });
+
+  const monthOptions = getAcademicYearMonthOptions(academicYearMonthsData);
+
+  const feeHeadOptions = [
+    { id: 'All', name: 'All' },
+    ...(studentFeeStructureData?.feeHeads?.map((fh: any) => ({
+      id: fh.feeHeadId,
+      name: fh.feeHeadName,
+    })) || []),
+  ];
+
   return (
     <Card
+      component={motion.div}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        display: 'flex',
+        flexDirection: 'column',
         p: { xs: 1.25, md: 1.5 },
-        boxShadow: (t) => `0 8px 18px ${alpha(t.palette.common.black, 0.06)}`,
-        borderRadius: 2.6,
-        border: (t) => `1px solid ${alpha(t.palette.primary.main, 0.14)}`,
-        position: { md: 'sticky' },
-        top: { md: 8 },
-        zIndex: 3,
-        // bgcolor: (t) => alpha(t.palette.background.paper, 0.95),
-        backdropFilter: 'blur(10px)',
+        boxShadow: (t) => `var(--shadows-4)`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
       {/* ── Header row: title + tabs ── */}
@@ -103,18 +132,18 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1.25,
+          gap: 1.5,
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          mb: 1,
+          mb: 1.25,
         }}
       >
         {/* Title + entry count */}
         <Box display="flex" alignItems="center" gap={1}>
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 30,
+              height: 30,
               borderRadius: 1.25,
               display: 'flex',
               alignItems: 'center',
@@ -131,9 +160,9 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           <Typography
             variant="subtitle1"
             fontWeight={700}
-            sx={{ fontSize: '0.95rem', letterSpacing: '-0.01em' }}
+            sx={{ fontSize: '0.9rem', letterSpacing: '-0.01em' }}
           >
-            Fee Timeline Navigator
+            Fee Ledger
           </Typography>
           {entryCount !== undefined && (
             <Chip
@@ -144,9 +173,8 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               sx={{
                 borderRadius: 999,
                 fontWeight: 600,
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 height: 22,
-                border: (t) => `1px solid ${alpha(t.palette.divider, 0.8)}`,
               }}
             />
           )}
@@ -157,10 +185,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={tabs.value}
           onChange={handleTabChange}
           sx={{
-            minHeight: 34,
-            border: (t) => `1px solid ${alpha(t.palette.divider, 0.8)}`,
-            borderRadius: 1.25,
-            // bgcolor: (t) => alpha(t.palette.background.neutral ?? t.palette.action.hover, 0.45),
+            minHeight: 30,
             '& .MuiTabs-indicator': { borderRadius: 999 },
           }}
           slotProps={{
@@ -175,10 +200,10 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
               icon={tab.icon ? <Iconify icon={tab.icon} width={13} /> : undefined}
               iconPosition="start"
               sx={{
-                minHeight: 32,
+                minHeight: 30,
                 py: 0.5,
-                px: 1.25,
-                fontSize: '0.77rem',
+                px: 1.5,
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 letterSpacing: '0.01em',
               }}
@@ -191,20 +216,21 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
       <Box
         sx={{
           display: 'flex',
-          gap: 1,
+          gap: 1.25,
           flexWrap: 'wrap',
-          pt: 1.1,
-          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.72)}`,
+          pt: 1,
+          borderTop: (t) => `1px solid ${alpha(t.palette.divider, 0.5)}`,
         }}
       >
         <CustomSelect
           label="Month"
-          options={MONTH_OPTIONS}
+          options={monthOptions}
           labelKey="label"
           valueKey="value"
           value={filters.month}
+          isLoading={isMonthsLoading || isMonthsFetching}
           onChange={(value) => onFilterChange({ ...filters, month: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
+          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
 
@@ -216,7 +242,7 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           value={filters.feeHead}
           isLoading={isFeeHeadLoading || isFeeHeadFetching}
           onChange={(value) => onFilterChange({ ...filters, feeHead: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
+          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
 
@@ -227,42 +253,9 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
           valueKey="value"
           value={filters.status}
           onChange={(value) => onFilterChange({ ...filters, status: value as string })}
-          formControlProps={{ sx: { flex: 1, minWidth: { xs: '100%', sm: 175 } } }}
+          formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
         />
-
-        <Box
-          sx={{
-            width: '100%',
-            mt: 0.3,
-            pt: 0.9,
-            borderTop: (t) => `1px dashed ${alpha(t.palette.divider, 0.85)}`,
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{ color: 'text.secondary', fontWeight: 700, mb: 0.7, display: 'block' }}
-          >
-            Quick Month Selection
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.65, flexWrap: 'wrap' }}>
-            {QUICK_MONTH_OPTIONS.map((month) => (
-              <Chip
-                key={month.value}
-                label={month.label}
-                size="small"
-                onClick={() => onFilterChange({ ...filters, month: month.value })}
-                color={filters.month === month.value ? 'primary' : 'default'}
-                variant={filters.month === month.value ? 'filled' : 'outlined'}
-                sx={{
-                  fontWeight: 700,
-                  height: 23,
-                  borderRadius: 1,
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
       </Box>
     </Card>
   );

@@ -57,12 +57,7 @@ const TeacherSelectionFields = ({
         renderOption={(props: any, option: EmployeeOption) => {
           const { key, ...rest } = props;
           return (
-            <Box
-              component="li"
-              {...rest}
-              key={`${option.label}-${key}`}
-              sx={{ display: 'flex', gap: 1 }}
-            >
+            <Box component="li" {...rest} key={key} sx={{ display: 'flex', gap: 1 }}>
               <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>{option.label?.[0]}</Avatar>
               {option.label}
             </Box>

@@ -135,6 +135,7 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
         id: 'name',
         label: 'Subject',
         isFilter: false,
+        align: 'left',
         render: renderSubjectName,
       },
       {
@@ -142,6 +143,8 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
         label: 'Weekly Lectures',
         isSort: false,
         isFilter: false,
+        align: 'left',
+
         render: renderLectureCell,
       },
     ],
@@ -149,7 +152,12 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
   );
 
   return (
-    <Box display="flex" flexDirection="column" gap={1} maxHeight="500px" height="100%">
+    <Box
+      display="flex"
+      flexDirection="column"
+      gap={1}
+      sx={{ maxHeight: 'calc(100vh - 380px)', overflow: 'hidden' }}
+    >
       {/* ── Toolbar: subject count + apply-to-all ── */}
       <Box
         sx={{

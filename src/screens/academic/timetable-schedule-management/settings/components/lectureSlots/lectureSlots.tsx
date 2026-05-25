@@ -248,7 +248,7 @@ const LectureSlots = () => {
 
       {/* Conditional Card/Table Rendering */}
       {addLectureSlotDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <CreateSlotsForm
             disabled={disabled}
             handleClose={handleClose}
@@ -257,11 +257,11 @@ const LectureSlots = () => {
           />
         </Card>
       ) : viewSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ViewCreateSlots data={editData} />
         </Card>
       ) : assignSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AssignSlots
             onClose={handleClose}
             lectureSlotId={editData?.id}

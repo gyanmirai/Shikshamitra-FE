@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
@@ -38,8 +39,8 @@ import {
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
-import { validations } from './employee-form-validation';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
+import { validations, getPersonalInformationValidationSchema } from './employee-form-validation';
 
 import type {
   IPayrollInformation,
@@ -55,10 +56,16 @@ export const toRawMobile = (value: string | null | undefined) => {
   return value.replace(/\s/g, '').replace(/^\+91/, '');
 };
 
+const toProfilePhotoValue = (value?: string | null) => {
+  if (!value) return '';
+  if (value.startsWith('data:') || value.startsWith('http')) return value;
+  return convertBase64Format(value);
+};
+
 export const personalInformationInitialValues = (
   editData?: Partial<IPersonalInformationResponse>
 ) => ({
-  // photo: '',
+  photo: toProfilePhotoValue(editData?.profilePicture || editData?.thumbnailPicture),
   lastName: editData ? editData.lastName : '',
   firstName: editData ? editData.firstName : '',
   middleName: editData ? editData.middleName : '',
@@ -93,6 +100,9 @@ export const personalInformationInitialValues = (
   employeeGroup: editData ? (editData.isTeaching ? 0 : 1) : '',
   // qualification: editData ? editData. : '',
   role: editData ? editData?.roleId : '',
+  organizationIds: editData?.organizationIds?.length
+    ? editData.organizationIds
+    : editData?.organizations?.map((item: any) => item.id) || [],
   // identificationMark1: editData ? editData.identificationMark1 : '',
   addressLine1: editData ? editData.address1 : '',
   addressLine2: editData ? editData.address2 : '',
@@ -250,6 +260,11 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   // ================= COMPONENTS =================
   earningComponents: editData?.earningComponents ?? [],
   deductionComponents: editData?.deductionComponents ?? [],
+  policyOverrideEnabled: false,
+  policyOverridePayrollPolicyId: '',
+  policyOverrideAttendancePolicyId: '',
+  policyOverrideEffectiveFrom: dayjs().format('YYYY-MM-DD'),
+  policyOverrideAssignmentReason: '',
 });
 
 const toOptionalGuid = (value: unknown) =>
@@ -369,6 +384,15 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [editData?.id]
   );
+  const employeeValidations = useMemo(
+    () => [
+      getPersonalInformationValidationSchema({
+        requirePhoto: !(editData?.id || initialValues.employeeId),
+      }),
+      ...validations.slice(1),
+    ],
+    [editData?.id, initialValues.employeeId]
+  );
 
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
@@ -391,6 +415,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
           isTeaching: values.employeeGroup === 0,
           roleId: values.role,
+          organizationIds: values.organizationIds || [],
           address1: values.addressLine1,
           address2: values.addressLine2,
           country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
@@ -569,11 +594,27 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             amount: getSalaryComponentPayloadAmount(item),
             isFixed: isSalaryComponentFixed(item),
           })),
+          ...(values.policyOverrideEnabled &&
+          currentYear?.id &&
+          values.policyOverridePayrollPolicyId &&
+          values.policyOverrideAttendancePolicyId &&
+          values.policyOverrideEffectiveFrom
+            ? {
+                policyOverride: {
+                  academicYearId: currentYear.id,
+                  payrollPolicyId: values.policyOverridePayrollPolicyId,
+                  attendancePolicyId: values.policyOverrideAttendancePolicyId,
+                  effectiveFrom: values.policyOverrideEffectiveFrom,
+                  assignmentReason:
+                    values.policyOverrideAssignmentReason || 'Employee payroll step override',
+                },
+              }
+            : {}),
         },
       }).unwrap();
       return res;
     },
-    [editData, updateBankDetails]
+    [currentYear?.id, editData, updateBankDetails]
   );
 
   const handelUpdateEmployee = useCallback(
@@ -596,6 +637,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
         isTeaching: values.employeeGroup === 0,
         roleId: values.role,
+        organizationIds: values.organizationIds || [],
         address1: values.addressLine1,
         address2: values.addressLine2,
         country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
@@ -753,8 +795,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         }
       } catch (error) {
         console.error(error, '============================');
+        shikshaMitraToast.error({
+          message:
+            (error as any)?.data?.message ||
+            (error as any)?.error ||
+            'Failed to save employee details',
+        });
+        setIsLoading(false);
+        return;
       }
-      if (isLastStep) {
+      if (isLastStep && saveSucceeded) {
         setIsSubmitted(true);
         handleClose(null, true);
         return;
@@ -802,7 +852,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         handleBack={() => {
           setActiveStep(activeStep - 1);
         }}
-        validationSchema={validations[activeStep]}
+        validationSchema={employeeValidations[activeStep]}
         onStepClick={(step) => {
           if (step === activeStep || !canNavigateToStep(step)) {
             return;

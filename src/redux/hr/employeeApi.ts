@@ -3,7 +3,9 @@ import { employeeType } from 'src/redux/tagTypes';
 
 const compactParams = (params: Record<string, unknown>) =>
   Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== undefined && value !== null)
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== null && value !== ''
+    )
   );
 
 export const resolveEmployeeIdParam = (input: any): string | null => {
@@ -29,6 +31,12 @@ export const buildEmployeeSubresourceUrl = (input: any, resourceName: string): s
   return `/employees/${id}/${resourceName}`;
 };
 
+export const employeePayrollInvalidationTags = [
+  employeeType.employee,
+  employeeType.attendanceRule,
+  employeeType.runPayroll,
+];
+
 export const employeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
@@ -51,6 +59,10 @@ export const employeeApi = api.injectEndpoints({
     }),
     getEmployeeById: builder.query({
       query: (id) => ({ url: `/employees/${id}`, redirect: 'follow' }),
+      providesTags: [employeeType.employee],
+    }),
+    getCurrentEmployee: builder.query({
+      query: () => ({ url: '/employees/me', method: 'GET' }),
       providesTags: [employeeType.employee],
     }),
     // addEmployee: builder.mutation({
@@ -158,7 +170,7 @@ export const employeeApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [employeeType.employee],
+      invalidatesTags: employeePayrollInvalidationTags,
     }),
 
     updateEmployeeStatus: builder.mutation({
@@ -295,6 +307,7 @@ export const employeeApi = api.injectEndpoints({
         url: `/employees/documents/${id}`,
         method: 'DELETE',
       }),
+      invalidatesTags: [employeeType.employeeDocumentConfig],
     }),
     getDocumentConfigurationById: builder.query({
       query: (id) => ({
@@ -309,6 +322,7 @@ export const employeeApi = api.injectEndpoints({
 export const {
   useGetEmployeeByIdQuery,
   useLazyGetEmployeeByIdQuery,
+  useGetCurrentEmployeeQuery,
   useGetEmployeeQuery,
   useLazyGetEmployeeQuery,
   useUpdateEmployeeMutation,

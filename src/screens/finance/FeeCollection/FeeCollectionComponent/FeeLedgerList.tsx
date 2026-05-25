@@ -1,13 +1,14 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { formatNumber } from 'src/utils/formate_number';
-import { Box, Card, Checkbox, Typography } from '@mui/material';
+import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 import ByMonthView from './FeeLedgerByMonth';
-import { toPeriod } from './FeeLedgerShared';
 import ByFeeHeadView from './FeeLedgerByFeeHead';
+import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
 
 import type { FeeLedgerTab } from './FeeLedgerFilterBar';
 import type {
@@ -31,17 +32,34 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
 
   return (
     <Card
+      component={motion.div}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
-        p: 1.5,
-        borderRadius: 2.25,
-        ml: 0.25,
-        mt: 1.5,
-        boxShadow: (t) => `0 6px 16px ${alpha(t.palette.common.black, 0.05)}`,
-        border: (t) => `1px solid ${alpha(t.palette.divider, 0.7)}`,
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: (t) => `var(--shadows-4)`,
+        border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
       }}
     >
       {/* Section header */}
-      <Box display="flex" alignItems="center" gap={1} mb={1.25} px={0.5}>
+      <Box
+        display="flex"
+        alignItems="center"
+        gap={1}
+        px={1.35}
+        py={1}
+        sx={{
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.65)}`,
+          bgcolor:
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.neutral ?? theme.palette.action.hover, 0.55)
+              : alpha(theme.palette.background.default, 0.35),
+        }}
+      >
         <Box
           sx={{
             width: 28,
@@ -50,91 +68,44 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: alpha(theme.palette.error.main, 0.09),
+            bgcolor: alpha(theme.palette.text.secondary, 0.09),
             flexShrink: 0,
           }}
         >
-          <Iconify icon="solar:bill-bold" sx={{ color: 'error.main', width: 15, height: 15 }} />
+          <Iconify icon="solar:bill-bold" sx={{ color: 'text.secondary', width: 15, height: 15 }} />
         </Box>
         <Typography
           variant="subtitle2"
           fontWeight={700}
-          color="error.main"
+          color="text.primary"
           sx={{ fontSize: '0.84rem' }}
         >
           Additional Charges
         </Typography>
       </Box>
+
+      {/* Column Header */}
+      <ColHeader firstLabel="Charge Name" showStatus />
+
+      {/* Charge Rows */}
       {chargesData.map((charge) => {
         const isSelected = selectedCharges.includes(charge.chargeId);
-        const isDisabled = charge.status === 0 || charge.status === 'Paid';
+        const isDisabled =
+          charge.status === FeeCollectionStatusType.Paid || charge.status === 'Paid';
 
         return (
-          <Box
+          <FeeRow
             key={charge.chargeId}
-            display="flex"
-            alignItems="center"
-            gap={1}
-            px={1.25}
-            py={0.875}
-            sx={{
-              border: `1px solid ${
-                isSelected
-                  ? alpha(theme.palette.error.main, 0.35)
-                  : alpha(theme.palette.error.main, 0.15)
-              }`,
-              borderRadius: 1.5,
-              mb: 0.875,
-              cursor: isDisabled ? 'default' : 'pointer',
-              opacity: isDisabled ? 0.45 : 1,
-              bgcolor: isSelected ? alpha(theme.palette.error.main, 0.05) : 'transparent',
-              transition: 'all 0.18s ease',
-              boxShadow: isSelected ? `0 0 0 2px ${alpha(theme.palette.error.main, 0.1)}` : 'none',
-              '&:hover': !isDisabled
-                ? {
-                    bgcolor: isSelected
-                      ? alpha(theme.palette.error.main, 0.08)
-                      : alpha(theme.palette.action.hover, 0.6),
-                    borderColor: alpha(theme.palette.error.main, 0.25),
-                  }
-                : {},
-            }}
-            onClick={!isDisabled ? () => onToggleCharge(charge.chargeId) : undefined}
-          >
-            <Checkbox
-              size="small"
-              checked={isSelected}
-              disabled={isDisabled}
-              onChange={() => onToggleCharge(charge.chargeId)}
-              onClick={(e) => e.stopPropagation()}
-              sx={{
-                p: 0.375,
-                color: 'error.light',
-                '&.Mui-checked': { color: 'error.main' },
-                '& .MuiSvgIcon-root': { fontSize: '1.1rem' },
-              }}
-            />
-            <Typography
-              variant="body2"
-              fontWeight={isSelected ? 600 : 500}
-              flex={1}
-              sx={{
-                fontSize: '0.8125rem',
-                color: isSelected ? 'error.main' : 'text.primary',
-                transition: 'color 0.15s',
-              }}
-            >
-              {charge.chargeName}
-            </Typography>
-            <Typography
-              variant="body2"
-              fontWeight={700}
-              color="error.main"
-              sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '0.8125rem' }}
-            >
-              ₹{formatNumber(charge.amount)}
-            </Typography>
-          </Box>
+            name={charge.chargeName}
+            total={charge.total ?? charge.amount}
+            paid={charge.paid ?? 0}
+            due={charge.amount}
+            status={charge.status as FeeCollectionStatusType}
+            isSelected={isSelected}
+            isDisabled={isDisabled}
+            showStatus
+            onToggle={() => onToggleCharge(charge.chargeId)}
+          />
         );
       })}
     </Card>
@@ -180,7 +151,7 @@ const FeeLedgerList = ({
 
   // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
-    const period = toPeriod(group.month, year);
+    const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
     const selectableItems = group.items.filter((i) => i.due > 0);
     const isAllSelected = selectableItems.every((i) =>
       selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
@@ -204,10 +175,11 @@ const FeeLedgerList = ({
 
   // ── Fee head group toggle ──────────────────────────────────────────────────
   const toggleFeeHeadGroup = (group: FeeHeadWiseGroup) => {
-    const getPeriod = (month: string) => toPeriod(month, year);
+    const getPeriod = (item: { month: any; year?: number }) =>
+      toPeriod(FeeMonth[item.month] as string, item.year ?? year);
     const selectableItems = group.items.filter((i) => i.due > 0);
     const isAllSelected = selectableItems.every((i) => {
-      const period = getPeriod(i.month);
+      const period = getPeriod(i);
       return selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
     });
 
@@ -217,17 +189,17 @@ const FeeLedgerList = ({
           (s) =>
             !(
               s.feeHeadId === group.feeHeadId &&
-              selectableItems.some((i) => getPeriod(i.month) === s.period)
+              selectableItems.some((i) => getPeriod(i) === s.period)
             )
         )
       );
     } else {
       const toAdd = selectableItems
         .filter((i) => {
-          const period = getPeriod(i.month);
+          const period = getPeriod(i);
           return !selectedItems.some((s) => s.feeHeadId === group.feeHeadId && s.period === period);
         })
-        .map((i) => ({ feeHeadId: group.feeHeadId, period: getPeriod(i.month), dueAmount: i.due }));
+        .map((i) => ({ feeHeadId: group.feeHeadId, period: getPeriod(i), dueAmount: i.due }));
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };
@@ -269,7 +241,7 @@ const FeeLedgerList = ({
   }
 
   return (
-    <Box sx={{ pl: 0.25 }}>
+    <Box sx={{ pl: 0.25, mb: 1 }}>
       {activeTab === 'by-month' && (
         <ByMonthView
           groups={data.monthWise}

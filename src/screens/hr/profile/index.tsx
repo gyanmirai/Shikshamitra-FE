@@ -12,7 +12,7 @@ const HrProfile = () => {
   return (
     <Box>
       <CustomBreadcrumbs heading="Profile" links={[{ name: 'HR' }, { name: 'Profile' }]} />
-      <EmployeeCard employee={employee || {}} />
+      <EmployeeCard employee={employee || {}} setSearchParams={() => {}} />
     </Box>
   );
 };

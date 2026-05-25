@@ -1,11 +1,32 @@
 'use client';
 
+import { Box, Alert, Button } from '@mui/material';
+import { RouterLink } from 'src/routes/components';
 import { hrPermissions } from 'src/constants/hr-menus';
 import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 const AttendanceSettingLayout = ({ children }: { children: React.ReactNode }) => (
   <StudentPermissionGuard permissionKey={hrPermissions.attendance.setting.root}>
-    {children}
+    <Box>
+      <Alert
+        severity="info"
+        sx={{ mb: 2 }}
+        action={
+          <Button
+            size="small"
+            color="inherit"
+            component={RouterLink}
+            href="/hr/policies?tab=attendance"
+          >
+            Open Attendance Policies
+          </Button>
+        }
+      >
+        Use this area for simple attendance setup. Advanced attendance rules are managed in Policies
+        & Rules.
+      </Alert>
+      {children}
+    </Box>
   </StudentPermissionGuard>
 );
 

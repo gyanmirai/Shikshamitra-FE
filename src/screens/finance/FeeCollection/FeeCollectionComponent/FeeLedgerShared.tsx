@@ -220,7 +220,7 @@ export const FeeRow = ({
 
       {/* STATUS */}
       <Box sx={{ width: 88, display: 'flex', justifyContent: 'center' }}>
-        {showStatus && status && (
+        {showStatus && status != null && (
           <Label color={FeeCollectionStatusTypeColors[status]} variant="soft">
             {FeeCollectionStatusType[status]}
           </Label>

@@ -59,7 +59,21 @@ const MetaItem = ({ icon, label, value }: MetaItemProps) => (
 const StudentInfoPreviewCard = ({ student, academicYear, feeStructureName }: Props) => {
   const theme = useTheme();
 
-  if (!student) return null;
+  if (!student) {
+    return (
+      <Card
+        sx={{
+          p: 1.5,
+          borderRadius: 1.5,
+          boxShadow: 'var(--shadows-4)',
+        }}
+      >
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          Student information not available
+        </Typography>
+      </Card>
+    );
+  }
 
   const initials = (student.name || 'S')
     .split(' ')

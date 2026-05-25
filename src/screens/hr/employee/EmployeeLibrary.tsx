@@ -65,7 +65,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
     currentQueryAndMutation: useGetFinesChargesQuery,
   });
 
-  const { data: mockIssuedBooks, isLoading: mockIssuedLoading } = useQueryAndMutation({
+  const { data: borrowHistoryBooks, isLoading: borrowHistoryLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIssuedBooksQuery,
   });
@@ -166,7 +166,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
             <CustomizableTable
               tableId="employee-issued-books-table"
               noDataText="No Borrowed History Data Found"
-              isLoading={mockIssuedLoading}
+              isLoading={borrowHistoryLoading}
               columns={[
                 { id: 'bookTitle', label: 'Book Title', align: 'left' },
                 { id: 'bookId', label: 'Book Category', align: 'left' },
@@ -174,7 +174,7 @@ const EmployeeLibrary = ({ employee }: EmployeeLibraryProps) => {
                 { id: 'issueDate', label: 'Issued on', align: 'left' },
                 { id: 'dueDate', label: 'Due on', align: 'left' },
               ]}
-              data={mockIssuedBooks || []}
+              data={borrowHistoryBooks || []}
             />
           </Box>
         );

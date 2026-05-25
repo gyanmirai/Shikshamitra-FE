@@ -31,9 +31,10 @@ const ChargesManagement = () => {
   const onConfirmDialg = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  // Lifted state for board and medium selection to persist across dialog open/close
+  // Lifted state for board, medium, and tab selection to persist across dialog open/close
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
+  const [selectedTab, setSelectedTab] = useState<string | number>(0);
 
   // Ref to store the refetch function from ChargesTable
   const chargeRefetchRef = useRef<(() => void) | null>(null);
@@ -234,6 +235,8 @@ const ChargesManagement = () => {
             removeChargeDialog.onTrue();
             setSelectedChargeData(data);
           }}
+          selectedTab={selectedTab}
+          setSelectedTab={setSelectedTab}
           onRefetch={(refetchFn) => {
             // Store refetch function in a ref so it can be called later
             chargeRefetchRef.current = refetchFn;
@@ -311,10 +314,11 @@ const ChargesManagement = () => {
         maxWidth="xs"
       >
         <ChargeReasonApprovalForm
-          onClose={() => {
+          onClose={(_e: any, isSubmit?: boolean) => {
             onConfirmDialg.onFalse();
             setSelectedMode('');
-            if (!viewChargeDetailsDialog.value) {
+            if (isSubmit) {
+              viewChargeDetailsDialog.onFalse();
               setSelectedChargeData(null);
             }
           }}

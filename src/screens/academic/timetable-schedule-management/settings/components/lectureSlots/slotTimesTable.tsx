@@ -244,7 +244,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
         id: 'slotType',
         label: 'Slot Type',
         minWidth: 300,
-        align: 'center' as const,
+        align: 'left' as const,
         isFilter: false,
         isSort: false,
         render(_v: unknown, row: ITimeSlot) {
@@ -254,7 +254,7 @@ const SlotTimesTable: React.FC<ISlotTimesTableProps> = ({
           const breakType: string = row.breakType ?? '';
           const slotTypeErr = errors?.[index]?.slotType;
           return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <CustomSelect
                   label="Slot *"

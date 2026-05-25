@@ -8,6 +8,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   // Prefer the specific business-rule message nested in data.data.message,
   // then fall back to the RFC 7807 detail field, then other fallbacks.
   const detail =
+    data?.data?.Message ||
     data?.data?.message ||
     data?.detail ||
     data?.error?.message ||

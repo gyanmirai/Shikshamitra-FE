@@ -884,16 +884,33 @@ const TimeTableForm = ({
     [createTimetable, divisionId, onClose, setIsDirty, standardId, transformSlotsToPayload]
   );
 
+  // API returns type as integers (1 = LECTURE, 0 = BREAK). Transform to string
+  // values the rest of the frontend (DayColumn counts, slotSummary, etc.) expects.
+  const initialSlots = useMemo(() => {
+    const empty = {
+      MONDAY: [],
+      TUESDAY: [],
+      WEDNESDAY: [],
+      THURSDAY: [],
+      FRIDAY: [],
+      SATURDAY: [],
+    } as Record<DayOfWeek, TimeSlot[]>;
+    if (!slotConfigData?.days) return empty;
+    return Object.fromEntries(
+      Object.entries(slotConfigData.days).map(([day, daySlots]) => [
+        day,
+        (daySlots as any[]).map((slot: any) => ({
+          ...slot,
+          type: slot.type === 0 ? 'LECTURE' : 'BREAK',
+          breakType: slot.breakType === 0 ? 'SHORT' : slot.breakType === 1 ? 'LUNCH' : 'SHORT',
+        })),
+      ])
+    ) as Record<DayOfWeek, TimeSlot[]>;
+  }, [slotConfigData?.days]);
+
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
-      slots: slotConfigData?.days || {
-        MONDAY: [],
-        TUESDAY: [],
-        WEDNESDAY: [],
-        THURSDAY: [],
-        FRIDAY: [],
-        SATURDAY: [],
-      },
+      slots: initialSlots,
     },
     enableReinitialize: true,
     onSubmit: (values) => {

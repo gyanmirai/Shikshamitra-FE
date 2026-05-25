@@ -48,6 +48,16 @@ export const subjectProgressManageApi = classManagementApi.injectEndpoints({
       }),
       invalidatesTags: [classManagementType.subjectProgress],
     }),
+    getChapterProgressLogs: builder.query<any, { chapterId: string; divisionId?: string }>({
+      query: ({ chapterId, divisionId }) => ({
+        url: `class-management/chapters/${chapterId}/progress/logs`,
+        method: 'GET',
+        params: {
+          divisionId,
+        },
+      }),
+      providesTags: [classManagementType.subjectProgress],
+    }),
   }),
 });
 
@@ -55,4 +65,5 @@ export const {
   useGetSubjectsQuery,
   useGetChaptersProgressQuery,
   useUpdateChapterProgressMutation,
+  useGetChapterProgressLogsQuery,
 } = subjectProgressManageApi;
