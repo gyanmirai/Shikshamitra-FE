@@ -288,6 +288,8 @@ const SeatAllocationSection = ({
     },
   });
 
+  console.log('Seat Layout Data:', seatLayoutData);
+
   // State to manage seat assignment data, tracking which students are assigned to which seats
   // Initialized with mock data from JSON file for seat allocation information
   const [assignedData, setAssignedData] = useState<ISeatAllocation[]>([]);
@@ -530,10 +532,10 @@ const SeatAllocationSection = ({
                 selectedRoom={{
                   id: classRoom,
                   roomName: seatLayoutData?.roomId ?? classRoom,
-                  capacity: seatLayoutData?.totalSeats ?? 0,
-                  rows: 6,
-                  columns: 2,
-                  benchCapacity: 2,
+                  capacity: seatLayoutData?.room?.capacity ?? 0,
+                  rows: seatLayoutData?.room?.benchesPerRow ?? 0,
+                  columns: seatLayoutData?.room?.benchesPerColumn ?? 0,
+                  benchCapacity: seatLayoutData?.room?.benchCapacity ?? 0,
                 }}
                 onStudentRemove={handleStudentRemove}
                 assignedData={assignedData}
