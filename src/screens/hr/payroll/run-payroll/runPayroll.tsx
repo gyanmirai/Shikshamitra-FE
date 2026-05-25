@@ -23,6 +23,12 @@ import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
+  toHrAuditLabel,
+  formatHrAuditValue,
+  parseHrAuditContext,
+  formatHrAuditDateTime,
+} from 'src/utils/hr-audit-format';
+import {
   Box,
   Card,
   Chip,
@@ -47,6 +53,7 @@ import {
   useUnmarkPayrollReviewedMutation,
   useGenerateAndLockPayrollMutation,
   useCreatePayrollAdjustmentMutation,
+  useUpdatePayrollAdjustmentMutation,
   useDeletePayrollAdjustmentMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
@@ -143,15 +150,6 @@ const formatDelta = (value: number | null, percent: number | null) => {
   return `${sign}${formatCurrency(value)}${pct}`;
 };
 
-const parseAuditContext = (contextJson?: string | null): Record<string, unknown> | null => {
-  if (!contextJson) return null;
-  try {
-    return JSON.parse(contextJson) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-};
-
 const getPayrollPreviewError = (error: any, fallbackMonth: string): PayrollPreviewError => ({
   message: error?.data?.detail || error?.data?.message || 'Payroll preview could not be prepared.',
   errorCode: error?.data?.errorCode,
@@ -171,6 +169,10 @@ const RunPayroll = () => {
   const router = useRouter();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canLockPayroll = hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollLock);
+  const canAdjustPayroll = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.runPayrollAdjustments
+  );
   const canViewPayrollAudit = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.runPayrollViewAudit
@@ -192,6 +194,7 @@ const RunPayroll = () => {
     isEarning: 'true',
     reason: '',
   });
+  const [editingAdjustmentId, setEditingAdjustmentId] = useState<string | null>(null);
 
   const selectedMonthKey = month?.format('YYYY-MM') ?? '';
   const isDataForSelectedMonth = Boolean(selectedMonthKey) && loadedMonthKey === selectedMonthKey;
@@ -225,6 +228,11 @@ const RunPayroll = () => {
   const [createAdjustment, { isLoading: createAdjustmentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreatePayrollAdjustmentMutation,
+  });
+
+  const [updateAdjustment, { isLoading: updateAdjustmentLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdatePayrollAdjustmentMutation,
   });
 
   const [deleteAdjustment, { isLoading: deleteAdjustmentLoading }] = useQueryAndMutation({
@@ -328,6 +336,9 @@ const RunPayroll = () => {
         .map((row) => row.id),
     [selectedRows]
   );
+  const activeRowCanAdjust = Boolean(
+    activeRow && activeRow.status === 'REVIEWED' && canAdjustPayroll
+  );
   useEffect(() => {
     setSelectedEmployeeIds((prev) => prev.filter((id) => pendingRows.some((row) => row.id === id)));
   }, [pendingRows]);
@@ -339,6 +350,11 @@ const RunPayroll = () => {
       setActiveRow(refreshedRow);
     }
   }, [activeRow, tableData]);
+
+  useEffect(() => {
+    setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
+    setEditingAdjustmentId(null);
+  }, [activeRow?.id]);
 
   useEffect(() => {
     let ticking = false;
@@ -378,7 +394,12 @@ const RunPayroll = () => {
           }
 
           const response = await fetchRunPayrollPreview(
-            { month: selectedMonthKey, page, pageSize: PAYROLL_REGISTER_PAGE_SIZE, forceRefresh },
+            {
+              month: selectedMonthKey,
+              page,
+              pageSize: PAYROLL_REGISTER_PAGE_SIZE,
+              forceRefresh: forceRefresh && page === 0,
+            },
             false
           ).unwrap();
           readiness = readiness || response?.readiness || null;
@@ -445,6 +466,12 @@ const RunPayroll = () => {
 
   const addPayrollAdjustment = useCallback(async () => {
     if (!activeRow || !selectedMonthKey) return;
+    if (!canAdjustPayroll || activeRow.status !== 'REVIEWED') {
+      shikshaMitraToast.error({
+        message: 'Payroll adjustments are available only for reviewed, unlocked rows.',
+      });
+      return;
+    }
     const amount = Number(adjustmentDraft.amount);
     if (
       !adjustmentDraft.name.trim() ||
@@ -457,27 +484,58 @@ const RunPayroll = () => {
     }
 
     try {
-      await createAdjustment({
+      const payload = {
         month: selectedMonthKey,
         employeeId: activeRow.id,
         name: adjustmentDraft.name.trim(),
         amount,
         isEarning: adjustmentDraft.isEarning === 'true',
         reason: adjustmentDraft.reason.trim(),
-      }).unwrap();
-      shikshaMitraToast.success({ message: 'Payroll adjustment added.' });
+      };
+      if (editingAdjustmentId) {
+        await updateAdjustment({ id: editingAdjustmentId, ...payload }).unwrap();
+      } else {
+        await createAdjustment(payload).unwrap();
+      }
+      shikshaMitraToast.success({
+        message: editingAdjustmentId ? 'Payroll adjustment updated.' : 'Payroll adjustment added.',
+      });
       setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
+      setEditingAdjustmentId(null);
       await loadPreview(true);
     } catch (error: any) {
-      shikshaMitraToast.error({ message: error?.data?.message || 'Failed to add adjustment.' });
+      shikshaMitraToast.error({
+        message:
+          error?.data?.message ||
+          (editingAdjustmentId ? 'Failed to update adjustment.' : 'Failed to add adjustment.'),
+      });
     }
-  }, [activeRow, adjustmentDraft, createAdjustment, loadPreview, selectedMonthKey]);
+  }, [
+    activeRow,
+    adjustmentDraft,
+    canAdjustPayroll,
+    createAdjustment,
+    editingAdjustmentId,
+    loadPreview,
+    selectedMonthKey,
+    updateAdjustment,
+  ]);
 
   const removePayrollAdjustment = useCallback(
     async (id: string) => {
+      if (!activeRowCanAdjust) {
+        shikshaMitraToast.error({
+          message: 'Payroll adjustments are available only for reviewed, unlocked rows.',
+        });
+        return;
+      }
       try {
         await deleteAdjustment(id).unwrap();
         shikshaMitraToast.success({ message: 'Payroll adjustment removed.' });
+        if (editingAdjustmentId === id) {
+          setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
+          setEditingAdjustmentId(null);
+        }
         await loadPreview(true);
       } catch (error: any) {
         shikshaMitraToast.error({
@@ -485,8 +543,23 @@ const RunPayroll = () => {
         });
       }
     },
-    [deleteAdjustment, loadPreview]
+    [activeRowCanAdjust, deleteAdjustment, editingAdjustmentId, loadPreview]
   );
+
+  const startEditingAdjustment = useCallback((adjustment: any) => {
+    setEditingAdjustmentId(adjustment.id);
+    setAdjustmentDraft({
+      name: adjustment.name || '',
+      amount: String(adjustment.amount ?? ''),
+      isEarning: adjustment.isEarning ? 'true' : 'false',
+      reason: adjustment.reason || '',
+    });
+  }, []);
+
+  const cancelEditingAdjustment = useCallback(() => {
+    setEditingAdjustmentId(null);
+    setAdjustmentDraft({ name: '', amount: '', isEarning: 'true', reason: '' });
+  }, []);
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -793,16 +866,20 @@ const RunPayroll = () => {
         >
           {isDataForSelectedMonth ? 'Refresh preview' : 'Generate preview'}
         </LoadingButton>
-        <LoadingButton
-          variant="outlined"
-          loading={readinessBusy}
-          size="small"
-          disabled={!month}
-          startIcon={<Iconify icon="solar:refresh-linear" />}
-          onClick={() => refetchReadiness()}
-        >
-          Refresh status
-        </LoadingButton>
+        <Tooltip title="Refreshes readiness counts only. Use Refresh preview to recompute payroll rows.">
+          <span>
+            <LoadingButton
+              variant="outlined"
+              loading={readinessBusy}
+              size="small"
+              disabled={!month}
+              startIcon={<Iconify icon="solar:refresh-linear" />}
+              onClick={() => refetchReadiness()}
+            >
+              Refresh status
+            </LoadingButton>
+          </span>
+        </Tooltip>
       </Stack>
 
       <Card variant="outlined" sx={{ mb: 1, p: 0 }}>
@@ -1129,242 +1206,347 @@ const RunPayroll = () => {
         anchor="right"
         open={Boolean(activeRow)}
         onClose={() => setActiveRow(null)}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, p: 2 } }}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 520 },
+            maxWidth: '100vw',
+            height: '100dvh',
+            maxHeight: '100dvh',
+            overflow: 'hidden',
+          },
+        }}
       >
         {activeRow ? (
-          <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography variant="h6">{activeRow.employeeName}</Typography>
-                <Typography variant="body2" color="text.secondary">
+          <Stack sx={{ height: '100%', minHeight: 0 }}>
+            <Stack
+              direction="row"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              spacing={1}
+              sx={{ flexShrink: 0, p: { xs: 1.5, sm: 2 }, pb: { xs: 1, sm: 1.25 } }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h6" noWrap>
+                  {activeRow.employeeName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
                   {activeRow.employeeIdentifier} • {activeRow.employeeGroup}
                 </Typography>
               </Box>
-              <IconButton onClick={() => setActiveRow(null)}>
+              <IconButton onClick={() => setActiveRow(null)} sx={{ flexShrink: 0 }}>
                 <Iconify icon="mingcute:close-line" />
               </IconButton>
             </Stack>
             <Divider />
-            <Grid container spacing={1}>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Payable days
-                </Typography>
-                <Typography variant="subtitle2">
-                  {activeRow.payableDays} / {activeRow.totalWorkingDays}
-                </Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Proration
-                </Typography>
-                <Typography variant="subtitle2">{activeRow.prorationFactor.toFixed(4)}</Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Total salary
-                </Typography>
-                <Typography variant="subtitle2">
-                  {formatCurrency(activeRow.fullGrossSalary)}
-                </Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Day rule
-                </Typography>
-                <Typography variant="subtitle2">{activeRow.dayCalculationMode}</Typography>
-              </Grid>
-              <Grid size={3}>
-                <Typography variant="caption" color="text.secondary">
-                  Review status
-                </Typography>
-                <Typography variant="subtitle2">{activeRow.status}</Typography>
-              </Grid>
-            </Grid>
-            <Card variant="outlined" sx={{ p: 1.25, overflow: 'visible' }}>
-              <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-                View all issues
-              </Typography>
-              {activeRow.issueCodes.length === 0 ? (
-                <Chip size="small" label="Clean payroll row" color="success" variant="outlined" />
-              ) : (
-                <Stack spacing={0.75}>
-                  {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
-                    const codes = activeRow.issueCodes.filter(
-                      (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity
-                    );
-                    if (!codes.length) return null;
-                    const color =
-                      severity === 'CRITICAL'
-                        ? 'error'
-                        : severity === 'WARNING'
-                          ? 'warning'
-                          : 'info';
-                    return (
-                      <Stack
-                        key={severity}
-                        direction="row"
-                        spacing={0.75}
-                        flexWrap="wrap"
-                        useFlexGap
-                      >
-                        <Chip size="small" color={color} label={severity} />
-                        {codes.map((code) => (
-                          <Chip
-                            key={code}
-                            size="small"
-                            variant="outlined"
-                            color={color}
-                            label={ISSUE_LABELS[code]?.label || code}
-                          />
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                px: { xs: 1.5, sm: 2 },
+                py: { xs: 1.25, sm: 2 },
+              }}
+            >
+              <Stack spacing={{ xs: 1.25, sm: 2 }}>
+                <Grid container spacing={1}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Payable days
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      {activeRow.payableDays} / {activeRow.totalWorkingDays}
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Proration
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      {activeRow.prorationFactor.toFixed(4)}
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Total salary
+                    </Typography>
+                    <Typography variant="subtitle2">
+                      {formatCurrency(activeRow.fullGrossSalary)}
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Day rule
+                    </Typography>
+                    <Typography variant="subtitle2" noWrap>
+                      {activeRow.dayCalculationMode}
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Review status
+                    </Typography>
+                    <Typography variant="subtitle2">{activeRow.status}</Typography>
+                  </Grid>
+                </Grid>
+                <Card variant="outlined" sx={{ p: { xs: 1, sm: 1.25 }, overflow: 'visible' }}>
+                  <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
+                    View all issues
+                  </Typography>
+                  {activeRow.issueCodes.length === 0 ? (
+                    <Chip
+                      size="small"
+                      label="Clean payroll row"
+                      color="success"
+                      variant="outlined"
+                    />
+                  ) : (
+                    <Stack spacing={0.75}>
+                      {(['CRITICAL', 'WARNING', 'INFO'] as const).map((severity) => {
+                        const codes = activeRow.issueCodes.filter(
+                          (code) => (ISSUE_LABELS[code]?.severity ?? 'INFO') === severity
+                        );
+                        if (!codes.length) return null;
+                        const color =
+                          severity === 'CRITICAL'
+                            ? 'error'
+                            : severity === 'WARNING'
+                              ? 'warning'
+                              : 'info';
+                        return (
+                          <Stack
+                            key={severity}
+                            direction="row"
+                            spacing={0.75}
+                            flexWrap="wrap"
+                            useFlexGap
+                            sx={{ minWidth: 0 }}
+                          >
+                            <Chip size="small" color={color} label={severity} />
+                            {codes.map((code) => (
+                              <Chip
+                                key={code}
+                                size="small"
+                                variant="outlined"
+                                color={color}
+                                label={ISSUE_LABELS[code]?.label || code}
+                                sx={{
+                                  maxWidth: '100%',
+                                  '& .MuiChip-label': {
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  },
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        );
+                      })}
+                    </Stack>
+                  )}
+                </Card>
+                <Card variant="outlined" sx={{ p: { xs: 1, sm: 1.25 } }}>
+                  <Stack spacing={{ xs: 1, sm: 1.25 }}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                      <Typography variant="subtitle2">Payroll-only adjustments</Typography>
+                      <Chip
+                        size="small"
+                        label={`${activeRow.payrollAdjustments.length}`}
+                        variant="outlined"
+                      />
+                    </Stack>
+                    {activeRow.payrollAdjustments.length ? (
+                      <Stack spacing={0.75}>
+                        {activeRow.payrollAdjustments.map((adjustment) => (
+                          <Stack
+                            key={adjustment.id}
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            spacing={1}
+                            sx={{ minWidth: 0 }}
+                          >
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Typography variant="body2" fontWeight={600} noWrap>
+                                {adjustment.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" noWrap>
+                                {adjustment.reason}
+                              </Typography>
+                            </Box>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={0.5}
+                              sx={{ flexShrink: 0, minWidth: 0 }}
+                            >
+                              <Chip
+                                size="small"
+                                color={adjustment.isEarning ? 'success' : 'error'}
+                                variant="outlined"
+                                label={`${adjustment.isEarning ? '+' : '-'}${formatCurrency(adjustment.amount)}`}
+                                sx={{
+                                  maxWidth: { xs: 140, sm: 180 },
+                                  '& .MuiChip-label': {
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  },
+                                }}
+                              />
+                              {activeRowCanAdjust ? (
+                                <>
+                                  <IconButton
+                                    size="small"
+                                    disabled={updateAdjustmentLoading || deleteAdjustmentLoading}
+                                    onClick={() => startEditingAdjustment(adjustment)}
+                                  >
+                                    <Iconify icon="solar:pen-linear" width={16} />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    disabled={deleteAdjustmentLoading}
+                                    onClick={() => removePayrollAdjustment(adjustment.id)}
+                                  >
+                                    <Iconify icon="solar:trash-bin-trash-linear" width={16} />
+                                  </IconButton>
+                                </>
+                              ) : null}
+                            </Stack>
+                          </Stack>
                         ))}
                       </Stack>
-                    );
-                  })}
-                </Stack>
-              )}
-            </Card>
-            <Card variant="outlined" sx={{ p: 1.25 }}>
-              <Stack spacing={1.25}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Typography variant="subtitle2">Payroll-only adjustments</Typography>
-                  <Chip
-                    size="small"
-                    label={`${activeRow.payrollAdjustments.length}`}
-                    variant="outlined"
-                  />
-                </Stack>
-                {activeRow.payrollAdjustments.length ? (
-                  <Stack spacing={0.75}>
-                    {activeRow.payrollAdjustments.map((adjustment) => (
-                      <Stack
-                        key={adjustment.id}
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="space-between"
-                        spacing={1}
-                      >
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="body2" fontWeight={600} noWrap>
-                            {adjustment.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap>
-                            {adjustment.reason}
-                          </Typography>
-                        </Box>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <Chip
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        No payroll-only adjustments.
+                      </Typography>
+                    )}
+                    {activeRow.status === 'LOCKED' ? (
+                      <Alert severity="info">Locked payroll rows cannot be adjusted.</Alert>
+                    ) : activeRow.status !== 'REVIEWED' ? (
+                      <Alert severity="warning">
+                        Mark this payroll row reviewed before adding payroll-only adjustments.
+                      </Alert>
+                    ) : !canAdjustPayroll ? (
+                      <Alert severity="warning">
+                        You do not have permission to change payroll-only adjustments.
+                      </Alert>
+                    ) : (
+                      <Grid container spacing={1}>
+                        <Grid size={{ xs: 12, sm: 5 }}>
+                          <TextField
+                            fullWidth
                             size="small"
-                            color={adjustment.isEarning ? 'success' : 'error'}
-                            variant="outlined"
-                            label={`${adjustment.isEarning ? '+' : '-'}${formatCurrency(adjustment.amount)}`}
+                            label="Name"
+                            value={adjustmentDraft.name}
+                            onChange={(event) =>
+                              setAdjustmentDraft((prev) => ({ ...prev, name: event.target.value }))
+                            }
                           />
-                          {activeRow.status === 'LOCKED' ? null : (
-                            <IconButton
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 3 }}>
+                          <TextField
+                            select
+                            fullWidth
+                            size="small"
+                            label="Type"
+                            value={adjustmentDraft.isEarning}
+                            onChange={(event) =>
+                              setAdjustmentDraft((prev) => ({
+                                ...prev,
+                                isEarning: event.target.value,
+                              }))
+                            }
+                          >
+                            <MenuItem value="true">Earning</MenuItem>
+                            <MenuItem value="false">Deduction</MenuItem>
+                          </TextField>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            type="number"
+                            label="Amount"
+                            value={adjustmentDraft.amount}
+                            onChange={(event) =>
+                              setAdjustmentDraft((prev) => ({
+                                ...prev,
+                                amount: event.target.value,
+                              }))
+                            }
+                          />
+                        </Grid>
+                        <Grid size={12}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Reason"
+                            value={adjustmentDraft.reason}
+                            onChange={(event) =>
+                              setAdjustmentDraft((prev) => ({
+                                ...prev,
+                                reason: event.target.value,
+                              }))
+                            }
+                          />
+                        </Grid>
+                        <Grid size={12}>
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <LoadingButton
                               size="small"
-                              disabled={deleteAdjustmentLoading}
-                              onClick={() => removePayrollAdjustment(adjustment.id)}
+                              variant="contained"
+                              loading={createAdjustmentLoading || updateAdjustmentLoading}
+                              startIcon={
+                                <Iconify
+                                  icon={
+                                    editingAdjustmentId
+                                      ? 'solar:diskette-bold'
+                                      : 'solar:add-circle-bold'
+                                  }
+                                />
+                              }
+                              onClick={addPayrollAdjustment}
+                              sx={{ width: { xs: '100%', sm: 'auto' } }}
                             >
-                              <Iconify icon="solar:trash-bin-trash-linear" width={16} />
-                            </IconButton>
-                          )}
-                        </Stack>
-                      </Stack>
-                    ))}
+                              {editingAdjustmentId ? 'Save adjustment' : 'Add adjustment'}
+                            </LoadingButton>
+                            {editingAdjustmentId ? (
+                              <LoadingButton
+                                size="small"
+                                variant="outlined"
+                                onClick={cancelEditingAdjustment}
+                                sx={{ width: { xs: '100%', sm: 'auto' } }}
+                              >
+                                Cancel
+                              </LoadingButton>
+                            ) : null}
+                          </Stack>
+                        </Grid>
+                      </Grid>
+                    )}
                   </Stack>
-                ) : (
-                  <Typography variant="caption" color="text.secondary">
-                    No payroll-only adjustments.
-                  </Typography>
-                )}
-                {activeRow.status === 'LOCKED' ? (
-                  <Alert severity="info">Locked payroll rows cannot be adjusted.</Alert>
-                ) : (
-                  <Grid container spacing={1}>
-                    <Grid size={{ xs: 12, sm: 5 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Name"
-                        value={adjustmentDraft.name}
-                        onChange={(event) =>
-                          setAdjustmentDraft((prev) => ({ ...prev, name: event.target.value }))
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }}>
-                      <TextField
-                        select
-                        fullWidth
-                        size="small"
-                        label="Type"
-                        value={adjustmentDraft.isEarning}
-                        onChange={(event) =>
-                          setAdjustmentDraft((prev) => ({ ...prev, isEarning: event.target.value }))
-                        }
-                      >
-                        <MenuItem value="true">Earning</MenuItem>
-                        <MenuItem value="false">Deduction</MenuItem>
-                      </TextField>
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        type="number"
-                        label="Amount"
-                        value={adjustmentDraft.amount}
-                        onChange={(event) =>
-                          setAdjustmentDraft((prev) => ({ ...prev, amount: event.target.value }))
-                        }
-                      />
-                    </Grid>
-                    <Grid size={12}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Reason"
-                        value={adjustmentDraft.reason}
-                        onChange={(event) =>
-                          setAdjustmentDraft((prev) => ({ ...prev, reason: event.target.value }))
-                        }
-                      />
-                    </Grid>
-                    <Grid size={12}>
-                      <LoadingButton
-                        size="small"
-                        variant="contained"
-                        loading={createAdjustmentLoading}
-                        startIcon={<Iconify icon="solar:add-circle-bold" />}
-                        onClick={addPayrollAdjustment}
-                      >
-                        Add adjustment
-                      </LoadingButton>
-                    </Grid>
-                  </Grid>
-                )}
+                </Card>
+                <SalaryDetailsTableCard
+                  title="Earnings"
+                  subheader="Payroll preview earnings"
+                  icon="solar:hand-money-linear"
+                  iconColor={{ bg: 'success.lighter', color: 'success.main' }}
+                  data={activeRow.earningComponents}
+                  tableId="payroll-workbench-earnings"
+                  nameColumnLabel="Earning"
+                  noDataText="No earnings found"
+                />
+                <SalaryDetailsTableCard
+                  title="Deductions"
+                  subheader="Payroll preview deductions"
+                  icon="solar:minus-circle-linear"
+                  iconColor={{ bg: 'error.lighter', color: 'error.main' }}
+                  data={activeRow.deductionComponents}
+                  tableId="payroll-workbench-deductions"
+                  nameColumnLabel="Deduction"
+                  noDataText="No deductions found"
+                />
               </Stack>
-            </Card>
-            <SalaryDetailsTableCard
-              title="Earnings"
-              subheader="Payroll preview earnings"
-              icon="solar:hand-money-linear"
-              iconColor={{ bg: 'success.lighter', color: 'success.main' }}
-              data={activeRow.earningComponents}
-              tableId="payroll-workbench-earnings"
-              nameColumnLabel="Earning"
-              noDataText="No earnings found"
-            />
-            <SalaryDetailsTableCard
-              title="Deductions"
-              subheader="Payroll preview deductions"
-              icon="solar:minus-circle-linear"
-              iconColor={{ bg: 'error.lighter', color: 'error.main' }}
-              data={activeRow.deductionComponents}
-              tableId="payroll-workbench-deductions"
-              nameColumnLabel="Deduction"
-              noDataText="No deductions found"
-            />
+            </Box>
           </Stack>
         ) : null}
       </Drawer>
@@ -1389,8 +1571,8 @@ const RunPayroll = () => {
           ) : payrollAuditLoading ? (
             <Alert severity="info">Loading payroll audit events...</Alert>
           ) : payrollAuditEvents?.items?.length ? (
-            payrollAuditEvents.items.map((event) => {
-              const context = parseAuditContext(event.contextJson);
+            payrollAuditEvents.items.map((event, index) => {
+              const context = parseHrAuditContext(event.contextJson);
               return (
                 <Card key={event.id} variant="outlined" sx={{ p: 1.25 }}>
                   <Stack spacing={0.75}>
@@ -1403,18 +1585,22 @@ const RunPayroll = () => {
                     >
                       <Chip
                         size="small"
-                        label={event.action.replaceAll('_', ' ')}
+                        label={`${index + 1}. ${event.actionLabel || toHrAuditLabel(event.action)}`}
                         color="primary"
                       />
                       <Typography variant="caption" color="text.secondary">
-                        {dayjs(event.occurredAt).format('DD MMM YYYY, hh:mm A')}
+                        {formatHrAuditDateTime(event.occurredAt, event.occurredAtDisplay)}
                       </Typography>
                     </Stack>
                     <Typography variant="body2" fontWeight={600}>
                       {event.summary}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Actor: {event.actorNameSnapshot || event.actorUserId || 'System'}
+                      Actor:{' '}
+                      {event.actorDisplayName ||
+                        event.actorNameSnapshot ||
+                        event.actorUserId ||
+                        'System'}
                     </Typography>
                     {context ? (
                       <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
@@ -1425,7 +1611,7 @@ const RunPayroll = () => {
                               key={key}
                               size="small"
                               variant="outlined"
-                              label={`${key}: ${String(value)}`}
+                              label={`${toHrAuditLabel(key)}: ${formatHrAuditValue(value)}`}
                               sx={{ maxWidth: '100%' }}
                             />
                           ))}

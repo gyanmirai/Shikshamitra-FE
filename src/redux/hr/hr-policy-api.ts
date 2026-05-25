@@ -165,6 +165,7 @@ export type EmployeePolicyOverrideRequest = {
 
 export type EffectiveEmployeePolicies = {
   employeeId: string;
+  academicYearId?: string;
   date: string;
   assignment?: HrPolicyAssignment | null;
   policySource: string;
@@ -352,9 +353,14 @@ export type HrAuditEvent = {
   actorUserId?: string | null;
   actorNameSnapshot?: string | null;
   occurredAt: string;
+  occurredAtUtc?: string;
+  occurredAtDisplay?: string;
+  actorDisplayName?: string;
+  actionLabel?: string;
   reason?: string | null;
   summary: string;
   changedFields: HrAuditChangedField[];
+  changedFieldCount?: number;
   contextJson?: string | null;
   correlationId?: string | null;
   sourceAuditLogId?: string | null;
@@ -390,6 +396,9 @@ export type HrPolicyVersion = {
   changeReason?: string | null;
   creationTime: string;
   creatorId?: string | null;
+  createdByName?: string | null;
+  summary?: string | null;
+  changedFieldCount?: number;
   snapshotJson: string;
 };
 
@@ -402,6 +411,13 @@ export type HrPolicyVersionCompare = {
     field: string;
     fromValue?: string | null;
     toValue?: string | null;
+    fieldKey?: string;
+    fieldLabel?: string;
+    category?: string;
+    fromDisplayValue?: string | null;
+    toDisplayValue?: string | null;
+    fromRawValue?: string | null;
+    toRawValue?: string | null;
   }>;
 };
 
@@ -527,6 +543,13 @@ export const hrPolicyApi = api.injectEndpoints({
       }),
       invalidatesTags: policyTags,
     }),
+    unarchiveWorkCalendarPolicy: builder.mutation<WorkCalendarPolicy, string>({
+      query: (id) => ({
+        url: `/hr/work-calendar-policies/${id}/unarchive`,
+        method: 'POST',
+      }),
+      invalidatesTags: policyTags,
+    }),
     updateWorkCalendarPolicy: builder.mutation<
       WorkCalendarPolicy,
       { id: string; body: CreateUpdateWorkCalendarPolicy }
@@ -589,6 +612,13 @@ export const hrPolicyApi = api.injectEndpoints({
         url: `/hr/payroll/policies/${id}`,
         method: 'DELETE',
         headers: token ? { 'X-HR-Policy-Impact-Token': token } : undefined,
+      }),
+      invalidatesTags: policyTags,
+    }),
+    unarchivePayrollPolicy: builder.mutation<PayrollPolicy, string>({
+      query: (id) => ({
+        url: `/hr/payroll/policies/${id}/unarchive`,
+        method: 'POST',
       }),
       invalidatesTags: policyTags,
     }),
@@ -672,6 +702,13 @@ export const hrPolicyApi = api.injectEndpoints({
         url: `/hr/attendance/policies/${id}`,
         method: 'DELETE',
         headers: token ? { 'X-HR-Policy-Impact-Token': token } : undefined,
+      }),
+      invalidatesTags: policyTags,
+    }),
+    unarchiveAttendancePolicy: builder.mutation<AttendancePolicy, string>({
+      query: (id) => ({
+        url: `/hr/attendance/policies/${id}/unarchive`,
+        method: 'POST',
       }),
       invalidatesTags: policyTags,
     }),
@@ -873,6 +910,16 @@ export const hrPolicyApi = api.injectEndpoints({
       }),
       providesTags: policyTags,
     }),
+    getPolicyRestorePreview: builder.query<
+      HrPolicyImpactPreview,
+      { policyType: HrPolicyType; policyId: string; versionId: string }
+    >({
+      query: ({ policyType, policyId, versionId }) => ({
+        url: `${policyVersionPath(policyType, policyId)}/${versionId}/restore-preview`,
+        method: 'GET',
+      }),
+      providesTags: policyTags,
+    }),
     restorePolicyVersionDraft: builder.mutation<
       WorkCalendarPolicy | PayrollPolicy | AttendancePolicy,
       {
@@ -928,6 +975,7 @@ export const {
   useUpdateWorkCalendarPolicyWithTokenMutation,
   useDeleteWorkCalendarPolicyMutation,
   useDeleteWorkCalendarPolicyWithTokenMutation,
+  useUnarchiveWorkCalendarPolicyMutation,
   useGetPayrollPoliciesQuery,
   useCreatePayrollPolicyMutation,
   useClonePayrollPolicyMutation,
@@ -935,6 +983,7 @@ export const {
   useUpdatePayrollPolicyWithTokenMutation,
   useDeletePayrollPolicyMutation,
   useDeletePayrollPolicyWithTokenMutation,
+  useUnarchivePayrollPolicyMutation,
   useSetDefaultPayrollPolicyMutation,
   useSetDefaultPayrollPolicyWithTokenMutation,
   useGetAttendancePoliciesQuery,
@@ -944,6 +993,7 @@ export const {
   useUpdateAttendancePolicyWithTokenMutation,
   useDeleteAttendancePolicyMutation,
   useDeleteAttendancePolicyWithTokenMutation,
+  useUnarchiveAttendancePolicyMutation,
   useSetDefaultAttendancePolicyMutation,
   useSetDefaultAttendancePolicyWithTokenMutation,
   useGetHrPolicyAssignmentsQuery,
@@ -959,6 +1009,7 @@ export const {
   useGetHrEntityAuditEventsQuery,
   useGetPolicyVersionsQuery,
   useComparePolicyVersionsQuery,
+  useGetPolicyRestorePreviewQuery,
   useRestorePolicyVersionDraftMutation,
   useDeleteHrPolicyAssignmentMutation,
   useDeleteHrPolicyAssignmentWithTokenMutation,

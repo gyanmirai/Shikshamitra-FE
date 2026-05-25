@@ -37,6 +37,10 @@ export interface GetAttendanceRegisterParams {
   maxResultCount?: number;
 }
 
+export interface GetGroupedAttendanceRegisterParams extends GetAttendanceRegisterParams {
+  exceptionFilter?: 'All' | 'NeedsAttention' | 'Absent' | 'HalfDay' | 'MissingPunch' | 'Locked';
+}
+
 const compactParams = (params: Record<string, unknown>) =>
   Object.fromEntries(
     Object.entries(params).filter(
@@ -190,6 +194,18 @@ export const attendanceApi = employeeApi.injectEndpoints({
       }),
       providesTags: [employeeType.attendance],
     }),
+    getGroupedAttendanceRegister: builder.query({
+      query: (params: GetGroupedAttendanceRegisterParams) => ({
+        url: '/hr/attendance/register/grouped',
+        method: 'GET',
+        params: compactParams({
+          ...params,
+          skipCount: params.skipCount ?? 0,
+          maxResultCount: params.maxResultCount ?? 50,
+        }),
+      }),
+      providesTags: [employeeType.attendance],
+    }),
     adjustAttendanceRegister: builder.mutation({
       query: (body) => ({
         url: '/hr/attendance/register/adjust',
@@ -224,6 +240,7 @@ export const {
   useUnlockDayAttendanceMutation,
   useGetDayAttendanceQuery,
   useGetAttendanceRegisterQuery,
+  useGetGroupedAttendanceRegisterQuery,
   useAdjustAttendanceRegisterMutation,
   useBulkAdjustAttendanceRegisterMutation,
 } = attendanceApi;
