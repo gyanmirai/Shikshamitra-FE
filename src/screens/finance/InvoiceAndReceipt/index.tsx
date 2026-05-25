@@ -66,7 +66,7 @@ const InvoiceAndReceipt = () => {
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/invoice-receipt' },
-          { name: 'Invoices & Receipts' },
+          { name: 'Invoice & Receipts' },
         ]}
         action={activeTab === 'invoice' && renderButton.invoice}
       />

@@ -1,47 +1,30 @@
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
-import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
   FeeReceiptListItem,
   GetFeeReceiptListParams,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { Box, Chip } from '@mui/material';
-import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
+import { formatNumber } from 'src/utils/formate_number';
+import { FeeMonth } from 'src/enums/fee-collection-type';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import {
   FeeReceiptKind,
-  FEE_RECEIPT_KIND_COLORS,
   FEE_RECEIPT_KIND_LABELS,
   useGetFeeReceiptListQuery,
-  FeeReceiptVerificationStatus,
-  FEE_RECEIPT_VERIFICATION_LABELS,
 } from 'src/redux/invoiceAndReceipt/feeReceiptApi';
 
 import ReceiptPreviewDialog from './Components/ReceiptPreviewDialog';
 
-// ── Month options ─────────────────────────────────────────────────────────────
-
-const MONTHS = [
-  { label: 'January', value: 1 },
-  { label: 'February', value: 2 },
-  { label: 'March', value: 3 },
-  { label: 'April', value: 4 },
-  { label: 'May', value: 5 },
-  { label: 'June', value: 6 },
-  { label: 'July', value: 7 },
-  { label: 'August', value: 8 },
-  { label: 'September', value: 9 },
-  { label: 'October', value: 10 },
-  { label: 'November', value: 11 },
-  { label: 'December', value: 12 },
-];
-
 const RECEIPT_KIND_OPTIONS = [
-  { label: 'All Types', value: '' },
+  { label: 'All Types', value: 'All Types' },
   { label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.FinalFee], value: FeeReceiptKind.FinalFee },
   {
     label: FEE_RECEIPT_KIND_LABELS[FeeReceiptKind.ProvisionalFee],
@@ -64,29 +47,49 @@ const ReceiptManagement = () => {
   const [mediums, setMediums] = useState<Medium[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedMedium, setSelectedMedium] = useState<string>('');
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const [selectedKind, setSelectedKind] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('All Months');
+  const [selectedKind, setSelectedKind] = useState<string>('All Types');
 
   // ── Pagination state ──────────────────────────────────────────────────────
 
   const [skipCount, setSkipCount] = useState(0);
   const [maxResultCount, setMaxResultCount] = useState(DEFAULT_PAGE_SIZE);
 
+  // ── Academic year months from API ─────────────────────────────────────────
+
+  const { data: academicYearMonthsData, isLoading: isMonthsLoading } =
+    useGetAcademicYearMonthsQuery({ academicYearId: currentYear?.id }, { skip: !currentYear?.id });
+
+  const MONTHS = [
+    { label: 'All Months', value: 'All Months' },
+    ...(academicYearMonthsData?.map((item: { month: number; year: number }) => ({
+      label: `${FeeMonth[item.month]}-${item.year}`,
+      value: String(item.month),
+    })) ?? []),
+  ];
+
   // ── Preview state ──────────────────────────────────────────────────────────
 
   const [previewReceiptId, setPreviewReceiptId] = useState<string | null>(null);
 
   // ── Board/Medium cascade from global state ────────────────────────────────
-
   useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear?.boards]);
-
+    if (currentYear?.boards) {
+      setBoards(currentYear.boards);
+      setSelectedBoard(currentYear.boards[0].id);
+      setSelectedMedium(currentYear.boards[0].educationMediums[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear.boards]);
+  // State to store the selected student concession data
+  // null when no student is selected
   useEffect(() => {
-    const board = boards.find((b: Board) => b.id === selectedBoard);
-    setMediums(board?.educationMediums || []);
-    setSelectedMedium('');
-  }, [boards, selectedBoard]);
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
+
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   const resetPagination = useCallback(() => setSkipCount(0), []);
 
@@ -122,76 +125,76 @@ const ReceiptManagement = () => {
 
   // ── Columns ───────────────────────────────────────────────────────────────
 
-  const columns = useMemo(
+  const columns: IColumn[] = useMemo(
     () => [
       {
         id: 'receiptNumber',
         label: 'Receipt No.',
-        renderCell: (value: string, row: FeeReceiptListItem) => (
-          <Box
-            component="span"
-            sx={{ color: 'primary.main', cursor: 'pointer', fontWeight: 600 }}
-            onClick={() => setPreviewReceiptId(row.id)}
-          >
-            {value}
-          </Box>
-        ),
-      },
-      {
-        id: 'receiptKind',
-        label: 'Receipt Type',
-        renderCell: (value: FeeReceiptKind, row: FeeReceiptListItem) => (
-          <Box display="flex" flexDirection="column" gap={0.5}>
-            <Label variant="soft" color={FEE_RECEIPT_KIND_COLORS[value] as LabelColor}>
-              {FEE_RECEIPT_KIND_LABELS[value] ?? row.receiptKindLabel}
-            </Label>
-            {row.verificationStatus !== FeeReceiptVerificationStatus.NotApplicable &&
-              row.verificationStatus !== FeeReceiptVerificationStatus.PendingVerification && (
-                <Chip
-                  size="small"
-                  label={FEE_RECEIPT_VERIFICATION_LABELS[row.verificationStatus]}
-                  color={
-                    row.verificationStatus === FeeReceiptVerificationStatus.Verified
-                      ? 'success'
-                      : 'error'
-                  }
-                  sx={{ height: 18, fontSize: 10 }}
-                />
-              )}
-          </Box>
-        ),
+        align: 'left',
+        width: 140,
+        minWidth: 120,
+        maxWidth: 160,
+        sticky: true,
       },
       {
         id: 'studentName',
-        label: 'Student Name',
-        renderCell: (value: string, row: FeeReceiptListItem) => (
-          <Box>
-            <Box fontWeight={600}>{value}</Box>
-            {row.grNo && (
-              <Box component="span" fontSize={11} color="text.secondary">
-                GR: {row.grNo}
-              </Box>
-            )}
-          </Box>
-        ),
+        label: 'Name(Gr No.)',
+        align: 'left',
+        width: 220,
+        minWidth: 180,
+        maxWidth: 260,
+        sticky: true,
+        render: (value, row) => (row.grNo ? `${value} (${row.grNo})` : value),
       },
       {
         id: 'rollNo',
         label: 'Roll No.',
-        renderCell: (value: string | null) => value ?? '—',
+        align: 'left',
+        width: 96,
+        minWidth: 80,
+        maxWidth: 120,
+        render: (value) => value ?? '—',
+      },
+      {
+        id: 'receiptKind',
+        label: 'Receipt Type',
+        align: 'left',
+        width: 160,
+        minWidth: 140,
+        maxWidth: 200,
+        sticky: true,
       },
       {
         id: 'totalPaidAmount',
         label: 'Paid Amount',
-        renderCell: (value: number) =>
-          `₹ ${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+        align: 'left',
+        width: 120,
+        minWidth: 100,
+        maxWidth: 160,
+        render: (value) => `₹ ${formatNumber(value ?? 0)}`,
       },
       {
         id: 'receiptDate',
         label: 'Receipt Date',
-        renderCell: (value: string) => {
+        align: 'left',
+        width: 120,
+        minWidth: 110,
+        maxWidth: 160,
+        render: (value) => {
           const d = new Date(value);
           return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-IN');
+        },
+      },
+      {
+        id: 'actions',
+        label: 'Action',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        width: 80,
+        minWidth: 64,
+        render(_value: any, row: any) {
+          return <ThreeDotsActions showThreeDots={false} showViewIcon handleViewClick={() => {}} />;
         },
       },
     ],
@@ -242,7 +245,7 @@ const ReceiptManagement = () => {
           formControlProps={{ sx: { maxWidth: 180, width: '100%' } }}
         />
         <CustomSelect
-          options={[{ label: 'All Months', value: '' }, ...MONTHS]}
+          options={MONTHS}
           label="Month"
           value={selectedMonth}
           onChange={(val) => {
@@ -251,6 +254,7 @@ const ReceiptManagement = () => {
           }}
           labelKey="label"
           valueKey="value"
+          isLoading={isMonthsLoading}
           formControlProps={{ sx: { maxWidth: 160, width: '100%' } }}
         />
         <CustomSelect

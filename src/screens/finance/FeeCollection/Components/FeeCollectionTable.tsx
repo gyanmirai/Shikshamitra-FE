@@ -146,10 +146,12 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           columns={[
             {
               id: 'name',
-              label: 'Name',
+              label: 'Name(Gr No.)',
               align: 'left',
               isFilter: true,
-              minWidth: '300px',
+              width: 350,
+              minWidth: 350,
+              maxWidth: 500,
               sticky: true,
             },
             {
@@ -157,13 +159,18 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               label: 'Class/Div',
               isFilter: true,
               align: 'left',
-              minWidth: '70px',
+              width: 100,
+              minWidth: 80,
+              maxWidth: 120,
             },
             {
               id: 'rollNumber',
               label: 'Roll No.',
               align: 'left',
               isFilter: true,
+              width: 96,
+              minWidth: 80,
+              maxWidth: 120,
             },
             {
               id: 'totalFees',
@@ -171,7 +178,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               align: 'left',
               isFilter: true,
               filterType: 'number',
-              minWidth: '120px',
+              width: 130,
+              minWidth: 110,
+              maxWidth: 160,
               render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
@@ -180,7 +189,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               align: 'left',
               isFilter: true,
               filterType: 'number',
-              minWidth: '120px',
+              width: 130,
+              minWidth: 110,
+              maxWidth: 160,
               render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
@@ -189,7 +200,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               filterType: 'number',
               align: 'left',
               isFilter: true,
-              minWidth: '130px',
+              width: 140,
+              minWidth: 120,
+              maxWidth: 170,
               render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
@@ -198,7 +211,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               filterType: 'number',
               align: 'left',
               isFilter: true,
-              minWidth: '130px',
+              width: 140,
+              minWidth: 120,
+              maxWidth: 170,
               render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
             },
             {
@@ -209,7 +224,9 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               filterType: 'enum',
               enumOptions: FeeCollectionStatusOptions,
               sticky: true,
-              minWidth: '60px',
+              width: 100,
+              minWidth: 84,
+              maxWidth: 130,
               render(value) {
                 const statusValue = value as FeeCollectionStatusType;
                 const color = FeeCollectionStatusTypeColors[statusValue] as LabelColor;
@@ -219,7 +236,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
             {
               id: 'action',
               label: 'Actions',
-              minWidth: 60,
+              width: 96,
+              minWidth: 80,
               align: 'left',
               isSort: false,
               sticky: true,

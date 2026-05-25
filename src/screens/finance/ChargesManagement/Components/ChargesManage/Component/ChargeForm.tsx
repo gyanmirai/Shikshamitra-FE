@@ -167,7 +167,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       educationMediumId: Yup.string().required('Medium is required'),
       standardId: Yup.string().required('Class is required'),
       divisionId: Yup.string().required('Division is required'),
-      selectedStudent: Yup.object().nullable().required('Student is required'),
       studentId: Yup.string().nullable().required('Student is required'),
     }),
     onSubmit: async (values) => {
@@ -204,7 +203,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
+  console.log('formik values=====', formik.values);
 
+  console.log('formik errors=====', formik.errors);
   const handleSubmit = useCallback(() => {
     formik.validateForm().then((validationErrors) => {
       formik.handleSubmit();

@@ -241,7 +241,7 @@ const FeeLedgerList = ({
   }
 
   return (
-    <Box sx={{ pl: 0.25 }}>
+    <Box sx={{ pl: 0.25, mb: 1 }}>
       {activeTab === 'by-month' && (
         <ByMonthView
           groups={data.monthWise}

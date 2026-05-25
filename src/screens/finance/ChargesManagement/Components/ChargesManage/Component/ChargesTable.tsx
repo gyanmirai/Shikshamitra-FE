@@ -31,6 +31,8 @@ const ChargesTable = ({
   setSelectedBoard,
   selectedMedium,
   setSelectedMedium,
+  selectedTab,
+  setSelectedTab,
 }: {
   onView: (data: IChargeData) => void;
   onEdit: (data: IChargeData) => void;
@@ -43,12 +45,19 @@ const ChargesTable = ({
   setSelectedBoard: (value: string) => void;
   selectedMedium: string;
   setSelectedMedium: (value: string) => void;
+  selectedTab: string | number;
+  setSelectedTab: (value: string | number) => void;
 }) => {
   // Local state to store filtered boards based on academic year
   const [boards, setBoards] = useState<Board[]>([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const tabs = useTabs(ChargesPaymentStatus.Pending);
+  const tabs = useTabs(selectedTab);
+
+  useEffect(() => {
+    setSelectedTab(tabs.value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabs.value]);
   // Fetch charge data using custom query hook
   const {
     data: chargesData,
@@ -229,10 +238,12 @@ const ChargesTable = ({
         columns={[
           {
             id: 'studentName',
-            label: 'Student Name',
+            label: 'Name(Gr No.)',
             align: 'left',
             isFilter: true,
-            minWidth: 140,
+            width: 350,
+            minWidth: 350,
+            maxWidth: 500,
             sticky: true,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
@@ -244,7 +255,9 @@ const ChargesTable = ({
             id: 'rollNumber',
             label: 'Roll No.',
             align: 'left',
-            minWidth: 90,
+            width: 96,
+            minWidth: 80,
+            maxWidth: 120,
             filterType: 'number',
             isFilter: true,
           },
@@ -252,7 +265,9 @@ const ChargesTable = ({
             id: 'standardName',
             label: 'Class/Div',
             align: 'left',
-            minWidth: 100,
+            width: 110,
+            minWidth: 90,
+            maxWidth: 140,
             isFilter: true,
             render: (value, row) => (
               <Typography variant="caption" fontSize="13px">
@@ -267,7 +282,9 @@ const ChargesTable = ({
             label: 'Charge Category',
             align: 'left',
             isFilter: true,
-            minWidth: 160,
+            width: 180,
+            minWidth: 150,
+            maxWidth: 220,
           },
           {
             id: 'amount',
@@ -275,12 +292,19 @@ const ChargesTable = ({
             filterType: 'number',
             align: 'left',
             isFilter: true,
+            width: 120,
+            minWidth: 100,
+            maxWidth: 160,
             render: (value) => `₹ ${parseFloat(value).toLocaleString()}`,
           },
           {
             id: 'description',
             label: 'Description',
             align: 'left',
+            width: 220,
+            minWidth: 160,
+            maxWidth: 280,
+            cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
             render: (value) => (
               <Typography
                 variant="caption"
@@ -301,7 +325,9 @@ const ChargesTable = ({
             label: 'Due Date',
             align: 'left',
             filterType: 'date',
-            minWidth: '110px',
+            width: 120,
+            minWidth: 100,
+            maxWidth: 150,
             // render: (value) => (
             //   <Typography fontSize="13px">
             //     {value ? dayjs(value).format('DD-MM-YYYY') : '-'}
@@ -314,7 +340,8 @@ const ChargesTable = ({
             align: 'left',
             isSort: false,
             isFilter: false,
-            minWidth: 40,
+            width: 96,
+            minWidth: 80,
             sticky: true,
             render(value, row) {
               return (

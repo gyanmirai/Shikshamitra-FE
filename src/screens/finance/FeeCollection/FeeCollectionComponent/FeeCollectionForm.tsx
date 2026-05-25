@@ -60,7 +60,6 @@ import {
 
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
-import QuickActionToolbar from './QuickActionToolbar';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
@@ -837,9 +836,10 @@ const FeeCollectComponentForm = ({
             filters={filters}
             onFilterChange={setFilters}
             entryCount={entryCount}
+            studentId={String(student?.id ?? '')}
           />
 
-          <Box mt={0.85}>
+          {/* <Box mt={0.85}>
             <QuickActionToolbar
               ledgerData={ledgerData}
               chargesData={chargesData ?? []}
@@ -849,7 +849,7 @@ const FeeCollectComponentForm = ({
               onSelectionChange={handleSelectionChange}
               onChargesChange={handleChargesChange}
             />
-          </Box>
+          </Box> */}
 
           {formik.submitCount > 0 &&
             formik.values.selectedItems.length === 0 &&
@@ -1102,6 +1102,7 @@ const FeeCollectComponentForm = ({
               border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
               flex: 1,
               minHeight: 0,
+              mb: 1,
             }}
           >
             {/* Checkout header */}
