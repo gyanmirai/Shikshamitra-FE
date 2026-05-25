@@ -41,15 +41,23 @@ const ChargeReasonApprovalForm = ({ onClose, mode, selectedCharge }: IReasonAppr
     validationSchema: Yup.object().shape({
       reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       if (mode === 'Approve') {
-        approveCharge({ id: selectedCharge?.chargeId, body: { approvalNotes: values.reason } });
+        const result: any = await approveCharge({
+          id: selectedCharge?.chargeId,
+          body: { approvalNotes: values.reason },
+        });
+        if (result?.error) return;
         shikshaMitraToast.success({
           message: `Charge approved successfully for ${selectedCharge?.categoryName} and assigned to ${selectedCharge?.studentName}`,
         });
       } else {
-        rejectCharge({ id: selectedCharge?.chargeId, body: { rejectionReason: values.reason } });
-        shikshaMitraToast.error({
+        const result: any = await rejectCharge({
+          id: selectedCharge?.chargeId,
+          body: { rejectionReason: values.reason },
+        });
+        if (result?.error) return;
+        shikshaMitraToast.success({
           message: `Charge rejected for ${selectedCharge?.categoryName} and assigned to ${selectedCharge?.studentName}`,
         });
       }

@@ -96,7 +96,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "formik": "^2.4.6",
-    "framer-motion": "^12.24.10",
+    "framer-motion": "^12.40.0",
     "highcharts": "^12.6.0",
     "input-otp": "^1.4.2",
     "iron-session": "^8.0.4",

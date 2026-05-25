@@ -60,7 +60,6 @@ import {
 
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
-import QuickActionToolbar from './QuickActionToolbar';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
 import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
@@ -455,7 +454,6 @@ const FeeCollectComponentForm = ({
       setPreviewOpen(true);
     },
   });
-
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
@@ -838,9 +836,10 @@ const FeeCollectComponentForm = ({
             filters={filters}
             onFilterChange={setFilters}
             entryCount={entryCount}
+            studentId={String(student?.id ?? '')}
           />
 
-          <Box mt={0.85}>
+          {/* <Box mt={0.85}>
             <QuickActionToolbar
               ledgerData={ledgerData}
               chargesData={chargesData ?? []}
@@ -850,7 +849,7 @@ const FeeCollectComponentForm = ({
               onSelectionChange={handleSelectionChange}
               onChargesChange={handleChargesChange}
             />
-          </Box>
+          </Box> */}
 
           {formik.submitCount > 0 &&
             formik.values.selectedItems.length === 0 &&
@@ -1103,6 +1102,7 @@ const FeeCollectComponentForm = ({
               border: (t) => `1px solid ${alpha(t.palette.divider, 0.75)}`,
               flex: 1,
               minHeight: 0,
+              mb: 1,
             }}
           >
             {/* Checkout header */}
@@ -1382,6 +1382,18 @@ const FeeCollectComponentForm = ({
               </Typography>
             </Box>
           )}
+
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => onCancel?.(null, false)}
+            disabled={collectLoading}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            sx={{ minWidth: 88 }}
+          >
+            Cancel
+          </Button>
           <LoadingButton
             variant="contained"
             size="small"
@@ -1399,17 +1411,6 @@ const FeeCollectComponentForm = ({
           >
             Collect Payment
           </LoadingButton>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={() => onCancel?.(null, false)}
-            disabled={collectLoading}
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            sx={{ minWidth: 88 }}
-          >
-            Cancel
-          </Button>
         </Box>
       </DialogActions>
 

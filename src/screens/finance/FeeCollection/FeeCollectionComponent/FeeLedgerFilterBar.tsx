@@ -12,9 +12,9 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Box, Tab, Chip, Card, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
+import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +31,7 @@ interface FeeLedgerFilterBarProps {
   filters: FeeLedgerFilters;
   onFilterChange: (filters: FeeLedgerFilters) => void;
   entryCount?: number;
+  studentId?: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -64,7 +65,12 @@ const STATUS_OPTIONS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFilterBarProps) => {
+const FeeLedgerFilterBar = ({
+  filters,
+  onFilterChange,
+  entryCount,
+  studentId,
+}: FeeLedgerFilterBarProps) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const tabs = useTabs(filters.activeTab);
@@ -75,13 +81,14 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
   };
 
   const {
-    data: feeHeadData,
+    data: studentFeeStructureData,
     isLoading: isFeeHeadLoading,
     isFetching: isFeeHeadFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetFeeHeadsQuery,
-    params: { academicYearId: currentYear?.id },
+    currentQueryAndMutation: useGetStudentFeeStructureQuery,
+    params: { studentId },
+    options: { skip: !studentId },
   });
 
   const {
@@ -96,7 +103,13 @@ const FeeLedgerFilterBar = ({ filters, onFilterChange, entryCount }: FeeLedgerFi
 
   const monthOptions = getAcademicYearMonthOptions(academicYearMonthsData);
 
-  const feeHeadOptions = [{ id: 'All', name: 'All' }, ...(feeHeadData?.items || [])];
+  const feeHeadOptions = [
+    { id: 'All', name: 'All' },
+    ...(studentFeeStructureData?.feeHeads?.map((fh: any) => ({
+      id: fh.feeHeadId,
+      name: fh.feeHeadName,
+    })) || []),
+  ];
 
   return (
     <Card

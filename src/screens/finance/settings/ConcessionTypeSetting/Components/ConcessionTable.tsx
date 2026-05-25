@@ -32,16 +32,27 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         id: 'name',
         label: 'Name',
         align: 'left',
+        width: 200,
+        minWidth: 160,
+        maxWidth: 260,
       },
       {
         id: 'description',
         label: 'Description',
         align: 'left',
+        width: 280,
+        minWidth: 200,
+        maxWidth: 360,
+        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
       },
       {
         id: 'documents',
         label: 'Documents',
         align: 'left',
+        width: 260,
+        minWidth: 200,
+        maxWidth: 340,
+        cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
         render: (value) => (value || []).map((doc: any) => doc.documentName).join(', '),
       },
       {
@@ -51,7 +62,8 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         isSort: false,
         isFilter: false,
         sticky: true,
-        minWidth: 50,
+        width: 96,
+        minWidth: 80,
         render: (value, row) => (
           <ThreeDotsActions
             showThreeDots={false}

@@ -11,8 +11,8 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Tab, Card, Tabs, Avatar, MenuList, MenuItem } from '@mui/material';
 
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
@@ -142,9 +142,11 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
         columns={[
           {
             id: 'name',
-            label: 'Student Name',
+            label: 'Name(Gr No.)',
             align: 'left',
-            minWidth: 170,
+            width: 350,
+            minWidth: 350,
+            maxWidth: 500,
             sticky: true,
             render: (value, row) => (
               <Box display="flex" alignItems="center" gap={1}>
@@ -153,23 +155,58 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
               </Box>
             ),
           },
-          { id: 'grNo', label: 'GR No.', align: 'left', isFilter: true, minWidth: 80 },
+          {
+            id: 'grNo',
+            label: 'GR No.',
+            align: 'left',
+            isFilter: true,
+            width: 100,
+            minWidth: 80,
+            maxWidth: 120,
+          },
           {
             id: 'rollNo',
             label: 'Roll No.',
             align: 'left',
             isFilter: true,
             filterType: 'number',
-            minWidth: 100,
+            width: 96,
+            minWidth: 80,
+            maxWidth: 120,
           },
-          { id: 'class', label: 'Class', align: 'left', isFilter: true },
-          { id: 'division', label: 'Division', align: 'left', isFilter: true },
-          { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: 120 },
+          {
+            id: 'class',
+            label: 'Class',
+            align: 'left',
+            isFilter: true,
+            width: 96,
+            minWidth: 80,
+            maxWidth: 120,
+          },
+          {
+            id: 'division',
+            label: 'Division',
+            align: 'left',
+            isFilter: true,
+            width: 96,
+            minWidth: 80,
+            maxWidth: 120,
+          },
+          {
+            id: 'contactNo',
+            label: 'Contact No.',
+            align: 'left',
+            width: 140,
+            minWidth: 120,
+            maxWidth: 160,
+          },
           {
             id: 'refundAmount',
             label: 'Refund Amount',
             align: 'left',
-            minWidth: '150px',
+            width: 150,
+            minWidth: 130,
+            maxWidth: 180,
             isFilter: true,
             render: (value) => (value ? `₹ ${value.toLocaleString()}` : '-'),
           },
@@ -177,7 +214,9 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             id: 'requestDate',
             label: 'Request Date',
             align: 'left',
-            minWidth: '160px',
+            width: 140,
+            minWidth: 120,
+            maxWidth: 170,
             isFilter: true,
             filterType: 'date',
           },
@@ -187,7 +226,8 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
             isFilter: false,
             isSort: false,
             align: 'left',
-            minWidth: 50,
+            width: 96,
+            minWidth: 80,
             sticky: true,
             render(value, row) {
               return (
