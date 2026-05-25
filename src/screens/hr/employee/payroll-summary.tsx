@@ -11,11 +11,11 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DashboardCard } from 'src/components/dashboard-card/dashboard-card';
+import { Box, Card, Grid, Stack, Alert, Button, Avatar, Skeleton, CardHeader } from '@mui/material';
 import {
   useGetEmployeeSalarySlipQuery,
   useLazyGetEmployeeSalarySlipPdfQuery,
 } from 'src/redux/runPayroll/runPayrollApi';
-import { Box, Card, Grid, Stack, Alert, Button, Avatar, Skeleton, CardHeader } from '@mui/material';
 
 import { toSalarySlipMonthYear } from './payroll-summary-utils';
 

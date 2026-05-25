@@ -28,122 +28,149 @@ export const validationSchema = [
             .matches(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color'),
           examDate: yup
             .mixed()
+            .nullable()
             .test(
               'is-valid-date',
               'Exam date is required',
-              (value) => value && dayjs(value as any).isValid()
-            )
-            .test('is-future-date', 'Exam date cannot be in the past', (value) => {
-              if (!value) return true;
-              return dayjs(value as any).isSameOrAfter(dayjs().startOf('day'));
-            })
-            .required('Exam date is required'),
+              // eslint-disable-next-line func-names
+              function (value) {
+                // Elective groups in separate mode store schedules per-subject; skip group-level check
+                const { electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                if (!value) return false;
+                if (!dayjs(value as any).isValid()) return false;
+                return dayjs(value as any).isSameOrAfter(dayjs().startOf('day'));
+              }
+            ),
           startTime: yup
             .mixed()
+            .nullable()
             .test(
               'is-valid-time',
               'Start time is required',
-              (value) => value && dayjs(value as any).isValid()
+              // eslint-disable-next-line func-names
+              function (value) {
+                const { electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                return !!(value && dayjs(value as any).isValid());
+              }
             )
-            .required('Start time is required')
             .test(
               'no-time-conflict',
               'Time conflicts with another subject on the same date',
               // eslint-disable-next-line func-names
               function (value) {
-                const { examDate } = this.parent;
-                const allSubjects = (this.options as any).from?.[1]?.value?.subjects || []; // Get all subjects from the form root with type assertion
+                const { examDate, electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
 
+                const allSubjects = (this.options as any).from?.[1]?.value?.subjects || [];
                 if (!value || !examDate || !allSubjects) return true;
 
                 const currentDate = dayjs(examDate as any).format('YYYY-MM-DD');
                 const currentStart = dayjs(value as any);
-                const currentPath = this.path; // e.g., "subjects[0].startTime"
+                const currentPath = this.path;
                 const currentIndex = parseInt(currentPath.match(/\[(\d+)\]/)?.[1] || '0', 10);
 
-                // Check against other subjects
                 for (let i = 0; i < allSubjects.length; i += 1) {
-                  if (i === currentIndex) {
-                    return true; // Skip validation for current subject
-                  }
-
+                  if (i === currentIndex) return true;
                   const otherSubject = allSubjects[i];
-                  if (!otherSubject?.examDate || !otherSubject?.startTime) {
-                    return true;
-                  }
-
+                  if (!otherSubject?.examDate || !otherSubject?.startTime) return true;
                   const otherDate = dayjs(otherSubject.examDate as any).format('YYYY-MM-DD');
                   const otherStart = dayjs(otherSubject.startTime as any);
-
-                  // Check for same date and same start time
-                  if (currentDate === otherDate && currentStart.isSame(otherStart)) {
-                    return false;
-                  }
+                  if (currentDate === otherDate && currentStart.isSame(otherStart)) return false;
                 }
                 return true;
               }
             ),
           endTime: yup
             .mixed()
+            .nullable()
             .test(
               'is-valid-dayjs',
               'End time is required',
-              (value) => value && dayjs(value as any).isValid()
+              // eslint-disable-next-line func-names
+              function (value) {
+                const { electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                return !!(value && dayjs(value as any).isValid());
+              }
             )
-            .required('End time is required')
             // eslint-disable-next-line func-names
             .test('is-after-start', 'End time must be after start time', function (value) {
-              const { startTime } = this.parent;
+              const { startTime, electiveGroupId, schedulingMode } = this.parent;
+              if (electiveGroupId && schedulingMode === 'separate') return true;
               if (!value || !startTime) return true;
-
-              const startDateTime = dayjs(startTime as any);
-              const endDateTime = dayjs(value as any);
-
-              return endDateTime.isAfter(startDateTime);
+              return dayjs(value as any).isAfter(dayjs(startTime as any));
             })
             .test(
               'minimum-duration',
               'Exam duration must be at least 30 minutes',
               // eslint-disable-next-line func-names
               function (value) {
-                const { startTime } = this.parent;
+                const { startTime, electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
                 if (!value || !startTime) return true;
-
-                const startDateTime = dayjs(startTime as any);
-                const endDateTime = dayjs(value as any);
-                const diffMinutes = endDateTime.diff(startDateTime, 'minute');
-
-                return diffMinutes >= 30;
+                return dayjs(value as any).diff(dayjs(startTime as any), 'minute') >= 30;
               }
             ),
           totalMarks: yup
-            .number()
-            .required('Total Marks is required')
-            .min(1, 'Total marks must be at least 1')
-            .max(1000, 'Total marks cannot exceed 1000')
-            .integer('Total marks must be a whole number')
-            .typeError('Must be a number'),
+            .mixed()
+            .nullable()
+            .test(
+              'total-marks-valid',
+              'Total Marks is required',
+              // eslint-disable-next-line func-names
+              function (value) {
+                const { electiveGroupId, schedulingMode } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                if (value === '' || value === undefined || value === null) return false;
+                const n = Number(value);
+                if (Number.isNaN(n)) return this.createError({ message: 'Must be a number' });
+                if (n < 1) return this.createError({ message: 'Total marks must be at least 1' });
+                if (n > 1000)
+                  return this.createError({ message: 'Total marks cannot exceed 1000' });
+                if (!Number.isInteger(n))
+                  return this.createError({ message: 'Total marks must be a whole number' });
+                return true;
+              }
+            ),
           passingMarks: yup
-            .number()
-            .required('Passing Marks is required')
-            .min(1, 'Passing marks must be at least 1')
-            .integer('Passing marks must be a whole number')
-            .typeError('Must be a number')
-            // eslint-disable-next-line func-names
-            .test('not-exceed-total', 'Passing marks cannot exceed total marks', function (value) {
-              const { totalMarks } = this.parent;
-              if (!value || !totalMarks) return true;
-              return value <= totalMarks;
-            }),
+            .mixed()
+            .nullable()
+            .test(
+              'passing-marks-valid',
+              'Passing Marks is required',
+              // eslint-disable-next-line func-names
+              function (value) {
+                const { electiveGroupId, schedulingMode, totalMarks } = this.parent;
+                if (electiveGroupId && schedulingMode === 'separate') return true;
+                if (value === '' || value === undefined || value === null) return false;
+                const n = Number(value);
+                if (Number.isNaN(n)) return this.createError({ message: 'Must be a number' });
+                if (n < 1) return this.createError({ message: 'Passing marks must be at least 1' });
+                if (!Number.isInteger(n))
+                  return this.createError({ message: 'Passing marks must be a whole number' });
+                if (totalMarks && n > Number(totalMarks))
+                  return this.createError({
+                    message: 'Passing marks cannot exceed total marks',
+                  });
+                return true;
+              }
+            ),
         })
       )
       .required('At least one subject is required')
       .test('Fill the second field details', (value) => {
         if (!value || value.length === 0) return true;
-        return value.every(
-          (div) =>
-            div.examDate && div.startTime && div.endTime && div.totalMarks && div.passingMarks
-        );
+        return value.every((div: any) => {
+          // For separate-mode elective groups: validate each individual subject
+          if (div.electiveGroupId && div.schedulingMode === 'separate') {
+            return (div.subjects || []).every(
+              (s: any) => s.examDate && s.startTime && s.endTime && s.totalMarks && s.passingMarks
+            );
+          }
+          return div.examDate && div.startTime && div.endTime && div.totalMarks && div.passingMarks;
+        });
       }),
   }),
 

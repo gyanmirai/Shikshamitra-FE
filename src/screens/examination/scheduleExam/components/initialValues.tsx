@@ -112,18 +112,48 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
 }
 
 export function serializeSchedulePayload(values: IExamFormValues) {
-  return {
-    subjects: values.subjects.map((sub) => ({
-      subjectId: sub.subjectId,
-      examDate: sub.examDate?.toISOString() ?? null,
-      startTime: sub.startTime?.toISOString() ?? null,
-      endTime: sub.endTime?.toISOString() ?? null,
-      gradeScalingId: sub.gradeScalingId ?? null,
-      totalMarks: Number(sub.totalMarks),
-      passingMarks: Number(sub.passingMarks),
-      notes: sub.notes,
-    })),
-  };
+  const subjects: Array<{
+    subjectId: string;
+    examDate: string | null;
+    startTime: string | null;
+    endTime: string | null;
+    gradeScalingId: string | null;
+    totalMarks: number;
+    passingMarks: number;
+    notes: string;
+  }> = [];
+
+  values.subjects.forEach((sub) => {
+    // Elective group in Separate mode: expand individual subjects into entries
+    if (sub.electiveGroupId && sub.schedulingMode === 'separate' && (sub as any).subjects?.length) {
+      ((sub as any).subjects as any[]).forEach((s: any) => {
+        subjects.push({
+          subjectId: s.subjectId || s.id,
+          examDate: s.examDate?.toISOString?.() ?? null,
+          startTime: s.startTime?.toISOString?.() ?? null,
+          endTime: s.endTime?.toISOString?.() ?? null,
+          gradeScalingId: s.gradeScalingId ?? null,
+          totalMarks: Number(s.totalMarks),
+          passingMarks: Number(s.passingMarks),
+          notes: s.notes ?? '',
+        });
+      });
+    } else {
+      // Core subject or elective group in Combined mode
+      subjects.push({
+        subjectId: sub.subjectId,
+        examDate: sub.examDate?.toISOString() ?? null,
+        startTime: sub.startTime?.toISOString() ?? null,
+        endTime: sub.endTime?.toISOString() ?? null,
+        gradeScalingId: sub.gradeScalingId ?? null,
+        totalMarks: Number(sub.totalMarks),
+        passingMarks: Number(sub.passingMarks),
+        notes: sub.notes,
+      });
+    }
+  });
+
+  return { subjects };
 }
 
 export function serializeRoomAssignmentPayload(values: IExamFormValues) {

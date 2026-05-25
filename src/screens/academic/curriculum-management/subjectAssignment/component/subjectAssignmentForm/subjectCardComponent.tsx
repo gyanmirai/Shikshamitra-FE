@@ -155,6 +155,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
           {!isPublished && onRemove && (
             <Tooltip title="Remove subject">
               <IconButton
+                component="span"
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();

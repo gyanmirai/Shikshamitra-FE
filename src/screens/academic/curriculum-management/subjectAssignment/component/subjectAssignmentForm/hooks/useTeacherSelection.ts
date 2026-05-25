@@ -21,6 +21,14 @@ export function useTeacherSelection({
 
   const initializedRef = useRef(false);
 
+  /**
+   * Per-query seen-ID sets used to deduplicate teacher options across paginated
+   * fetches. Reset on every new search (page === 1) so stale IDs from a
+   * previous query never bleed into a fresh search.
+   */
+  const seenPrimaryIdsRef = useRef<Set<string>>(new Set());
+  const seenSecondaryIdsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
@@ -56,18 +64,25 @@ export function useTeacherSelection({
    * Memoization Justification:
    * Passed to PaginatedSearchSelect component which debounces and re-fetches.
    * Stable reference prevents unnecessary search resets.
+   *
+   * Deduplication: seenPrimaryIdsRef tracks every id returned so far for the
+   * current query. It resets on page 1 (new search) so a fresh query starts
+   * clean. This prevents the same teacher from appearing multiple times when
+   * the server paginates or when usePaginatedSearch appends a stale page.
    */
   const fetchPrimaryTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
+      if (page === 1) seenPrimaryIdsRef.current = new Set();
       const res = await getPrimaryTeacherOptions({ search: query, page }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
-      return {
-        data: (res?.items ?? []).map((item: { id: string; fullName: string }) => ({
-          id: item.id,
-          label: item.fullName,
-        })),
-        hasMore,
-      };
+      const data = (res?.items ?? [])
+        .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))
+        .filter(({ id }: { id: string }) => {
+          if (seenPrimaryIdsRef.current.has(id)) return false;
+          seenPrimaryIdsRef.current.add(id);
+          return true;
+        });
+      return { data, hasMore };
     },
     [getPrimaryTeacherOptions]
   );
@@ -76,18 +91,23 @@ export function useTeacherSelection({
    * Memoization Justification:
    * Passed to PaginatedSearchSelect component which debounces and re-fetches.
    * Stable reference prevents unnecessary search resets.
+   *
+   * Deduplication: seenSecondaryIdsRef tracks every id returned so far for
+   * the current query. Reset on page 1 for the same reason as primary above.
    */
   const fetchSecondaryTeacherOptions = useCallback(
     async (query: string, page: number = 1) => {
+      if (page === 1) seenSecondaryIdsRef.current = new Set();
       const res = await getSecondaryTeacherOptions({ search: query, page }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
-      return {
-        data: (res?.items ?? []).map((item: { id: string; fullName: string }) => ({
-          id: item.id,
-          label: item.fullName,
-        })),
-        hasMore,
-      };
+      const data = (res?.items ?? [])
+        .map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName }))
+        .filter(({ id }: { id: string }) => {
+          if (seenSecondaryIdsRef.current.has(id)) return false;
+          seenSecondaryIdsRef.current.add(id);
+          return true;
+        });
+      return { data, hasMore };
     },
     [getSecondaryTeacherOptions]
   );
