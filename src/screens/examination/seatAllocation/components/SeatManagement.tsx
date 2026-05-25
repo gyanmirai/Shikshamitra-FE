@@ -31,6 +31,7 @@ const SeatManagement = ({
   onStudentRemove: (studentId: string | null) => void;
   onSeatSwap: (from: number, to: number) => void;
 }) => {
+  console.log('Selected Room:', selectedRoom);
   const roomRows = selectedRoom.rows ?? 6;
   const roomColumns = selectedRoom.columns ?? 2;
   const roomBenchCapacity = selectedRoom.benchCapacity ?? 2;
