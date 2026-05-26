@@ -17,7 +17,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Button, Typography } from '@mui/material';
-import { useAssignLectureSlotToClassesMutation } from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
+import {
+  useGetLectureSlotsQuery,
+  useAssignLectureSlotToClassesMutation,
+} from 'src/redux/academicAPI/timetableApi/lectureSlotsApi';
 
 interface AssignSlotsProps {
   onClose: (e: any, isSubmit: boolean) => void;
@@ -30,6 +33,14 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
+  // Fetch all existing lecture slots to know which classes are already configured
+  const { data: allSlotsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLectureSlotsQuery,
+    params: { AcademicMediumId: medium?.id },
+    options: { skip: !medium?.id },
+  });
+
   const [assignLectureSlot, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAssignLectureSlotToClassesMutation,
@@ -41,6 +52,11 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
     setAllClass(allClasses);
   }, [medium]);
+
+  // StandardIds that already have a lecture slot configured — these should be disabled in the dropdown
+  const configuredStandardIds: string[] = (allSlotsData?.items ?? []).map(
+    (slot: any) => slot.standardId
+  );
 
   const formik = useFormik({
     initialValues: {
@@ -240,6 +256,8 @@ const AssignSlots = ({ onClose, lectureSlotId, sourceClassName }: AssignSlotsPro
                       ? formik.errors.classNames
                       : undefined
                   }
+                  disabledValues={configuredStandardIds}
+                  disabledLabel="Already configured"
                 />
               </ShakingTextField>
             </Stack>
