@@ -8,10 +8,10 @@ import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -55,9 +55,23 @@ const AssignElectiveSubject = () => {
     options: { skip: !classes },
   });
 
-  const electiveGroups = (subjectAssignmentsData?.data?.items ?? [])
-    .filter((item: any) => item.subjectType === 1)
-    .map((item: any) => ({ id: item.electiveGroupId, name: item.electiveGroupName }));
+  // Deduplicate by electiveGroupId and skip records where the name is null/empty.
+  // The subject-assignments endpoint returns one row per subject, so the same
+  // electiveGroupId appears multiple times; only some rows carry a non-null name.
+  const electiveGroups = useMemo(() => {
+    const seen = new Set<string>();
+    return (subjectAssignmentsData?.data?.items ?? [])
+      .filter(
+        (item: any) => item.subjectType === 1 && item.electiveGroupId && item.electiveGroupName
+      )
+      .reduce((acc: { id: string; name: string }[], item: any) => {
+        if (!seen.has(item.electiveGroupId)) {
+          seen.add(item.electiveGroupId);
+          acc.push({ id: item.electiveGroupId, name: item.electiveGroupName });
+        }
+        return acc;
+      }, []);
+  }, [subjectAssignmentsData]);
 
   // --------------------------------------------
   // BUILD CLASS LIST FROM MEDIUM
@@ -314,15 +328,16 @@ const AssignElectiveSubject = () => {
         isLoading={isElectiveLoading || isElectiveFetching}
         noDataText={<>No Students Found</>}
         columns={[
-          { id: 'studentName', label: 'Student Name', minWidth: '200px' },
-          { id: 'rollNo', label: 'Roll No.', minWidth: '120px' },
-          { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
+          { id: 'studentName', label: 'Student Name', minWidth: '200px', align: 'left' },
+          { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' },
+          // { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
           {
             id: 'electiveSubjects',
             label: '',
             minWidth: '220px',
             isFilter: false,
             isSort: false,
+            align: 'left',
             renderColumn: () => {
               if (!students || students.length === 0) return null;
 
@@ -339,33 +354,48 @@ const AssignElectiveSubject = () => {
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
-                          cursor: 'pointer',
+                          gap: 1,
+                          pl: 1,
+                          pr: 1.5,
+                          py: 0.625,
                           borderRadius: 1,
-                          overflow: 'hidden',
                           border: '1px solid',
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          transition: 'all 0.18s ease',
                           borderColor: isSelected ? s.subjectColor : 'divider',
-                          backgroundColor: isSelected ? `${s.subjectColor}14` : 'background.paper',
-                          '&:hover': {
-                            backgroundColor: `${s.subjectColor}20`,
-                            borderColor: s.subjectColor,
-                          },
+                          backgroundColor: isSelected ? `${s.subjectColor}12` : 'background.paper',
+                          ...(isSelected
+                            ? {
+                                boxShadow: `0 1px 4px ${s.subjectColor}30`,
+                                '&:hover': { backgroundColor: `${s.subjectColor}22` },
+                              }
+                            : {
+                                opacity: 0.6,
+                                '&:hover': {
+                                  backgroundColor: 'background.paper',
+                                  borderColor: 'divider',
+                                },
+                              }),
                         }}
                       >
                         <Box
                           sx={{
-                            width: 4,
-                            alignSelf: 'stretch',
-                            backgroundColor: isSelected ? s.subjectColor : 'text.disabled',
+                            width: 3,
+                            height: 16,
+                            borderRadius: 1,
                             flexShrink: 0,
+                            backgroundColor: isSelected ? s.subjectColor : 'grey.300',
+                            transition: 'background-color 0.18s ease',
                           }}
                         />
                         <Typography
                           variant="body2"
                           sx={{
-                            px: 1.5,
-                            py: 0.5,
                             fontWeight: isSelected ? 600 : 400,
+                            color: isSelected ? 'text.primary' : 'text.secondary',
                             whiteSpace: 'nowrap',
+                            transition: 'all 0.18s ease',
                           }}
                         >
                           {s.subjectName}
@@ -389,33 +419,48 @@ const AssignElectiveSubject = () => {
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        cursor: 'pointer',
+                        gap: 1,
+                        pl: 1,
+                        pr: 1.5,
+                        py: 0.625,
                         borderRadius: 1,
-                        overflow: 'hidden',
                         border: '1px solid',
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        transition: 'all 0.18s ease',
                         borderColor: isSelected ? s.subjectColor : 'divider',
-                        backgroundColor: isSelected ? `${s.subjectColor}14` : 'background.paper',
-                        '&:hover': {
-                          backgroundColor: `${s.subjectColor}20`,
-                          borderColor: s.subjectColor,
-                        },
+                        backgroundColor: isSelected ? `${s.subjectColor}12` : 'background.paper',
+                        ...(isSelected
+                          ? {
+                              boxShadow: `0 1px 4px ${s.subjectColor}30`,
+                              '&:hover': { backgroundColor: `${s.subjectColor}22` },
+                            }
+                          : {
+                              opacity: 0.6,
+                              '&:hover': {
+                                backgroundColor: 'background.paper',
+                                borderColor: 'divider',
+                              },
+                            }),
                       }}
                     >
                       <Box
                         sx={{
-                          width: 4,
-                          alignSelf: 'stretch',
-                          backgroundColor: isSelected ? s.subjectColor : 'text.disabled',
+                          width: 3,
+                          height: 16,
+                          borderRadius: 1,
                           flexShrink: 0,
+                          backgroundColor: isSelected ? s.subjectColor : 'grey.300',
+                          transition: 'background-color 0.18s ease',
                         }}
                       />
                       <Typography
                         variant="body2"
                         sx={{
-                          px: 1.5,
-                          py: 0.5,
                           fontWeight: isSelected ? 600 : 400,
+                          color: isSelected ? 'text.primary' : 'text.secondary',
                           whiteSpace: 'nowrap',
+                          transition: 'all 0.18s ease',
                         }}
                       >
                         {s.subjectName}

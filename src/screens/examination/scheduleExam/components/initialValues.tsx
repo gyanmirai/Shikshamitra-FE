@@ -30,41 +30,267 @@ export function mapBackendToFormik(
   examSubjectsData: any = null,
   examTypes: any[] = []
 ): IExamFormValues {
-  // Build lookup maps for enrichment: prefer schedule data, fall back to examSubjects
   const scheduleMap: Record<string, any> = {};
-  (scheduleData?.subjects ?? []).forEach((s: any) => {
-    scheduleMap[s.subjectId] = s;
+  const rawScheduleSubjects: any[] = scheduleData?.subjects ?? scheduleData?.data?.subjects ?? [];
+  rawScheduleSubjects.forEach((s: any) => {
+    if (s?.subjectId) {
+      scheduleMap[s.subjectId] = s;
+      // Schedule API stores individual elective subjects in electiveGroupSubjects (not subjects).
+      // Populate scheduleMap for each so per-subject schedule lookup works in separate mode.
+      if (s.electiveGroupId && Array.isArray(s.electiveGroupSubjects)) {
+        s.electiveGroupSubjects.forEach((sub: any) => {
+          if (sub?.subjectId) {
+            scheduleMap[sub.subjectId] = {
+              ...sub,
+              electiveGroupId: s.electiveGroupId,
+              examDate: sub.examDate ?? s.examDate ?? null,
+              startTime: sub.startTime ?? s.startTime ?? null,
+              endTime: sub.endTime ?? s.endTime ?? null,
+              totalMarks: sub.totalMarks ?? s.totalMarks ?? null,
+              passingMarks: sub.passingMarks ?? s.passingMarks ?? null,
+              notes: sub.notes ?? s.notes ?? null,
+              gradeScalingId: sub.gradeScalingId ?? s.gradeScalingId ?? null,
+            };
+          }
+        });
+      }
+    }
   });
 
-  // examSubjectsData may be an array or { items: [] } — normalise to array
-  const subjectsArr: any[] = Array.isArray(examSubjectsData)
-    ? examSubjectsData
-    : (examSubjectsData?.items ?? examSubjectsData?.subjects ?? []);
+  const subjectsArr: any[] = (() => {
+    if (!examSubjectsData) return [];
+    if (Array.isArray(examSubjectsData)) return examSubjectsData;
+    return (
+      examSubjectsData?.items ??
+      examSubjectsData?.data?.items ??
+      examSubjectsData?.subjects ??
+      examSubjectsData?.data?.subjects ??
+      []
+    );
+  })();
+
+  const isAssignmentFormat =
+    subjectsArr.length > 0 && Array.isArray((subjectsArr[0] as any)?.subjects);
 
   const examSubjectMap: Record<string, any> = {};
-  subjectsArr.forEach((s: any) => {
-    examSubjectMap[s.subjectId] = s;
-  });
+  const electiveGroupMap: Record<
+    string,
+    { name: string; color: string; subjects: IExamSubject[] }
+  > = {};
 
-  // Merge identity fields (Step 1) with schedule fields (Step 2) into one array
-  const subjects: IExamSubject[] = (basicData?.subjectIds ?? []).map((subjectId: string) => {
+  if (isAssignmentFormat) {
+    subjectsArr.forEach((item: any) => {
+      if (item?.electiveGroupId) {
+        // Elective group item: key by electiveGroupId
+        electiveGroupMap[item.electiveGroupId] = {
+          name: item.electiveGroupName ?? '',
+          color: item.color ?? '#9E9E9E',
+          subjects: (item.subjects ?? []).map((s: any) => ({
+            ...s,
+            subjectColor: s.color ?? s.subjectColor ?? item.color ?? '#9E9E9E',
+          })),
+        };
+      } else {
+        // Core subject item: map each nested subject by its subjectId
+        (item.subjects ?? []).forEach((s: any) => {
+          if (s?.subjectId) {
+            examSubjectMap[s.subjectId] = {
+              ...s,
+              subjectColor: s.color ?? s.subjectColor ?? item.color ?? '#9E9E9E',
+            };
+          }
+        });
+      }
+    });
+  } else {
+    // Flat format — each item is an individual subject
+    subjectsArr.forEach((s: any) => {
+      if (!s?.subjectId) return;
+      const subjectColor = s.color ?? s.subjectColor ?? '#9E9E9E';
+      examSubjectMap[s.subjectId] = { ...s, subjectColor };
+
+      if (s.electiveGroupId) {
+        if (!electiveGroupMap[s.electiveGroupId]) {
+          electiveGroupMap[s.electiveGroupId] = {
+            name: s.electiveGroupName ?? '',
+            color: subjectColor,
+            subjects: [],
+          };
+        }
+        electiveGroupMap[s.electiveGroupId].subjects.push({ ...s, subjectColor } as any);
+      }
+    });
+  }
+
+  // Step 3a — resolve raw metadata for every subjectId in basicData
+  interface RawEntry {
+    subjectId: string;
+    sched: any;
+    sub: any;
+    electiveData: { name: string; color: string; subjects: IExamSubject[] } | undefined;
+    resolvedElectiveGroupId: string | undefined;
+    resolvedSubjectName: string;
+    resolvedSubjectColor: string;
+  }
+
+  const rawEntries: RawEntry[] = (basicData?.subjectIds ?? []).map((subjectId: string) => {
     const sched = scheduleMap[subjectId] ?? {};
     const sub = examSubjectMap[subjectId] ?? {};
+    // Look up by subjectId first; if basicData already uses group IDs this hits directly
+    const electiveData = electiveGroupMap[subjectId];
+
+    const resolvedElectiveGroupId: string | undefined =
+      sched.electiveGroupId ?? sub.electiveGroupId ?? (electiveData ? subjectId : undefined);
+
+    const resolvedSubjectName: string =
+      sched.electiveGroupName ??
+      sched.subjectName ??
+      sub.subjectName ??
+      electiveData?.name ??
+      sub.name ??
+      '';
+
+    const resolvedSubjectColor: string =
+      sched.subjectColor ??
+      sched.electiveGroupColor ??
+      sched.color ??
+      sub.subjectColor ??
+      sub.color ??
+      electiveData?.color ??
+      '#9E9E9E';
+
     return {
       subjectId,
-      // Prefer schedule → examSubjects → fallback
-      subjectName: sched.subjectName ?? sub.subjectName ?? sub.name ?? '',
-      subjectColor: sched.subjectColor ?? sub.subjectColor ?? sub.color ?? '#9E9E9E',
-      subjectCode: sched.subjectCode ?? sub.subjectCode ?? sub.code,
-      electiveGroupId: sched.electiveGroupId ?? sub.electiveGroupId,
-      examDate: sched.examDate ? dayjs(sched.examDate) : null,
-      // Backend stores time as "HH:mm:ss" — normalise to a single reference date
-      startTime: sched.startTime ? dayjs(sched.startTime) : null,
-      endTime: sched.endTime ? dayjs(sched.endTime) : null,
-      totalMarks: sched.totalMarks ?? '',
-      passingMarks: sched.passingMarks ?? '',
-      notes: sched.notes ?? '',
+      sched,
+      sub,
+      electiveData,
+      resolvedElectiveGroupId,
+      resolvedSubjectName,
+      resolvedSubjectColor,
     };
+  });
+
+  // Helper — enrich a subject object with its per-subject schedule fields
+  const withSchedule = (s: any, fallbackColor: string) => {
+    const subSched = scheduleMap[s.subjectId] ?? {};
+    return {
+      ...s,
+      subjectColor: s.color || s.subjectColor || fallbackColor,
+      examDate: subSched.examDate ? dayjs(subSched.examDate) : null,
+      startTime: subSched.startTime ? dayjs(subSched.startTime) : null,
+      endTime: subSched.endTime ? dayjs(subSched.endTime) : null,
+      totalMarks: subSched.totalMarks ?? '',
+      passingMarks: subSched.passingMarks ?? '',
+      notes: subSched.notes ?? '',
+      gradeScalingId: subSched.gradeScalingId ?? null,
+    };
+  };
+
+  // Step 3b — emit one entry per core subject; one consolidated entry per elective group
+  const emittedGroupIds = new Set<string>();
+
+  const subjects: IExamSubject[] = rawEntries.flatMap((entry) => {
+    const {
+      subjectId,
+      sched,
+      sub,
+      electiveData,
+      resolvedElectiveGroupId,
+      resolvedSubjectName,
+      resolvedSubjectColor,
+    } = entry;
+
+    // ── Core subject ────────────────────────────────────────────────────────
+    if (!resolvedElectiveGroupId) {
+      return [
+        {
+          subjectId,
+          subjectName: resolvedSubjectName,
+          subjectColor: resolvedSubjectColor,
+          subjectCode: sched.subjectCode ?? sub.subjectCode ?? sub.code ?? '',
+          electiveGroupId: undefined,
+          subjects: undefined,
+          schedulingMode: undefined,
+          examDate: sched.examDate ? dayjs(sched.examDate) : null,
+          startTime: sched.startTime ? dayjs(sched.startTime) : null,
+          endTime: sched.endTime ? dayjs(sched.endTime) : null,
+          totalMarks: sched.totalMarks ?? '',
+          passingMarks: sched.passingMarks ?? '',
+          notes: sched.notes ?? '',
+          gradeScalingId: sched.gradeScalingId ?? null,
+        } as IExamSubject,
+      ];
+    }
+
+    // ── Elective subject — consolidate all siblings under one group entry ──
+    // Skip if we have already emitted this group
+    if (emittedGroupIds.has(resolvedElectiveGroupId)) return [];
+    emittedGroupIds.add(resolvedElectiveGroupId);
+
+    // All rawEntries that belong to this elective group
+    const siblingEntries = rawEntries.filter(
+      (e) => e.resolvedElectiveGroupId === resolvedElectiveGroupId
+    );
+
+    // Group-level metadata: prefer the schedule API's group entry (subjectId === electiveGroupId)
+    const groupSched = scheduleMap[resolvedElectiveGroupId] ?? {};
+    const groupName = groupSched.electiveGroupName ?? electiveData?.name ?? resolvedSubjectName;
+    const groupColor =
+      groupSched.electiveGroupColor ??
+      groupSched.color ??
+      electiveData?.color ??
+      resolvedSubjectColor;
+
+    let restoredSubjects: any[];
+    if (electiveData?.subjects?.length) {
+      restoredSubjects = electiveData.subjects.map((s: any) => withSchedule(s, groupColor));
+    } else if (
+      Array.isArray(groupSched.electiveGroupSubjects) &&
+      groupSched.electiveGroupSubjects.length > 0
+    ) {
+      restoredSubjects = groupSched.electiveGroupSubjects.map((s: any) =>
+        withSchedule({ ...s, subjectColor: s.color || s.subjectColor || groupColor }, groupColor)
+      );
+    } else {
+      restoredSubjects = siblingEntries.map(
+        ({ subjectId: sid, sched: sSched, sub: sSub, resolvedSubjectColor: sColor }) =>
+          withSchedule(
+            {
+              ...sSub,
+              ...sSched,
+              subjectId: sid,
+              subjectName: sSched.subjectName ?? sSub.subjectName ?? '',
+              subjectColor: sColor,
+            },
+            sColor
+          )
+      );
+    }
+
+    const hasGroupSchedule = !!groupSched.examDate;
+    const hasSeparateSchedules = restoredSubjects.some((s: any) => s.examDate);
+    const schedulingMode: 'combined' | 'separate' =
+      hasSeparateSchedules && !hasGroupSchedule ? 'separate' : 'combined';
+
+    return [
+      {
+        // Use the group ID as subjectId — mirrors how Create flow stores elective entries
+        subjectId: resolvedElectiveGroupId,
+        subjectName: groupName,
+        subjectColor: groupColor,
+        subjectCode: groupSched.subjectCode ?? '',
+        electiveGroupId: resolvedElectiveGroupId,
+        subjects: restoredSubjects,
+        schedulingMode,
+        examDate: groupSched.examDate ? dayjs(groupSched.examDate) : null,
+        startTime: groupSched.startTime ? dayjs(groupSched.startTime) : null,
+        endTime: groupSched.endTime ? dayjs(groupSched.endTime) : null,
+        totalMarks: groupSched.totalMarks ?? '',
+        passingMarks: groupSched.passingMarks ?? '',
+        notes: groupSched.notes ?? '',
+        gradeScalingId: groupSched.gradeScalingId ?? null,
+      } as IExamSubject,
+    ];
   });
 
   // Build roomDetails keyed by subjectId (not subjectName — avoids name collisions)
@@ -107,13 +333,21 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
     examName: values.examName,
     standardId: values.className,
     divisionIds: values.divisions.filter((id) => id !== 'all'),
-    subjectIds: values.subjects.map((s) => s.electiveGroupId || s.subjectId),
+    subjectIds: values.subjects.flatMap((s: any) => {
+      // Elective group: send each individual subject's ID, not the group ID
+      if (s.electiveGroupId && Array.isArray(s.subjects) && s.subjects.length > 0) {
+        return s.subjects.map((sub: any) => sub.subjectId || sub.id);
+      }
+      // Core subject (or individual elective entry): send subjectId directly
+      return [s.subjectId];
+    }),
   };
 }
 
 export function serializeSchedulePayload(values: IExamFormValues) {
   const subjects: Array<{
     subjectId: string;
+    electiveGroupId?: string | null;
     examDate: string | null;
     startTime: string | null;
     endTime: string | null;
@@ -129,6 +363,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       ((sub as any).subjects as any[]).forEach((s: any) => {
         subjects.push({
           subjectId: s.subjectId || s.id,
+          // electiveGroupId: sub.electiveGroupId,
           examDate: s.examDate?.toISOString?.() ?? null,
           startTime: s.startTime?.toISOString?.() ?? null,
           endTime: s.endTime?.toISOString?.() ?? null,
@@ -142,6 +377,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
       // Core subject or elective group in Combined mode
       subjects.push({
         subjectId: sub.subjectId,
+        // electiveGroupId: sub.electiveGroupId ?? null,
         examDate: sub.examDate?.toISOString() ?? null,
         startTime: sub.startTime?.toISOString() ?? null,
         endTime: sub.endTime?.toISOString() ?? null,
@@ -160,23 +396,53 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
   // Exclude the 'all' placeholder — mirrors serializeBasicDetailsPayload
   const validDivisionIds = values.divisions.filter((id) => id !== 'all');
 
-  return {
-    isRoomAssigned: values.isRoomAssign,
-    subjects: values.subjects.map((sub) => {
+  const subjectEntries: Array<{
+    subjectId: string;
+    electiveGroupId: string | null;
+    examDate: string | null;
+    divisions: Array<{ divisionId: string; roomIds: string[]; capacity: number }>;
+  }> = [];
+
+  values.subjects.forEach((sub) => {
+    if (sub.electiveGroupId && (sub as any).subjects?.length) {
+      // Elective group: expand into one entry per individual subject
+      ((sub as any).subjects as any[]).forEach((s: any) => {
+        const sId = s.subjectId || s.id;
+        const mappedDivisions = validDivisionIds.map((divId) => ({
+          divisionId: divId,
+          roomIds: values.roomDetails[sId]?.[divId]?.roomIds ?? [],
+          capacity: values.roomDetails[sId]?.[divId]?.capacity ?? 0,
+        }));
+        subjectEntries.push({
+          subjectId: sId,
+          electiveGroupId: sub.electiveGroupId ?? null,
+          examDate: s.examDate?.toISOString?.() ?? null,
+          divisions: values.isRoomAssign
+            ? mappedDivisions.filter((div) => div.roomIds.length > 0)
+            : mappedDivisions,
+        });
+      });
+    } else {
+      // Core subject
       const mappedDivisions = validDivisionIds.map((divId) => ({
         divisionId: divId,
         roomIds: values.roomDetails[sub.subjectId]?.[divId]?.roomIds ?? [],
         capacity: values.roomDetails[sub.subjectId]?.[divId]?.capacity ?? 0,
       }));
-
-      return {
+      subjectEntries.push({
         subjectId: sub.subjectId,
+        electiveGroupId: null,
         examDate: sub.examDate?.toISOString() ?? null,
         divisions: values.isRoomAssign
           ? mappedDivisions.filter((div) => div.roomIds.length > 0)
           : mappedDivisions,
-      };
-    }),
+      });
+    }
+  });
+
+  return {
+    isRoomAssigned: values.isRoomAssign,
+    subjects: subjectEntries,
   };
 }
 

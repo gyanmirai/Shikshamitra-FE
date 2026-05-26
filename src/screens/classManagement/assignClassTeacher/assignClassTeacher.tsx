@@ -17,8 +17,8 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { useRef, useMemo, useState, useEffect, useCallback, type MouseEvent } from 'react';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useLazyGetEmployeeQuery, useLazyGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import {
@@ -44,6 +44,8 @@ const TeacherCell = ({
   const [getEmployees] = useLazyGetEmployeeQuery();
   const [getEmployeeById] = useLazyGetEmployeeByIdQuery();
   const [selectedTeacher, setSelectedTeacher] = useState<EmployeeOption | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const isClearingRef = useRef(false);
 
   /**
    * Tracks IDs already returned for the current search query so that the
@@ -85,47 +87,69 @@ const TeacherCell = ({
     [getEmployees]
   );
 
+  const handleMouseDownCapture = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.MuiAutocomplete-clearIndicator')) {
+      isClearingRef.current = true;
+      setTimeout(() => {
+        isClearingRef.current = false;
+      }, 0);
+      return;
+    }
+    if (!target.closest('.MuiAutocomplete-popupIndicator')) {
+      setDropdownOpen(true);
+    }
+  }, []);
+
   return (
-    <PaginatedSearchSelect
-      label="Class Teacher"
-      fetchOptions={fetchOptions}
-      value={selectedTeacher}
-      onChange={(_: unknown, newValue: EmployeeOption | null) => {
-        setSelectedTeacher(newValue);
-        onTeacherChange(newValue);
-      }}
-      getOptionLabel={(option: EmployeeOption) => option?.label || ''}
-      isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
-        option.id === value.id
-      }
-      renderOption={(props: any, option: EmployeeOption) => {
-        const { key: _key, ...rest } = props;
-        return (
-          <Box component="li" {...rest} key={option.id} sx={{ display: 'flex', gap: 1 }}>
-            <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>{option.label?.[0]}</Avatar>
-            {option.label}
-          </Box>
-        );
-      }}
-      debounceMs={400}
-      minChars={0}
-      size="small"
-      fullWidth
-      sx={{
-        maxWidth: '280px',
-        '& .MuiOutlinedInput-root': {
-          '& fieldset': {
-            borderColor: 'black',
+    <Box onMouseDownCapture={handleMouseDownCapture}>
+      <PaginatedSearchSelect
+        label="Class Teacher"
+        fetchOptions={fetchOptions}
+        value={selectedTeacher}
+        onChange={(_: unknown, newValue: EmployeeOption | null) => {
+          setSelectedTeacher(newValue);
+          onTeacherChange(newValue);
+        }}
+        open={dropdownOpen}
+        onOpen={() => {
+          if (isClearingRef.current) return;
+          setDropdownOpen(true);
+        }}
+        onClose={() => setDropdownOpen(false)}
+        getOptionLabel={(option: EmployeeOption) => option?.label || ''}
+        isOptionEqualToValue={(option: EmployeeOption, value: EmployeeOption) =>
+          option.id === value.id
+        }
+        renderOption={(props: any, option: EmployeeOption) => {
+          const { key: _key, ...rest } = props;
+          return (
+            <Box component="li" {...rest} key={option.id} sx={{ display: 'flex', gap: 1 }}>
+              <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>{option.label?.[0]}</Avatar>
+              {option.label}
+            </Box>
+          );
+        }}
+        debounceMs={400}
+        minChars={0}
+        size="small"
+        fullWidth
+        sx={{
+          maxWidth: '280px',
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: 'black',
+            },
+            '&:hover fieldset': {
+              borderColor: 'black',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'black',
+            },
           },
-          '&:hover fieldset': {
-            borderColor: 'black',
-          },
-          '&.Mui-focused fieldset': {
-            borderColor: 'black',
-          },
-        },
-      }}
-    />
+        }}
+      />
+    </Box>
   );
 };
 

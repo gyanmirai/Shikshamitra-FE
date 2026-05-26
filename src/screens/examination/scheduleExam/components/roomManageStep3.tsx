@@ -113,13 +113,39 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
             exit="exit"
           >
             <Grid container spacing={3}>
-              {(formik.values.subjects ?? []).map((subject: any) => (
-                <Grid size={{ xs: 12 }} key={subject.subjectId}>
-                  <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
-                    <RoomAssignmentCard subject={subject} formik={formik} />
-                  </motion.div>
-                </Grid>
-              ))}
+              {(formik.values.subjects ?? []).flatMap((subject: any) => {
+                // Elective groups: render a card per individual subject
+                if (subject.electiveGroupId && subject.subjects?.length) {
+                  return subject.subjects.map((s: any, sIdx: number) => (
+                    <Grid
+                      size={{ xs: 12 }}
+                      key={`${subject.electiveGroupId}-${s.subjectId || sIdx}`}
+                    >
+                      <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
+                        <RoomAssignmentCard
+                          subject={{
+                            subjectId: s.subjectId,
+                            subjectName: s.subjectName || s.name || '',
+                            subjectColor: s.subjectColor || s.color || '#9E9E9E',
+                            examDate: s.examDate || null,
+                            electiveGroupName: subject.subjectName,
+                            electiveGroupId: subject.electiveGroupId,
+                          }}
+                          formik={formik}
+                        />
+                      </motion.div>
+                    </Grid>
+                  ));
+                }
+                // Core subjects: one card as-is
+                return [
+                  <Grid size={{ xs: 12 }} key={subject.subjectId}>
+                    <motion.div variants={cardItemVariants} style={{ width: '100%' }}>
+                      <RoomAssignmentCard subject={subject} formik={formik} />
+                    </motion.div>
+                  </Grid>,
+                ];
+              })}
             </Grid>
           </motion.div>
         )}
@@ -130,7 +156,7 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
 export default RoomDetails;
 
 const RoomAssignmentCard = ({ subject, formik }: any) => {
-  const { subjectId, subjectName, examDate } = subject;
+  const { subjectId, subjectName, examDate, electiveGroupName } = subject;
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
 
@@ -179,15 +205,26 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
     <SectionCard
       title={subjectName}
       headerContent={
-        examDate ? (
-          <Chip
-            label={examDate.format('dddd, DD MMM YYYY')}
-            size="small"
-            variant="soft"
-            color="primary"
-            sx={{ fontWeight: 600, borderRadius: 1 }}
-          />
-        ) : null
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {electiveGroupName && (
+            <Chip
+              label={electiveGroupName}
+              size="small"
+              variant="soft"
+              color="warning"
+              sx={{ fontWeight: 600, borderRadius: 1 }}
+            />
+          )}
+          {examDate && (
+            <Chip
+              label={examDate.format('dddd, DD MMM YYYY')}
+              size="small"
+              variant="soft"
+              color="primary"
+              sx={{ fontWeight: 600, borderRadius: 1 }}
+            />
+          )}
+        </Box>
       }
       paperProps={{
         sx: {
