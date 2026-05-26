@@ -59,6 +59,57 @@ export type HRDashboardSummary = {
   insights: HRDashboardInsight[];
 };
 
+export type HRDashboardKey = 'Main' | 'Attendance' | 'Payroll';
+
+export type HRDashboardPreviewStatus = 'Empty' | 'Ready' | 'Refreshing' | 'Failed' | string;
+
+export type HRDashboardPreview = {
+  dashboardKey: HRDashboardKey | string;
+  status: HRDashboardPreviewStatus;
+  payloadJson: string;
+  payloadVersion: number;
+  lastRefreshedAt?: string | null;
+  refreshStartedAt?: string | null;
+  refreshRequestedByUserId?: string | null;
+  lastError?: string | null;
+};
+
+export type HRDashboardAttendancePreview = {
+  date: string;
+  totalStaff: number;
+  present: number;
+  absent: number;
+  halfDay: number;
+  missingAttendance: number;
+  attendanceRate: number;
+  trend: HRDashboardSummary['attendanceTrend'];
+  topDefaulters: Array<{
+    employeeId: string;
+    employeeName: string;
+    employeeIdentifier: string;
+    missingAttendance: number;
+    absences: number;
+  }>;
+  shiftSummary: Array<{
+    shiftName: string;
+    staffCount: number;
+    present: number;
+    missing: number;
+  }>;
+};
+
+export type HRDashboardPayrollPreview = HRDashboardSummary['payroll'];
+
+export const parseHRDashboardPayload = <T>(preview?: HRDashboardPreview): T | undefined => {
+  if (!preview?.payloadJson || preview.payloadJson === '{}') return undefined;
+
+  try {
+    return JSON.parse(preview.payloadJson) as T;
+  } catch {
+    return undefined;
+  }
+};
+
 export type HRDashboardEmployeeSnapshot = {
   id: string;
   name: string;
@@ -133,7 +184,30 @@ export const hrDashboardApi = employeeApi.injectEndpoints({
       ],
       keepUnusedDataFor: 60,
     }),
+    getHRDashboardPreview: builder.query<HRDashboardPreview, HRDashboardKey>({
+      query: (dashboardKey) => ({
+        url: `/hr/dashboard/previews/${dashboardKey}`,
+        method: 'GET',
+      }),
+      providesTags: (_result, _error, dashboardKey) => [
+        { type: employeeType.hrDashboard, id: dashboardKey },
+      ],
+      keepUnusedDataFor: 3600,
+    }),
+    refreshHRDashboardPreview: builder.mutation<HRDashboardPreview, HRDashboardKey>({
+      query: (dashboardKey) => ({
+        url: `/hr/dashboard/previews/${dashboardKey}/refresh`,
+        method: 'POST',
+      }),
+      invalidatesTags: (_result, _error, dashboardKey) => [
+        { type: employeeType.hrDashboard, id: dashboardKey },
+      ],
+    }),
   }),
 });
 
-export const { useGetHRDashboardSummaryQuery } = hrDashboardApi;
+export const {
+  useGetHRDashboardSummaryQuery,
+  useGetHRDashboardPreviewQuery,
+  useRefreshHRDashboardPreviewMutation,
+} = hrDashboardApi;
