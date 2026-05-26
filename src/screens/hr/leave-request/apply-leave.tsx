@@ -6,29 +6,25 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { useSession } from 'next-auth/react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { hrPaths } from 'src/constants/hr-menus';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { EmployeeLeaveStatusOptions } from 'src/enums/employee-leave-status';
 import { Box, Card, Alert, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import {
-  EmployeeLeaveStatusType,
-  EmployeeLeaveStatusOptions,
-} from 'src/enums/employee-leave-status';
 import {
   useGetLeaveRequestByIdQuery,
   useLazyGetLeaveRequestsQuery,
@@ -39,19 +35,17 @@ import {
 } from 'src/redux/hr/leaveApi';
 
 import AddLeaveRequest from './leave-requst';
-import { ApproveRejectForm } from './leave-approvals';
 import LeaveCalender, { LeaveRequestForm } from './leave-calender';
-import {
-  isAdminFromProfile,
-  parseApiProblemDetail,
-  LEAVE_EMPLOYEE_NOT_FOUND,
-} from './leave-request.utils';
 import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
-  normalizeLeaveStatus,
   getLeaveStatusFilterValue,
 } from './leave-status.utils';
+import {
+  parseApiProblemDetail,
+  LEAVE_EMPLOYEE_NOT_FOUND,
+  APPLY_LEAVE_ROW_ACTION_LABELS,
+} from './leave-request.utils';
 
 const LEAVE_REQUESTS_PAGE_SIZE = 100;
 const MY_LEAVE_PATH = '/dashboard/my-leave';
@@ -81,15 +75,7 @@ type ApplyLeaveProps = {
 
 const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) => {
   const isSelfMode = mode === 'self';
-  const { data: session } = useSession();
   const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
-  const { employee, permissions } = useSelector((state: RootState) => state.auth);
-  const isAdminUser = isAdminFromProfile((session as any)?.profile);
-  const hasApprovalPermission = permissions?.some(
-    (permission: any) =>
-      permission?.name === hrPermissions.leaveManagement.approvals && permission?.isGranted
-  );
-  const canReviewLeaves = !isSelfMode && Boolean(isAdminUser || hasApprovalPermission);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [isLeaveRequestsLoading, setIsLeaveRequestsLoading] = useState(false);
   const [selfLeaveAccessError, setSelfLeaveAccessError] = useState<string | null>(null);
@@ -196,10 +182,8 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
 
   const addLeaveRequestDialog = useBoolean();
   const cancelConfirmation = useBoolean();
-  const approveOrRejectConfirmation = useBoolean();
   const viewCalendarView = useBoolean();
   const [editData, setEditData] = useState<any>(null);
-  const [approvalData, setApprovalData] = useState<any>(null);
 
   const actions = useCallback(
     ({ popover }: any, row: any) => (
@@ -212,38 +196,8 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           }}
         >
           <Iconify icon="carbon:view-filled" sx={{ height: '16px', width: '16px' }} />
-          View
+          {APPLY_LEAVE_ROW_ACTION_LABELS[0]}
         </MenuItem>
-        {canReviewLeaves &&
-          normalizeLeaveStatus(row?.status) === 'PENDING' &&
-          String(row?.employeeId ?? '') !== String(employee?.id ?? '') && (
-            <MenuItem
-              onClick={() => {
-                setApprovalData({ ...row, type: EmployeeLeaveStatusType.Approved });
-                approveOrRejectConfirmation.onTrue();
-                popover.onClose();
-              }}
-              sx={{ color: 'success.main' }}
-            >
-              <Iconify icon="mdi:approve" sx={{ height: '16px', width: '16px' }} />
-              Approve
-            </MenuItem>
-          )}
-        {canReviewLeaves &&
-          normalizeLeaveStatus(row?.status) === 'PENDING' &&
-          String(row?.employeeId ?? '') !== String(employee?.id ?? '') && (
-            <MenuItem
-              onClick={() => {
-                setApprovalData({ ...row, type: EmployeeLeaveStatusType.Rejected });
-                approveOrRejectConfirmation.onTrue();
-                popover.onClose();
-              }}
-              sx={{ color: 'error.main' }}
-            >
-              <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
-              Reject
-            </MenuItem>
-          )}
         <MenuItem
           onClick={() => {
             setEditData(row);
@@ -253,17 +207,11 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           sx={{ color: 'error.main' }}
         >
           <Iconify icon={GlobalIcons.delete} sx={{ height: '16px', width: '16px' }} />
-          Cancel
+          {APPLY_LEAVE_ROW_ACTION_LABELS[1]}
         </MenuItem>
       </MenuList>
     ),
-    [
-      addLeaveRequestDialog,
-      approveOrRejectConfirmation,
-      canReviewLeaves,
-      cancelConfirmation,
-      employee?.id,
-    ]
+    [addLeaveRequestDialog, cancelConfirmation]
   );
 
   const tableData = useMemo(() => {
@@ -595,48 +543,6 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
           </LoadingButton>
         }
       />
-
-      {approvalData?.type && (
-        <CustomDialog
-          open={approveOrRejectConfirmation.value}
-          handleClose={() => {
-            approveOrRejectConfirmation.onFalse();
-            setApprovalData(null);
-          }}
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">
-                {approvalData.type === EmployeeLeaveStatusType.Rejected
-                  ? 'Reject Leave Request'
-                  : 'Approve Leave Request'}
-              </Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title={
-                  approvalData.type === EmployeeLeaveStatusType.Rejected
-                    ? 'Remarks are required to reject the leave request.'
-                    : 'Review the request and click Approve. Add remarks if you wish to include any additional info.'
-                }
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-        >
-          <ApproveRejectForm
-            handleClose={(_e, isSubmit) => {
-              approveOrRejectConfirmation.onFalse();
-              setApprovalData(null);
-              if (isSubmit) {
-                setReloadKey((prev) => prev + 1);
-              }
-            }}
-            editData={approvalData}
-          />
-        </CustomDialog>
-      )}
 
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog

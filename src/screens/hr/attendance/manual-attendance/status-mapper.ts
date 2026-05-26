@@ -12,6 +12,13 @@ export const MANUAL_ATTENDANCE_UI_STATUS = {
   Pending: 'Pending',
 } as const;
 
+export const MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS = [
+  { label: 'Present', value: MANUAL_ATTENDANCE_UI_STATUS.Present },
+  { label: 'Half Day', value: MANUAL_ATTENDANCE_UI_STATUS.HalfDay },
+  { label: 'Absent', value: MANUAL_ATTENDANCE_UI_STATUS.Absent },
+  { label: 'Pending', value: MANUAL_ATTENDANCE_UI_STATUS.Pending },
+];
+
 export type ManualAttendanceUiStatus =
   (typeof MANUAL_ATTENDANCE_UI_STATUS)[keyof typeof MANUAL_ATTENDANCE_UI_STATUS];
 

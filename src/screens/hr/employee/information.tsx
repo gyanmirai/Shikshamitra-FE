@@ -32,6 +32,7 @@ import { infoValidations } from './employee-form-validation';
 import { getSalaryComponentPayloadAmount } from './salary-utils';
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
+import { buildWorkExperiencePayload } from './work-experience-payload';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
@@ -344,23 +345,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     async (values: any, formik: any) => {
       const res = await updateExperienceInfo({
         employeeId: values.employeeId,
-        body: values.experiences.map((i: any) => ({
-          ...i,
-          mediumStageName: i.mediumStageName ?? '',
-          designation: i.designation,
-          department: i.department,
-          country: {
-            name: i.country?.name ?? '',
-            isoCode: i.country?.isoCode ?? '',
-          },
-          state: {
-            name: i.state?.name ?? '',
-            isoCode: i.state?.isoCode ?? '',
-          },
-          city: i.city?.name ?? '',
-          startDate: i.startDate ? dateConvertor(i.startDate.format(dateFormat)) : null,
-          endDate: i.endDate ? dateConvertor(i.endDate.format(dateFormat)) : null,
-        })),
+        body: values.experiences.map((i: any) =>
+          buildWorkExperiencePayload(i, (date) => dateConvertor(date.format(dateFormat)))
+        ),
       }).unwrap();
       return res;
     },

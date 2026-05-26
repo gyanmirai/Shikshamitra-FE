@@ -3,12 +3,14 @@ import type { DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { getSession } from 'next-auth/react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CommonCalender from 'src/components/calender';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -17,6 +19,10 @@ import {
   getLeaveStatusColor,
   getLeaveStatusLabel,
 } from 'src/screens/hr/leave-request/leave-status.utils';
+import {
+  getLeaveAttachmentLabel,
+  buildLeaveAttachmentDownloadUrl,
+} from 'src/screens/hr/leave-request/leave-request.utils';
 import {
   Box,
   Chip,
@@ -358,6 +364,38 @@ export const LeaveRequestForm = ({
     editData?.employee?.educationMediumStage?.name ||
     currentYear?.name ||
     '-';
+  const attachmentLabel = getLeaveAttachmentLabel(detail);
+
+  const handleOpenAttachment = useCallback(async () => {
+    if (!detail?.id) {
+      return;
+    }
+
+    try {
+      const session: any = await getSession();
+      const response = await fetch(
+        buildLeaveAttachmentDownloadUrl(detail.id, isSelfMode ? 'self' : 'hr'),
+        {
+          credentials: 'include',
+          headers: {
+            ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Attachment download failed');
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      window.open(objectUrl, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } catch (error) {
+      console.error(error);
+      shikshaMitraToast.error({ message: 'Unable to open leave attachment.' });
+    }
+  }, [detail?.id, isSelfMode]);
 
   const employeeName =
     detail?.employeeName ||
@@ -546,7 +584,7 @@ export const LeaveRequestForm = ({
             <SectionHeader icon="mdi:paperclip" label="Attachment" />
             <Box
               component="button"
-              onClick={() => window.open(detail.attachmentUrl, '_blank')}
+              onClick={handleOpenAttachment}
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -567,7 +605,7 @@ export const LeaveRequestForm = ({
             >
               <Iconify icon="mdi:file-document-outline" width={14} color="primary.main" />
               <Typography variant="body2" fontWeight={500} color="text.primary">
-                {detail.attachmentUrl.split('/').pop() || 'View Document'}
+                {attachmentLabel}
               </Typography>
               <Iconify icon="mdi:arrow-right" width={14} color="text.disabled" />
             </Box>

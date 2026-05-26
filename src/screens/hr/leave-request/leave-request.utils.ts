@@ -8,9 +8,11 @@ export const LEAVE_TARGET_EMPLOYEE_REQUIRED = 'HR:Leave:020033';
 export const LEAVE_EMPLOYEE_NOT_FOUND = 'HR:Leave:020006';
 export const SELF_EMPLOYEE_ID = 'self';
 export const SELF_OPTION = { id: SELF_EMPLOYEE_ID, label: 'Self' } as const;
+export const APPLY_LEAVE_ROW_ACTION_LABELS = ['View', 'Cancel'] as const;
 
 export type LeaveCenterContext = 'hr' | 'self';
 export type LeaveCenterTab = 'my-requests' | 'approvals' | 'balance';
+export type LeaveAttachmentMode = 'hr' | 'self';
 export type EmployeeOption = {
   id: string;
   label: string;
@@ -152,6 +154,33 @@ export function resolveLeaveCenterTab(
   }
 
   return visibleTabs[0] ?? 'my-requests';
+}
+
+export function buildLeaveAttachmentDownloadPath(
+  leaveRequestId: string,
+  mode: LeaveAttachmentMode = 'hr'
+): string {
+  const encodedId = encodeURIComponent(leaveRequestId);
+  return mode === 'self'
+    ? `/leave-management/my/${encodedId}/attachment/download`
+    : `/leave-management/${encodedId}/attachment/download`;
+}
+
+export function buildLeaveAttachmentDownloadUrl(
+  leaveRequestId: string,
+  mode: LeaveAttachmentMode = 'hr'
+): string {
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL;
+  const path = `/api${buildLeaveAttachmentDownloadPath(leaveRequestId, mode)}`;
+  return apiRoot ? `${apiRoot.replace(/\/$/, '')}${path}` : path;
+}
+
+export function getLeaveAttachmentLabel(detail: any): string {
+  return (
+    detail?.attachmentFileName ||
+    detail?.fileName ||
+    (detail?.id ? `leave-attachment-${String(detail.id).slice(0, 8)}` : 'View attachment')
+  );
 }
 
 export function isEmployeeSelectionValidForCreate(

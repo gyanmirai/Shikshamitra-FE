@@ -39,6 +39,7 @@ import {
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
+import { buildWorkExperiencePayload } from './work-experience-payload';
 import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 import { validations, getPersonalInformationValidationSchema } from './employee-form-validation';
 
@@ -534,23 +535,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 
       const res = await updateExperienceInfo({
         employeeId,
-        body: values.experiences.map((i: any) => ({
-          id: i.id,
-          mediumStageName: i.mediumStageName ?? '',
-          designation: i.designation,
-          department: i.department,
-          country: {
-            name: i.country?.name ?? '',
-            isoCode: i.country?.isoCode ?? '',
-          },
-          state: {
-            name: i.state?.name ?? '',
-            isoCode: i.state?.isoCode ?? '',
-          },
-          city: i.city?.name ?? '',
-          startDate: i.startDate ? dateConvertor(i.startDate.format(dateFormat)) : null,
-          endDate: i.endDate ? dateConvertor(i.endDate.format(dateFormat)) : null,
-        })),
+        body: values.experiences.map((i: any) =>
+          buildWorkExperiencePayload(i, (date) => dateConvertor(date.format(dateFormat)))
+        ),
       }).unwrap();
       return res;
     },
@@ -686,6 +673,9 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         });
         return null;
       }
+      if (!currentYear?.id) {
+        throw new Error('Academic year is required to save academic permissions.');
+      }
 
       const res = await addAccessControl({
         academicYearIds: [currentYear.id],
@@ -698,7 +688,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }).unwrap();
       return res;
     },
-    [addAccessControl, currentYear.id, editData]
+    [addAccessControl, currentYear?.id, editData]
   );
 
   const handleSave = useCallback(
@@ -764,12 +754,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             shikshaMitraToast.success({ message: 'Reporting manager updated successfully' });
           }
           saveSucceeded = true;
-        }
-        if (isLastStep && !isSaveButton) {
+        } else if (activeStep === 7) {
           await handleAcademicPermission(values, formik, values.employeeId);
-          shikshaMitraToast.success({
-            message: `Employee ${editData ? 'updated' : 'added'}  successfully`,
-          });
+          shikshaMitraToast.success(
+            isSaveButton
+              ? { message: 'Academic permissions updated successfully' }
+              : { message: `Employee ${editData ? 'updated' : 'added'}  successfully` }
+          );
           saveSucceeded = true;
         }
 
@@ -785,7 +776,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           // Don't reset the initialized flag on the last step — we're about to close
           // the form and clearing it would cause the useEffect to re-fire with cached
           // API data, producing a double-render / double-save appearance.
-          if (!isLastStep) {
+          if (!isLastStep || isSaveButton) {
             resetCurrentStepRef.current?.();
           }
         }

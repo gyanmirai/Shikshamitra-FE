@@ -33,6 +33,7 @@ import {
   mapTakeAttendanceStatusToUi,
   buildManualAttendanceSaveEntries,
   MANUAL_ATTENDANCE_UI_STATUS as STATUS,
+  MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
 } from 'src/screens/hr/attendance/manual-attendance/status-mapper';
 
 // ---------------------------------------------------------------------------
@@ -238,6 +239,43 @@ const ManualAttendanceScreen = () => {
   const halfDayCount = employeeData.filter((e) => e.status === STATUS.HalfDay).length;
   const absentCount = employeeData.filter((e) => e.status === STATUS.Absent).length;
   const pendingCount = employeeData.filter((e) => e.status === STATUS.Pending).length;
+
+  const renderStatusSummaryTooltip = (
+    status: AttendanceStatusType,
+    label: string,
+    count: number,
+    hint: string
+  ) =>
+    count > 0 ? (
+      <Box sx={{ p: 1, maxWidth: 260 }}>
+        <Typography variant="caption" fontWeight={600} display="block" mb={0.5}>
+          {label} ({count})
+        </Typography>
+        {employeeData
+          .filter((e) => e.status === status)
+          .slice(0, 8)
+          .map((e) => (
+            <Typography key={e.id} variant="caption" display="block">
+              • {e.fullName} ({e.employeeCode})
+            </Typography>
+          ))}
+        {count > 8 && (
+          <Typography variant="caption" display="block" sx={{ fontStyle: 'italic', mt: 0.5 }}>
+            +{count - 8} more
+          </Typography>
+        )}
+        <Typography
+          variant="caption"
+          display="block"
+          mt={1}
+          sx={{ fontStyle: 'italic', opacity: 0.8 }}
+        >
+          {hint}
+        </Typography>
+      </Box>
+    ) : (
+      hint
+    );
 
   // -------------------------------------------------------------------------
   // Columns
@@ -450,7 +488,8 @@ const ManualAttendanceScreen = () => {
               minWidth: '110px',
               align: 'left' as const,
               isSort: false,
-              isFilter: false,
+              filterType: 'enum' as const,
+              enumOptions: MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
               render: (value: string) => {
                 const colorMap: Record<
                   string,
@@ -555,42 +594,92 @@ const ManualAttendanceScreen = () => {
                     </CustomTooltip>
 
                     {/* Half Day */}
-                    <Box
-                      sx={{
-                        flex: 1,
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '10px',
-                        bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
-                        color: 'info.dark',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: 'default',
+                    <CustomTooltip
+                      title={renderStatusSummaryTooltip(
+                        STATUS.HalfDay,
+                        'Half Day',
+                        halfDayCount,
+                        'Click ½ to mark all as Half Day'
+                      )}
+                      arrow
+                      placement="top"
+                      slotProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'background.paper',
+                            color: 'text.primary',
+                            boxShadow: (t) => t.shadows[8],
+                            border: (t) => `1px solid ${t.vars.palette.divider}`,
+                            '& .MuiTooltip-arrow': {
+                              color: 'background.paper',
+                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                            },
+                          },
+                        },
                       }}
                     >
-                      {halfDayCount}
-                    </Box>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '10px',
+                          bgcolor: (t) => varAlpha(t.vars.palette.info.mainChannel, 0.16),
+                          color: 'info.dark',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'default',
+                        }}
+                      >
+                        {halfDayCount}
+                      </Box>
+                    </CustomTooltip>
 
                     {/* Pending */}
-                    <Box
-                      sx={{
-                        flex: 1,
-                        height: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '10px',
-                        bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.16),
-                        color: 'warning.dark',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: 'default',
+                    <CustomTooltip
+                      title={renderStatusSummaryTooltip(
+                        STATUS.Pending,
+                        'Pending',
+                        pendingCount,
+                        'Pending rows need individual attendance marks'
+                      )}
+                      arrow
+                      placement="top"
+                      slotProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'background.paper',
+                            color: 'text.primary',
+                            boxShadow: (t) => t.shadows[8],
+                            border: (t) => `1px solid ${t.vars.palette.divider}`,
+                            '& .MuiTooltip-arrow': {
+                              color: 'background.paper',
+                              '&::before': { border: (t) => `1px solid ${t.vars.palette.divider}` },
+                            },
+                          },
+                        },
                       }}
                     >
-                      {pendingCount}
-                    </Box>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '10px',
+                          bgcolor: (t) => varAlpha(t.vars.palette.warning.mainChannel, 0.16),
+                          color: 'warning.dark',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'default',
+                        }}
+                      >
+                        {pendingCount}
+                      </Box>
+                    </CustomTooltip>
 
                     {/* Absent */}
                     <CustomTooltip
