@@ -35,6 +35,8 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   isSearch?: boolean;
   addOtherItemText?: string;
   addOtherItemOnClick?: () => void;
+  disabledValues?: (string | number)[];
+  disabledLabel?: string;
 };
 
 const CustomSelect = <T extends string, J extends boolean>({
@@ -55,6 +57,8 @@ const CustomSelect = <T extends string, J extends boolean>({
   isSearch = false,
   addOtherItemText = '',
   addOtherItemOnClick,
+  disabledValues = [],
+  disabledLabel = 'Already configured',
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
   const handleChange = (event: any) => {
@@ -134,16 +138,24 @@ const CustomSelect = <T extends string, J extends boolean>({
             {options?.length === 0 ? (
               <MenuItem disabled>{noOptionsMessage}</MenuItem>
             ) : (
-              options.map((option) => (
-                <MenuItem key={option[valueKey]} value={option[valueKey]}>
-                  {multiple && (
-                    <Checkbox
-                      checked={(value as string[])?.indexOf(option[valueKey] as string) > -1}
+              options.map((option) => {
+                const isDisabled = disabledValues.includes(option[valueKey] as string | number);
+                return (
+                  <MenuItem key={option[valueKey]} value={option[valueKey]} disabled={isDisabled}>
+                    {multiple && (
+                      <Checkbox
+                        checked={(value as string[])?.indexOf(option[valueKey] as string) > -1}
+                        disabled={isDisabled}
+                      />
+                    )}
+                    <ListItemText
+                      primary={option[labelKey]}
+                      secondary={isDisabled ? disabledLabel : undefined}
+                      secondaryTypographyProps={isDisabled ? { fontSize: '0.72rem' } : undefined}
                     />
-                  )}
-                  <ListItemText primary={option[labelKey]} />
-                </MenuItem>
-              ))
+                  </MenuItem>
+                );
+              })
             )}
           </Select>
           {helperText && <FormHelperText>{helperText}</FormHelperText>}
