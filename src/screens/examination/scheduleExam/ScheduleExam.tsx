@@ -107,7 +107,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     }
   };
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box height="100%" display="flex" flexDirection="column" overflow="hidden">
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
@@ -146,7 +146,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.28, ease: 'easeOut' }}
-            style={{ height: '100%' }}
+            style={{ flex: 1, minHeight: 0 }}
           >
             <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
               <NewExamForm
@@ -226,7 +226,9 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
         }}
         maxWidth="md"
       >
-        <ViewTimetableComp examData={selectedExam} />
+        <Box sx={{ px: 2, pb: 2, pt: 2 }}>
+          <ViewTimetableComp examData={selectedExam} />
+        </Box>
       </CustomDialog>
     </Box>
   );

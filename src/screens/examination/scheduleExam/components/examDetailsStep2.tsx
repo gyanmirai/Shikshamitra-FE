@@ -23,14 +23,15 @@ import {
   Divider,
   Tooltip,
   TableRow,
+  Accordion,
   TableBody,
   TableCell,
   TableHead,
   TextField,
   Typography,
-  ToggleButton,
   TableContainer,
-  ToggleButtonGroup,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 import type { IExamFormValues } from '../type';
@@ -116,6 +117,9 @@ const ScheduleTableHead = memo(() => (
                   position: 'sticky',
                   left: 0,
                   zIndex: 3,
+                  // Opaque background required so scrolling columns don't bleed through.
+                  // background.paper adapts correctly to both light and dark mode.
+                  bgcolor: 'background.paper',
                 }
               : {}),
           }}
@@ -183,7 +187,7 @@ const SubjectScheduleRow = memo(
         sx={{
           position: 'sticky',
           left: 0,
-          zIndex: 1,
+          zIndex: 2,
           bgcolor: 'background.paper',
           minWidth: 200,
           py: 1.25,
@@ -642,28 +646,6 @@ const ElectiveGroupCard = memo(
     const group = formik.values.subjects[groupIndex];
     const groupName: string = group?.subjectName || group?.electiveGroupName || 'Elective Group';
     const individualSubjects: any[] = group?.subjects || [];
-    const mode: 'combined' | 'separate' = group?.schedulingMode ?? 'combined';
-
-    const handleModeChange = useCallback(
-      (_: any, newMode: string | null) => {
-        if (!newMode) return;
-        formik.setFieldValue(`subjects.${groupIndex}.schedulingMode`, newMode);
-      },
-      [formik, groupIndex]
-    );
-
-    const handleGroupFieldChange = useCallback(
-      (field: string, value: any) => {
-        formik.setFieldValue(`subjects.${groupIndex}.${field}`, value);
-      },
-      [formik, groupIndex]
-    );
-    const handleGroupFieldBlur = useCallback(
-      (field: string) => {
-        formik.setFieldTouched(`subjects.${groupIndex}.${field}`, false, false);
-      },
-      [formik, groupIndex]
-    );
 
     const handleSubjectFieldChange = useCallback(
       (subjectIdx: number, field: string, value: any) => {
@@ -672,7 +654,6 @@ const ElectiveGroupCard = memo(
       [formik, groupIndex]
     );
 
-    // Separate mode: local touched state per subject per field
     const [sepTouched, setSepTouched] = useState<Record<number, Record<string, boolean>>>({});
 
     const handleSepFieldBlur = useCallback((subjectIdx: number, field: string) => {
@@ -682,38 +663,51 @@ const ElectiveGroupCard = memo(
       }));
     }, []);
 
-    // When Formik has attempted validation and found errors, reveal all field errors
     const showAllSepErrors = Boolean(formik.errors?.subjects);
 
-    const groupErrors =
-      typeof formik.errors.subjects?.[groupIndex] === 'object'
-        ? (formik.errors.subjects[groupIndex] as any)
-        : {};
-    const groupTouched = formik.touched.subjects?.[groupIndex] ?? {};
+    const handleApplyToGroup = useCallback(
+      (values: ApplyToAllValues) => {
+        if (!Object.keys(values).length) return;
+        const updated = formik.values.subjects.map((sub: any, idx: number) => {
+          if (idx !== groupIndex) return sub;
+          return { ...sub, subjects: (sub.subjects || []).map((s: any) => ({ ...s, ...values })) };
+        });
+        formik.setValues({ ...formik.values, subjects: updated }, true);
+      },
+      [formik, groupIndex]
+    );
+
+    console.log('formik', formik);
 
     return (
-      <Paper
-        variant="outlined"
+      <Accordion
+        defaultExpanded
+        disableGutters
+        elevation={0}
         sx={{
           mb: 2,
-          overflow: 'hidden',
           borderRadius: 2,
           border: '1px solid',
           borderColor: 'divider',
+          overflow: 'hidden',
+          '&:before': { display: 'none' },
         }}
       >
-        {/* Group header */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          flexWrap="wrap"
-          gap={1}
+        <AccordionSummary
+          expandIcon={<Iconify icon="eva:chevron-down-fill" width={18} />}
           sx={{
             px: 2,
-            py: 1.25,
+            minHeight: 44,
             bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.07),
             borderBottom: '1px solid',
             borderColor: 'divider',
+            '&.Mui-expanded': { minHeight: 44 },
+            '& .MuiAccordionSummary-content': {
+              alignItems: 'center',
+              gap: 1,
+              my: 0.75,
+              flexWrap: 'wrap',
+            },
           }}
         >
           <Box
@@ -735,125 +729,28 @@ const ElectiveGroupCard = memo(
             variant="soft"
             sx={{ fontSize: '0.7rem', height: 20, fontWeight: 600 }}
           />
-          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-              sx={{ whiteSpace: 'nowrap' }}
-            >
-              Scheduling mode
-            </Typography>
-            <ToggleButtonGroup
-              value={mode}
-              exclusive
-              size="small"
-              onChange={handleModeChange}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 1.5,
-                  py: 0.35,
-                  fontSize: '0.72rem',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  color: 'text.secondary',
-                  lineHeight: 1.5,
-                  '&.Mui-selected': {
-                    bgcolor: 'warning.main',
-                    color: 'warning.contrastText',
-                    borderColor: 'warning.main',
-                    '&:hover': { bgcolor: 'warning.dark' },
-                  },
-                },
-              }}
-            >
-              <ToggleButton value="combined">Combined</ToggleButton>
-              <ToggleButton value="separate">Separate</ToggleButton>
-            </ToggleButtonGroup>
+        </AccordionSummary>
+
+        <AccordionDetails sx={{ p: 0 }}>
+          {/* Per-group apply-to-all bar */}
+          <Box
+            sx={{
+              px: 2,
+              py: 1.25,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.03),
+            }}
+          >
+            <ApplyToAllBar onApply={handleApplyToGroup} />
           </Box>
-        </Stack>
 
-        {/* Mode helper text */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          gap={0.75}
-          sx={{
-            px: 2,
-            py: 0.75,
-            bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.04),
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
-          <Iconify icon="eva:info-fill" width={14} sx={{ color: 'warning.main', flexShrink: 0 }} />
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
-            {mode === 'combined'
-              ? 'All subjects in this group share the same exam schedule.'
-              : 'Each subject in this group has its own independent schedule.'}
-          </Typography>
-        </Stack>
-
-        {/* Schedule table */}
-        <TableContainer>
-          <Table size="small" sx={{ tableLayout: 'auto' }}>
-            <ScheduleTableHead />
-            <TableBody>
-              {mode === 'combined' ? (
-                <>
-                  <SubjectScheduleRow
-                    key={`combined-group-${groupIndex}`}
-                    values={{
-                      subjectColor: '#F59E0B',
-                      subjectName: groupName,
-                      subjectCode:
-                        individualSubjects.length > 0
-                          ? `${individualSubjects.length} subjects`
-                          : undefined,
-                      examDate: group.examDate,
-                      startTime: group.startTime,
-                      endTime: group.endTime,
-                      gradeScalingId: group.gradeScalingId,
-                      totalMarks: group.totalMarks,
-                      passingMarks: group.passingMarks,
-                      notes: group.notes,
-                    }}
-                    errors={groupErrors}
-                    touched={groupTouched}
-                    onFieldChange={handleGroupFieldChange}
-                    onFieldBlur={handleGroupFieldBlur}
-                    gradeScalings={gradeScalings}
-                    isGradeScalingsLoading={isGradeScalingsLoading}
-                    currentYear={currentYear}
-                  />
-                  {individualSubjects.map((sub: any, j: number) => (
-                    <SubjectScheduleRow
-                      key={`combined-sub-${groupIndex}-${j}`}
-                      values={{
-                        subjectColor: sub.subjectColor || sub.color || '#9E9E9E',
-                        subjectName: sub.subjectName || sub.name || '',
-                        subjectCode: sub.subjectCode || sub.code,
-                        examDate: group.examDate,
-                        startTime: group.startTime,
-                        endTime: group.endTime,
-                        gradeScalingId: group.gradeScalingId,
-                        totalMarks: group.totalMarks,
-                        passingMarks: group.passingMarks,
-                        notes: group.notes,
-                      }}
-                      onFieldChange={() => {}}
-                      onFieldBlur={() => {}}
-                      gradeScalings={gradeScalings}
-                      isGradeScalingsLoading={isGradeScalingsLoading}
-                      currentYear={currentYear}
-                      isReadOnly
-                    />
-                  ))}
-                </>
-              ) : (
-                individualSubjects.map((sub: any, j: number) => {
+          {/* Schedule table */}
+          <TableContainer>
+            <Table size="small" sx={{ tableLayout: 'auto' }}>
+              <ScheduleTableHead />
+              <TableBody>
+                {individualSubjects.map((sub: any, j: number) => {
                   const subSchedule = group.subjects?.[j] || sub;
                   const subErrors = validateSepSubject(subSchedule);
                   const subTouched = showAllSepErrors ? ALL_FIELDS_TOUCHED : (sepTouched[j] ?? {});
@@ -881,12 +778,12 @@ const ElectiveGroupCard = memo(
                       currentYear={currentYear}
                     />
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </AccordionDetails>
+      </Accordion>
     );
   }
 );
@@ -932,21 +829,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       const updated = formik.values.subjects.map((sub: any) =>
         sub.electiveGroupId ? sub : { ...sub, ...values }
       );
-      formik.setValues({ ...formik.values, subjects: updated }, true);
-    },
-    [formik]
-  );
-
-  const handleApplyAllElective = useCallback(
-    (values: ApplyToAllValues) => {
-      if (!Object.keys(values).length) return;
-      const updated = formik.values.subjects.map((sub: any) => {
-        if (!sub.electiveGroupId) return sub;
-        if (sub.schedulingMode === 'separate') {
-          return { ...sub, subjects: (sub.subjects || []).map((s: any) => ({ ...s, ...values })) };
-        }
-        return { ...sub, ...values };
-      });
       formik.setValues({ ...formik.values, subjects: updated }, true);
     },
     [formik]
@@ -1028,17 +910,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
       ═══════════════════════════════════ */}
       {electiveGroups.length > 0 && (
         <Box>
-          <Paper
-            variant="outlined"
-            sx={{
-              mb: 2,
-              p: 2,
-              pb: 1.5,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
+          <Box sx={{ mb: 2, px: 0.5 }}>
             <SectionHeader
               icon="solar:star-bold-duotone"
               accent="warning"
@@ -1054,8 +926,7 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
                 },
               ]}
             />
-            <ApplyToAllBar onApply={handleApplyAllElective} />
-          </Paper>
+          </Box>
 
           {electiveGroups.map(({ index }) => (
             <ElectiveGroupCard

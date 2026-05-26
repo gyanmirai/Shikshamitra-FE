@@ -62,7 +62,6 @@ const SubjectTable = ({
       })) || [],
     [subjectTableData]
   );
-  console.log('subjectData---', subjectData);
 
   const actions = useCallback(
     ({ popover, row }: any) => (
