@@ -474,6 +474,7 @@ export const SalaryDetailsTableCard = ({
           {
             id: 'amount',
             label: 'Amount',
+            align: 'center',
             filterType: 'number',
             render(value, row) {
               return (
@@ -481,6 +482,7 @@ export const SalaryDetailsTableCard = ({
                   variant="body2"
                   sx={{
                     fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
+                    textAlign: 'center',
                   }}
                 >
                   {formatCurrency(value)}

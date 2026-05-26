@@ -641,12 +641,13 @@ const RunPayroll = () => {
         id: 'payableDays',
         label: 'Payable days',
         minWidth: 160,
+        align: 'center',
         filterType: 'number',
         render(_value, row) {
           const absentDays = Number(row.absentDays || 0);
 
           return (
-            <Stack spacing={0.25}>
+            <Stack spacing={0.25} alignItems="center">
               <Typography variant="body2" fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
                 {row.payableDays} / {row.totalWorkingDays}
               </Typography>
@@ -665,6 +666,7 @@ const RunPayroll = () => {
         id: 'fullGrossSalary',
         label: 'Total salary',
         minWidth: 140,
+        align: 'center',
         filterType: 'number',
         render: (v) => formatCurrency(v),
       },
@@ -672,6 +674,7 @@ const RunPayroll = () => {
         id: 'grossSalary',
         label: 'Payable gross',
         minWidth: 130,
+        align: 'center',
         filterType: 'number',
         render: (v) => formatCurrency(v),
       },
@@ -679,6 +682,7 @@ const RunPayroll = () => {
         id: 'totalDeduction',
         label: 'Deductions',
         minWidth: 140,
+        align: 'center',
         filterType: 'number',
         render: (v) => formatCurrency(v),
       },
@@ -686,6 +690,7 @@ const RunPayroll = () => {
         id: 'netSalary',
         label: 'Net pay',
         minWidth: 130,
+        align: 'center',
         filterType: 'number',
         render: (v) => formatCurrency(v),
       },
@@ -693,6 +698,7 @@ const RunPayroll = () => {
         id: 'previousMonthNetPay',
         label: 'Last month',
         minWidth: 130,
+        align: 'center',
         filterType: 'number',
         render: (v) => (typeof v === 'number' ? formatCurrency(v) : '-'),
       },
@@ -700,10 +706,15 @@ const RunPayroll = () => {
         id: 'netPayDelta',
         label: 'Variance',
         minWidth: 150,
+        align: 'center',
         render(_value, row) {
           const isHighVariance = row.issueCodes?.includes('LARGE_SALARY_VARIANCE');
           return (
-            <Typography variant="body2" color={isHighVariance ? 'warning.main' : 'text.primary'}>
+            <Typography
+              variant="body2"
+              textAlign="center"
+              color={isHighVariance ? 'warning.main' : 'text.primary'}
+            >
               {formatDelta(row.netPayDelta, row.netPayDeltaPercent)}
             </Typography>
           );

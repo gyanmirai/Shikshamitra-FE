@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { AttendanceNumericField } from 'src/screens/hr/policies/hr-policy-ui-utils';
 import type {
   PolicyStatus,
   HrPolicyType,
@@ -14,12 +15,16 @@ import type {
   WorkCalendarHoliday,
   HrPolicyImpactPreview,
   HrPolicyVersionCompare,
+  CreateUpdatePayrollPolicy,
   HrPolicyAssignmentConflict,
+  CreateUpdateAttendancePolicy,
+  CreateUpdateWorkCalendarPolicy,
 } from 'src/redux/hr/hr-policy-api';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { useSearchParams } from 'next/navigation';
@@ -44,6 +49,21 @@ import {
   mergeNonOverlappingHolidayRows,
 } from 'src/screens/hr/policies/holiday-overlap-utils';
 import {
+  isPayrollPolicyUnchanged,
+  filterPoliciesByArchiveView,
+  isAttendancePolicyUnchanged,
+  isWorkCalendarPolicyUnchanged,
+} from 'src/screens/hr/policies/hr-policy-change-utils';
+import {
+  attendanceNumericRules,
+  clampNumericPolicyInput,
+  cleanVersionDisplayValue,
+  getNumericPolicyInputError,
+  sanitizeNumericPolicyInput,
+  versionMatchesHistorySearch,
+  isAttendanceThresholdOrderValid,
+} from 'src/screens/hr/policies/hr-policy-ui-utils';
+import {
   Box,
   Tab,
   Card,
@@ -58,8 +78,10 @@ import {
   Button,
   Select,
   Switch,
+  Portal,
   Tooltip,
   Divider,
+  Backdrop,
   MenuItem,
   TableRow,
   TableBody,
@@ -75,8 +97,8 @@ import {
   DialogActions,
   DialogContent,
   InputAdornment,
-  TableContainer,
   LinearProgress,
+  TableContainer,
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
@@ -127,6 +149,7 @@ type WorkspaceTab =
   | 'effective';
 type PolicyAssignmentTargetType = 'employee' | 'group';
 type DrawerKind = 'calendar' | 'payroll' | 'attendance' | 'assignment';
+type PolicyArchiveView = 'current' | 'archived';
 
 type HRPolicyWorkspaceProps = {
   focus?: WorkspaceTab;
@@ -1000,17 +1023,6 @@ function toLabel(value?: string | null) {
     .replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
-function cleanVersionDisplayValue(value?: string | null) {
-  if (!value || value === 'null' || value === 'undefined') return 'Not set';
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
-    return 'Unknown reference';
-  }
-  if (value.trim().startsWith('{') || value.trim().startsWith('[')) {
-    return 'Changed';
-  }
-  return value;
-}
-
 function formatNumber(value?: number | null) {
   return value == null ? '-' : value.toLocaleString();
 }
@@ -1053,42 +1065,41 @@ function PolicyOperationOverlay({ operation }: { operation: PolicyOperationState
   if (!operation) return null;
 
   return (
-    <Box
-      sx={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: (theme) => theme.zIndex.modal + 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        px: 2,
-        bgcolor: 'rgba(15, 23, 42, 0.38)',
-        backdropFilter: 'blur(2px)',
-      }}
-    >
-      <Paper
-        elevation={8}
-        role="status"
-        aria-live="polite"
+    <Portal>
+      <Backdrop
+        open
         sx={{
-          width: 'min(360px, 100%)',
-          p: 3,
-          borderRadius: 1,
-          textAlign: 'center',
+          zIndex: (theme) => theme.zIndex.modal + 2,
+          px: 2,
+          color: 'text.primary',
+          bgcolor: 'rgba(15, 23, 42, 0.44)',
+          backdropFilter: 'blur(3px)',
         }}
       >
-        <Stack spacing={2} alignItems="center">
-          <CircularProgress size={42} thickness={4.5} />
-          <Stack spacing={0.5}>
-            <Typography variant="subtitle1">{operation.title}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {operation.message}
-            </Typography>
+        <Paper
+          elevation={8}
+          role="status"
+          aria-live="polite"
+          sx={{
+            width: 'min(360px, 100%)',
+            p: 3,
+            borderRadius: 1,
+            textAlign: 'center',
+          }}
+        >
+          <Stack spacing={2} alignItems="center">
+            <CircularProgress size={42} thickness={4.5} />
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1">{operation.title}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {operation.message}
+              </Typography>
+            </Stack>
+            <LinearProgress sx={{ width: 1 }} />
           </Stack>
-          <LinearProgress sx={{ width: 1 }} />
-        </Stack>
-      </Paper>
-    </Box>
+        </Paper>
+      </Backdrop>
+    </Portal>
   );
 }
 
@@ -1100,6 +1111,7 @@ function PolicyDrawerLayout({
   onSave,
   loading,
   disabled,
+  disabledReason,
   operation,
   children,
 }: {
@@ -1110,6 +1122,7 @@ function PolicyDrawerLayout({
   onSave: () => void;
   loading: boolean;
   disabled: boolean;
+  disabledReason?: string;
   operation?: PolicyOperationState;
   children: React.ReactNode;
 }) {
@@ -1153,16 +1166,19 @@ function PolicyDrawerLayout({
         <Button variant="outlined" onClick={onClose} disabled={Boolean(operation)}>
           Cancel
         </Button>
-        <LoadingButton
-          variant="contained"
-          disabled={disabled || Boolean(operation)}
-          loading={loading || Boolean(operation)}
-          onClick={onSave}
-        >
-          {operation ? 'Saving...' : 'Save'}
-        </LoadingButton>
+        <Tooltip title={disabled && disabledReason ? disabledReason : ''}>
+          <span>
+            <LoadingButton
+              variant="contained"
+              disabled={disabled || Boolean(operation)}
+              loading={loading || Boolean(operation)}
+              onClick={onSave}
+            >
+              {operation ? 'Saving...' : 'Save'}
+            </LoadingButton>
+          </span>
+        </Tooltip>
       </Stack>
-      <PolicyOperationOverlay operation={operation || null} />
     </Box>
   );
 }
@@ -1170,11 +1186,13 @@ function PolicyDrawerLayout({
 function PolicySection({
   title,
   description,
+  help,
   compact = false,
   children,
 }: {
   title: string;
   description?: string;
+  help?: string;
   compact?: boolean;
   children: React.ReactNode;
 }) {
@@ -1191,9 +1209,12 @@ function PolicySection({
     >
       <Stack spacing={compact ? 1.5 : 2}>
         <Box>
-          <Typography variant="subtitle1" sx={{ lineHeight: 1.35 }}>
-            {title}
-          </Typography>
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Typography variant="subtitle1" sx={{ lineHeight: 1.35 }}>
+              {title}
+            </Typography>
+            {help ? <InfoTooltipIcon title={help} /> : null}
+          </Stack>
           {description ? (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: 720 }}>
               {description}
@@ -1203,6 +1224,33 @@ function PolicySection({
         {children}
       </Stack>
     </Paper>
+  );
+}
+
+function InfoTooltipIcon({ title }: { title: string }) {
+  return (
+    <Tooltip title={title} arrow>
+      <Box
+        component="span"
+        aria-label={title}
+        tabIndex={0}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.secondary',
+          lineHeight: 0,
+          cursor: 'help',
+          '&:focus-visible': {
+            outline: (theme) => `2px solid ${theme.vars.palette.primary.main}`,
+            outlineOffset: 2,
+            borderRadius: '50%',
+          },
+        }}
+      >
+        <Iconify icon="mdi:information-outline" width={16} />
+      </Box>
+    </Tooltip>
   );
 }
 
@@ -1239,13 +1287,7 @@ function FieldLabel({ label, help }: { label: React.ReactNode; help?: string }) 
   return (
     <Stack component="span" direction="row" spacing={0.5} alignItems="center">
       <Box component="span">{label}</Box>
-      {help ? (
-        <Tooltip title={help} arrow>
-          <Box component="span" sx={{ display: 'inline-flex', color: 'text.secondary' }}>
-            <Iconify icon="mdi:information-outline" width={16} />
-          </Box>
-        </Tooltip>
-      ) : null}
+      {help ? <InfoTooltipIcon title={help} /> : null}
     </Stack>
   );
 }
@@ -1367,6 +1409,7 @@ function SectionTable({ children, columns }: { children: React.ReactNode; column
 }
 
 export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
+  const muiTheme = useTheme();
   const searchParams = useSearchParams();
   const queryTab = searchParams.get('tab') as WorkspaceTab | null;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -1404,6 +1447,14 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   );
   const [assignmentFilters, setAssignmentFilters] =
     useState<AssignmentFilters>(defaultAssignmentFilters);
+  const [policyArchiveView, setPolicyArchiveView] = useState<Record<DrawerKind, PolicyArchiveView>>(
+    {
+      calendar: 'current',
+      payroll: 'current',
+      attendance: 'current',
+      assignment: 'current',
+    }
+  );
   const [assignmentDateError, setAssignmentDateError] = useState('');
   const [assignmentConflict, setAssignmentConflict] = useState<HrPolicyAssignmentConflict | null>(
     null
@@ -1434,6 +1485,34 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     groupId: '',
     date: toDateInput(currentYear?.startDate) || dayjs().format('YYYY-MM-DD'),
   });
+
+  const getAttendanceNumericFieldProps = (field: AttendanceNumericField) => {
+    const rule = attendanceNumericRules[field];
+    const value = attendanceForm[field] || '';
+    const helperText =
+      getNumericPolicyInputError(value, rule) || `Allowed range: ${rule.min}-${rule.max}`;
+    const hasError = Boolean(getNumericPolicyInputError(value, rule));
+
+    return {
+      fullWidth: true,
+      size: 'small' as const,
+      value,
+      error: hasError,
+      helperText,
+      inputProps: { inputMode: 'numeric' as const, maxLength: rule.maxLength },
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+        const nextValue = sanitizeNumericPolicyInput(event.target.value, rule);
+        setAttendanceForm((current) => ({ ...current, [field]: nextValue }));
+      },
+      onBlur: () => {
+        setAttendanceForm((current) => ({
+          ...current,
+          [field]: clampNumericPolicyInput(current[field] || '', rule),
+        }));
+      },
+    };
+  };
+
   const listArgs = { academicYearId, maxResultCount: 200 };
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
   const { data: employees, isFetching: employeesLoading } = useGetEmployeeQuery(
@@ -1468,10 +1547,23 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const calendars = useMemo(() => workCalendarPolicies?.items || [], [workCalendarPolicies?.items]);
   const payroll = useMemo(() => payrollPolicies?.items || [], [payrollPolicies?.items]);
   const attendance = useMemo(() => attendancePolicies?.items || [], [attendancePolicies?.items]);
+  const visibleCalendars = filterPoliciesByArchiveView(calendars, policyArchiveView.calendar);
+  const visiblePayroll = filterPoliciesByArchiveView(payroll, policyArchiveView.payroll);
+  const visibleAttendance = filterPoliciesByArchiveView(attendance, policyArchiveView.attendance);
+  const archivedCalendarCount = calendars.filter((item) => item.status === 'archived').length;
+  const archivedPayrollCount = payroll.filter((item) => item.status === 'archived').length;
+  const archivedAttendanceCount = attendance.filter((item) => item.status === 'archived').length;
   const activeCalendars = calendars.filter((item) => item.status === 'active');
   const activePayroll = payroll.filter((item) => item.status === 'active');
   const activeAttendance = attendance.filter((item) => item.status === 'active');
   const isPolicyOperationActive = Boolean(activePolicyOperation);
+  const drawerTransitionDuration = useMemo(
+    () => ({
+      enter: muiTheme.transitions.duration.enteringScreen + 100,
+      exit: muiTheme.transitions.duration.leavingScreen,
+    }),
+    [muiTheme.transitions.duration.enteringScreen, muiTheme.transitions.duration.leavingScreen]
+  );
   const runPolicyOperation = async <T,>(
     operation: Exclude<PolicyOperationState, null>,
     task: () => Promise<T>
@@ -1484,8 +1576,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       setActivePolicyOperation(null);
     }
   };
-  const defaultPayroll = payroll.find((item) => item.isDefault) || activePayroll[0];
-  const defaultAttendance = attendance.find((item) => item.isDefault) || activeAttendance[0];
+  const defaultPayroll = activePayroll.find((item) => item.isDefault) || activePayroll[0];
+  const defaultAttendance = activeAttendance.find((item) => item.isDefault) || activeAttendance[0];
   const employeeOptions = getItems<LookupOption>(employees);
   const groupOptions = getItems<LookupOption>(groups);
   const assignmentRows = useMemo<AssignmentTableRow[]>(() => {
@@ -1813,6 +1905,108 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     employeesLoading ||
     groupsLoading;
 
+  const buildCalendarPayload = (): CreateUpdateWorkCalendarPolicy | null => {
+    if (!academicYearId) return null;
+    const customWeeklyOffs = sortWeekDays(calendarForm.customWeeklyOffs);
+    const weeklyOffs = getWeeklyOffsForRule(calendarForm.weeklyOffPattern, customWeeklyOffs);
+    return {
+      academicYearId,
+      name: calendarForm.name.trim(),
+      status: calendarForm.status,
+      effectiveFrom: calendarForm.effectiveFrom,
+      effectiveTo: calendarForm.effectiveTo || null,
+      weeklyOffPattern: toApiWeeklyPattern(calendarForm.weeklyOffPattern),
+      customWeeklyOffs: weeklyOffs,
+      holidaySyncMode: 'snapshot',
+      holidays: calendarForm.holidays.map((holiday) => ({
+        ...holiday,
+        academicYearId,
+        date: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
+        fromDate: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
+        toDate: dayjs(getHolidayToDate(holiday)).format('YYYY-MM-DD'),
+        dayCount: getHolidayDayCount(holiday),
+      })),
+    };
+  };
+
+  const buildPayrollPayload = (): CreateUpdatePayrollPolicy | null => {
+    if (!academicYearId) return null;
+    const dayCalculationType = normalizePayrollDayCalculationType(payrollForm.dayCalculationType);
+    const manualMonthDaysResult = buildManualMonthDaysPayload({
+      academicYearStart: currentYear?.startDate,
+      academicYearEnd: currentYear?.endDate,
+      manualMonthDays: payrollForm.manualMonthDays,
+    });
+    return {
+      academicYearId,
+      workCalendarPolicyId: payrollForm.workCalendarPolicyId,
+      name: payrollForm.name.trim(),
+      status: payrollForm.status,
+      isDefault: payrollForm.isDefault,
+      dayCalculationType,
+      manualDays: null,
+      manualMonthDays: dayCalculationType === 'manual-days' ? manualMonthDaysResult.items : [],
+      saturdayWorkPolicy: payrollForm.saturdayWorkPolicy,
+      holidayOverrides: (drawer?.item as PayrollPolicy | undefined)?.holidayOverrides || [],
+    };
+  };
+
+  const buildAttendancePayload = (): CreateUpdateAttendancePolicy | null => {
+    if (!academicYearId) return null;
+    const formToSave = attendanceAdvancedMode
+      ? attendanceForm
+      : applyAttendanceAdvancedDefaults(attendanceForm);
+    return {
+      academicYearId,
+      workCalendarPolicyId: formToSave.workCalendarPolicyId,
+      name: formToSave.name.trim(),
+      status: formToSave.status,
+      isDefault: formToSave.isDefault,
+      fullDayThresholdPercentage: Number(formToSave.fullDayThresholdPercentage),
+      halfDayThresholdPercentage: Number(formToSave.halfDayThresholdPercentage),
+      absentThresholdPercentage: Number(formToSave.absentThresholdPercentage),
+      missingPunchBehavior: formToSave.missingPunchBehavior,
+      manualCorrectionAllowed: formToSave.manualCorrectionAllowed,
+      graceTime: Number(formToSave.graceTime || 0),
+      maxLateAllowedPerMonth: Number(formToSave.maxLateAllowedPerMonth || 0),
+      penaltyType: formToSave.penaltyType,
+      penaltyCountThreshold: Number(formToSave.penaltyCountThreshold || 0),
+      earlyExitEnabled: formToSave.earlyExitEnabled,
+      earlyExitGraceTime: Number(formToSave.earlyExitGraceTime || 0),
+      overtimeEnabled: formToSave.overtimeEnabled,
+      overtimeRate: formToSave.overtimeRate || null,
+      minOvertimeMinutes: numberOrNull(formToSave.minOvertimeMinutes),
+      holidayWorkBehavior: formToSave.holidayWorkBehavior,
+      sandwichRuleEnabled: formToSave.sandwichRuleEnabled,
+      payrollPreviewEnabled: formToSave.payrollPreviewEnabled,
+    };
+  };
+
+  const calendarPayload = buildCalendarPayload();
+  const payrollPayload = buildPayrollPayload();
+  const attendancePayload = buildAttendancePayload();
+  const currentCalendarUnchanged = Boolean(
+    drawer?.kind === 'calendar' &&
+    drawer.mode === 'edit' &&
+    drawer.item &&
+    calendarPayload &&
+    isWorkCalendarPolicyUnchanged(drawer.item as WorkCalendarPolicy, calendarPayload)
+  );
+  const currentPayrollUnchanged = Boolean(
+    drawer?.kind === 'payroll' &&
+    drawer.mode === 'edit' &&
+    drawer.item &&
+    payrollPayload &&
+    isPayrollPolicyUnchanged(drawer.item as PayrollPolicy, payrollPayload)
+  );
+  const currentAttendanceUnchanged = Boolean(
+    drawer?.kind === 'attendance' &&
+    drawer.mode === 'edit' &&
+    drawer.item &&
+    attendancePayload &&
+    isAttendancePolicyUnchanged(drawer.item as AttendancePolicy, attendancePayload)
+  );
+
   const openCalendarDrawer = async (item?: WorkCalendarPolicy) => {
     setFormError('');
     const customWeeklyOffs = sortWeekDays(item?.customWeeklyOffs || []);
@@ -1844,7 +2038,11 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           }
         : defaultCalendarForm(currentYear?.startDate, currentYear?.endDate)
     );
-    setDrawer({ kind: 'calendar', mode: item ? 'edit' : 'create', item });
+    setDrawer({
+      kind: 'calendar',
+      mode: item ? 'edit' : 'create',
+      item: item ? { ...item, holidays } : undefined,
+    });
     if (academicYearId) {
       try {
         const previewRows = await loadHolidayImportPreview({ academicYearId }).unwrap();
@@ -1982,13 +2180,14 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     label: string,
     run: (token?: string) => Promise<void>
   ) => {
-    setImpactDrawerOpen(true);
-    setImpactPreview(preview);
     setImpactPreviewError('');
     if (preview.blockingWarnings?.length || preview.requiresConfirmation) {
+      setImpactDrawerOpen(true);
+      setImpactPreview(preview);
       setPendingImpactAction({ label, run });
       return;
     }
+    setPendingImpactAction(null);
     await run();
   };
 
@@ -2190,24 +2389,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       );
       return;
     }
-    const body = {
-      academicYearId,
-      name: calendarForm.name.trim(),
-      status: calendarForm.status,
-      effectiveFrom: calendarForm.effectiveFrom,
-      effectiveTo: calendarForm.effectiveTo || null,
-      weeklyOffPattern: toApiWeeklyPattern(calendarForm.weeklyOffPattern),
-      customWeeklyOffs: weeklyOffs,
-      holidaySyncMode: 'snapshot',
-      holidays: calendarForm.holidays.map((holiday) => ({
-        ...holiday,
-        academicYearId,
-        date: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
-        fromDate: dayjs(getHolidayFromDate(holiday)).format('YYYY-MM-DD'),
-        toDate: dayjs(getHolidayToDate(holiday)).format('YYYY-MM-DD'),
-        dayCount: getHolidayDayCount(holiday),
-      })),
-    };
+    const body = buildCalendarPayload();
+    if (!body) return;
     await runPolicyOperation(
       {
         key: 'save-calendar',
@@ -2225,6 +2408,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               policyId: drawer.item.id,
               academicYearId,
               action: 'update',
+              workCalendarPolicy: body,
             }).unwrap();
             await runWithImpactConfirmation(preview, 'Save work calendar', async (token) => {
               await updateWorkCalendarPolicyWithToken({
@@ -2269,18 +2453,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         return;
       }
     }
-    const body = {
-      academicYearId,
-      workCalendarPolicyId: payrollForm.workCalendarPolicyId,
-      name: payrollForm.name.trim(),
-      status: payrollForm.status,
-      isDefault: payrollForm.isDefault,
-      dayCalculationType,
-      manualDays: null,
-      manualMonthDays: isManualDays ? manualMonthDaysResult.items : [],
-      saturdayWorkPolicy: payrollForm.saturdayWorkPolicy,
-      holidayOverrides: (drawer?.item as PayrollPolicy | undefined)?.holidayOverrides || [],
-    };
+    const body = buildPayrollPayload();
+    if (!body) return;
     await runPolicyOperation(
       {
         key: 'save-payroll',
@@ -2298,6 +2472,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               policyId: drawer.item.id,
               academicYearId,
               action: 'update',
+              payrollPolicy: body,
             }).unwrap();
             await runWithImpactConfirmation(preview, 'Save payroll policy', async (token) => {
               await updatePayrollPolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
@@ -2327,34 +2502,24 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       setFormError('Name and active work calendar are required.');
       return;
     }
-    if (!(full >= half && half >= absent)) {
-      setFormError('Thresholds must be ordered as full day >= half day >= absent.');
+    if (!isAttendanceThresholdOrderValid(full, half, absent)) {
+      setFormError('Thresholds must be ordered as full day > half day >= absent.');
       return;
     }
-    const body = {
-      academicYearId,
-      workCalendarPolicyId: formToSave.workCalendarPolicyId,
-      name: formToSave.name.trim(),
-      status: formToSave.status,
-      isDefault: formToSave.isDefault,
-      fullDayThresholdPercentage: full,
-      halfDayThresholdPercentage: half,
-      absentThresholdPercentage: absent,
-      missingPunchBehavior: formToSave.missingPunchBehavior,
-      manualCorrectionAllowed: formToSave.manualCorrectionAllowed,
-      graceTime: Number(formToSave.graceTime || 0),
-      maxLateAllowedPerMonth: Number(formToSave.maxLateAllowedPerMonth || 0),
-      penaltyType: formToSave.penaltyType,
-      penaltyCountThreshold: Number(formToSave.penaltyCountThreshold || 0),
-      earlyExitEnabled: formToSave.earlyExitEnabled,
-      earlyExitGraceTime: Number(formToSave.earlyExitGraceTime || 0),
-      overtimeEnabled: formToSave.overtimeEnabled,
-      overtimeRate: formToSave.overtimeRate || null,
-      minOvertimeMinutes: numberOrNull(formToSave.minOvertimeMinutes),
-      holidayWorkBehavior: formToSave.holidayWorkBehavior,
-      sandwichRuleEnabled: formToSave.sandwichRuleEnabled,
-      payrollPreviewEnabled: formToSave.payrollPreviewEnabled,
-    };
+    const invalidRule = (Object.keys(attendanceNumericRules) as AttendanceNumericField[]).find(
+      (field) => getNumericPolicyInputError(formToSave[field] || '', attendanceNumericRules[field])
+    );
+    if (invalidRule) {
+      setFormError(
+        getNumericPolicyInputError(
+          formToSave[invalidRule] || '',
+          attendanceNumericRules[invalidRule]
+        )
+      );
+      return;
+    }
+    const body = buildAttendancePayload();
+    if (!body) return;
     await runPolicyOperation(
       {
         key: 'save-attendance',
@@ -2372,6 +2537,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               policyId: drawer.item.id,
               academicYearId,
               action: 'update',
+              attendancePolicy: body,
             }).unwrap();
             await runWithImpactConfirmation(preview, 'Save attendance policy', async (token) => {
               await updateAttendancePolicyWithToken({ id: drawer.item!.id, body, token }).unwrap();
@@ -2477,8 +2643,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     await runPolicyOperation(
       {
         key: 'archive-policy',
-        title: 'Archiving policy',
-        message: 'Checking impact before archiving this policy...',
+        title: 'Removing policy',
+        message: 'Checking impact before removing this policy...',
       },
       async () => {
         try {
@@ -2489,7 +2655,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             academicYearId: item.academicYearId,
             action: 'archive',
           }).unwrap();
-          await runWithImpactConfirmation(preview, 'Archive policy', async (token) => {
+          await runWithImpactConfirmation(preview, 'Remove policy', async (token) => {
             if (type === 'payroll') {
               await deletePayrollPolicyWithToken({ id: item.id, token }).unwrap();
             } else if (type === 'attendance') {
@@ -2497,10 +2663,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             } else {
               await deleteWorkCalendarPolicyWithToken({ id: item.id, token }).unwrap();
             }
-            toast.success('Policy archived');
+            toast.success('Policy removed from list');
           });
         } catch (error) {
-          setImpactPreviewError(getErrorMessage(error, 'Could not archive policy.'));
+          setImpactPreviewError(getErrorMessage(error, 'Could not remove policy.'));
         }
       }
     );
@@ -2659,6 +2825,28 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
   const showError = (error: unknown, fallback: string) =>
     error ? <Alert severity="error">{getErrorMessage(error, fallback)}</Alert> : null;
 
+  const renderPolicyArchiveToggle = (
+    kind: 'calendar' | 'payroll' | 'attendance',
+    archivedCount: number
+  ) => (
+    <Stack direction="row" spacing={1}>
+      <Button
+        size="small"
+        variant={policyArchiveView[kind] === 'current' ? 'contained' : 'outlined'}
+        onClick={() => setPolicyArchiveView((current) => ({ ...current, [kind]: 'current' }))}
+      >
+        Current
+      </Button>
+      <Button
+        size="small"
+        variant={policyArchiveView[kind] === 'archived' ? 'contained' : 'outlined'}
+        onClick={() => setPolicyArchiveView((current) => ({ ...current, [kind]: 'archived' }))}
+      >
+        Archived ({archivedCount})
+      </Button>
+    </Stack>
+  );
+
   const renderCalendars = () => (
     <Card sx={{ p: 2 }}>
       <Stack
@@ -2667,15 +2855,20 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         spacing={1.5}
         sx={{ mb: 2 }}
       >
-        <Typography variant="h6">Work Calendars</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Iconify icon="mdi:plus" />}
-          onClick={() => openCalendarDrawer()}
-          disabled={!academicYearId || !canCreatePolicy}
-        >
-          New Calendar
-        </Button>
+        <Stack spacing={1}>
+          <Typography variant="h6">Work Calendars</Typography>
+          {renderPolicyArchiveToggle('calendar', archivedCalendarCount)}
+        </Stack>
+        {policyArchiveView.calendar === 'current' ? (
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={() => openCalendarDrawer()}
+            disabled={!academicYearId || !canCreatePolicy}
+          >
+            New Calendar
+          </Button>
+        ) : null}
       </Stack>
       {showError(calendarsError, 'Could not load work calendars.')}
       <SectionTable
@@ -2690,8 +2883,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           'Actions',
         ]}
       >
-        {calendars.length ? (
-          calendars.map((item) => (
+        {visibleCalendars.length ? (
+          visibleCalendars.map((item) => (
             <TableRow key={item.id} hover>
               <TableCell>{item.name}</TableCell>
               <TableCell>
@@ -2769,7 +2962,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                     </IconButton>
                   </span>
                 </Tooltip>
-                <Tooltip title={item.status === 'archived' ? 'Unarchive' : 'Archive'}>
+                <Tooltip title={item.status === 'archived' ? 'Restore' : 'Remove'}>
                   <span>
                     <IconButton
                       size="small"
@@ -2788,7 +2981,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                         icon={
                           item.status === 'archived'
                             ? 'mdi:archive-arrow-up-outline'
-                            : 'mdi:archive-outline'
+                            : 'mdi:trash-can-outline'
                         }
                       />
                     </IconButton>
@@ -2798,15 +2991,23 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             </TableRow>
           ))
         ) : (
-          <EmptyRows colSpan={8} message="No work calendars." />
+          <EmptyRows
+            colSpan={8}
+            message={
+              policyArchiveView.calendar === 'archived'
+                ? 'No removed work calendars.'
+                : 'No work calendars.'
+            }
+          />
         )}
       </SectionTable>
     </Card>
   );
 
   const renderPolicyTable = (type: 'payroll' | 'attendance') => {
-    const items = type === 'payroll' ? payroll : attendance;
+    const items = type === 'payroll' ? visiblePayroll : visibleAttendance;
     const error = type === 'payroll' ? payrollError : attendanceError;
+    const archivedCount = type === 'payroll' ? archivedPayrollCount : archivedAttendanceCount;
     return (
       <Card sx={{ p: 2 }}>
         <Stack
@@ -2819,20 +3020,23 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             <Typography variant="h6">
               {type === 'payroll' ? 'Payroll Policies' : 'Attendance Policies'}
             </Typography>
+            {renderPolicyArchiveToggle(type, archivedCount)}
             {type === 'attendance' ? (
               <Typography variant="body2" color="text.secondary">
                 Most schools can use one standard policy and keep Advanced Settings off.
               </Typography>
             ) : null}
           </Stack>
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={() => (type === 'payroll' ? openPayrollDrawer() : openAttendanceDrawer())}
-            disabled={!academicYearId || activeCalendars.length === 0 || !canCreatePolicy}
-          >
-            {type === 'attendance' ? 'New Standard Policy' : 'New Policy'}
-          </Button>
+          {policyArchiveView[type] === 'current' ? (
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="mdi:plus" />}
+              onClick={() => (type === 'payroll' ? openPayrollDrawer() : openAttendanceDrawer())}
+              disabled={!academicYearId || activeCalendars.length === 0 || !canCreatePolicy}
+            >
+              {type === 'attendance' ? 'New Standard Policy' : 'New Policy'}
+            </Button>
+          ) : null}
         </Stack>
         {activeCalendars.length === 0 ? (
           <Alert severity="warning" sx={{ mb: 2 }}>
@@ -2960,7 +3164,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                       </IconButton>
                     </span>
                   </Tooltip>
-                  <Tooltip title={item.status === 'archived' ? 'Unarchive' : 'Archive'}>
+                  <Tooltip title={item.status === 'archived' ? 'Restore' : 'Remove'}>
                     <span>
                       <IconButton
                         size="small"
@@ -2981,7 +3185,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                           icon={
                             item.status === 'archived'
                               ? 'mdi:archive-arrow-up-outline'
-                              : 'mdi:archive-outline'
+                              : 'mdi:trash-can-outline'
                           }
                         />
                       </IconButton>
@@ -2994,9 +3198,11 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             <EmptyRows
               colSpan={8}
               message={
-                type === 'attendance'
-                  ? 'No attendance policy yet. Create one standard policy for the academic year to start.'
-                  : `No ${type} policies.`
+                policyArchiveView[type] === 'archived'
+                  ? `No removed ${type} policies.`
+                  : type === 'attendance'
+                    ? 'No attendance policy yet. Create one standard policy for the academic year to start.'
+                    : `No ${type} policies.`
               }
             />
           )}
@@ -3720,7 +3926,8 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       anchor="right"
       open={impactDrawerOpen}
       onClose={closeImpactDrawer}
-      PaperProps={{ sx: { position: 'relative', width: { xs: '100%', md: 560 } } }}
+      transitionDuration={drawerTransitionDuration}
+      PaperProps={{ sx: { width: { xs: '100%', md: 560 } } }}
     >
       <DrawerHeader
         title="Policy Impact"
@@ -3860,7 +4067,6 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           </>
         ) : null}
       </Stack>
-      <PolicyOperationOverlay operation={activePolicyOperation} />
     </Drawer>
   );
 
@@ -4038,13 +4244,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     const filteredVersions = versions.filter((version) => {
       const matchesAction =
         versionFilters.action === 'all' || version.changeAction === versionFilters.action;
-      const search = versionFilters.search.trim().toLowerCase();
-      const matchesSearch =
-        !search ||
-        version.name.toLowerCase().includes(search) ||
-        (version.changeReason || '').toLowerCase().includes(search) ||
-        (version.createdByName || version.creatorId || '').toLowerCase().includes(search) ||
-        toLabel(version.changeAction).toLowerCase().includes(search);
+      const matchesSearch = versionMatchesHistorySearch(version, versionFilters.search);
       return matchesAction && matchesSearch;
     });
     const actions = Array.from(new Set(versions.map((version) => version.changeAction))).filter(
@@ -4066,7 +4266,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         onClose={() => {
           if (!isPolicyOperationActive) setVersionTarget(null);
         }}
-        PaperProps={{ sx: { position: 'relative', width: { xs: '100%', md: 720 } } }}
+        PaperProps={{ sx: { width: { xs: '100%', md: 720 } } }}
       >
         <DrawerHeader
           title="Policy Versions"
@@ -4226,7 +4426,6 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             </Alert>
           ) : null}
         </Stack>
-        <PolicyOperationOverlay operation={activePolicyOperation} />
       </Drawer>
     );
   };
@@ -4534,11 +4733,19 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           error={formError}
           onClose={closeDrawer}
           onSave={saveCalendar}
-          disabled={drawer.mode === 'edit' ? !canEditPolicy : !canCreatePolicy}
+          disabled={
+            drawer.mode === 'edit'
+              ? !canEditPolicy || Boolean(currentCalendarUnchanged)
+              : !canCreatePolicy
+          }
+          disabledReason={currentCalendarUnchanged ? 'No changes to save' : undefined}
           loading={createCalendarState.isLoading || updateCalendarState.isLoading}
           operation={isCurrentSaveOperation ? activePolicyOperation : null}
         >
-          <PolicySection title="Policy Details">
+          <PolicySection
+            title="Policy Details"
+            help="Basic calendar identity and validity dates used by attendance and payroll policy calculations."
+          >
             <DrawerFormGrid>
               <DrawerField label="Name *">
                 <TextField
@@ -4564,7 +4771,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="archived">Archived</MenuItem>
               </DrawerSelectField>
-              <DrawerField label="Effective From *">
+              <DrawerField
+                label="Effective From *"
+                help="The first date this work calendar can be used for attendance and payroll calculations."
+              >
                 <TextField
                   fullWidth
                   type="date"
@@ -4578,7 +4788,10 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                   }
                 />
               </DrawerField>
-              <DrawerField label="Effective To">
+              <DrawerField
+                label="Effective To"
+                help="Optional end date. Leave blank when this calendar should remain available until replaced."
+              >
                 <TextField
                   fullWidth
                   type="date"
@@ -4593,11 +4806,13 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           </PolicySection>
           <PolicySection
             title="Weekly Schedule"
+            help="Defines the weekly working pattern. Use custom weekly offs only when the default rules do not match the institution schedule."
             description="Weekly offs repeat every week. Use Holiday Rules for one-time dates."
           >
             <DrawerFormGrid>
               <DrawerSelectField
                 label="Weekly Rule *"
+                help="Choose the repeating weekly off rule that determines normal working days for this calendar."
                 value={calendarForm.weeklyOffPattern}
                 onChange={(event) =>
                   setCalendarForm((current) => ({
@@ -4613,17 +4828,63 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                 ))}
               </DrawerSelectField>
               <Box>
-                <Paper variant="outlined" sx={{ p: 1.25, bgcolor: 'action.hover', height: 1 }}>
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" color="text.secondary">
-                      Weekly preview
-                    </Typography>
-                    <Typography variant="body2">
-                      Working days: {formatWeekDays(previewWorkingDays)}
-                    </Typography>
-                    <Typography variant="body2">
-                      Weekly offs: {formatWeekDays(previewWeeklyOffs)}
-                    </Typography>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1.5,
+                    height: 1,
+                    bgcolor: 'background.default',
+                    borderColor: (theme) =>
+                      theme.palette.mode === 'dark' ? 'rgba(145, 158, 171, 0.24)' : 'divider',
+                  }}
+                >
+                  <Stack spacing={1.25}>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <Typography variant="subtitle2">Weekly preview</Typography>
+                      <InfoTooltipIcon title="Preview of working days and weekly offs generated from the selected weekly rule." />
+                    </Stack>
+                    <Stack spacing={1}>
+                      {[
+                        { label: 'Working days', days: previewWorkingDays, color: 'success' },
+                        { label: 'Weekly offs', days: previewWeeklyOffs, color: 'warning' },
+                      ].map((row) => (
+                        <Stack
+                          key={row.label}
+                          direction={{ xs: 'column', sm: 'row' }}
+                          spacing={0.75}
+                          alignItems={{ xs: 'flex-start', sm: 'center' }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ minWidth: 86, flexShrink: 0 }}
+                          >
+                            {row.label}
+                          </Typography>
+                          <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                            {row.days.length ? (
+                              row.days.map((day) => (
+                                <Chip
+                                  key={`${row.label}-${day}`}
+                                  size="small"
+                                  label={
+                                    weekdayOptions.find((option) => option.value === day)?.short ||
+                                    day
+                                  }
+                                  color={row.color as 'success' | 'warning'}
+                                  variant="outlined"
+                                  sx={{ minWidth: 40 }}
+                                />
+                              ))
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                -
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Stack>
+                      ))}
+                    </Stack>
                   </Stack>
                 </Paper>
               </Box>
@@ -4658,6 +4919,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           </PolicySection>
           <PolicySection
             title="Holiday Review"
+            help="Review central and manual holidays stored in this work calendar before saving it."
             description="These holidays belong to this work calendar. Payroll and Attendance policies decide how each holiday is treated."
           >
             <Stack spacing={2}>
@@ -4920,6 +5182,9 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                                 </Stack>
                               ) : (
                                 <Tooltip
+                                  leaveDelay={0}
+                                  TransitionProps={{ timeout: 120 }}
+                                  slotProps={{ popper: { sx: { pointerEvents: 'none' } } }}
                                   title={
                                     holiday.isIncluded
                                       ? 'Remove from this calendar'
@@ -5036,7 +5301,12 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           error={formError}
           onClose={closeDrawer}
           onSave={savePayroll}
-          disabled={drawer.mode === 'edit' ? !canEditPolicy : !canCreatePolicy}
+          disabled={
+            drawer.mode === 'edit'
+              ? !canEditPolicy || Boolean(currentPayrollUnchanged)
+              : !canCreatePolicy
+          }
+          disabledReason={currentPayrollUnchanged ? 'No changes to save' : undefined}
           loading={createPayrollState.isLoading || updatePayrollState.isLoading}
           operation={isCurrentSaveOperation ? activePolicyOperation : null}
         >
@@ -5374,7 +5644,12 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
           error={formError}
           onClose={closeDrawer}
           onSave={saveAttendance}
-          disabled={drawer.mode === 'edit' ? !canEditPolicy : !canCreatePolicy}
+          disabled={
+            drawer.mode === 'edit'
+              ? !canEditPolicy || Boolean(currentAttendanceUnchanged)
+              : !canCreatePolicy
+          }
+          disabledReason={currentAttendanceUnchanged ? 'No changes to save' : undefined}
           loading={createAttendanceState.isLoading || updateAttendanceState.isLoading}
           operation={isCurrentSaveOperation ? activePolicyOperation : null}
         >
@@ -5444,35 +5719,13 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                 label="Full day threshold"
                 help="Minimum worked time percentage required to count the day as a full day."
               >
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  value={attendanceForm.fullDayThresholdPercentage}
-                  onChange={(event) =>
-                    setAttendanceForm((current) => ({
-                      ...current,
-                      fullDayThresholdPercentage: event.target.value,
-                    }))
-                  }
-                />
+                <TextField {...getAttendanceNumericFieldProps('fullDayThresholdPercentage')} />
               </DrawerField>
               <DrawerField
                 label="Half day threshold"
                 help="Minimum worked time percentage required to count the day as a half day."
               >
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  value={attendanceForm.halfDayThresholdPercentage}
-                  onChange={(event) =>
-                    setAttendanceForm((current) => ({
-                      ...current,
-                      halfDayThresholdPercentage: event.target.value,
-                    }))
-                  }
-                />
+                <TextField {...getAttendanceNumericFieldProps('halfDayThresholdPercentage')} />
               </DrawerField>
             </DrawerFormGrid>
           </PolicySection>
@@ -5530,52 +5783,19 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                   label="Absent threshold"
                   help="Worked time percentage at or below this value is treated as absent."
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={attendanceForm.absentThresholdPercentage}
-                    onChange={(event) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        absentThresholdPercentage: event.target.value,
-                      }))
-                    }
-                  />
+                  <TextField {...getAttendanceNumericFieldProps('absentThresholdPercentage')} />
                 </DrawerField>
                 <DrawerField
                   label="Late grace minutes"
                   help="Late arrival minutes ignored before the employee is counted as late."
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={attendanceForm.graceTime}
-                    onChange={(event) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        graceTime: event.target.value,
-                      }))
-                    }
-                  />
+                  <TextField {...getAttendanceNumericFieldProps('graceTime')} />
                 </DrawerField>
                 <DrawerField
                   label="Allowed late arrivals per month"
                   help="Number of late arrivals allowed in a month before penalties can apply."
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={attendanceForm.maxLateAllowedPerMonth}
-                    onChange={(event) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        maxLateAllowedPerMonth: event.target.value,
-                      }))
-                    }
-                  />
+                  <TextField {...getAttendanceNumericFieldProps('maxLateAllowedPerMonth')} />
                 </DrawerField>
                 <DrawerSelectField
                   label="Penalty"
@@ -5596,18 +5816,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                   label="Late count before deduction"
                   help="Number of qualifying late instances required before the selected penalty is applied."
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={attendanceForm.penaltyCountThreshold}
-                    onChange={(event) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        penaltyCountThreshold: event.target.value,
-                      }))
-                    }
-                  />
+                  <TextField {...getAttendanceNumericFieldProps('penaltyCountThreshold')} />
                 </DrawerField>
                 <DrawerSwitchField
                   label="Early exit"
@@ -5629,35 +5838,13 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
                   label="Early exit grace minutes"
                   help="Early departure minutes ignored before the exit is flagged."
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={attendanceForm.earlyExitGraceTime}
-                    onChange={(event) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        earlyExitGraceTime: event.target.value,
-                      }))
-                    }
-                  />
+                  <TextField {...getAttendanceNumericFieldProps('earlyExitGraceTime')} />
                 </DrawerField>
                 <DrawerField
                   label="Minimum overtime minutes"
                   help="Minimum extra minutes required before overtime is counted."
                 >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    value={attendanceForm.minOvertimeMinutes}
-                    onChange={(event) =>
-                      setAttendanceForm((current) => ({
-                        ...current,
-                        minOvertimeMinutes: event.target.value,
-                      }))
-                    }
-                  />
+                  <TextField {...getAttendanceNumericFieldProps('minOvertimeMinutes')} />
                 </DrawerField>
                 <DrawerField
                   label="Overtime Rate"
@@ -5928,7 +6115,6 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             </Box>
           </Stack>
         </Box>
-        <PolicyOperationOverlay operation={isCurrentSaveOperation ? activePolicyOperation : null} />
       </Box>
     );
   };
@@ -6007,6 +6193,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         anchor="right"
         open={Boolean(drawer)}
         onClose={closeDrawer}
+        transitionDuration={drawerTransitionDuration}
         PaperProps={{ sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' } }}
       >
         {renderDrawerContent()}
@@ -6017,8 +6204,20 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>
-          {editingManualHolidayIndex === null ? 'Add Manual Holiday' : 'Edit Manual Holiday'}
+        <DialogTitle sx={{ pr: 6 }}>
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Typography variant="h6">
+              {editingManualHolidayIndex === null ? 'Add Manual Holiday' : 'Edit Manual Holiday'}
+            </Typography>
+            <InfoTooltipIcon title="Add dates that should be treated as holidays in this work calendar." />
+          </Stack>
+          <IconButton
+            aria-label="Close manual holiday dialog"
+            onClick={closeManualHolidayDialog}
+            sx={{ position: 'absolute', top: 12, right: 12 }}
+          >
+            <Iconify icon="mdi:close" />
+          </IconButton>
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
@@ -6028,7 +6227,12 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             <TextField
               fullWidth
               size="small"
-              label="Holiday name *"
+              label={
+                <FieldLabel
+                  label="Holiday name *"
+                  help="Enter the holiday name shown in this work calendar and related reviews."
+                />
+              }
               value={manualHolidayForm.holidayName}
               onChange={(event) =>
                 setManualHolidayForm((current) => ({ ...current, holidayName: event.target.value }))
@@ -6038,7 +6242,12 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               fullWidth
               size="small"
               type="date"
-              label="From date *"
+              label={
+                <FieldLabel
+                  label="From date *"
+                  help="First date included in the manual holiday range."
+                />
+              }
               InputLabelProps={{ shrink: true }}
               value={manualHolidayForm.fromDate}
               onChange={(event) =>
@@ -6053,7 +6262,12 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
               fullWidth
               size="small"
               type="date"
-              label="To date *"
+              label={
+                <FieldLabel
+                  label="To date *"
+                  help="Last date included in the manual holiday range."
+                />
+              }
               InputLabelProps={{ shrink: true }}
               value={manualHolidayForm.toDate}
               onChange={(event) =>
@@ -6076,7 +6290,12 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             <TextField
               fullWidth
               size="small"
-              label="Notes"
+              label={
+                <FieldLabel
+                  label="Notes"
+                  help="Optional context for HR reviewers, such as the reason or source for this manual holiday."
+                />
+              }
               value={manualHolidayForm.notes}
               onChange={(event) =>
                 setManualHolidayForm((current) => ({ ...current, notes: event.target.value }))
@@ -6093,7 +6312,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
             disabled={Boolean(manualHolidayConflict)}
             onClick={saveManualHoliday}
           >
-            Save Holiday
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -6102,7 +6321,7 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       {renderVersionDrawer()}
       {renderRestoreVersionDialog()}
       <PolicyOperationOverlay
-        operation={drawer || impactDrawerOpen ? null : activePolicyOperation}
+        operation={activePolicyOperation?.key === 'preview-impact' ? null : activePolicyOperation}
       />
     </Box>
   );

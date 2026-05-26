@@ -5,6 +5,7 @@ import {
   mapTakeAttendanceStatusToUi,
   mapManualAttendanceStatusToWire,
   buildManualAttendanceSaveEntries,
+  MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
 } from 'src/screens/hr/attendance/manual-attendance/status-mapper';
 
 describe('manual attendance status mapper', () => {
@@ -45,6 +46,15 @@ describe('manual attendance status mapper', () => {
         outTime: '',
         remarks: '',
       },
+    ]);
+  });
+
+  it('exposes status filter options for locked read-only attendance tables', () => {
+    expect(MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS).toEqual([
+      { label: 'Present', value: MANUAL_ATTENDANCE_UI_STATUS.Present },
+      { label: 'Half Day', value: MANUAL_ATTENDANCE_UI_STATUS.HalfDay },
+      { label: 'Absent', value: MANUAL_ATTENDANCE_UI_STATUS.Absent },
+      { label: 'Pending', value: MANUAL_ATTENDANCE_UI_STATUS.Pending },
     ]);
   });
 });

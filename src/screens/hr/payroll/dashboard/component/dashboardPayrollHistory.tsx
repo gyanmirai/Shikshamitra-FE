@@ -8,13 +8,13 @@ const DashboardPayrollHistory = () => (
       tableId="payroll-history-table"
       columns={[
         { id: 'month', label: 'Month' },
-        { id: 'totalEmployee', label: 'Total Employee' },
-        { id: 'totalNetPayble', label: 'Total Net Payble' },
-        { id: 'fixPay', label: 'Fix Pay' },
-        { id: 'bonus', label: 'Bonus' },
-        { id: 'tds', label: 'TDS' },
-        { id: 'pt', label: 'PT' },
-        { id: 'deduction', label: 'Deduction' },
+        { id: 'totalEmployee', label: 'Total Employee', align: 'center' },
+        { id: 'totalNetPayble', label: 'Total Net Payble', align: 'center' },
+        { id: 'fixPay', label: 'Fix Pay', align: 'center' },
+        { id: 'bonus', label: 'Bonus', align: 'center' },
+        { id: 'tds', label: 'TDS', align: 'center' },
+        { id: 'pt', label: 'PT', align: 'center' },
+        { id: 'deduction', label: 'Deduction', align: 'center' },
         { id: 'status', label: 'Status' },
       ]}
       data={[]}
