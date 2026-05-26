@@ -23,8 +23,10 @@ import {
 } from '@mui/material';
 
 import StudentRefundInfo from './StudentRefundInfo';
+import RefundFeeHeadViewTable from './RefundFeeHeadViewTable';
 
 import type { IStudentFeeData, IRefundFormProps } from '../type';
+import type { IRefundFeeHeadItem } from './RefundFeeHeadViewTable';
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -191,98 +193,29 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
               </Box>
             </Card>
 
-            {/* Refund Lines */}
-            {dto?.lines && dto.lines.length > 0 && (
+            {/* Fee Head Refund Table */}
+            {dto?.feeHeads && dto.feeHeads.length > 0 && (
               <>
                 <Typography variant="subtitle2" fontWeight={700} mb={1}>
-                  Refund Lines ({dto.lines.length})
+                  Fee Head-wise Refund Details
                 </Typography>
-                <Card variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden', mb: 2 }}>
-                  {/* Header */}
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    px={2}
-                    py={1}
-                    sx={{
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      bgcolor: 'background.neutral',
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      sx={{ flex: 1, letterSpacing: '0.7px', fontSize: '10px' }}
-                    >
-                      #
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      sx={{ flex: 3, letterSpacing: '0.7px', fontSize: '10px' }}
-                    >
-                      Due Fee ID
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      fontWeight={700}
-                      textTransform="uppercase"
-                      sx={{
-                        width: 120,
-                        textAlign: 'right',
-                        letterSpacing: '0.7px',
-                        fontSize: '10px',
-                      }}
-                    >
-                      Amount
-                    </Typography>
-                  </Box>
-                  {dto.lines.map((line, idx) => (
-                    <Box
-                      key={line.id}
-                      display="flex"
-                      alignItems="center"
-                      px={2}
-                      py={1}
-                      sx={{
-                        borderBottom: idx < dto.lines.length - 1 ? '1px solid' : 'none',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Typography variant="body2" sx={{ flex: 1 }}>
-                        {idx + 1}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          flex: 3,
-                          fontFamily: 'monospace',
-                          fontSize: '0.75rem',
-                          color: 'text.secondary',
-                        }}
-                      >
-                        {line.dueFeeId}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          width: 120,
-                          textAlign: 'right',
-                          fontWeight: 600,
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        {formatCurrency(line.amount)}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Card>
+                <RefundFeeHeadViewTable
+                  data={dto.feeHeads.map(
+                    (fh): IRefundFeeHeadItem => ({
+                      feeHeadId: fh.feeHeadId,
+                      feeHeadName: fh.feeHeadName,
+                      totalPaid: fh.totalPaid,
+                      totalRefunded: fh.totalRefunded,
+                      items: fh.items.map((item) => ({
+                        month: item.month,
+                        total: item.total,
+                        paid: item.paid,
+                        refundAmount: item.refundAmount,
+                        status: item.status,
+                      })),
+                    })
+                  )}
+                />
               </>
             )}
 

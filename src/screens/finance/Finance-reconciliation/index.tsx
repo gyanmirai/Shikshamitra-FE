@@ -19,15 +19,32 @@ import { FormSlider } from 'src/screens/student/enrollment/register/register-for
 import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
 import UpiTable from './Component/UpiTable';
-import WalletTable from './Component/WalletTable';
+import DebitCardTable from './Component/DebitCardTable';
 import CreditCardTable from './Component/CreditCardTable';
 import DemandDraftTable from './Component/DemandDraftTable';
 import BankTransferTable from './Component/BankTransferTable';
 import ChequeDetailsForm from './Component/ChequeDetailsTable';
-import OnlineGatewayTable from './Component/OnlineGatewayTable';
 
 // Map enum to label and component
 const reconciliationTabConfig = [
+  {
+    label: 'UPI',
+    value: ReconciliationtatusType.UPI,
+    color: 'error' as LabelColor,
+    component: (props: any) => <UpiTable {...props} />,
+  },
+  {
+    label: 'Credit Card',
+    value: ReconciliationtatusType.CreditCard,
+    color: 'warning' as LabelColor,
+    component: (props: any) => <CreditCardTable {...props} />,
+  },
+  {
+    label: 'Debit Card',
+    value: ReconciliationtatusType.DebitCard,
+    color: 'warning' as LabelColor,
+    component: (props: any) => <DebitCardTable {...props} />,
+  },
   {
     label: 'Cheque',
     value: ReconciliationtatusType.Cheque,
@@ -46,36 +63,12 @@ const reconciliationTabConfig = [
     color: 'success' as LabelColor,
     component: (props: any) => <BankTransferTable {...props} />,
   },
-  {
-    label: 'Credit Card',
-    value: ReconciliationtatusType.CreditCard,
-    color: 'warning' as LabelColor,
-    component: (props: any) => <CreditCardTable {...props} />,
-  },
-  {
-    label: 'UPI',
-    value: ReconciliationtatusType.UPI,
-    color: 'error' as LabelColor,
-    component: (props: any) => <UpiTable {...props} />,
-  },
-  {
-    label: 'Online Gateway',
-    value: ReconciliationtatusType.OnlineGateway,
-    color: 'secondary' as LabelColor,
-    component: (props: any) => <OnlineGatewayTable {...props} />,
-  },
-  {
-    label: 'Wallet',
-    value: ReconciliationtatusType.Wallet,
-    color: 'default' as LabelColor,
-    component: (props: any) => <WalletTable {...props} />,
-  },
 ];
 
 const FinanceReconciliation = () => {
   // Tab state
   const [searchParams, setSearchParams] = useNewSearchParam<{ tab?: string }>();
-  const activeTab = searchParams?.tab || ReconciliationtatusType.Cheque;
+  const activeTab = searchParams?.tab || ReconciliationtatusType.UPI;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 

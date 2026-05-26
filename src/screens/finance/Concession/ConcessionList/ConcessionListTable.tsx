@@ -19,14 +19,14 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
     columns={[
       {
         id: 'studentName',
-        label: 'Student Name',
+        label: 'Name(Gr No.)',
         align: 'left',
         sticky: true,
         minWidth: 150,
         render: (value, row) => (
           <Box display="flex" alignItems="center" gap={1}>
             <Avatar src={row.avatarUrl} sx={{ width: 32, height: 32 }} />
-            {row.studentName}
+            {row.studentName} ({row.grNo})
           </Box>
         ),
       },
