@@ -1,9 +1,20 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-export const getChapterValidationSchema = (currentYear: { startDate: string; endDate: string }) =>
+export const getChapterValidationSchema = (
+  currentYear: { startDate: string; endDate: string },
+  existingChapters: Array<{ chapterNumber: number; id: string }> = [],
+  editingChapterId?: string
+) =>
   Yup.object({
-    chapterNo: Yup.number().required('Chapter Number is required'),
+    chapterNo: Yup.number()
+      .required('Chapter Number is required')
+      .test('unique-chapter-no', 'This Chapter Number is already used', (value) => {
+        if (value === undefined || value === null) return true;
+        return !existingChapters.some(
+          (ch) => ch.chapterNumber === Number(value) && ch.id !== editingChapterId
+        );
+      }),
     chapterName: Yup.string().required('Chapter Name is required'),
     startDate: Yup.mixed()
       .required('Chapter Start Date is required')

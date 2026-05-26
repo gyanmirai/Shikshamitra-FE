@@ -2,12 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -22,8 +22,21 @@ import {
 
 import type { IAssignmentTypeFormProps } from './type';
 
-const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose, editData }) => {
+const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({
+  open,
+  onClose,
+  editData,
+  existingTypes = [],
+}) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const existingNames = useMemo(
+    () => new Set<string>(existingTypes.map((t) => t.assignmentTypeName.trim().toLowerCase())),
+    [existingTypes]
+  );
+  const existingNamesRef = useRef<Set<string>>(new Set());
+  existingNamesRef.current = existingNames;
+
   const [addAssignmentType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAssignmentTypeMutation,
@@ -40,7 +53,15 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
     },
     enableReinitialize: true,
     validationSchema: Yup.object().shape({
-      assignmentTypeName: Yup.string().required('Name is required'),
+      assignmentTypeName: Yup.string()
+        .required('Name is required')
+        .test('unique-assignment-type', 'This assignment type already exists', (value) => {
+          if (!value?.trim()) return true;
+          const trimmed = value.trim().toLowerCase();
+          // Allow saving the same name when editing the current record
+          if (editData && editData.assignmentTypeName.trim().toLowerCase() === trimmed) return true;
+          return !existingNamesRef.current.has(trimmed);
+        }),
     }),
     onSubmit: async (values) => {
       try {

@@ -71,11 +71,13 @@ const HomeworkMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   });
 
   const homeworkOptions =
-    (homeworkData?.items || []).map((hw: any) => ({
-      id: hw.id,
-      label: hw.title,
-      submissionType: hw.submissionType,
-    })) || [];
+    (homeworkData?.items || [])
+      .filter((hw: any) => hw.status === 1 && (hw.submissionType === 0 || hw.submissionType === 1))
+      .map((hw: any) => ({
+        id: hw.id,
+        label: hw.title,
+        submissionType: hw.submissionType,
+      })) || [];
 
   const subjectOptions = (() => {
     const allOptions: { value: string; label: string }[] = [];

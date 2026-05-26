@@ -52,6 +52,7 @@ export interface IAddNewChapterProps {
   subject?: string;
   classId?: string;
   subjectId?: string;
+  existingChapters?: Array<{ chapterNumber: number; id: string }>;
 }
 
 export interface IChapterTableProps {

@@ -156,6 +156,7 @@ const AssignmentTypeCreation = () => {
           open={addAssignmentTypeDialog}
           onClose={handleClose}
           editData={selectedData}
+          existingTypes={assignmentTypeData?.data ?? []}
         />
       </CustomDialog>
       {/* Delete Assignment Type Dialog */}
